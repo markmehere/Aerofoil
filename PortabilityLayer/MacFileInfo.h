@@ -1,0 +1,89 @@
+#pragma once
+
+#include "DataTypes.h"
+#include "PascalStr.h"
+
+namespace PortabilityLayer
+{
+	enum FinderFileFlags
+	{
+		FINDER_FILE_FLAG_LOCKED = (1 << 15),
+		FINDER_FILE_FLAG_INVISIBLE = (1 << 14),
+		FINDER_FILE_FLAG_BUNDLE = (1 << 13),
+		FINDER_FILE_FLAG_SYSTEM = (1 << 12),
+		FINDER_FILE_FLAG_COPY_PROTECTED = (1 << 11),
+		FINDER_FILE_FLAG_BUSY = (1 << 10),
+		FINDER_FILE_FLAG_CHANGED = (1 << 9),
+		FINDER_FILE_FLAG_INITED = (1 << 8),
+	};
+
+	struct MacFileProperties
+	{
+		MacFileProperties();
+
+		char m_fileType[4];
+		char m_fileCreator[4];
+		int16_t m_xPos;
+		int16_t m_yPos;
+		uint16_t m_finderFlags;
+		uint8_t m_protected;
+		uint32_t m_creationDate;
+		uint32_t m_modifiedDate;
+
+		void Serialize(void *buffer);
+		void Deserialize(const void *buffer);
+	};
+
+	struct MacFilePropertiesSerialized
+	{
+		static const unsigned int kOffsetFileType = 0;
+		static const unsigned int kOffsetFileCreator = 4;
+		static const unsigned int kOffsetXPos = 8;
+		static const unsigned int kOffsetYPos = 10;
+		static const unsigned int kOffsetFinderFlags = 12;
+		static const unsigned int kProtected = 14;
+		static const unsigned int kCreationDate = 15;
+		static const unsigned int kModifiedDate = 19;
+
+		static const unsigned int kSize = 23;
+
+		uint8_t m_data[kSize];
+
+		void Deserialize(MacFileProperties &props) const;
+		void Serialize(const MacFileProperties &props);
+	};
+
+	struct MacFileInfo
+	{
+		MacFileInfo();
+
+		PascalStr<64> m_fileName;
+		uint16_t m_commentSize;
+		uint32_t m_dataForkSize;
+		uint32_t m_resourceForkSize;
+
+		MacFileProperties m_properties;
+	};
+}
+
+namespace PortabilityLayer
+{
+	inline MacFileProperties::MacFileProperties()
+		: m_xPos(0)
+		, m_yPos(0)
+		, m_finderFlags(0)
+		, m_protected(0)
+		, m_creationDate(0)
+		, m_modifiedDate(0)
+	{
+		m_fileType[0] = m_fileType[1] = m_fileType[2] = m_fileType[3] = '\0';
+		m_fileCreator[0] = m_fileCreator[1] = m_fileCreator[2] = m_fileCreator[3] = '\0';
+	}
+
+	inline MacFileInfo::MacFileInfo()
+		: m_dataForkSize(0)
+		, m_resourceForkSize(0)
+		, m_commentSize(0)
+	{
+	}
+}
