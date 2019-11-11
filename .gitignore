@@ -15,5 +15,6 @@
 *.ilk
 *.lib
 *.pdb
+*.idb
 .vs/*
 Packaged/*
