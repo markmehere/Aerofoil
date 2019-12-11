@@ -127,16 +127,21 @@
     <ClInclude Include="ByteSwap.h" />
     <ClInclude Include="ByteUnpack.h" />
     <ClInclude Include="CFileStream.h" />
+    <ClInclude Include="ClientAudioChannelContext.h" />
     <ClInclude Include="DataTypes.h" />
     <ClInclude Include="DisplayDeviceManager.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FilePermission.h" />
     <ClInclude Include="GpAppInterface.h" />
+    <ClInclude Include="HostAudioChannel.h" />
+    <ClInclude Include="HostAudioDriver.h" />
+    <ClInclude Include="HostMutex.h" />
     <ClInclude Include="HostSuspendCallArgument.h" />
     <ClInclude Include="HostSuspendCallID.h" />
     <ClInclude Include="HostSuspendHook.h" />
     <ClInclude Include="HostDisplayDriver.h" />
     <ClInclude Include="HostSystemServices.h" />
+    <ClInclude Include="HostThreadEvent.h" />
     <ClInclude Include="IOStream.h" />
     <ClInclude Include="MacBinary2.h" />
     <ClInclude Include="MacFileMem.h" />
@@ -150,6 +155,7 @@
     <ClInclude Include="MMHandleBlock.h" />
     <ClInclude Include="PascalStr.h" />
     <ClInclude Include="PascalStrLiteral.h" />
+    <ClInclude Include="PixelFormat.h" />
     <ClInclude Include="PLAliases.h" />
     <ClInclude Include="HostMemoryBuffer.h" />
     <ClInclude Include="HostFileSystem.h" />
@@ -164,8 +170,24 @@
     <ClInclude Include="PLFolders.h" />
     <ClInclude Include="PLLowMem.h" />
     <ClInclude Include="PLMacTypes.h" />
+    <ClInclude Include="QDGraf.h" />
+    <ClInclude Include="QDManager.h" />
+    <ClInclude Include="QDPictEmitContext.h" />
+    <ClInclude Include="QDPictDecoder.h" />
+    <ClInclude Include="QDPictEmitScanlineParameters.h" />
+    <ClInclude Include="QDPictOpcodeDefs.h" />
+    <ClInclude Include="QDPictOpcodes.h" />
+    <ClInclude Include="QDPictHeader.h" />
+    <ClInclude Include="QDPixMap.h" />
+    <ClInclude Include="QDPort.h" />
+    <ClInclude Include="QDRegion.h" />
+    <ClInclude Include="QDStandardPalette.h" />
+    <ClInclude Include="QDState.h" />
+    <ClInclude Include="QDUtils.h" />
     <ClInclude Include="RandomNumberGenerator.h" />
+    <ClInclude Include="Rect2i.h" />
     <ClInclude Include="ResourceCompiledRef.h" />
+    <ClInclude Include="ResourceCompiledTypeList.h" />
     <ClInclude Include="ResourceFile.h" />
     <ClInclude Include="PLMenus.h" />
     <ClInclude Include="PLNavigation.h" />
@@ -184,6 +206,9 @@
     <ClInclude Include="PLToolUtils.h" />
     <ClInclude Include="ResTypeID.h" />
     <ClInclude Include="ResTypeIDCodec.h" />
+    <ClInclude Include="RGBAColor.h" />
+    <ClInclude Include="SharedTypes.h" />
+    <ClInclude Include="Vec2i.h" />
     <ClInclude Include="VirtualDirectory.h" />
     <ClInclude Include="RCPtr.h" />
     <ClInclude Include="RefCounted.h" />
@@ -191,6 +216,8 @@
     <ClInclude Include="ScopedPtr.h" />
     <ClInclude Include="SmallestInt.h" />
     <ClInclude Include="UnsafePascalStr.h" />
+    <ClInclude Include="WindowDef.h" />
+    <ClInclude Include="WindowManager.h" />
     <ClInclude Include="XModemCRC.h" />
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +227,7 @@
     <ClCompile Include="CFileStream.cpp" />
     <ClCompile Include="DisplayDeviceManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="HostAudioDriver.cpp" />
     <ClCompile Include="HostDisplayDriver.cpp" />
     <ClCompile Include="HostFileSystem.cpp" />
     <ClCompile Include="HostSuspendHook.cpp" />
@@ -227,9 +255,21 @@
     <ClCompile Include="PLResources.cpp" />
     <ClCompile Include="PLSound.cpp" />
     <ClCompile Include="PLStringCompare.cpp" />
+    <ClCompile Include="QDGraf.cpp" />
+    <ClCompile Include="QDManager.cpp" />
+    <ClCompile Include="QDPictDecoder.cpp" />
+    <ClCompile Include="QDPictEmitContext.cpp" />
+    <ClCompile Include="QDPictHeader.cpp" />
+    <ClCompile Include="QDPixMap.cpp" />
+    <ClCompile Include="QDPort.cpp" />
+    <ClCompile Include="QDStandardPalette.cpp" />
+    <ClCompile Include="QDState.cpp" />
+    <ClCompile Include="QDUtils.cpp" />
     <ClCompile Include="RandomNumberGenerator.cpp" />
     <ClCompile Include="ResourceCompiledRef.cpp" />
     <ClCompile Include="ResourceFile.cpp" />
+    <ClCompile Include="WindowDef.cpp" />
+    <ClCompile Include="WindowManager.cpp" />
     <ClCompile Include="XModemCRC.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

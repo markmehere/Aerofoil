@@ -54,7 +54,7 @@ short		tileOver, tempBack, cursorIs;
 Boolean		originalLeftOpen, originalTopOpen, originalRightOpen, originalBottomOpen;
 Boolean		originalFloor;
 
-extern	Cursor		handCursor, beamCursor;
+extern	Cursor		handCursor;
 extern	short		houseResFork, lastBackground;
 
 
@@ -278,7 +278,7 @@ void HiliteTileOver (Point mouseIs)
 		{
 			if (cursorIs != kBeamCursor)
 			{
-				SetCursor(&beamCursor);
+				SetBuiltinCursor(iBeamCursor);
 				cursorIs = kBeamCursor;
 			}
 		}

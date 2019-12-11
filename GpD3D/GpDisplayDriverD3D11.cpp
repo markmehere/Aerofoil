@@ -90,61 +90,61 @@ bool GpDisplayDriverD3D11::PresentFrameAndSync()
 
 	UINT lastPresentCount = 0;
 
-	if (FAILED(m_SwapChain->GetLastPresentCount(&lastPresentCount)))
+	if (FAILED(m_swapChain->GetLastPresentCount(&lastPresentCount)))
 		return false;
 
-	if (FAILED(m_SwapChain->Present1(1, 0, &presentParams)))
+	if (FAILED(m_swapChain->Present1(1, 0, &presentParams)))
 		return false;
 
 	//DebugPrintf("r: %i\n", static_cast<int>(r));
 
 	DXGI_FRAME_STATISTICS stats;
-	if (FAILED(m_SwapChain->GetFrameStatistics(&stats)))
+	if (FAILED(m_swapChain->GetFrameStatistics(&stats)))
 		return false;
 
 	if (stats.SyncQPCTime.QuadPart != 0)
 	{
-		if (m_SyncTimeBase.QuadPart == 0)
-			m_SyncTimeBase = stats.SyncQPCTime;
+		if (m_syncTimeBase.QuadPart == 0)
+			m_syncTimeBase = stats.SyncQPCTime;
 
 		LARGE_INTEGER timestamp;
-		timestamp.QuadPart = stats.SyncQPCTime.QuadPart - m_SyncTimeBase.QuadPart;
+		timestamp.QuadPart = stats.SyncQPCTime.QuadPart - m_syncTimeBase.QuadPart;
 
 		bool compacted = false;
-		if (m_PresentHistory.Size() > 0)
+		if (m_presentHistory.Size() > 0)
 		{
-			CompactedPresentHistoryItem &lastItem = m_PresentHistory[m_PresentHistory.Size() - 1];
-			LONGLONG timeDelta = timestamp.QuadPart - lastItem.m_Timestamp.QuadPart;
+			CompactedPresentHistoryItem &lastItem = m_presentHistory[m_presentHistory.Size() - 1];
+			LONGLONG timeDelta = timestamp.QuadPart - lastItem.m_timestamp.QuadPart;
 
 			if (timeDelta < 0)
 				timeDelta = 0;	// This should never happen
 
-			if (timeDelta * static_cast<LONGLONG>(m_Properties.m_FrameTimeLockDenominator) < m_QPFrequency.QuadPart * static_cast<LONGLONG>(m_Properties.m_FrameTimeLockNumerator))
+			if (timeDelta * static_cast<LONGLONG>(m_properties.m_frameTimeLockDenominator) < m_QPFrequency.QuadPart * static_cast<LONGLONG>(m_properties.m_frameTimeLockNumerator))
 			{
-				lastItem.m_NumFrames++;
+				lastItem.m_numFrames++;
 				compacted = true;
 			}
 		}
 
 		if (!compacted)
 		{
-			if (m_PresentHistory.Size() == m_PresentHistory.CAPACITY)
-				m_PresentHistory.RemoveFromStart();
+			if (m_presentHistory.Size() == m_presentHistory.CAPACITY)
+				m_presentHistory.RemoveFromStart();
 
-			CompactedPresentHistoryItem *newItem = m_PresentHistory.Append();
-			newItem->m_Timestamp = timestamp;
-			newItem->m_NumFrames = 1;
+			CompactedPresentHistoryItem *newItem = m_presentHistory.Append();
+			newItem->m_timestamp = timestamp;
+			newItem->m_numFrames = 1;
 		}
 	}
 
-	if (m_PresentHistory.Size() >= 2)
+	if (m_presentHistory.Size() >= 2)
 	{
-		const size_t presentHistorySizeMinusOne = m_PresentHistory.Size() - 1;
+		const size_t presentHistorySizeMinusOne = m_presentHistory.Size() - 1;
 		unsigned int numFrames = 0;
 		for (size_t i = 0; i < presentHistorySizeMinusOne; i++)
-			numFrames += m_PresentHistory[i].m_NumFrames;
+			numFrames += m_presentHistory[i].m_numFrames;
 
-		LONGLONG timeFrame = m_PresentHistory[presentHistorySizeMinusOne].m_Timestamp.QuadPart - m_PresentHistory[0].m_Timestamp.QuadPart;
+		LONGLONG timeFrame = m_presentHistory[presentHistorySizeMinusOne].m_timestamp.QuadPart - m_presentHistory[0].m_timestamp.QuadPart;
 
 		unsigned int cancelledFrames = 0;
 		LONGLONG cancelledTime = 0;
@@ -153,8 +153,8 @@ bool GpDisplayDriverD3D11::PresentFrameAndSync()
 
 		for (size_t i = 0; i < presentHistorySizeMinusOne; i++)
 		{
-			LONGLONG blockTimeframe = m_PresentHistory[i + 1].m_Timestamp.QuadPart - m_PresentHistory[i].m_Timestamp.QuadPart;
-			unsigned int blockNumFrames = m_PresentHistory[i].m_NumFrames;
+			LONGLONG blockTimeframe = m_presentHistory[i + 1].m_timestamp.QuadPart - m_presentHistory[i].m_timestamp.QuadPart;
+			unsigned int blockNumFrames = m_presentHistory[i].m_numFrames;
 
 			if (blockTimeframe * static_cast<LONGLONG>(numFrames) >= timeFrame * static_cast<LONGLONG>(blockNumFrames) * overshootTolerance)
 			{
@@ -171,27 +171,27 @@ bool GpDisplayDriverD3D11::PresentFrameAndSync()
 		// timeFrame / numFrames / qpFreq >= minFrameTimeNum / minFrameTimeDenom
 
 		bool isInFrameTimeLock = false;
-		if (timeFrame * static_cast<LONGLONG>(m_Properties.m_FrameTimeLockMinDenominator) >= static_cast<LONGLONG>(numFrames) * static_cast<LONGLONG>(m_Properties.m_FrameTimeLockMinNumerator) * m_QPFrequency.QuadPart
-			&& timeFrame * static_cast<LONGLONG>(m_Properties.m_FrameTimeLockMaxDenominator) <= static_cast<LONGLONG>(numFrames) * static_cast<LONGLONG>(m_Properties.m_FrameTimeLockMaxNumerator) * m_QPFrequency.QuadPart)
+		if (timeFrame * static_cast<LONGLONG>(m_properties.m_frameTimeLockMinDenominator) >= static_cast<LONGLONG>(numFrames) * static_cast<LONGLONG>(m_properties.m_frameTimeLockMinNumerator) * m_QPFrequency.QuadPart
+			&& timeFrame * static_cast<LONGLONG>(m_properties.m_frameTimeLockMaxDenominator) <= static_cast<LONGLONG>(numFrames) * static_cast<LONGLONG>(m_properties.m_frameTimeLockMaxNumerator) * m_QPFrequency.QuadPart)
 		{
 			isInFrameTimeLock = true;
 		}
 
-		LONGLONG frameTimeStep = m_FrameTimeSliceSize;
+		LONGLONG frameTimeStep = m_frameTimeSliceSize;
 		if (!isInFrameTimeLock)
 		{
 			const int MAX_FRAMES_PER_STEP = 4;
 
 			frameTimeStep = timeFrame / numFrames;
-			if (frameTimeStep > m_FrameTimeSliceSize * MAX_FRAMES_PER_STEP)
-				frameTimeStep = m_FrameTimeSliceSize * MAX_FRAMES_PER_STEP;
+			if (frameTimeStep > m_frameTimeSliceSize * MAX_FRAMES_PER_STEP)
+				frameTimeStep = m_frameTimeSliceSize * MAX_FRAMES_PER_STEP;
 		}
 
-		m_FrameTimeAccumulated += frameTimeStep;
-		while (m_FrameTimeAccumulated >= m_FrameTimeSliceSize)
+		m_frameTimeAccumulated += frameTimeStep;
+		while (m_frameTimeAccumulated >= m_frameTimeSliceSize)
 		{
-			m_Properties.m_TickFunc(m_Properties.m_TickFuncContext, m_vosFiber);
-			m_FrameTimeAccumulated -= m_FrameTimeSliceSize;
+			m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
+			m_frameTimeAccumulated -= m_frameTimeSliceSize;
 		}
 	}
 
@@ -232,7 +232,7 @@ void GpDisplayDriverD3D11::Run()
 
 	ShowWindow(hWnd, g_gpWindowsGlobals.m_nCmdShow);
 
-	StartD3DForWindow(hWnd, m_SwapChain);
+	StartD3DForWindow(hWnd, m_swapChain);
 
 	LARGE_INTEGER lastTimestamp;
 	memset(&lastTimestamp, 0, sizeof(lastTimestamp));
@@ -264,10 +264,14 @@ void GpDisplayDriverD3D11::Shutdown()
 	delete this;
 }
 
-void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int &width, unsigned int &height)
+void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *pixelFormat)
 {
-	width = m_windowWidth;
-	height = m_windowHeight;
+	if (width)
+		*width = m_windowWidth;
+	if (height)
+		*height = m_windowHeight;
+	if (pixelFormat)
+		*pixelFormat = PortabilityLayer::PixelFormat_8BitStandard;
 }
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)
@@ -276,15 +280,15 @@ GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperti
 }
 
 GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties)
-	: m_Properties(properties)
-	, m_FrameTimeAccumulated(0)
+	: m_properties(properties)
+	, m_frameTimeAccumulated(0)
 	, m_windowWidth(640)
 	, m_windowHeight(480)
 	, m_vosFiber(nullptr)
 {
-	memset(&m_SyncTimeBase, 0, sizeof(m_SyncTimeBase));
+	memset(&m_syncTimeBase, 0, sizeof(m_syncTimeBase));
 
 	QueryPerformanceFrequency(&m_QPFrequency);
 
-	m_FrameTimeSliceSize = m_QPFrequency.QuadPart * static_cast<LONGLONG>(properties.m_FrameTimeLockNumerator) / static_cast<LONGLONG>(properties.m_FrameTimeLockDenominator);
+	m_frameTimeSliceSize = m_QPFrequency.QuadPart * static_cast<LONGLONG>(properties.m_frameTimeLockNumerator) / static_cast<LONGLONG>(properties.m_frameTimeLockDenominator);
 }

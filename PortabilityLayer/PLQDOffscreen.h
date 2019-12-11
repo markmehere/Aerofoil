@@ -9,14 +9,7 @@ struct ColorTable
 {
 };
 
-struct PixMap
-{
-};
-
-struct Picture
-{
-	Rect picFrame;
-};
+struct PixMap;
 
 typedef ColorTable *CTabPtr;
 typedef CTabPtr *CTabHandle;

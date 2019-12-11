@@ -37,7 +37,6 @@ Rect		houseEditText1, houseEditText2;
 short		houseCursorIs;
 Boolean		keyHit, tempPhoneBit;
 
-extern	Cursor		beamCursor;
 extern	Boolean		noRoomAtAll, changeLockStateOfHouse, saveHouseLocked;
 extern	Boolean		phoneBitSet;
 
@@ -185,7 +184,7 @@ Boolean HouseFilter (DialogPtr dial, EventRecord *event, short *item)
 		{
 			if (houseCursorIs != kBeamCursor)
 			{
-				SetCursor(&beamCursor);
+				SetBuiltinCursor(iBeamCursor);
 				houseCursorIs = kBeamCursor;
 			}
 		}

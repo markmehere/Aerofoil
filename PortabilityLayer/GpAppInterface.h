@@ -21,6 +21,7 @@
 
 namespace PortabilityLayer
 {
+	class HostAudioDriver;
 	class HostFileSystem;
 	class HostDisplayDriver;
 	class HostSystemServices;
@@ -34,6 +35,7 @@ public:
 	virtual void PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance) = 0;
 	virtual void PL_HostDisplayDriver_SetInstance(PortabilityLayer::HostDisplayDriver *instance) = 0;
 	virtual void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) = 0;
+	virtual void PL_HostAudioDriver_SetInstance(PortabilityLayer::HostAudioDriver *instance) = 0;
 	virtual void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) = 0;
 };
 

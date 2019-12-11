@@ -5,10 +5,10 @@
 
 IGpDisplayDriver *GpDisplayDriverFactory::CreateDisplayDriver(const GpDisplayDriverProperties &properties)
 {
-	assert(properties.m_Type < EGpDisplayDriverType_Count);
+	assert(properties.m_type < EGpDisplayDriverType_Count);
 
-	if (ms_Registry[properties.m_Type])
-		return ms_Registry[properties.m_Type](properties);
+	if (ms_Registry[properties.m_type])
+		return ms_Registry[properties.m_type](properties);
 	else
 		return nullptr;
 }

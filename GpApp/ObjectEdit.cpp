@@ -2289,7 +2289,7 @@ void GetThisRoomsObjRects (void)
 				else
 				{
 					HLock((Handle)thePict);
-					roomObjectRects[i] = (*thePict)->picFrame;
+					roomObjectRects[i] = (*thePict)->picFrame.ToRect();
 					HUnlock((Handle)thePict);
 				}
 				ZeroRectCorner(&roomObjectRects[i]);

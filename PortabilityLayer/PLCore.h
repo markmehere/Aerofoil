@@ -4,6 +4,8 @@
 
 #include "DataTypes.h"
 #include "PLErrorCodes.h"
+#include "SharedTypes.h"
+#include "QDPort.h"
 
 #ifdef _MSC_VER
 #pragma warning(error:4311)	// Pointer truncation to int
@@ -33,23 +35,10 @@ typedef unsigned char Str255[256];
 typedef unsigned char *StringPtr;
 
 class PLPasStr;
+struct CGraf;
+struct Region;
 
 #define PL_DEAD(n) ((void)0)
-
-typedef struct Point
-{
-	short v;
-	short h;
-} Point;
-
-// FIXME: Audit
-struct Rect
-{
-	short top;
-	short left;
-	short bottom;
-	short right;
-};
 
 struct FinderInfoBlock
 {
@@ -93,21 +82,18 @@ struct CCursor
 {
 };
 
-struct CGraf
-{
-};
 
 struct Window
 {
+	Window();
+
+	PortabilityLayer::QDPort m_port;	// Must be the first item
 };
 
 struct Menu
 {
 };
 
-struct Region
-{
-};
 
 struct DateTimeRec
 {
@@ -280,6 +266,7 @@ void SetCCursor(CCrsrHandle handle);
 void HideCursor();
 
 void SetCursor(CursPtr cursor);
+void SetBuiltinCursor(int builtinCursor);
 
 void DisposeCCursor(CCrsrHandle handle);
 
@@ -402,6 +389,7 @@ void DebugStr(const PLPasStr &str);
 static const Boolean PL_TRUE = 1;
 static const Boolean PL_FALSE = 0;
 
+WindowPtr PL_GetPutInFrontWindowPtr();
 
 void PL_NotYetImplemented();
 void PL_NotYetImplemented_Minor();

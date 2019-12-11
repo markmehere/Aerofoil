@@ -207,7 +207,22 @@ Boolean DoWeHaveDragManager (void)
 
 short WhatsOurDepth (void)
 {
-	return 8;
+	PortabilityLayer::PixelFormat pixelFormat;
+	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nil, nil, &pixelFormat);
+
+	switch (pixelFormat)
+	{
+	case PortabilityLayer::PixelFormat_8BitCustom:
+	case PortabilityLayer::PixelFormat_8BitStandard:
+		return 8;
+	case PortabilityLayer::PixelFormat_RGB555:
+		return 16;
+	case PortabilityLayer::PixelFormat_RGB24:
+	case PortabilityLayer::PixelFormat_RGB32:
+		return 32;
+	default:
+		return 0;
+	}
 }
 
 void SwitchToDepth (short, Boolean)
@@ -476,7 +491,7 @@ void GetDeviceRect(Rect *rect)
 {
 	unsigned int width;
 	unsigned int height;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(width, height);
+	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, &height, nil);
 
 	SetRect(rect, 0, 0, static_cast<short>(width), static_cast<short>(height));
 }

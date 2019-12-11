@@ -1,6 +1,7 @@
 #include "GpAppInterface.h"
 
 #include "DisplayDeviceManager.h"
+#include "HostAudioDriver.h"
 #include "HostFileSystem.h"
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
@@ -15,6 +16,7 @@ public:
 	void PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance) override;
 	void PL_HostDisplayDriver_SetInstance(PortabilityLayer::HostDisplayDriver *instance) override;
 	void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) override;
+	void PL_HostAudioDriver_SetInstance(PortabilityLayer::HostAudioDriver *instance) override;
 	void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) override;
 };
 
@@ -44,6 +46,11 @@ void GpAppInterfaceImpl::PL_HostSystemServices_SetInstance(PortabilityLayer::Hos
 	PortabilityLayer::HostSystemServices::SetInstance(instance);
 }
 
+void GpAppInterfaceImpl::PL_HostAudioDriver_SetInstance(PortabilityLayer::HostAudioDriver *instance)
+{
+	PortabilityLayer::HostAudioDriver::SetInstance(instance);
+}
+
 void GpAppInterfaceImpl::PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context)
 {
 	PortabilityLayer::InstallHostSuspendHook(hook, context);
@@ -51,7 +58,8 @@ void GpAppInterfaceImpl::PL_InstallHostSuspendHook(PortabilityLayer::HostSuspend
 
 static GpAppInterfaceImpl gs_application;
 
-extern "C" GpAppInterface *GpAppInterface_Get()
+
+GP_APP_DLL_EXPORT_API GpAppInterface *GpAppInterface_Get()
 {
 	return &gs_application;
 }

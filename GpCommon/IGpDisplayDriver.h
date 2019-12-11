@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PixelFormat.h"
+
 // Display drivers are responsible for timing and calling the game tick function.
 class IGpDisplayDriver
 {
@@ -9,5 +11,5 @@ public:
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
 
-	virtual void GetDisplayResolution(unsigned int &width, unsigned int &height) = 0;
+	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) = 0;
 };

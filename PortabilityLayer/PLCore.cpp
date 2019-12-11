@@ -12,14 +12,30 @@
 #include "HostSystemServices.h"
 #include "ResourceManager.h"
 #include "MemoryManager.h"
+#include "MemReaderStream.h"
 #include "MMHandleBlock.h"
 #include "ResTypeID.h"
 #include "RandomNumberGenerator.h"
+#include "PLBigEndian.h"
+#include "QDManager.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 #include <assert.h>
 
 void InitCursor()
 {
+}
+
+Rect BERect::ToRect() const
+{
+	Rect rect;
+	rect.top = this->top;
+	rect.bottom = this->bottom;
+	rect.left = this->left;
+	rect.right = this->right;
+
+	return rect;
 }
 
 OSErr FSClose(short fsRef)
@@ -58,6 +74,11 @@ void HideCursor()
 }
 
 void SetCursor(CursPtr cursor)
+{
+	PL_NotYetImplemented();
+}
+
+void SetBuiltinCursor(int builtinCursor)
 {
 	PL_NotYetImplemented();
 }
@@ -168,8 +189,24 @@ void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	Handle windowResource = GetResource('WIND', resID);
+
+	if (!windowResource)
+		return nullptr;
+
+	long resSize = GetHandleSize(windowResource);
+
+	PortabilityLayer::MemReaderStream stream(*windowResource, resSize);
+
+	PortabilityLayer::WindowDef def;
+	if (!def.Deserialize(&stream))
+		return nullptr;
+
+	WindowPtr window = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
+	if (window)
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(window, behind);
+
+	return window;
 }
 
 WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, Boolean hasCloseBox, long userdata)
@@ -186,17 +223,21 @@ WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Bo
 
 void SizeWindow(WindowPtr window, int width, int height, Boolean addToUpdateRegion)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::WindowManager::GetInstance()->ResizeWindow(window, width, height);
 }
 
 void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::WindowManager *windowManager = PortabilityLayer::WindowManager::GetInstance();
+
+	windowManager->MoveWindow(window, x, y);
+	if (moveToFront != 0)
+		windowManager->PutWindowBehind(window, windowManager->GetPutInFrontSentinel());
 }
 
 void ShowWindow(WindowPtr window)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::WindowManager::GetInstance()->ShowWindow(window);
 }
 
 void SetWTitle(WindowPtr window, const PLPasStr &title)
@@ -286,7 +327,27 @@ OSErr FindFolder(int refNum, int posType, bool createFolder, short *volumeRef, l
 
 void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
 {
-	PL_NotYetImplemented();
+	if (fnameIndex < 1)
+		return;
+
+	PortabilityLayer::MMHandleBlock *istrRes = PortabilityLayer::ResourceManager::GetInstance()->GetResource('STR#', stringsID);
+	if (istrRes && istrRes->m_contents)
+	{
+		const uint8_t *contentsBytes = static_cast<const uint8_t *>(istrRes->m_contents);
+		const BEUInt16_t *pArraySize = reinterpret_cast<const BEUInt16_t*>(contentsBytes);
+
+		const uint16_t arraySize = *pArraySize;
+
+		if (fnameIndex > static_cast<int>(arraySize))
+			return;
+
+		const uint8_t *strStart = contentsBytes + 2;
+		for (int i = 1; i < fnameIndex; i++)
+			strStart += (*strStart) + 1;
+
+		str[0] = strStart[0];
+		memcpy(str + 1, strStart + 1, *strStart);
+	}
 }
 
 OSErr PBDirCreate(HFileParam *fileParam, bool asynchronous)
@@ -489,13 +550,16 @@ Handle NewHandle(Size size)
 
 void DisposeHandle(Handle handle)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle));
 }
 
 long GetHandleSize(Handle handle)
 {
-	PL_NotYetImplemented();
-	return 0;
+	if (!handle)
+		return 0;
+
+	PortabilityLayer::MMHandleBlock *block = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle);
+	return static_cast<long>(block->m_size);
 }
 
 void HNoPurge(Handle hdl)
@@ -527,14 +591,16 @@ void SetHandleSize(Handle hdl, Size newSize)
 
 void *NewPtr(Size size)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	return PortabilityLayer::MemoryManager::GetInstance()->Alloc(size);
 }
 
 void *NewPtrClear(Size size)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	void *data = NewPtr(size);
+	if (data != nullptr && size != 0)
+		memset(data, 0, size);
+
+	return data;
 }
 
 void DisposePtr(void *ptr)
@@ -572,7 +638,7 @@ OSErr MemError()
 
 void BlockMove(const void *src, void *dest, Size size)
 {
-	PL_NotYetImplemented();
+	memcpy(dest, src, size);
 }
 
 Boolean WaitNextEvent(int eventMask, EventRecord *eventOut, long sleep, void *unknown)
@@ -611,4 +677,15 @@ void PL_Init()
 	PortabilityLayer::ResourceManager::GetInstance()->Init();
 	PortabilityLayer::DisplayDeviceManager::GetInstance()->Init();
 	PortabilityLayer::AEManager::GetInstance()->Init();
+	PortabilityLayer::QDManager::GetInstance()->Init();
+}
+
+WindowPtr PL_GetPutInFrontWindowPtr()
+{
+	return PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel();
+}
+
+Window::Window()
+	: m_port(PortabilityLayer::QDPortType_Window)
+{
 }

@@ -23,9 +23,9 @@ extern	RgnHandle		mirrorRgn;
 extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
 extern	WindowPtr		menuWindow;
 extern	Rect			shieldRect, boardSrcRect, localRoomsDest[];
-extern	CursHandle		handCursorH, beamCursorH, vertCursorH, horiCursorH;
+extern	CursHandle		handCursorH, vertCursorH, horiCursorH;
 extern	CursHandle		diagCursorH;
-extern	Cursor			handCursor, beamCursor, vertCursor, horiCursor;
+extern	Cursor			handCursor, vertCursor, horiCursor;
 extern	Cursor			diagCursor;
 extern	MenuHandle		appleMenu, gameMenu, optionsMenu, houseMenu;
 extern	Point			shieldPt;
@@ -84,12 +84,6 @@ void GetExtraCursors (void)
 		RedAlert(kErrFailedResourceLoad);
 	HLock((Handle)handCursorH);
 	handCursor = **handCursorH;
-	
-	beamCursorH = GetCursor(iBeamCursor);
-	if (beamCursorH == nil)
-		RedAlert(kErrFailedResourceLoad);
-	HLock((Handle)beamCursorH);
-	beamCursor = **beamCursorH;
 	
 	vertCursorH = GetCursor(kVertCursorID);
 	if (vertCursorH == nil)

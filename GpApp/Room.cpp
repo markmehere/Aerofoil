@@ -279,7 +279,7 @@ void ReadyBackground (short theID, short *theTiles)
 	}
 	
 	HLock((Handle)thePicture);
-	dest = (*thePicture)->picFrame;
+	dest = (*thePicture)->picFrame.ToRect();
 	HUnlock((Handle)thePicture);
 	QOffsetRect(&dest, -dest.left, -dest.top);
 	DrawPicture(thePicture, &dest);

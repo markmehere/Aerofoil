@@ -1,4 +1,5 @@
 
+#define _CRT_SECURE_NO_WARNINGS
 //============================================================================
 //----------------------------------------------------------------------------
 //									Music.c
@@ -235,11 +236,11 @@ OSErr LoadMusicSounds (void)
 		HLock(theSound);
 		soundDataSize = GetHandleSize(theSound) - 20L;
 		HUnlock(theSound);
-		
+
 		theMusicData[i] = NewPtr(soundDataSize);
 		if (theMusicData[i] == nil)
 			return (MemError());
-		
+
 		HLock(theSound);
 		BlockMove((Ptr)(static_cast<Byte*>(*theSound) + 20L), theMusicData[i], soundDataSize);
 		ReleaseResource(theSound);

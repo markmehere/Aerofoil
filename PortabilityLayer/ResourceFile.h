@@ -11,25 +11,22 @@ namespace PortabilityLayer
 	class MacFileMem;
 	struct MMHandleBlock;
 	struct ResourceCompiledRef;
+	struct ResourceCompiledTypeList;
 	class ResTypeID;
 
 	class ResourceFile
 	{
 	public:
+
 		ResourceFile();
 		~ResourceFile();
 
 		bool Load(IOStream *stream);
 
+		const ResourceCompiledTypeList *GetResourceTypeList(const ResTypeID &resType);
 		MMHandleBlock *GetResource(const ResTypeID &resType, int id, bool load);
 
 	private:
-		struct CompiledTypeList
-		{
-			ResTypeID m_resType;
-			ResourceCompiledRef *m_firstRef;
-			size_t m_numRefs;
-		};
 
 		uint8_t *m_resDataBlob;
 		size_t m_resDataBlobSize;
@@ -40,14 +37,14 @@ namespace PortabilityLayer
 		ResourceCompiledRef *m_compiledRefBlob;
 		size_t m_numResources;
 
-		CompiledTypeList *m_compiledTypeListBlob;
+		ResourceCompiledTypeList *m_compiledTypeListBlob;
 		size_t m_numResourceTypes;
 
 		static bool CompiledRefSortPredicate(const ResourceCompiledRef &a, const ResourceCompiledRef &b);
-		static bool CompiledTypeListSortPredicate(const CompiledTypeList &a, const CompiledTypeList &b);
+		static bool CompiledTypeListSortPredicate(const ResourceCompiledTypeList &a, const ResourceCompiledTypeList &b);
 
 		static int CompiledRefSearchPredicate(int resID, const ResourceCompiledRef &ref);
-		static int CompiledTypeListSearchPredicate(const ResTypeID &resTypeID, const CompiledTypeList &typeList);
+		static int CompiledTypeListSearchPredicate(const ResTypeID &resTypeID, const ResourceCompiledTypeList &typeList);
 	};
 }
 

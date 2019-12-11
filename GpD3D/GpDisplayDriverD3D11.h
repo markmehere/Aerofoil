@@ -7,6 +7,8 @@
 #include "GpCoreDefs.h"
 #include "GpDisplayDriverProperties.h"
 
+#include "PixelFormat.h"
+
 struct IDXGISwapChain1;
 
 class GpDisplayDriverD3D11 : public IGpDisplayDriver
@@ -15,7 +17,7 @@ public:
 	void Run() override;
 	void Shutdown() override;
 
-	void GetDisplayResolution(unsigned int &width, unsigned int &height) override;
+	void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) override;
 
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
 
@@ -24,24 +26,24 @@ private:
 
 	bool PresentFrameAndSync();
 
-	IDXGISwapChain1 *m_SwapChain;
+	IDXGISwapChain1 *m_swapChain;
 
 	struct CompactedPresentHistoryItem
 	{
-		LARGE_INTEGER m_Timestamp;
-		unsigned int m_NumFrames;
+		LARGE_INTEGER m_timestamp;
+		unsigned int m_numFrames;
 	};
 
-	GpRingBuffer<CompactedPresentHistoryItem, 60> m_PresentHistory;
-	GpDisplayDriverProperties m_Properties;
+	GpRingBuffer<CompactedPresentHistoryItem, 60> m_presentHistory;
+	GpDisplayDriverProperties m_properties;
 
-	LARGE_INTEGER m_SyncTimeBase;
+	LARGE_INTEGER m_syncTimeBase;
 	LARGE_INTEGER m_QPFrequency;
-	UINT m_ExpectedSyncDelta;
-	bool m_IsResettingSwapChain;
+	UINT m_expectedSyncDelta;
+	bool m_isResettingSwapChain;
 
-	LONGLONG m_FrameTimeAccumulated;
-	LONGLONG m_FrameTimeSliceSize;
+	LONGLONG m_frameTimeAccumulated;
+	LONGLONG m_frameTimeSliceSize;
 
 	DWORD m_windowWidth;
 	DWORD m_windowHeight;

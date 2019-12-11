@@ -10,6 +10,7 @@ namespace PortabilityLayer
 }
 
 class IGpDisplayDriver;
+class IGpAudioDriver;
 class GpFiber;
 
 class GpAppEnvironment
@@ -22,6 +23,7 @@ public:
 
 	void Tick(GpFiber *vosFiber);
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);
+	void SetAudioDriver(IGpAudioDriver *audioDriver);
 
 private:
 	enum ApplicationState
@@ -44,6 +46,7 @@ private:
 
 	ApplicationState m_applicationState;
 	IGpDisplayDriver *m_displayDriver;
+	IGpAudioDriver *m_audioDriver;
 	GpFiber *m_applicationFiber;
 	GpFiber *m_vosFiber;
 

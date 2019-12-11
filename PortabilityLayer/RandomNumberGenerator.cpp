@@ -18,7 +18,7 @@ namespace PortabilityLayer
 		static const int kN = 624;
 		static const int kM = 397;
 		static const int kR = 31;
-		static const uint32_t kLowMask = (1 << kR) - 1;
+		static const uint32_t kLowMask = (static_cast<uint32_t>(1) << kR) - 1;
 		static const uint32_t kHighMask = ~kLowMask;
 
 		void Twist();

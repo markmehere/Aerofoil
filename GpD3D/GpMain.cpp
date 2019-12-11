@@ -1,8 +1,11 @@
 #include "GpMain.h"
+#include "GpAudioDriverFactory.h"
+#include "GpAudioDriverProperties.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpDisplayDriverProperties.h"
 #include "GpGlobalConfig.h"
 #include "GpAppEnvironment.h"
+#include "IGpAudioDriver.h"
 #include "IGpDisplayDriver.h"
 
 #include <string.h>
@@ -22,24 +25,37 @@ int GpMain::Run()
 	GpDisplayDriverProperties ddProps;
 	memset(&ddProps, 0, sizeof(ddProps));
 
-	ddProps.m_FrameTimeLockNumerator = 1;
-	ddProps.m_FrameTimeLockDenominator = 60;
+	ddProps.m_type = EGpDisplayDriverType_D3D11;
+
+	ddProps.m_frameTimeLockNumerator = 1;
+	ddProps.m_frameTimeLockDenominator = 60;
 
 	// +/- 1% tolerance for frame time variance
-	ddProps.m_FrameTimeLockMinNumerator = 99;
-	ddProps.m_FrameTimeLockMinDenominator = 6000;
-	ddProps.m_FrameTimeLockMaxNumerator = 101;
-	ddProps.m_FrameTimeLockMaxDenominator = 6000;
+	ddProps.m_frameTimeLockMinNumerator = 99;
+	ddProps.m_frameTimeLockMinDenominator = 6000;
+	ddProps.m_frameTimeLockMaxNumerator = 101;
+	ddProps.m_frameTimeLockMaxDenominator = 6000;
 
-	ddProps.m_TickFunc = TickAppEnvironment;
-	ddProps.m_TickFuncContext = appEnvironment;
-	ddProps.m_Type = g_gpGlobalConfig.m_displayDriverType;
+	ddProps.m_tickFunc = TickAppEnvironment;
+	ddProps.m_tickFuncContext = appEnvironment;
+	ddProps.m_type = g_gpGlobalConfig.m_displayDriverType;
+
+	GpAudioDriverProperties adProps;
+	memset(&adProps, 0, sizeof(adProps));
+
+	// The sample rate used in all of Glider PRO's sound is 0x56ee8ba3
+	// This appears to be the "standard" Mac sample rate, probably rounded from 244800/11.
+	adProps.m_type = EGpAudioDriverType_XAudio2;
+	adProps.m_sampleRate = (244800 * 2 + 11) / (11 * 2);
+	adProps.m_debug = true;
 
 	IGpDisplayDriver *displayDriver = GpDisplayDriverFactory::CreateDisplayDriver(ddProps);
+	IGpAudioDriver *audioDriver = GpAudioDriverFactory::CreateAudioDriver(adProps);
 
 	appEnvironment->Init();
 
 	appEnvironment->SetDisplayDriver(displayDriver);
+	appEnvironment->SetAudioDriver(audioDriver);
 
 	// Start the display loop
 	displayDriver->Run();

@@ -37,7 +37,7 @@ public:
 	BEInteger<T> operator++(int);
 
 private:
-	T m_beValue;
+	uint8_t m_beValueBytes[sizeof(T)];
 };
 
 template<class T>
@@ -83,30 +83,32 @@ struct BEInteger_SwapHelper<uint32_t>
 	}
 };
 
-// Int16
+#include <string.h>
+
 template<class T>
 inline BEInteger<T>::BEInteger()
-	: m_beValue(0)
 {
+	memset(m_beValueBytes, 0, sizeof(T));
 }
 
 template<class T>
 inline BEInteger<T>::BEInteger(const BEInteger<T> &other)
-	: m_beValue(other.m_beValue)
 {
+	memcpy(m_beValueBytes, other.m_beValueBytes, sizeof(T));
 }
 
 template<class T>
 inline BEInteger<T>::BEInteger(T i)
-	: m_beValue(i)
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	BEInteger_SwapHelper<T>::Swap(i);
+	memcpy(m_beValueBytes, &i, sizeof(T));
 }
 
 template<class T>
 inline BEInteger<T>::operator T() const
 {
-	int16_t result = m_beValue;
+	T result;
+	memcpy(&result, m_beValueBytes, sizeof(T));
 	BEInteger_SwapHelper<T>::Swap(result);
 	return result;
 }
@@ -115,7 +117,7 @@ template<class T>
 inline BEInteger<T> &BEInteger<T>::operator=(T value)
 {
 	BEInteger_SwapHelper<T>::Swap(value);
-	m_beValue = value;
+	memcpy(m_beValueBytes, &value, sizeof(T));
 	return *this;
 }
 
@@ -123,9 +125,14 @@ template<class T>
 template<class TOther>
 BEInteger<T> &BEInteger<T>::operator+=(TOther value)
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue += value;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue += value;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
@@ -133,9 +140,14 @@ template<class T>
 template<class TOther>
 BEInteger<T> &BEInteger<T>::operator-=(TOther value)
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue -= value;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue -= value;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
@@ -143,9 +155,14 @@ template<class T>
 template<class TOther>
 BEInteger<T> &BEInteger<T>::operator*=(TOther value)
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue *= value;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue *= value;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
@@ -153,9 +170,14 @@ template<class T>
 template<class TOther>
 BEInteger<T> &BEInteger<T>::operator/=(TOther value)
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue /= value;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue /= value;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
@@ -163,18 +185,28 @@ template<class T>
 template<class TOther>
 BEInteger<T> &BEInteger<T>::operator%=(TOther value)
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue %= value;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue %= value;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
 template<class T>
 BEInteger<T>& BEInteger<T>::operator--()
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue--;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue--;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
@@ -189,9 +221,14 @@ BEInteger<T> BEInteger<T>::operator--(int)
 template<class T>
 BEInteger<T>& BEInteger<T>::operator++()
 {
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
-	m_beValue++;
-	BEInteger_SwapHelper<T>::Swap(m_beValue);
+	T storedValue;
+	memcpy(&storedValue, m_beValueBytes, sizeof(T));
+
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+	storedValue++;
+	BEInteger_SwapHelper<T>::Swap(storedValue);
+
+	memcpy(m_beValueBytes, &storedValue, sizeof(T));
 	return *this;
 }
 
@@ -208,5 +245,11 @@ typedef BEInteger<int16_t> BEInt16_t;
 typedef BEInteger<int32_t> BEInt32_t;
 typedef BEInteger<uint16_t> BEUInt16_t;
 typedef BEInteger<uint32_t> BEUInt32_t;
+
+struct BEFixed32_t
+{
+	BEInt16_t m_intPart;
+	BEUInt16_t m_fracPart;
+};
 
 #endif

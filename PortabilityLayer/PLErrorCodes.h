@@ -25,6 +25,7 @@ enum ErrorCodes
 	volOffLinErr,
 	permErr,
 	wrPermErr,
+	queueFull,
 
 	genericErr,
 };

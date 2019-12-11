@@ -1,5 +1,5 @@
-#include "GpWindows.h"
 #include "GpMain.h"
+#include "GpAudioDriverFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpDisplayDriverFactoryD3D11.h"
 #include "GpGlobalConfig.h"
@@ -9,11 +9,13 @@
 
 #include "HostFileSystem.h"
 
-#include <d3d11.h>
+#include "GpWindows.h"
 
 #include <stdio.h>
 
 GPWindowsGlobals g_gpWindowsGlobals;
+
+extern "C" __declspec(dllimport) IGpAudioDriver *GpDriver_CreateAudioDriver_XAudio2(const GpAudioDriverProperties &properties);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -28,6 +30,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_D3D11;
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_D3D11, GpDisplayDriverFactoryD3D11::Create);
+	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);
 
 	return GpMain::Run();
 }

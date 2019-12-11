@@ -6,7 +6,7 @@
 
 class PLPasStr;
 
-struct Dialog
+struct Dialog : public PortabilityLayer::QDPort
 {
 };
 

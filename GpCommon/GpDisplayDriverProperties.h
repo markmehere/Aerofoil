@@ -1,0 +1,26 @@
+#pragma once
+
+#include "EGpDisplayDriverType.h"
+
+class IGpDisplayDriver;
+class GpFiber;
+
+struct GpDisplayDriverProperties
+{
+	typedef void(*TickFunc_t)(void *context, GpFiber *vosFiber);
+
+	EGpDisplayDriverType m_type;
+
+	unsigned int m_frameTimeLockNumerator;
+	unsigned int m_frameTimeLockDenominator;
+
+	unsigned int m_frameTimeLockMinNumerator;
+	unsigned int m_frameTimeLockMinDenominator;
+
+	unsigned int m_frameTimeLockMaxNumerator;
+	unsigned int m_frameTimeLockMaxDenominator;
+
+	// Tick function and context to call when a frame needs to be served.
+	TickFunc_t m_tickFunc;
+	void *m_tickFuncContext;
+};

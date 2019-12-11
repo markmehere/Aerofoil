@@ -60,21 +60,29 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
+    <Import Project="..\GpMainApp.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
+    <Import Project="..\GpMainApp.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
+    <Import Project="..\GpMainApp.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
+    <Import Project="..\GpMainApp.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -128,9 +136,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GpAppEnvironment.cpp" />
+    <ClCompile Include="GpAudioDriverFactory.cpp" />
     <ClCompile Include="GpDisplayDriverFactory.cpp" />
     <ClCompile Include="GpDisplayDriverFactoryD3D11.cpp" />
-    <ClCompile Include="GpEvent_Win32.cpp" />
     <ClCompile Include="GpFiber_Win32.cpp" />
     <ClCompile Include="GpFileStream_Win32.cpp" />
     <ClCompile Include="GpFileSystem_Win32.cpp" />
@@ -139,19 +147,27 @@
     <ClCompile Include="GpMain_Win32.cpp" />
     <ClCompile Include="GpDisplayDriverD3D11.cpp" />
     <ClCompile Include="GpMemoryBuffer.cpp" />
+    <ClCompile Include="GpMutex_Win32.cpp" />
+    <ClCompile Include="GpPLGlueAudioChannel.cpp" />
+    <ClCompile Include="GpPLGlueAudioDriver.cpp" />
     <ClCompile Include="GpPLGlueDisplayDriver.cpp" />
     <ClCompile Include="GpSystemServices_Win32.cpp" />
     <ClCompile Include="GpFiberStarter_Win32.cpp" />
+    <ClCompile Include="GpThreadEvent_Win32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
+    <ClInclude Include="EGpAudioDriverType.h" />
     <ClInclude Include="EGpDisplayDriverType.h" />
     <ClInclude Include="GpAppEnvironment.h" />
+    <ClInclude Include="GpAudioDriverFactory.h" />
+    <ClInclude Include="GpAudioDriverProperties.h" />
+    <ClInclude Include="GpAudioDriverXAudio2.h" />
     <ClInclude Include="GpCoreDefs.h" />
     <ClInclude Include="GpDisplayDriverD3D11.h" />
     <ClInclude Include="GpDisplayDriverFactory.h" />
     <ClInclude Include="GpDisplayDriverFactoryD3D11.h" />
     <ClInclude Include="GpDisplayDriverProperties.h" />
-    <ClInclude Include="GpEvent.h" />
     <ClInclude Include="GpFiber.h" />
     <ClInclude Include="GpFiber_Win32.h" />
     <ClInclude Include="GpFileStream_Win32.h" />
@@ -159,16 +175,25 @@
     <ClInclude Include="GpGlobalConfig.h" />
     <ClInclude Include="GpMain.h" />
     <ClInclude Include="GpMemoryBuffer.h" />
+    <ClInclude Include="GpMutex_Win32.h" />
+    <ClInclude Include="GpPLGlueAudioChannel.h" />
+    <ClInclude Include="GpPLGlueAudioDriver.h" />
     <ClInclude Include="GpPLGlueDisplayDriver.h" />
     <ClInclude Include="GpRingBuffer.h" />
     <ClInclude Include="GpSystemServices_Win32.h" />
     <ClInclude Include="GpFiberStarter.h" />
+    <ClInclude Include="GpThreadEvent_Win32.h" />
     <ClInclude Include="GpWindows.h" />
+    <ClInclude Include="IGpAudioChannel.h" />
+    <ClInclude Include="IGpAudioDriver.h" />
     <ClInclude Include="IGpDisplayDriver.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GpApp\GpApp.vcxproj">
       <Project>{6233c3f2-5781-488e-b190-4fa8836f5a77}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GpAudioDriver_XAudio2\GpAudioDriver_XAudio2.vcxproj">
+      <Project>{e3bdc783-8646-433e-adf0-8b6390d36669}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

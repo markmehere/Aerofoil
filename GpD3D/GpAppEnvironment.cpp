@@ -1,6 +1,7 @@
 #include "GpAppEnvironment.h"
 #include "GpFiberStarter.h"
 #include "GpAppInterface.h"
+#include "GpPLGlueAudioDriver.h"
 #include "GpPLGlueDisplayDriver.h"
 #include "GpFiber.h"
 #include "HostSuspendCallArgument.h"
@@ -10,6 +11,7 @@
 GpAppEnvironment::GpAppEnvironment()
 	: m_applicationState(ApplicationState_NotStarted)
 	, m_displayDriver(nullptr)
+	, m_audioDriver(nullptr)
 	, m_applicationFiber(nullptr)
 	, m_vosFiber(nullptr)
 	, m_suspendCallID(PortabilityLayer::HostSuspendCallID_Unknown)
@@ -81,6 +83,11 @@ void GpAppEnvironment::SetDisplayDriver(IGpDisplayDriver *displayDriver)
 	m_displayDriver = displayDriver;
 }
 
+void GpAppEnvironment::SetAudioDriver(IGpAudioDriver *audioDriver)
+{
+	m_audioDriver = audioDriver;
+}
+
 void GpAppEnvironment::StaticAppThreadFunc(void *context)
 {
 	static_cast<GpAppEnvironment*>(context)->AppThreadFunc();
@@ -94,6 +101,7 @@ void GpAppEnvironment::AppThreadFunc()
 void GpAppEnvironment::InitializeApplicationState()
 {
 	GpAppInterface_Get()->PL_HostDisplayDriver_SetInstance(GpPLGlueDisplayDriver::GetInstance());
+	GpAppInterface_Get()->PL_HostAudioDriver_SetInstance(GpPLGlueAudioDriver::GetInstance());
 	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
 
 	SynchronizeState();
@@ -102,6 +110,7 @@ void GpAppEnvironment::InitializeApplicationState()
 void GpAppEnvironment::SynchronizeState()
 {
 	GpPLGlueDisplayDriver::GetInstance()->SetGpDisplayDriver(m_displayDriver);
+	GpPLGlueAudioDriver::GetInstance()->SetGpAudioDriver(m_audioDriver);
 }
 
 void GpAppEnvironment::StaticSuspendHookFunc(void *context, PortabilityLayer::HostSuspendCallID callID, const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue)

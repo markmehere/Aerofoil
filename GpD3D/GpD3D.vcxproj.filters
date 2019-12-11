@@ -36,9 +36,6 @@
     <ClCompile Include="GpAppEnvironment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GpEvent_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpFileSystem_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,6 +55,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GpFiber_Win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpPLGlueAudioDriver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpAudioDriverFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpPLGlueAudioChannel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpMutex_Win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpThreadEvent_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,9 +110,6 @@
     <ClInclude Include="GpRingBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GpEvent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GpFileSystem_Win32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -123,6 +132,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpFiber.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IGpAudioDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpAudioDriverFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EGpAudioDriverType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpAudioDriverProperties.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpPLGlueAudioDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpAudioDriverXAudio2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpPLGlueAudioChannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IGpAudioChannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpMutex_Win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpThreadEvent_Win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

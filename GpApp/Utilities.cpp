@@ -301,7 +301,7 @@ void LoadGraphic (short resID)
 		RedAlert(kErrFailedGraphicLoad);
 	
 	HLock((Handle)thePicture);
-	bounds = (*thePicture)->picFrame;
+	bounds = (*thePicture)->picFrame.ToRect();
 	HUnlock((Handle)thePicture);
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);

@@ -101,7 +101,7 @@ namespace PortabilityLayer
 			return 0;
 
 		long oldPos = ftell(m_file);
-		fseek(m_file, SEEK_END, 0);
+		fseek(m_file, 0, SEEK_END);
 		const UFilePos_t endPos = static_cast<UFilePos_t>(ftell(m_file));
 		fseek(m_file, oldPos, SEEK_SET);
 

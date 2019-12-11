@@ -1,17 +1,28 @@
 #include "PLResources.h"
 
+#include "MemoryManager.h"
 #include "MMHandleBlock.h"
 #include "ResourceManager.h"
 #include "ResourceCompiledRef.h"
 
+#include <assert.h>
+
 void DetachResource(Handle hdl)
 {
-	PL_NotYetImplemented();
+	if (!hdl)
+		return;
+
+	PortabilityLayer::MMHandleBlock *block = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(hdl);
+	assert(block->m_rmSelfRef);
+	assert(block->m_rmSelfRef->m_handle == block);
+	block->m_rmSelfRef->m_handle = nullptr;
+	block->m_rmSelfRef = nullptr;
 }
 
 void ReleaseResource(Handle hdl)
 {
-	PL_NotYetImplemented();
+	DetachResource(hdl);
+	DisposeHandle(hdl);
 }
 
 short CurResFile()

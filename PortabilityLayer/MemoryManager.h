@@ -16,8 +16,10 @@ namespace PortabilityLayer
 
 		virtual void *Alloc(size_t size) = 0;
 		virtual void Release(void *buf) = 0;
+		virtual void *Realloc(void *buf, size_t newSize) = 0;
 
 		virtual MMHandleBlock *AllocHandle(size_t size) = 0;
+		virtual bool ResizeHandle(MMHandleBlock *hdl, size_t newSize) = 0;
 		virtual void ReleaseHandle(MMHandleBlock *hdl) = 0;
 
 		template<class T>

@@ -9,7 +9,7 @@ class GpPLGlueDisplayDriver final : public PortabilityLayer::HostDisplayDriver
 public:
 	GpPLGlueDisplayDriver();
 
-	void GetDisplayResolution(unsigned int &width, unsigned int &height) override;
+	void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) override;
 	void HideCursor() override;
 
 	void SetGpDisplayDriver(IGpDisplayDriver *displayDriver);

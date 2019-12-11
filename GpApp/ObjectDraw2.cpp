@@ -1147,7 +1147,7 @@ void DrawCalendar (Rect *theRect)
 		RedAlert(kErrFailedGraphicLoad);
 	
 	HLock((Handle)thePicture);
-	bounds = (*thePicture)->picFrame;
+	bounds = (*thePicture)->picFrame.ToRect();
 	HUnlock((Handle)thePicture);
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, theRect->left, theRect->top);
@@ -1183,7 +1183,7 @@ void DrawBulletin (Rect *theRect)
 		RedAlert(kErrFailedGraphicLoad);
 	
 	HLock((Handle)thePicture);
-	bounds = (*thePicture)->picFrame;
+	bounds = (*thePicture)->picFrame.ToRect();
 	HUnlock((Handle)thePicture);
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, theRect->left, theRect->top);

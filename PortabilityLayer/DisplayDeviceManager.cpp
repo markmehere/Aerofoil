@@ -1,7 +1,7 @@
 #include "DisplayDeviceManager.h"
 
+#include "HostDisplayDriver.h"
 #include "PLQuickdraw.h"
-
 #include "MemoryManager.h"
 
 namespace PortabilityLayer
@@ -38,6 +38,8 @@ namespace PortabilityLayer
 	void DisplayDeviceManagerImpl::Init()
 	{
 		m_mainDevice = MemoryManager::GetInstance()->NewHandle<GDevice>();
+
+		HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &(*m_mainDevice)->pixelFormat);
 	}
 
 	void DisplayDeviceManagerImpl::Shutdown()

@@ -82,7 +82,7 @@ void InitScoreboardMap (void)
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	HLock((Handle)thePicture);
-	bounds = (*thePicture)->picFrame;
+	bounds = (*thePicture)->picFrame.ToRect();
 	HUnlock((Handle)thePicture);
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, hOffset, 0);

@@ -5,6 +5,7 @@
 #include "MemoryManager.h"
 #include "MemReaderStream.h"
 #include "ResourceCompiledRef.h"
+#include "ResourceCompiledTypeList.h"
 
 #include <algorithm>
 
@@ -143,7 +144,8 @@ namespace PortabilityLayer
 			return false;
 		ByteSwap::BigUInt16(numTypesMinusOne);
 
-		m_numResourceTypes = numTypesMinusOne + 1;
+		// numTypesMinusOne can sometimes be -1, in which case there are no resources
+		m_numResourceTypes = (numTypesMinusOne + 1) & 0xffff;
 
 		if (sizeFromStartOfTypeList < 2 || (sizeFromStartOfTypeList - 2) / 8 < m_numResourceTypes)
 			return false;
@@ -166,13 +168,16 @@ namespace PortabilityLayer
 			numResourcesTotal += numResourcesOfThisType;
 		}
 
-		m_compiledRefBlob = new ResourceCompiledRef[numResourcesTotal];
+		if (numResourcesTotal > 0)
+			m_compiledRefBlob = new ResourceCompiledRef[numResourcesTotal];
+
 		m_numResources = numResourcesTotal;
 
 		// Second pass: Compile references
 		ResourceCompiledRef *refToCompile = m_compiledRefBlob;
 
-		m_compiledTypeListBlob = new CompiledTypeList[m_numResourceTypes];
+		if (m_numResourceTypes > 0)
+			m_compiledTypeListBlob = new ResourceCompiledTypeList[m_numResourceTypes];
 
 		for (uint32_t i = 0; i < m_numResourceTypes; i++)
 		{
@@ -186,7 +191,7 @@ namespace PortabilityLayer
 			ByteSwap::BigUInt16(tlEntry.m_numResourcesMinusOne);
 			ByteSwap::BigUInt16(tlEntry.m_refListOffset);
 
-			CompiledTypeList &ctl = m_compiledTypeListBlob[i];
+			ResourceCompiledTypeList &ctl = m_compiledTypeListBlob[i];
 			ctl.m_resType = tlEntry.m_resType;
 			ctl.m_firstRef = refToCompile;
 			ctl.m_numRefs = tlEntry.m_numResourcesMinusOne + 1;
@@ -318,7 +323,7 @@ namespace PortabilityLayer
 		return a.m_resID < b.m_resID;
 	}
 
-	bool ResourceFile::CompiledTypeListSortPredicate(const CompiledTypeList &a, const CompiledTypeList &b)
+	bool ResourceFile::CompiledTypeListSortPredicate(const ResourceCompiledTypeList &a, const ResourceCompiledTypeList &b)
 	{
 		return memcmp(&a.m_resType, &b.m_resType, sizeof(ResTypeID)) < 0;
 	}
@@ -328,18 +333,27 @@ namespace PortabilityLayer
 		return resID - ref.m_resID;
 	}
 
-	int ResourceFile::CompiledTypeListSearchPredicate(const ResTypeID &resTypeID, const CompiledTypeList &typeList)
+	int ResourceFile::CompiledTypeListSearchPredicate(const ResTypeID &resTypeID, const ResourceCompiledTypeList &typeList)
 	{
 		return memcmp(&resTypeID, &typeList.m_resType, 4);
 	}
 
+	const ResourceCompiledTypeList *ResourceFile::GetResourceTypeList(const ResTypeID &resType)
+	{
+		const ResourceCompiledTypeList *tlStart = m_compiledTypeListBlob;
+		const ResourceCompiledTypeList *tlEnd = tlStart + m_numResourceTypes;
+
+		const ResourceCompiledTypeList *tl = BinarySearch(tlStart, tlEnd, resType, CompiledTypeListSearchPredicate);
+		if (tl == tlEnd)
+			return nullptr;
+
+		return tl;
+	}
+
 	MMHandleBlock *ResourceFile::GetResource(const ResTypeID &resType, int id, bool load)
 	{
-		const CompiledTypeList *tlStart = m_compiledTypeListBlob;
-		const CompiledTypeList *tlEnd = tlStart + m_numResourceTypes;
-
-		const CompiledTypeList *tl = BinarySearch(tlStart, tlEnd, resType, CompiledTypeListSearchPredicate);
-		if (tl == tlEnd)
+		const ResourceCompiledTypeList *tl = GetResourceTypeList(resType);
+		if (tl == nullptr)
 			return nullptr;
 
 		ResourceCompiledRef *refStart = tl->m_firstRef;
@@ -366,6 +380,7 @@ namespace PortabilityLayer
 			{
 				void *contents = MemoryManager::GetInstance()->Alloc(resSize);
 				handle->m_contents = contents;
+				handle->m_size = resSize;
 				memcpy(handle->m_contents, ref->m_resData, resSize);
 			}
 		}

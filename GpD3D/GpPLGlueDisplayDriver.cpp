@@ -6,9 +6,9 @@ GpPLGlueDisplayDriver::GpPLGlueDisplayDriver()
 {
 }
 
-void GpPLGlueDisplayDriver::GetDisplayResolution(unsigned int &width, unsigned int &height)
+void GpPLGlueDisplayDriver::GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp)
 {
-	m_displayDriver->GetDisplayResolution(width, height);
+	m_displayDriver->GetDisplayResolution(width, height, bpp);
 }
 
 void GpPLGlueDisplayDriver::HideCursor()

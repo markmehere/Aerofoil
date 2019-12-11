@@ -2,7 +2,6 @@
 
 OSErr EnterMovies()
 {
-	PL_NotYetImplemented();
 	return noErr;
 }
 

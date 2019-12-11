@@ -3,6 +3,8 @@
 #define __PL_QUICKDRAW_H__
 
 #include "PLCore.h"
+#include "QDGraf.h"
+#include "SharedTypes.h"
 
 struct Dialog;
 
@@ -100,12 +102,9 @@ struct CIcon
 {
 };
 
-struct GDevice
-{
-};
-
 struct BitMap
 {
+	Rect m_rect;
 };
 
 struct RGBColor
@@ -121,7 +120,8 @@ typedef GDPtr *GDHandle;
 typedef CIcon *CIconPtr;
 typedef CIconPtr *CIconHandle;
 
-typedef WindowPtr GrafPtr;
+typedef PortabilityLayer::QDPort GrafPort;
+typedef GrafPort *GrafPtr;
 
 typedef Byte Pattern[8];
 
@@ -130,8 +130,8 @@ void SetPort(GrafPtr graf);
 void SetPortWindowPort(WindowPtr window);
 void SetPortDialogPort(Dialog *dialog);
 
-void BeginUpdate(GrafPtr graf);
-void EndUpdate(GrafPtr graf);
+void BeginUpdate(WindowPtr graf);
+void EndUpdate(WindowPtr graf);
 
 OSErr GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags);
 OSErr PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite);

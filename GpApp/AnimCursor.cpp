@@ -221,7 +221,7 @@ void IncrementCursor (void)
 		}
 	}
 	else
-		SetCursor((CursPtr)*GetCursor(watchCursor));
+		SetBuiltinCursor(watchCursor);
 }
 
 //--------------------------------------------------------------  DecrementCursor
@@ -249,7 +249,7 @@ void DecrementCursor (void)
 		}
 	}
 	else
-		SetCursor((CursPtr)*GetCursor(watchCursor));
+		SetBuiltinCursor(watchCursor);
 }
 
 //--------------------------------------------------------------  SpinCursor

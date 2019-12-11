@@ -16,7 +16,7 @@
 
 
 #define	kNilPointer					0L
-#define	kPutInFront					(WindowPtr)-1L
+#define	kPutInFront					(PL_GetPutInFrontWindowPtr())
 #define	kNormalUpdates				TRUE
 #define kOneKilobyte				1024
 #define kOkayButton					1

@@ -227,7 +227,7 @@ void GetObjectRect (objectPtr who, Rect *itsRect)
 		else
 		{
 			HLock((Handle)thePict);
-			*itsRect = (*thePict)->picFrame;
+			*itsRect = (*thePict)->picFrame.ToRect();
 			HUnlock((Handle)thePict);
 		}
 		ZeroRectCorner(itsRect);

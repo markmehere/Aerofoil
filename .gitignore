@@ -2,6 +2,8 @@
 *.db
 *.opendb
 *.ipch
+*.iobj
+*.ipdb
 *.pch
 *.user
 *.mcp
