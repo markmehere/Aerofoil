@@ -21,5 +21,21 @@ x64\Release\hqx2gp.exe "GpApp2\Houses\SpacePods.binhex" "Packaged\Houses\SpacePo
 x64\Release\hqx2gp.exe "GpApp2\Houses\Teddy World.binhex" "Packaged\Houses\Teddy World"
 x64\Release\hqx2gp.exe "GpApp2\Houses\The Asylum Pro.binhex" "Packaged\Houses\The Asylum Pro"
 x64\Release\hqx2gp.exe "GpApp2\Houses\Titanic.binhex" "Packaged\Houses\Titanic"
-copy /Y "GpApp2\Houses\*.mov" "Packaged\Houses"
+
+x64\Release\FTagData.exe "GpApp2\Houses\Art Museum.mov", "Packaged\Houses\Art Museum.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Castle o' the Air.mov", "Packaged\Houses\Castle o' the Air.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\CD Demo House.mov", "Packaged\Houses\CD Demo House.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Davis Station.mov", "Packaged\Houses\Davis Station.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Demo House.mov", "Packaged\Houses\Demo House.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Grand Prix.mov", "Packaged\Houses\Grand Prix.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\ImagineHouse PRO II.mov", "Packaged\Houses\ImagineHouse PRO II.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Land of Illusion.mov", "Packaged\Houses\Land of Illusion.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Leviathan.mov", "Packaged\Houses\Leviathan.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Nemo's Market.mov", "Packaged\Houses\Nemo's Market.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Rainbow's End.mov", "Packaged\Houses\Rainbow's End.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Slumberland.mov", "Packaged\Houses\Slumberland.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\SpacePods.mov", "Packaged\Houses\SpacePods.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Teddy World.mov", "Packaged\Houses\Teddy World.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "GpApp2\Houses\Titanic.mov", "Packaged\Houses\Titanic.mov" MooV ozm5 0 0 locked
+
 pause

@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PictChecker", "PictChecker\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GpAudioDriver_XAudio2", "GpAudioDriver_XAudio2\GpAudioDriver_XAudio2.vcxproj", "{E3BDC783-8646-433E-ADF0-8B6390D36669}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FTagData", "FTagData\FTagData.vcxproj", "{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -91,6 +93,14 @@ Global
 		{E3BDC783-8646-433E-ADF0-8B6390D36669}.Release|x64.Build.0 = Release|x64
 		{E3BDC783-8646-433E-ADF0-8B6390D36669}.Release|x86.ActiveCfg = Release|Win32
 		{E3BDC783-8646-433E-ADF0-8B6390D36669}.Release|x86.Build.0 = Release|Win32
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Debug|x64.ActiveCfg = Debug|x64
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Debug|x64.Build.0 = Debug|x64
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Debug|x86.ActiveCfg = Debug|Win32
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Debug|x86.Build.0 = Debug|Win32
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Release|x64.ActiveCfg = Release|x64
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Release|x64.Build.0 = Release|x64
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Release|x86.ActiveCfg = Release|Win32
+		{A8FCDC5E-729C-4A80-BF9F-B669C52B2AE3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
