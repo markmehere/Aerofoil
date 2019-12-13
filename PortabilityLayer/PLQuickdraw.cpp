@@ -306,17 +306,12 @@ void FrameRoundRect(const Rect *rect, int w, int h)
 	PL_NotYetImplemented();
 }
 
-void PenMode(int mode)
+void PenMode(CopyBitsMode copyBitsMode)
 {
 	PL_NotYetImplemented();
 }
 
 void PenMode(PenModeID penMode)
-{
-	PL_NotYetImplemented();
-}
-
-void PenMode(CopyBitsMode copyBitsMode)
 {
 	PL_NotYetImplemented();
 }

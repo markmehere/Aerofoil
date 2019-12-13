@@ -2,10 +2,96 @@
 #include "GpFileStream_Win32.h"
 #include "GpWindows.h"
 #include "GpMemoryBuffer.h"
+#include "HostDirectoryCursor.h"
 
 #include <string>
 #include <Shlwapi.h>
 #include <ShlObj.h>
+#include <assert.h>
+
+class GpDirectoryCursor_Win32 final : public PortabilityLayer::HostDirectoryCursor
+{
+public:
+	static GpDirectoryCursor_Win32 *Create(const HANDLE &handle, const WIN32_FIND_DATAW &findData);
+
+	bool GetNext(const char *&outFileName) override;
+	void Destroy() override;
+
+private:
+	GpDirectoryCursor_Win32(const HANDLE &handle, const WIN32_FIND_DATAW &findData);
+	~GpDirectoryCursor_Win32();
+
+	HANDLE m_handle;
+	WIN32_FIND_DATAW m_findData;
+	char m_chars[MAX_PATH + 1];
+	bool m_haveNext;
+};
+
+GpDirectoryCursor_Win32 *GpDirectoryCursor_Win32::Create(const HANDLE &handle, const WIN32_FIND_DATAW &findData)
+{
+	void *storage = malloc(sizeof(GpDirectoryCursor_Win32));
+	if (!storage)
+		return nullptr;
+
+	return new (storage) GpDirectoryCursor_Win32(handle, findData);
+}
+
+bool GpDirectoryCursor_Win32::GetNext(const char *&outFileName)
+{
+	while (m_haveNext)
+	{
+		bool haveResult = false;
+
+		bool hasInvalidChars = false;
+		for (const wchar_t *fnameScan = m_findData.cFileName; *fnameScan; fnameScan++)
+		{
+			const int32_t asInt = static_cast<int32_t>(*fnameScan);
+			if (asInt < 1 || asInt >= 128)
+			{
+				hasInvalidChars = true;
+				break;
+			}
+		}
+
+		if (!hasInvalidChars && wcscmp(m_findData.cFileName, L".") && wcscmp(m_findData.cFileName, L".."))
+		{
+			const size_t len = wcslen(m_findData.cFileName);
+
+			haveResult = true;
+
+			for (size_t i = 0; i <= len; i++)
+				m_chars[i] = static_cast<char>(m_findData.cFileName[i]);
+		}
+
+		m_haveNext = (FindNextFileW(m_handle, &m_findData) != FALSE);
+
+		if (haveResult)
+		{
+			outFileName = m_chars;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void GpDirectoryCursor_Win32::Destroy()
+{
+	this->~GpDirectoryCursor_Win32();
+	free(this);
+}
+
+GpDirectoryCursor_Win32::GpDirectoryCursor_Win32(const HANDLE &handle, const WIN32_FIND_DATAW &findData)
+	: m_handle(handle)
+	, m_findData(findData)
+	, m_haveNext(true)
+{
+}
+
+GpDirectoryCursor_Win32::~GpDirectoryCursor_Win32()
+{
+	FindClose(m_handle);
+}
 
 GpFileSystem_Win32::GpFileSystem_Win32()
 {
@@ -54,6 +140,22 @@ PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::EVirt
 	return new GpFileStream_Win32(h, true, writeAccess, true);
 }
 
+PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(PortabilityLayer::EVirtualDirectory virtualDirectory)
+{
+	wchar_t winPath[MAX_PATH + 2];
+
+	if (!ResolvePath(virtualDirectory, "*", winPath))
+		return nullptr;
+
+	WIN32_FIND_DATAW findData;
+	HANDLE ff = FindFirstFileW(winPath, &findData);
+
+	if (ff == INVALID_HANDLE_VALUE)
+		return nullptr;
+
+	return GpDirectoryCursor_Win32::Create(ff, findData);
+}
+
 GpFileSystem_Win32 *GpFileSystem_Win32::GetInstance()
 {
 	return &ms_instance;
@@ -67,6 +169,9 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::EVirtualDirectory virtual
 	{
 	case PortabilityLayer::EVirtualDirectory_ApplicationData:
 		baseDir = L"D:\\Source Code\\GlidePort\\Packaged\\";
+		break;
+	case PortabilityLayer::EVirtualDirectory_GameData:
+		baseDir = L"D:\\Source Code\\GlidePort\\Packaged\\Houses\\";
 		break;
 	case PortabilityLayer::EVirtualDirectory_Prefs:
 		baseDir = m_prefsDir.c_str();

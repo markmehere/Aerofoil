@@ -2,6 +2,7 @@
 
 OSErr ResolveAliasFile(FSSpecPtr fsSpec, Boolean recursive, Boolean *outIsFolder, Boolean *outWasAliased)
 {
-	PL_NotYetImplemented();
+	*outIsFolder = PL_FALSE;
+	*outWasAliased = PL_FALSE;
 	return noErr;
 }

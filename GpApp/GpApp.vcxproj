@@ -182,6 +182,7 @@
     <ClCompile Include="SelectHouse.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="SoundSync_Win32.cpp" />
     <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="StructuresInit.cpp" />
     <ClCompile Include="StructuresInit2.cpp" />
@@ -197,6 +198,35 @@
     <ProjectReference Include="..\PortabilityLayer\PortabilityLayer.vcxproj">
       <Project>{6ec62b0f-9353-40a4-a510-3788f1368b33}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="About.h" />
+    <ClInclude Include="DialogUtils.h" />
+    <ClInclude Include="DynamicMaps.h" />
+    <ClInclude Include="Environ.h" />
+    <ClInclude Include="Externs.h" />
+    <ClInclude Include="GameOver.h" />
+    <ClInclude Include="GliderDefines.h" />
+    <ClInclude Include="GliderProtos.h" />
+    <ClInclude Include="GliderStructs.h" />
+    <ClInclude Include="GliderVars.h" />
+    <ClInclude Include="House.h" />
+    <ClInclude Include="MainWindow.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="Marquee.h" />
+    <ClInclude Include="ObjectEdit.h" />
+    <ClInclude Include="Objects.h" />
+    <ClInclude Include="Play.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Prefix.h" />
+    <ClInclude Include="RectUtils.h" />
+    <ClInclude Include="Room.h" />
+    <ClInclude Include="RoomGraphics.h" />
+    <ClInclude Include="RubberBands.h" />
+    <ClInclude Include="Scoreboard.h" />
+    <ClInclude Include="SoundSync.h" />
+    <ClInclude Include="Tools.h" />
+    <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

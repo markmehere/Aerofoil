@@ -1,11 +1,21 @@
 #include "PLResources.h"
 
+#include "HostFileSystem.h"
 #include "MemoryManager.h"
 #include "MMHandleBlock.h"
+#include "PLPasStr.h"
 #include "ResourceManager.h"
 #include "ResourceCompiledRef.h"
 
 #include <assert.h>
+
+struct PLOpenedResFile
+{
+	bool m_isOpen;
+};
+
+static const unsigned int kPLMaxOpenedResFiles = 64;
+static PLOpenedResFile gs_resFiles[kPLMaxOpenedResFiles];
 
 void DetachResource(Handle hdl)
 {
@@ -32,7 +42,7 @@ short CurResFile()
 
 void UseResFile(short fid)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::ResourceManager::GetInstance()->SetCurrentResFile(fid);
 }
 
 Handle Get1Resource(UInt32 resID, int index)
@@ -66,8 +76,9 @@ OSErr ResError()
 
 short FSpOpenResFile(const FSSpec *spec, int permission)
 {
-	PL_NotYetImplemented();
-	return 0;
+	PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
+
+	return rm->OpenResFork(static_cast<PortabilityLayer::EVirtualDirectory>(spec->parID), PLPasStr(spec->name));
 }
 
 void CloseResFile(short refNum)

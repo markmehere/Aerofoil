@@ -1,6 +1,5 @@
 #include "PLMenus.h"
 
-
 MenuHandle GetMenu(int resID)
 {
 	PL_NotYetImplemented();

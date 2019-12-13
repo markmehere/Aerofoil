@@ -15,6 +15,7 @@
 #include "Environ.h"
 #include "House.h"
 #include "RectUtils.h"
+#include "VirtualDirectory.h"
 
 
 #define kLoadHouseDialogID		1000
@@ -557,8 +558,6 @@ void SortHouseList (void)
 void DoDirSearch (void)
 {
 	#define		kMaxDirectories		32
-	CInfoPBRec	theBlock;
-	Str255		nameString;
 	long		theDirs[kMaxDirectories];
 	OSErr		theErr, notherErr;
 	short		count, i, currentDir, numDirs;
@@ -566,51 +565,32 @@ void DoDirSearch (void)
 	for (i = 0; i < kMaxDirectories; i++)
 		theDirs[i] = 0L;
 	currentDir = 0;
-	theDirs[currentDir] = thisMac.dirID;
+	theDirs[currentDir] = PortabilityLayer::EVirtualDirectory_GameData;
 	numDirs = 1;
-	
-	theBlock.hFileInfo.ioCompletion = nil;
-	theBlock.hFileInfo.ioVRefNum = thisMac.vRefNum;
-	theBlock.hFileInfo.ioNamePtr = nameString;
 	
 	while ((currentDir < numDirs) && (currentDir < kMaxDirectories))
 	{
 		count = 1;
 		theErr = noErr;
-		
-		while (theErr == noErr)
+
+		long dirID = theDirs[currentDir];
+
+		DirectoryFileListEntry *firstFile = GetDirectoryFiles(theDirs[currentDir]);
+
+		for (DirectoryFileListEntry *f = firstFile; f; f = f->nextEntry)
 		{
 			SpinCursor(1);
-			theBlock.hFileInfo.ioFDirIndex = count;
-			theBlock.hFileInfo.ioDirID = theDirs[currentDir];
-			theErr = PBGetCatInfo(&theBlock, false);
-			
-			if (theErr == noErr)
+
+			if ((f->finderInfo.fdType == 'gliH') && (f->finderInfo.fdCreator == 'ozm5') && (housesFound < maxFiles))
 			{
-				if ((theBlock.hFileInfo.ioFlAttrib & 0x10) == 0x00)
-				{
-					if ((theBlock.hFileInfo.ioFlFndrInfo.fdType == 'gliH') && 
-							(theBlock.hFileInfo.ioFlFndrInfo.fdCreator == 'ozm5') && 
-							(housesFound < maxFiles))
-					{
-						notherErr = FSMakeFSSpec(thisMac.vRefNum, 
-								theBlock.hFileInfo.ioFlParID, nameString, 
-								&theHousesSpecs[housesFound]);
-						if (notherErr == noErr)
-							housesFound++;
-					}
-				}
-				else if ((theBlock.hFileInfo.ioFlAttrib & 0x10) == 0x10)
-				{
-					if (numDirs < kMaxDirectories)
-					{
-						theDirs[numDirs] = theBlock.hFileInfo.ioDirID;
-						numDirs++;
-					}
-				}
-				count++;
+				notherErr = FSMakeFSSpec(thisMac.vRefNum, theDirs[currentDir], f->name, &theHousesSpecs[housesFound]);
+				if (notherErr == noErr)
+					housesFound++;
 			}
 		}
+
+		DisposeDirectoryFiles(firstFile);
+
 		currentDir++;
 	}
 	

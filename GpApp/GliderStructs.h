@@ -11,7 +11,7 @@
 typedef struct
 {
 	Point		topLeft;				// 4
-	short		distance;				// 2
+	int16_t		distance;				// 2
 	Boolean		initial;				// 1
 	Boolean		state;					// 1		              F. lf. dn. rt. up
 	Byte		vector;					// 1		| x | x | x | x | 8 | 4 | 2 | 1 |
@@ -21,14 +21,14 @@ typedef struct
 typedef struct
 {
 	Rect		bounds;					// 8
-	short		pict;					// 2
+	int16_t		pict;					// 2
 } furnitureType;						// total = 10
 
 typedef struct
 {
 	Point		topLeft;				// 4
-	short		length;					// 2 grease spill
-	short		points;					// 2 invis bonus
+	int16_t		length;					// 2 grease spill
+	int16_t		points;					// 2 invis bonus
 	Boolean		state;					// 1
 	Boolean		initial;				// 1
 } bonusType;							// total = 10
@@ -36,8 +36,8 @@ typedef struct
 typedef struct
 {
 	Point		topLeft;				// 4
-	short		tall;					// 2 invis transport
-	short		where;					// 2
+	int16_t		tall;					// 2 invis transport
+	int16_t		where;					// 2
 	Byte		who;					// 1
 	Byte		wide;					// 1
 } transportType;						// total = 10
@@ -45,8 +45,8 @@ typedef struct
 typedef struct
 {
 	Point		topLeft;				// 4
-	short		delay;					// 2
-	short		where;					// 2
+	int16_t		delay;					// 2
+	int16_t		where;					// 2
 	Byte		who;					// 1
 	Byte		type;					// 1
 } switchType;							// total = 10
@@ -54,7 +54,7 @@ typedef struct
 typedef struct
 {
 	Point		topLeft;				// 4
-	short		length;					// 2
+	int16_t		length;					// 2
 	Byte		byte0;					// 1
 	Byte		byte1;					// 1
 	Boolean		initial;				// 1
@@ -64,7 +64,7 @@ typedef struct
 typedef struct
 {
 	Point		topLeft;				// 4
-	short		height;					// 2 toaster, pict ID
+	int16_t		height;					// 2 toaster, pict ID
 	Byte		byte0;					// 1
 	Byte		delay;					// 1
 	Boolean		initial;				// 1
@@ -74,7 +74,7 @@ typedef struct
 typedef struct
 {
 	Point		topLeft;					// 4
-	short		length;						// 2
+	int16_t		length;						// 2
 	Byte		delay;						// 1
 	Byte		byte0;						// 1
 	Boolean		initial;					// 1
@@ -84,12 +84,12 @@ typedef struct
 typedef struct
 {
 	Rect		bounds;						// 8
-	short		pict;						// 2
+	int16_t		pict;						// 2
 } clutterType;								// total = 10
 
 typedef struct
 {
-	short		what;						// 2
+	int16_t		what;						// 2
 	union
 	{
 		blowerType		a;
@@ -110,25 +110,25 @@ typedef struct
 	Str15			names[kMaxScores];		// 16 * 10	= 160
 	Int32			scores[kMaxScores];		// 4 * 10	= 40
 	UInt32			timeStamps[kMaxScores];	// 4 * 10	= 40
-	short			levels[kMaxScores];		// 2 * 10	= 20
+	int16_t			levels[kMaxScores];		// 2 * 10	= 20
 } scoresType;								// total 	= 292
 
 typedef struct
 {
-	short		version;					// 2
-	short		wasStarsLeft;				// 2
+	int16_t		version;					// 2
+	int16_t		wasStarsLeft;				// 2
 	UInt32		timeStamp;					// 4
 	Point		where;						// 4
 	Int32		score;						// 4
 	Int32		unusedLong;					// 4
 	Int32		unusedLong2;				// 4
-	short		energy;						// 2
-	short		bands;						// 2
-	short		roomNumber;					// 2
-	short		gliderState;				// 2
-	short		numGliders;					// 2
-	short		foil;						// 2
-	short		unusedShort;				// 2
+	int16_t		energy;						// 2
+	int16_t		bands;						// 2
+	int16_t		roomNumber;					// 2
+	int16_t		gliderState;				// 2
+	int16_t		numGliders;					// 2
+	int16_t		foil;						// 2
+	int16_t		unusedShort;				// 2
 	Boolean		facing;						// 1
 	Boolean		showFoil;					// 1
 } gameType;									// total = 40
@@ -166,25 +166,25 @@ typedef struct
 typedef struct
 {
 	Str27		name;						// 28
-	short		bounds;						// 2
+	int16_t		bounds;						// 2
 	Byte		leftStart;					// 1
 	Byte		rightStart;					// 1
 	Byte		unusedByte;					// 1
 	Boolean		visited;					// 1
-	short		background;					// 2
-	short		tiles[kNumTiles];			// 2 * 8
-	short		floor, suite;				// 2 + 2
-	short		openings;					// 2
-	short		numObjects;					// 2
+	int16_t		background;					// 2
+	int16_t		tiles[kNumTiles];			// 2 * 8
+	int16_t		floor, suite;				// 2 + 2
+	int16_t		openings;					// 2
+	int16_t		numObjects;					// 2
 	objectType	objects[kMaxRoomObs];		// 24 * 12
 } roomType, *roomPtr;						// total = 348
 
 typedef struct
 {
-	short		version;					// 2
-	short		unusedShort;				// 2
-	long		timeStamp;					// 4
-	long		flags;						// 4 (bit 0 = wardBit)
+	int16_t		version;					// 2
+	int16_t		unusedShort;				// 2
+	int32_t		timeStamp;					// 4
+	int32_t		flags;						// 4 (bit 0 = wardBit)
 	Point		initial;					// 4
 	Str255		banner;						// 256
 	Str255		trailer;					// 256
@@ -192,8 +192,8 @@ typedef struct
 	gameType	savedGame;					// 40
 	Boolean		hasGame;					// 1
 	Boolean		unusedBoolean;				// 1
-	short		firstRoom;					// 2
-	short		nRooms;						// 2
+	int16_t		firstRoom;					// 2
+	int16_t		nRooms;						// 2
 	roomType	rooms[1];					// 348 * nRooms
 } houseType, *housePtr, **houseHand;		// total = 866 +
 

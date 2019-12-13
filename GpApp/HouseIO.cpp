@@ -313,6 +313,302 @@ Boolean SaveHouseAs (void)
 // With a house open, this function reads in the actual bits of dataÉ
 // into memory.
 
+void ByteSwapPoint(Point *point)
+{
+	PortabilityLayer::ByteSwap::BigInt16(point->h);
+	PortabilityLayer::ByteSwap::BigInt16(point->v);
+}
+
+void ByteSwapRect(Rect *rect)
+{
+	PortabilityLayer::ByteSwap::BigInt16(rect->top);
+	PortabilityLayer::ByteSwap::BigInt16(rect->left);
+	PortabilityLayer::ByteSwap::BigInt16(rect->bottom);
+	PortabilityLayer::ByteSwap::BigInt16(rect->right);
+}
+
+void ByteSwapScores(scoresType *scores)
+{
+	for (int i = 0; i < kMaxScores; i++)
+		PortabilityLayer::ByteSwap::BigInt32(scores->scores[i]);
+
+	for (int i = 0; i < kMaxScores; i++)
+		PortabilityLayer::ByteSwap::BigUInt32(scores->timeStamps[i]);
+
+	for (int i = 0; i < kMaxScores; i++)
+		PortabilityLayer::ByteSwap::BigInt16(scores->levels[i]);
+}
+
+void ByteSwapSavedGame(gameType *game)
+{
+	PortabilityLayer::ByteSwap::BigInt16(game->version);
+	PortabilityLayer::ByteSwap::BigInt16(game->wasStarsLeft);
+	PortabilityLayer::ByteSwap::BigUInt32(game->timeStamp);
+	ByteSwapPoint(&game->where);
+	PortabilityLayer::ByteSwap::BigInt32(game->score);
+	PortabilityLayer::ByteSwap::BigInt32(game->unusedLong);
+	PortabilityLayer::ByteSwap::BigInt32(game->unusedLong2);
+	PortabilityLayer::ByteSwap::BigInt16(game->energy);
+	PortabilityLayer::ByteSwap::BigInt16(game->bands);
+
+	PortabilityLayer::ByteSwap::BigInt16(game->roomNumber);
+	PortabilityLayer::ByteSwap::BigInt16(game->gliderState);
+	PortabilityLayer::ByteSwap::BigInt16(game->numGliders);
+	PortabilityLayer::ByteSwap::BigInt16(game->foil);
+	PortabilityLayer::ByteSwap::BigInt16(game->unusedShort);
+}
+
+void ByteSwapBlower(blowerType *blower)
+{
+	ByteSwapPoint(&blower->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(blower->distance);
+}
+
+void ByteSwapFurniture(furnitureType *furniture)
+{
+	ByteSwapRect(&furniture->bounds);
+	PortabilityLayer::ByteSwap::BigInt16(furniture->pict);
+}
+
+void ByteSwapBonus(bonusType *bonus)
+{
+	ByteSwapPoint(&bonus->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(bonus->length);
+	PortabilityLayer::ByteSwap::BigInt16(bonus->points);
+}
+
+void ByteSwapTransport(transportType *transport)
+{
+	ByteSwapPoint(&transport->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(transport->tall);
+	PortabilityLayer::ByteSwap::BigInt16(transport->where);
+}
+
+void ByteSwapSwitch(switchType *sw)
+{
+	ByteSwapPoint(&sw->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(sw->delay);
+	PortabilityLayer::ByteSwap::BigInt16(sw->where);
+}
+
+void ByteSwapLight(lightType *light)
+{
+	ByteSwapPoint(&light->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(light->length);
+}
+
+void ByteSwapAppliance(applianceType *appliance)
+{
+	ByteSwapPoint(&appliance->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(appliance->height);
+}
+
+void ByteSwapEnemy(enemyType *enemy)
+{
+	ByteSwapPoint(&enemy->topLeft);
+	PortabilityLayer::ByteSwap::BigInt16(enemy->length);
+}
+
+void ByteSwapClutter(clutterType *clutter)
+{
+	ByteSwapRect(&clutter->bounds);
+	PortabilityLayer::ByteSwap::BigInt16(clutter->pict);
+}
+
+void ByteSwapObject(objectType *obj)
+{
+	PortabilityLayer::ByteSwap::BigInt16(obj->what);
+
+	switch (obj->what)
+	{
+	case kFloorVent:
+	case kCeilingVent:
+	case kFloorBlower:
+	case kCeilingBlower:
+	case kSewerGrate:
+	case kLeftFan:
+	case kRightFan:
+	case kTaper:
+	case kCandle:
+	case kStubby:
+	case kTiki:
+	case kBBQ:
+	case kInvisBlower:
+	case kGrecoVent:
+	case kSewerBlower:
+	case kLiftArea:
+		ByteSwapBlower(&obj->data.a);
+		break;
+
+	case kTable:
+	case kShelf:
+	case kCabinet:
+	case kFilingCabinet:
+	case kWasteBasket:
+	case kMilkCrate:
+	case kCounter:
+	case kDresser:
+	case kDeckTable:
+	case kStool:
+	case kTrunk:
+	case kInvisObstacle:
+	case kManhole:
+	case kBooks:
+	case kInvisBounce:
+		ByteSwapFurniture(&obj->data.b);
+		break;
+
+	case kRedClock:
+	case kBlueClock:
+	case kYellowClock:
+	case kCuckoo:
+	case kPaper:
+	case kBattery:
+	case kBands:
+	case kGreaseRt:
+	case kGreaseLf:
+	case kFoil:
+	case kInvisBonus:
+	case kStar:
+	case kSparkle:
+	case kHelium:
+	case kSlider:
+		ByteSwapBonus(&obj->data.c);
+		break;
+
+	case kUpStairs:
+	case kDownStairs:
+	case kMailboxLf:
+	case kMailboxRt:
+	case kFloorTrans:
+	case kCeilingTrans:
+	case kDoorInLf:
+	case kDoorInRt:
+	case kDoorExRt:
+	case kDoorExLf:
+	case kWindowInLf:
+	case kWindowInRt:
+	case kWindowExRt:
+	case kWindowExLf:
+	case kInvisTrans:
+	case kDeluxeTrans:
+		ByteSwapTransport(&obj->data.d);
+		break;
+
+	case kLightSwitch:
+	case kMachineSwitch:
+	case kThermostat:
+	case kPowerSwitch:
+	case kKnifeSwitch:
+	case kInvisSwitch:
+	case kTrigger:
+	case kLgTrigger:
+	case kSoundTrigger:
+		ByteSwapSwitch(&obj->data.e);
+		break;
+
+	case kCeilingLight:
+	case kLightBulb:
+	case kTableLamp:
+	case kHipLamp:
+	case kDecoLamp:
+	case kFlourescent:
+	case kTrackLight:
+	case kInvisLight:
+		ByteSwapLight(&obj->data.f);
+		break;
+
+	case kShredder:
+	case kToaster:
+	case kMacPlus:
+	case kGuitar:
+	case kTV:
+	case kCoffee:
+	case kOutlet:
+	case kVCR:
+	case kStereo:
+	case kMicrowave:
+	case kCinderBlock:
+	case kFlowerBox:
+	case kCDs:
+	case kCustomPict:
+		ByteSwapAppliance(&obj->data.g);
+		break;
+
+	case kBalloon:
+	case kCopterLf:
+	case kCopterRt:
+	case kDartLf:
+	case kDartRt:
+	case kBall:
+	case kDrip:
+	case kFish:
+	case kCobweb:
+		ByteSwapEnemy(&obj->data.h);
+		break;
+
+	case kOzma:
+	case kMirror:
+	case kMousehole:
+	case kFireplace:
+	case kFlower:
+	case kWallWindow:
+	case kBear:
+	case kCalendar:
+	case kVase1:
+	case kVase2:
+	case kBulletin:
+	case kCloud:
+	case kFaucet:
+	case kRug:
+	case kChimes:
+		ByteSwapClutter(&obj->data.i);
+		break;
+	default:
+		break;
+	};
+}
+
+void ByteSwapRoom(roomType *room)
+{
+	PortabilityLayer::ByteSwap::BigInt16(room->bounds);
+
+	PortabilityLayer::ByteSwap::BigInt16(room->background);
+
+	for (int i = 0; i < kNumTiles; i++)
+		PortabilityLayer::ByteSwap::BigInt16(room->tiles[i]);
+
+	PortabilityLayer::ByteSwap::BigInt16(room->floor);
+	PortabilityLayer::ByteSwap::BigInt16(room->suite);
+	PortabilityLayer::ByteSwap::BigInt16(room->openings);
+	PortabilityLayer::ByteSwap::BigInt16(room->numObjects);
+	for (int i = 0; i < kMaxRoomObs; i++)
+		ByteSwapObject(room->objects + i);
+}
+
+bool ByteSwapHouse(housePtr house, size_t sizeInBytes)
+{
+	PortabilityLayer::ByteSwap::BigInt16(house->version);
+	PortabilityLayer::ByteSwap::BigInt16(house->unusedShort);
+	PortabilityLayer::ByteSwap::BigInt32(house->timeStamp);
+	PortabilityLayer::ByteSwap::BigInt32(house->flags);
+	ByteSwapPoint(&house->initial);
+	ByteSwapScores(&house->highScores);
+	ByteSwapSavedGame(&house->savedGame);
+	PortabilityLayer::ByteSwap::BigInt16(house->firstRoom);
+	PortabilityLayer::ByteSwap::BigInt16(house->nRooms);
+
+	const size_t roomDataSize = sizeInBytes + sizeof(roomType) - sizeof(houseType);
+	if (house->nRooms < 1 || roomDataSize / sizeof(roomType) < static_cast<size_t>(house->nRooms))
+		return false;
+
+	const size_t nRooms = static_cast<size_t>(house->nRooms);
+	for (size_t i = 0; i < nRooms; i++)
+		ByteSwapRoom(house->rooms + i);
+
+	return true;
+}
+
 Boolean ReadHouse (void)
 {
 	long		byteCount;
@@ -377,6 +673,8 @@ Boolean ReadHouse (void)
 		HUnlock((Handle)thisHouse);
 		return(false);
 	}
+
+	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 	
 	numberRooms = (*thisHouse)->nRooms;
 	#ifdef COMPILEDEMO
@@ -451,6 +749,8 @@ Boolean WriteHouse (Boolean checkIt)
 	UInt32			timeStamp;
 	long			byteCount;
 	OSErr			theErr;
+
+	PL_NotYetImplemented();
 	
 	if (!houseOpen)
 	{
@@ -488,7 +788,9 @@ Boolean WriteHouse (Boolean checkIt)
 		(*thisHouse)->timeStamp = (long)timeStamp;
 		(*thisHouse)->version = wasHouseVersion;
 	}
-	
+
+	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+
 	theErr = FSWrite(houseRefNum, &byteCount, *thisHouse);
 	if (theErr != noErr)
 	{
@@ -497,6 +799,8 @@ Boolean WriteHouse (Boolean checkIt)
 		return(false);
 	}
 	
+	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+
 	theErr = SetEOF(houseRefNum, byteCount);
 	if (theErr != noErr)
 	{

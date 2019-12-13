@@ -20,6 +20,8 @@ namespace PortabilityLayer
 
 		int OpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, short *outRefNum) override;
 		int OpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, short *outRefNum) override;
+		bool ReadFileProperties(uint32_t dirID, const PLPasStr &filename, MacFileProperties &properties) override;
+		IOStream *GetFileStream(int fileID) override;
 
 		int RawOpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream **outStream) override;
 		int RawOpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream **outStream) override;
@@ -66,6 +68,28 @@ namespace PortabilityLayer
 		return OpenFileFork(dirID, filename, ".gpr", permission, outRefNum);
 	}
 
+	bool FileManagerImpl::ReadFileProperties(uint32_t dirID, const PLPasStr &filename, MacFileProperties &properties)
+	{
+		IOStream *stream = nullptr;
+		int err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Read, true, &stream);
+		if (err)
+			return false;
+
+		MacFilePropertiesSerialized serialized;
+		bool readOk = (stream->Read(serialized.m_data, MacFilePropertiesSerialized::kSize) == MacFilePropertiesSerialized::kSize);
+		stream->Close();
+
+		if (readOk)
+			serialized.Deserialize(properties);
+
+		return readOk;
+	}
+
+	IOStream *FileManagerImpl::GetFileStream(int fileID)
+	{
+		return m_refs[fileID].m_stream;
+	}
+
 	int FileManagerImpl::RawOpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream **outStream)
 	{
 		return RawOpenFileFork(dirID, filename, ".gpd", permission, ignoreMeta, outStream);
@@ -94,7 +118,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		if (refIndex == 0x7fff)
+		if (refIndex == 0x8000)
 			return tmfoErr;
 
 		IOStream *stream = nullptr;
@@ -110,7 +134,7 @@ namespace PortabilityLayer
 		of.m_dirID = static_cast<EVirtualDirectory>(dirID);
 		of.m_fileName.Set(filename.Length(), filename.Chars());
 
-		*outRefNum = static_cast<short>(refIndex + 1);
+		*outRefNum = static_cast<short>(refIndex);
 
 		return noErr;
 	}
@@ -132,10 +156,10 @@ namespace PortabilityLayer
 				return fnfErr;
 		}
 
-		const bool needToCreate = !(ignoreMeta || HostFileSystem::GetInstance()->FileExists(static_cast<EVirtualDirectory>(dirID), extFN));
-
 		if (!ConstructFilename(extFN, filename, ext))
 			return bdNamErr;
+
+		const bool needToCreate = !(ignoreMeta || HostFileSystem::GetInstance()->FileExists(static_cast<EVirtualDirectory>(dirID), extFN));
 
 		IOStream *fstream = nullptr;
 		switch (permission)
@@ -180,7 +204,7 @@ namespace PortabilityLayer
 			if (c >= '0' && c <= '9')
 				continue;
 
-			if (c == '_')
+			if (c == '_' || c == '.' || c == '\'')
 				continue;
 
 			if (c == ' ' && i != 0 && i != fnameSize - 1)

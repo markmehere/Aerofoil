@@ -446,9 +446,7 @@ void DoSettingsMain (void);								// --- Settings.c
 
 void PlayPrioritySound (SInt16, SInt16);					// --- Sound.c
 void FlushAnyTriggerPlaying (void);
-void PlaySound0 (SInt16, SInt16);
-void PlaySound1 (SInt16, SInt16);
-void PlaySound2 (SInt16, SInt16);
+void PlayExclusiveSoundChannel (SInt16, SInt16, SInt16, SInt16);
 OSErr LoadTriggerSound (SInt16);
 void DumpTriggerSound (void);
 void InitSound (void);

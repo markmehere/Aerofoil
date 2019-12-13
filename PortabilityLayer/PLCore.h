@@ -51,7 +51,7 @@ struct FileInfoBlock
 	void *ioCompletion;
 	short ioVRefNum;	// Volume ref num
 	StringPtr ioNamePtr;
-	int ioFDirIndex;	// Index (1-based!)
+	int ioFDirIndex;	// Index: If >0, Nth directory in ioVRefNum.  If 0, lookup by name.  If <0, do behavior that we don't support.
 	long ioDirID;		// Input: Directory ID   Output: File ID
 	int ioFlAttrib;		// File attributes
 	FinderInfoBlock ioFlFndrInfo;
@@ -72,6 +72,13 @@ struct CInfoPBRec
 {
 	FileInfoBlock hFileInfo;
 	DirInfoBlock dirInfo;
+};
+
+struct DirectoryFileListEntry
+{
+	FinderInfoBlock finderInfo;
+	Str32 name;
+	DirectoryFileListEntry *nextEntry;
 };
 
 struct Cursor
@@ -324,6 +331,7 @@ OSErr FSMakeFSSpec(int refNum, long dirID, const PLPasStr &fileName, FSSpec *spe
 OSErr FSpCreate(const FSSpec *spec, UInt32 creator, UInt32 fileType, ScriptCode scriptTag);
 OSErr FSpDirCreate(const FSSpec *spec, ScriptCode script, long *outDirID);
 OSErr FSpOpenDF(const FSSpec *spec, int permission, short *refNum);
+OSErr FSpOpenRF(const FSSpec *spec, int permission, short *refNum);
 OSErr FSWrite(short refNum, long *byteCount, const void *data);
 OSErr FSRead(short refNum, long *byteCount, void *data);
 OSErr FSpDelete(const FSSpec *spec);
@@ -333,6 +341,9 @@ OSErr GetEOF(short refNum, long *byteCount);
 OSErr SetEOF(short refNum, long byteCount);
 
 OSErr PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async);
+
+DirectoryFileListEntry *GetDirectoryFiles(long dirID);
+void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL);
 
 short StringWidth(const PLPasStr &str);
 
@@ -393,6 +404,7 @@ WindowPtr PL_GetPutInFrontWindowPtr();
 
 void PL_NotYetImplemented();
 void PL_NotYetImplemented_Minor();
+void PL_NotYetImplemented_TODO();
 void PL_Init();
 
 

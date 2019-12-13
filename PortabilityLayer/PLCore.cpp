@@ -6,11 +6,14 @@
 #include "DisplayDeviceManager.h"
 #include "FileManager.h"
 #include "FilePermission.h"
+#include "HostDirectoryCursor.h"
+#include "HostFileSystem.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
 #include "ResourceManager.h"
+#include "MacFileInfo.h"
 #include "MemoryManager.h"
 #include "MemReaderStream.h"
 #include "MMHandleBlock.h"
@@ -22,6 +25,29 @@
 #include "WindowManager.h"
 
 #include <assert.h>
+
+static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
+{
+	const char *strBase = str;
+	while (*str)
+	{
+		const char c = *str++;
+
+		if (c == '.' || c == ' ' || c == '_' || c == '\'' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+			continue;
+		else
+			return false;
+	}
+
+	ptrdiff_t len = str - strBase;
+	if (len > 31)
+		return false;
+
+	memcpy(pstr + 1, strBase, static_cast<size_t>(len));
+	pstr[0] = static_cast<uint8_t>(len);
+
+	return true;
+}
 
 void InitCursor()
 {
@@ -414,7 +440,11 @@ OSErr FSWrite(short refNum, long *byteCount, const void *data)
 
 OSErr FSRead(short refNum, long *byteCount, void *data)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::IOStream *stream = PortabilityLayer::FileManager::GetInstance()->GetFileStream(refNum);
+
+	const size_t bytesRead = stream->Read(data, static_cast<size_t>(*byteCount));
+	*byteCount = static_cast<long>(bytesRead);
+
 	return noErr;
 }
 
@@ -426,19 +456,35 @@ OSErr FSpDelete(const FSSpec *spec)
 
 OSErr FSpGetFInfo(const FSSpec *spec, FInfo *finfo)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::MacFileProperties mfp;
+	if (!PortabilityLayer::FileManager::GetInstance()->ReadFileProperties(static_cast<uint32_t>(spec->parID), spec->name, mfp))
+		return fnfErr;
+
+	finfo->fdType = PortabilityLayer::ResTypeIDCodec::Decode(mfp.m_fileType);
+
 	return noErr;
 }
 
 OSErr SetFPos(short refNum, SetFPosWhere where, long offset)
 {
-	PL_NotYetImplemented();
+	switch (where)
+	{
+	case fsFromStart:
+		if (!PortabilityLayer::FileManager::GetInstance()->GetFileStream(refNum)->SeekStart(static_cast<PortabilityLayer::UFilePos_t>(offset)))
+			return ioErr;
+		break;
+	default:
+		return genericErr;
+	}
+
 	return noErr;
 }
 
 OSErr GetEOF(short refNum, long *byteCount)
 {
-	PL_NotYetImplemented();
+	const PortabilityLayer::UFilePos_t fileSize = PortabilityLayer::FileManager::GetInstance()->GetFileStream(refNum)->Size();
+
+	*byteCount = static_cast<long>(fileSize);
 	return noErr;
 }
 
@@ -452,6 +498,95 @@ OSErr PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async)
 {
 	PL_NotYetImplemented();
 	return noErr;
+}
+
+DirectoryFileListEntry *GetDirectoryFiles(long dirID)
+{
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+	PortabilityLayer::HostFileSystem *fs = PortabilityLayer::HostFileSystem::GetInstance();
+	PortabilityLayer::HostDirectoryCursor *dirCursor = fs->ScanDirectory(static_cast<PortabilityLayer::EVirtualDirectory>(dirID));
+
+	DirectoryFileListEntry *firstDFL = nullptr;
+	DirectoryFileListEntry *lastDFL = nullptr;
+
+	if (!dirCursor)
+		return nullptr;
+
+	const char *filename;
+	char fnCopy[256];
+	while (dirCursor->GetNext(filename))
+	{
+		const size_t fnLen = strlen(filename);
+		if (fnLen < 5 || fnLen > 255)
+			continue;
+
+		memcpy(fnCopy, filename, fnLen + 1);
+
+		if (!strcmp(&filename[fnLen - 4], ".gpf"))
+		{
+			const size_t dotPos = fnLen - 4;
+			PortabilityLayer::IOStream *stream = fs->OpenFile(static_cast<PortabilityLayer::EVirtualDirectory>(dirID), filename, false, false);
+			if (!stream)
+				continue;
+
+			PortabilityLayer::MacFileProperties mfp;
+			PortabilityLayer::MacFilePropertiesSerialized mfs;
+
+			const size_t gpfSize = stream->Read(mfs.m_data, PortabilityLayer::MacFilePropertiesSerialized::kSize);
+			stream->Close();
+
+			if (gpfSize != PortabilityLayer::MacFilePropertiesSerialized::kSize)
+				continue;
+
+			mfs.Deserialize(mfp);
+
+			fnCopy[dotPos] = '\0';
+
+			DirectoryFileListEntry tempDFL;
+			tempDFL.finderInfo.fdType = PortabilityLayer::ResTypeIDCodec::Decode(mfp.m_fileType);
+			tempDFL.finderInfo.fdCreator = PortabilityLayer::ResTypeIDCodec::Decode(mfp.m_fileCreator);
+			tempDFL.nextEntry = nullptr;
+			if (!ConvertFilenameToSafePStr(fnCopy, tempDFL.name))
+				continue;
+
+			DirectoryFileListEntry *dfl = static_cast<DirectoryFileListEntry*>(mm->Alloc(sizeof(DirectoryFileListEntry)));
+			if (!dfl)
+			{
+				if (firstDFL)
+					DisposeDirectoryFiles(firstDFL);
+
+				return nullptr;
+			}
+
+			new (dfl) DirectoryFileListEntry(tempDFL);
+
+			dfl->nextEntry = nullptr;
+
+			if (lastDFL)
+				lastDFL->nextEntry = dfl;
+			else
+				firstDFL = dfl;
+
+			lastDFL = dfl;
+		}
+	}
+
+	dirCursor->Destroy();
+
+	return firstDFL;
+}
+
+void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL)
+{
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+	DirectoryFileListEntry *dfl = firstDFL;
+	while (dfl)
+	{
+		DirectoryFileListEntry *nextDFL = dfl->nextEntry;
+		mm->Release(dfl);
+		dfl = nextDFL;
+	}
 }
 
 short StringWidth(const PLPasStr &str)
@@ -621,12 +756,10 @@ void PurgeSpace(long *totalFree, long *contiguousFree)
 
 void HSetState(Handle handle, char state)
 {
-	PL_NotYetImplemented();
 }
 
 char HGetState(Handle handle)
 {
-	PL_NotYetImplemented();
 	return 0;
 }
 
@@ -668,6 +801,10 @@ void PL_NotYetImplemented()
 }
 
 void PL_NotYetImplemented_Minor()
+{
+}
+
+void PL_NotYetImplemented_TODO()
 {
 }
 

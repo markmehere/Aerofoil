@@ -191,7 +191,8 @@ Boolean DoWeHaveSoundManager3 (void)
 
 Boolean DoWeHaveQuickTime (void)
 {
-	return true;
+	PL_NotYetImplemented_TODO();
+	return false;
 }
 
 //--------------------------------------------------------------  DoWeHaveDragManager

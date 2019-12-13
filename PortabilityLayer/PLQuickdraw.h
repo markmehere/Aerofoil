@@ -55,17 +55,16 @@ enum SystemFontID
 	mobile = 24,
 };
 
-// wtf?
 enum SystemColorID
 {
-	whiteColor = 30,
-	blackColor = 33,
-	yellowColor = 69,
-	magentaColor = 137,
-	redColor = 205,
-	cyanColor = 273,
-	greenColor = 341,
-	blueColor = 409,
+	whiteColor = 1,
+	blackColor,
+	yellowColor,
+	magentaColor,
+	redColor,
+	cyanColor,
+	greenColor,
+	blueColor,
 };
 
 enum CopyBitsMode
@@ -73,29 +72,13 @@ enum CopyBitsMode
 	srcCopy,
 	srcOr,
 	srcXor,
-	srcBic,
-	notSrcCopy,
-	notSrcOr,
-	notSrcXor,
-	notSrcBic,
-	transparent
+	transparent,
 };
 
 enum PenModeID
 {
-	patCopy = 8,
-	patOr,
+	patOr = transparent + 1,
 	patXor,
-	patBic,
-	notPatCopy,
-	notPatOr,
-	notPatXor,
-	notPatBic,
-};
-
-enum HiliteMode
-{
-	hilite = 50,
 };
 
 struct CIcon
@@ -165,7 +148,8 @@ void ClipRect(const Rect *rect);	// Sets the clipping area
 void FrameRect(const Rect *rect);
 void FrameOval(const Rect *rect);
 void FrameRoundRect(const Rect *rect, int w, int h);
-void PenMode(int mode);	// Can be CopyBitsMode, PenModeID, and possibly add "50" to hilite
+void PenMode(CopyBitsMode copyBitsMode);
+void PenMode(PenModeID mode);
 void PenPat(const Pattern *pattern);
 void PenSize(int w, int h);
 void PenNormal();

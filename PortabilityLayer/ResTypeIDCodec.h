@@ -16,7 +16,7 @@ namespace PortabilityLayer
 	{
 	public:
 		static void Encode(int32_t id, char *chars);
-		static int32_t Decode(char *chars);
+		static int32_t Decode(const char *chars);
 	};
 
 	template<>
@@ -24,7 +24,7 @@ namespace PortabilityLayer
 	{
 	public:
 		static void Encode(int32_t id, char *chars);
-		static int32_t Decode(char *chars);
+		static int32_t Decode(const char *chars);
 	};
 
 	typedef ResTypeIDCodecResolver<'abcd'> ResTypeIDCodec;
@@ -40,7 +40,7 @@ namespace PortabilityLayer
 		chars[3] = static_cast<char>((id >> 24) & 0xff);
 	}
 
-	inline int32_t ResTypeIDCodecResolver<0x64636261>::Decode(char *chars)
+	inline int32_t ResTypeIDCodecResolver<0x64636261>::Decode(const char *chars)
 	{
 		return static_cast<int32_t>(
 			((chars[0] & 0xff) << 0)
@@ -57,7 +57,7 @@ namespace PortabilityLayer
 		chars[3] = static_cast<char>((id >> 0) & 0xff);
 	}
 
-	inline int32_t ResTypeIDCodecResolver<0x61626364>::Decode(char *chars)
+	inline int32_t ResTypeIDCodecResolver<0x61626364>::Decode(const char *chars)
 	{
 		return static_cast<int32_t>(
 			((chars[0] & 0xff) << 24)

@@ -9,11 +9,11 @@
 #include "PLResources.h"
 #include "PLSound.h"
 #include "Externs.h"
+#include "SoundSync.h"
 
 
 #define kBaseBufferSoundID			1000
 #define kMaxSounds					64
-#define kNoSoundPlaying				-1
 
 
 void CallBack0 (SndChannelPtr, SndCommand *);
@@ -28,11 +28,9 @@ OSErr CloseSoundChannels (void);
 SndCallBackUPP		callBack0UPP, callBack1UPP, callBack2UPP;
 SndChannelPtr		channel0, channel1, channel2;
 Ptr					theSoundData[kMaxSounds];
-short				numSoundsLoaded, priority0, priority1, priority2;
-short				soundPlaying0, soundPlaying1, soundPlaying2;
+short				numSoundsLoaded;
 Boolean				soundLoaded[kMaxSounds], dontLoadSounds;
 Boolean				channelOpen, isSoundOn, failedSound;
-
 
 //==============================================================  Functions
 //--------------------------------------------------------------  PlayPrioritySound
@@ -43,44 +41,33 @@ void PlayPrioritySound (short which, short priority)
 	
 	if (failedSound || dontLoadSounds)
 		return;
+
+	SoundSyncState ss = SoundSync_ReadAll();
 	
 	if ((priority == kTriggerPriority) && 
-			((priority0 == kTriggerPriority) || 
-			((priority1 == kTriggerPriority)) || 
-			((priority2 == kTriggerPriority))))
+			((ss.priority0 == kTriggerPriority) ||
+			((ss.priority1 == kTriggerPriority)) ||
+			((ss.priority2 == kTriggerPriority))))
 		return;
 	
 	whosLowest = 0;
-	lowestPriority = priority0;
+	lowestPriority = ss.priority0;
 	
-	if (priority1 < lowestPriority)
+	if (ss.priority1 < lowestPriority)
 	{
-		lowestPriority = priority1;
+		lowestPriority = ss.priority1;
 		whosLowest = 1;
 	}
 	
-	if (priority2 < lowestPriority)
+	if (ss.priority2 < lowestPriority)
 	{
-		lowestPriority = priority2;
+		lowestPriority = ss.priority2;
 		whosLowest = 2;
 	}
 	
 	if (priority >= lowestPriority)
 	{
-		switch (whosLowest)
-		{
-			case 0:
-			PlaySound0(which, priority);
-			break;
-			
-			case 1:
-			PlaySound1(which, priority);
-			break;
-			
-			case 2:
-			PlaySound2(which, priority);
-			break;
-		}
+		PlayExclusiveSoundChannel(whosLowest, which, lowestPriority, priority);
 	}
 }
 
@@ -90,8 +77,10 @@ void FlushAnyTriggerPlaying (void)
 {
 	SndCommand	theCommand;
 	OSErr		theErr;
+
+	SoundSyncState ss = SoundSync_ReadAll();
 	
-	if (priority0 == kTriggerPriority)
+	if (ss.priority0 == kTriggerPriority)
 	{
 		theCommand.cmd = quietCmd;
 		theCommand.param1 = 0;
@@ -103,7 +92,7 @@ void FlushAnyTriggerPlaying (void)
 		theErr = SndDoImmediate(channel0, &theCommand);
 	}
 	
-	if (priority1 == kTriggerPriority)
+	if (ss.priority1 == kTriggerPriority)
 	{
 		theCommand.cmd = quietCmd;
 		theCommand.param1 = 0;
@@ -115,7 +104,7 @@ void FlushAnyTriggerPlaying (void)
 		theErr = SndDoImmediate(channel1, &theCommand);
 	}
 	
-	if (priority2 == kTriggerPriority)
+	if (ss.priority2 == kTriggerPriority)
 	{
 		theCommand.cmd = quietCmd;
 		theCommand.param1 = 0;
@@ -130,85 +119,63 @@ void FlushAnyTriggerPlaying (void)
 
 //--------------------------------------------------------------  PlaySound0
 
-void PlaySound0 (short soundID, short priority)
+void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPriority, short newPriority)
 {
 	SndCommand	theCommand;
 	OSErr		theErr;
 	
 	if (failedSound || dontLoadSounds)
 		return;
-	
-	theErr = noErr;
-	if (isSoundOn)
+
+	SndChannelPtr channel = nil;
+	switch (channelIndex)
 	{
-		priority0 = priority;
-		soundPlaying0 = soundID;
-		
-		theCommand.cmd = bufferCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theSoundData[soundID]);
-		theErr = SndDoImmediate(channel0, &theCommand);
-		
-		theCommand.cmd = callBackCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoCommand(channel0, &theCommand, true);
+	case 0:
+		channel = channel0;
+		break;
+	case 1:
+		channel = channel2;
+		break;
+	case 2:
+		channel = channel2;
+		break;
+	default:
+		return;
 	}
-}
 
-//--------------------------------------------------------------  PlaySound1
-
-void PlaySound1 (short soundID, short priority)
-{
-	SndCommand	theCommand;
-	OSErr		theErr;
-	
-	if (failedSound || dontLoadSounds)
-		return;
-	
 	theErr = noErr;
 	if (isSoundOn)
 	{
-		priority1 = priority;
-		soundPlaying1 = soundID;
-		
+		if (oldPriority != 0)
+		{
+			// Flush the queue and stop the channel, which will remove the pending callback
+			theCommand.cmd = flushCmd;
+			theCommand.param1 = 0;
+			theCommand.param2 = 0;
+			theErr = SndDoImmediate(channel, &theCommand);
+
+			theCommand.cmd = quietCmd;
+			theCommand.param1 = 0;
+			theCommand.param2 = 0;
+			theErr = SndDoImmediate(channel, &theCommand);
+
+			SoundSync_ClearPriority(channelIndex);
+		}
+
+		SoundSync_PutPriority(channelIndex, newPriority);
+
 		theCommand.cmd = bufferCmd;
 		theCommand.param1 = 0;
 		theCommand.param2 = (intptr_t)(theSoundData[soundID]);
-		theErr = SndDoImmediate(channel1, &theCommand);
+		theErr = SndDoCommand(channel, &theCommand, true);
 		
 		theCommand.cmd = callBackCmd;
 		theCommand.param1 = 0;
 		theCommand.param2 = 0;
-		theErr = SndDoCommand(channel1, &theCommand, true);
-	}
-}
+		theErr = SndDoCommand(channel, &theCommand, true);
 
-//--------------------------------------------------------------  PlaySound2
-
-void PlaySound2 (short soundID, short priority)
-{
-	SndCommand	theCommand;
-	OSErr		theErr;
-	
-	if (failedSound || dontLoadSounds)
-		return;
-	
-	theErr = noErr;
-	if (isSoundOn)
-	{
-		theCommand.cmd = bufferCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theSoundData[soundID]);
-		theErr = SndDoImmediate(channel2, &theCommand);
-		
-		theCommand.cmd = callBackCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoCommand(channel2, &theCommand, true);
-		
-		priority2 = priority;
-		soundPlaying2 = soundID;
+		if (theErr != noErr)
+			SoundSync_ClearPriority(channelIndex);
 	}
 }
 
@@ -216,24 +183,21 @@ void PlaySound2 (short soundID, short priority)
 
 void CallBack0 (SndChannelPtr theChannel, SndCommand *theCommand)
 {
-	priority0 = 0;
-	soundPlaying0 = kNoSoundPlaying;
+	SoundSync_ClearPriority(0);
 }
 
 //--------------------------------------------------------------  CallBack1
 
 void CallBack1 (SndChannelPtr theChannel, SndCommand *theCommand)
 {
-	priority1 = 0;
-	soundPlaying1 = kNoSoundPlaying;
+	SoundSync_ClearPriority(1);
 }
 
 //--------------------------------------------------------------  CallBack2
 
 void CallBack2 (SndChannelPtr theChannel, SndCommand *theCommand)
 {
-	priority2 = 0;
-	soundPlaying2 = kNoSoundPlaying;
+	SoundSync_ClearPriority(2);
 }
 
 //--------------------------------------------------------------  LoadTriggerSound
@@ -423,13 +387,10 @@ void InitSound (void)
 	channel0 = nil;
 	channel1 = nil;
 	channel2 = nil;
-	
-	priority0 = 0;
-	priority1 = 0;
-	priority2 = 0;
-	soundPlaying0 = kNoSoundPlaying;
-	soundPlaying1 = kNoSoundPlaying;
-	soundPlaying2 = kNoSoundPlaying;
+
+	SoundSync_ClearPriority(0);
+	SoundSync_ClearPriority(1);
+	SoundSync_ClearPriority(2);
 	
 	theErr = LoadBufferSounds();
 	if (theErr != noErr)

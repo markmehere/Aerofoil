@@ -4,12 +4,10 @@
 #define __PL_IOTREAM_H__
 
 #include "DataTypes.h"
+#include "FilePos.h"
 
 namespace PortabilityLayer
 {
-	typedef int64_t FilePos_t;
-	typedef uint64_t UFilePos_t;
-
 	class IOStream
 	{
 	public:

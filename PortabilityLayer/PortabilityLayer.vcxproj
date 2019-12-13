@@ -132,9 +132,11 @@
     <ClInclude Include="DisplayDeviceManager.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FilePermission.h" />
+    <ClInclude Include="FilePos.h" />
     <ClInclude Include="GpAppInterface.h" />
     <ClInclude Include="HostAudioChannel.h" />
     <ClInclude Include="HostAudioDriver.h" />
+    <ClInclude Include="HostDirectoryCursor.h" />
     <ClInclude Include="HostMutex.h" />
     <ClInclude Include="HostSuspendCallArgument.h" />
     <ClInclude Include="HostSuspendCallID.h" />
@@ -147,6 +149,7 @@
     <ClInclude Include="MacFileMem.h" />
     <ClInclude Include="MacFileInfo.h" />
     <ClInclude Include="MacFileWriteableMem.h" />
+    <ClInclude Include="MacLatin.h" />
     <ClInclude Include="MacRsrcHeader.h" />
     <ClInclude Include="MacRsrcMap.h" />
     <ClInclude Include="MemoryManager.h" />
@@ -235,6 +238,7 @@
     <ClCompile Include="MacBinary2.cpp" />
     <ClCompile Include="MacFileInfo.cpp" />
     <ClCompile Include="MacFileMem.cpp" />
+    <ClCompile Include="MacLatin1.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MemReaderStream.cpp" />
     <ClCompile Include="MMBlock.cpp" />

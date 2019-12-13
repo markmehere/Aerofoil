@@ -4,6 +4,7 @@
 
 #include "FilePermission.h"
 #include "CoreDefs.h"
+#include "FilePos.h"
 
 #include <stdint.h>
 
@@ -12,6 +13,7 @@ class PLPasStr;
 namespace PortabilityLayer
 {
 	class IOStream;
+	struct MacFileProperties;
 
 	class FileManager
 	{
@@ -20,6 +22,8 @@ namespace PortabilityLayer
 
 		virtual int OpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, short *outRefNum) = 0;
 		virtual int OpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, short *outRefNum) = 0;
+		virtual bool ReadFileProperties(uint32_t dirID, const PLPasStr &filename, MacFileProperties &properties) = 0;
+		virtual IOStream *GetFileStream(int fileID) = 0;
 
 		virtual int RawOpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream **outStream) = 0;
 		virtual int RawOpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream **outStream) = 0;
