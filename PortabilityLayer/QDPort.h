@@ -17,6 +17,12 @@ namespace PortabilityLayer
 		QDPortType_Window,
 	};
 
+	enum QDPortDirtyFlag
+	{
+		QDPortDirtyFlag_Size = 1,
+		QDPortDirtyFlag_Contents = 2,
+	};
+
 	class QDPort
 	{
 	public:
@@ -32,7 +38,15 @@ namespace PortabilityLayer
 		PixelFormat GetPixelFormat() const;
 		Rect GetRect() const;
 
+		bool Resize(const Rect &rect);
+
+		bool IsDirty(uint32_t flag) const;
+		void SetDirty(uint32_t flag);
+		void ClearDirty(uint32_t flag);
+
 	private:
+		void DisposePixMap();
+
 		QDPortType m_portType;
 
 		QDState m_state;
@@ -42,6 +56,7 @@ namespace PortabilityLayer
 		int16_t m_top;
 		uint16_t m_width;
 		uint16_t m_height;
+		uint32_t m_dirtyFlags;
 		PixelFormat m_pixelFormat;
 	};
 

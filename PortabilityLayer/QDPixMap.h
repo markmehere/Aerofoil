@@ -8,6 +8,7 @@
 
 struct PixMap : public BitMap
 {
+	void Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr);
 };
 
 namespace PortabilityLayer
@@ -21,6 +22,7 @@ namespace PortabilityLayer
 		size_t GetPitch() const;
 		void *GetPixelData();
 		const void *GetPixelData() const;
+		size_t GetDataCapacity() const;
 
 		static size_t SizeForDimensions(uint16_t width, uint16_t height, PixelFormat pixelFormat);
 
@@ -32,10 +34,8 @@ namespace PortabilityLayer
 		int16_t m_top;
 		uint16_t m_width;
 		uint16_t m_height;
-		PixelFormat m_pixelFormat;
 
-		size_t m_pitch;
-		void *m_data;
+		size_t m_dataCapacity;
 	};
 }
 
@@ -57,4 +57,9 @@ inline void *PortabilityLayer::PixMapImpl::GetPixelData()
 inline const void *PortabilityLayer::PixMapImpl::GetPixelData() const
 {
 	return m_data;
+}
+
+inline size_t PortabilityLayer::PixMapImpl::GetDataCapacity() const
+{
+	return m_dataCapacity;
 }

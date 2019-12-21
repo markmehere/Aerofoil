@@ -2,7 +2,7 @@
 
 #include "EGpAudioDriverType.h"
 
-class IGpAudioDriver;
+struct IGpAudioDriver;
 struct GpAudioDriverProperties;
 
 class GpAudioDriverFactory

@@ -10,5 +10,6 @@ namespace PortabilityLayer
 		EVirtualDirectory_GameData,
 		EVirtualDirectory_UserData,
 		EVirtualDirectory_Prefs,
+		EVirtualDirectory_Fonts,
 	};
 }

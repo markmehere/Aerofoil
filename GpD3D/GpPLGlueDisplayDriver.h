@@ -2,7 +2,7 @@
 
 #include "HostDisplayDriver.h"
 
-class IGpDisplayDriver;
+struct IGpDisplayDriver;
 
 class GpPLGlueDisplayDriver final : public PortabilityLayer::HostDisplayDriver
 {

@@ -7,8 +7,7 @@
 class PLPasStr;
 
 MenuHandle GetMenu(int resID);
-void AppendResMenu(MenuHandle menu, UInt32 resType);	// Appends all menus of a given type
-void InsertMenu(MenuHandle menu, int index);
+void InsertMenu(MenuHandle menu, int beforeID);
 void DeleteMenu(int menuID);	// ???
 void DrawMenuBar();
 void HiliteMenu(int menu);

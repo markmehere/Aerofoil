@@ -29,7 +29,8 @@ extern	Boolean		twoPlayerGame;
 
 void SaveGame2 (void)
 {
-		// Add NavServices later.
+	PL_NotYetImplemented();
+	// Add NavServices later.
 /*
 	StandardFileReply	theReply;
 	FSSpec				tempSpec;
@@ -166,6 +167,7 @@ void SavedGameMismatchError (StringPtr gameName)
 
 Boolean OpenSavedGame (void)
 {
+	PL_NotYetImplemented();
 return false;		// TEMP fix this iwth NavServices
 /*
 	StandardFileReply	theReply;

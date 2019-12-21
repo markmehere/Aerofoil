@@ -497,13 +497,14 @@ void HandleEvent (void)
 		SelectTool(kSelectTool);
 	}
 
+	// GP: Use WaitNextEvent to yield to the host
 	//if (thisMac.hasWNE)
-	//	itHappened = WaitNextEvent(everyEvent, &theEvent, sleep, nil);
+		itHappened = WaitNextEvent(everyEvent, &theEvent, sleep, nil);
 	//else
-	{
-		//		SystemTask();
-		itHappened = GetNextEvent(everyEvent, &theEvent);
-	}
+	//{
+	//	//		SystemTask();
+	//	itHappened = GetNextEvent(everyEvent, &theEvent);
+	//}
 	
 	if (itHappened)
 	{

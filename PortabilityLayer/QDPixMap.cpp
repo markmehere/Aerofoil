@@ -10,18 +10,16 @@ namespace PortabilityLayer
 		, m_top(top)
 		, m_width(width)
 		, m_height(height)
-		, m_pitch(PitchForWidth(width, pixelFormat))
-		, m_pixelFormat(pixelFormat)
+		, m_dataCapacity(0)
 	{
-		m_rect.left = left;
-		m_rect.top = top;
-		m_rect.right = static_cast<uint16_t>(left + width);
-		m_rect.bottom = static_cast<uint16_t>(top + height);
+		const Rect rect = Rect::Create(top, left, static_cast<uint16_t>(top + height), static_cast<uint16_t>(left + width));
 
-		m_pitch = (width + PL_SYSTEM_MEMORY_ALIGNMENT - 1);
-		m_pitch -= m_pitch % PL_SYSTEM_MEMORY_ALIGNMENT;
+		const size_t pitch = PitchForWidth(width, pixelFormat);
 
-		m_data = reinterpret_cast<uint8_t*>(this) + AlignedSize();
+		void *dataPtr = reinterpret_cast<uint8_t*>(this) + AlignedSize();
+		m_dataCapacity = PitchForWidth(width, pixelFormat) * height;
+
+		static_cast<PixMap*>(this)->Init(rect, pixelFormat, PitchForWidth(width, pixelFormat), dataPtr);
 	}
 
 	size_t PixMapImpl::SizeForDimensions(uint16_t width, uint16_t height, PixelFormat pixelFormat)
@@ -65,4 +63,9 @@ namespace PortabilityLayer
 
 		return szAdjusted;
 	}
+}
+
+void PixMap::Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr)
+{
+	BitMap::Init(rect, pixelFormat, pitch, dataPtr);
 }

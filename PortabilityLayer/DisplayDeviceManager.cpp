@@ -3,6 +3,7 @@
 #include "HostDisplayDriver.h"
 #include "PLQuickdraw.h"
 #include "MemoryManager.h"
+#include "QDStandardPalette.h"
 
 namespace PortabilityLayer
 {
@@ -38,8 +39,25 @@ namespace PortabilityLayer
 	void DisplayDeviceManagerImpl::Init()
 	{
 		m_mainDevice = MemoryManager::GetInstance()->NewHandle<GDevice>();
+		if (m_mainDevice)
+		{
+			GDevice *device = *m_mainDevice;
 
-		HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &(*m_mainDevice)->pixelFormat);
+			HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &device->pixelFormat);
+
+			uint8_t *paletteStorage = device->paletteStorage;
+			while (reinterpret_cast<intptr_t>(paletteStorage) % PL_SYSTEM_MEMORY_ALIGNMENT != 0)
+				paletteStorage++;
+
+			PortabilityLayer::RGBAColor *paletteData = reinterpret_cast<PortabilityLayer::RGBAColor*>(paletteStorage);
+			device->paletteDataOffset = static_cast<uint8_t>(paletteStorage - device->paletteStorage);
+
+			const PortabilityLayer::RGBAColor *spColors = StandardPalette::GetInstance()->GetColors();
+			for (size_t i = 0; i < 256; i++)
+				paletteData[i] = spColors[i];
+
+			device->paletteIsDirty = true;
+		}
 	}
 
 	void DisplayDeviceManagerImpl::Shutdown()

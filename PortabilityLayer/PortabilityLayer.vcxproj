@@ -59,18 +59,22 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
+    <Import Project="..\GpCommon.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -133,10 +137,14 @@
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FilePermission.h" />
     <ClInclude Include="FilePos.h" />
+    <ClInclude Include="FontManager.h" />
     <ClInclude Include="GpAppInterface.h" />
     <ClInclude Include="HostAudioChannel.h" />
     <ClInclude Include="HostAudioDriver.h" />
     <ClInclude Include="HostDirectoryCursor.h" />
+    <ClInclude Include="HostFont.h" />
+    <ClInclude Include="HostFontHandler.h" />
+    <ClInclude Include="HostInputDriver.h" />
     <ClInclude Include="HostMutex.h" />
     <ClInclude Include="HostSuspendCallArgument.h" />
     <ClInclude Include="HostSuspendCallID.h" />
@@ -144,6 +152,8 @@
     <ClInclude Include="HostDisplayDriver.h" />
     <ClInclude Include="HostSystemServices.h" />
     <ClInclude Include="HostThreadEvent.h" />
+    <ClInclude Include="HostVOSEventQueue.h" />
+    <ClInclude Include="InputManager.h" />
     <ClInclude Include="IOStream.h" />
     <ClInclude Include="MacBinary2.h" />
     <ClInclude Include="MacFileMem.h" />
@@ -170,9 +180,11 @@
     <ClInclude Include="PLCore.h" />
     <ClInclude Include="PLDialogs.h" />
     <ClInclude Include="PLErrorCodes.h" />
+    <ClInclude Include="PLEventQueue.h" />
     <ClInclude Include="PLFolders.h" />
     <ClInclude Include="PLLowMem.h" />
     <ClInclude Include="PLMacTypes.h" />
+    <ClInclude Include="MenuManager.h" />
     <ClInclude Include="QDGraf.h" />
     <ClInclude Include="QDManager.h" />
     <ClInclude Include="QDPictEmitContext.h" />
@@ -230,17 +242,22 @@
     <ClCompile Include="CFileStream.cpp" />
     <ClCompile Include="DisplayDeviceManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="HostAudioDriver.cpp" />
     <ClCompile Include="HostDisplayDriver.cpp" />
     <ClCompile Include="HostFileSystem.cpp" />
+    <ClCompile Include="HostFontHandler.cpp" />
     <ClCompile Include="HostSuspendHook.cpp" />
     <ClCompile Include="HostSystemServices.cpp" />
+    <ClCompile Include="HostVOSEventQueue.cpp" />
+    <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="MacBinary2.cpp" />
     <ClCompile Include="MacFileInfo.cpp" />
     <ClCompile Include="MacFileMem.cpp" />
     <ClCompile Include="MacLatin1.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MemReaderStream.cpp" />
+    <ClCompile Include="MenuManager.cpp" />
     <ClCompile Include="MMBlock.cpp" />
     <ClCompile Include="MMHandleBlock.cpp" />
     <ClCompile Include="PLAliases.cpp" />
@@ -249,6 +266,7 @@
     <ClCompile Include="PLControlDefinitions.cpp" />
     <ClCompile Include="PLCore.cpp" />
     <ClCompile Include="PLDialogs.cpp" />
+    <ClCompile Include="PLEventQueue.cpp" />
     <ClCompile Include="PLMenus.cpp" />
     <ClCompile Include="PLMovies.cpp" />
     <ClCompile Include="PLNavigation.cpp" />

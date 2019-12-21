@@ -8,11 +8,19 @@
 
 struct PixMap;
 struct Rect;
+struct IGpDisplayDriverSurface;
 
 struct CGraf 
 {
 	CGraf()
 		: m_port(PortabilityLayer::QDPortType_CGraf)
+		, m_ddSurface(nullptr)
+	{
+	}
+
+	explicit CGraf(PortabilityLayer::QDPortType overridePortType)
+		: m_port(overridePortType)
+		, m_ddSurface(nullptr)
 	{
 	}
 
@@ -24,13 +32,13 @@ struct CGraf
 		return 0;
 	}
 
+	bool Resize(const Rect &rect)
+	{
+		return m_port.Resize(rect);
+	}
+
 	// Must be the first item
 	PortabilityLayer::QDPort m_port;
-};
 
-namespace PortabilityLayer
-{
-	class CGrafImpl final : public CGraf
-	{
-	};
-}
+	IGpDisplayDriverSurface *m_ddSurface;
+};

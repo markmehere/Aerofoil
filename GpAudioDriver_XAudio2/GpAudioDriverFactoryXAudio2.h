@@ -1,6 +1,6 @@
 #pragma once
 
-class IGpAudioDriver;
+struct IGpAudioDriver;
 struct GpAudioDriverProperties;
 
 class GpAudioDriverFactoryXAudio2

@@ -6,12 +6,15 @@
 #include "DisplayDeviceManager.h"
 #include "FileManager.h"
 #include "FilePermission.h"
+#include "FontManager.h"
 #include "HostDirectoryCursor.h"
 #include "HostFileSystem.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
+#include "HostVOSEventQueue.h"
+#include "InputManager.h"
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
 #include "MemoryManager.h"
@@ -20,6 +23,7 @@
 #include "ResTypeID.h"
 #include "RandomNumberGenerator.h"
 #include "PLBigEndian.h"
+#include "PLEventQueue.h"
 #include "QDManager.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
@@ -47,6 +51,15 @@ static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 	pstr[0] = static_cast<uint8_t>(len);
 
 	return true;
+}
+
+static void TranslateVOSEvent(const GpVOSEvent *vosEvent, EventRecord *evt)
+{
+	PL_NotYetImplemented();
+}
+
+static void ImportVOSEvents()
+{
 }
 
 void InitCursor()
@@ -122,6 +135,8 @@ void Delay(int ticks, UInt32 *endTickCount)
 		args[0].m_uint = static_cast<uint32_t>(ticks);
 
 		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_Delay, args, nullptr);
+
+		ImportVOSEvents();
 	}
 
 	if (endTickCount)
@@ -210,7 +225,12 @@ void DisposeWindow(WindowPtr window)
 
 void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect)
 {
-	PL_NotYetImplemented();
+	if (windowRegion == kWindowContentRgn)
+		*rect = window->m_graf.m_port.GetRect();
+	else
+	{
+		PL_NotYetImplemented();
+	}
 }
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
@@ -273,8 +293,10 @@ void SetWTitle(WindowPtr window, const PLPasStr &title)
 
 bool GetNextEvent(int32_t eventMask, EventRecord *event)
 {
-	PL_NotYetImplemented();
-	return noErr;
+	assert(eventMask == everyEvent);	// We don't support other use cases
+
+	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
+	return queue->Dequeue(event) ? PL_TRUE : PL_FALSE;
 }
 
 long MenuSelect(Point point)
@@ -296,7 +318,7 @@ long TickCount()
 
 void GetKeys(KeyMap keyMap)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::InputManager::GetInstance()->GetKeys(keyMap);
 }
 
 short LoWord(Int32 v)
@@ -311,8 +333,8 @@ short HiWord(Int32 v)
 
 bool BitTst(const KeyMap *keyMap, int bit)
 {
-	PL_NotYetImplemented();
-	return noErr;
+	const unsigned char *keyMapBytes = *keyMap;
+	return ((keyMapBytes[bit >> 3] >> (7 - (bit & 0x7))) & 1) != 0;
 }
 
 void NumToString(long number, unsigned char *str)
@@ -776,8 +798,21 @@ void BlockMove(const void *src, void *dest, Size size)
 
 Boolean WaitNextEvent(int eventMask, EventRecord *eventOut, long sleep, void *unknown)
 {
-	PL_NotYetImplemented();
-	return 0;
+	for (;;)
+	{
+		Boolean hasEvent = GetNextEvent(eventMask, eventOut);
+		if (hasEvent)
+			return hasEvent;
+
+		Delay(1, nullptr);
+
+		if (sleep == 0)
+			break;
+
+		sleep--;
+	}
+
+	return PL_FALSE;
 }
 
 void DrawControls(WindowPtr window)
@@ -804,12 +839,14 @@ void PL_NotYetImplemented_Minor()
 {
 }
 
-void PL_NotYetImplemented_TODO()
+void PL_NotYetImplemented_TODO(const char *category)
 {
+	(void)category;
 }
 
 void PL_Init()
 {
+	PortabilityLayer::FontManager::GetInstance()->Init();
 	PortabilityLayer::MemoryManager::GetInstance()->Init();
 	PortabilityLayer::ResourceManager::GetInstance()->Init();
 	PortabilityLayer::DisplayDeviceManager::GetInstance()->Init();
@@ -823,6 +860,8 @@ WindowPtr PL_GetPutInFrontWindowPtr()
 }
 
 Window::Window()
-	: m_port(PortabilityLayer::QDPortType_Window)
+	: m_graf(PortabilityLayer::QDPortType_Window)
+	, m_wmX(0)
+	, m_wmY(0)
 {
 }

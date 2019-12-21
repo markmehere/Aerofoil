@@ -2,12 +2,13 @@
 
 #include "EGpDisplayDriverType.h"
 
-class IGpDisplayDriver;
+struct IGpDisplayDriver;
 class GpFiber;
 
 struct GpDisplayDriverProperties
 {
 	typedef void(*TickFunc_t)(void *context, GpFiber *vosFiber);
+	typedef void(*RenderFunc_t)(void *context);
 
 	EGpDisplayDriverType m_type;
 
@@ -23,4 +24,7 @@ struct GpDisplayDriverProperties
 	// Tick function and context to call when a frame needs to be served.
 	TickFunc_t m_tickFunc;
 	void *m_tickFuncContext;
+
+	RenderFunc_t m_renderFunc;
+	void *m_renderFuncContext;
 };

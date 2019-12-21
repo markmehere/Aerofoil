@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RGBAColor.h"
+#include "SharedTypes.h"
 
 struct Region;
 
@@ -14,9 +15,13 @@ namespace PortabilityLayer
 		int m_textFace;
 		int m_textSize;
 		Region **m_clipRegion;
+		Point m_penPos;
 
 		void SetForeColor(const RGBAColor &color);
 		void SetBackColor(const RGBAColor &color);
+
+		const RGBAColor &GetForeColor() const;
+		const RGBAColor &GetBackColor() const;
 
 		uint8_t ResolveForeColor8(const RGBAColor *palette, unsigned int numColors);
 		uint8_t ResolveBackColor8(const RGBAColor *palette, unsigned int numColors);

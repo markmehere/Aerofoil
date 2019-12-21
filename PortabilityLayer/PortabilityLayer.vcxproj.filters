@@ -324,6 +324,30 @@
     <ClInclude Include="FilePos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MenuManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HostFontHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FontManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HostFont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HostInputDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HostVOSEventQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLEventQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -477,6 +501,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MacLatin1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HostFontHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FontManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HostVOSEventQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLEventQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

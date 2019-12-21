@@ -1,6 +1,6 @@
 #pragma once
 
-class IGpDisplayDriver;
+struct IGpDisplayDriver;
 struct GpDisplayDriverProperties;
 
 class GpDisplayDriverFactoryD3D11

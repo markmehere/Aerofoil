@@ -2,10 +2,14 @@
 
 #include "DisplayDeviceManager.h"
 #include "HostDisplayDriver.h"
+#include "IGpDisplayDriver.h"
+#include "IGpDisplayDriverSurface.h"
 #include "PLCore.h"
+#include "PLEventQueue.h"
 #include "MemoryManager.h"
 #include "QDGraf.h"
 #include "QDManager.h"
+#include "QDPixMap.h"
 #include "WindowDef.h"
 
 struct GDevice;
@@ -21,7 +25,7 @@ namespace PortabilityLayer
 		~WindowImpl();
 
 		bool Init(const WindowDef &windowDef, GDevice **device);
-		void Resize(int width, int height);
+		bool Resize(int width, int height);
 
 		WindowImpl *GetWindowAbove() const;
 		WindowImpl *GetWindowBelow() const;
@@ -55,11 +59,14 @@ namespace PortabilityLayer
 		void HideWindow(Window *window) override;
 		GDevice **GetWindowDevice(Window *window) override;
 
+		void RenderFrame(IGpDisplayDriver *displayDriver) override;
+
 		Window *GetPutInFrontSentinel() const override;
 
 		static WindowManagerImpl *GetInstance();
 
 	private:
+		void RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver);
 		void DetachWindow(Window *window);
 
 		WindowImpl *m_windowStackTop;
@@ -91,7 +98,7 @@ namespace PortabilityLayer
 
 		const Rect adjustedBounds = Rect::Create(0, 0, bounds.bottom - bounds.top, bounds.right - bounds.left);
 
-		if (int errorCode = m_port.Init(adjustedBounds, (*device)->pixelFormat))
+		if (int errorCode = m_graf.Init(adjustedBounds, (*device)->pixelFormat))
 			return false;
 
 		m_device = device;
@@ -99,8 +106,13 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	void WindowImpl::Resize(int width, int height)
+	bool WindowImpl::Resize(int width, int height)
 	{
+		Rect rect = m_graf.m_port.GetRect();
+		rect.right = rect.left + width;
+		rect.bottom = rect.top + height;
+
+		return m_graf.Resize(rect);
 	}
 
 	WindowImpl *WindowImpl::GetWindowAbove() const
@@ -164,6 +176,12 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
+		if (EventRecord *evt = PortabilityLayer::EventQueue::GetInstance()->Enqueue())
+		{
+			evt->what = updateEvt;
+			evt->message = reinterpret_cast<intptr_t>(static_cast<Window*>(window));
+		}
+
 		return window;
 	}
 
@@ -179,6 +197,7 @@ namespace PortabilityLayer
 			if (m_windowStackTop)
 			{
 				m_windowStackTop->SetWindowAbove(window);
+				window->SetWindowBelow(m_windowStackTop);
 				m_windowStackTop = window;
 			}
 			else
@@ -226,14 +245,44 @@ namespace PortabilityLayer
 		return static_cast<WindowImpl*>(window)->GetDevice();
 	}
 
+	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)
+	{
+		GDevice **mainDeviceHdl = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetMainDevice();
+
+		if (mainDeviceHdl)
+		{
+			GDevice *mainDevice = *mainDeviceHdl;
+
+			if (mainDevice->paletteIsDirty)
+			{
+				displayDriver->UpdatePalette(mainDevice->paletteStorage + mainDevice->paletteDataOffset);
+				mainDevice->paletteIsDirty = false;
+			}
+
+			WindowImpl *window = m_windowStackBottom;
+			while (window)
+			{
+				RenderWindow(window, displayDriver);
+				window = window->GetWindowAbove();
+			}
+		}
+	}
+
 	void WindowManagerImpl::ResizeWindow(Window *window, int width, int height)
 	{
 		static_cast<WindowImpl*>(window)->Resize(width, height);
+
+		if (EventRecord *evt = PortabilityLayer::EventQueue::GetInstance()->Enqueue())
+		{
+			evt->what = updateEvt;
+			evt->message = reinterpret_cast<intptr_t>(window);
+		}
 	}
 
 	void WindowManagerImpl::MoveWindow(Window *window, int x, int y)
 	{
-		PL_NotYetImplemented_Minor();
+		window->m_wmX = x;
+		window->m_wmY = y;
 	}
 
 	void WindowManagerImpl::DetachWindow(Window *window)
@@ -258,6 +307,36 @@ namespace PortabilityLayer
 	Window *WindowManagerImpl::GetPutInFrontSentinel() const
 	{
 		return &ms_putInFront;
+	}
+
+	void WindowManagerImpl::RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver)
+	{
+		GDevice *device = *window->GetDevice();
+
+		CGraf &graf = window->m_graf;
+		const PixMap *pixMap = *graf.m_port.GetPixMap();
+		const size_t width = pixMap->m_rect.right - pixMap->m_rect.left;
+		const size_t height = pixMap->m_rect.bottom - pixMap->m_rect.top;
+
+		if (graf.m_port.IsDirty(QDPortDirtyFlag_Size))
+		{
+			if (graf.m_ddSurface != nullptr)
+				graf.m_ddSurface->Destroy();
+
+			graf.m_ddSurface = nullptr;
+			graf.m_port.ClearDirty(QDPortDirtyFlag_Size);
+		}
+
+		if (graf.m_ddSurface == nullptr)
+			graf.m_ddSurface = displayDriver->CreateSurface(pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, pixMap->m_pixelFormat);
+
+		if (graf.m_port.IsDirty(QDPortDirtyFlag_Contents) && graf.m_ddSurface != nullptr)
+		{
+			graf.m_ddSurface->UploadEntire(pixMap->m_data, pixMap->m_pitch);
+			graf.m_port.ClearDirty(QDPortDirtyFlag_Contents);
+		}
+
+		displayDriver->DrawSurface(graf.m_ddSurface, window->m_wmX, window->m_wmY, width, height);
 	}
 
 	WindowManagerImpl *WindowManagerImpl::GetInstance()

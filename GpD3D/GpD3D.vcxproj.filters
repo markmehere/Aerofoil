@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\CompiledShaders">
+      <UniqueIdentifier>{6dd6af81-4f84-4e4f-aa25-9dd4c1b53536}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GpMain_Win32.cpp">
@@ -71,6 +74,30 @@
     </ClCompile>
     <ClCompile Include="GpThreadEvent_Win32.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpFontHandlerFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpFontHandler_FreeType2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpVOSEventQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpDisplayDriverSurfaceD3D11.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadersD3D11\DrawQuadV_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadersD3D11\DrawQuad15BitP_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadersD3D11\DrawQuadPaletteP_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadersD3D11\DrawQuadRGBP_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +192,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpFontHandlerFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpFontHandler_FreeType2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpVOSEventQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpDisplayDriverSurfaceD3D11.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpComPtr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

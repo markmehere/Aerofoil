@@ -2,11 +2,9 @@
 
 struct IGpAudioChannel;
 
-class IGpAudioDriver
+struct IGpAudioDriver
 {
 public:
-	virtual ~IGpAudioDriver() {}
-
 	virtual IGpAudioChannel *CreateChannel() = 0;
 
 	virtual void Shutdown() = 0;

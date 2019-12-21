@@ -1,7 +1,9 @@
 #pragma once
 
+#include "CoreDefs.h"
 #include "PLBigEndian.h"
 #include "PixelFormat.h"
+#include "RGBAColor.h"
 
 struct Point
 {
@@ -92,6 +94,10 @@ struct BEColorTableItem
 struct GDevice
 {
 	PortabilityLayer::PixelFormat pixelFormat;
+
+	uint8_t paletteStorage[256 * 4 + PL_SYSTEM_MEMORY_ALIGNMENT];
+	uint8_t paletteDataOffset;
+	bool paletteIsDirty;
 };
 
 inline bool Rect::IsValid() const

@@ -14,3 +14,5 @@ struct GPWindowsGlobals
 };
 
 extern GPWindowsGlobals g_gpWindowsGlobals;
+
+#undef CreateMutex

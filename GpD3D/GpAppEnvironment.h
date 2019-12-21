@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GpVOSEventQueue.h"
 #include "HostSuspendCallID.h"
 
 #include <stdint.h>
@@ -7,10 +8,12 @@
 namespace PortabilityLayer
 {
 	union HostSuspendCallArgument;
+	class HostFontHandler;
+	class HostVOSEventQueue;
 }
 
-class IGpDisplayDriver;
-class IGpAudioDriver;
+struct IGpDisplayDriver;
+struct IGpAudioDriver;
 class GpFiber;
 
 class GpAppEnvironment
@@ -22,8 +25,11 @@ public:
 	void Init();
 
 	void Tick(GpFiber *vosFiber);
+	void Render();
+
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);
 	void SetAudioDriver(IGpAudioDriver *audioDriver);
+	void SetFontHandler(PortabilityLayer::HostFontHandler *fontHandler);
 
 private:
 	enum ApplicationState
@@ -47,6 +53,8 @@ private:
 	ApplicationState m_applicationState;
 	IGpDisplayDriver *m_displayDriver;
 	IGpAudioDriver *m_audioDriver;
+	PortabilityLayer::HostFontHandler *m_fontHandler;
+	GpVOSEventQueue m_vosEventQueue;
 	GpFiber *m_applicationFiber;
 	GpFiber *m_vosFiber;
 

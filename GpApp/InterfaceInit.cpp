@@ -49,7 +49,7 @@ void InitializeMenus (void)
 	appleMenu = GetMenu(kAppleMenuID);
 	if (appleMenu == nil)
 		RedAlert(kErrFailedResourceLoad);
-	AppendResMenu(appleMenu, 'DRVR');
+	//AppendResMenu(appleMenu, 'DRVR');	// GP: We don't support this
 	InsertMenu(appleMenu, 0);
 	
 	gameMenu = GetMenu(kGameMenuID);

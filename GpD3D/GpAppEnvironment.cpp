@@ -1,6 +1,7 @@
 #include "GpAppEnvironment.h"
 #include "GpFiberStarter.h"
 #include "GpAppInterface.h"
+#include "GpFontHandlerFactory.h"
 #include "GpPLGlueAudioDriver.h"
 #include "GpPLGlueDisplayDriver.h"
 #include "GpFiber.h"
@@ -12,6 +13,7 @@ GpAppEnvironment::GpAppEnvironment()
 	: m_applicationState(ApplicationState_NotStarted)
 	, m_displayDriver(nullptr)
 	, m_audioDriver(nullptr)
+	, m_fontHandler(nullptr)
 	, m_applicationFiber(nullptr)
 	, m_vosFiber(nullptr)
 	, m_suspendCallID(PortabilityLayer::HostSuspendCallID_Unknown)
@@ -63,7 +65,7 @@ void GpAppEnvironment::Tick(GpFiber *vosFiber)
 			}
 			break;
 		case ApplicationState_TimedSuspend:
-			if (m_delaySuspendTicks <= 1)
+			if (m_delaySuspendTicks == 0)
 				m_applicationState = ApplicationState_Running;
 			else
 			{
@@ -78,6 +80,11 @@ void GpAppEnvironment::Tick(GpFiber *vosFiber)
 	}
 }
 
+void GpAppEnvironment::Render()
+{
+	GpAppInterface_Get()->PL_Render(m_displayDriver);
+}
+
 void GpAppEnvironment::SetDisplayDriver(IGpDisplayDriver *displayDriver)
 {
 	m_displayDriver = displayDriver;
@@ -86,6 +93,11 @@ void GpAppEnvironment::SetDisplayDriver(IGpDisplayDriver *displayDriver)
 void GpAppEnvironment::SetAudioDriver(IGpAudioDriver *audioDriver)
 {
 	m_audioDriver = audioDriver;
+}
+
+void GpAppEnvironment::SetFontHandler(PortabilityLayer::HostFontHandler *fontHandler)
+{
+	m_fontHandler = fontHandler;
 }
 
 void GpAppEnvironment::StaticAppThreadFunc(void *context)
@@ -103,6 +115,9 @@ void GpAppEnvironment::InitializeApplicationState()
 	GpAppInterface_Get()->PL_HostDisplayDriver_SetInstance(GpPLGlueDisplayDriver::GetInstance());
 	GpAppInterface_Get()->PL_HostAudioDriver_SetInstance(GpPLGlueAudioDriver::GetInstance());
 	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
+
+	GpAppInterface_Get()->PL_HostFontHandler_SetInstance(m_fontHandler);
+	GpAppInterface_Get()->PL_HostVOSEventQueue_SetInstance(&m_vosEventQueue);
 
 	SynchronizeState();
 }

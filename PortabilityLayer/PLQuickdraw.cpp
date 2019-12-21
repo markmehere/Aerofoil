@@ -3,13 +3,17 @@
 #include "QDState.h"
 #include "DisplayDeviceManager.h"
 #include "MMHandleBlock.h"
+#include "MemoryManager.h"
 #include "ResourceManager.h"
 #include "ResTypeID.h"
 #include "RGBAColor.h"
+#include "QDStandardPalette.h"
 #include "WindowManager.h"
 #include "QDGraf.h"
 #include "QDPixMap.h"
 #include "QDUtils.h"
+
+#include <assert.h>
 
 void GetPort(GrafPtr *graf)
 {
@@ -27,12 +31,12 @@ void SetPort(GrafPtr graf)
 
 void BeginUpdate(WindowPtr graf)
 {
-	PL_NotYetImplemented();
+	(void)graf;
 }
 
 void EndUpdate(WindowPtr graf)
 {
-	PL_NotYetImplemented();
+	graf->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 OSErr GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags)
@@ -83,7 +87,7 @@ void SetPortWindowPort(WindowPtr window)
 
 	GDevice **device = wm->GetWindowDevice(window);
 
-	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->m_port, device);
+	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->m_graf.m_port, device);
 }
 
 void SetPortDialogPort(Dialog *dialog)
@@ -114,7 +118,10 @@ int TextWidth(const PLPasStr &str, int firstChar1Based, int length)
 
 void MoveTo(int x, int y)
 {
-	PL_NotYetImplemented();
+	Point &penPos = PortabilityLayer::QDManager::GetInstance()->GetState()->m_penPos;
+
+	penPos.h = x;
+	penPos.v = y;
 }
 
 void LineTo(int x, int y)
@@ -194,22 +201,46 @@ void BackColor(SystemColorID color)
 
 void GetForeColor(RGBColor *color)
 {
-	PL_NotYetImplemented();
+	const PortabilityLayer::RGBAColor foreColor = PortabilityLayer::QDManager::GetInstance()->GetState()->GetForeColor();
+	color->red = foreColor.r * 0x0101;
+	color->green = foreColor.g * 0x0101;
+	color->blue = foreColor.b * 0x0101;
 }
 
 void Index2Color(int index, RGBColor *color)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::QDPort *port;
+
+	PortabilityLayer::QDManager::GetInstance()->GetPort(&port, nullptr);
+
+	PortabilityLayer::PixelFormat pf = port->GetPixelFormat();
+	if (pf == PortabilityLayer::PixelFormat_8BitCustom)
+	{
+		PL_NotYetImplemented();
+	}
+	else
+	{
+		const PortabilityLayer::RGBAColor color8 = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[index];
+		color->red = color8.r * 0x0101;
+		color->green = color8.g * 0x0101;
+		color->blue = color8.b * 0x0101;
+	}
 }
 
 void RGBForeColor(const RGBColor *color)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::RGBAColor truncatedColor;
+	truncatedColor.r = (color->red >> 8);
+	truncatedColor.g = (color->green >> 8);
+	truncatedColor.b = (color->blue >> 8);
+	truncatedColor.a = 255;
+
+	PortabilityLayer::QDManager::GetInstance()->GetState()->SetForeColor(truncatedColor);
 }
 
 void DrawString(const PLPasStr &str)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Text");
 }
 
 void PaintRect(const Rect *rect)
@@ -382,7 +413,83 @@ void GetIndPattern(Pattern *pattern, int patListID, int index)
 
 void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *destRect, CopyBitsMode copyMode, RgnHandle maskRegion)
 {
-	PL_NotYetImplemented();
+	assert(srcBitmap->m_pixelFormat == destBitmap->m_pixelFormat);
+
+	const Rect &srcBounds = srcBitmap->m_rect;
+	const Rect &destBounds = destBitmap->m_rect;
+	const PortabilityLayer::PixelFormat pixelFormat = srcBitmap->m_pixelFormat;
+	const size_t srcPitch = srcBitmap->m_pitch;
+	const size_t destPitch = destBitmap->m_pitch;
+
+	assert(srcRect->top >= srcBounds.top);
+	assert(srcRect->bottom <= srcBounds.bottom);
+	assert(srcRect->left >= srcBounds.left);
+	assert(srcRect->right <= srcBounds.right);
+
+	assert(destRect->top >= destBounds.top);
+	assert(destRect->bottom <= destBounds.bottom);
+	assert(destRect->left >= destBounds.left);
+	assert(destRect->right <= destBounds.right);
+
+	assert(srcRect->right - srcRect->left == destRect->right - destRect->left);
+	assert(srcRect->bottom - srcRect->top == destRect->bottom - destRect->top);
+
+	const Region *mask = *maskRegion;
+
+	const Rect constrainedDestRect = destRect->Intersect(mask->rect);
+	if (!constrainedDestRect.IsValid())
+		return;
+
+	Rect constrainedSrcRect = *srcRect;
+	constrainedSrcRect.left += constrainedDestRect.left - destRect->left;
+	constrainedSrcRect.right += constrainedDestRect.right - destRect->right;
+	constrainedSrcRect.top += constrainedDestRect.top - destRect->top;
+	constrainedSrcRect.bottom += constrainedDestRect.bottom - destRect->bottom;
+
+	const size_t srcFirstCol = constrainedSrcRect.left - srcBitmap->m_rect.left;
+	const size_t srcFirstRow = constrainedSrcRect.top - srcBitmap->m_rect.top;
+
+	const size_t destFirstCol = constrainedDestRect.left - destBitmap->m_rect.left;
+	const size_t destFirstRow = constrainedDestRect.top - destBitmap->m_rect.top;
+
+	if (mask->size != sizeof(Region))
+	{
+		PL_NotYetImplemented();
+	}
+	else
+	{
+		size_t pixelSizeBytes = 0;
+
+		switch (pixelFormat)
+		{
+		case PortabilityLayer::PixelFormat_8BitCustom:
+		case PortabilityLayer::PixelFormat_8BitStandard:
+			pixelSizeBytes = 1;
+			break;
+		case PortabilityLayer::PixelFormat_RGB555:
+			pixelSizeBytes = 2;
+			break;
+		case PortabilityLayer::PixelFormat_RGB24:
+			pixelSizeBytes = 3;
+			break;
+		case PortabilityLayer::PixelFormat_RGB32:
+			pixelSizeBytes = 4;
+			break;
+		};
+
+		const uint8_t *srcBytes = static_cast<const uint8_t*>(srcBitmap->m_data);
+		uint8_t *destBytes = static_cast<uint8_t*>(destBitmap->m_data);
+
+		const size_t firstSrcByte = srcFirstRow * srcPitch + srcFirstCol * pixelSizeBytes;
+		const size_t firstDestByte = destFirstRow * destPitch + destFirstCol * pixelSizeBytes;
+
+		const size_t numCopiedRows = srcRect->bottom - srcRect->top;
+		const size_t numCopiedCols = srcRect->right - srcRect->left;
+		const size_t numCopiedBytesPerScanline = numCopiedCols * pixelSizeBytes;
+
+		for (size_t i = 0; i < numCopiedRows; i++)
+			memcpy(destBytes + firstDestByte + i * destPitch, srcBytes + firstSrcByte + i * srcPitch, numCopiedBytesPerScanline);
+	}
 }
 
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *maskRect, const Rect *destRect)
@@ -393,13 +500,33 @@ void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBit
 
 RgnHandle NewRgn()
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	PortabilityLayer::MMHandleBlock *handle = PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(sizeof(Region));
+
+	Region *rgn = static_cast<Region*>(handle->m_contents);
+
+	rgn->size = sizeof(Region);
+	rgn->rect = Rect::Create(0, 0, 0, 0);
+
+	return reinterpret_cast<Region**>(&handle->m_contents);
 }
 
 void RectRgn(RgnHandle region, const Rect *rect)
 {
-	PL_NotYetImplemented();
+	Region *rgn = *region;
+
+	if (rgn->size != sizeof(Region))
+	{
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+		PortabilityLayer::MMHandleBlock *hdlBlock = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(region);
+
+		// OK if this fails, I guess
+		if (mm->ResizeHandle(hdlBlock, sizeof(Region)))
+			rgn = static_cast<Region*>(hdlBlock->m_contents);
+
+		rgn->size = sizeof(Region);
+	}
+
+	rgn->rect = *rect;
 }
 
 void UnionRgn(RgnHandle regionA, RgnHandle regionB, RgnHandle regionC)
@@ -409,7 +536,7 @@ void UnionRgn(RgnHandle regionA, RgnHandle regionB, RgnHandle regionC)
 
 void DisposeRgn(RgnHandle rgn)
 {
-	PL_NotYetImplemented();
+	DisposeHandle(reinterpret_cast<Handle>(rgn));
 }
 
 void OpenRgn()
@@ -441,20 +568,20 @@ void SetClip(RgnHandle rgn)
 
 BitMap *GetPortBitMapForCopyBits(CGrafPtr grafPtr)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	return *grafPtr->m_port.GetPixMap();
 }
 
 CGrafPtr GetWindowPort(WindowPtr window)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	return &window->m_graf;
 }
 
 RgnHandle GetPortVisibleRegion(CGrafPtr port, RgnHandle region)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	const Rect rect = port->m_port.GetRect();
+
+	RectRgn(region, &rect);
+	return region;
 }
 
 
@@ -499,4 +626,12 @@ RgnHandle GetGrayRgn()
 {
 	PL_NotYetImplemented();
 	return nullptr;
+}
+
+void BitMap::Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr)
+{
+	m_rect = rect;
+	m_pixelFormat = pixelFormat;
+	m_pitch = pitch;
+	m_data = dataPtr;
 }

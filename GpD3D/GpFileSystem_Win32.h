@@ -3,6 +3,7 @@
 #include "HostFileSystem.h"
 
 #include "GpCoreDefs.h"
+#include "GpWindows.h"
 
 #include <string>
 
@@ -21,6 +22,10 @@ private:
 	bool ResolvePath(PortabilityLayer::EVirtualDirectory virtualDirectory, const char *path, wchar_t *outPath);
 
 	std::wstring m_prefsDir;
+	std::wstring m_packagedDir;
+	std::wstring m_housesDir;
+	std::wstring m_resourcesDir;
+	wchar_t m_executablePath[MAX_PATH];
 
 	static GpFileSystem_Win32 ms_instance;
 };

@@ -95,6 +95,8 @@ GpDirectoryCursor_Win32::~GpDirectoryCursor_Win32()
 
 GpFileSystem_Win32::GpFileSystem_Win32()
 {
+	m_executablePath[0] = 0;
+
 	PWSTR docsPath;
 	if (!FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &docsPath)))
 	{
@@ -112,6 +114,47 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 
 		CreateDirectoryW(m_prefsDir.c_str(), nullptr);
 		m_prefsDir.append(L"\\");
+	}
+
+	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
+	if (modulePathSize == MAX_PATH || modulePathSize == 0)
+		m_executablePath[0] = 0;
+
+	size_t currentPathLength = wcslen(m_executablePath);
+
+	for (;;)
+	{
+		while (currentPathLength > 0 && m_executablePath[currentPathLength - 1] != '\\')
+			currentPathLength--;
+
+		m_executablePath[currentPathLength] = 0;
+
+		if (currentPathLength + 11 > MAX_PATH)
+		{
+			// "Resources" append is a longer path than the executable
+			continue;
+		}
+
+		if (wcscat_s(m_executablePath, L"Resources"))
+		{
+			currentPathLength = 0;
+			break;
+		}
+
+		if (PathFileExistsW(m_executablePath) && PathIsDirectoryW(m_executablePath))
+		{
+			m_executablePath[currentPathLength] = 0;
+			break;
+		}
+		else
+			currentPathLength--;
+	}
+
+	if (currentPathLength > 0)
+	{
+		m_packagedDir = std::wstring(m_executablePath) + L"Packaged\\";
+		m_housesDir = std::wstring(m_executablePath) + L"Packaged\\Houses\\";
+		m_resourcesDir = std::wstring(m_executablePath) + L"Resources\\";
 	}
 }
 
@@ -136,6 +179,8 @@ PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::EVirt
 	const DWORD creationDisposition = create ? OPEN_ALWAYS : OPEN_EXISTING;
 
 	HANDLE h = CreateFileW(winPath, desiredAccess, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (h == INVALID_HANDLE_VALUE)
+		return false;
 
 	return new GpFileStream_Win32(h, true, writeAccess, true);
 }
@@ -168,13 +213,16 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::EVirtualDirectory virtual
 	switch (virtualDirectory)
 	{
 	case PortabilityLayer::EVirtualDirectory_ApplicationData:
-		baseDir = L"D:\\Source Code\\GlidePort\\Packaged\\";
+		baseDir = m_packagedDir.c_str();
 		break;
 	case PortabilityLayer::EVirtualDirectory_GameData:
-		baseDir = L"D:\\Source Code\\GlidePort\\Packaged\\Houses\\";
+		baseDir = m_housesDir.c_str();
 		break;
 	case PortabilityLayer::EVirtualDirectory_Prefs:
 		baseDir = m_prefsDir.c_str();
+		break;
+	case PortabilityLayer::EVirtualDirectory_Fonts:
+		baseDir = m_resourcesDir.c_str();
 		break;
 	default:
 		return false;

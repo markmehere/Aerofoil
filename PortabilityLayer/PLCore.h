@@ -6,6 +6,7 @@
 #include "PLErrorCodes.h"
 #include "SharedTypes.h"
 #include "QDPort.h"
+#include "QDGraf.h"
 
 #ifdef _MSC_VER
 #pragma warning(error:4311)	// Pointer truncation to int
@@ -37,6 +38,10 @@ typedef unsigned char *StringPtr;
 class PLPasStr;
 struct CGraf;
 struct Region;
+struct Menu;
+
+typedef void *Ptr;
+typedef Ptr *Handle;
 
 #define PL_DEAD(n) ((void)0)
 
@@ -89,18 +94,17 @@ struct CCursor
 {
 };
 
-
 struct Window
 {
 	Window();
 
-	PortabilityLayer::QDPort m_port;	// Must be the first item
-};
+	CGraf m_graf;	// Must be the first item
 
-struct Menu
-{
+	// The port is always at 0,0
+	// These are the WM coordinates
+	int32_t m_wmX;
+	int32_t m_wmY;
 };
-
 
 struct DateTimeRec
 {
@@ -172,14 +176,10 @@ typedef MenuPtr *MenuHandle;
 typedef RgnPtr *RgnHandle;
 typedef VersRecPtr *VersRecHndl;
 
-typedef void *Ptr;
-typedef Ptr *Handle;
-
 typedef WindowPtr WindowRef;	// wtf?
 
 
 typedef unsigned char KeyMap[16];
-
 
 enum RegionID
 {
@@ -404,7 +404,7 @@ WindowPtr PL_GetPutInFrontWindowPtr();
 
 void PL_NotYetImplemented();
 void PL_NotYetImplemented_Minor();
-void PL_NotYetImplemented_TODO();
+void PL_NotYetImplemented_TODO(const char *category);
 void PL_Init();
 
 

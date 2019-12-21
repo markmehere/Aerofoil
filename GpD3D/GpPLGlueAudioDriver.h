@@ -2,7 +2,7 @@
 
 #include "HostAudioDriver.h"
 
-class IGpAudioDriver;
+struct IGpAudioDriver;
 
 class GpPLGlueAudioDriver final : public PortabilityLayer::HostAudioDriver
 {

@@ -14,10 +14,16 @@ namespace PortabilityLayer
 		, m_height(0)
 		, m_pixMap(nullptr)
 		, m_pixelFormat(PixelFormat_Invalid)
+		, m_dirtyFlags(0)
 	{
 	}
 
 	QDPort::~QDPort()
+	{
+		DisposePixMap();
+	}
+
+	void QDPort::DisposePixMap()
 	{
 		if (m_pixMap)
 		{
@@ -29,25 +35,57 @@ namespace PortabilityLayer
 
 	int QDPort::Init(const Rect &rect, PixelFormat pixelFormat)
 	{
-		m_left = rect.left;
-		m_top = rect.top;
-		m_width = static_cast<uint16_t>(rect.right - rect.left);
-		m_height = static_cast<uint16_t>(rect.bottom - rect.top);
 		m_pixMap = nullptr;
 		m_pixelFormat = pixelFormat;
 
-		size_t pixMapSize = PixMapImpl::SizeForDimensions(m_width, m_height, m_pixelFormat);
-		if (pixMapSize == 0)
+		if (!Resize(rect))
 			return mFulErr;
+
+		return noErr;
+	}
+
+	bool QDPort::Resize(const Rect &rect)
+	{
+		const uint16_t width = static_cast<uint16_t>(rect.right - rect.left);
+		const uint16_t height = static_cast<uint16_t>(rect.bottom - rect.top);
+
+		size_t pixMapSize = PixMapImpl::SizeForDimensions(width, height, m_pixelFormat);
+		if (pixMapSize == 0)
+			return false;
 
 		MMHandleBlock *pmBlock = MemoryManager::GetInstance()->AllocHandle(pixMapSize);
 		if (!pmBlock)
-			return mFulErr;
+			return false;
 
-		new (pmBlock->m_contents) PixMapImpl(m_left, m_top, m_width, m_height, m_pixelFormat);
+		SetDirty(QDPortDirtyFlag_Size | QDPortDirtyFlag_Contents);
+
+		m_left = rect.left;
+		m_top = rect.top;
+		m_width = width;
+		m_height = height;
+
+		new (pmBlock->m_contents) PixMapImpl(m_left, m_top, width, height, m_pixelFormat);
+
+		DisposePixMap();
+
 		m_pixMap = reinterpret_cast<PixMap**>(&pmBlock->m_contents);
 
-		return noErr;
+		return true;
+	}
+
+	bool QDPort::IsDirty(uint32_t flag) const
+	{
+		return (m_dirtyFlags & flag) != 0;
+	}
+
+	void QDPort::SetDirty(uint32_t flag)
+	{
+		m_dirtyFlags |= flag;
+	}
+
+	void QDPort::ClearDirty(uint32_t flag)
+	{
+		m_dirtyFlags &= ~flag;
 	}
 
 	PixMap **QDPort::GetPixMap() const
@@ -72,6 +110,6 @@ namespace PortabilityLayer
 
 	Rect QDPort::GetRect() const
 	{
-		return Rect::Create(0, 0, m_height, m_width);
+		return Rect::Create(m_top, m_left, m_top + m_height, m_left + m_width);
 	}
 }

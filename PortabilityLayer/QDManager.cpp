@@ -74,14 +74,14 @@ namespace PortabilityLayer
 		if (depth != 8)
 			return genericErr;
 
-		void *grafStorage = MemoryManager::GetInstance()->Alloc(sizeof(CGrafImpl));
+		void *grafStorage = MemoryManager::GetInstance()->Alloc(sizeof(CGraf));
 		if (!grafStorage)
 			return mFulErr;
 
 		if (!bounds.IsValid())
 			return genericErr;
 
-		CGrafImpl *graf = new (grafStorage) CGrafImpl();
+		CGraf *graf = new (grafStorage) CGraf();
 		int initError = graf->Init(bounds, pixelFormat);
 		if (initError)
 		{

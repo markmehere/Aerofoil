@@ -6,10 +6,23 @@
 #include "IGpDisplayDriver.h"
 #include "GpCoreDefs.h"
 #include "GpDisplayDriverProperties.h"
+#include "GpComPtr.h"
 
 #include "PixelFormat.h"
 
 struct IDXGISwapChain1;
+struct ID3D11Buffer;
+struct ID3D11DepthStencilState;
+struct ID3D11Device;
+struct ID3D11DeviceContext;
+struct ID3D11InputLayout;
+struct ID3D11PixelShader;
+struct ID3D11RenderTargetView;
+struct ID3D11SamplerState;
+struct ID3D11ShaderResourceView;
+struct ID3D11Texture1D;
+struct ID3D11Texture2D;
+struct ID3D11VertexShader;
 
 class GpDisplayDriverD3D11 : public IGpDisplayDriver
 {
@@ -19,14 +32,50 @@ public:
 
 	void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) override;
 
+	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat) override;
+	void DrawSurface(IGpDisplayDriverSurface *surface, size_t x, size_t y, size_t width, size_t height) override;
+
+	void UpdatePalette(const void *paletteData) override;
+
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
 
 private:
-	GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties);
+	struct DrawQuadVertexConstants
+	{
+		float m_ndcOriginX;
+		float m_ndcOriginY;
+		float m_ndcWidth;
+		float m_ndcHeight;
 
+		float m_surfaceDimensionX;
+		float m_surfaceDimensionY;
+		float m_unused[2];
+	};
+
+	GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties);
+	~GpDisplayDriverD3D11();
+
+	bool InitResources();
 	bool PresentFrameAndSync();
 
-	IDXGISwapChain1 *m_swapChain;
+	GpComPtr<IDXGISwapChain1> m_swapChain;
+	GpComPtr<ID3D11Device> m_device;
+	GpComPtr<ID3D11DeviceContext> m_deviceContext;
+	GpComPtr<ID3D11Buffer> m_quadIndexBuffer;
+	GpComPtr<ID3D11Buffer> m_quadVertexBuffer;
+	GpComPtr<ID3D11InputLayout> m_drawQuadInputLayout;
+	GpComPtr<ID3D11VertexShader> m_drawQuadVertexShader;
+	GpComPtr<ID3D11PixelShader> m_drawQuadPalettePixelShader;
+	GpComPtr<ID3D11PixelShader> m_drawQuad15BitPixelShader;
+	GpComPtr<ID3D11PixelShader> m_drawQuadRGBPixelShader;
+	GpComPtr<ID3D11Buffer> m_drawQuadVertexConstantBuffer;
+	GpComPtr<ID3D11DepthStencilState> m_drawQuadDepthStencilState;
+	GpComPtr<ID3D11SamplerState> m_nearestNeighborSamplerState;
+	GpComPtr<ID3D11Texture1D> m_paletteTexture;
+	GpComPtr<ID3D11ShaderResourceView> m_paletteTextureSRV;
+
+	GpComPtr<ID3D11Texture2D> m_backBufferTexture;
+	GpComPtr<ID3D11RenderTargetView> m_backBufferRTV;
 
 	struct CompactedPresentHistoryItem
 	{

@@ -88,6 +88,11 @@ struct CIcon
 struct BitMap
 {
 	Rect m_rect;
+	PortabilityLayer::PixelFormat m_pixelFormat;
+	size_t m_pitch;
+	void *m_data;
+
+	void Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr);
 };
 
 struct RGBColor

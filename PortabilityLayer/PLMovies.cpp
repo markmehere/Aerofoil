@@ -31,13 +31,13 @@ OSErr AddUserData(UserData userData, Handle data, UInt32 type)
 
 OSErr OpenMovieFile(const FSSpec *fsSpec, short *outRefNum, int permissions)
 {
-	PL_NotYetImplemented_TODO();
+	PL_NotYetImplemented_TODO("Movies");
 	return noErr;
 }
 
 OSErr NewMovieFromFile(Movie *movie, short refNum, const short *optResId, StringPtr resName, int flags, Boolean *unused)
 {
-	PL_NotYetImplemented_TODO();
+	PL_NotYetImplemented_TODO("Movies");
 	return noErr;
 }
 

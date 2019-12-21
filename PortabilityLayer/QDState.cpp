@@ -22,6 +22,7 @@ namespace PortabilityLayer
 		m_backUnresolvedColor.r = m_backUnresolvedColor.g = m_backUnresolvedColor.b = m_backUnresolvedColor.a = 255;
 		m_foreUnresolvedColor.r = m_foreUnresolvedColor.g = m_foreUnresolvedColor.b = 0;
 		m_foreUnresolvedColor.a = 255;
+		m_penPos.h = m_penPos.v = 0;
 	}
 
 	void QDState::SetForeColor(const RGBAColor &color)
@@ -36,6 +37,16 @@ namespace PortabilityLayer
 		m_backUnresolvedColor = color;
 		m_isBackResolved16 = false;
 		m_isBackResolved8 = false;
+	}
+
+	const RGBAColor &QDState::GetForeColor() const
+	{
+		return m_foreUnresolvedColor;
+	}
+
+	const RGBAColor &QDState::GetBackColor() const
+	{
+		return m_backUnresolvedColor;
 	}
 
 	uint8_t QDState::ResolveForeColor8(const RGBAColor *palette, unsigned int numColors)

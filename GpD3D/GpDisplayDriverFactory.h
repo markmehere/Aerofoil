@@ -2,7 +2,7 @@
 
 #include "EGpDisplayDriverType.h"
 
-class IGpDisplayDriver;
+struct IGpDisplayDriver;
 struct GpDisplayDriverProperties;
 
 class GpDisplayDriverFactory

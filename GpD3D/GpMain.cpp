@@ -1,6 +1,7 @@
 #include "GpMain.h"
 #include "GpAudioDriverFactory.h"
 #include "GpAudioDriverProperties.h"
+#include "GpFontHandlerFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpDisplayDriverProperties.h"
 #include "GpGlobalConfig.h"
@@ -15,6 +16,11 @@ namespace
 	void TickAppEnvironment(void *context, GpFiber *vosFiber)
 	{
 		static_cast<GpAppEnvironment*>(context)->Tick(vosFiber);
+	}
+
+	void RenderAppEnvironment(void *context)
+	{
+		static_cast<GpAppEnvironment*>(context)->Render();
 	}
 }
 
@@ -38,6 +44,10 @@ int GpMain::Run()
 
 	ddProps.m_tickFunc = TickAppEnvironment;
 	ddProps.m_tickFuncContext = appEnvironment;
+
+	ddProps.m_renderFunc = RenderAppEnvironment;
+	ddProps.m_renderFuncContext = appEnvironment;
+
 	ddProps.m_type = g_gpGlobalConfig.m_displayDriverType;
 
 	GpAudioDriverProperties adProps;
@@ -51,11 +61,13 @@ int GpMain::Run()
 
 	IGpDisplayDriver *displayDriver = GpDisplayDriverFactory::CreateDisplayDriver(ddProps);
 	IGpAudioDriver *audioDriver = GpAudioDriverFactory::CreateAudioDriver(adProps);
+	PortabilityLayer::HostFontHandler *fontHandler = GpFontHandlerFactory::Create();
 
 	appEnvironment->Init();
 
 	appEnvironment->SetDisplayDriver(displayDriver);
 	appEnvironment->SetAudioDriver(audioDriver);
+	appEnvironment->SetFontHandler(fontHandler);
 
 	// Start the display loop
 	displayDriver->Run();

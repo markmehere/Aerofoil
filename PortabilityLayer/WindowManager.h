@@ -3,6 +3,7 @@
 struct Window;
 struct CGraf;
 struct GDevice;
+struct IGpDisplayDriver;
 
 namespace PortabilityLayer
 {
@@ -19,6 +20,8 @@ namespace PortabilityLayer
 		virtual void ShowWindow(Window *window) = 0;
 		virtual void HideWindow(Window *window) = 0;
 		virtual GDevice **GetWindowDevice(Window *window) = 0;
+
+		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;
 
 		static WindowManager *GetInstance();
 	};
