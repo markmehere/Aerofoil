@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FreeType", "FreeType\FreeTy
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompileShadersD3D11", "CompileShadersD3D11\CompileShadersD3D11.vcxproj", "{ED2F91E1-673A-4590-82B2-EB157927D3E3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConvertColorCursors", "ConvertColorCursors\ConvertColorCursors.vcxproj", "{B852D549-4020-4477-8BFB-E199FF78B047}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -121,6 +123,14 @@ Global
 		{ED2F91E1-673A-4590-82B2-EB157927D3E3}.Release|x64.Build.0 = Release|x64
 		{ED2F91E1-673A-4590-82B2-EB157927D3E3}.Release|x86.ActiveCfg = Release|Win32
 		{ED2F91E1-673A-4590-82B2-EB157927D3E3}.Release|x86.Build.0 = Release|Win32
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Debug|x64.ActiveCfg = Debug|x64
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Debug|x64.Build.0 = Debug|x64
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Debug|x86.ActiveCfg = Debug|Win32
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Debug|x86.Build.0 = Debug|Win32
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x64.ActiveCfg = Release|x64
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x64.Build.0 = Release|x64
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x86.ActiveCfg = Release|Win32
+		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

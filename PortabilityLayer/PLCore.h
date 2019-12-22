@@ -12,6 +12,8 @@
 #pragma warning(error:4311)	// Pointer truncation to int
 #endif
 
+struct IGpColorCursor;
+
 namespace PortabilityLayer
 {
 	struct MMHandleBlock;
@@ -92,6 +94,7 @@ struct Cursor
 
 struct CCursor
 {
+	IGpColorCursor *hwCursor;
 };
 
 struct Window

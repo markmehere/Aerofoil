@@ -11,5 +11,6 @@ namespace PortabilityLayer
 		EVirtualDirectory_UserData,
 		EVirtualDirectory_Prefs,
 		EVirtualDirectory_Fonts,
+		EVirtualDirectory_Cursors,
 	};
 }

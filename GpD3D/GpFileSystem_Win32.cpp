@@ -95,6 +95,7 @@ GpDirectoryCursor_Win32::~GpDirectoryCursor_Win32()
 
 GpFileSystem_Win32::GpFileSystem_Win32()
 {
+	// GP TODO: This shouldn't be static init since it allocates memory
 	m_executablePath[0] = 0;
 
 	PWSTR docsPath;
@@ -199,6 +200,11 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(Portabi
 		return nullptr;
 
 	return GpDirectoryCursor_Win32::Create(ff, findData);
+}
+
+const wchar_t *GpFileSystem_Win32::GetBasePath() const
+{
+	return m_executablePath;
 }
 
 GpFileSystem_Win32 *GpFileSystem_Win32::GetInstance()

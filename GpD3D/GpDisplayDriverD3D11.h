@@ -10,6 +10,9 @@
 
 #include "PixelFormat.h"
 
+struct GpWindowsGlobals;
+class GpColorCursor_Win32;
+
 struct IDXGISwapChain1;
 struct ID3D11Buffer;
 struct ID3D11DepthStencilState;
@@ -35,6 +38,10 @@ public:
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, size_t x, size_t y, size_t width, size_t height) override;
 
+	IGpColorCursor *LoadColorCursor(int cursorID) override;
+	void SetColorCursor(IGpColorCursor *colorCursor) override;
+	void SetStandardCursor(EGpStandardCursor_t standardCursor) override;
+
 	void UpdatePalette(const void *paletteData) override;
 
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
@@ -52,11 +59,21 @@ private:
 		float m_unused[2];
 	};
 
+	struct CompactedPresentHistoryItem
+	{
+		LARGE_INTEGER m_timestamp;
+		unsigned int m_numFrames;
+	};
+
 	GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties);
 	~GpDisplayDriverD3D11();
 
 	bool InitResources();
 	bool PresentFrameAndSync();
+
+	void SynchronizeCursors();
+	void ChangeToCursor(HCURSOR cursor);
+	void ChangeToStandardCursor(EGpStandardCursor_t cursor);
 
 	GpComPtr<IDXGISwapChain1> m_swapChain;
 	GpComPtr<ID3D11Device> m_device;
@@ -77,12 +94,6 @@ private:
 	GpComPtr<ID3D11Texture2D> m_backBufferTexture;
 	GpComPtr<ID3D11RenderTargetView> m_backBufferRTV;
 
-	struct CompactedPresentHistoryItem
-	{
-		LARGE_INTEGER m_timestamp;
-		unsigned int m_numFrames;
-	};
-
 	GpRingBuffer<CompactedPresentHistoryItem, 60> m_presentHistory;
 	GpDisplayDriverProperties m_properties;
 
@@ -97,5 +108,15 @@ private:
 	DWORD m_windowWidth;
 	DWORD m_windowHeight;
 
+	GpColorCursor_Win32 *m_activeCursor;
+	GpColorCursor_Win32 *m_pendingCursor;
+	EGpStandardCursor_t m_currentStandardCursor;
+	EGpStandardCursor_t m_pendingStandardCursor;
+	bool m_mouseIsInClientArea;
+
 	GpFiber *m_vosFiber;
+	GpWindowsGlobals *m_osGlobals;
+
+	HCURSOR m_arrowCursor;
+	HWND m_hwnd;
 };

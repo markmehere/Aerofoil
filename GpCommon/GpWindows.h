@@ -2,17 +2,19 @@
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
+#define OEMRESOURCE
 
 #include <Windows.h>
 
-struct GPWindowsGlobals
+struct GpWindowsGlobals
 {
 	HINSTANCE m_hInstance;
 	HINSTANCE m_hPrevInstance;
-	LPSTR m_cmdLine;
+	LPCSTR m_cmdLine;
+	LPCWSTR m_baseDir;
 	int m_nCmdShow;
 };
 
-extern GPWindowsGlobals g_gpWindowsGlobals;
+extern GpWindowsGlobals g_gpWindowsGlobals;
 
 #undef CreateMutex

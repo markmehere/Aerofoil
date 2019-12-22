@@ -49,6 +49,7 @@ int GpMain::Run()
 	ddProps.m_renderFuncContext = appEnvironment;
 
 	ddProps.m_type = g_gpGlobalConfig.m_displayDriverType;
+	ddProps.m_osGlobals = g_gpGlobalConfig.m_osGlobals;
 
 	GpAudioDriverProperties adProps;
 	memset(&adProps, 0, sizeof(adProps));

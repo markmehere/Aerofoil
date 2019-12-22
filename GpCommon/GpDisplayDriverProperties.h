@@ -21,6 +21,8 @@ struct GpDisplayDriverProperties
 	unsigned int m_frameTimeLockMaxNumerator;
 	unsigned int m_frameTimeLockMaxDenominator;
 
+	void *m_osGlobals;
+
 	// Tick function and context to call when a frame needs to be served.
 	TickFunc_t m_tickFunc;
 	void *m_tickFuncContext;

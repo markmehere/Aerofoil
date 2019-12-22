@@ -1,4 +1,7 @@
 x64\Release\MiniRez.exe "GpApp2\Glider PRO.r" Packaged\ApplicationResources.gpr
+
+x64\Release\ConvertColorCursors.exe
+
 x64\Release\hqx2gp.exe "GpApp2\Houses\Art Museum.binhex" "Packaged\Houses\Art Museum"
 x64\Release\hqx2gp.exe "GpApp2\Houses\California or Bust!.binhex" "Packaged\Houses\California or Bust!"
 x64\Release\hqx2gp.exe "GpApp2\Houses\Castle o' the Air.binhex" "Packaged\Houses\Castle o' the Air"

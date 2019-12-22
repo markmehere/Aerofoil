@@ -1,6 +1,8 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "GpDisplayDriverD3D11.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
 #include "GpWindows.h"
+#include "GpColorCursor_Win32.h"
 #include "GpFiber_Win32.h"
 
 #include <d3d11.h>
@@ -308,6 +310,8 @@ bool GpDisplayDriverD3D11::InitResources()
 
 bool GpDisplayDriverD3D11::PresentFrameAndSync()
 {
+	SynchronizeCursors();
+
 	float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 
 	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, clearColor);
@@ -443,9 +447,74 @@ bool GpDisplayDriverD3D11::PresentFrameAndSync()
 	return true;
 }
 
+void GpDisplayDriverD3D11::SynchronizeCursors()
+{
+	HCURSOR replacementCursor = nullptr;
+
+	if (m_activeCursor)
+	{
+		if (m_pendingCursor != m_activeCursor)
+		{
+			if (m_pendingCursor == nullptr)
+			{
+				m_currentStandardCursor = m_pendingStandardCursor;
+				ChangeToStandardCursor(m_currentStandardCursor);
+
+				m_activeCursor->DecRef();
+				m_activeCursor = nullptr;
+			}
+			else
+			{
+				ChangeToCursor(m_pendingCursor->GetHCursor());
+
+				m_pendingCursor->IncRef();
+				m_activeCursor->DecRef();
+				m_activeCursor = m_pendingCursor;
+			}
+		}
+	}
+	else
+	{
+		if (m_pendingCursor)
+		{
+			m_pendingCursor->IncRef();
+			m_activeCursor = m_pendingCursor;
+
+			ChangeToCursor(m_activeCursor->GetHCursor());
+		}
+		else
+		{
+			if (m_pendingStandardCursor != m_currentStandardCursor)
+			{
+				ChangeToStandardCursor(m_pendingStandardCursor);
+				m_currentStandardCursor = m_pendingStandardCursor;
+			}
+		}
+	}
+}
+
+
+void GpDisplayDriverD3D11::ChangeToCursor(HCURSOR cursor)
+{
+	if (m_mouseIsInClientArea)
+		SetCursor(cursor);
+
+	SetClassLongPtrW(m_hwnd, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(cursor));
+}
+
+void GpDisplayDriverD3D11::ChangeToStandardCursor(EGpStandardCursor_t cursor)
+{
+	switch (cursor)
+	{
+	case EGpStandardCursors::kArrow:
+	default:
+		ChangeToCursor(m_arrowCursor);
+		break;
+	}
+}
+
 void GpDisplayDriverD3D11::Run()
 {
-	HWND hWnd;
 	WNDCLASSEX wc;
 
 	LPVOID fiber = ConvertThreadToFiberEx(this, 0);
@@ -460,7 +529,7 @@ void GpDisplayDriverD3D11::Run()
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WinProc;
 	wc.hInstance = g_gpWindowsGlobals.m_hInstance;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor = m_arrowCursor;
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	wc.lpszClassName = "GPD3D11WindowClass";
 
@@ -473,11 +542,11 @@ void GpDisplayDriverD3D11::Run()
 	RECT wr = { 0, 0, m_windowWidth, m_windowHeight };
 	AdjustWindowRect(&wr, windowStyle, menus != NULL);
 
-	hWnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", L"GlidePort (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, g_gpWindowsGlobals.m_hInstance, NULL);
+	m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", L"GlidePort (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, g_gpWindowsGlobals.m_hInstance, NULL);
 
-	ShowWindow(hWnd, g_gpWindowsGlobals.m_nCmdShow);
+	ShowWindow(m_hwnd, g_gpWindowsGlobals.m_nCmdShow);
 
-	StartD3DForWindow(hWnd, m_swapChain, m_device, m_deviceContext);
+	StartD3DForWindow(m_hwnd, m_swapChain, m_device, m_deviceContext);
 
 	InitResources();
 
@@ -495,6 +564,10 @@ void GpDisplayDriverD3D11::Run()
 
 			if (msg.message == WM_QUIT)
 				break;
+			else if (msg.message == WM_MOUSEMOVE)
+				m_mouseIsInClientArea = true;
+			else if (msg.message == WM_MOUSELEAVE)
+				m_mouseIsInClientArea = false;
 		}
 		else
 		{
@@ -612,6 +685,44 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, size_t 
 	m_deviceContext->DrawIndexed(6, 0, 0);
 }
 
+IGpColorCursor *GpDisplayDriverD3D11::LoadColorCursor(int cursorID)
+{
+	const size_t bufSize = MAX_PATH;
+	wchar_t path[bufSize];
+
+	int sz = _snwprintf(path, bufSize, L"%sPackaged\\WinCursors\\%i.cur", m_osGlobals->m_baseDir, cursorID);
+	if (sz < 0 || static_cast<size_t>(sz) >= bufSize)
+		return nullptr;
+
+	return GpColorCursor_Win32::Load(path);
+}
+
+// We can't just set the cursor because we want to post WM_SETCURSOR to keep it limited
+// to the game window area, but depending on the fiber implementation, this may not be
+// the window thread.
+void GpDisplayDriverD3D11::SetColorCursor(IGpColorCursor *colorCursor)
+{
+	GpColorCursor_Win32 *winCursor = static_cast<GpColorCursor_Win32*>(colorCursor);
+
+	winCursor->IncRef();
+
+	if (m_pendingCursor)
+		m_pendingCursor->DecRef();
+
+	m_pendingCursor = winCursor;
+}
+
+void GpDisplayDriverD3D11::SetStandardCursor(EGpStandardCursor_t standardCursor)
+{
+	if (m_pendingCursor)
+	{
+		m_pendingCursor->DecRef();
+		m_pendingCursor = nullptr;
+	}
+
+	m_pendingStandardCursor = standardCursor;
+}
+
 void GpDisplayDriverD3D11::UpdatePalette(const void *paletteData)
 {
 	const size_t dataSize = 256 * 4;
@@ -643,14 +754,23 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_windowWidth(640)
 	, m_windowHeight(480)
 	, m_vosFiber(nullptr)
+	, m_osGlobals(static_cast<GpWindowsGlobals*>(properties.m_osGlobals))
+	, m_pendingCursor(nullptr)
+	, m_activeCursor(nullptr)
+	, m_currentStandardCursor(EGpStandardCursors::kArrow)
+	, m_pendingStandardCursor(EGpStandardCursors::kArrow)
+	, m_mouseIsInClientArea(false)
 {
 	memset(&m_syncTimeBase, 0, sizeof(m_syncTimeBase));
 
 	QueryPerformanceFrequency(&m_QPFrequency);
 
 	m_frameTimeSliceSize = m_QPFrequency.QuadPart * static_cast<LONGLONG>(properties.m_frameTimeLockNumerator) / static_cast<LONGLONG>(properties.m_frameTimeLockDenominator);
+
+	m_arrowCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_SHARED));
 }
 
 GpDisplayDriverD3D11::~GpDisplayDriverD3D11()
 {
+	// GP TODO: Sloppy cleanup... Close the window!!
 }

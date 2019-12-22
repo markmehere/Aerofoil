@@ -14,6 +14,7 @@
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
 #include "HostVOSEventQueue.h"
+#include "IGpColorCursor.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
@@ -64,6 +65,7 @@ static void ImportVOSEvents()
 
 void InitCursor()
 {
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kArrow);
 }
 
 Rect BERect::ToRect() const
@@ -90,26 +92,34 @@ CursHandle GetCursor(int cursorID)
 
 CCrsrHandle GetCCursor(int cursorID)
 {
-	PortabilityLayer::ResourceManager *resManager = PortabilityLayer::ResourceManager::GetInstance();
-	PortabilityLayer::MMHandleBlock *ccRes = resManager->GetResource('crsr', cursorID);
+	PortabilityLayer::HostDisplayDriver *driver = PortabilityLayer::HostDisplayDriver::GetInstance();
+	IGpColorCursor *hwCursor = driver->LoadColorCursor(cursorID);
 
-	if (!ccRes)
+	if (!hwCursor)
 		return nullptr;
 
-	PortabilityLayer::MMHandleBlock *copy = PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(ccRes->m_size);
-	memcpy(copy->m_contents, ccRes->m_contents, ccRes->m_size);
+	CCrsrHandle hdl = PortabilityLayer::MemoryManager::GetInstance()->NewHandle<CCursor>();
+	if (!hdl)
+	{
+		hwCursor->Destroy();
+		return nullptr;
+	}
 
-	return reinterpret_cast<CCrsrHandle>(copy);
+	CCursor *ccursor = *hdl;
+	ccursor->hwCursor = hwCursor;
+
+	return hdl;
 }
 
 void SetCCursor(CCrsrHandle handle)
 {
-	PL_NotYetImplemented_Minor();
+	assert(handle);
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor((*handle)->hwCursor);
 }
 
 void HideCursor()
 {
-	PortabilityLayer::HostDisplayDriver::GetInstance()->HideCursor();
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kHidden);
 }
 
 void SetCursor(CursPtr cursor)
@@ -124,7 +134,9 @@ void SetBuiltinCursor(int builtinCursor)
 
 void DisposeCCursor(CCrsrHandle handle)
 {
-	PL_NotYetImplemented();
+	(*handle)->hwCursor->Destroy();
+
+	PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle));
 }
 
 void Delay(int ticks, UInt32 *endTickCount)

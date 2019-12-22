@@ -99,6 +99,9 @@
     <ClCompile Include="ShadersD3D11\DrawQuadRGBP_D3D11.cpp">
       <Filter>Source Files\CompiledShaders</Filter>
     </ClCompile>
+    <ClCompile Include="..\GpCommon\GpColorCursor_Win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GpWindows.h">
@@ -210,6 +213,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpComPtr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\IGpColorCursor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\GpColorCursor_Win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\EGpStandardCursor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

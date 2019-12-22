@@ -1,4 +1,5 @@
 #include "GpPLGlueDisplayDriver.h"
+#include "VirtualDirectory.h"
 #include "IGpDisplayDriver.h"
 
 GpPLGlueDisplayDriver::GpPLGlueDisplayDriver()
@@ -11,8 +12,19 @@ void GpPLGlueDisplayDriver::GetDisplayResolution(unsigned int *width, unsigned i
 	m_displayDriver->GetDisplayResolution(width, height, bpp);
 }
 
-void GpPLGlueDisplayDriver::HideCursor()
+IGpColorCursor *GpPLGlueDisplayDriver::LoadColorCursor(int cursorID)
 {
+	return m_displayDriver->LoadColorCursor(cursorID);
+}
+
+void GpPLGlueDisplayDriver::SetColorCursor(IGpColorCursor *colorCursor)
+{
+	m_displayDriver->SetColorCursor(colorCursor);
+}
+
+void GpPLGlueDisplayDriver::SetStandardCursor(EGpStandardCursor_t standardCursor)
+{
+	m_displayDriver->SetStandardCursor(standardCursor);
 }
 
 GpPLGlueDisplayDriver *GpPLGlueDisplayDriver::GetInstance()

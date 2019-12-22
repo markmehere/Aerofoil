@@ -16,6 +16,8 @@ public:
 	PortabilityLayer::IOStream *OpenFile(PortabilityLayer::EVirtualDirectory virtualDirectory, const char *path, bool writeAccess, bool create) override;
 	PortabilityLayer::HostDirectoryCursor *ScanDirectory(PortabilityLayer::EVirtualDirectory virtualDirectory) override;
 
+	const wchar_t *GetBasePath() const;
+
 	static GpFileSystem_Win32 *GetInstance();
 
 private:
