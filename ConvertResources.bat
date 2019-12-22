@@ -1,3 +1,7 @@
+mkdir Packaged
+mkdir Packaged\Houses
+mkdir Packaged\WinCursors
+
 x64\Release\MiniRez.exe "GpApp2\Glider PRO.r" Packaged\ApplicationResources.gpr
 
 x64\Release\ConvertColorCursors.exe
