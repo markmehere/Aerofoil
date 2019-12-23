@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "PixelFormat.h"
+#include "GpPixelFormat.h"
 #include "QDState.h"
 #include "QDPort.h"
 
@@ -24,7 +24,7 @@ struct CGraf
 	{
 	}
 
-	int Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat)
+	int Init(const Rect &rect, GpPixelFormat_t pixelFormat)
 	{
 		if (int errorCode = m_port.Init(rect, pixelFormat))
 			return errorCode;

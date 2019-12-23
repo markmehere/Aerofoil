@@ -1,17 +1,18 @@
 #pragma once
 
-#include "IGpColorCursor.h"
+#include "IGpColorCursor_Win32.h"
 #include "GpWindows.h"
 
-class GpColorCursor_Win32 final : public IGpColorCursor
+
+class GpColorCursor_Win32 final : public IGpColorCursor_Win32
 {
 public:
 	void Destroy() override;
 
-	const HCURSOR &GetHCursor() const;
+	const HCURSOR &GetHCursor() const override;
 
-	void IncRef();
-	void DecRef();
+	void IncRef() override;
+	void DecRef() override;
 
 	static GpColorCursor_Win32 *Load(const wchar_t *path);
 

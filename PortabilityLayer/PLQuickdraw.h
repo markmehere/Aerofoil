@@ -26,33 +26,12 @@ enum IconSuiteFlags
 enum TextFlags
 {
 	bold = 1,
-	italicBit = 2,
-	ulineBit = 4,
-	outlineBit = 8,
-	shadowBit = 16,
-	condenseBit = 32,
-	extendBit = 64,
 };
 
 enum SystemFontID
 {
 	systemFont = 0,	// System font
 	applFont = 1,	// Application font
-	newYork = 2,
-	geneva = 3,
-	monaco = 4,
-	venice = 5,
-	london = 6,
-	athens = 7,
-	sanFran = 8,
-	toronto = 9,
-	cairo = 11,
-	losAngeles = 12,
-	times = 20,
-	helvetica = 21,
-	courier = 22,
-	symbol = 23,
-	mobile = 24,
 };
 
 enum SystemColorID
@@ -88,11 +67,11 @@ struct CIcon
 struct BitMap
 {
 	Rect m_rect;
-	PortabilityLayer::PixelFormat m_pixelFormat;
+	GpPixelFormat_t m_pixelFormat;
 	size_t m_pitch;
 	void *m_data;
 
-	void Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr);
+	void Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, void *dataPtr);
 };
 
 struct RGBColor

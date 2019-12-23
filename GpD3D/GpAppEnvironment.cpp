@@ -4,8 +4,8 @@
 #include "GpFontHandlerFactory.h"
 #include "GpPLGlueAudioDriver.h"
 #include "GpPLGlueDisplayDriver.h"
-#include "GpFiber.h"
 #include "HostSuspendCallArgument.h"
+#include "IGpFiber.h"
 
 #include <assert.h>
 
@@ -31,7 +31,7 @@ void GpAppEnvironment::Init()
 {
 }
 
-void GpAppEnvironment::Tick(GpFiber *vosFiber)
+void GpAppEnvironment::Tick(IGpFiber *vosFiber)
 {
 	GpAppInterface_Get()->PL_IncrementTickCounter(1);
 

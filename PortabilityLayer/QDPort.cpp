@@ -13,7 +13,7 @@ namespace PortabilityLayer
 		, m_width(0)
 		, m_height(0)
 		, m_pixMap(nullptr)
-		, m_pixelFormat(PixelFormat_Invalid)
+		, m_pixelFormat(GpPixelFormats::kInvalid)
 		, m_dirtyFlags(0)
 	{
 	}
@@ -33,7 +33,7 @@ namespace PortabilityLayer
 		}
 	}
 
-	int QDPort::Init(const Rect &rect, PixelFormat pixelFormat)
+	int QDPort::Init(const Rect &rect, GpPixelFormat_t pixelFormat)
 	{
 		m_pixMap = nullptr;
 		m_pixelFormat = pixelFormat;
@@ -56,6 +56,8 @@ namespace PortabilityLayer
 		MMHandleBlock *pmBlock = MemoryManager::GetInstance()->AllocHandle(pixMapSize);
 		if (!pmBlock)
 			return false;
+
+		memset(pmBlock->m_contents, 0, pixMapSize);
 
 		SetDirty(QDPortDirtyFlag_Size | QDPortDirtyFlag_Contents);
 
@@ -103,7 +105,7 @@ namespace PortabilityLayer
 		return &m_state;
 	}
 
-	PixelFormat QDPort::GetPixelFormat() const
+	GpPixelFormat_t QDPort::GetPixelFormat() const
 	{
 		return m_pixelFormat;
 	}

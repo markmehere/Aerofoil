@@ -13,7 +13,7 @@
 
 namespace
 {
-	void TickAppEnvironment(void *context, GpFiber *vosFiber)
+	void TickAppEnvironment(void *context, IGpFiber *vosFiber)
 	{
 		static_cast<GpAppEnvironment*>(context)->Tick(vosFiber);
 	}

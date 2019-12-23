@@ -2,7 +2,7 @@
 
 #include "IGpDisplayDriverSurface.h"
 #include "GpComPtr.h"
-#include "PixelFormat.h"
+#include "GpPixelFormat.h"
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -17,19 +17,19 @@ public:
 	virtual void Destroy() override;
 
 	ID3D11ShaderResourceView *GetSRV() const;
-	PortabilityLayer::PixelFormat GetPixelFormat() const;
+	GpPixelFormat_t GetPixelFormat() const;
 	size_t GetWidth() const;
 	size_t GetHeight() const;
 
-	static GpDisplayDriverSurfaceD3D11 *Create(ID3D11Device *device, ID3D11DeviceContext *deviceContext, size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat);
+	static GpDisplayDriverSurfaceD3D11 *Create(ID3D11Device *device, ID3D11DeviceContext *deviceContext, size_t width, size_t height, GpPixelFormat_t pixelFormat);
 
 private:
-	GpDisplayDriverSurfaceD3D11(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ID3D11Texture2D *texture, ID3D11ShaderResourceView *srv, size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat);
+	GpDisplayDriverSurfaceD3D11(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ID3D11Texture2D *texture, ID3D11ShaderResourceView *srv, size_t width, size_t height, GpPixelFormat_t pixelFormat);
 	~GpDisplayDriverSurfaceD3D11();
 
 	size_t m_width;
 	size_t m_height;
-	PortabilityLayer::PixelFormat m_pixelFormat;
+	GpPixelFormat_t m_pixelFormat;
 	ID3D11Device *m_device;
 	ID3D11DeviceContext *m_deviceContext;
 

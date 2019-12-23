@@ -10,6 +10,8 @@ struct MenuItem
 	uint8_t key;
 	uint8_t submenuID;
 	uint8_t textStyle;
+	bool enabled;
+	bool checked;
 };
 
 struct Menu
@@ -18,7 +20,7 @@ struct Menu
 	uint16_t width;
 	uint16_t height;
 	uint16_t commandID;
-	uint32_t itemEnabledMask;
+	bool enabled;
 
 	PortabilityLayer::MMHandleBlock *stringBlobHandle;
 
@@ -43,6 +45,9 @@ namespace PortabilityLayer
 		void InsertMenuAfter(Menu **insertingMenu, Menu **existingMenu) override;
 		void InsertMenuAtEnd(Menu **insertingMenu) override;
 		void InsertMenuAtBeginning(Menu **insertingMenu) override;
+		void SetMenuEnabled(Menu **menuHandle, bool enabled) override;
+		void SetItemEnabled(Menu **menu, unsigned int index, bool enabled) override;
+		void SetItemChecked(Menu **menu, unsigned int index, bool checked) override;
 
 		static MenuManagerImpl *GetInstance();
 
@@ -109,17 +114,21 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
+		uint32_t enableFlags = header.enableFlags;
+
 		Menu *menu = static_cast<Menu*>(menuData->m_contents);
 		menu->menuID = header.menuID;
 		menu->width = header.width;
 		menu->height = header.height;
 		menu->commandID = header.commandID;
-		menu->itemEnabledMask = header.enableFlags;
+		menu->enabled = ((enableFlags & 1) != 0);
 
 		uint8_t *stringDataStart = static_cast<uint8_t*>(stringData->m_contents);
 		uint8_t *stringDest = stringDataStart;
 		memcpy(stringDest, resBytes + 14, 1 + resBytes[14]);
 		stringDest += 1 + resBytes[14];
+
+		enableFlags >>= 1;
 
 		MenuItem *currentItem = menu->menuItems;
 		for (const uint8_t *menuItemStart = menuDataStart; *menuItemStart; menuItemStart += 5 + (*menuItemStart))
@@ -132,7 +141,11 @@ namespace PortabilityLayer
 			currentItem->key = menuItemStart[2 + itemNameLength];
 			currentItem->submenuID = menuItemStart[3 + itemNameLength];
 			currentItem->textStyle = menuItemStart[4 + itemNameLength];
-			currentItem->nameOffsetInStringBlob = stringDest - stringDataStart;
+			currentItem->nameOffsetInStringBlob = static_cast<uint32_t>(stringDest - stringDataStart);
+			currentItem->enabled = ((enableFlags & 1) != 0);
+			currentItem->checked = false;
+
+			enableFlags >>= 1;
 
 			currentItem++;
 			stringDest += 1 + (*menuItemStart);
@@ -213,6 +226,33 @@ namespace PortabilityLayer
 		(*m_firstMenu)->prevMenu = insertingMenu;
 		(*insertingMenu)->nextMenu = m_firstMenu;
 		m_firstMenu = insertingMenu;
+	}
+
+	void MenuManagerImpl::SetMenuEnabled(Menu **menuHandle, bool enabled)
+	{
+		Menu *menu = *menuHandle;
+
+		menu->enabled = enabled;
+	}
+
+	void MenuManagerImpl::SetItemEnabled(Menu **menuHandle, unsigned int index, bool enabled)
+	{
+		Menu *menu = *menuHandle;
+
+		if (index >= menu->numMenuItems)
+			return;
+
+		menu->menuItems[index].enabled = enabled;
+	}
+
+	void MenuManagerImpl::SetItemChecked(Menu **menuHandle, unsigned int index, bool checked)
+	{
+		Menu *menu = *menuHandle;
+
+		if (index >= menu->numMenuItems)
+			return;
+
+		menu->menuItems[index].checked = checked;
 	}
 
 	MenuManagerImpl *MenuManagerImpl::GetInstance()

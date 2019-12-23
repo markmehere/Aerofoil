@@ -5,7 +5,7 @@
 
 namespace PortabilityLayer
 {
-	PixMapImpl::PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, PixelFormat pixelFormat)
+	PixMapImpl::PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat)
 		: m_left(left)
 		, m_top(top)
 		, m_width(width)
@@ -22,7 +22,7 @@ namespace PortabilityLayer
 		static_cast<PixMap*>(this)->Init(rect, pixelFormat, PitchForWidth(width, pixelFormat), dataPtr);
 	}
 
-	size_t PixMapImpl::SizeForDimensions(uint16_t width, uint16_t height, PixelFormat pixelFormat)
+	size_t PixMapImpl::SizeForDimensions(uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat)
 	{
 		return AlignedSize() + PitchForWidth(width, pixelFormat) * height;
 	}
@@ -35,23 +35,23 @@ namespace PortabilityLayer
 		return szAdjusted;
 	}
 
-	size_t PixMapImpl::PitchForWidth(uint16_t width, PixelFormat pixelFormat)
+	size_t PixMapImpl::PitchForWidth(uint16_t width, GpPixelFormat_t pixelFormat)
 	{
 		size_t rowByteCount = 0;
 
 		switch (pixelFormat)
 		{
-		case PixelFormat_8BitCustom:
-		case PixelFormat_8BitStandard:
+		case GpPixelFormats::k8BitCustom:
+		case GpPixelFormats::k8BitStandard:
 			rowByteCount = width;
 			break;
-		case PixelFormat_RGB555:
+		case GpPixelFormats::kRGB555:
 			rowByteCount = width * 2;
 			break;
-		case PixelFormat_RGB24:
+		case GpPixelFormats::kRGB24:
 			rowByteCount = width * 3;
 			break;
-		case PixelFormat_RGB32:
+		case GpPixelFormats::kRGB32:
 			rowByteCount = width * 4;
 			break;
 		default:
@@ -65,7 +65,7 @@ namespace PortabilityLayer
 	}
 }
 
-void PixMap::Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr)
+void PixMap::Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, void *dataPtr)
 {
 	BitMap::Init(rect, pixelFormat, pitch, dataPtr);
 }

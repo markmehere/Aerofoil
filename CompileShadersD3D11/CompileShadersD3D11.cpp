@@ -23,7 +23,7 @@ const CompileJob kCompileJobs[] =
 {
 	{
 		L"ShaderSrc\\DrawQuadV.hlsl",
-		L"GpD3D\\ShadersD3D11\\DrawQuadV_D3D11.cpp",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuadV_D3D11.cpp",
 		"g_drawQuadV_D3D11",
 		drawQuadDefs,
 		"VSMain",
@@ -31,7 +31,7 @@ const CompileJob kCompileJobs[] =
 	},
 	{
 		L"ShaderSrc\\DrawQuadRGBP.hlsl",
-		L"GpD3D\\ShadersD3D11\\DrawQuadRGBP_D3D11.cpp",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuadRGBP_D3D11.cpp",
 		"g_drawQuadRGBP_D3D11",
 		drawQuadDefs,
 		"PSMain",
@@ -39,7 +39,7 @@ const CompileJob kCompileJobs[] =
 	},
 	{
 		L"ShaderSrc\\DrawQuadPaletteP.hlsl",
-		L"GpD3D\\ShadersD3D11\\DrawQuadPaletteP_D3D11.cpp",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuadPaletteP_D3D11.cpp",
 		"g_drawQuadPaletteP_D3D11",
 		drawQuadDefs,
 		"PSMain",
@@ -47,7 +47,7 @@ const CompileJob kCompileJobs[] =
 	},
 	{
 		L"ShaderSrc\\DrawQuad15BitP.hlsl",
-		L"GpD3D\\ShadersD3D11\\DrawQuad15BitP_D3D11.cpp",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuad15BitP_D3D11.cpp",
 		"g_drawQuad15BitP_D3D11",
 		drawQuadDefs,
 		"PSMain",

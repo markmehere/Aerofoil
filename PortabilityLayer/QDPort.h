@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "PixelFormat.h"
+#include "GpPixelFormat.h"
 #include "QDState.h"
 
 struct PixMap;
@@ -29,13 +29,13 @@ namespace PortabilityLayer
 		explicit QDPort(QDPortType portType);
 		~QDPort();
 
-		int Init(const Rect &rect, PixelFormat pixelFormat);
+		int Init(const Rect &rect, GpPixelFormat_t pixelFormat);
 		QDPortType GetPortType() const;
 
 		PixMap **GetPixMap() const;
 		const QDState *GetState() const;
 		QDState *GetState();
-		PixelFormat GetPixelFormat() const;
+		GpPixelFormat_t GetPixelFormat() const;
 		Rect GetRect() const;
 
 		bool Resize(const Rect &rect);
@@ -57,7 +57,7 @@ namespace PortabilityLayer
 		uint16_t m_width;
 		uint16_t m_height;
 		uint32_t m_dirtyFlags;
-		PixelFormat m_pixelFormat;
+		GpPixelFormat_t m_pixelFormat;
 	};
 
 	inline QDPortType QDPort::GetPortType() const

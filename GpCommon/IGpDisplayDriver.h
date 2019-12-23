@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PixelFormat.h"
+#include "GpPixelFormat.h"
 #include "EGpStandardCursor.h"
 
 struct IGpDisplayDriverSurface;
@@ -13,9 +13,9 @@ public:
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
 
-	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) = 0;
+	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) = 0;
 
-	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat) = 0;
+	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) = 0;
 	virtual void DrawSurface(IGpDisplayDriverSurface *surface, size_t x, size_t y, size_t width, size_t height) = 0;
 
 	virtual IGpColorCursor *LoadColorCursor(int cursorID) = 0;

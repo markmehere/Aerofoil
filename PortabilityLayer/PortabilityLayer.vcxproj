@@ -137,13 +137,16 @@
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FilePermission.h" />
     <ClInclude Include="FilePos.h" />
+    <ClInclude Include="FontFamily.h" />
     <ClInclude Include="FontManager.h" />
+    <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="GpAppInterface.h" />
     <ClInclude Include="HostAudioChannel.h" />
     <ClInclude Include="HostAudioDriver.h" />
     <ClInclude Include="HostDirectoryCursor.h" />
     <ClInclude Include="HostFont.h" />
     <ClInclude Include="HostFontHandler.h" />
+    <ClInclude Include="HostFontRenderedGlyph.h" />
     <ClInclude Include="HostInputDriver.h" />
     <ClInclude Include="HostMutex.h" />
     <ClInclude Include="HostSuspendCallArgument.h" />
@@ -159,7 +162,7 @@
     <ClInclude Include="MacFileMem.h" />
     <ClInclude Include="MacFileInfo.h" />
     <ClInclude Include="MacFileWriteableMem.h" />
-    <ClInclude Include="MacLatin.h" />
+    <ClInclude Include="MacRoman.h" />
     <ClInclude Include="MacRsrcHeader.h" />
     <ClInclude Include="MacRsrcMap.h" />
     <ClInclude Include="MemoryManager.h" />
@@ -201,6 +204,7 @@
     <ClInclude Include="QDUtils.h" />
     <ClInclude Include="RandomNumberGenerator.h" />
     <ClInclude Include="Rect2i.h" />
+    <ClInclude Include="RenderedFont.h" />
     <ClInclude Include="ResourceCompiledRef.h" />
     <ClInclude Include="ResourceCompiledTypeList.h" />
     <ClInclude Include="ResourceFile.h" />
@@ -242,7 +246,9 @@
     <ClCompile Include="CFileStream.cpp" />
     <ClCompile Include="DisplayDeviceManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FontFamily.cpp" />
     <ClCompile Include="FontManager.cpp" />
+    <ClCompile Include="FontRenderer.cpp" />
     <ClCompile Include="HostAudioDriver.cpp" />
     <ClCompile Include="HostDisplayDriver.cpp" />
     <ClCompile Include="HostFileSystem.cpp" />
@@ -254,7 +260,7 @@
     <ClCompile Include="MacBinary2.cpp" />
     <ClCompile Include="MacFileInfo.cpp" />
     <ClCompile Include="MacFileMem.cpp" />
-    <ClCompile Include="MacLatin1.cpp" />
+    <ClCompile Include="MacRoman.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MemReaderStream.cpp" />
     <ClCompile Include="MenuManager.cpp" />

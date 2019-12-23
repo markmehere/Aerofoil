@@ -3,11 +3,11 @@
 #include "EGpDisplayDriverType.h"
 
 struct IGpDisplayDriver;
-class GpFiber;
+struct IGpFiber;
 
 struct GpDisplayDriverProperties
 {
-	typedef void(*TickFunc_t)(void *context, GpFiber *vosFiber);
+	typedef void(*TickFunc_t)(void *context, IGpFiber *vosFiber);
 	typedef void(*RenderFunc_t)(void *context);
 
 	EGpDisplayDriverType m_type;

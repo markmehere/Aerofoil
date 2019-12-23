@@ -2,8 +2,14 @@
 #include "QDManager.h"
 #include "QDState.h"
 #include "DisplayDeviceManager.h"
+#include "FontFamily.h"
+#include "FontManager.h"
 #include "MMHandleBlock.h"
 #include "MemoryManager.h"
+#include "HostFontHandler.h"
+#include "PLPasStr.h"
+#include "RenderedFont.h"
+#include "RenderedGlyphMetrics.h"
 #include "ResourceManager.h"
 #include "ResTypeID.h"
 #include "RGBAColor.h"
@@ -13,6 +19,7 @@
 #include "QDPixMap.h"
 #include "QDUtils.h"
 
+#include <algorithm>
 #include <assert.h>
 
 void GetPort(GrafPtr *graf)
@@ -213,8 +220,8 @@ void Index2Color(int index, RGBColor *color)
 
 	PortabilityLayer::QDManager::GetInstance()->GetPort(&port, nullptr);
 
-	PortabilityLayer::PixelFormat pf = port->GetPixelFormat();
-	if (pf == PortabilityLayer::PixelFormat_8BitCustom)
+	GpPixelFormat_t pf = port->GetPixelFormat();
+	if (pf == GpPixelFormats::k8BitCustom)
 	{
 		PL_NotYetImplemented();
 	}
@@ -238,9 +245,127 @@ void RGBForeColor(const RGBColor *color)
 	PortabilityLayer::QDManager::GetInstance()->GetState()->SetForeColor(truncatedColor);
 }
 
+static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character)
+{
+	assert(rect.IsValid());
+
+	const PortabilityLayer::RenderedGlyphMetrics *metrics;
+	const void *data;
+	if (!rfont->GetGlyph(character, &metrics, &data))
+		return;
+
+	const Point originalPoint = penPos;
+
+	penPos.h += metrics->m_advanceX;
+
+	const int32_t leftCoord = originalPoint.h + metrics->m_bearingX;
+	const int32_t topCoord = originalPoint.v - metrics->m_bearingY;
+	const int32_t rightCoord = leftCoord + metrics->m_glyphWidth;
+	const int32_t bottomCoord = topCoord + metrics->m_glyphHeight;
+
+	const int32_t clampedLeftCoord = std::max<int32_t>(leftCoord, rect.left);
+	const int32_t clampedTopCoord = std::max<int32_t>(topCoord, rect.top);
+	const int32_t clampedRightCoord = std::min<int32_t>(rightCoord, rect.right);
+	const int32_t clampedBottomCoord = std::min<int32_t>(bottomCoord, rect.bottom);
+
+	if (clampedLeftCoord >= clampedRightCoord || clampedTopCoord >= clampedBottomCoord)
+		return;
+
+	const uint32_t firstOutputRow = clampedTopCoord - rect.top;
+	const uint32_t firstOutputCol = clampedLeftCoord - rect.left;
+
+	const uint32_t firstInputRow = clampedTopCoord - topCoord;
+	const uint32_t firstInputCol = clampedLeftCoord - leftCoord;
+
+	const uint32_t numCols = clampedRightCoord - clampedLeftCoord;
+	const uint32_t numRows = clampedBottomCoord - clampedTopCoord;
+
+	const size_t inputPitch = metrics->m_glyphDataPitch;
+	const size_t outputPitch = pixMap->m_pitch;
+	const uint8_t *firstInputRowData = static_cast<const uint8_t*>(data) + firstInputRow * inputPitch;
+
+	switch (pixMap->m_pixelFormat)
+	{
+	case GpPixelFormats::k8BitStandard:
+		{
+			uint8_t *firstOutputRowData = static_cast<uint8_t*>(pixMap->m_data) + firstOutputRow * outputPitch;
+
+			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+			for (uint32_t row = 0; row < numRows; row++)
+			{
+				const uint8_t *inputRowData = firstInputRowData + row * inputPitch;
+				uint8_t *outputRowData = firstOutputRowData + row * outputPitch;
+
+				// It should be possible to speed this up, if needed.  The input is guaranteed to be well-aligned and not mutable within this loop.
+				for (uint32_t col = 0; col < numCols; col++)
+				{
+					const size_t inputOffset = firstInputCol + col;
+					if (inputRowData[inputOffset / 8] & (1 << (inputOffset & 0x7)))
+						outputRowData[firstOutputCol + col] = color;
+				}
+			}
+		}
+		break;
+	default:
+		PL_NotYetImplemented();
+	}
+}
+
 void DrawString(const PLPasStr &str)
 {
-	PL_NotYetImplemented_TODO("Text");
+	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
+
+	PortabilityLayer::QDPort *port = nullptr;
+	qdManager->GetPort(&port, nullptr);
+
+	PortabilityLayer::QDState *qdState = qdManager->GetState();
+
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	const int textSize = qdState->m_textSize;
+	const int textFace = qdState->m_textFace;
+	const int fontID = qdState->m_fontID;
+
+	int variationFlags = 0;
+	if (textFace & bold)
+		variationFlags |= PortabilityLayer::FontFamilyFlag_Bold;
+
+	const PortabilityLayer::FontFamily *fontFamily = nullptr;
+
+	switch (fontID)
+	{
+	case applFont:
+		fontFamily = fontManager->GetApplicationFont(textSize, variationFlags);
+		break;
+	case systemFont:
+		fontFamily = fontManager->GetSystemFont(textSize, variationFlags);
+		break;
+	default:
+		PL_NotYetImplemented();
+		return;
+	}
+
+	const int realVariation = fontFamily->GetVariationForFlags(variationFlags);
+	PortabilityLayer::HostFont *font = fontFamily->GetFontForVariation(realVariation);
+
+	if (!font)
+		return;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFont(font, textSize, fontFamily->GetHacksForVariation(realVariation));
+
+	Point penPos = qdState->m_penPos;
+	const size_t len = str.Length();
+	const uint8_t *chars = str.UChars();
+
+	PixMap *pixMap = *port->GetPixMap();
+
+	const Rect rect = pixMap->m_rect;
+
+	if (!rect.IsValid())
+		return;	// ???
+
+	for (size_t i = 0; i < len; i++)
+		DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i]);
 }
 
 void PaintRect(const Rect *rect)
@@ -251,7 +376,7 @@ void PaintRect(const Rect *rect)
 	PortabilityLayer::QDPort *qdPort;
 	PortabilityLayer::QDManager::GetInstance()->GetPort(&qdPort, nullptr);
 
-	PortabilityLayer::PixelFormat pixelFormat = qdPort->GetPixelFormat();
+	GpPixelFormat_t pixelFormat = qdPort->GetPixelFormat();
 
 	Rect constrainedRect = *rect;
 
@@ -281,7 +406,7 @@ void PaintRect(const Rect *rect)
 
 	switch (pixelFormat)
 	{
-	case PortabilityLayer::PixelFormat_8BitStandard:
+	case GpPixelFormats::k8BitStandard:
 		{
 			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
 
@@ -417,7 +542,7 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, 
 
 	const Rect &srcBounds = srcBitmap->m_rect;
 	const Rect &destBounds = destBitmap->m_rect;
-	const PortabilityLayer::PixelFormat pixelFormat = srcBitmap->m_pixelFormat;
+	const GpPixelFormat_t pixelFormat = srcBitmap->m_pixelFormat;
 	const size_t srcPitch = srcBitmap->m_pitch;
 	const size_t destPitch = destBitmap->m_pitch;
 
@@ -462,17 +587,17 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, 
 
 		switch (pixelFormat)
 		{
-		case PortabilityLayer::PixelFormat_8BitCustom:
-		case PortabilityLayer::PixelFormat_8BitStandard:
+		case GpPixelFormats::k8BitCustom:
+		case GpPixelFormats::k8BitStandard:
 			pixelSizeBytes = 1;
 			break;
-		case PortabilityLayer::PixelFormat_RGB555:
+		case GpPixelFormats::kRGB555:
 			pixelSizeBytes = 2;
 			break;
-		case PortabilityLayer::PixelFormat_RGB24:
+		case GpPixelFormats::kRGB24:
 			pixelSizeBytes = 3;
 			break;
-		case PortabilityLayer::PixelFormat_RGB32:
+		case GpPixelFormats::kRGB32:
 			pixelSizeBytes = 4;
 			break;
 		};
@@ -628,7 +753,7 @@ RgnHandle GetGrayRgn()
 	return nullptr;
 }
 
-void BitMap::Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr)
+void BitMap::Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, void *dataPtr)
 {
 	m_rect = rect;
 	m_pixelFormat = pixelFormat;

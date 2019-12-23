@@ -8,10 +8,11 @@
 #include "GpDisplayDriverProperties.h"
 #include "GpComPtr.h"
 
-#include "PixelFormat.h"
+#include "GpPixelFormat.h"
 
 struct GpWindowsGlobals;
-class GpColorCursor_Win32;
+struct IGpColorCursor_Win32;
+struct IGpFiber;
 
 struct IDXGISwapChain1;
 struct ID3D11Buffer;
@@ -33,9 +34,9 @@ public:
 	void Run() override;
 	void Shutdown() override;
 
-	void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) override;
+	void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) override;
 
-	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat) override;
+	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, size_t x, size_t y, size_t width, size_t height) override;
 
 	IGpColorCursor *LoadColorCursor(int cursorID) override;
@@ -108,13 +109,13 @@ private:
 	DWORD m_windowWidth;
 	DWORD m_windowHeight;
 
-	GpColorCursor_Win32 *m_activeCursor;
-	GpColorCursor_Win32 *m_pendingCursor;
+	IGpColorCursor_Win32 *m_activeCursor;
+	IGpColorCursor_Win32 *m_pendingCursor;
 	EGpStandardCursor_t m_currentStandardCursor;
 	EGpStandardCursor_t m_pendingStandardCursor;
 	bool m_mouseIsInClientArea;
 
-	GpFiber *m_vosFiber;
+	IGpFiber *m_vosFiber;
 	GpWindowsGlobals *m_osGlobals;
 
 	HCURSOR m_arrowCursor;

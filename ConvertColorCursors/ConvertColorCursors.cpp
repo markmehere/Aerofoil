@@ -3,6 +3,7 @@
 #include "ResourceCompiledTypeList.h"
 #include "ResourceFile.h"
 #include "SharedTypes.h"
+#include "QDStandardPalette.h"
 #include "PLBigEndian.h"
 #include <assert.h>
 
@@ -83,24 +84,11 @@ void WriteToFileCallback(void *context, void *data, int size)
 	fwrite(data, 1, size, static_cast<FILE*>(context));
 }
 
-int main(int argc, const char **argv)
+void ConvertCursors(PortabilityLayer::ResourceFile *resFile)
 {
-	FILE *f = nullptr;
-	errno_t err = fopen_s(&f, "Packaged\\ApplicationResources.gpr", "rb");
-	if (err)
-		return err;
-
-	PortabilityLayer::CFileStream stream(f);
-
-	PortabilityLayer::ResourceFile *resFile = new PortabilityLayer::ResourceFile();
-	if (!resFile->Load(&stream))
-		return -1;
-
-	stream.Close();
-
 	const PortabilityLayer::ResourceCompiledTypeList *typeList = resFile->GetResourceTypeList('crsr');
 	if (!typeList)
-		return -1;
+		return;
 
 	const size_t numRefs = typeList->m_numRefs;
 	for (size_t i = 0; i < numRefs; i++)
@@ -247,6 +235,101 @@ int main(int argc, const char **argv)
 		delete[] colorValues;
 		delete[] pixelDataRGBA;
 	}
+}
+
+void ConvertIconFamily(PortabilityLayer::ResourceFile *resFile, int32_t iconBitmapType, int32_t iconColorType, const char *prefix, unsigned int dimension)
+{
+	const PortabilityLayer::ResourceCompiledTypeList *typeList = resFile->GetResourceTypeList(iconBitmapType);
+	if (!typeList)
+		return;
+
+	const size_t numRefs = typeList->m_numRefs;
+	for (size_t i = 0; i < numRefs; i++)
+	{
+		const int resID = typeList->m_firstRef[i].m_resID;
+		const PortabilityLayer::MMHandleBlock *bwBlock = resFile->GetResource(iconBitmapType, resID, true);
+		const PortabilityLayer::MMHandleBlock *colorBlock = resFile->GetResource(iconColorType, resID, true);
+
+		if (!bwBlock || !colorBlock)
+			continue;
+
+		const uint8_t *bwIconData = static_cast<const uint8_t*>(bwBlock->m_contents);
+		const uint8_t *bwMaskData = bwIconData + (dimension * dimension / 8);
+
+		const uint8_t *indexedData = static_cast<const uint8_t*>(colorBlock->m_contents);
+
+		PortabilityLayer::RGBAColor *pixelData = new PortabilityLayer::RGBAColor[dimension * dimension * 4];
+
+		for (unsigned int i = 0; i < dimension * dimension; i++)
+		{
+			PortabilityLayer::RGBAColor &item = pixelData[i];
+
+			item = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[indexedData[i]];
+
+			if (bwMaskData[i / 8] & (0x80 >> (i & 7)))
+				item.a = 255;
+			else
+				item.a = 0;
+		}
+
+		char outPath[256];
+		sprintf_s(outPath, "GpD3D\\ConvertedResources\\%s%i.ico", prefix, resID);
+
+		FILE *outF = nullptr;
+		errno_t outErr = fopen_s(&outF, outPath, "wb");
+		if (!outErr)
+		{
+			IconDir iconDir;
+			iconDir.m_reserved = 0;
+			iconDir.m_type = 1;
+			iconDir.m_numImages = 1;
+
+			IconDirEntry iconDirEntry;
+			iconDirEntry.m_width = dimension;
+			iconDirEntry.m_height = dimension;
+			iconDirEntry.m_numColors = 0;
+			iconDirEntry.m_reserved = 0;
+			iconDirEntry.m_numPlanes_HotSpotX = 0;
+			iconDirEntry.m_bpp_HotSpotY = 32;
+			iconDirEntry.m_imageDataSize = 0;
+			iconDirEntry.m_imageDataOffset = sizeof(IconDir) + sizeof(IconDirEntry);
+
+			fwrite(&iconDir, 1, sizeof(IconDir), outF);
+			fwrite(&iconDirEntry, 1, sizeof(IconDirEntry), outF);
+
+			long imageDataStart = ftell(outF);
+			stbi_write_png_to_func(WriteToFileCallback, outF, dimension, dimension, 4, pixelData, dimension * 4);
+			long imageDataEnd = ftell(outF);
+
+			fseek(outF, sizeof(IconDir), SEEK_SET);
+
+			iconDirEntry.m_imageDataSize = static_cast<uint32_t>(imageDataEnd - imageDataStart);
+			fwrite(&iconDirEntry, 1, sizeof(IconDirEntry), outF);
+			fclose(outF);
+		}
+
+		delete[] pixelData;
+	}
+}
+
+int main(int argc, const char **argv)
+{
+	FILE *f = nullptr;
+	errno_t err = fopen_s(&f, "Packaged\\ApplicationResources.gpr", "rb");
+	if (err)
+		return err;
+
+	PortabilityLayer::CFileStream stream(f);
+
+	PortabilityLayer::ResourceFile *resFile = new PortabilityLayer::ResourceFile();
+	if (!resFile->Load(&stream))
+		return -1;
+
+	stream.Close();
+
+	ConvertCursors(resFile);
+	ConvertIconFamily(resFile, 'ics#', 'ics8', "Small", 16);
+	ConvertIconFamily(resFile, 'ICN#', 'icl8', "Large", 32);
 
 	return 0;
 }

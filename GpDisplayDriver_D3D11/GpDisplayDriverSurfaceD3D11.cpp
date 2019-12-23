@@ -64,7 +64,7 @@ ID3D11ShaderResourceView *GpDisplayDriverSurfaceD3D11::GetSRV() const
 	return m_srv;
 }
 
-PortabilityLayer::PixelFormat GpDisplayDriverSurfaceD3D11::GetPixelFormat() const
+GpPixelFormat_t GpDisplayDriverSurfaceD3D11::GetPixelFormat() const
 {
 	return m_pixelFormat;
 }
@@ -79,23 +79,23 @@ size_t GpDisplayDriverSurfaceD3D11::GetHeight() const
 	return m_height;
 }
 
-GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *device, ID3D11DeviceContext *deviceContext, size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat)
+GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *device, ID3D11DeviceContext *deviceContext, size_t width, size_t height, GpPixelFormat_t pixelFormat)
 {
 	DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R8_UNORM;
 
 	switch (pixelFormat)
 	{
-	case PortabilityLayer::PixelFormat_8BitCustom:
-	case PortabilityLayer::PixelFormat_8BitStandard:
+	case GpPixelFormats::k8BitCustom:
+	case GpPixelFormats::k8BitStandard:
 		dxgiFormat = DXGI_FORMAT_R8_UINT;
 		break;
-	case PortabilityLayer::PixelFormat_RGB555:
+	case GpPixelFormats::kRGB555:
 		dxgiFormat = DXGI_FORMAT_R16_UINT;
 		break;
-	case PortabilityLayer::PixelFormat_RGB32:
+	case GpPixelFormats::kRGB32:
 		dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 		break;
-	case PortabilityLayer::PixelFormat_RGB24:	// RGB24 is not supported as a surface format (PL must convert it)
+	case GpPixelFormats::kRGB24:	// RGB24 is not supported as a surface format (PL must convert it)
 	default:
 		return nullptr;
 	}
@@ -137,7 +137,7 @@ GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *d
 	return new (storage) GpDisplayDriverSurfaceD3D11(device, deviceContext, texture, srv, width, height, pixelFormat);
 }
 
-GpDisplayDriverSurfaceD3D11::GpDisplayDriverSurfaceD3D11(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ID3D11Texture2D *texture, ID3D11ShaderResourceView *srv, size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat)
+GpDisplayDriverSurfaceD3D11::GpDisplayDriverSurfaceD3D11(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ID3D11Texture2D *texture, ID3D11ShaderResourceView *srv, size_t width, size_t height, GpPixelFormat_t pixelFormat)
 	: m_width(width)
 	, m_height(height)
 	, m_pixelFormat(pixelFormat)

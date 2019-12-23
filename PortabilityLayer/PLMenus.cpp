@@ -59,25 +59,34 @@ void DrawMenuBar()
 
 void HiliteMenu(int menu)
 {
-	PL_NotYetImplemented_TODO("Menus");
+	PL_NotYetImplemented();
 }
 
 void EnableMenuItem(MenuHandle menu, int index)
 {
-	PL_NotYetImplemented_TODO("Menus");
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+	if (index == 0)
+		mm->SetMenuEnabled(menu, true);
+	else
+		mm->SetItemEnabled(menu, index - 1, true);
 }
 
 void DisableMenuItem(MenuHandle menu, int index)
 {
-	PL_NotYetImplemented_TODO("Menus");
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+	if (index == 0)
+		mm->SetMenuEnabled(menu, false);
+	else
+		mm->SetItemEnabled(menu, index - 1, false);
 }
 
 void CheckMenuItem(MenuHandle menu, int index, Boolean checked)
 {
-	PL_NotYetImplemented_TODO("Menus");
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+	mm->SetItemChecked(menu, index - 1, checked != 0);
 }
 
 void SetMenuItemText(MenuHandle menu, int index, const PLPasStr &text)
 {
-	PL_NotYetImplemented_TODO("Menus");
+	PL_NotYetImplemented();
 }

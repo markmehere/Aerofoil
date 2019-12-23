@@ -2,13 +2,13 @@
 
 #include "PLBigEndian.h"
 #include "PLQuickdraw.h"
-#include "PixelFormat.h"
+#include "GpPixelFormat.h"
 
 #include <stdint.h>
 
 struct PixMap : public BitMap
 {
-	void Init(const Rect &rect, PortabilityLayer::PixelFormat pixelFormat, size_t pitch, void *dataPtr);
+	void Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, void *dataPtr);
 };
 
 namespace PortabilityLayer
@@ -16,19 +16,19 @@ namespace PortabilityLayer
 	class PixMapImpl final : public PixMap
 	{
 	public:
-		PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, PixelFormat pixelFormat);
+		PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat);
 		
-		PixelFormat GetPixelFormat() const;
+		GpPixelFormat_t GetPixelFormat() const;
 		size_t GetPitch() const;
 		void *GetPixelData();
 		const void *GetPixelData() const;
 		size_t GetDataCapacity() const;
 
-		static size_t SizeForDimensions(uint16_t width, uint16_t height, PixelFormat pixelFormat);
+		static size_t SizeForDimensions(uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat);
 
 	private:
 		static size_t AlignedSize();
-		static size_t PitchForWidth(uint16_t width, PixelFormat pixelFormat);
+		static size_t PitchForWidth(uint16_t width, GpPixelFormat_t pixelFormat);
 
 		int16_t m_left;
 		int16_t m_top;
@@ -39,7 +39,7 @@ namespace PortabilityLayer
 	};
 }
 
-inline PortabilityLayer::PixelFormat PortabilityLayer::PixMapImpl::GetPixelFormat() const
+inline GpPixelFormat_t PortabilityLayer::PixMapImpl::GetPixelFormat() const
 {
 	return m_pixelFormat;
 }

@@ -4,7 +4,7 @@
 
 namespace PortabilityLayer
 {
-	namespace MacLatin
+	namespace MacRoman
 	{
 		extern const uint16_t g_toUnicode[256];
 		extern const uint8_t g_stripDiacritic[256];

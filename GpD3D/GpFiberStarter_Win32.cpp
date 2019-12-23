@@ -9,7 +9,7 @@ namespace GpFiberStarter_Win32
 	struct FiberStartState
 	{
 		GpFiberStarter::ThreadFunc_t m_threadFunc;
-		GpFiber *m_creatingFiber;
+		IGpFiber *m_creatingFiber;
 		void *m_context;
 	};
 
@@ -18,7 +18,7 @@ namespace GpFiberStarter_Win32
 		const FiberStartState *tss = static_cast<const FiberStartState*>(lpThreadParameter);
 
 		GpFiberStarter::ThreadFunc_t threadFunc = tss->m_threadFunc;
-		GpFiber *creatingFiber = tss->m_creatingFiber;
+		IGpFiber *creatingFiber = tss->m_creatingFiber;
 		void *context = tss->m_context;
 		creatingFiber->YieldTo();
 
@@ -28,7 +28,7 @@ namespace GpFiberStarter_Win32
 	}
 }
 
-GpFiber *GpFiberStarter::StartFiber(ThreadFunc_t threadFunc, void *context, GpFiber *creatingFiber)
+IGpFiber *GpFiberStarter::StartFiber(ThreadFunc_t threadFunc, void *context, IGpFiber *creatingFiber)
 {
 	ULONG_PTR lowLimit;
 	ULONG_PTR highLimit;
@@ -48,5 +48,5 @@ GpFiber *GpFiberStarter::StartFiber(ThreadFunc_t threadFunc, void *context, GpFi
 
 	SwitchToFiber(fiber);
 
-	return new GpFiber_Win32(fiber);
+	return GpFiber_Win32::Create(fiber);
 }

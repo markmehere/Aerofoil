@@ -1,5 +1,5 @@
 #include "PLStringCompare.h"
-#include "MacLatin.h"
+#include "MacRoman.h"
 
 #include <string.h>
 
@@ -28,7 +28,7 @@ Boolean EqualString(const PLPasStr &string1, const PLPasStr &string2, Boolean ca
 				const uint8_t c1 = chars1[i];
 				const uint8_t c2 = chars2[i];
 
-				if (PortabilityLayer::MacLatin::g_stripDiacritic[c1] != PortabilityLayer::MacLatin::g_stripDiacritic[c2])
+				if (PortabilityLayer::MacRoman::g_stripDiacritic[c1] != PortabilityLayer::MacRoman::g_stripDiacritic[c2])
 					return PL_FALSE;
 			}
 
@@ -46,7 +46,7 @@ Boolean EqualString(const PLPasStr &string1, const PLPasStr &string2, Boolean ca
 				const uint8_t c1 = chars1[i];
 				const uint8_t c2 = chars2[i];
 
-				if (PortabilityLayer::MacLatin::g_toLower[c1] != PortabilityLayer::MacLatin::g_toLower[c2])
+				if (PortabilityLayer::MacRoman::g_toLower[c1] != PortabilityLayer::MacRoman::g_toLower[c2])
 					return PL_FALSE;
 			}
 
@@ -57,10 +57,10 @@ Boolean EqualString(const PLPasStr &string1, const PLPasStr &string2, Boolean ca
 			// Diacritic insensitive
 			for (size_t i = 0; i < len; i++)
 			{
-				const uint8_t c1 = PortabilityLayer::MacLatin::g_stripDiacritic[chars1[i]];
-				const uint8_t c2 = PortabilityLayer::MacLatin::g_stripDiacritic[chars2[i]];
+				const uint8_t c1 = PortabilityLayer::MacRoman::g_stripDiacritic[chars1[i]];
+				const uint8_t c2 = PortabilityLayer::MacRoman::g_stripDiacritic[chars2[i]];
 
-				if (PortabilityLayer::MacLatin::g_toLower[c1] != PortabilityLayer::MacLatin::g_toLower[c2])
+				if (PortabilityLayer::MacRoman::g_toLower[c1] != PortabilityLayer::MacRoman::g_toLower[c2])
 					return PL_FALSE;
 			}
 

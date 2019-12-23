@@ -6,6 +6,11 @@
 
 #include <Windows.h>
 
+#undef CreateMutex
+
+struct IGpFiber;
+struct IGpColorCursor_Win32;
+
 struct GpWindowsGlobals
 {
 	HINSTANCE m_hInstance;
@@ -13,8 +18,8 @@ struct GpWindowsGlobals
 	LPCSTR m_cmdLine;
 	LPCWSTR m_baseDir;
 	int m_nCmdShow;
+
+	IGpFiber *(*m_createFiberFunc)(LPVOID fiber);
+	IGpColorCursor_Win32 *(*m_loadColorCursorFunc)(const wchar_t *path);
 };
 
-extern GpWindowsGlobals g_gpWindowsGlobals;
-
-#undef CreateMutex

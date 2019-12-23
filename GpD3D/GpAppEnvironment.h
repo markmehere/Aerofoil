@@ -14,7 +14,7 @@ namespace PortabilityLayer
 
 struct IGpDisplayDriver;
 struct IGpAudioDriver;
-class GpFiber;
+struct IGpFiber;
 
 class GpAppEnvironment
 {
@@ -24,7 +24,7 @@ public:
 
 	void Init();
 
-	void Tick(GpFiber *vosFiber);
+	void Tick(IGpFiber *vosFiber);
 	void Render();
 
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);
@@ -55,8 +55,8 @@ private:
 	IGpAudioDriver *m_audioDriver;
 	PortabilityLayer::HostFontHandler *m_fontHandler;
 	GpVOSEventQueue m_vosEventQueue;
-	GpFiber *m_applicationFiber;
-	GpFiber *m_vosFiber;
+	IGpFiber *m_applicationFiber;
+	IGpFiber *m_vosFiber;
 
 	uint32_t m_delaySuspendTicks;
 

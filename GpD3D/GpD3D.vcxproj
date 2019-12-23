@@ -143,12 +143,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\GpCommon\GpColorCursor_Win32.cpp" />
     <ClCompile Include="GpAppEnvironment.cpp" />
     <ClCompile Include="GpAudioDriverFactory.cpp" />
+    <ClCompile Include="GpColorCursor_Win32.cpp" />
     <ClCompile Include="GpDisplayDriverFactory.cpp" />
-    <ClCompile Include="GpDisplayDriverFactoryD3D11.cpp" />
-    <ClCompile Include="GpDisplayDriverSurfaceD3D11.cpp" />
     <ClCompile Include="GpFiber_Win32.cpp" />
     <ClCompile Include="GpFileStream_Win32.cpp" />
     <ClCompile Include="GpFileSystem_Win32.cpp" />
@@ -157,7 +155,6 @@
     <ClCompile Include="GpGlobalConfig.cpp" />
     <ClCompile Include="GpMain.cpp" />
     <ClCompile Include="GpMain_Win32.cpp" />
-    <ClCompile Include="GpDisplayDriverD3D11.cpp" />
     <ClCompile Include="GpMemoryBuffer.cpp" />
     <ClCompile Include="GpMutex_Win32.cpp" />
     <ClCompile Include="GpPLGlueAudioChannel.cpp" />
@@ -167,10 +164,6 @@
     <ClCompile Include="GpFiberStarter_Win32.cpp" />
     <ClCompile Include="GpThreadEvent_Win32.cpp" />
     <ClCompile Include="GpVOSEventQueue.cpp" />
-    <ClCompile Include="ShadersD3D11\DrawQuad15BitP_D3D11.cpp" />
-    <ClCompile Include="ShadersD3D11\DrawQuadPaletteP_D3D11.cpp" />
-    <ClCompile Include="ShadersD3D11\DrawQuadRGBP_D3D11.cpp" />
-    <ClCompile Include="ShadersD3D11\DrawQuadV_D3D11.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\GpCommon\EGpStandardCursor.h" />
@@ -183,14 +176,10 @@
     <ClInclude Include="GpAppEnvironment.h" />
     <ClInclude Include="GpAudioDriverFactory.h" />
     <ClInclude Include="GpAudioDriverProperties.h" />
-    <ClInclude Include="GpAudioDriverXAudio2.h" />
     <ClInclude Include="GpComPtr.h" />
     <ClInclude Include="GpCoreDefs.h" />
-    <ClInclude Include="GpDisplayDriverD3D11.h" />
     <ClInclude Include="GpDisplayDriverFactory.h" />
-    <ClInclude Include="GpDisplayDriverFactoryD3D11.h" />
     <ClInclude Include="GpDisplayDriverProperties.h" />
-    <ClInclude Include="GpDisplayDriverSurfaceD3D11.h" />
     <ClInclude Include="GpFiber.h" />
     <ClInclude Include="GpFiber_Win32.h" />
     <ClInclude Include="GpFileStream_Win32.h" />
@@ -213,6 +202,7 @@
     <ClInclude Include="IGpAudioChannel.h" />
     <ClInclude Include="IGpAudioDriver.h" />
     <ClInclude Include="IGpDisplayDriver.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FreeType\FreeType.vcxproj">
@@ -224,6 +214,16 @@
     <ProjectReference Include="..\GpAudioDriver_XAudio2\GpAudioDriver_XAudio2.vcxproj">
       <Project>{e3bdc783-8646-433e-adf0-8b6390d36669}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\GpDisplayDriver_D3D11\GpDisplayDriver_D3D11.vcxproj">
+      <Project>{ffc961ac-55b4-4a38-a83e-06ae98f59acc}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GpD3D.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="ConvertedResources\Large128.ico" />
+    <Image Include="ConvertedResources\Small128.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

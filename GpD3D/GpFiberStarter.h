@@ -1,11 +1,11 @@
 #pragma once
 
-class GpFiber;
+struct IGpFiber;
 
 class GpFiberStarter
 {
 public:
 	typedef void(*ThreadFunc_t)(void *context);
 
-	static GpFiber *StartFiber(ThreadFunc_t threadFunc, void *context, GpFiber *creatingFiber);
+	static IGpFiber *StartFiber(ThreadFunc_t threadFunc, void *context, IGpFiber *creatingFiber);
 };

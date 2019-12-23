@@ -54,18 +54,18 @@ namespace PortabilityLayer
 
 	int QDManagerImpl::NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, GDevice **device, int flags)
 	{
-		PixelFormat pixelFormat;
+		GpPixelFormat_t pixelFormat;
 
 		switch (depth)
 		{
 		case 8:
-			pixelFormat = (colorTable == nullptr) ? PixelFormat_8BitStandard : PixelFormat_8BitCustom;
+			pixelFormat = (colorTable == nullptr) ? GpPixelFormats::k8BitStandard : GpPixelFormats::k8BitCustom;
 			break;
 		case 16:
-			pixelFormat = PixelFormat_RGB555;
+			pixelFormat = GpPixelFormats::kRGB555;
 			break;
 		case 32:
-			pixelFormat = PixelFormat_RGB32;
+			pixelFormat = GpPixelFormats::kRGB32;
 			break;
 		default:
 			return genericErr;

@@ -1,30 +1,103 @@
 #include "GpFontHandler_FreeType2.h"
 
+#include "CoreDefs.h"
 #include "IOStream.h"
 #include "HostFont.h"
+#include "HostFontRenderedGlyph.h"
+#include "RenderedGlyphMetrics.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_MODULE_H
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <new>
 #include <assert.h>
+
+
+class GpFontRenderedGlyph_FreeType2 final : public PortabilityLayer::HostFontRenderedGlyph
+{
+public:
+	const PortabilityLayer::RenderedGlyphMetrics &GetMetrics() const override;
+	const void *GetData() const override;
+	void Destroy() override;
+
+	static GpFontRenderedGlyph_FreeType2 *Create(size_t dataSize, const PortabilityLayer::RenderedGlyphMetrics &metrics);
+
+	void *GetMutableData();
+
+private:
+	GpFontRenderedGlyph_FreeType2(void *data, const PortabilityLayer::RenderedGlyphMetrics &metrics);
+	~GpFontRenderedGlyph_FreeType2();
+
+	void *m_data;
+	PortabilityLayer::RenderedGlyphMetrics m_metrics;
+};
 
 class GpFont_FreeType2 final : public PortabilityLayer::HostFont
 {
 public:
 	void Destroy() override;
+	GpFontRenderedGlyph_FreeType2 *Render(uint32_t unicodeCodePoint, unsigned int size) override;
 
-	static GpFont_FreeType2 *Create(FT_Face face);
+	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream);
+
+	bool FTLoad(const FT_Library &library);
 
 private:
-	explicit GpFont_FreeType2(FT_Face face);
+	explicit GpFont_FreeType2(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream);
 	~GpFont_FreeType2();
 
+	FT_StreamRec_ m_ftStream;
 	FT_Face m_face;
+	PortabilityLayer::IOStream *m_stream;
+	unsigned int m_currentSize;
 };
 
+const PortabilityLayer::RenderedGlyphMetrics &GpFontRenderedGlyph_FreeType2::GetMetrics() const
+{
+	return m_metrics;
+}
+
+const void *GpFontRenderedGlyph_FreeType2::GetData() const
+{
+	return m_data;
+}
+
+void GpFontRenderedGlyph_FreeType2::Destroy()
+{
+	this->~GpFontRenderedGlyph_FreeType2();
+	free(this);
+}
+
+GpFontRenderedGlyph_FreeType2 *GpFontRenderedGlyph_FreeType2::Create(size_t dataSize, const PortabilityLayer::RenderedGlyphMetrics &metrics)
+{
+	size_t alignedPrefixSize = (sizeof(GpFontRenderedGlyph_FreeType2) + PL_SYSTEM_MEMORY_ALIGNMENT - 1);
+	alignedPrefixSize -= alignedPrefixSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+
+	void *storage = malloc(alignedPrefixSize + dataSize);
+	if (!storage)
+		return nullptr;
+
+	return new (storage) GpFontRenderedGlyph_FreeType2(static_cast<uint8_t*>(storage) + alignedPrefixSize, metrics);
+}
+
+void *GpFontRenderedGlyph_FreeType2::GetMutableData()
+{
+	return m_data;
+}
+
+
+GpFontRenderedGlyph_FreeType2::GpFontRenderedGlyph_FreeType2(void *data, const PortabilityLayer::RenderedGlyphMetrics &metrics)
+	: m_metrics(metrics)
+	, m_data(data)
+{
+}
+
+GpFontRenderedGlyph_FreeType2::~GpFontRenderedGlyph_FreeType2()
+{
+}
 
 void GpFont_FreeType2::Destroy()
 {
@@ -32,23 +105,120 @@ void GpFont_FreeType2::Destroy()
 	free(this);
 }
 
-GpFont_FreeType2 *GpFont_FreeType2::Create(FT_Face face)
+GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size)
+{
+	if (m_currentSize != size)
+	{
+		if (FT_Set_Pixel_Sizes(m_face, 0, size) != 0)
+			return nullptr;
+
+		m_currentSize = size;
+	}
+
+	FT_UInt glyphIndex = FT_Get_Char_Index(m_face, unicodeCodePoint);
+	if (!glyphIndex)
+		return nullptr;
+
+	if (FT_Load_Glyph(m_face, glyphIndex, FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO) != 0)
+		return nullptr;
+
+	if (FT_Render_Glyph(m_face->glyph, FT_RENDER_MODE_MONO) != 0)
+		return nullptr;
+
+	const FT_GlyphSlot glyph = m_face->glyph;
+
+	if (glyph->bitmap.pixel_mode != FT_PIXEL_MODE_MONO)
+		return nullptr;	// ????
+
+	PortabilityLayer::RenderedGlyphMetrics metrics;
+	memset(&metrics, 0, sizeof(metrics));
+
+	metrics.m_bearingX = glyph->metrics.horiBearingX / 64;
+	metrics.m_bearingY = glyph->metrics.horiBearingY / 64;
+	metrics.m_glyphWidth = glyph->bitmap.width;
+	metrics.m_glyphHeight = glyph->bitmap.rows;
+	metrics.m_advanceX = glyph->metrics.horiAdvance / 64;
+
+	const size_t numRowsRequired = glyph->bitmap.rows;
+	size_t pitchRequired = (glyph->bitmap.width + 7) / 8;
+	pitchRequired = pitchRequired + (PL_SYSTEM_MEMORY_ALIGNMENT - 1);
+	pitchRequired -= pitchRequired % PL_SYSTEM_MEMORY_ALIGNMENT;
+
+	const size_t glyphDataSize = numRowsRequired * pitchRequired;
+
+	metrics.m_glyphDataPitch = pitchRequired;
+
+	GpFontRenderedGlyph_FreeType2 *renderedGlyph = GpFontRenderedGlyph_FreeType2::Create(glyphDataSize, metrics);
+	if (!renderedGlyph)
+		return nullptr;
+
+	uint8_t *fillData = static_cast<uint8_t*>(renderedGlyph->GetMutableData());
+
+	unsigned int bmWidth = glyph->bitmap.width;
+	unsigned int bmHeight = glyph->bitmap.rows;
+	unsigned int bmPitch = glyph->bitmap.pitch;
+	unsigned int copyableBytesPerRow = (bmWidth + 7) / 8;
+	const uint8_t *bmBytes = glyph->bitmap.buffer;
+
+	size_t fillOffset = 0;
+	for (unsigned int row = 0; row < bmHeight; row++)
+	{
+		const uint8_t *bmReadStart = bmBytes + bmPitch * row;
+		uint8_t *bmWriteStart = fillData + pitchRequired * row;
+
+		for (unsigned int i = 0; i < copyableBytesPerRow; i++)
+		{
+			const uint8_t b = bmReadStart[i];
+
+			uint8_t fillByte = 0;
+			for (int bit = 0; bit < 8; bit++)
+				fillByte |= ((b >> (7 - bit)) & 1) << bit;
+
+			bmWriteStart[i] = fillByte;
+		}
+	}
+
+	return renderedGlyph;
+}
+
+GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream)
 {
 	void *storage = malloc(sizeof(GpFont_FreeType2));
 	if (!storage)
 		return nullptr;
 
-	return new (storage) GpFont_FreeType2(face);
+	return new (storage) GpFont_FreeType2(streamRec, stream);
 }
 
-GpFont_FreeType2::GpFont_FreeType2(FT_Face face)
-	: m_face(face)
+bool GpFont_FreeType2::FTLoad(const FT_Library &library)
 {
+	FT_Open_Args openArgs;
+	memset(&openArgs, 0, sizeof(openArgs));
+	openArgs.flags = FT_OPEN_STREAM;
+	openArgs.stream = &m_ftStream;
+
+	FT_Error errorCode = FT_Open_Face(library, &openArgs, 0, &m_face);
+	if (errorCode != 0)
+		return false;
+
+	return true;
+}
+
+GpFont_FreeType2::GpFont_FreeType2(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream)
+	: m_face(nullptr)
+	, m_ftStream(streamRec)
+	, m_stream(stream)
+	, m_currentSize(0)
+{
+	assert(stream);
 }
 
 GpFont_FreeType2::~GpFont_FreeType2()
 {
-	FT_Done_Face(m_face);
+	if (m_face)
+		FT_Done_Face(m_face);
+
+	m_stream->Close();
 }
 
 GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
@@ -69,7 +239,6 @@ GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
 
 PortabilityLayer::HostFont *GpFontHandler_FreeType2::LoadFont(PortabilityLayer::IOStream *stream)
 {
-
 	FT_StreamRec_ ftStream;
 	memset(&ftStream, 0, sizeof(ftStream));
 	ftStream.size = 0x7fffffff;
@@ -78,24 +247,25 @@ PortabilityLayer::HostFont *GpFontHandler_FreeType2::LoadFont(PortabilityLayer::
 	ftStream.read = FTStreamIo;
 	ftStream.close = FTStreamClose;
 
-	FT_Open_Args openArgs;
-	memset(&openArgs, 0, sizeof(openArgs));
-	openArgs.flags = FT_OPEN_STREAM;
-	openArgs.stream = &ftStream;
-
-	FT_Face face;
-	FT_Error errorCode = FT_Open_Face(m_library, &openArgs, 0, &face);
-	if (errorCode != 0)
-		return nullptr;
-
-	GpFont_FreeType2 *font = GpFont_FreeType2::Create(face);
+	GpFont_FreeType2 *font = GpFont_FreeType2::Create(ftStream, stream);
 	if (!font)
 	{
-		FT_Done_Face(face);
+		stream->Close();
+		return nullptr;
+	}
+
+	if (!font->FTLoad(m_library))
+	{
+		font->Destroy();
 		return nullptr;
 	}
 
 	return font;
+}
+
+bool GpFontHandler_FreeType2::KeepStreamOpen() const
+{
+	return true;
 }
 
 void GpFontHandler_FreeType2::Shutdown()

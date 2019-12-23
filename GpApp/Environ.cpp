@@ -208,18 +208,18 @@ Boolean DoWeHaveDragManager (void)
 
 short WhatsOurDepth (void)
 {
-	PortabilityLayer::PixelFormat pixelFormat;
+	GpPixelFormat_t pixelFormat;
 	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nil, nil, &pixelFormat);
 
 	switch (pixelFormat)
 	{
-	case PortabilityLayer::PixelFormat_8BitCustom:
-	case PortabilityLayer::PixelFormat_8BitStandard:
+	case GpPixelFormats::k8BitCustom:
+	case GpPixelFormats::k8BitStandard:
 		return 8;
-	case PortabilityLayer::PixelFormat_RGB555:
+	case GpPixelFormats::kRGB555:
 		return 16;
-	case PortabilityLayer::PixelFormat_RGB24:
-	case PortabilityLayer::PixelFormat_RGB32:
+	case GpPixelFormats::kRGB24:
+	case GpPixelFormats::kRGB32:
 		return 32;
 	default:
 		return 0;

@@ -129,7 +129,7 @@ namespace PortabilityLayer
 
 		void *imageData = m_pixMap->GetPixelData();
 
-		if (m_pixMap->GetPixelFormat() == PixelFormat_8BitStandard)
+		if (m_pixMap->GetPixelFormat() == GpPixelFormats::k8BitStandard)
 		{
 			switch (m_blitType)
 			{
@@ -301,7 +301,7 @@ void DrawPicture(PicHandle pict, Rect *bounds)
 
 	switch (pixMap->GetPixelFormat())
 	{
-	case PortabilityLayer::PixelFormat_8BitStandard:
+	case GpPixelFormats::k8BitStandard:
 		{
 			PortabilityLayer::PixMapBlitEmitter blitEmitter(PortabilityLayer::Vec2i(bounds->left, bounds->top), pixMap);
 			PortabilityLayer::QDPictDecoder decoder;

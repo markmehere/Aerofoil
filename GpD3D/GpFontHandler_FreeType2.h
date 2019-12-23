@@ -18,6 +18,8 @@ public:
 	PortabilityLayer::HostFont *LoadFont(PortabilityLayer::IOStream *stream) override;
 	void Shutdown() override;
 
+	bool KeepStreamOpen() const override;
+
 	static GpFontHandler_FreeType2 *Create();
 
 private:

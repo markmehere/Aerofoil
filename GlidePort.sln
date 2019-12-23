@@ -27,6 +27,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CompileShadersD3D11", "Comp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConvertColorCursors", "ConvertColorCursors\ConvertColorCursors.vcxproj", "{B852D549-4020-4477-8BFB-E199FF78B047}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GpDisplayDriver_D3D11", "GpDisplayDriver_D3D11\GpDisplayDriver_D3D11.vcxproj", "{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImportCharSet", "ImportCharSet\ImportCharSet.vcxproj", "{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -131,6 +135,22 @@ Global
 		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x64.Build.0 = Release|x64
 		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x86.ActiveCfg = Release|Win32
 		{B852D549-4020-4477-8BFB-E199FF78B047}.Release|x86.Build.0 = Release|Win32
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Debug|x64.ActiveCfg = Debug|x64
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Debug|x64.Build.0 = Debug|x64
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Debug|x86.ActiveCfg = Debug|Win32
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Debug|x86.Build.0 = Debug|Win32
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Release|x64.ActiveCfg = Release|x64
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Release|x64.Build.0 = Release|x64
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Release|x86.ActiveCfg = Release|Win32
+		{FFC961AC-55B4-4A38-A83E-06AE98F59ACC}.Release|x86.Build.0 = Release|Win32
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Debug|x64.ActiveCfg = Debug|x64
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Debug|x64.Build.0 = Debug|x64
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Debug|x86.ActiveCfg = Debug|Win32
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Debug|x86.Build.0 = Debug|Win32
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Release|x64.ActiveCfg = Release|x64
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Release|x64.Build.0 = Release|x64
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Release|x86.ActiveCfg = Release|Win32
+		{B3D152CB-CD52-4CD6-9213-710ADE1B8EB0}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

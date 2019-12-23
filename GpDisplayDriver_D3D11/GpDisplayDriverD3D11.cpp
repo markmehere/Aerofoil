@@ -2,8 +2,8 @@
 #include "GpDisplayDriverD3D11.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
 #include "GpWindows.h"
-#include "GpColorCursor_Win32.h"
-#include "GpFiber_Win32.h"
+#include "IGpColorCursor_Win32.h"
+#include "IGpFiber.h"
 
 #include <d3d11.h>
 #include <dxgi1_2.h>
@@ -11,6 +11,7 @@
 #include <emmintrin.h>
 
 #include <stdio.h>
+#include <new>
 
 #pragma comment (lib, "d3d11.lib")
 
@@ -521,14 +522,14 @@ void GpDisplayDriverD3D11::Run()
 	if (!fiber)
 		return;	// ???
 
-	m_vosFiber = new GpFiber_Win32(fiber);
+	m_vosFiber = m_osGlobals->m_createFiberFunc(fiber);
 
 	ZeroMemory(&wc, sizeof(wc));
 
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WinProc;
-	wc.hInstance = g_gpWindowsGlobals.m_hInstance;
+	wc.hInstance = m_osGlobals->m_hInstance;
 	wc.hCursor = m_arrowCursor;
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	wc.lpszClassName = "GPD3D11WindowClass";
@@ -542,9 +543,9 @@ void GpDisplayDriverD3D11::Run()
 	RECT wr = { 0, 0, m_windowWidth, m_windowHeight };
 	AdjustWindowRect(&wr, windowStyle, menus != NULL);
 
-	m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", L"GlidePort (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, g_gpWindowsGlobals.m_hInstance, NULL);
+	m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", L"GlidePort (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
 
-	ShowWindow(m_hwnd, g_gpWindowsGlobals.m_nCmdShow);
+	ShowWindow(m_hwnd, m_osGlobals->m_nCmdShow);
 
 	StartD3DForWindow(m_hwnd, m_swapChain, m_device, m_deviceContext);
 
@@ -581,20 +582,21 @@ void GpDisplayDriverD3D11::Run()
 
 void GpDisplayDriverD3D11::Shutdown()
 {
-	delete this;
+	this->~GpDisplayDriverD3D11();
+	free(this);
 }
 
-void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *pixelFormat)
+void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *pixelFormat)
 {
 	if (width)
 		*width = m_windowWidth;
 	if (height)
 		*height = m_windowHeight;
 	if (pixelFormat)
-		*pixelFormat = PortabilityLayer::PixelFormat_8BitStandard;
+		*pixelFormat = GpPixelFormats::k8BitStandard;
 }
 
-IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, PortabilityLayer::PixelFormat pixelFormat)
+IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat)
 {
 	return GpDisplayDriverSurfaceD3D11::Create(m_device, m_deviceContext, width, height, pixelFormat);
 }
@@ -645,8 +647,8 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, size_t 
 	};
 	m_deviceContext->PSSetSamplers(0, sizeof(samplerStates) / sizeof(samplerStates[0]), samplerStates);
 
-	PortabilityLayer::PixelFormat pixelFormat = d3d11Surface->GetPixelFormat();
-	if (pixelFormat == PortabilityLayer::PixelFormat_8BitStandard || pixelFormat == PortabilityLayer::PixelFormat_8BitCustom)
+	GpPixelFormat_t pixelFormat = d3d11Surface->GetPixelFormat();
+	if (pixelFormat == GpPixelFormats::k8BitStandard || pixelFormat == GpPixelFormats::k8BitCustom)
 	{
 		ID3D11ShaderResourceView *psResourceViews[] =
 		{
@@ -657,7 +659,7 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, size_t 
 		m_deviceContext->PSSetShader(m_drawQuadPalettePixelShader, nullptr, 0);
 		m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
 	}
-	else if (pixelFormat == PortabilityLayer::PixelFormat_RGB555)
+	else if (pixelFormat == GpPixelFormats::kRGB555)
 	{
 		ID3D11ShaderResourceView *psResourceViews[] =
 		{
@@ -667,7 +669,7 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, size_t 
 		m_deviceContext->PSSetShader(m_drawQuad15BitPixelShader, nullptr, 0);
 		m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
 	}
-	else if (pixelFormat == PortabilityLayer::PixelFormat_RGB32)
+	else if (pixelFormat == GpPixelFormats::kRGB32)
 	{
 		ID3D11ShaderResourceView *psResourceViews[] =
 		{
@@ -694,7 +696,7 @@ IGpColorCursor *GpDisplayDriverD3D11::LoadColorCursor(int cursorID)
 	if (sz < 0 || static_cast<size_t>(sz) >= bufSize)
 		return nullptr;
 
-	return GpColorCursor_Win32::Load(path);
+	return m_osGlobals->m_loadColorCursorFunc(path);
 }
 
 // We can't just set the cursor because we want to post WM_SETCURSOR to keep it limited
@@ -702,7 +704,7 @@ IGpColorCursor *GpDisplayDriverD3D11::LoadColorCursor(int cursorID)
 // the window thread.
 void GpDisplayDriverD3D11::SetColorCursor(IGpColorCursor *colorCursor)
 {
-	GpColorCursor_Win32 *winCursor = static_cast<GpColorCursor_Win32*>(colorCursor);
+	IGpColorCursor_Win32 *winCursor = static_cast<IGpColorCursor_Win32*>(colorCursor);
 
 	winCursor->IncRef();
 
@@ -745,7 +747,11 @@ void GpDisplayDriverD3D11::UpdatePalette(const void *paletteData)
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)
 {
-	return new GpDisplayDriverD3D11(properties);
+	void *storage = malloc(sizeof(GpDisplayDriverD3D11));
+	if (!storage)
+		return nullptr;
+
+	return new (storage) GpDisplayDriverD3D11(properties);
 }
 
 GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties)
@@ -773,4 +779,9 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 GpDisplayDriverD3D11::~GpDisplayDriverD3D11()
 {
 	// GP TODO: Sloppy cleanup... Close the window!!
+}
+
+extern "C" __declspec(dllexport) IGpDisplayDriver *GpDriver_CreateDisplayDriver_D3D11(const GpDisplayDriverProperties &properties)
+{
+	return GpDisplayDriverD3D11::Create(properties);
 }

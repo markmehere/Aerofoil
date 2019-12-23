@@ -245,7 +245,13 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::EVirtualDirectory virtual
 
 	memcpy(outPath, baseDir, sizeof(wchar_t) * baseDirLen);
 	for (size_t i = 0; i < pathLen; i++)
-		outPath[baseDirLen + i] = static_cast<wchar_t>(path[i]);
+	{
+		char c = path[i];
+		if (c == '/')
+			c = '\\';
+
+		outPath[baseDirLen + i] = static_cast<wchar_t>(c);
+	}
 
 	outPath[baseDirLen + pathLen] = static_cast<wchar_t>(0);
 

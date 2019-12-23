@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreDefs.h"
+#include "GpPixelFormat.h"
 #include "PLBigEndian.h"
-#include "PixelFormat.h"
 #include "RGBAColor.h"
 
 struct Point
@@ -93,7 +93,7 @@ struct BEColorTableItem
 
 struct GDevice
 {
-	PortabilityLayer::PixelFormat pixelFormat;
+	GpPixelFormat_t pixelFormat;
 
 	uint8_t paletteStorage[256 * 4 + PL_SYSTEM_MEMORY_ALIGNMENT];
 	uint8_t paletteDataOffset;

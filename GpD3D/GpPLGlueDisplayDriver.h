@@ -9,7 +9,7 @@ class GpPLGlueDisplayDriver final : public PortabilityLayer::HostDisplayDriver
 public:
 	GpPLGlueDisplayDriver();
 
-	void GetDisplayResolution(unsigned int *width, unsigned int *height, PortabilityLayer::PixelFormat *bpp) override;
+	void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) override;
 	IGpColorCursor *LoadColorCursor(int id) override;
 	void SetColorCursor(IGpColorCursor *colorCursor) override;
 	void SetStandardCursor(EGpStandardCursor_t standardCursor) override;

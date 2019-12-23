@@ -8,7 +8,7 @@ void GpColorCursor_Win32::Destroy()
 	this->DecRef();
 }
 
-GpColorCursor_Win32 *GpColorCursor_Win32::Load(const wchar_t *path)
+IGpColorCursor_Win32 *GpColorCursor_Win32::Load(const wchar_t *path)
 {
 	HANDLE imageH = LoadImageW(nullptr, path, IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE);
 
