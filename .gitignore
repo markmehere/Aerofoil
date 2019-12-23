@@ -18,5 +18,7 @@
 *.lib
 *.pdb
 *.idb
+*.aps
+*.res
 .vs/*
 Packaged/*
