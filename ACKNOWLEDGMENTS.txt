@@ -4,3 +4,12 @@ Virtue font:
 Virtue is used with permission and is authorized only for NON-COMMERCIAL redistribution as part of the GlidePort package.
 
 Please visit the author's website (http://www.scootergraphics.com/) for more information.
+
+
+Roboto font:
+(c)2011 Google
+Distributed under the Apache License (see Resources/Fonts/Roboto/LICENSE)
+
+
+stb_image_write:
+Created by Sean Barrett
