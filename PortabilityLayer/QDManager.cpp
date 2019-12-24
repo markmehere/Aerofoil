@@ -6,6 +6,8 @@
 #include "QDGraf.h"
 #include "QDState.h"
 
+#include <assert.h>
+
 namespace PortabilityLayer
 {
 	class QDManagerImpl final : public QDManager
@@ -19,6 +21,8 @@ namespace PortabilityLayer
 		int NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, GDevice **device, int flags) override;
 		void DisposeGWorld(CGraf *gw) override;
 		QDState *GetState() override;
+
+		int DepthForPixelFormat(GpPixelFormat_t pixelFormat) const override;
 
 		static QDManagerImpl *GetInstance();
 
@@ -59,6 +63,9 @@ namespace PortabilityLayer
 
 		switch (depth)
 		{
+		case 1:
+			pixelFormat = GpPixelFormats::kBW1;
+			break;
 		case 8:
 			pixelFormat = (colorTable == nullptr) ? GpPixelFormats::k8BitStandard : GpPixelFormats::k8BitCustom;
 			break;
@@ -71,9 +78,6 @@ namespace PortabilityLayer
 		default:
 			return genericErr;
 		}
-
-		if (depth != 8)
-			return genericErr;
 
 		void *grafStorage = MemoryManager::GetInstance()->Alloc(sizeof(CGraf));
 		if (!grafStorage)
@@ -103,6 +107,25 @@ namespace PortabilityLayer
 	QDState *QDManagerImpl::GetState()
 	{
 		return m_port->GetState();
+	}
+
+	int QDManagerImpl::DepthForPixelFormat(GpPixelFormat_t pixelFormat) const
+	{
+		switch (pixelFormat)
+		{
+		case GpPixelFormats::k8BitStandard:
+		case GpPixelFormats::k8BitCustom:
+			return 8;
+		case GpPixelFormats::kRGB555:
+			return 16;
+		case GpPixelFormats::kRGB24:
+			return 24;
+		case GpPixelFormats::kRGB32:
+			return 32;
+		default:
+			assert(false);
+			return 0;
+		}
 	}
 
 	QDManagerImpl *QDManagerImpl::GetInstance()

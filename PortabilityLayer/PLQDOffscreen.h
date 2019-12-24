@@ -25,7 +25,7 @@ enum QDFlags
 	useTempMem = 1,
 };
 
-OSErr NewGWorld(GWorldPtr *gworld, int depth, Rect *bounds, CTabHandle colorTable, GDHandle device, int flags);
+OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, GDHandle device, int flags);
 void DisposeGWorld(GWorldPtr gworld);
 
 PixMapHandle GetGWorldPixMap(GWorldPtr gworld);

@@ -232,7 +232,7 @@ namespace PortabilityLayer
 	}
 }
 
-OSErr NewGWorld(GWorldPtr *gworld, int depth, Rect *bounds, CTabHandle colorTable, GDHandle device, int flags)
+OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, GDHandle device, int flags)
 {
 	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, depth, *bounds, colorTable, device, flags);
 }
@@ -301,6 +301,7 @@ void DrawPicture(PicHandle pict, Rect *bounds)
 
 	switch (pixMap->GetPixelFormat())
 	{
+	case GpPixelFormats::kBW1:
 	case GpPixelFormats::k8BitStandard:
 		{
 			PortabilityLayer::PixMapBlitEmitter blitEmitter(PortabilityLayer::Vec2i(bounds->left, bounds->top), pixMap);

@@ -474,6 +474,8 @@ void DoDiedGameOver (void)
 					pagesStuck = 8;
 					userAborted = true;
 				}
+
+			Delay(1, nullptr);
 		}
 		while (TickCount() < nextLoop);
 		nextLoop = TickCount() + 2;

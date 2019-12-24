@@ -6,6 +6,7 @@ namespace GpPixelFormats
 	{
 		kInvalid,
 
+		kBW1,
 		k8BitStandard,
 		k8BitCustom,
 		kRGB555,

@@ -10,6 +10,7 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual bool Dequeue(EventRecord *evt) = 0;
+		virtual const EventRecord *Peek() const = 0;
 		virtual EventRecord *Enqueue() = 0;
 
 		static EventQueue *GetInstance();

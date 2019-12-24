@@ -534,9 +534,7 @@ void GetIndPattern(Pattern *pattern, int patListID, int index)
 	memcpy(pattern, patternRes + 2 + (index - 1) * 8, 8);
 }
 
-
-
-void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *destRect, CopyBitsMode copyMode, RgnHandle maskRegion)
+static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, RgnHandle maskRegion)
 {
 	assert(srcBitmap->m_pixelFormat == destBitmap->m_pixelFormat);
 
@@ -546,30 +544,84 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, 
 	const size_t srcPitch = srcBitmap->m_pitch;
 	const size_t destPitch = destBitmap->m_pitch;
 
-	assert(srcRect->top >= srcBounds.top);
-	assert(srcRect->bottom <= srcBounds.bottom);
-	assert(srcRect->left >= srcBounds.left);
-	assert(srcRect->right <= srcBounds.right);
+	assert(srcRectBase->right - srcRectBase->left == destRectBase->right - destRectBase->left);
+	assert(srcRectBase->bottom - srcRectBase->top == destRectBase->bottom - destRectBase->top);
 
-	assert(destRect->top >= destBounds.top);
-	assert(destRect->bottom <= destBounds.bottom);
-	assert(destRect->left >= destBounds.left);
-	assert(destRect->right <= destBounds.right);
+	if (maskBitmap)
+	{
+		assert(maskRectBase);
+		assert(maskRectBase->right - maskRectBase->left == destRectBase->right - destRectBase->left);
+	}
 
-	assert(srcRect->right - srcRect->left == destRect->right - destRect->left);
-	assert(srcRect->bottom - srcRect->top == destRect->bottom - destRect->top);
+	assert((maskBitmap == nullptr) == (maskRectBase == nullptr));
 
-	const Region *mask = *maskRegion;
+	Rect srcRect;
+	Rect destRect;
+	Rect maskRect;
 
-	const Rect constrainedDestRect = destRect->Intersect(mask->rect);
+	{
+		const Rect constrainedSrcRect = srcRectBase->Intersect(srcBounds);
+		const Rect constrainedDestRect = destRectBase->Intersect(destBounds);
+
+		const int32_t leftNudge = std::max(constrainedSrcRect.left - srcRectBase->left, constrainedDestRect.left - destRectBase->left);
+		const int32_t topNudge = std::max(constrainedSrcRect.top - srcRectBase->top, constrainedDestRect.top - destRectBase->top);
+		const int32_t bottomNudge = std::min(constrainedSrcRect.bottom - srcRectBase->bottom, constrainedDestRect.bottom - destRectBase->bottom);
+		const int32_t rightNudge = std::min(constrainedSrcRect.right - srcRectBase->right, constrainedDestRect.right - destRectBase->right);
+
+		const int32_t srcLeft = srcRectBase->left + leftNudge;
+		const int32_t srcRight = srcRectBase->right + rightNudge;
+		const int32_t srcTop = srcRectBase->top + topNudge;
+		const int32_t srcBottom = srcRectBase->bottom + bottomNudge;
+
+		if (srcTop >= srcBottom)
+			return;
+
+		if (srcLeft >= srcRight)
+			return;
+
+		srcRect.left = srcLeft;
+		srcRect.right = srcRight;
+		srcRect.top = srcTop;
+		srcRect.bottom = srcBottom;
+
+		destRect.left = destRectBase->left + leftNudge;
+		destRect.right = destRectBase->right + rightNudge;
+		destRect.top = destRectBase->top + topNudge;
+		destRect.bottom = destRectBase->bottom + bottomNudge;
+
+		if (maskRectBase)
+		{
+			maskRect.left = maskRectBase->left + leftNudge;
+			maskRect.right = maskRectBase->right + rightNudge;
+			maskRect.top = maskRectBase->top + topNudge;
+			maskRect.bottom = maskRectBase->bottom + bottomNudge;
+		}
+	}
+
+	assert(srcRect.top >= srcBounds.top);
+	assert(srcRect.bottom <= srcBounds.bottom);
+	assert(srcRect.left >= srcBounds.left);
+	assert(srcRect.right <= srcBounds.right);
+
+	assert(destRect.top >= destBounds.top);
+	assert(destRect.bottom <= destBounds.bottom);
+	assert(destRect.left >= destBounds.left);
+	assert(destRect.right <= destBounds.right);
+
+	const Region *mask = nullptr;
+
+	if (maskRegion)
+		mask = *maskRegion;
+
+	const Rect constrainedDestRect = mask ? destRect.Intersect(mask->rect) : destRect;
 	if (!constrainedDestRect.IsValid())
 		return;
 
-	Rect constrainedSrcRect = *srcRect;
-	constrainedSrcRect.left += constrainedDestRect.left - destRect->left;
-	constrainedSrcRect.right += constrainedDestRect.right - destRect->right;
-	constrainedSrcRect.top += constrainedDestRect.top - destRect->top;
-	constrainedSrcRect.bottom += constrainedDestRect.bottom - destRect->bottom;
+	Rect constrainedSrcRect = srcRect;
+	constrainedSrcRect.left += constrainedDestRect.left - destRect.left;
+	constrainedSrcRect.right += constrainedDestRect.right - destRect.right;
+	constrainedSrcRect.top += constrainedDestRect.top - destRect.top;
+	constrainedSrcRect.bottom += constrainedDestRect.bottom - destRect.bottom;
 
 	const size_t srcFirstCol = constrainedSrcRect.left - srcBitmap->m_rect.left;
 	const size_t srcFirstRow = constrainedSrcRect.top - srcBitmap->m_rect.top;
@@ -577,7 +629,7 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, 
 	const size_t destFirstCol = constrainedDestRect.left - destBitmap->m_rect.left;
 	const size_t destFirstRow = constrainedDestRect.top - destBitmap->m_rect.top;
 
-	if (mask->size != sizeof(Region))
+	if (mask && mask->size != sizeof(Region))
 	{
 		PL_NotYetImplemented();
 	}
@@ -608,8 +660,8 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, 
 		const size_t firstSrcByte = srcFirstRow * srcPitch + srcFirstCol * pixelSizeBytes;
 		const size_t firstDestByte = destFirstRow * destPitch + destFirstCol * pixelSizeBytes;
 
-		const size_t numCopiedRows = srcRect->bottom - srcRect->top;
-		const size_t numCopiedCols = srcRect->right - srcRect->left;
+		const size_t numCopiedRows = srcRect.bottom - srcRect.top;
+		const size_t numCopiedCols = srcRect.right - srcRect.left;
 		const size_t numCopiedBytesPerScanline = numCopiedCols * pixelSizeBytes;
 
 		for (size_t i = 0; i < numCopiedRows; i++)
@@ -617,11 +669,15 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, 
 	}
 }
 
-void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *maskRect, const Rect *destRect)
+void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *destRectBase, CopyBitsMode copyMode, RgnHandle maskRegion)
 {
-	PL_NotYetImplemented();
+	CopyBitsComplete(srcBitmap, nullptr, destBitmap, srcRectBase, nullptr, destRectBase, maskRegion);
 }
 
+void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase)
+{
+	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
+}
 
 RgnHandle NewRgn()
 {
@@ -725,8 +781,9 @@ void SubPt(Point srcPoint, Point *destPoint)
 
 Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection)
 {
-	PL_NotYetImplemented();
-	return false;
+	*outIntersection = rectA->Intersect(*rectB);
+
+	return outIntersection->IsValid() ? PL_TRUE : PL_FALSE;
 }
 
 
@@ -759,4 +816,16 @@ void BitMap::Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, v
 	m_pixelFormat = pixelFormat;
 	m_pitch = pitch;
 	m_data = dataPtr;
+}
+
+#include "stb_image_write.h"
+
+void DebugPixMap(PixMap **pixMapH, const char *outName)
+{
+	PixMap *pixMap = *pixMapH;
+	char outPath[1024];
+	strcpy_s(outPath, outName);
+	strcat_s(outPath, ".png");
+
+	stbi_write_png(outPath, pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, 1, pixMap->m_data, pixMap->m_pitch);
 }

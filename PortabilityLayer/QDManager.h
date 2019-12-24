@@ -1,5 +1,7 @@
 #pragma once
 
+#include "GpPixelFormat.h"
+
 struct ColorTable;
 struct CGraf;
 struct GDevice;
@@ -20,6 +22,8 @@ namespace PortabilityLayer
 		virtual void DisposeGWorld(CGraf *gw) = 0;
 
 		virtual QDState *GetState() = 0;
+
+		virtual int DepthForPixelFormat(GpPixelFormat_t pixelFormat) const = 0;
 
 		static QDManager *GetInstance();
 	};

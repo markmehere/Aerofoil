@@ -138,8 +138,12 @@ void WipeScreenOn (short direction, Rect *theRect)
 
 void DumpScreenOn (Rect *theRect)
 {
+	CGrafPtr graf = GetWindowPort(mainWindow);
+
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+			GetPortBitMapForCopyBits(graf),
 			theRect, theRect, srcCopy, nil);
+
+	graf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 

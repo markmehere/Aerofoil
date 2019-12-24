@@ -248,8 +248,9 @@ OSErr CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, short depth)
 	
 	if (theErr)
 		theErr = NewGWorld(theGWorld, depth, bounds, nil, nil, 0);
-	
-	LockPixels(GetGWorldPixMap(*theGWorld));
+
+	if (!theErr)
+		LockPixels(GetGWorldPixMap(*theGWorld));
 	
 	return theErr;
 }
@@ -450,6 +451,8 @@ Boolean WaitForInputEvent (short seconds)
 		}
 		if ((seconds != -1) && (TickCount() >= timeToBail))
 			waiting = false;
+
+		Delay(1, nullptr);
 	}
 	FlushEvents(everyEvent, 0);
 	return (didResume);

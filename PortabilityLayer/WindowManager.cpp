@@ -7,9 +7,11 @@
 #include "PLCore.h"
 #include "PLEventQueue.h"
 #include "MemoryManager.h"
+#include "MenuManager.h"
 #include "QDGraf.h"
 #include "QDManager.h"
 #include "QDPixMap.h"
+#include "Vec2i.h"
 #include "WindowDef.h"
 
 struct GDevice;
@@ -58,6 +60,7 @@ namespace PortabilityLayer
 		void ShowWindow(Window *window) override;
 		void HideWindow(Window *window) override;
 		GDevice **GetWindowDevice(Window *window) override;
+		void FindWindow(const Point &point, Window **outWindow, short *outRegion) const override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
@@ -243,6 +246,60 @@ namespace PortabilityLayer
 	GDevice **WindowManagerImpl::GetWindowDevice(Window *window)
 	{
 		return static_cast<WindowImpl*>(window)->GetDevice();
+	}
+
+	void WindowManagerImpl::FindWindow(const Point &point, Window **outWindow, short *outRegion) const
+	{
+		// outRegion = One of:
+		/*
+		inMenuBar,
+		inSysWindow,
+		inContent,
+		inDrag,
+		inGrow,
+		inGoAway,
+		inZoomIn,
+		inZoomOut,
+		*/
+
+		if (PortabilityLayer::MenuManager::GetInstance()->IsPointInMenuBar(PortabilityLayer::Vec2i(point.h, point.v)))
+		{
+			if (outWindow)
+				*outWindow = nullptr;
+
+			if (outRegion)
+				*outRegion = inMenuBar;
+
+			return;
+		}
+
+		WindowImpl *window = m_windowStackTop;
+		while (window)
+		{
+			const Rect windowRect = window->m_graf.m_port.GetRect();
+
+			const int32_t localX = point.h - window->m_wmX;
+			const int32_t localY = point.v - window->m_wmY;
+
+			if (localX >= 0 && localY >= 0 && localX < windowRect.right && localY < windowRect.bottom)
+			{
+				if (outWindow)
+					*outWindow = window;
+
+				if (outRegion)
+					*outRegion = inContent;
+
+				return;
+			}
+
+			window = window->GetWindowBelow();
+		}
+
+		if (outWindow)
+			*outWindow = nullptr;
+
+		if (outRegion)
+			*outRegion = 0;
 	}
 
 	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)

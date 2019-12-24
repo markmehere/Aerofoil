@@ -148,6 +148,7 @@ Pattern *GetQDGlobalsBlack(Pattern *pattern);
 // Index is 1-based
 void GetIndPattern(Pattern *pattern, int patListID, int index);
 
+void DebugPixMap(PixMap **pixMap, const char *outName);
 
 void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *destRect, CopyBitsMode copyMode, RgnHandle maskRegion);
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *maskRect, const Rect *destRect);

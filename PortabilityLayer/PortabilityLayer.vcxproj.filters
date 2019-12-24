@@ -361,7 +361,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SimpleGraphic.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -543,6 +543,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleGraphic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\stb\stb_image_write.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

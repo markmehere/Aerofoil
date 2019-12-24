@@ -18,39 +18,44 @@
 #include "QDManager.h"
 #include "QDPixMap.h"
 #include "RGBAColor.h"
+#include "Vec2i.h"
 
 #include <stdint.h>
 #include <assert.h>
+#include <algorithm>
 
 namespace
 {
+	static const int kMidGray = 187;
+
 	const PortabilityLayer::RGBAColor gs_barTopLeftCornerGraphicPixels[] =
 	{
 		{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 85, 85, 85, 255 }, { 170, 170, 170, 255 },
 		{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 85, 85, 85, 255 }, { 255, 255, 255, 255 }, { 255, 255, 255, 255 },
-		{ 0, 0, 0, 255 }, { 85, 85, 85, 255 }, { 255, 255, 255, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 },
-		{ 85, 85, 85, 255 }, { 255, 255, 255, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 },
-		{ 170, 170, 170, 255 }, { 255, 255, 255, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 },
+		{ 0, 0, 0, 255 }, { 85, 85, 85, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
+		{ 85, 85, 85, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
+		{ 170, 170, 170, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
 	};
 
 	const PortabilityLayer::RGBAColor gs_barTopRightCornerGraphicPixels[] =
 	{
 		{ 170, 170, 170, 255 }, { 85, 85, 85, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
 		{ 255, 255, 255, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-		{ 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 }, { 0, 0, 0, 255 },
-		{ 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 },
-		{ 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 221, 221, 221, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 },
+		{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 }, { 0, 0, 0, 255 },
+		{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 },
+		{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 255, 255, 255, 255 }, { 85, 85, 85, 255 },
 	};
 
 	const PortabilityLayer::RGBAColor gs_barBrightColor = { 255, 255, 255, 255 };
-	const PortabilityLayer::RGBAColor gs_barMidColor = { 221, 221, 221, 255 };
+	const PortabilityLayer::RGBAColor gs_barMidColor = { kMidGray, kMidGray, kMidGray, 255 };
 	const PortabilityLayer::RGBAColor gs_barDarkColor = { 102, 102, 102, 255 };
 	const PortabilityLayer::RGBAColor gs_barBottomEdgeColor = { 0, 0, 0, 255 };
 	const PortabilityLayer::RGBAColor gs_barNormalTextColor = { 0, 0, 0, 255 };
+	const PortabilityLayer::RGBAColor gs_barHighlightTextColor = { 255, 255, 255, 255 };
 
-	const PortabilityLayer::RGBAColor gs_barHighlightBrightColor = { 153, 153, 255, 255 };
-	const PortabilityLayer::RGBAColor gs_barHighlightMidColor = { 102, 102, 204, 255 };
-	const PortabilityLayer::RGBAColor gs_barHighlightDarkColor = { 51, 51, 102, 255 };
+	const PortabilityLayer::RGBAColor gs_barHighlightBrightColor = { 153, 204, 255, 255 };
+	const PortabilityLayer::RGBAColor gs_barHighlightMidColor = { 51, 102, 204, 255 };
+	const PortabilityLayer::RGBAColor gs_barHighlightDarkColor = { 0, 51, 102, 255 };
 
 	PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5> gs_barTopLeftCornerGraphic(gs_barTopLeftCornerGraphicPixels);
 	PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5> gs_barTopRightCornerGraphic(gs_barTopRightCornerGraphicPixels);
@@ -65,6 +70,9 @@ struct MenuItem
 	uint8_t textStyle;
 	bool enabled;
 	bool checked;
+
+	uint16_t layoutYOffset;
+	uint16_t layoutHeight;
 };
 
 struct Menu
@@ -75,6 +83,10 @@ struct Menu
 	uint16_t commandID;
 	bool enabled;
 	bool isIcon;
+	bool haveMenuLayout;
+
+	size_t layoutWidth;
+	size_t layoutHeight;
 
 	PortabilityLayer::MMHandleBlock *stringBlobHandle;
 
@@ -83,6 +95,7 @@ struct Menu
 
 	// Refreshed on layout
 	size_t cumulativeOffset;
+	size_t unpaddedTitleWidth;
 	unsigned int menuIndex;
 
 	size_t numMenuItems;
@@ -112,6 +125,9 @@ namespace PortabilityLayer
 		void SetItemEnabled(Menu **menu, unsigned int index, bool enabled) override;
 		void SetItemChecked(Menu **menu, unsigned int index, bool checked) override;
 
+		bool IsPointInMenuBar(const Vec2i &point) const override;
+		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
+
 		void DrawMenuBar() override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
@@ -119,7 +135,36 @@ namespace PortabilityLayer
 		static MenuManagerImpl *GetInstance();
 
 	private:
-		void RefreshMenuLayout();
+		class MenuSelectionState
+		{
+		public:
+			MenuSelectionState();
+			~MenuSelectionState();
+
+			void HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool &outNeedRedraw);
+			void Dismiss();
+
+			Menu **GetSelectedMenu() const;
+			CGraf *GetRenderedMenu() const;
+			const unsigned int *GetSelectedItem() const;
+
+			void SelectItem(size_t item);
+			void ClearSelection();
+
+		private:
+			void RenderMenu(Menu *menu);
+
+			Menu **m_currentMenu;
+			CGraf *m_menuGraf;
+			unsigned int m_itemIndex;
+			bool m_haveItem;
+		};
+
+		void RefreshMenuBarLayout();
+		void RefreshMenuLayout(Menu *menu);
+		void ProcessMouseMoveTo(const Vec2i &point);
+		void ProcessMouseMoveToMenuBar(const Vec2i &point);
+		void ProcessMouseMoveToMenu(const Vec2i &point);
 
 		static const unsigned int kIconResID = 128;
 		static const unsigned int kMenuFontSize = 12;
@@ -128,19 +173,29 @@ namespace PortabilityLayer
 		static const unsigned int kMenuBarHeight = 20;
 		static const unsigned int kMenuBarItemPadding = 6;
 		static const unsigned int kMenuBarInitialPadding = 16;
+
+		static const unsigned int kMenuItemHeight = 18;
+		static const unsigned int kMenuItemTextYOffset = 13;
+		static const unsigned int kMenuSeparatorHeight = 6;
+
+		static const unsigned int kMenuItemRightPadding = 8;
+		static const unsigned int kMenuItemLeftPadding = 16 + 2 + 2;	// 2 for left border, 16 for icon, 2 for spacing
+
 		static const int kMenuFontFlags = PortabilityLayer::FontFamilyFlag_Bold;
 
 		CGraf *m_menuBarGraf;
 
 		Menu **m_firstMenu;
 		Menu **m_lastMenu;
-		bool m_haveMenuLayout;
+		bool m_haveMenuBarLayout;
 		bool m_haveIcon;
 
 		uint8_t m_iconColors[16 * 16];
 		uint8_t m_iconMask[32];
 
 		SimpleGraphic *m_iconGraphic;
+
+		MenuSelectionState m_menuSelectionState;
 
 		static MenuManagerImpl ms_instance;
 	};
@@ -149,7 +204,7 @@ namespace PortabilityLayer
 		: m_menuBarGraf(nullptr)
 		, m_firstMenu(nullptr)
 		, m_lastMenu(nullptr)
-		, m_haveMenuLayout(false)
+		, m_haveMenuBarLayout(false)
 		, m_haveIcon(false)
 		, m_iconGraphic(nullptr)
 	{
@@ -235,7 +290,9 @@ namespace PortabilityLayer
 		menu->enabled = ((enableFlags & 1) != 0);
 		menu->menuIndex = 0;
 		menu->cumulativeOffset = 0;
+		menu->unpaddedTitleWidth = 0;
 		menu->isIcon = false;
+		menu->haveMenuLayout = false;
 
 		uint8_t *stringDataStart = static_cast<uint8_t*>(stringData->m_contents);
 		uint8_t *stringDest = stringDataStart;
@@ -258,6 +315,7 @@ namespace PortabilityLayer
 			currentItem->nameOffsetInStringBlob = static_cast<uint32_t>(stringDest - stringDataStart);
 			currentItem->enabled = ((enableFlags & 1) != 0);
 			currentItem->checked = false;
+			currentItem->layoutYOffset = 0;
 
 			enableFlags >>= 1;
 
@@ -269,6 +327,8 @@ namespace PortabilityLayer
 		menu->stringBlobHandle = stringData;
 		menu->prevMenu = nullptr;
 		menu->nextMenu = nullptr;
+		menu->layoutWidth = 0;
+		menu->layoutHeight = 0;
 
 		return reinterpret_cast<Menu**>(&menuData->m_contents);
 	}
@@ -286,7 +346,7 @@ namespace PortabilityLayer
 
 	void MenuManagerImpl::InsertMenuBefore(Menu **insertingMenu, Menu **existingMenu)
 	{
-		m_haveMenuLayout = false;
+		m_haveMenuBarLayout = false;
 
 		Menu *insertingMenuPtr = *insertingMenu;
 		Menu *existingMenuPtr = *existingMenu;
@@ -304,7 +364,7 @@ namespace PortabilityLayer
 
 	void MenuManagerImpl::InsertMenuAfter(Menu **insertingMenu, Menu **existingMenu)
 	{
-		m_haveMenuLayout = false;
+		m_haveMenuBarLayout = false;
 
 		Menu *insertingMenuPtr = *insertingMenu;
 		Menu *existingMenuPtr = *existingMenu;
@@ -322,7 +382,7 @@ namespace PortabilityLayer
 
 	void MenuManagerImpl::InsertMenuAtEnd(Menu **insertingMenu)
 	{
-		m_haveMenuLayout = false;
+		m_haveMenuBarLayout = false;
 
 		if (m_firstMenu == nullptr)
 		{
@@ -337,7 +397,7 @@ namespace PortabilityLayer
 
 	void MenuManagerImpl::InsertMenuAtBeginning(Menu **insertingMenu)
 	{
-		m_haveMenuLayout = false;
+		m_haveMenuBarLayout = false;
 
 		if (m_firstMenu == nullptr)
 		{
@@ -375,6 +435,72 @@ namespace PortabilityLayer
 			return;
 
 		menu->menuItems[index].checked = checked;
+	}
+
+	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const
+	{
+		return point.m_y >= 0 && static_cast<uint32_t>(point.m_y) < kMenuBarHeight;
+	}
+
+
+	void MenuManagerImpl::MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem)
+	{
+		RefreshMenuBarLayout();
+
+		ProcessMouseMoveTo(initialPoint);
+
+		if (m_menuSelectionState.GetSelectedMenu() == nullptr)
+		{
+			if (outMenu)
+				*outMenu = 0;
+
+			if (outItem)
+				*outItem = 0;
+
+			return;
+		}
+
+		EventRecord evt;
+		bool canDismiss = false;
+		while (!canDismiss)
+		{
+			if (WaitNextEvent(everyEvent, &evt, 1, nullptr))
+			{
+				const EventCode eventCode = static_cast<EventCode>(evt.what);
+
+				switch (eventCode)
+				{
+				case mouseMove:
+				case mouseDown:	// It's possible to get a mouse down event again if the mouse leaves the window and is downed again inside
+					ProcessMouseMoveTo(PortabilityLayer::Vec2i(evt.where.h, evt.where.v));
+					break;
+				case mouseUp:
+					canDismiss = true;
+					break;
+				}
+			}
+		}
+
+		if (outMenu)
+			*outMenu = 0;
+
+		if (outItem)
+			*outItem = 0;
+
+		if (Menu **menuHdl = m_menuSelectionState.GetSelectedMenu())
+		{
+			if (const unsigned int *selectedItem = m_menuSelectionState.GetSelectedItem())
+			{
+				if (outMenu)
+					*outMenu = (*menuHdl)->menuID;
+
+				if (outItem)
+					*outItem = (*selectedItem) + 1;
+			}
+		}
+
+		m_menuSelectionState.Dismiss();
+		this->DrawMenuBar();
 	}
 
 	void MenuManagerImpl::DrawMenuBar()
@@ -422,17 +548,7 @@ namespace PortabilityLayer
 
 		if (m_menuBarGraf == nullptr)
 		{
-			int depth = 0;
-
-			switch (pixelFormat)
-			{
-			case GpPixelFormats::k8BitStandard:
-				depth = 8;
-				break;
-			default:
-				PL_NotYetImplemented();
-				return;
-			}
+			int depth = PortabilityLayer::QDManager::GetInstance()->DepthForPixelFormat(pixelFormat);
 
 			if (qdManager->NewGWorld(&m_menuBarGraf, depth, menuRect, nullptr, nullptr, 0) != 0)
 				return;
@@ -448,8 +564,7 @@ namespace PortabilityLayer
 				return;
 		}
 
-
-		RefreshMenuLayout();
+		RefreshMenuBarLayout();
 
 		CGraf *oldGraf;
 		GDHandle oldDevice;
@@ -504,11 +619,44 @@ namespace PortabilityLayer
 		gs_barTopLeftCornerGraphic.DrawToPixMap(pixMap, 0, 0);
 		gs_barTopRightCornerGraphic.DrawToPixMap(pixMap, static_cast<int16_t>(width) - static_cast<int16_t>(gs_barTopRightCornerGraphic.m_width), 0);
 
+		Menu **selectedMenuHdl = m_menuSelectionState.GetSelectedMenu();
+
+		if (selectedMenuHdl)
+		{
+			Menu *menu = *selectedMenuHdl;
+
+			const size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding - kMenuBarItemPadding;
+			const size_t width = menu->unpaddedTitleWidth + kMenuBarItemPadding * 2;
+
+			const int16_t left = static_cast<int16_t>(xCoordinate);
+			const int16_t right = static_cast<int16_t>(xCoordinate + width);
+
+			// Top edge
+			qdState->SetForeColor(gs_barHighlightBrightColor);
+			{
+				const Rect rect = Rect::Create(0, left, 1, right);
+				PaintRect(&rect);
+			}
+
+			// Middle
+			qdState->SetForeColor(gs_barHighlightMidColor);
+			{
+				const Rect rect = Rect::Create(1, left, kMenuBarHeight - 2, right);
+				PaintRect(&rect);
+			}
+
+			qdState->SetForeColor(gs_barHighlightDarkColor);
+			{
+				const Rect rect = Rect::Create(kMenuBarHeight - 2, left, kMenuBarHeight - 1, right);
+				PaintRect(&rect);
+			}
+		}
+
+		// Text items
 		qdState->SetForeColor(gs_barNormalTextColor);
 		TextFont(systemFont);
 		TextSize(kMenuFontSize);
 
-		// Text items
 		{
 			Menu **menuHdl = m_firstMenu;
 			while (menuHdl)
@@ -522,17 +670,35 @@ namespace PortabilityLayer
 					if (menu->isIcon)
 					{
 						if (m_iconGraphic)
-							m_iconGraphic->DrawToPixMapWithMask(pixMap, m_iconMask, xCoordinate, kMenuBarIconYOffset);
+							m_iconGraphic->DrawToPixMapWithMask(pixMap, m_iconMask, static_cast<int16_t>(xCoordinate), kMenuBarIconYOffset);
 					}
 					else
 					{
-						qdState->m_penPos.h = xCoordinate;
-						qdState->m_penPos.v = kMenuBarTextYOffset;
-						DrawString(PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
+						if (menuHdl != selectedMenuHdl)
+						{
+							qdState->m_penPos.h = static_cast<int16_t>(xCoordinate);
+							qdState->m_penPos.v = kMenuBarTextYOffset;
+							DrawString(PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
+						}
 					}
 				}
 
 				menuHdl = menu->nextMenu;
+			}
+		}
+
+		if (selectedMenuHdl)
+		{
+			Menu *menu = *selectedMenuHdl;
+
+			if (menu->stringBlobHandle && !menu->isIcon)
+			{
+				qdState->SetForeColor(gs_barHighlightTextColor);
+				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
+
+				qdState->m_penPos.h = static_cast<int16_t>(xCoordinate);
+				qdState->m_penPos.v = kMenuBarTextYOffset;
+				DrawString(PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
 			}
 		}
 
@@ -555,11 +721,23 @@ namespace PortabilityLayer
 				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, 0, width, height);
 			}
 		}
+
+		if (CGraf *renderedMenu = m_menuSelectionState.GetRenderedMenu())
+		{
+			renderedMenu->PushToDDSurface(displayDriver);
+
+			Menu *selectedMenu = *m_menuSelectionState.GetSelectedMenu();
+			const PixMap *pixMap = *renderedMenu->m_port.GetPixMap();
+
+			const size_t xCoordinate = kMenuBarInitialPadding + selectedMenu->menuIndex * kMenuBarItemPadding * 2 + selectedMenu->cumulativeOffset - kMenuBarItemPadding;
+
+			displayDriver->DrawSurface(renderedMenu->m_ddSurface, xCoordinate, kMenuBarHeight, pixMap->m_rect.right, pixMap->m_rect.bottom);
+		}
 	}
 
-	void MenuManagerImpl::RefreshMenuLayout()
+	void MenuManagerImpl::RefreshMenuBarLayout()
 	{
-		if (m_haveMenuLayout)
+		if (m_haveMenuBarLayout)
 			return;
 
 		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
@@ -587,16 +765,141 @@ namespace PortabilityLayer
 
 			if (pascalStr.Length() == 1 && pascalStr.UChars()[0] == 0x14)
 			{
-				measuredWidth += 16;
+				menu->unpaddedTitleWidth = 16;
 				menu->isIcon = true;
 			}
 			else
-				measuredWidth += rfont->MeasureString(pascalStr.UChars(), pascalStr.Length());
+				menu->unpaddedTitleWidth = rfont->MeasureString(pascalStr.UChars(), pascalStr.Length());
+
+			measuredWidth += menu->unpaddedTitleWidth;
 
 			menuHdl = menu->nextMenu;
 		}
 
-		m_haveMenuLayout = true;
+		m_haveMenuBarLayout = true;
+	}
+
+	void MenuManagerImpl::RefreshMenuLayout(Menu *menu)
+	{
+		if (menu->haveMenuLayout)
+			return;
+
+		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+		PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(kMenuFontSize, kMenuFontFlags);
+		if (!fontFamily)
+			return;
+
+		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, kMenuFontFlags);
+		if (!rfont)
+			return;
+
+		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
+
+		size_t cumulativeHeight = 0;
+		size_t width = menu->width;
+
+		const size_t numItems = menu->numMenuItems;
+		for (size_t i = 0; i < numItems; i++)
+		{
+			MenuItem &item = menu->menuItems[i];
+			item.layoutYOffset = cumulativeHeight;
+			item.layoutHeight = kMenuItemHeight;
+
+			const uint8_t *itemName = strBlob + item.nameOffsetInStringBlob;
+			const PLPasStr itemNamePStr = PLPasStr(itemName);
+
+			const size_t nameWidth = rfont->MeasureString(itemNamePStr.UChars(), itemNamePStr.Length());
+
+			const size_t paddedWidth = nameWidth + kMenuItemLeftPadding + kMenuItemRightPadding;
+
+			width = std::max<size_t>(width, paddedWidth);
+
+			cumulativeHeight += item.layoutHeight;
+		}
+
+		menu->haveMenuLayout = true;
+		menu->layoutWidth = width;
+		menu->layoutHeight = cumulativeHeight;
+	}
+
+	void MenuManagerImpl::ProcessMouseMoveTo(const Vec2i &point)
+	{
+		if (point.m_y < 0)
+			return;
+
+		if (point.m_y < static_cast<int>(kMenuBarHeight))
+			ProcessMouseMoveToMenuBar(point);
+		else
+			ProcessMouseMoveToMenu(point);
+	}
+
+	void MenuManagerImpl::ProcessMouseMoveToMenuBar(const Vec2i &point)
+	{
+		if (point.m_x < 0)
+			return;
+
+		const uint32_t mouseXCoordinate = static_cast<uint32_t>(point.m_x);
+
+		Menu **selectedMenu = nullptr;
+
+		Menu **menuHdl = m_firstMenu;
+
+		while (menuHdl)
+		{
+			Menu *menu = *menuHdl;
+
+			uint32_t menuLeftXCoordinate = kMenuBarInitialPadding + menu->cumulativeOffset + menu->menuIndex * kMenuBarItemPadding * 2 - kMenuBarItemPadding;
+			uint32_t menuRightXCoordinate = menuLeftXCoordinate + menu->unpaddedTitleWidth + kMenuBarItemPadding * 2;
+
+			if (mouseXCoordinate >= menuLeftXCoordinate && mouseXCoordinate < menuRightXCoordinate)
+			{
+				selectedMenu = menuHdl;
+				break;
+			}
+
+			menuHdl = menu->nextMenu;
+		}
+
+		if (selectedMenu)
+		{
+			bool needRedraw = false;
+			m_menuSelectionState.HandleSelectionOfMenu(this, menuHdl, needRedraw);
+
+			if (needRedraw)
+				DrawMenuBar();
+		}
+	}
+
+	void MenuManagerImpl::ProcessMouseMoveToMenu(const Vec2i &point)
+	{
+		Menu **selectedMenuHandle = m_menuSelectionState.GetSelectedMenu();
+
+		if (selectedMenuHandle)
+		{
+			Menu *menu = *selectedMenuHandle;
+			const int32_t xCoordinate = kMenuBarInitialPadding + menu->menuIndex * kMenuBarItemPadding * 2 + menu->cumulativeOffset - kMenuBarItemPadding;
+
+			const Vec2i localPoint = point - Vec2i(xCoordinate, kMenuBarHeight);
+
+			if (localPoint.m_x < 0 || localPoint.m_y < 0 || static_cast<size_t>(localPoint.m_x) >= menu->layoutWidth || static_cast<size_t>(localPoint.m_y) >= menu->layoutHeight)
+				return;
+
+			const size_t localY = localPoint.m_y;
+
+			for (size_t i = 0; i < menu->numMenuItems; i++)
+			{
+				const MenuItem &item = menu->menuItems[i];
+
+				if (localY >= item.layoutYOffset && localY - item.layoutYOffset < item.layoutHeight)
+				{
+					m_menuSelectionState.SelectItem(i);
+					return;
+				}
+			}
+		}
+
+		m_menuSelectionState.ClearSelection();
 	}
 
 	MenuManagerImpl *MenuManagerImpl::GetInstance()
@@ -605,6 +908,166 @@ namespace PortabilityLayer
 	}
 
 	MenuManagerImpl MenuManagerImpl::ms_instance;
+
+	MenuManagerImpl::MenuSelectionState::MenuSelectionState()
+		: m_currentMenu(nullptr)
+		, m_menuGraf(nullptr)
+		, m_haveItem(false)
+		, m_itemIndex(0)
+	{
+	}
+
+	MenuManagerImpl::MenuSelectionState::~MenuSelectionState()
+	{
+		Dismiss();
+	}
+
+	void MenuManagerImpl::MenuSelectionState::HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool &outNeedRedraw)
+	{
+		outNeedRedraw = false;
+
+		if (!menuHdl)
+			return;
+
+		if (menuHdl != m_currentMenu)
+		{
+			Dismiss();
+			m_currentMenu = menuHdl;
+
+			Menu *menu = *menuHdl;
+
+			outNeedRedraw = true;
+
+			mm->RefreshMenuLayout(menu);
+
+			RenderMenu(menu);
+		}
+	}
+
+	void MenuManagerImpl::MenuSelectionState::Dismiss()
+	{
+		if (m_menuGraf)
+		{
+			DisposeGWorld(m_menuGraf);
+			m_menuGraf = nullptr;
+		}
+
+		m_currentMenu = nullptr;
+		m_haveItem = false;
+	}
+
+	Menu **MenuManagerImpl::MenuSelectionState::GetSelectedMenu() const
+	{
+		return m_currentMenu;
+	}
+
+	CGraf *MenuManagerImpl::MenuSelectionState::GetRenderedMenu() const
+	{
+		return m_menuGraf;
+	}
+
+	const unsigned int *MenuManagerImpl::MenuSelectionState::GetSelectedItem() const
+	{
+		if (!m_haveItem)
+			return nullptr;
+
+		return &m_itemIndex;
+	}
+
+	void MenuManagerImpl::MenuSelectionState::SelectItem(size_t item)
+	{
+		if (m_haveItem && m_itemIndex == item)
+			return;
+
+		m_haveItem = true;
+		m_itemIndex = item;
+
+		if (m_currentMenu)
+			RenderMenu(*m_currentMenu);
+	}
+
+	void MenuManagerImpl::MenuSelectionState::ClearSelection()
+	{
+		if (!m_haveItem)
+			return;
+
+		m_haveItem = false;
+
+		if (m_currentMenu)
+			RenderMenu(*m_currentMenu);
+	}
+
+	void MenuManagerImpl::MenuSelectionState::RenderMenu(Menu *menu)
+	{
+		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
+
+		const Rect menuRect = Rect::Create(0, 0, menu->layoutHeight, menu->layoutWidth);
+
+		if (m_menuGraf == nullptr)
+		{
+			GpPixelFormat_t pixelFormat;
+			PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &pixelFormat);
+
+			if (qdManager->NewGWorld(&m_menuGraf, qdManager->DepthForPixelFormat(pixelFormat), menuRect, nullptr, nullptr, 0) != 0)
+				return;
+		}
+
+		CGrafPtr oldGraf = nullptr;
+		GDHandle oldDevice = nullptr;
+		GetGWorld(&oldGraf, &oldDevice);
+
+		SetGWorld(m_menuGraf, nullptr);
+
+		QDState *qdState = qdManager->GetState();
+
+		qdState->SetForeColor(gs_barMidColor);
+
+		{
+			const Rect rect = Rect::Create(0, 0, menu->layoutHeight, menu->layoutWidth);
+			PaintRect(&rect);
+		}
+
+		TextFont(systemFont);
+		TextSize(kMenuFontSize);
+
+		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
+
+		qdState->m_penPos.h = kMenuItemLeftPadding;
+
+		qdState->SetForeColor(gs_barNormalTextColor);
+
+		for (size_t i = 0; i < menu->numMenuItems; i++)
+		{
+			if (m_haveItem && i == m_itemIndex)
+				continue;
+
+			const MenuItem &item = menu->menuItems[i];
+
+			qdState->m_penPos.v = item.layoutYOffset + kMenuItemTextYOffset;
+
+			DrawString(PLPasStr(strBlob + item.nameOffsetInStringBlob));
+		}
+
+		if (m_haveItem)
+		{
+			const MenuItem &selectedItem = menu->menuItems[m_itemIndex];
+			qdState->SetForeColor(gs_barHighlightMidColor);
+			const Rect itemRect = Rect::Create(selectedItem.layoutYOffset, 0, selectedItem.layoutYOffset + selectedItem.layoutHeight, menu->layoutWidth);
+			PaintRect(&itemRect);
+
+			qdState->SetForeColor(gs_barHighlightTextColor);
+
+			const MenuItem &item = menu->menuItems[m_itemIndex];
+
+			qdState->m_penPos.v = item.layoutYOffset + kMenuItemTextYOffset;
+
+			DrawString(PLPasStr(strBlob + item.nameOffsetInStringBlob));
+		}
+
+		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
+
+		SetGWorld(oldGraf, oldDevice);
+	}
 
 	MenuManager *MenuManager::GetInstance()
 	{

@@ -43,6 +43,7 @@ namespace PortabilityLayer
 		{
 		case GpPixelFormats::k8BitCustom:
 		case GpPixelFormats::k8BitStandard:
+		case GpPixelFormats::kBW1:
 			rowByteCount = width;
 			break;
 		case GpPixelFormats::kRGB555:

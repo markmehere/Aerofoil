@@ -17,3 +17,12 @@ Other parts:
 - FTagData: Copies a data-only file to a .gpd and creates a .gpf for it
 - ImportCharSet: Imports the Unicode MacRoman description into a code page table.
 - PictChecker: Experimental app that extracts all of the PICT resources from all of the houses and dumps them to PNG.  Used to verify that the PICT loader works.
+
+
+GlidePort is intended to be primarily a straight port, retaining most of the look and feel of the original.
+
+Planned additions:
+- 32-bit color support (mainly matters for houses that have higher-resolution PICT resources)
+- Resolution changes while the game is running
+- Bring back the gray-to-color intro fade that was removed in later versions
+- Gamepad support

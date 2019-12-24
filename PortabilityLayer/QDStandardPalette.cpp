@@ -150,7 +150,7 @@ namespace PortabilityLayer
 		const int gGrayDelta = static_cast<int>(g * 3) - static_cast<int>(grayscaleTimes3);
 		const int bGrayDelta = static_cast<int>(b * 3) - static_cast<int>(grayscaleTimes3);
 
-		if (rGrayDelta >= -3 && rGrayDelta <= 3 && gGrayDelta >= -3 && gGrayDelta <= -3 && bGrayDelta >= -3 && bGrayDelta <= -3)
+		if (rGrayDelta >= -3 && rGrayDelta <= 3 && gGrayDelta >= -3 && gGrayDelta <= 3 && bGrayDelta >= -3 && bGrayDelta <= 3)
 		{
 			// Divide down to 0..15 range
 			const unsigned int grayscaleValue = (grayscaleTimes3 * 21 + 36) >> 6;
@@ -167,7 +167,7 @@ namespace PortabilityLayer
 				else if (grayscale6Step == 5)
 					return 0;
 				else
-					return 180 - 36 * grayscale6Step;
+					return 215 - 43 * grayscale6Step;
 			}
 			else
 				return 255 - grayscale6Step * 2 - grayscale6StepRemainder;

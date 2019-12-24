@@ -74,7 +74,6 @@ extern	Boolean		switchedOut;
 void NewGame (short mode)
 {
 	Rect		tempRect;
-	Size		freeBytes, growBytes;
 	OSErr		theErr;
 	Boolean		wasPlayMusicPref;
 	
@@ -191,8 +190,6 @@ void NewGame (short mode)
 	}
 	InitTelephone();
 	wasPlayMusicPref = isPlayMusicGame;
-	
-	freeBytes = MaxMem(&growBytes);
 	
 #ifdef CREATEDEMODATA
 	SysBeep(1);

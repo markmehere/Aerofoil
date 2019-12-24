@@ -194,7 +194,11 @@ typedef struct
 	Boolean		unusedBoolean;				// 1
 	int16_t		firstRoom;					// 2
 	int16_t		nRooms;						// 2
+
+	int16_t		padding;
 	roomType	rooms[1];					// 348 * nRooms
+
+	static const size_t kBinaryDataSize = 866;
 } houseType, *housePtr, **houseHand;		// total = 866 +
 
 typedef struct

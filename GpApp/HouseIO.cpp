@@ -598,7 +598,7 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes)
 	PortabilityLayer::ByteSwap::BigInt16(house->firstRoom);
 	PortabilityLayer::ByteSwap::BigInt16(house->nRooms);
 
-	const size_t roomDataSize = sizeInBytes + sizeof(roomType) - sizeof(houseType);
+	const size_t roomDataSize = sizeInBytes - houseType::kBinaryDataSize;
 	if (house->nRooms < 1 || roomDataSize / sizeof(roomType) < static_cast<size_t>(house->nRooms))
 		return false;
 
@@ -614,6 +614,9 @@ Boolean ReadHouse (void)
 	long		byteCount;
 	OSErr		theErr;
 	short		whichRoom;
+
+	// There should be no padding remaining the house type
+	PL_STATIC_ASSERT(sizeof(houseType) - sizeof(roomType) == houseType::kBinaryDataSize + 2);
 	
 	if (!houseOpen)
 	{
@@ -649,8 +652,11 @@ Boolean ReadHouse (void)
 	
 	if (thisHouse != nil)
 		DisposeHandle((Handle)thisHouse);
+
+	// GP: Correct for padding
+	const size_t alignmentPadding = sizeof(houseType) - sizeof(roomType) - houseType::kBinaryDataSize;
 	
-	thisHouse = (houseHand)NewHandle(byteCount);
+	thisHouse = (houseHand)NewHandle(byteCount + alignmentPadding);
 	if (thisHouse == nil)
 	{
 		YellowAlert(kYellowNoMemory, 10);
@@ -666,12 +672,22 @@ Boolean ReadHouse (void)
 	}
 	
 	HLock((Handle)thisHouse);
-	theErr = FSRead(houseRefNum, &byteCount, *thisHouse);
-	if (theErr != noErr)
+	long readByteCount = byteCount;
+	theErr = FSRead(houseRefNum, &readByteCount, *thisHouse);
+	if (theErr != noErr || readByteCount != byteCount || byteCount < static_cast<long>(houseType::kBinaryDataSize))
 	{
 		CheckFileError(theErr, thisHouseName);
 		HUnlock((Handle)thisHouse);
 		return(false);
+	}
+
+	if (alignmentPadding != 0)
+	{
+		// GP: Correct for padding
+		const size_t roomDataSize = byteCount - houseType::kBinaryDataSize;
+
+		uint8_t *houseDataBytes = reinterpret_cast<uint8_t*>(*thisHouse);
+		memmove((*thisHouse)->rooms, houseDataBytes + houseType::kBinaryDataSize, roomDataSize);
 	}
 
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
@@ -791,14 +807,27 @@ Boolean WriteHouse (Boolean checkIt)
 
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 
-	theErr = FSWrite(houseRefNum, &byteCount, *thisHouse);
+	long headerSize = houseType::kBinaryDataSize;
+	long roomsSize = sizeof(roomType) * (*thisHouse)->nRooms;
+
+	theErr = FSWrite(houseRefNum, &headerSize, *thisHouse);
 	if (theErr != noErr)
 	{
 		CheckFileError(theErr, thisHouseName);
+		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 		HUnlock((Handle)thisHouse);
 		return(false);
 	}
-	
+
+	theErr = FSWrite(houseRefNum, &roomsSize, (*thisHouse)->rooms);
+	if (theErr != noErr)
+	{
+		CheckFileError(theErr, thisHouseName);
+		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+		HUnlock((Handle)thisHouse);
+		return(false);
+	}
+
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 
 	theErr = SetEOF(houseRefNum, byteCount);

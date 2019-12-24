@@ -616,14 +616,18 @@ void RenderShreds (void)
 void CopyRectsQD (void)
 {
 	short		i;
+
+	CGrafPtr mainWindowGraf = GetWindowPort(mainWindow);
 	
 	for (i = 0; i < numWork2Main; i++)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+				GetPortBitMapForCopyBits(mainWindowGraf),
 				&work2MainRects[i], &work2MainRects[i], 
 				srcCopy, nil);
 	}
+
+	mainWindowGraf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	
 	for (i = 0; i < numBack2Work; i++)
 	{
@@ -661,6 +665,7 @@ void RenderFrame (void)
 	
 	while (TickCount() < nextFrame)
 	{
+		Delay(1, nullptr);
 	}
 	nextFrame = TickCount() + kTicksPerFrame;
 	

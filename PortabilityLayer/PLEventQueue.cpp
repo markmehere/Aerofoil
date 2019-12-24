@@ -11,6 +11,7 @@ namespace PortabilityLayer
 		~EventQueueImpl();
 
 		bool Dequeue(EventRecord *evt) override;
+		const EventRecord *Peek() const override;
 		EventRecord *Enqueue() override;
 
 		static EventQueueImpl *GetInstance();
@@ -40,7 +41,8 @@ namespace PortabilityLayer
 		if (m_numQueuedEvents == 0)
 			return false;
 
-		*evt = m_events[m_firstEvent];
+		if (evt)
+			*evt = m_events[m_firstEvent];
 
 		m_firstEvent++;
 		if (m_firstEvent == kMaxEvents)
@@ -50,6 +52,15 @@ namespace PortabilityLayer
 
 		return true;
 	}
+
+	const EventRecord *EventQueueImpl::Peek() const
+	{
+		if (m_numQueuedEvents == 0)
+			return nullptr;
+
+		return m_events + m_firstEvent;
+	}
+
 
 	EventRecord *EventQueueImpl::Enqueue()
 	{

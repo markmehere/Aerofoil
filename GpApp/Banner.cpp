@@ -72,13 +72,13 @@ void DrawBanner (Point *topLeft)
 	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, 1);	
 	SetGWorld(tempMask, nil);
 	LoadGraphic(kBannerPageBottomMask);
-	
+
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(tempMask), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
 			&mapBounds, &mapBounds, &partPage);
 	SetPort((GrafPtr)workSrcMap);
-	
+
 	SetGWorld(wasCPort, wasWorld);
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
@@ -176,6 +176,9 @@ void BringUpBanner (void)
 	
 	DrawBanner(&topLeft);
 	DrawBannerMessage(topLeft);
+
+	DumpScreenOn(&justRoomsRect);
+
 //	if (quickerTransitions)
 //		DissBitsChunky(&justRoomsRect);		// was workSrcRect
 //	else
@@ -186,6 +189,7 @@ void BringUpBanner (void)
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
 			&wholePage, &wholePage, srcCopy, nil);
+
 	
 	if (demoGoing)
 		WaitForInputEvent(4);

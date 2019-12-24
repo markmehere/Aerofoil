@@ -7,6 +7,7 @@
 #include "FileManager.h"
 #include "FilePermission.h"
 #include "FontManager.h"
+#include "GpVOSEvent.h"
 #include "HostDirectoryCursor.h"
 #include "HostFileSystem.h"
 #include "HostSuspendCallArgument.h"
@@ -27,10 +28,12 @@
 #include "PLBigEndian.h"
 #include "PLEventQueue.h"
 #include "QDManager.h"
+#include "Vec2i.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
 
 #include <assert.h>
+#include <algorithm>
 
 static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 {
@@ -55,16 +58,65 @@ static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 	return true;
 }
 
-static void TranslateVOSEvent(const GpVOSEvent *vosEvent, EventRecord *evt)
+static void TranslateMouseInputEvent(const GpMouseInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
 {
-	PL_NotYetImplemented();
+	if (vosEvent.m_button == GpMouseButtons::kLeft)
+	{
+		if (vosEvent.m_eventType == GpMouseEventTypes::kDown)
+		{
+			if (EventRecord *evt = queue->Enqueue())
+			{
+				evt->what = mouseDown;
+				evt->where.h = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_x));
+				evt->where.v = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_y));
+			}
+		}
+		else if (vosEvent.m_eventType == GpMouseEventTypes::kUp)
+		{
+			if (EventRecord *evt = queue->Enqueue())
+			{
+				evt->what = mouseUp;
+				evt->where.h = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_x));
+				evt->where.v = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_y));
+			}
+		}
+	}
+	else if (vosEvent.m_eventType == GpMouseEventTypes::kMove)
+	{
+		if (EventRecord *evt = queue->Enqueue())
+		{
+			evt->what = mouseMove;
+			evt->where.h = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_x));
+			evt->where.v = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_y));
+		}
+	}
+}
+
+static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
+{
+}
+
+static void TranslateVOSEvent(const GpVOSEvent *vosEvent, PortabilityLayer::EventQueue *queue)
+{
+	switch (vosEvent->m_eventType)
+	{
+	case GpVOSEventTypes::kMouseInput:
+		TranslateMouseInputEvent(vosEvent->m_event.m_mouseInputEvent, queue);
+		break;
+	case GpVOSEventTypes::kKeyboardInput:
+		TranslateKeyboardInputEvent(vosEvent->m_event.m_keyboardInputEvent, queue);
+		break;
+	}
 }
 
 static void ImportVOSEvents()
 {
+	PortabilityLayer::EventQueue *plQueue = PortabilityLayer::EventQueue::GetInstance();
+
 	PortabilityLayer::HostVOSEventQueue *evtQueue = PortabilityLayer::HostVOSEventQueue::GetInstance();
 	while (const GpVOSEvent *evt = evtQueue->GetNext())
 	{
+		TranslateVOSEvent(evt, plQueue);
 		evtQueue->DischargeOne();
 	}
 }
@@ -184,8 +236,10 @@ Handle GetResource(const char(&resTypeLiteral)[5], int id)
 
 short FindWindow(Point point, WindowPtr *window)
 {
-	PL_NotYetImplemented();
-	return 0;
+	short part = 0;
+	PortabilityLayer::WindowManager::GetInstance()->FindWindow(point, window, &part);
+
+	return part;
 }
 
 void DragWindow(WindowPtr window, Point start, Rect *bounds)
@@ -309,6 +363,22 @@ void SetWTitle(WindowPtr window, const PLPasStr &title)
 	PL_NotYetImplemented();
 }
 
+bool PeekNextEvent(int32_t eventMask, EventRecord *event)
+{
+	assert(eventMask == everyEvent);	// We don't support other use cases
+
+	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
+	const EventRecord *record = queue->Peek();
+
+	if (record)
+	{
+		*event = *record;
+		return PL_TRUE;
+	}
+	else
+		return PL_FALSE;
+}
+
 bool GetNextEvent(int32_t eventMask, EventRecord *event)
 {
 	assert(eventMask == everyEvent);	// We don't support other use cases
@@ -319,8 +389,12 @@ bool GetNextEvent(int32_t eventMask, EventRecord *event)
 
 long MenuSelect(Point point)
 {
-	PL_NotYetImplemented();
-	return noErr;
+	int16_t menuID = 0;
+	uint16_t menuItem = 0;
+
+	PortabilityLayer::MenuManager::GetInstance()->MenuSelect(PortabilityLayer::Vec2i(point.h, point.v), &menuID, &menuItem);
+
+	return (static_cast<int32_t>(menuID) << 16) | (static_cast<int32_t>(menuItem));
 }
 
 long MenuKey(int charCode)
@@ -357,7 +431,8 @@ bool BitTst(const KeyMap *keyMap, int bit)
 
 void NumToString(long number, unsigned char *str)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Strings");
+	str[0] = 0;
 }
 
 void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c)
@@ -701,7 +776,11 @@ UInt32 GetDblTime()
 
 void FlushEvents(int mask, int unknown)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
+
+	while (queue->Dequeue(nullptr))
+	{
+	}
 }
 
 void ExitToShell()
@@ -781,12 +860,6 @@ void *NewPtrClear(Size size)
 void DisposePtr(void *ptr)
 {
 	PL_NotYetImplemented();
-}
-
-Size MaxMem(Size *growBytes)
-{
-	PL_NotYetImplemented();
-	return 0;
 }
 
 void PurgeSpace(long *totalFree, long *contiguousFree)

@@ -60,7 +60,7 @@ void DrawMenuBar()
 
 void HiliteMenu(int menu)
 {
-	PL_NotYetImplemented();
+	// Don't know what this does
 }
 
 void EnableMenuItem(MenuHandle menu, int index)

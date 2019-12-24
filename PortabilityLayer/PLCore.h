@@ -186,8 +186,7 @@ typedef unsigned char KeyMap[16];
 
 enum RegionID
 {
-	inDesk,
-	inMenuBar,
+	inMenuBar = 1,
 	inSysWindow,
 	inContent,
 	inDrag,
@@ -206,6 +205,7 @@ enum EventCode
 {
 	mouseDown,
 	mouseUp,
+	mouseMove,
 	keyDown,
 	autoKey,
 	updateEvt,
@@ -307,6 +307,7 @@ void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront);
 void ShowWindow(WindowPtr window);
 void SetWTitle(WindowPtr window, const PLPasStr &title);
 
+bool PeekNextEvent(int32_t eventMask, EventRecord *event);
 bool GetNextEvent(int32_t eventMask, EventRecord *event);
 
 long MenuSelect(Point point);	// Breaks into menu select routine (in practice we'll just forward one from the queue?)
