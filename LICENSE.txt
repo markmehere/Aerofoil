@@ -11,7 +11,7 @@ GlidePort is made available under the following dual-license terms:
 - If you obtain a license to use the Glider PRO source code under terms other
   than the terms of the GNU General Public License version 2, or if you do not
   require a license (i.e. because you hold the copyright), or if you are are
-  permitted to use Glider PRO's source code for any other reason, you may use
-  any new source code and modifications in the GlidePort source code under the
-  conditions of the MIT license, as published in the included LICENSE-MIT.txt
-  file.
+  permitted to use Glider PRO's source code under different terms for any
+  other reason, you may use any new source code and modifications in the
+  GlidePort source code under the conditions of the MIT license, as published
+  in the included LICENSE-MIT.txt file.
