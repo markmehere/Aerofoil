@@ -14,6 +14,7 @@ GpAppEnvironment::GpAppEnvironment()
 	, m_displayDriver(nullptr)
 	, m_audioDriver(nullptr)
 	, m_fontHandler(nullptr)
+	, m_vosEventQueue(nullptr)
 	, m_applicationFiber(nullptr)
 	, m_vosFiber(nullptr)
 	, m_suspendCallID(PortabilityLayer::HostSuspendCallID_Unknown)
@@ -100,6 +101,11 @@ void GpAppEnvironment::SetFontHandler(PortabilityLayer::HostFontHandler *fontHan
 	m_fontHandler = fontHandler;
 }
 
+void GpAppEnvironment::SetVOSEventQueue(GpVOSEventQueue *eventQueue)
+{
+	m_vosEventQueue = eventQueue;
+}
+
 void GpAppEnvironment::StaticAppThreadFunc(void *context)
 {
 	static_cast<GpAppEnvironment*>(context)->AppThreadFunc();
@@ -117,7 +123,7 @@ void GpAppEnvironment::InitializeApplicationState()
 	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
 
 	GpAppInterface_Get()->PL_HostFontHandler_SetInstance(m_fontHandler);
-	GpAppInterface_Get()->PL_HostVOSEventQueue_SetInstance(&m_vosEventQueue);
+	GpAppInterface_Get()->PL_HostVOSEventQueue_SetInstance(m_vosEventQueue);
 
 	SynchronizeState();
 }

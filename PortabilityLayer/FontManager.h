@@ -18,6 +18,7 @@ namespace PortabilityLayer
 		virtual FontFamily *GetApplicationFont(int fontSize, int variationFlags) const = 0;
 
 		virtual RenderedFont *GetRenderedFont(HostFont *font, int size, FontHacks fontHacks) = 0;
+		virtual RenderedFont *GetRenderedFontFromFamily(FontFamily *fontFamily, int fontSize, int flags) = 0;
 
 		static FontManager *GetInstance();
 	};

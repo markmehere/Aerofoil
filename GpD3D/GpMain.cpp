@@ -26,6 +26,7 @@ namespace
 
 int GpMain::Run()
 {
+	GpVOSEventQueue *eventQueue = new GpVOSEventQueue();
 	GpAppEnvironment *appEnvironment = new GpAppEnvironment();
 
 	GpDisplayDriverProperties ddProps;
@@ -50,6 +51,7 @@ int GpMain::Run()
 
 	ddProps.m_type = g_gpGlobalConfig.m_displayDriverType;
 	ddProps.m_osGlobals = g_gpGlobalConfig.m_osGlobals;
+	ddProps.m_eventQueue = eventQueue;
 
 	GpAudioDriverProperties adProps;
 	memset(&adProps, 0, sizeof(adProps));
@@ -69,6 +71,7 @@ int GpMain::Run()
 	appEnvironment->SetDisplayDriver(displayDriver);
 	appEnvironment->SetAudioDriver(audioDriver);
 	appEnvironment->SetFontHandler(fontHandler);
+	appEnvironment->SetVOSEventQueue(eventQueue);
 
 	// Start the display loop
 	displayDriver->Run();

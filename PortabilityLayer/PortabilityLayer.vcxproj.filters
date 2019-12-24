@@ -360,6 +360,9 @@
     <ClInclude Include="MacRoman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimpleGraphic.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -537,6 +540,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MacRoman.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleGraphic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -19,6 +19,7 @@
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
 #include "MemoryManager.h"
+#include "MenuManager.h"
 #include "MemReaderStream.h"
 #include "MMHandleBlock.h"
 #include "ResTypeID.h"
@@ -61,6 +62,11 @@ static void TranslateVOSEvent(const GpVOSEvent *vosEvent, EventRecord *evt)
 
 static void ImportVOSEvents()
 {
+	PortabilityLayer::HostVOSEventQueue *evtQueue = PortabilityLayer::HostVOSEventQueue::GetInstance();
+	while (const GpVOSEvent *evt = evtQueue->GetNext())
+	{
+		evtQueue->DischargeOne();
+	}
 }
 
 void InitCursor()
@@ -864,6 +870,7 @@ void PL_Init()
 	PortabilityLayer::DisplayDeviceManager::GetInstance()->Init();
 	PortabilityLayer::AEManager::GetInstance()->Init();
 	PortabilityLayer::QDManager::GetInstance()->Init();
+	PortabilityLayer::MenuManager::GetInstance()->Init();
 }
 
 WindowPtr PL_GetPutInFrontWindowPtr()

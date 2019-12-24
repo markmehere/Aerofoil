@@ -25,6 +25,7 @@ namespace PortabilityLayer
 		FontFamily *GetApplicationFont(int textSize, int variationFlags) const override;
 
 		RenderedFont *GetRenderedFont(HostFont *font, int size, FontHacks fontHacks) override;
+		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, int flags) override;
 
 		static FontManagerImpl *GetInstance();
 
@@ -155,6 +156,17 @@ namespace PortabilityLayer
 			m_usageCounter++;
 
 		return rfont;
+	}
+
+	RenderedFont *FontManagerImpl::GetRenderedFontFromFamily(FontFamily *fontFamily, int size, int flags)
+	{
+		const int variation = fontFamily->GetVariationForFlags(flags);
+
+		PortabilityLayer::HostFont *hostFont = fontFamily->GetFontForVariation(variation);
+		if (!hostFont)
+			return nullptr;
+
+		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFont(hostFont, size, fontFamily->GetHacksForVariation(variation));
 	}
 
 	FontManagerImpl *FontManagerImpl::GetInstance()

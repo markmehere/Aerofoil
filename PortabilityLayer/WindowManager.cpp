@@ -311,31 +311,13 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver)
 	{
-		GDevice *device = *window->GetDevice();
-
 		CGraf &graf = window->m_graf;
+
+		graf.PushToDDSurface(displayDriver);
+
 		const PixMap *pixMap = *graf.m_port.GetPixMap();
 		const size_t width = pixMap->m_rect.right - pixMap->m_rect.left;
 		const size_t height = pixMap->m_rect.bottom - pixMap->m_rect.top;
-
-		if (graf.m_port.IsDirty(QDPortDirtyFlag_Size))
-		{
-			if (graf.m_ddSurface != nullptr)
-				graf.m_ddSurface->Destroy();
-
-			graf.m_ddSurface = nullptr;
-			graf.m_port.ClearDirty(QDPortDirtyFlag_Size);
-		}
-
-		if (graf.m_ddSurface == nullptr)
-			graf.m_ddSurface = displayDriver->CreateSurface(pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, pixMap->m_pixelFormat);
-
-		if (graf.m_port.IsDirty(QDPortDirtyFlag_Contents) && graf.m_ddSurface != nullptr)
-		{
-			graf.m_ddSurface->UploadEntire(pixMap->m_data, pixMap->m_pitch);
-			graf.m_port.ClearDirty(QDPortDirtyFlag_Contents);
-		}
-
 		displayDriver->DrawSurface(graf.m_ddSurface, window->m_wmX, window->m_wmY, width, height);
 	}
 

@@ -1,5 +1,14 @@
 #pragma once
 
+namespace GpKeyModifiers
+{
+	enum GpKeyModifier
+	{
+		kShift,
+		kCtrl,
+	};
+}
+
 namespace GpKeyIDSubsets
 {
 	enum GpKeyIDSubset
@@ -43,9 +52,9 @@ namespace GpKeySpecials
 
 typedef GpKeySpecials::GpKeySpecial GpKeySpecial_t;
 
-namespace GpInputEventTypes
+namespace GpKeyboardInputEventTypes
 {
-	enum GpInputEventType
+	enum GpKeyboardInputEventType
 	{
 		kDown,
 		kUp,
@@ -53,19 +62,9 @@ namespace GpInputEventTypes
 	};
 }
 
-typedef GpInputEventTypes::GpInputEventType GpInputEventType_t;
+typedef GpKeyboardInputEventTypes::GpKeyboardInputEventType GpKeyboardInputEventType_t;
 
-namespace GpVOSEventTypes
-{
-	enum GpVOSEventType
-	{
-		kInput,
-	};
-}
-
-typedef GpVOSEventTypes::GpVOSEventType GpVOSEventType_t;
-
-struct GpInputEvent
+struct GpKeyboardInputEvent
 {
 	union KeyUnion
 	{
@@ -73,17 +72,66 @@ struct GpInputEvent
 		char m_asciiChar;
 	};
 
-	GpInputEventType_t m_eventType;
+	GpKeyboardInputEventType_t m_eventType;
 	GpKeyIDSubset_t m_keyIDSubset;
 	KeyUnion m_key;
 };
+
+namespace GpMouseEventTypes
+{
+	enum GpMouseEventType
+	{
+		kUp,
+		kDown,
+		kMove,
+		kLeave,
+	};
+}
+
+typedef GpMouseEventTypes::GpMouseEventType GpMouseEventType_t;
+
+namespace GpMouseButtons
+{
+	enum GpMouseButton
+	{
+		kNone,
+		kLeft,
+		kMiddle,
+		kRight,
+		kX1,
+		kX2,
+	};
+}
+
+typedef GpMouseButtons::GpMouseButton GpMouseButton_t;
+
+struct GpMouseInputEvent
+{
+	int32_t m_x;
+	int32_t m_y;
+	GpMouseEventType_t m_eventType;
+	GpMouseButton_t m_button;
+};
+
+namespace GpVOSEventTypes
+{
+	enum GpVOSEventType
+	{
+		kKeyboardInput,
+		kMouseInput,
+	};
+}
+
+typedef GpVOSEventTypes::GpVOSEventType GpVOSEventType_t;
 
 struct GpVOSEvent
 {
 	union EventUnion
 	{
-		GpInputEvent m_inputEvent;
+		GpKeyboardInputEvent m_keyboardInputEvent;
+		GpMouseInputEvent m_mouseInputEvent;
 	};
 
+	EventUnion m_event;
 	GpVOSEventType_t m_eventType;
 };

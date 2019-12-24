@@ -2,6 +2,7 @@
 #include "PLResources.h"
 
 #include "MenuManager.h"
+#include "QDManager.h"
 
 // Menu resource structure:
 // uint16 menu ID
@@ -54,7 +55,7 @@ void DeleteMenu(int menuID)
 
 void DrawMenuBar()
 {
-	PL_NotYetImplemented_TODO("Menus");
+	PortabilityLayer::MenuManager::GetInstance()->DrawMenuBar();
 }
 
 void HiliteMenu(int menu)

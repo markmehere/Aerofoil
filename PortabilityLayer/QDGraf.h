@@ -8,9 +8,10 @@
 
 struct PixMap;
 struct Rect;
+struct IGpDisplayDriver;
 struct IGpDisplayDriverSurface;
 
-struct CGraf 
+struct CGraf final
 {
 	CGraf()
 		: m_port(PortabilityLayer::QDPortType_CGraf)
@@ -36,6 +37,8 @@ struct CGraf
 	{
 		return m_port.Resize(rect);
 	}
+
+	void PushToDDSurface(IGpDisplayDriver *displayDriver);
 
 	// Must be the first item
 	PortabilityLayer::QDPort m_port;

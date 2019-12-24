@@ -17,6 +17,7 @@ namespace PortabilityLayer
 		void GetPort(QDPort **port, GDevice ***gdHandle) override;
 		void SetPort(QDPort *gw, GDevice **gdHandle) override;
 		int NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, GDevice **device, int flags) override;
+		void DisposeGWorld(CGraf *gw) override;
 		QDState *GetState() override;
 
 		static QDManagerImpl *GetInstance();
@@ -91,6 +92,12 @@ namespace PortabilityLayer
 
 		*gw = graf;
 		return noErr;
+	}
+
+	void QDManagerImpl::DisposeGWorld(CGraf *gw)
+	{
+		gw->~CGraf();
+		MemoryManager::GetInstance()->Release(gw);
 	}
 
 	QDState *QDManagerImpl::GetState()

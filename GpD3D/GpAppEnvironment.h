@@ -30,6 +30,7 @@ public:
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);
 	void SetAudioDriver(IGpAudioDriver *audioDriver);
 	void SetFontHandler(PortabilityLayer::HostFontHandler *fontHandler);
+	void SetVOSEventQueue(GpVOSEventQueue *eventQueue);
 
 private:
 	enum ApplicationState
@@ -54,7 +55,7 @@ private:
 	IGpDisplayDriver *m_displayDriver;
 	IGpAudioDriver *m_audioDriver;
 	PortabilityLayer::HostFontHandler *m_fontHandler;
-	GpVOSEventQueue m_vosEventQueue;
+	GpVOSEventQueue *m_vosEventQueue;
 	IGpFiber *m_applicationFiber;
 	IGpFiber *m_vosFiber;
 

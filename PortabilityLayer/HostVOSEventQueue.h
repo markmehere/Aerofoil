@@ -1,15 +1,12 @@
 #pragma once
 
-struct GpVOSEvent;
+#include "IGpVOSEventQueue.h"
 
 namespace PortabilityLayer
 {
-	class HostVOSEventQueue
+	class HostVOSEventQueue : public IGpVOSEventQueue
 	{
 	public:
-		virtual const GpVOSEvent *GetNext() = 0;
-		virtual void DischargeOne() = 0;
-
 		static void SetInstance(HostVOSEventQueue *instance);
 		static HostVOSEventQueue *GetInstance();
 

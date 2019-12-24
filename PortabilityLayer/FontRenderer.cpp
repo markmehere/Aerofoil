@@ -5,6 +5,7 @@
 #include "HostFontHandler.h"
 #include "HostFontRenderedGlyph.h"
 #include "MacRoman.h"
+#include "PLPasStr.h"
 #include "RenderedFont.h"
 #include "RenderedGlyphMetrics.h"
 
@@ -19,6 +20,7 @@ namespace PortabilityLayer
 	{
 	public:
 		bool GetGlyph(unsigned int character, const RenderedGlyphMetrics **outMetricsPtr, const void **outData) const override;
+		size_t MeasureString(const uint8_t *chars, size_t len) const override;
 
 		void Destroy() override;
 
@@ -57,6 +59,19 @@ namespace PortabilityLayer
 		*outData = static_cast<const uint8_t*>(m_data) + dataOffset;
 
 		return true;
+	}
+
+	size_t RenderedFontImpl::MeasureString(const uint8_t *chars, size_t len) const
+	{
+		size_t measure = 0;
+
+		for (size_t i = 0; i < len; i++)
+		{
+			const RenderedGlyphMetrics &metrics = m_metrics[chars[i]];
+			measure += metrics.m_advanceX;
+		}
+
+		return measure;
 	}
 
 	void RenderedFontImpl::Destroy()

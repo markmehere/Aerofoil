@@ -7,6 +7,7 @@
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
 #include "HostVOSEventQueue.h"
+#include "MenuManager.h"
 #include "WindowManager.h"
 
 int gpAppMain();
@@ -40,6 +41,7 @@ void GpAppInterfaceImpl::PL_IncrementTickCounter(uint32_t count)
 void GpAppInterfaceImpl::PL_Render(IGpDisplayDriver *displayDriver)
 {
 	PortabilityLayer::WindowManager::GetInstance()->RenderFrame(displayDriver);
+	PortabilityLayer::MenuManager::GetInstance()->RenderFrame(displayDriver);
 }
 
 void GpAppInterfaceImpl::PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance)

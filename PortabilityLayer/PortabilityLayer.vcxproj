@@ -227,6 +227,7 @@
     <ClInclude Include="ResTypeIDCodec.h" />
     <ClInclude Include="RGBAColor.h" />
     <ClInclude Include="SharedTypes.h" />
+    <ClInclude Include="SimpleGraphic.h" />
     <ClInclude Include="Vec2i.h" />
     <ClInclude Include="VirtualDirectory.h" />
     <ClInclude Include="RCPtr.h" />
@@ -296,6 +297,7 @@
     <ClCompile Include="RandomNumberGenerator.cpp" />
     <ClCompile Include="ResourceCompiledRef.cpp" />
     <ClCompile Include="ResourceFile.cpp" />
+    <ClCompile Include="SimpleGraphic.cpp" />
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />
     <ClCompile Include="XModemCRC.cpp" />

@@ -4,6 +4,7 @@
 
 struct IGpDisplayDriver;
 struct IGpFiber;
+struct IGpVOSEventQueue;
 
 struct GpDisplayDriverProperties
 {
@@ -29,4 +30,6 @@ struct GpDisplayDriverProperties
 
 	RenderFunc_t m_renderFunc;
 	void *m_renderFuncContext;
+
+	IGpVOSEventQueue *m_eventQueue;
 };

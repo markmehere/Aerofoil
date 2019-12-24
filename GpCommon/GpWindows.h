@@ -10,6 +10,7 @@
 
 struct IGpFiber;
 struct IGpColorCursor_Win32;
+struct IGpVOSEventQueue;
 
 struct GpWindowsGlobals
 {
@@ -21,5 +22,6 @@ struct GpWindowsGlobals
 
 	IGpFiber *(*m_createFiberFunc)(LPVOID fiber);
 	IGpColorCursor_Win32 *(*m_loadColorCursorFunc)(const wchar_t *path);
+	void (*m_translateWindowsMessageFunc)(const MSG *msg, IGpVOSEventQueue *eventQueue);
 };
 

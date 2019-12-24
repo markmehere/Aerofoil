@@ -239,7 +239,7 @@ OSErr NewGWorld(GWorldPtr *gworld, int depth, Rect *bounds, CTabHandle colorTabl
 
 void DisposeGWorld(GWorldPtr gworld)
 {
-	PL_NotYetImplemented();
+	return PortabilityLayer::QDManager::GetInstance()->DisposeGWorld(gworld);
 }
 
 PixMapHandle GetGWorldPixMap(GWorldPtr gworld)

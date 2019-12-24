@@ -14,7 +14,7 @@ public:
 	const GpVOSEvent *GetNext() override;
 	void DischargeOne() override;
 
-	GpVOSEvent *QueueEvent();
+	GpVOSEvent *QueueEvent() override;
 
 private:
 	static const size_t kMaxEvents = 10000;

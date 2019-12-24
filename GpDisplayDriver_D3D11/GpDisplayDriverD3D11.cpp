@@ -565,10 +565,29 @@ void GpDisplayDriverD3D11::Run()
 
 			if (msg.message == WM_QUIT)
 				break;
-			else if (msg.message == WM_MOUSEMOVE)
-				m_mouseIsInClientArea = true;
-			else if (msg.message == WM_MOUSELEAVE)
-				m_mouseIsInClientArea = false;
+			else
+			{
+				if (msg.message == WM_MOUSEMOVE)
+				{
+					if (!m_mouseIsInClientArea)
+					{
+						m_mouseIsInClientArea = true;
+
+						TRACKMOUSEEVENT tme;
+						ZeroMemory(&tme, sizeof(tme));
+
+						tme.cbSize = sizeof(tme);
+						tme.dwFlags = TME_LEAVE;
+						tme.hwndTrack = m_hwnd;
+						tme.dwHoverTime = HOVER_DEFAULT;
+						TrackMouseEvent(&tme);
+					}
+				}
+				else if (msg.message == WM_MOUSELEAVE)
+					m_mouseIsInClientArea = false;
+
+				m_osGlobals->m_translateWindowsMessageFunc(&msg, m_properties.m_eventQueue);
+			}
 		}
 		else
 		{

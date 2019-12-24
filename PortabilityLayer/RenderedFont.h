@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace PortabilityLayer
 {
 	struct RenderedGlyphMetrics;
@@ -8,6 +10,7 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual bool GetGlyph(unsigned int character, const RenderedGlyphMetrics **outMetricsPtr, const void **outData) const = 0;
+		virtual size_t MeasureString(const uint8_t *chars, size_t len) const = 0;
 
 		virtual void Destroy() = 0;
 	};
