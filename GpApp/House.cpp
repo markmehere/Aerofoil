@@ -5,6 +5,7 @@
 //============================================================================
 
 #include "PLAppleEvents.h"
+#include "PLKeyEncoding.h"
 #include "PLNavigation.h"
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
@@ -631,10 +632,10 @@ Boolean GoToFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);

@@ -803,7 +803,7 @@ namespace PortabilityLayer
 		for (size_t i = 0; i < numItems; i++)
 		{
 			MenuItem &item = menu->menuItems[i];
-			item.layoutYOffset = cumulativeHeight;
+			item.layoutYOffset = static_cast<uint16_t>(cumulativeHeight);
 			item.layoutHeight = kMenuItemHeight;
 
 			const uint8_t *itemName = strBlob + item.nameOffsetInStringBlob;
@@ -849,8 +849,8 @@ namespace PortabilityLayer
 		{
 			Menu *menu = *menuHdl;
 
-			uint32_t menuLeftXCoordinate = kMenuBarInitialPadding + menu->cumulativeOffset + menu->menuIndex * kMenuBarItemPadding * 2 - kMenuBarItemPadding;
-			uint32_t menuRightXCoordinate = menuLeftXCoordinate + menu->unpaddedTitleWidth + kMenuBarItemPadding * 2;
+			const size_t menuLeftXCoordinate = kMenuBarInitialPadding + menu->cumulativeOffset + menu->menuIndex * kMenuBarItemPadding * 2 - kMenuBarItemPadding;
+			const size_t menuRightXCoordinate = menuLeftXCoordinate + menu->unpaddedTitleWidth + kMenuBarItemPadding * 2;
 
 			if (mouseXCoordinate >= menuLeftXCoordinate && mouseXCoordinate < menuRightXCoordinate)
 			{
@@ -878,7 +878,7 @@ namespace PortabilityLayer
 		if (selectedMenuHandle)
 		{
 			Menu *menu = *selectedMenuHandle;
-			const int32_t xCoordinate = kMenuBarInitialPadding + menu->menuIndex * kMenuBarItemPadding * 2 + menu->cumulativeOffset - kMenuBarItemPadding;
+			const int32_t xCoordinate = static_cast<int32_t>(kMenuBarInitialPadding + menu->menuIndex * kMenuBarItemPadding * 2 + menu->cumulativeOffset - kMenuBarItemPadding);
 
 			const Vec2i localPoint = point - Vec2i(xCoordinate, kMenuBarHeight);
 
@@ -980,7 +980,7 @@ namespace PortabilityLayer
 			return;
 
 		m_haveItem = true;
-		m_itemIndex = item;
+		m_itemIndex = static_cast<unsigned int>(item);
 
 		if (m_currentMenu)
 			RenderMenu(*m_currentMenu);
@@ -1001,7 +1001,7 @@ namespace PortabilityLayer
 	{
 		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
 
-		const Rect menuRect = Rect::Create(0, 0, menu->layoutHeight, menu->layoutWidth);
+		const Rect menuRect = Rect::Create(0, 0, static_cast<int16_t>(menu->layoutHeight), static_cast<int16_t>(menu->layoutWidth));
 
 		if (m_menuGraf == nullptr)
 		{

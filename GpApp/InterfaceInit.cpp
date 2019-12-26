@@ -9,6 +9,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "Map.h"
+#include "PLKeyEncoding.h"
 #include "RectUtils.h"
 #include "Tools.h"
 
@@ -139,10 +140,10 @@ void VariableInit (void)
 #endif
 	
 	theGlider.which = kPlayer1;
-	theGlider2.leftKey = kControlKeyMap;
-	theGlider2.rightKey = kCommandKeyMap;
-	theGlider2.battKey = kOptionKeyMap;
-	theGlider2.bandKey = kShiftKeyMap;
+	theGlider2.leftKey = PL_KEY_ASCII('A');
+	theGlider2.rightKey = PL_KEY_ASCII('D');
+	theGlider2.battKey = PL_KEY_ASCII('S');
+	theGlider2.bandKey = PL_KEY_ASCII('W');
 	theGlider2.which = kPlayer2;
 	
 	theMode = kSplashMode;

@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLKeyEncoding.h"
 #include "PLNumberFormatting.h"
 #include "PLResources.h"
 #include "PLSound.h"
@@ -184,10 +184,10 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 	switch (theEvent->what)
 	{
 		case keyDown:
-		switch ((theEvent->message) & charCodeMask)
+		switch (theEvent->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			HiLiteOkayButton();
 			Delay(8, &dummyLong);
 			UnHiLiteOkayButton();

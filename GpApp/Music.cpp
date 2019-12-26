@@ -354,6 +354,8 @@ void InitMusic (void)
 	musicCursor = 0;
 	musicSoundID = musicScore[musicCursor];
 	musicMode = kPlayWholeScoreMode;
+
+	PL_NotYetImplemented_TODO("MusicSync");
 	
 	if (isPlayMusicIdle)
 	{

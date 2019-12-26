@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLKeyEncoding.h"
 #include "PLNumberFormatting.h"
 #include "PLSound.h"
 #include "PLTextUtils.h"
@@ -341,22 +341,22 @@ Boolean BlowerFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
 			
-			case kTabKeyASCII:
+			case PL_KEY_SPECIAL(kTab):
 //			SelectDialogItemText(dial, kRoomNameItem, 0, 1024);
 			return(true);
 			break;
@@ -396,10 +396,10 @@ Boolean FurnitureFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
@@ -432,10 +432,10 @@ Boolean CustPictFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
@@ -468,16 +468,16 @@ Boolean SwitchFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
@@ -510,22 +510,22 @@ Boolean TriggerFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
 			
-			case kTabKeyASCII:
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kDelay3Item, 0, 1024);
 			return(true);
 			break;
@@ -557,16 +557,16 @@ Boolean LightFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
@@ -607,22 +607,22 @@ Boolean ApplianceFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
-			
-			case kTabKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kDelayItem, 0, 1024);
 			return(true);
 			break;
@@ -662,16 +662,16 @@ Boolean MicrowaveFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
@@ -712,16 +712,16 @@ Boolean GreaseFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
@@ -754,10 +754,10 @@ Boolean InvisBonusFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
@@ -790,16 +790,16 @@ Boolean TransFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
@@ -832,22 +832,22 @@ Boolean EnemyFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
-			
-			case kTabKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kDelay2Item, 0, 1024);
 			return(true);
 			break;
@@ -887,16 +887,16 @@ Boolean FlowerFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);

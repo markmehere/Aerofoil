@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLKeyEncoding.h"
 #include "PLNumberFormatting.h"
 #include "PLResources.h"
 #include "PLSound.h"
@@ -305,22 +305,22 @@ Boolean RoomFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
-			
-			case kTabKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kRoomNameItem, 0, 1024);
 			return(true);
 			break;
@@ -634,22 +634,22 @@ Boolean OriginalArtFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
-			
-			case kTabKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kPICTIDItem, 0, 1024);
 			return(true);
 			break;

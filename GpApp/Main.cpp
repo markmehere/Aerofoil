@@ -7,6 +7,7 @@
 
 
 #include "PLApplication.h"
+#include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -131,10 +132,10 @@ void ReadInPrefs (void)
 		PasStringCopy(PSTR("up arrow"), bandName);
 		PasStringCopy(PSTR("Your Name"), highName);
 		PasStringCopy(PSTR("Your Message Here"), highBanner);
-		theGlider.leftKey = kLeftArrowKeyMap;
-		theGlider.rightKey = kRightArrowKeyMap;
-		theGlider.battKey = kDownArrowKeyMap;
-		theGlider.bandKey = kUpArrowKeyMap;
+		theGlider.leftKey = PL_KEY_SPECIAL(kLeftArrow);
+		theGlider.rightKey = PL_KEY_SPECIAL(kRightArrow);
+		theGlider.battKey = PL_KEY_SPECIAL(kDownArrow);
+		theGlider.bandKey = PL_KEY_SPECIAL(kUpArrow);
 		
 		UnivGetSoundVolume(&isVolume, thisMac.hasSM3);
 		if (isVolume < 1)

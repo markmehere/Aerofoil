@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace GpKeyModifiers
 {
 	enum GpKeyModifier
@@ -14,8 +16,9 @@ namespace GpKeyIDSubsets
 	enum GpKeyIDSubset
 	{
 		kASCII,
+		kUnicode,
 		kSpecial,
-		kNumPadASCII,
+		kNumPadNumber,
 		kNumPadSpecial,
 		kFKey,	// Key value is a raw F number
 	};
@@ -27,6 +30,7 @@ namespace GpKeySpecials
 {
 	enum GpKeySpecial
 	{
+		kTab,
 		kEscape,
 		kPrintScreen,
 		kScrollLock,
@@ -47,10 +51,32 @@ namespace GpKeySpecials
 		kLeftAlt,
 		kRightAlt,
 		kNumLock,
+		kLeftArrow,
+		kUpArrow,
+		kDownArrow,
+		kRightArrow,
+
+		kCount,
 	};
 }
 
 typedef GpKeySpecials::GpKeySpecial GpKeySpecial_t;
+
+
+namespace GpNumPadSpecials
+{
+	enum GpNumPadSpecial
+	{
+		kSlash,
+		kAsterisk,
+		kMinus,
+		kPlus,
+
+		kCount,
+	};
+}
+
+typedef GpNumPadSpecials::GpNumPadSpecial GpNumPadSpecial_t;
 
 namespace GpKeyboardInputEventTypes
 {
@@ -68,8 +94,12 @@ struct GpKeyboardInputEvent
 {
 	union KeyUnion
 	{
-		GpKeySpecials::GpKeySpecial m_specialKey;
+		GpKeySpecial_t m_specialKey;
+		GpNumPadSpecial_t m_numPadSpecialKey;
+		uint8_t m_numPadNumber;
 		char m_asciiChar;
+		uint32_t m_unicodeChar;
+		unsigned char m_fKey;
 	};
 
 	GpKeyboardInputEventType_t m_eventType;
@@ -135,3 +165,5 @@ struct GpVOSEvent
 	EventUnion m_event;
 	GpVOSEventType_t m_eventType;
 };
+
+static const unsigned int GpFKeyMaximumInclusive = 24;

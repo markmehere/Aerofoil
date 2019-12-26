@@ -7,6 +7,7 @@
 
 
 #include "PLAliases.h"
+#include "PLKeyEncoding.h"
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLStringCompare.h"
@@ -199,38 +200,36 @@ void PageDownHouses (DialogPtr theDial)
 Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 {
 	short		screenCount, i, wasIndex;
-	char		theChar;
 	
 	switch (event->what)
 	{
 		case keyDown:
-		theChar = (event->message) & charCodeMask;
-		switch (theChar)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
-			
-			case kPageUpKeyASCII:
+
+			case PL_KEY_SPECIAL(kPageUp):
 			*item = kScrollUpItem;
 			return (true);
 			break;
-			
-			case kPageDownKeyASCII:
+
+			case PL_KEY_SPECIAL(kPageDown):
 			*item = kScrollDownItem;
 			return (true);
 			break;
-			
-			case kUpArrowKeyASCII:
+
+			case PL_KEY_SPECIAL(kUpArrow):
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex -= 4;
 			if (thisHouseIndex < 0)
@@ -248,8 +247,8 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
-			
-			case kDownArrowKeyASCII:
+
+			case PL_KEY_SPECIAL(kDownArrow):
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex += 4;
 			screenCount = housesFound - housePage;
@@ -260,8 +259,8 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
-			
-			case kLeftArrowKeyASCII:
+
+			case PL_KEY_SPECIAL(kLeftArrow):
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex--;
 			if (thisHouseIndex < 0)
@@ -274,9 +273,9 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
-			
-			case kTabKeyASCII:
-			case kRightArrowKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
+			case PL_KEY_SPECIAL(kRightArrow):
 			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex++;
 			screenCount = housesFound - housePage;
@@ -289,32 +288,34 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 			break;
 			
 			default:
-			if (((theChar > 0x40) && (theChar <= 0x5A)) || 
-					((theChar > 0x60) && (theChar <= 0x7A)))
+			if (PL_KEY_GET_EVENT_TYPE(event->message) == KeyEventType_ASCII)
 			{
-				if ((theChar > 0x60) && (theChar <= 0x7A))
-					theChar -= 0x20;
-				wasIndex = thisHouseIndex;
-				thisHouseIndex = -1;
-				i = 0;
-				do
+				char theChar = static_cast<char>(PL_KEY_GET_VALUE(event->message));
+
+				if (theChar >= 'A' && theChar <= 'Z')
 				{
-					if ((fileFirstChar[i] >= theChar) && (fileFirstChar[i] != 0x7F))
-						thisHouseIndex = i;
-					i++;
-				}
-				while ((thisHouseIndex == -1) && (i < 12));
-				if (thisHouseIndex == -1)
-				{
-					screenCount = housesFound - housePage;
-					if (screenCount > kDispFiles)
-						screenCount = kDispFiles;
-					thisHouseIndex = screenCount - 1;
-				}
-				if (wasIndex != thisHouseIndex)
-				{
-					InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[wasIndex]);
-					InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+					wasIndex = thisHouseIndex;
+					thisHouseIndex = -1;
+					i = 0;
+					do
+					{
+						if ((fileFirstChar[i] >= theChar) && (fileFirstChar[i] != 0x7F))
+							thisHouseIndex = i;
+						i++;
+					} while ((thisHouseIndex == -1) && (i < 12));
+
+					if (thisHouseIndex == -1)
+					{
+						screenCount = housesFound - housePage;
+						if (screenCount > kDispFiles)
+							screenCount = kDispFiles;
+						thisHouseIndex = screenCount - 1;
+					}
+					if (wasIndex != thisHouseIndex)
+					{
+						InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[wasIndex]);
+						InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+					}
 				}
 				return(true);
 			}

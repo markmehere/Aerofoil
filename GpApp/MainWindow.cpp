@@ -12,6 +12,7 @@
 #include "Environ.h"
 #include "House.h"
 #include "RectUtils.h"
+#include "PLKeyEncoding.h"
 
 
 #define kMainWindowID			128
@@ -353,7 +354,7 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 		DoNewObjectClick(wherePt);
 	
 	GetKeys(theseKeys);
-	if (!BitTst(&theseKeys, kShiftKeyMap))
+	if (!BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kShift)))
 	{
 		EraseSelectedTool();
 		SelectTool(kSelectTool);

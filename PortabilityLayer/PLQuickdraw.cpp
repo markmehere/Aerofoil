@@ -133,7 +133,7 @@ void MoveTo(int x, int y)
 
 void LineTo(int x, int y)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void SetOrigin(int x, int y)
@@ -427,12 +427,12 @@ void PaintRect(const Rect *rect)
 
 void PaintOval(const Rect *rect)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Ovals");
 }
 
 void PaintRgn(RgnHandle region)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void ClipRect(const Rect *rect)
@@ -449,17 +449,17 @@ void ClipRect(const Rect *rect)
 
 void FrameRect(const Rect *rect)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Rects");
 }
 
 void FrameOval(const Rect *rect)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Ovals");
 }
 
 void FrameRoundRect(const Rect *rect, int w, int h)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Ovals");
 }
 
 void PenMode(CopyBitsMode copyBitsMode)
@@ -469,12 +469,12 @@ void PenMode(CopyBitsMode copyBitsMode)
 
 void PenMode(PenModeID penMode)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void PenPat(const Pattern *pattern)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void PenSize(int w, int h)
@@ -484,7 +484,7 @@ void PenSize(int w, int h)
 
 void PenNormal()
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void EraseRect(const Rect *rect)
@@ -499,24 +499,36 @@ void InvertRect(const Rect *rect)
 
 void InsetRect(Rect *rect, int x, int y)
 {
-	PL_NotYetImplemented();
+	rect->left += x;
+	rect->right -= x;
+	rect->top += y;
+	rect->bottom -= y;
 }
 
 void Line(int x, int y)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 Pattern *GetQDGlobalsGray(Pattern *pattern)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	uint8_t *patternBytes = *pattern;
+	for (int i = 0; i < 8; i += 2)
+	{
+		patternBytes[i] = 0xaa;
+		patternBytes[i + 1] = 0x55;
+	}
+
+	return pattern;
 }
 
 Pattern *GetQDGlobalsBlack(Pattern *pattern)
 {
-	PL_NotYetImplemented();
-	return nullptr;
+	uint8_t *patternBytes = *pattern;
+	for (int i = 0; i < 8; i++)
+		patternBytes[i] = 255;
+
+	return pattern;
 }
 
 void GetIndPattern(Pattern *pattern, int patListID, int index)
@@ -712,7 +724,7 @@ void RectRgn(RgnHandle region, const Rect *rect)
 
 void UnionRgn(RgnHandle regionA, RgnHandle regionB, RgnHandle regionC)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void DisposeRgn(RgnHandle rgn)
@@ -722,12 +734,12 @@ void DisposeRgn(RgnHandle rgn)
 
 void OpenRgn()
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void CloseRgn(RgnHandle rgn)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 Boolean PtInRgn(Point point, RgnHandle rgn)
@@ -738,12 +750,12 @@ Boolean PtInRgn(Point point, RgnHandle rgn)
 
 void GetClip(RgnHandle rgn)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 void SetClip(RgnHandle rgn)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Polys");
 }
 
 

@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLKeyEncoding.h"
 #include "PLResources.h"
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
@@ -231,7 +231,7 @@ Boolean CreateNewRoom (short h, short v)
 	UpdateMenus(false);
 	
 	GetKeys(theKeys);
-	if (BitTst(&theKeys, kShiftKeyMap))
+	if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift)))
 		newRoomNow = false;
 	else
 		newRoomNow = autoRoomEdit;			// Flag to bring up RoomInfo

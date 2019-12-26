@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLKeyEncoding.h"
 #include "PLSound.h"
 #include "PLTextUtils.h"
 #include "DialogUtils.h"
@@ -146,54 +146,48 @@ Boolean BrainsFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kEscapeKeyASCII:
+
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
-			
-			case kCapAKeyASCII:
-			case kAKeyASCII:
+
+			case PL_KEY_ASCII('A'):
 			*item = kDoDemoCheck;
 			return(true);
 			break;
-			
-			case kCapBKeyASCII:
-			case kBKeyASCII:
+
+			case PL_KEY_ASCII('B'):
 			*item = kDoBackgroundCheck;
 			return(true);
 			break;
-			
-			case kCapDKeyASCII:
-			case kDKeyASCII:
+
+			case PL_KEY_ASCII('D'):
 			*item = kBrainsDefault;
 			FlashDialogButton(dial, kBrainsDefault);
 			return(true);
 			break;
-			
-			case kCapEKeyASCII:
-			case kEKeyASCII:
+
+			case PL_KEY_ASCII('E'):
 			*item = kDoErrorCheck;
 			return(true);
 			break;
-			
-			case kCapQKeyASCII:
-			case kQKeyASCII:
+
+			case PL_KEY_ASCII('Q'):
 			*item = kQuickTransitCheck;
 			return(true);
 			break;
-			
-			case kCapZKeyASCII:
-			case kZKeyASCII:
+
+			case PL_KEY_ASCII('Z'):
 			*item = kDoZoomsCheck;
 			return(true);
 			break;
@@ -336,10 +330,10 @@ void SetControlsToDefaults (DialogPtr theDialog)
 	PasStringCopy(PSTR("rt arrow"), tempRightStr);
 	PasStringCopy(PSTR("dn arrow"), tempBattStr);
 	PasStringCopy(PSTR("up arrow"), tempBandStr);
-	tempLeftMap = kLeftArrowKeyMap;
-	tempRightMap = kRightArrowKeyMap;
-	tempBattMap = kDownArrowKeyMap;
-	tempBandMap = kUpArrowKeyMap;
+	tempLeftMap = PL_KEY_SPECIAL(kLeftArrow);
+	tempRightMap = PL_KEY_SPECIAL(kRightArrow);
+	tempBattMap = PL_KEY_SPECIAL(kDownArrow);
+	tempBandMap = PL_KEY_SPECIAL(kUpArrow);
 	wasEscPauseKey = false;
 	SelectFromRadioGroup(theDialog, kTABPausesRadio, 
 				kESCPausesRadio, kTABPausesRadio);
@@ -379,7 +373,7 @@ void UpdateSettingsControl (DialogPtr theDialog)
 
 Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 {
-	long		wasKeyMap;
+	intptr_t		wasKeyMap;
 	
 	switch (event->what)
 	{
@@ -387,12 +381,12 @@ Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 		switch (whichCtrl)
 		{
 			case 0:
-			wasKeyMap = (long)GetKeyMapFromMessage(event->message);
+			wasKeyMap = event->message;
 			if ((wasKeyMap == tempLeftMap) || (wasKeyMap == tempBattMap) || 
-					(wasKeyMap == tempBandMap) || (wasKeyMap == kTabKeyMap) || 
-					(wasKeyMap == kEscKeyMap) || (wasKeyMap == kDeleteKeyMap))
+					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) || 
+					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
 			{
-				if (wasKeyMap == kEscKeyMap)
+				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
 					FlashDialogButton(dial, kCancelButton);
 					*item = kCancelButton;
@@ -409,12 +403,12 @@ Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 			break;
 			
 			case 1:
-			wasKeyMap = (long)GetKeyMapFromMessage(event->message);
+			wasKeyMap = event->message;
 			if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempBattMap) || 
-					(wasKeyMap == tempBandMap) || (wasKeyMap == kTabKeyMap) || 
-					(wasKeyMap == kEscKeyMap) || (wasKeyMap == kDeleteKeyMap))
+					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
+					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
 			{
-				if (wasKeyMap == kEscKeyMap)
+				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
 					FlashDialogButton(dial, kCancelButton);
 					*item = kCancelButton;
@@ -431,12 +425,12 @@ Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 			break;
 			
 			case 2:
-			wasKeyMap = (long)GetKeyMapFromMessage(event->message);
+			wasKeyMap = event->message;
 			if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempLeftMap) || 
-					(wasKeyMap == tempBandMap) || (wasKeyMap == kTabKeyMap) || 
-					(wasKeyMap == kEscKeyMap) || (wasKeyMap == kDeleteKeyMap))
+					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
+					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
 			{
-				if (wasKeyMap == kEscKeyMap)
+				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
 					FlashDialogButton(dial, kCancelButton);
 					*item = kCancelButton;
@@ -453,12 +447,12 @@ Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 			break;
 			
 			case 3:
-			wasKeyMap = (long)GetKeyMapFromMessage(event->message);
+			wasKeyMap = event->message;
 			if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempLeftMap) || 
-					(wasKeyMap == tempBattMap) || (wasKeyMap == kTabKeyMap) || 
-					(wasKeyMap == kEscKeyMap) || (wasKeyMap == kDeleteKeyMap))
+					(wasKeyMap == tempBattMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
+					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
 			{
-				if (wasKeyMap == kEscKeyMap)
+				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
 					FlashDialogButton(dial, kCancelButton);
 					*item = kCancelButton;
@@ -665,40 +659,40 @@ Boolean SoundFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
 			
-			case kUpArrowKeyASCII:
+			case PL_KEY_SPECIAL(kUpArrow):
 			*item = kLouderItem;
 			return(true);
 			break;
 			
-			case kDownArrowKeyASCII:
+			case PL_KEY_SPECIAL(kDownArrow):
 			*item = kSofterItem;
 			return(true);
 			break;
 			
-			case k0KeyASCII:
-			case k1KeyASCII:
-			case k2KeyASCII:
-			case k3KeyASCII:
-			case k4KeyASCII:
-			case k5KeyASCII:
-			case k6KeyASCII:
-			case k7KeyASCII:
-			newVolume = (((event->message) & charCodeMask) - k0KeyASCII);
+			case PL_KEY_ASCII('0'):
+			case PL_KEY_ASCII('1'):
+			case PL_KEY_ASCII('2'):
+			case PL_KEY_ASCII('3'):
+			case PL_KEY_ASCII('4'):
+			case PL_KEY_ASCII('5'):
+			case PL_KEY_ASCII('6'):
+			case PL_KEY_ASCII('7'):
+			newVolume = PL_KEY_GET_VALUE(event->message) - '0';
 			if (newVolume == 7L)
 				SetDialogNumToStr(dial, kVolNumberItem, 11L);
 			else
@@ -710,21 +704,18 @@ Boolean SoundFilter (DialogPtr dial, EventRecord *event, short *item)
 			return(false);
 			break;
 			
-			case kCapDKeyASCII:
-			case kDKeyASCII:
+			case PL_KEY_ASCII('D'):
 			*item = kSoundDefault;
 			FlashDialogButton(dial, kSoundDefault);
 			return(true);
 			break;
 			
-			case kCapGKeyASCII:
-			case kGKeyASCII:
+			case PL_KEY_ASCII('G'):
 			*item = kPlayMusicItem;
 			return(true);
 			break;
 			
-			case kCapIKeyASCII:
-			case kIKeyASCII:
+			case PL_KEY_ASCII('I'):
 			*item = kIdleMusicItem;
 			return(true);
 			break;
@@ -949,22 +940,22 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
 			*item = kCancelButton;
 			return(true);
 			break;
 			
-			case kLeftArrowKeyASCII:
+			case PL_KEY_SPECIAL(kLeftArrow):
 			switch (numNeighbors)
 			{
 				case 1:
@@ -982,7 +973,7 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 			return(true);
 			break;
 			
-			case kRightArrowKeyASCII:
+			case PL_KEY_SPECIAL(kRightArrow):
 			switch (numNeighbors)
 			{
 				case 1:
@@ -1000,7 +991,7 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 			return(true);
 			break;
 			
-			case kUpArrowKeyASCII:
+			case PL_KEY_SPECIAL(kUpArrow):
 			switch (wasDepthPref)
 			{
 				case kSwitchIfNeeded:
@@ -1018,7 +1009,7 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 			return(true);
 			break;
 			
-			case kDownArrowKeyASCII:
+			case PL_KEY_SPECIAL(kDownArrow):
 			switch (wasDepthPref)
 			{
 				case kSwitchIfNeeded:
@@ -1036,43 +1027,39 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 			return(true);
 			break;
 			
-			case k1KeyASCII:
+			case PL_KEY_ASCII('1'):
 			*item = kDisplay1Item;
 			return(true);
 			break;
 			
-			case k3KeyASCII:
+			case PL_KEY_ASCII('3'):
 			*item = kDisplay3Item;
 			return(true);
 			break;
 			
-			case k9KeyASCII:
+			case PL_KEY_ASCII('9'):
 			*item = kDisplay9Item;
 			return(true);
 			break;
 			
-			case kCapBKeyASCII:
-			case kBKeyASCII:
+			case PL_KEY_ASCII('B'):
 			*item = kDoColorFadeItem;
 			return(true);
 			break;
 			
-			case kCapDKeyASCII:
-			case kDKeyASCII:
+			case PL_KEY_ASCII('D'):
 			*item = kDispDefault;
 			FlashDialogButton(dial, kDispDefault);
 			return(true);
 			break;
 			
-			case kCapRKeyASCII:
-			case kRKeyASCII:
+			case PL_KEY_ASCII('R'):
 			*item = kUseScreen2Item;
 			FlashDialogButton(dial, kUseQDItem);
 			return(true);
 			break;
 			
-			case kCapUKeyASCII:
-			case kUKeyASCII:
+			case PL_KEY_ASCII('U'):
 			*item = kUseQDItem;
 			return(true);
 			break;
@@ -1234,10 +1221,10 @@ void SetAllDefaults (void)
 	PasStringCopy(PSTR("rt arrow"), rightName);
 	PasStringCopy(PSTR("dn arrow"), batteryName);
 	PasStringCopy(PSTR("up arrow"), bandName);
-	theGlider.leftKey = kLeftArrowKeyMap;
-	theGlider.rightKey = kRightArrowKeyMap;
-	theGlider.battKey = kDownArrowKeyMap;
-	theGlider.bandKey = kUpArrowKeyMap;
+	theGlider.leftKey = PL_KEY_SPECIAL(kLeftArrow);
+	theGlider.rightKey = PL_KEY_SPECIAL(kRightArrow);
+	theGlider.battKey = PL_KEY_SPECIAL(kDownArrow);
+	theGlider.bandKey = PL_KEY_SPECIAL(kUpArrow);
 	isEscPauseKey = false;
 								// Default sound settings
 	isPlayMusicIdle = true;
@@ -1311,35 +1298,31 @@ Boolean PrefsFilter (DialogPtr dial, EventRecord *event, short *item)
 	switch (event->what)
 	{
 		case keyDown:
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kCapBKeyASCII:
-			case kBKeyASCII:
+			case PL_KEY_ASCII('B'):
 			*item = kBrainsButton;
 			return(true);
 			break;
 			
-			case kCapCKeyASCII:
-			case kCKeyASCII:
+			case PL_KEY_ASCII('C'):
 			*item = kControlsButton;
 			return(true);
 			break;
 			
-			case kCapDKeyASCII:
-			case kDKeyASCII:
+			case PL_KEY_ASCII('d'):
 			*item = kDisplayButton;
 			return(true);
 			break;
 			
-			case kCapSKeyASCII:
-			case kSKeyASCII:
+			case PL_KEY_ASCII('S'):
 			*item = kSoundButton;
 			return(true);
 			break;

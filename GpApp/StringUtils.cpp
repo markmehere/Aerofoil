@@ -152,7 +152,7 @@ void GetLineOfText (StringPtr srcStr, short index, StringPtr textLine)
 		do
 		{
 			i++;
-			if (srcStr[i] == kReturnKeyASCII)
+			if (srcStr[i] == '\r')
 			{
 				count++;
 				if (count == index)
@@ -172,7 +172,7 @@ void GetLineOfText (StringPtr srcStr, short index, StringPtr textLine)
 		foundIt = false;
 		do
 		{
-			if (srcStr[i] == kReturnKeyASCII)
+			if (srcStr[i] == '\r')
 			{
 				stop = i;
 				foundIt = true;
@@ -226,9 +226,9 @@ void WrapText (StringPtr theText, short maxChars)
 		{
 			count++;
 			chars++;
-			if (theText[count] == kReturnKeyASCII)
+			if (theText[count] == '\r')
 				foundEdge = true;
-			else if (theText[count] == kSpaceBarASCII)
+			else if (theText[count] == ' ')
 			{
 				foundSpace = true;
 				spaceIs = count;
@@ -238,7 +238,7 @@ void WrapText (StringPtr theText, short maxChars)
 		
 		if ((!foundEdge) && (count < lastChar) && (foundSpace))
 		{
-			theText[spaceIs] = kReturnKeyASCII;
+			theText[spaceIs] = '\r';
 			count = spaceIs + 1;
 		}
 	}

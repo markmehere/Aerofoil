@@ -7,6 +7,7 @@
 
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
+#include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "MainWindow.h"
@@ -210,12 +211,13 @@ void DoGameOverStarAnimation (void)
 		do
 		{
 			GetKeys(theKeys);
-			if ((BitTst(&theKeys, kCommandKeyMap)) || (BitTst(&theKeys, kOptionKeyMap)) || 
-					(BitTst(&theKeys, kShiftKeyMap)) || (BitTst(&theKeys, kControlKeyMap)))
+			if ((BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift))))
 				noInteruption = false;
 			if (GetNextEvent(everyEvent, &theEvent))
 				if ((theEvent.what == mouseDown) || (theEvent.what == keyDown))
 					noInteruption = false;
+
+			Delay(1, nullptr);
 		}
 		while (TickCount() < nextLoop);
 		nextLoop = TickCount() + 2;
@@ -462,8 +464,7 @@ void DoDiedGameOver (void)
 		do
 		{
 			GetKeys(theKeys);
-			if ((BitTst(&theKeys, kCommandKeyMap)) || (BitTst(&theKeys, kOptionKeyMap)) || 
-					(BitTst(&theKeys, kShiftKeyMap)) || (BitTst(&theKeys, kControlKeyMap)))
+			if ((BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift))))
 			{
 				pagesStuck = 8;
 				userAborted = true;

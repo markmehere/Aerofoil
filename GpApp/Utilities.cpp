@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+#include "PLKeyEncoding.h"
 #include "PLQuickdraw.h"
 #include "PLPasStr.h"
 #include "PLResources.h"
@@ -429,8 +430,7 @@ Boolean WaitForInputEvent (short seconds)
 	while (waiting)
 	{
 		GetKeys(theKeys);
-		if ((BitTst(&theKeys, kCommandKeyMap)) || (BitTst(&theKeys, kOptionKeyMap)) || 
-				(BitTst(&theKeys, kShiftKeyMap)) || (BitTst(&theKeys, kControlKeyMap)))
+		if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)) || BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt)) || BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift)))
 			waiting = false;
 		if (GetNextEvent(everyEvent, &theEvent))
 		{
@@ -472,8 +472,10 @@ void WaitCommandQReleased (void)
 	while (waiting)
 	{
 		GetKeys(theKeys);
-		if ((!BitTst(&theKeys, kCommandKeyMap)) || (!BitTst(&theKeys, kQKeyMap)))
+		if (!BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)) || !BitTst(theKeys, PL_KEY_ASCII('Q')))
 			waiting = false;
+
+		Delay(1, nullptr);
 	}
 	FlushEvents(everyEvent, 0);
 }
@@ -496,178 +498,15 @@ char KeyMapOffsetFromRawKey (char rawKeyCode)
 	return (theOffset);
 }
 
-//--------------------------------------------------------------  GetKeyMapFromMessage
-// Gets the key map offset from a keyDown event's message field.
-
-char GetKeyMapFromMessage (intptr_t message)
-{
-	long		theVirtual;
-	char		offset;
-	
-	theVirtual = (message & keyCodeMask) >> 8;
-	offset = KeyMapOffsetFromRawKey((char)theVirtual);
-	return (offset);
-}
-
 //--------------------------------------------------------------  GetKeyName
 // Given a keyDown event (it's message field), this function returnsÉ
 // a string with that key's name (so we get "Shift" and "Esc", etc.).
 
 void GetKeyName (intptr_t message, StringPtr theName)
 {
-	long		theASCII, theVirtual;
-	
-	theASCII = message & charCodeMask;
-	theVirtual = (message & keyCodeMask) >> 8;
-	
-	if ((theASCII >= kExclamationASCII) && (theASCII <= kZKeyASCII))
-	{
-		
-		if ((theVirtual >= 0x0041) && (theVirtual <= 0x005C))
-		{
-			PasStringCopy(PSTR("( )"), theName);
-			theName[2] = (char)theASCII;
-		}
-		else
-		{
-			PasStringCopy(PSTR("  key"), theName);
-			theName[1] = (char)theASCII;
-		}
-	}
-	else
-	{
-		switch (theASCII)
-		{
-			case kHomeKeyASCII:
-			PasStringCopy(PSTR("home"), theName);
-			break;
-			
-			case kEnterKeyASCII:
-			PasStringCopy(PSTR("enter"), theName);
-			break;
-			
-			case kEndKeyASCII:
-			PasStringCopy(PSTR("end"), theName);
-			break;
-			
-			case kHelpKeyASCII:
-			PasStringCopy(PSTR("help"), theName);
-			break;
-			
-			case kDeleteKeyASCII:
-			PasStringCopy(PSTR("delete"), theName);
-			break;
-			
-			case kTabKeyASCII:
-			PasStringCopy(PSTR("tab"), theName);
-			break;
-			
-			case kPageUpKeyASCII:
-			PasStringCopy(PSTR("pg up"), theName);
-			break;
-			
-			case kPageDownKeyASCII:
-			PasStringCopy(PSTR("pg dn"), theName);
-			break;
-			
-			case kReturnKeyASCII:
-			PasStringCopy(PSTR("return"), theName);
-			break;
-			
-			case kFunctionKeyASCII:
-			switch (theVirtual)
-			{
-				case 0x0060:
-				PasStringCopy(PSTR("F5"), theName);
-				break;
-				case 0x0061:
-				PasStringCopy(PSTR("F6"), theName);
-				break;
-				case 0x0062:
-				PasStringCopy(PSTR("F7"), theName);
-				break;
-				case 0x0063:
-				PasStringCopy(PSTR("F3"), theName);
-				break;
-				case 0x0064:
-				PasStringCopy(PSTR("F8"), theName);
-				break;
-				case 0x0065:
-				PasStringCopy(PSTR("F9"), theName);
-				break;
-				case 0x0067:
-				PasStringCopy(PSTR("F11"), theName);
-				break;
-				case 0x0069:
-				PasStringCopy(PSTR("F13"), theName);
-				break;
-				case 0x006B:
-				PasStringCopy(PSTR("F14"), theName);
-				break;
-				case 0x006D:
-				PasStringCopy(PSTR("F10"), theName);
-				break;
-				case 0x006F:
-				PasStringCopy(PSTR("F12"), theName);
-				break;
-				case 0x0071:
-				PasStringCopy(PSTR("F15"), theName);
-				break;
-				case 0x0076:
-				PasStringCopy(PSTR("F4"), theName);
-				break;
-				case 0x0078:
-				PasStringCopy(PSTR("F2"), theName);
-				break;
-				case 0x007A:
-				PasStringCopy(PSTR("F1"), theName);
-				break;
-				default:
-				NumToString(theVirtual, theName);
-				break;
-			}
-			break;
-			
-			case kClearKeyASCII:
-			PasStringCopy(PSTR("clear"), theName);
-			break;
-			
-			case kEscapeKeyASCII:
-			if (theVirtual == 0x0047)
-				PasStringCopy(PSTR("clear"), theName);
-			else
-				PasStringCopy(PSTR("esc"), theName);
-			break;
-			
-			case kLeftArrowKeyASCII:
-			PasStringCopy(PSTR("lf arrow"), theName);
-			break;
-			
-			case kRightArrowKeyASCII:
-			PasStringCopy(PSTR("rt arrow"), theName);
-			break;
-			
-			case kUpArrowKeyASCII:
-			PasStringCopy(PSTR("up arrow"), theName);
-			break;
-			
-			case kDownArrowKeyASCII:
-			PasStringCopy(PSTR("dn arrow"), theName);
-			break;
-			
-			case kSpaceBarASCII:
-			PasStringCopy(PSTR("space"), theName);
-			break;
-			
-			case kForwardDeleteASCII:
-			PasStringCopy(PSTR("frwd del"), theName);
-			break;
-			
-			default:
-			PasStringCopy(PSTR("????"), theName);
-			break;
-		}
-	}
+	PasStringCopy(PSTR("TODO"), theName);
+
+	PL_NotYetImplemented_TODO("KeyNames");
 }
 
 //--------------------------------------------------------------  OptionKeyDown
@@ -678,7 +517,7 @@ Boolean OptionKeyDown (void)
 	KeyMap		theKeys;
 	
 	GetKeys(theKeys);
-	if (BitTst(&theKeys, kOptionKeyMap))
+	if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt)))
 		return (true);
 	else
 		return (false);

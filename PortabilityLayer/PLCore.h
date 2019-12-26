@@ -181,8 +181,7 @@ typedef VersRecPtr *VersRecHndl;
 
 typedef WindowPtr WindowRef;	// wtf?
 
-
-typedef unsigned char KeyMap[16];
+struct KeyMap;
 
 enum RegionID
 {
@@ -207,6 +206,7 @@ enum EventCode
 	mouseUp,
 	mouseMove,
 	keyDown,
+	keyUp,
 	autoKey,
 	updateEvt,
 	osEvt,
@@ -242,9 +242,6 @@ static const int everyEvent = -1;
 
 static const int iBeamCursor = 1;
 static const int watchCursor = 4;
-
-static const int charCodeMask = 0xff;
-static const int keyCodeMask = 0xff00;
 
 static const int shiftKey = 0x1;
 static const int cmdKey = 0x2;		// Ctrl
@@ -314,11 +311,11 @@ long MenuSelect(Point point);	// Breaks into menu select routine (in practice we
 
 long MenuKey(int charCode);
 long TickCount();
-void GetKeys(KeyMap keyMap);
+void GetKeys(KeyMap &keyMap);
 
 short LoWord(Int32 v);
 short HiWord(Int32 v);
-bool BitTst(const KeyMap *keyMap, int bit);
+bool BitTst(const KeyMap &keyMap, int bit);
 
 void NumToString(long number, unsigned char *str);
 void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c);

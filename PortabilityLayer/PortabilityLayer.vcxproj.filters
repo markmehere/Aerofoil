@@ -363,6 +363,12 @@
     <ClInclude Include="SimpleGraphic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PLKeyEncoding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\GpBitfield.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">

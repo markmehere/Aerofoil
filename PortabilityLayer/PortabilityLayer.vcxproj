@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\GpCommon\GpBitfield.h" />
     <ClInclude Include="AEHandlerDesc.h" />
     <ClInclude Include="AEManager.h" />
     <ClInclude Include="BinarySearch.h" />
@@ -189,6 +190,7 @@
     <ClInclude Include="PLErrorCodes.h" />
     <ClInclude Include="PLEventQueue.h" />
     <ClInclude Include="PLFolders.h" />
+    <ClInclude Include="PLKeyEncoding.h" />
     <ClInclude Include="PLLowMem.h" />
     <ClInclude Include="PLMacTypes.h" />
     <ClInclude Include="MenuManager.h" />

@@ -7,6 +7,7 @@
 
 
 #include "PLToolUtils.h"
+#include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
@@ -738,7 +739,7 @@ Boolean AddNewObject (Point where, short what, Boolean showItNow)
 		
 		case kFlower:
 		GetKeys(theseKeys);
-		if (!BitTst(&theseKeys, kShiftKeyMap))
+		if (!BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kShift)))
 			wasFlower = RandomInt(kNumFlowers);
 		newRect = flowerSrc[wasFlower];
 		CenterRectOnPoint(&newRect, where);

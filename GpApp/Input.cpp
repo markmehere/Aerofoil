@@ -7,6 +7,7 @@
 
 #include "PLToolUtils.h"
 #include "PLDialogs.h"
+#include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
@@ -53,7 +54,7 @@ void LogDemoKey (char keyIs)
 
 void DoCommandKey (void)
 {	
-	if (BitTst(&theKeys, kQKeyMap))
+	if (BitTst(theKeys, PL_KEY_ASCII('Q')))
 	{
 		playing = false;
 		paused = false;
@@ -63,7 +64,7 @@ void DoCommandKey (void)
 				SaveGame2();		// New save game.
 		}
 	}
-	else if ((BitTst(&theKeys, kSKeyMap)) && (!twoPlayerGame))
+	else if ((BitTst(theKeys, PL_KEY_ASCII('S'))) && (!twoPlayerGame))
 	{
 		RefreshScoreboard(kSavingTitleMode);
 		SaveGame2();				// New save game.
@@ -91,17 +92,17 @@ void DoPause (void)
 	{
 		GetKeys(theKeys);
 	}
-	while ((isEscPauseKey && BitTst(&theKeys, kEscKeyMap)) || 
-			(!isEscPauseKey && BitTst(&theKeys, kTabKeyMap)));
+	while ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) || 
+			(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))));
 	
 	paused = true;
 	while (paused)
 	{
 		GetKeys(theKeys);
-		if ((isEscPauseKey && BitTst(&theKeys, kEscKeyMap)) || 
-				(!isEscPauseKey && BitTst(&theKeys, kTabKeyMap)))
+		if ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
+				(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))))
 			paused = false;
-		else if (BitTst(&theKeys, kCommandKeyMap))
+		else if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 	}
 	
@@ -113,8 +114,8 @@ void DoPause (void)
 	{
 		GetKeys(theKeys);
 	}
-	while ((isEscPauseKey && BitTst(&theKeys, kEscKeyMap)) || 
-			(!isEscPauseKey && BitTst(&theKeys, kTabKeyMap)));
+	while ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
+			(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))));
 }
 
 //--------------------------------------------------------------  DoBatteryEngaged
@@ -192,10 +193,10 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		
 #if BUILD_ARCADE_VERSION
 		
-		if ((BitTst(&theKeys, thisGlider->leftKey)) || 
-				(BitTst(&theKeys, thisGlider->rightKey)) || 
-				(BitTst(&theKeys, thisGlider->battKey)) || 
-				(BitTst(&theKeys, thisGlider->bandKey)))
+		if ((BitTst(theKeys, thisGlider->leftKey)) || 
+				(BitTst(theKeys, thisGlider->rightKey)) || 
+				(BitTst(theKeys, thisGlider->battKey)) || 
+				(BitTst(theKeys, thisGlider->bandKey)))
 		{
 			playing = false;
 			paused = false;
@@ -269,8 +270,8 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 	 	else
 	 		thisGlider->fireHeld = false;
 	 	
-		if ((isEscPauseKey && BitTst(&theKeys, kEscKeyMap)) || 
-				(!isEscPauseKey && BitTst(&theKeys, kTabKeyMap)))
+		if ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
+				(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))))
 		{
 			DoPause();
 		}
@@ -284,7 +285,7 @@ void GetInput (gliderPtr thisGlider)
 	if (thisGlider->which == kPlayer1)
 	{
 		GetKeys(theKeys);
-		if (BitTst(&theKeys, kCommandKeyMap))
+		if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 	}
 	
@@ -299,12 +300,12 @@ void GetInput (gliderPtr thisGlider)
 	{
 		thisGlider->heldLeft = false;
 		thisGlider->heldRight = false;
-		if (BitTst(&theKeys, thisGlider->rightKey))			// right key
+		if (BitTst(theKeys, thisGlider->rightKey))			// right key
 		{
 		#ifdef CREATEDEMODATA
 			LogDemoKey(0);
 		#endif
-			if (BitTst(&theKeys, thisGlider->leftKey))
+			if (BitTst(theKeys, thisGlider->leftKey))
 			{
 				ToggleGliderFacing(thisGlider);
 				thisGlider->heldLeft = true;
@@ -316,7 +317,7 @@ void GetInput (gliderPtr thisGlider)
 				thisGlider->heldRight = true;
 			}
 		}
-		else if (BitTst(&theKeys, thisGlider->leftKey))		// left key
+		else if (BitTst(theKeys, thisGlider->leftKey))		// left key
 		{
 		#ifdef CREATEDEMODATA
 			LogDemoKey(1);
@@ -328,7 +329,7 @@ void GetInput (gliderPtr thisGlider)
 		else
 			thisGlider->tipped = false;
 		
-		if ((BitTst(&theKeys, thisGlider->battKey)) && (batteryTotal != 0) && 
+		if ((BitTst(theKeys, thisGlider->battKey)) && (batteryTotal != 0) && 
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
@@ -342,7 +343,7 @@ void GetInput (gliderPtr thisGlider)
 		else
 			batteryWasEngaged = false;
 		
-		if ((BitTst(&theKeys, thisGlider->bandKey)) && (bandsTotal > 0) && 
+		if ((BitTst(theKeys, thisGlider->bandKey)) && (bandsTotal > 0) && 
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
@@ -365,14 +366,14 @@ void GetInput (gliderPtr thisGlider)
 			thisGlider->fireHeld = false;
 		
 		if ((otherPlayerEscaped != kNoOneEscaped) && 
-				(BitTst(&theKeys, kDeleteKeyMap)) && 
+				(BitTst(theKeys, PL_KEY_SPECIAL(kDelete))) &&
 				(thisGlider->which) && (!onePlayerLeft))
 		{
 			ForceKillGlider();
 		}
 		
-		if ((isEscPauseKey && BitTst(&theKeys, kEscKeyMap)) || 
-				(!isEscPauseKey && BitTst(&theKeys, kTabKeyMap)))
+		if ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
+				(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))))
 		{
 			DoPause();
 		}

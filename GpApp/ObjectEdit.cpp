@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLKeyEncoding.h"
 #include "PLSound.h"
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
@@ -2754,8 +2754,8 @@ void HiliteAllObjects (void)
 	{
 		GetKeys(theseKeys);
 	}
-	while ((BitTst(&theseKeys, kCommandKeyMap)) && 
-			(BitTst(&theseKeys, kOptionKeyMap)));
+	while ((BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kControl))) && 
+			(BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kAlt))));
 	
 	for (i = 0; i < kMaxRoomObs; i++)
 		FrameRect(&roomObjectRects[i]);

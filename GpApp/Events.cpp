@@ -7,6 +7,7 @@
 
 
 #include "PLAppleEvents.h"
+#include "PLKeyEncoding.h"
 #include "PLToolUtils.h"
 #include "PLQuickdraw.h"
 #include "Externs.h"
@@ -162,54 +163,51 @@ void HandleMouseEvent (EventRecord *theEvent)
 
 void HandleKeyEvent (EventRecord *theEvent)
 {
-	char		theChar;
+	intptr_t	theChar;
 	Boolean		shiftDown, commandDown, optionDown;
 	
-	theChar = theEvent->message & charCodeMask;
+	theChar = theEvent->message;
 	shiftDown = ((theEvent->modifiers & shiftKey) != 0);
 	commandDown = ((theEvent->modifiers & cmdKey) != 0);
 	optionDown = ((theEvent->modifiers & optionKey) != 0);
 	
 	if ((commandDown) && (!optionDown))
-		DoMenuChoice(MenuKey(theChar));
+		DoMenuChoice(MenuKey(static_cast<int>(theChar)));
 	else 
 	{
 		switch (theChar)
 		{
-			case kHelpKeyASCII:
-			break;
-			
-			case kPageUpKeyASCII:
+			case PL_KEY_SPECIAL(kPageUp):
 			if (houseUnlocked)
 				PrevToolMode();
 			break;
 			
-			case kPageDownKeyASCII:
+			case PL_KEY_SPECIAL(kPageDown):
 			if (houseUnlocked)
 				NextToolMode();
 			break;
 			
 #if BUILD_ARCADE_VERSION
 			
-			case kLeftArrowKeyASCII:
+			case PL_KEY_SPECIAL(kLeftArrow):
 			DoOptionsMenu(iHighScores);
 			break;
 			
-			case kRightArrowKeyASCII:
+			case PL_KEY_SPECIAL(kRightArrow):
 			DoOptionsMenu(iHelp);
 			break;
 			
-			case kUpArrowKeyASCII:
+			case PL_KEY_SPECIAL(kUpArrow):
 			DoGameMenu(iNewGame);
 			break;
 			
-			case kDownArrowKeyASCII:
+			case PL_KEY_SPECIAL(kDownArrow):
 			DoGameMenu(iNewGame);
 			break;
 			
 #else
 			
-			case kLeftArrowKeyASCII:
+			case PL_KEY_SPECIAL(kLeftArrow):
 			if (houseUnlocked)
 			{
 				if (objActive == kNoObjectSelected)
@@ -219,7 +217,7 @@ void HandleKeyEvent (EventRecord *theEvent)
 			}
 			break;
 			
-			case kRightArrowKeyASCII:
+			case PL_KEY_SPECIAL(kRightArrow):
 			if (houseUnlocked)
 			{
 				if (objActive == kNoObjectSelected)
@@ -229,7 +227,7 @@ void HandleKeyEvent (EventRecord *theEvent)
 			}
 			break;
 			
-			case kUpArrowKeyASCII:
+			case PL_KEY_SPECIAL(kUpArrow):
 			if (houseUnlocked)
 			{
 				if (objActive == kNoObjectSelected)
@@ -239,7 +237,7 @@ void HandleKeyEvent (EventRecord *theEvent)
 			}
 			break;
 			
-			case kDownArrowKeyASCII:
+			case PL_KEY_SPECIAL(kDownArrow):
 			if (houseUnlocked)
 			{
 				if (objActive == kNoObjectSelected)
@@ -251,7 +249,7 @@ void HandleKeyEvent (EventRecord *theEvent)
 			
 #endif
 			
-			case kDeleteKeyASCII:
+			case PL_KEY_SPECIAL(kDelete):
 			if (houseUnlocked)
 			{
 				if (objActive == kNoObjectSelected)
@@ -261,7 +259,7 @@ void HandleKeyEvent (EventRecord *theEvent)
 			}
 			break;
 			
-			case kTabKeyASCII:
+			case PL_KEY_SPECIAL(kTab):
 			if ((theMode == kEditMode) && (houseUnlocked))
 			{
 				if (shiftDown)
@@ -271,61 +269,52 @@ void HandleKeyEvent (EventRecord *theEvent)
 			}
 			break;
 			
-			case kEscapeKeyASCII:
+			case PL_KEY_SPECIAL(kEscape):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				DeselectObject();
 			break;
 			
-			case kAKeyASCII:
-			case kCapAKeyASCII:
+			case PL_KEY_ASCII('A'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kApplianceMode);
 			break;
 			
-			case kBKeyASCII:
-			case kCapBKeyASCII:
+			case PL_KEY_ASCII('B'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kBlowerMode);
 			break;
 			
-			case kCKeyASCII:
-			case kCapCKeyASCII:
+			case PL_KEY_ASCII('C'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kClutterMode);
 			break;
 			
-			case kEKeyASCII:
-			case kCapEKeyASCII:
+			case PL_KEY_ASCII('E'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kEnemyMode);
 			break;
 			
-			case kFKeyASCII:
-			case kCapFKeyASCII:
+			case PL_KEY_ASCII('F'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kFurnitureMode);
 			break;
 			
-			case kLKeyASCII:
-			case kCapLKeyASCII:
+			case PL_KEY_ASCII('L'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kLightMode);
 			break;
 			
-			case kPKeyASCII:
-			case kCapPKeyASCII:
+			case PL_KEY_ASCII('P'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kBonusMode);
 			break;
 			
-			case kSKeyASCII:
-			case kCapSKeyASCII:
+			case PL_KEY_ASCII('S'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kSwitchMode);
 			break;
 			
-			case kTKeyASCII:
-			case kCapTKeyASCII:
+			case PL_KEY_ASCII('T'):
 			if ((theMode == kEditMode) && (houseUnlocked))
 				SetSpecificToolMode(kTransportMode);
 			break;
@@ -485,12 +474,12 @@ void HandleEvent (void)
 	Boolean		itHappened = true;
 	
 	GetKeys(eventKeys);
-	if ((BitTst(&eventKeys, kCommandKeyMap)) && 
-			(BitTst(&eventKeys, kOptionKeyMap)))
+	if ((BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kControl))) && 
+			(BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kAlt))))
 	{
 		HiliteAllObjects();
 	}
-	else if ((BitTst(&eventKeys, kOptionKeyMap)) && (theMode == kEditMode) && 
+	else if ((BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kAlt))) && (theMode == kEditMode) &&
 			(houseUnlocked))
 	{
 		EraseSelectedTool();

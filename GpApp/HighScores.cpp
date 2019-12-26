@@ -7,6 +7,7 @@
 
 
 #include "PLFolders.h"
+#include "PLKeyEncoding.h"
 #include "PLNumberFormatting.h"
 #include "PLScript.h"
 #include "PLSound.h"
@@ -457,17 +458,17 @@ Boolean NameFilter (DialogPtr dial, EventRecord *event, short *item)
 	{
 		case keyDown:
 		keyStroke = true;
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			PlayPrioritySound(kCarriageSound, kCarriagePriority);
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
 			
-			case kTabKeyASCII:
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kHighNameItem, 0, 1024);
 			return(false);
 			break;
@@ -565,17 +566,17 @@ Boolean BannerFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case keyDown:
 		keyStroke = true;
-		switch ((event->message) & charCodeMask)
+		switch (event->message)
 		{
-			case kReturnKeyASCII:
-			case kEnterKeyASCII:
+			case PL_KEY_SPECIAL(kEnter):
+			case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			PlayPrioritySound(kCarriageSound, kCarriagePriority);
 			FlashDialogButton(dial, kOkayButton);
 			*item = kOkayButton;
 			return(true);
 			break;
-			
-			case kTabKeyASCII:
+
+			case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kHighBannerItem, 0, 1024);
 			return(false);
 			break;

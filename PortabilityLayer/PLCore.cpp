@@ -1,11 +1,14 @@
 #include "PLCore.h"
 #include "PLApplication.h"
 #include "PLPasStr.h"
+#include "PLKeyEncoding.h"
+#include "PLQuickdraw.h"
 
 #include "AEManager.h"
 #include "DisplayDeviceManager.h"
 #include "FileManager.h"
 #include "FilePermission.h"
+#include "FontFamily.h"
 #include "FontManager.h"
 #include "GpVOSEvent.h"
 #include "HostDirectoryCursor.h"
@@ -19,14 +22,17 @@
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
+#include "MacRoman.h"
 #include "MemoryManager.h"
 #include "MenuManager.h"
 #include "MemReaderStream.h"
 #include "MMHandleBlock.h"
+#include "RenderedFont.h"
 #include "ResTypeID.h"
 #include "RandomNumberGenerator.h"
 #include "PLBigEndian.h"
 #include "PLEventQueue.h"
+#include "PLKeyEncoding.h"
 #include "QDManager.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
@@ -94,6 +100,65 @@ static void TranslateMouseInputEvent(const GpMouseInputEvent &vosEvent, Portabil
 
 static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
 {
+	PortabilityLayer::InputManager *inputManager = PortabilityLayer::InputManager::GetInstance();
+
+	if (vosEvent.m_eventType == GpKeyboardInputEventTypes::kUp || vosEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
+		inputManager->ApplyEvent(vosEvent);
+
+	intptr_t msg = 0;
+
+	switch (vosEvent.m_keyIDSubset)
+	{
+	case GpKeyIDSubsets::kASCII:
+		msg = PL_KEY_ASCII(vosEvent.m_key.m_asciiChar);
+		break;
+	case GpKeyIDSubsets::kFKey:
+		msg = PL_KEY_FKEY(vosEvent.m_key.m_fKey);
+		break;
+	case GpKeyIDSubsets::kNumPadNumber:
+		msg = PL_KEY_NUMPAD_NUMBER(vosEvent.m_key.m_numPadNumber);
+		break;
+	case GpKeyIDSubsets::kSpecial:
+		msg = PL_KEY_SPECIAL_ENCODE(vosEvent.m_key.m_specialKey);
+		break;
+	case GpKeyIDSubsets::kNumPadSpecial:
+		msg = PL_KEY_NUMPAD_SPECIAL_ENCODE(vosEvent.m_key.m_numPadSpecialKey);
+		break;
+	case GpKeyIDSubsets::kUnicode:
+		for (int i = 128; i < 256; i++)
+		{
+			if (PortabilityLayer::MacRoman::g_toUnicode[i] == vosEvent.m_key.m_unicodeChar)
+			{
+				msg = PL_KEY_MACROMAN(i);
+				break;
+			}
+		}
+		break;
+	default:
+		PL_NotYetImplemented();
+	}
+
+	if (msg == 0)
+		return;
+
+	EventRecord *evt = queue->Enqueue();
+
+	switch (vosEvent.m_eventType)
+	{
+	case GpKeyboardInputEventTypes::kUp:
+		evt->what = keyUp;
+		break;
+	case GpKeyboardInputEventTypes::kDown:
+		evt->what = keyUp;
+		break;
+	case GpKeyboardInputEventTypes::kAuto:
+		evt->what = autoKey;
+		break;
+	};
+
+	evt->message = msg;
+
+	PL_NotYetImplemented_TODO("Modifiers");
 }
 
 static void TranslateVOSEvent(const GpVOSEvent *vosEvent, PortabilityLayer::EventQueue *queue)
@@ -408,7 +473,7 @@ long TickCount()
 	return PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount();
 }
 
-void GetKeys(KeyMap keyMap)
+void GetKeys(KeyMap &keyMap)
 {
 	PortabilityLayer::InputManager::GetInstance()->GetKeys(keyMap);
 }
@@ -423,10 +488,49 @@ short HiWord(Int32 v)
 	return (((v >> 16) ^ 0x8000) & 0xffff) - 0x8000;
 }
 
-bool BitTst(const KeyMap *keyMap, int bit)
+static bool BitTestEitherSpecial(const KeyMap &keyMap, int eitherSpecial)
 {
-	const unsigned char *keyMapBytes = *keyMap;
-	return ((keyMapBytes[bit >> 3] >> (7 - (bit & 0x7))) & 1) != 0;
+	switch (eitherSpecial)
+	{
+	case KeyEventEitherSpecialCategories::kAlt:
+		return keyMap.m_special.Get(GpKeySpecials::kLeftAlt) || keyMap.m_special.Get(GpKeySpecials::kRightAlt);
+	case KeyEventEitherSpecialCategories::kShift:
+		return keyMap.m_special.Get(GpKeySpecials::kLeftShift) || keyMap.m_special.Get(GpKeySpecials::kRightShift);
+	case KeyEventEitherSpecialCategories::kControl:
+		return keyMap.m_special.Get(GpKeySpecials::kLeftCtrl) || keyMap.m_special.Get(GpKeySpecials::kRightCtrl);
+	default:
+		assert(false);
+		return false;
+	}
+}
+
+bool BitTst(const KeyMap &keyMap, int encodedKey)
+{
+	const KeyEventType evtType = PL_KEY_GET_EVENT_TYPE(encodedKey);
+	const int evtValue = PL_KEY_GET_VALUE(encodedKey);
+
+	switch (evtType)
+	{
+	case KeyEventType_Special:
+		return keyMap.m_special.Get(evtValue);
+	case KeyEventType_ASCII:
+		return keyMap.m_ascii.Get(evtValue);
+	case KeyEventType_MacRoman:
+		assert(evtValue >= 128 && evtValue < 256);
+		return keyMap.m_macRoman.Get(evtValue - 128);
+	case KeyEventType_NumPadNumber:
+		return keyMap.m_numPadNumber.Get(evtValue);
+	case KeyEventType_NumPadSpecial:
+		return keyMap.m_numPadSpecial.Get(evtValue);
+	case KeyEventType_FKey:
+		assert(evtValue >= 1 && evtValue <= GpFKeyMaximumInclusive);
+		return keyMap.m_fKey.Get(evtValue - 1);
+	case KeyEventType_EitherSpecial:
+		return BitTestEitherSpecial(keyMap, evtValue);
+	default:
+		assert(false);
+		return false;
+	}
 }
 
 void NumToString(long number, unsigned char *str)
@@ -706,8 +810,40 @@ void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL)
 
 short StringWidth(const PLPasStr &str)
 {
-	PL_NotYetImplemented();
-	return 0;
+	const PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	const int textSize = qdState->m_textSize;
+	const int textFace = qdState->m_textFace;
+	const int fontID = qdState->m_fontID;
+
+	int variationFlags = 0;
+	if (textFace & bold)
+		variationFlags |= PortabilityLayer::FontFamilyFlag_Bold;
+
+	PortabilityLayer::FontFamily *fontFamily = nullptr;
+
+	switch (fontID)
+	{
+	case applFont:
+		fontFamily = fontManager->GetApplicationFont(textSize, variationFlags);
+		break;
+	case systemFont:
+		fontFamily = fontManager->GetSystemFont(textSize, variationFlags);
+		break;
+	default:
+		PL_NotYetImplemented();
+		return 0;
+	}
+
+	if (!fontFamily)
+		return 0;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, textSize, variationFlags);
+	if (!rfont)
+		return 0;
+
+	return rfont->MeasureString(str.UChars(), str.Length());
 }
 
 void GetMouse(Point *point)
@@ -765,7 +901,10 @@ void GetDateTime(UInt32 *dateTime)
 
 void GetTime(DateTimeRec *dateTime)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("DateTime");
+	dateTime->month = 1;
+	dateTime->hour = 0;
+	dateTime->minute = 0;
 }
 
 UInt32 GetDblTime()
