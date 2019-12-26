@@ -16,6 +16,11 @@ void GpPLGlueAudioChannel::PostBuffer(const void *buffer, size_t bufferSize)
 	m_audioChannel->PostBuffer(buffer, bufferSize);
 }
 
+void GpPLGlueAudioChannel::Stop()
+{
+	m_audioChannel->Stop();
+}
+
 void GpPLGlueAudioChannel::Destroy()
 {
 	this->~GpPLGlueAudioChannel();

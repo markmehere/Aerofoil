@@ -15,8 +15,9 @@ public:
 
 	static GpAudioChannelXAudio2 *Create(GpAudioDriverXAudio2 *driver);
 
-	void SetAudioChannelContext(IGpAudioChannelCallbacks *callbacks);
-	void PostBuffer(const void *buffer, size_t bufferSize);
+	void SetAudioChannelContext(IGpAudioChannelCallbacks *callbacks) override;
+	void PostBuffer(const void *buffer, size_t bufferSize) override;
+	void Stop() override;
 	void Destroy() override;
 
 	bool Init();

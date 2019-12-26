@@ -19,6 +19,8 @@ namespace PortabilityLayer
 		~AudioChannelImpl();
 
 		bool PushCommand(const SndCommand &command, bool blocking);
+		void ClearAllCommands();
+		void Stop();
 
 		void NotifyBufferFinished() override;
 
@@ -196,6 +198,38 @@ namespace PortabilityLayer
 
 		return true;
 	}
+
+	void AudioChannelImpl::ClearAllCommands()
+	{
+		m_mutex->Lock();
+		m_numQueuedCommands = 0;
+		m_nextDequeueCommandPos = 0;
+		m_nextInsertCommandPos = 0;
+		m_mutex->Unlock();
+	}
+
+	void AudioChannelImpl::Stop()
+	{
+		m_mutex->Lock();
+		if (m_state == State_Idle)
+		{
+			m_mutex->Unlock();
+		}
+		else if (m_state == State_PlayingAsync)
+		{
+			m_state = State_FlushStarting;
+			m_audioChannel->Stop();
+			m_mutex->Unlock();
+
+			m_threadEvent->Wait();
+		}
+		else
+		{
+			m_mutex->Unlock();
+			assert(false);
+		}
+	}
+
 }
 
 OSErr GetDefaultOutputVolume(long *vol)
@@ -297,7 +331,17 @@ OSErr SndDoCommand(SndChannelPtr channel, const SndCommand *command, Boolean fai
 
 OSErr SndDoImmediate(SndChannelPtr channel, const SndCommand *command)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::AudioChannelImpl *audioChannelImpl = static_cast<PortabilityLayer::AudioChannelImpl*>(channel);
+
+	if (command->cmd == flushCmd)
+		audioChannelImpl->ClearAllCommands();
+	else if (command->cmd == quietCmd)
+		audioChannelImpl->Stop();
+	else
+	{
+		assert(false);
+		return genericErr;
+	}
+
 	return noErr;
 }
-

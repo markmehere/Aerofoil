@@ -10,6 +10,7 @@ class GpPLGlueAudioChannel final : public PortabilityLayer::HostAudioChannel, pu
 public:
 	void SetClientAudioChannelContext(PortabilityLayer::ClientAudioChannelContext *context) override;
 	void PostBuffer(const void *buffer, size_t bufferSize) override;
+	void Stop() override;
 	void Destroy() override;
 
 	void NotifyBufferFinished() override;

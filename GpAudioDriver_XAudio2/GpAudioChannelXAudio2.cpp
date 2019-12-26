@@ -80,6 +80,15 @@ void GpAudioChannelXAudio2::PostBuffer(const void *buffer, size_t bufferSize)
 	}
 }
 
+void GpAudioChannelXAudio2::Stop()
+{
+	// Set voice state BEFORE calling FlushSourceBuffers so state is idle before any callbacks trigger
+	m_sourceVoice->Stop(0, 0);
+	m_voiceState = VoiceState_Idle;
+
+	m_sourceVoice->FlushSourceBuffers();
+}
+
 void GpAudioChannelXAudio2::Destroy()
 {
 	this->~GpAudioChannelXAudio2();
