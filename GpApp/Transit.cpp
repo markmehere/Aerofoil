@@ -129,6 +129,9 @@ void ReadyGliderFromTransit (gliderPtr thisGlider, short toWhat)
 		thisGlider->destShadow.right = tempRect.right;
 		thisGlider->whole = thisGlider->dest;
 		thisGlider->wholeShadow = thisGlider->destShadow;
+		// GP: Match rects
+		thisGlider->src.bottom = thisGlider->src.top;
+		thisGlider->mask.bottom = thisGlider->mask.top;
 		break;
 		
 		case kLinkedToFloorDuct:
