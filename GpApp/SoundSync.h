@@ -13,3 +13,4 @@ struct SoundSyncState
 SoundSyncState SoundSync_ReadAll();
 void SoundSync_ClearPriority(int index);
 void SoundSync_PutPriority(int index, int16_t priority);
+

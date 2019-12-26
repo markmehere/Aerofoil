@@ -11,6 +11,9 @@
 #include "PLSound.h"
 #include "Environ.h"
 #include "Externs.h"
+#include "SoundSync.h"
+#include "HostMutex.h"
+#include "HostSystemServices.h"
 
 
 #define kBaseBufferMusicID			2000
@@ -29,12 +32,21 @@ OSErr CloseMusicChannel (void);
 SndCallBackUPP	musicCallBackUPP;
 SndChannelPtr	musicChannel;
 Ptr				theMusicData[kMaxMusic];
-short			musicSoundID, musicCursor;
 short			musicScore[kLastMusicPiece];
 short			gameScore[kLastGamePiece];
-short			musicMode;
 Boolean			isMusicOn, isPlayMusicIdle, isPlayMusicGame;
 Boolean			failedMusic, dontLoadMusic;
+
+// Anything accessed from this must do so under the mutex lock, unless music is stopped
+struct MusicState
+{
+	short			musicMode;
+	short			musicSoundID, musicCursor;
+};
+
+MusicState musicState;
+PortabilityLayer::HostMutex *musicMutex;
+
 
 extern	Boolean		isSoundOn;
 
@@ -52,6 +64,9 @@ OSErr StartMusic (void)
 	
 	if (dontLoadMusic)
 		return(theErr);
+
+	if (musicMutex == nullptr)
+		return(theErr);
 	
 	UnivGetSoundVolume(&soundVolume, thisMac.hasSM3);
 	
@@ -59,7 +74,7 @@ OSErr StartMusic (void)
 	{
 		theCommand.cmd = bufferCmd;
 		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theMusicData[musicSoundID]);
+		theCommand.param2 = (intptr_t)(theMusicData[musicState.musicSoundID]);
 		theErr = SndDoCommand(musicChannel, &theCommand, false);
 		if (theErr != noErr)
 			return (theErr);
@@ -72,14 +87,14 @@ OSErr StartMusic (void)
 		if (theErr != noErr)
 			return (theErr);
 		
-		musicCursor++;
-		if (musicCursor >= kLastMusicPiece)
-			musicCursor = 0;
-		musicSoundID = musicScore[musicCursor];
+		musicState.musicCursor++;
+		if (musicState.musicCursor >= kLastMusicPiece)
+			musicState.musicCursor = 0;
+		musicState.musicSoundID = musicScore[musicState.musicCursor];
 		
 		theCommand.cmd = bufferCmd;
 		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theMusicData[musicSoundID]);
+		theCommand.param2 = (intptr_t)(theMusicData[musicState.musicSoundID]);
 		theErr = SndDoCommand(musicChannel, &theCommand, false);
 		if (theErr != noErr)
 			return (theErr);
@@ -149,22 +164,24 @@ void SetMusicalMode (short newMode)
 {	
 	if (dontLoadMusic)
 		return;
-	
+
+	musicMutex->Lock();
 	switch (newMode)
 	{
 		case kKickGameScoreMode:
-		musicCursor = 2;
+		musicState.musicCursor = 2;
 		break;
 		
 		case kProdGameScoreMode:
-		musicCursor = -1;
+		musicState.musicCursor = -1;
 		break;
 		
 		default:
-		musicMode = newMode;
-		musicCursor = 0;
+		musicState.musicMode = newMode;
+		musicState.musicCursor = 0;
 		break;
 	}
+	musicMutex->Unlock();
 }
 
 //--------------------------------------------------------------  MusicCallBack
@@ -175,32 +192,36 @@ void MusicCallBack (SndChannelPtr theChannel, SndCommand *theCommand)
 	
 //	gameA5 = theCommand.param2;
 //	thisA5 = SetA5(gameA5);
-	
-	switch (musicMode)
+
+	musicMutex->Lock();
+	switch (musicState.musicMode)
 	{
 		case kPlayGameScoreMode:
-		musicCursor++;
-		if (musicCursor >= kLastGamePiece)
-			musicCursor = 1;
-		musicSoundID = gameScore[musicCursor];
-		if (musicSoundID < 0)
+		musicState.musicCursor++;
+		if (musicState.musicCursor >= kLastGamePiece)
+			musicState.musicCursor = 1;
+		musicState.musicSoundID = gameScore[musicState.musicCursor];
+		if (musicState.musicSoundID < 0)
 		{
-			musicCursor += musicSoundID;
-			musicSoundID = gameScore[musicCursor];
+			musicState.musicCursor += musicState.musicSoundID;
+			musicState.musicSoundID = gameScore[musicState.musicCursor];
 		}
 		break;
 		
 		case kPlayWholeScoreMode:
-		musicCursor++;
-		if (musicCursor >= kLastMusicPiece - 1)
-			musicCursor = 0;
-		musicSoundID = musicScore[musicCursor];
+		musicState.musicCursor++;
+		if (musicState.musicCursor >= kLastMusicPiece - 1)
+			musicState.musicCursor = 0;
+		musicState.musicSoundID = musicScore[musicState.musicCursor];
 		break;
 		
 		default:
-		musicSoundID = musicMode;
+		musicState.musicSoundID = musicState.musicMode;
 		break;
 	}
+
+	short musicSoundID = musicState.musicSoundID;
+	musicMutex->Unlock();
 	
 	theCommand->cmd = bufferCmd;
 	theCommand->param1 = 0;
@@ -348,9 +369,11 @@ void InitMusic (void)
 	gameScore[4] = kPlayChorus;
 	gameScore[5] = kPlayChorus;
 	
-	musicCursor = 0;
-	musicSoundID = musicScore[musicCursor];
-	musicMode = kPlayWholeScoreMode;
+	musicState.musicCursor = 0;
+	musicState.musicSoundID = musicScore[musicState.musicCursor];
+	musicState.musicMode = kPlayWholeScoreMode;
+
+	musicMutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
 
 	PL_NotYetImplemented_TODO("MusicSync");
 	
@@ -376,6 +399,7 @@ void KillMusic (void)
 	
 	theErr = DumpMusicSounds();
 	theErr = CloseMusicChannel();
+	musicMutex->Destroy();
 }
 
 //--------------------------------------------------------------  MusicBytesNeeded
