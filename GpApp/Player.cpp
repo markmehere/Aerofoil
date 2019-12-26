@@ -9,6 +9,7 @@
 #include "Play.h"
 #include "RectUtils.h"
 
+#include <assert.h>
 
 #define kGravity				3
 #define kHImpulse				2
@@ -1301,6 +1302,10 @@ void MoveGliderShredding (gliderPtr thisGlider)
 			{
 				AddAShreddedGlider(&thisGlider->dest);
 				thisGlider->frame = kShredderCountdown;
+
+				thisGlider->dest.bottom = thisGlider->dest.top;
+				thisGlider->src.bottom = thisGlider->src.top;
+				thisGlider->mask.bottom = thisGlider->mask.top;
 			}
 			else
 			{
@@ -1309,6 +1314,8 @@ void MoveGliderShredding (gliderPtr thisGlider)
 				thisGlider->mask.bottom = thisGlider->mask.top + vNotClipped;
 			}
 		}
+
+		assert(thisGlider->src.bottom - thisGlider->src.top == thisGlider->dest.bottom - thisGlider->dest.top);
 	}
 	else
 	{
