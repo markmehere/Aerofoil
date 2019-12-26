@@ -3,7 +3,7 @@
 #define __PL_QDOFFSCREEN_H__
 
 #include "PLCore.h"
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 
 struct ColorTable
 {

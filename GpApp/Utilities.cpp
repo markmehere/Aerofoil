@@ -5,7 +5,7 @@
 //============================================================================
 
 #include "PLKeyEncoding.h"
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 #include "PLPasStr.h"
 #include "PLResources.h"
 #include "PLSound.h"
@@ -302,9 +302,7 @@ void LoadGraphic (short resID)
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
-	HLock((Handle)thePicture);
 	bounds = (*thePicture)->picFrame.ToRect();
-	HUnlock((Handle)thePicture);
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);
 	
@@ -327,31 +325,6 @@ void LoadScaledGraphic (short resID, Rect *theRect)
 	ReleaseResource((Handle)thePicture);
 }
 
-//--------------------------------------------------------------  PlotSICN
-// Draws a small icon (16 x 16 pixels).
-/*
-void PlotSICN (Rect *theRect, SICNHand theSICN, long theIndex)
-{
-	char		state;
-	BitMap		srcBits;
-	
-	if ((theSICN != nil) && 
-			((GetHandleSize((Handle)theSICN) / sizeof(SICN)) > theIndex))
-	{
-		state = HGetState((Handle)theSICN);
-		HLock((Handle)theSICN);
-		
-		srcBits.baseAddr = (Ptr)(*theSICN)[theIndex];
-		srcBits.rowBytes = 2;
-		SetRect(&srcBits.bounds, 0, 0, 16, 16);
-		
-		CopyBits(&srcBits,&(*qd.thePort).portBits, 
-				&srcBits.bounds, theRect, srcCopy, nil);
-		
-		HSetState((Handle) theSICN, state);
-	}
-}
-*/
 //--------------------------------------------------------------  LargeIconPlot
 // Draws a standard b&w icon (32 x 32) - resource is an 'ICON'.
 

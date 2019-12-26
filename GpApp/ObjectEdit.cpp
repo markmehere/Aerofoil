@@ -529,11 +529,8 @@ void DragObject (Point where)
 	
 	if (objActive == kInitialGliderSelected)
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		(*thisHouse)->initial.h += deltaH;
 		(*thisHouse)->initial.v += deltaV;
-		HSetState((Handle)thisHouse, wasState);
 	}
 	else if (objActive == kLeftGliderSelected)
 	{
@@ -805,8 +802,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kDoorExLf)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kDoorExLf;
@@ -818,7 +813,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -839,8 +833,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kDoorExRt)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kDoorExRt;
@@ -852,8 +844,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -874,8 +864,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kDoorInLfLeft)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kDoorInLf;
@@ -887,8 +875,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -909,8 +895,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kDoorInRtLeft)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kDoorInRt;
@@ -922,8 +906,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -944,8 +926,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kWindowExRt)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kWindowExRt;
@@ -957,8 +937,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -979,8 +957,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kWindowExLf)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kWindowExLf;
@@ -992,8 +968,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -1014,8 +988,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kWindowInLf)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kWindowInLf;
@@ -1027,8 +999,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -1049,8 +1019,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kWindowInRt)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kWindowInRt;
@@ -1062,8 +1030,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -1084,8 +1050,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kDownStairs)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kDownStairs;
@@ -1098,8 +1062,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -1120,8 +1082,6 @@ void AddObjectPairing (void)
 			emptySlot = FindObjectSlotInRoom(roomNum);
 			if ((emptySlot != -1) && (!DoesRoomNumHaveObject(roomNum, kUpStairs)))
 			{
-				wasState = HGetState((Handle)thisHouse);
-				HLock((Handle)thisHouse);
 				testRoomPtr = &((*thisHouse)->rooms[roomNum]);
 				
 				testRoomPtr->objects[emptySlot].what = kUpStairs;
@@ -1134,8 +1094,6 @@ void AddObjectPairing (void)
 				testRoomPtr->objects[emptySlot].data.d.wide = 0;
 				
 				testRoomPtr->numObjects++;
-				
-				HSetState((Handle)thisHouse, wasState);
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
@@ -1486,11 +1444,8 @@ void MoveObject (short whichWay, Boolean shiftDown)
 	if (objActive == kInitialGliderSelected)
 	{
 		wasRect = initialGliderRect;
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		(*thisHouse)->initial.h += deltaH;
 		(*thisHouse)->initial.v += deltaV;
-		HSetState((Handle)thisHouse, wasState);
 	}
 	else if (objActive == kLeftGliderSelected)
 	{
@@ -2288,9 +2243,7 @@ void GetThisRoomsObjRects (void)
 				}
 				else
 				{
-					HLock((Handle)thePict);
 					roomObjectRects[i] = (*thePict)->picFrame.ToRect();
-					HUnlock((Handle)thePict);
 				}
 				ZeroRectCorner(&roomObjectRects[i]);
 				QOffsetRect(&roomObjectRects[i], 

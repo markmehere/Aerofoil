@@ -90,9 +90,6 @@
     <ClInclude Include="PLMovies.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLQuickdraw.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLMacTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -369,6 +366,24 @@
     <ClInclude Include="..\GpCommon\GpBitfield.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LinePlotter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlotDirection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLQDraw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScanlineMaskConverter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IPlotter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScanlineMaskBuilder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -396,9 +411,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLResources.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PLQuickdraw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLSound.cpp">
@@ -552,6 +564,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\stb\stb_image_write.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanlineMaskConverter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLQDraw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinePlotter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanlineMaskBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanlineMask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -131,9 +131,6 @@ void InitAnimatedCursor (acurHandle ballCursH)
 		if (!compiledBallCursorH)
 			RedAlert(kErrFailedResourceLoad);
 
-		HNoPurge((Handle)ballCursH);
-		MoveHHi((Handle)ballCursH);
-		HLock((Handle)ballCursH);
 		if (useColor)
 			useColor = GetColorCursors(ballCursH, compiledBallCursorH);
 		if (!useColor && !GetMonoCursors(ballCursH, compiledBallCursorH))

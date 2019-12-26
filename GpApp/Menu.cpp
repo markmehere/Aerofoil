@@ -723,12 +723,10 @@ short QueryResumeGame (void)
 	
 	resumeFilterUPP = NewModalFilterUPP(ResumeFilter);
 
-	wasState = HGetState((Handle)thisHouse);	// get score & num. gliders
-	HLock((Handle)thisHouse);
+	// get score & num. gliders
 	thisHousePtr = *thisHouse;
 	hadPoints = thisHousePtr->savedGame.score;
 	hadGliders = thisHousePtr->savedGame.numGliders;
-	HSetState((Handle)thisHouse, wasState);
 	NumToString(hadPoints, scoreStr);			// param text strings
 	NumToString((long)hadGliders, glidStr);
 	if (hadGliders == 1)

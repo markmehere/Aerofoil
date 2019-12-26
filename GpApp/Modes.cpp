@@ -165,10 +165,7 @@ void StartGliderMailingIn (gliderPtr thisGlider, Rect *bounds, hotPtr who)
 	objLinked = masterObjects[whoLinked].objectLink;
 	linkedToWhat = WhatAreWeLinkedTo(transRoom, objLinked);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	GetObjectRect(&(*thisHouse)->rooms[transRoom].objects[objLinked], &transRect);
-	HSetState((Handle)thisHouse, wasState);
 	
 	thisGlider->frame = 0;
 	thisGlider->clip = *bounds;
@@ -228,10 +225,7 @@ void StartGliderDuctingDown (gliderPtr thisGlider, Rect *bounds, hotPtr who)
 	objLinked = masterObjects[whoLinked].objectLink;
 	linkedToWhat = WhatAreWeLinkedTo(transRoom, objLinked);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	GetObjectRect(&(*thisHouse)->rooms[transRoom].objects[objLinked], &transRect);
-	HSetState((Handle)thisHouse, wasState);
 	
 	thisGlider->frame = 0;
 	thisGlider->clip = *bounds;
@@ -261,10 +255,7 @@ void StartGliderDuctingUp (gliderPtr thisGlider, Rect *bounds, hotPtr who)
 	objLinked = masterObjects[whoLinked].objectLink;
 	linkedToWhat = WhatAreWeLinkedTo(transRoom, objLinked);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	GetObjectRect(&(*thisHouse)->rooms[transRoom].objects[objLinked], &transRect);
-	HSetState((Handle)thisHouse, wasState);
 	
 	thisGlider->frame = 0;
 	thisGlider->clip = *bounds;
@@ -303,10 +294,7 @@ void StartGliderTransporting (gliderPtr thisGlider, hotPtr who)
 	objLinked = masterObjects[whoLinked].objectLink;
 	linkedToWhat = WhatAreWeLinkedTo(transRoom, objLinked);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	GetObjectRect(&(*thisHouse)->rooms[transRoom].objects[objLinked], &transRect);
-	HSetState((Handle)thisHouse, wasState);
 	
 	thisGlider->dest.right = thisGlider->dest.left + kGliderWide;
 	thisGlider->dest.bottom = thisGlider->dest.top + kGliderHigh;

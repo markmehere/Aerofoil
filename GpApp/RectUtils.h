@@ -8,7 +8,7 @@
 #pragma once
 
 
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 
 
 void FrameWHRect (short, short, short, short);

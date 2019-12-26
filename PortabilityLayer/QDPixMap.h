@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PLBigEndian.h"
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 #include "GpPixelFormat.h"
 
 #include <stdint.h>

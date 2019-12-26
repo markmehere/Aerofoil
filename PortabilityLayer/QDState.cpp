@@ -1,6 +1,6 @@
 #include "QDState.h"
 
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 #include "QDStandardPalette.h"
 
 namespace PortabilityLayer

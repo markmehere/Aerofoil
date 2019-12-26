@@ -225,7 +225,6 @@ OSErr LoadTriggerSound (short soundID)
 		{
 			soundDataSize = GetHandleSize(theSound) - 20L;
 			theSoundData[kMaxSounds - 1] = NewPtr(soundDataSize);
-			HLock(theSound);
 			if (theSoundData[kMaxSounds - 1] == nil)
 			{
 				ReleaseResource(theSound);
@@ -268,15 +267,12 @@ OSErr LoadBufferSounds (void)
 		if (theSound == nil)
 			return (MemError());
 		
-		HLock(theSound);
 		soundDataSize = GetHandleSize(theSound) - 20L;
-		HUnlock(theSound);
 		
 		theSoundData[i] = NewPtr(soundDataSize);
 		if (theSoundData[i] == nil)
 			return (MemError());
 		
-		HLock(theSound);
 		BlockMove((Ptr)((Byte*)(*theSound) + 20L), theSoundData[i], soundDataSize);
 		ReleaseResource(theSound);
 	}

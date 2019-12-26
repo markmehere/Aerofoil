@@ -37,9 +37,6 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 	ZeroRectCorner(&testRect);
 	isLit = (numLights > 0);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	for (i = 0; i < kMaxRoomObs; i++)
 	{
 		dynamicNum = -1;
@@ -960,7 +957,5 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 

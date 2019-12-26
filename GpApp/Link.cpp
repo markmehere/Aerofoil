@@ -295,8 +295,6 @@ void DoLink (void)
 		}
 		else
 		{
-			wasState = HGetState((Handle)thisHouse);
-			HLock((Handle)thisHouse);
 			if (linkerIsSwitch)
 			{
 				(*thisHouse)->rooms[linkRoom].objects[linkObject].data.e.where = 
@@ -311,7 +309,6 @@ void DoLink (void)
 				(*thisHouse)->rooms[linkRoom].objects[linkObject].data.d.who = 
 						objActive;
 			}
-			HSetState((Handle)thisHouse, wasState);
 		}
 		fileDirty = true;
 		UpdateMenus(false);
@@ -342,8 +339,6 @@ void DoUnlink (void)
 	}
 	else
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		if (linkerIsSwitch)
 		{
 			(*thisHouse)->rooms[linkRoom].objects[linkObject].data.e.where = -1;
@@ -354,7 +349,6 @@ void DoUnlink (void)
 			(*thisHouse)->rooms[linkRoom].objects[linkObject].data.d.where = -1;
 			(*thisHouse)->rooms[linkRoom].objects[linkObject].data.d.who = 255;
 		}
-		HSetState((Handle)thisHouse, wasState);
 	}
 	fileDirty = true;
 	UpdateMenus(false);

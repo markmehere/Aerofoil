@@ -18,6 +18,9 @@ namespace PortabilityLayer
 
 		Vec2i &operator+=(const Vec2i &other);
 		Vec2i &operator-=(const Vec2i &other);
+
+		bool operator==(const Vec2i &other) const;
+		bool operator!=(const Vec2i &other) const;
 	};
 
 	inline Vec2i::Vec2i()
@@ -61,5 +64,14 @@ namespace PortabilityLayer
 		m_y -= other.m_y;
 		return *this;
 	}
-}
 
+	inline bool Vec2i::operator==(const Vec2i &other) const
+	{
+		return m_x == other.m_x && m_y == other.m_y;
+	}
+
+	inline bool Vec2i::operator!=(const Vec2i &other) const
+	{
+		return !((*this) == other);
+	}
+}

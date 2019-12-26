@@ -11,6 +11,9 @@
 #include "Objects.h"
 #include "RectUtils.h"
 #include "Room.h"
+#include "Vec2i.h"
+#include "ScanlineMask.h"
+#include "ScanlineMaskConverter.h"
 
 
 #define k8WhiteColor			0
@@ -293,16 +296,20 @@ void DrawShelf (Rect *shelfTop)
 	GetGWorld(&wasCPort, &wasWorld);
 	SetGWorld(backSrcMap, nil);
 	
-	MoveTo(shelfTop->left, shelfTop->bottom);
 	shadowRgn = NewRgn();
 	if (shadowRgn == nil)
 		RedAlert(kErrUnnaccounted);
+
+	PortabilityLayer::Vec2i poly[5];
+	poly[0] = PortabilityLayer::Vec2i(shelfTop->left, shelfTop->bottom);
+	poly[1] = poly[0] + PortabilityLayer::Vec2i(kShelfShadowOff, kShelfShadowOff);
+	poly[2] = poly[1] + PortabilityLayer::Vec2i(RectWide(shelfTop) - kShelfDeep, 0);
+	poly[3] = poly[2] + PortabilityLayer::Vec2i(0, -kShelfThick + 1);
+	poly[4] = poly[3] + PortabilityLayer::Vec2i(-kShelfShadowOff, -kShelfShadowOff);
+
+	//PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompilePoly(poly, sizeof(poly) / sizeof(poly[0]));
+
 	OpenRgn();
-	Line(kShelfShadowOff, kShelfShadowOff);
-	Line(RectWide(shelfTop) - kShelfDeep, 0);
-	Line(0, -kShelfThick + 1);
-	Line(-kShelfShadowOff, -kShelfShadowOff);
-	LineTo(shelfTop->left, shelfTop->bottom);
 	CloseRgn(shadowRgn);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
 	PenMode(patOr);
@@ -312,7 +319,9 @@ void DrawShelf (Rect *shelfTop)
 		ColorRegion(shadowRgn, k8DkstGrayColor);
 	PenNormal();
 	DisposeRgn(shadowRgn);
-	
+	//mask->Destroy();
+
+	MoveTo(shelfTop->left, shelfTop->bottom);
 	InsetRect(shelfTop, 0, 1);
 	ColorRect(shelfTop, brownC);
 	InsetRect(shelfTop, 0, -1);

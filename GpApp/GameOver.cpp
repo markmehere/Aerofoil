@@ -91,10 +91,7 @@ void SetUpFinalScreen (void)
 	if (textDown < 0)
 		textDown = 0;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	PasStringCopy((*thisHouse)->trailer, tempStr);
-	HSetState((Handle)thisHouse, wasState);
 	
 	count = 0;
 	do

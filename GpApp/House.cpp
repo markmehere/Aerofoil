@@ -123,7 +123,6 @@ Boolean InitializeEmptyHouse (void)
 		return (false);
 	}
 	
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	thisHousePtr->version = kHouseVersion;
@@ -143,8 +142,6 @@ Boolean InitializeEmptyHouse (void)
 	
 	wardBitSet = false;
 	phoneBitSet = false;
-	
-	HUnlock((Handle)thisHouse);
 	
 	numberRooms = 0;
 	mapLeftRoom = 60;
@@ -174,8 +171,6 @@ short RealRoomNumberCount (void)
 	short		realRoomCount, i;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	realRoomCount = (*thisHouse)->nRooms;
 	if (realRoomCount != 0)
 	{
@@ -185,7 +180,6 @@ short RealRoomNumberCount (void)
 				realRoomCount--;
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (realRoomCount);
 }
@@ -200,8 +194,6 @@ short GetFirstRoomNumber (void)
 	short		firstRoom;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	if ((*thisHouse)->nRooms <= 0)
 	{
 		firstRoom = -1;
@@ -213,7 +205,6 @@ short GetFirstRoomNumber (void)
 		if ((firstRoom >= (*thisHouse)->nRooms) || (firstRoom < 0))
 			firstRoom = 0;
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (firstRoom);
 }
@@ -228,15 +219,11 @@ void WhereDoesGliderBegin (Rect *theRect, short mode)
 	Point		initialPt;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	if (mode == kResumeGameMode)
 		initialPt = smallGame.where;
 	else if (mode == kNewGameMode)
 		initialPt = (*thisHouse)->initial;
 	
-	HSetState((Handle)thisHouse, wasState);
 	QSetRect(theRect, 0, 0, kGliderWide, kGliderHigh);
 	QOffsetRect(theRect, initialPt.h, initialPt.v);
 }
@@ -266,8 +253,6 @@ short CountHouseLinks (void)
 	
 	numLinks = 0;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	numRooms = thisHousePtr->nRooms;
 	
@@ -303,8 +288,6 @@ short CountHouseLinks (void)
 		}
 	}
 	
-	HSetState((Handle)thisHouse, wasState);
-	
 	return (numLinks);
 }
 
@@ -324,8 +307,6 @@ void GenerateLinksList (void)
 	short		floor, suite, roomLinked, objectLinked;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	numRooms = thisHousePtr->nRooms;
 	
@@ -382,8 +363,6 @@ void GenerateLinksList (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 #endif
 
@@ -468,8 +447,6 @@ void SortHouseObjects (void)
 	
 	GenerateLinksList();
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	numRooms = thisHousePtr->nRooms;
 	
@@ -498,7 +475,6 @@ void SortHouseObjects (void)
 	}
 	
 	SpinCursor(3);
-	HSetState((Handle)thisHouse, wasState);
 	if (linksList != nil)
 		DisposePtr((Ptr)linksList);
 	ForceThisRoom(thisRoomNumber);
@@ -516,8 +492,6 @@ short CountRoomsVisited (void)
 	short		numRooms, r, count;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	numRooms = thisHousePtr->nRooms;
 	count = 0;
@@ -528,7 +502,6 @@ short CountRoomsVisited (void)
 			count++;
 	}
 	
-	HSetState((Handle)thisHouse, wasState);
 	return (count);
 }
 
@@ -548,8 +521,6 @@ void GenerateRetroLinks (void)
 	for (i = 0; i < kMaxRoomObs; i++)		// Initialize array.
 		retroLinkList[i].room = -1;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	numRooms = thisHousePtr->nRooms;
 	
@@ -610,8 +581,6 @@ void GenerateRetroLinks (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  UpdateGoToDialog
@@ -759,9 +728,6 @@ void ConvertHouseVer1To2 (void)
 	
 	SpinCursor(3);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
 	{
@@ -814,7 +780,6 @@ void ConvertHouseVer1To2 (void)
 	}
 	
 	(*thisHouse)->version = kHouseVersion;
-	HSetState((Handle)thisHouse, wasState);
 	
 	InitCursor();
 	CloseMessageWindow();
@@ -834,8 +799,6 @@ void ShiftWholeHouse (short howFar)
 	
 	CopyThisRoomToRoom();
 	wasRoom = thisRoomNumber;
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	numRooms = (*thisHouse)->nRooms;
 	
 	for (i = 0; i < numRooms; i++)
@@ -852,7 +815,6 @@ void ShiftWholeHouse (short howFar)
 		}
 	}
 	
-	HSetState((Handle)thisHouse, wasState);
 	ForceThisRoom(wasRoom);
 	
 	InitCursor();

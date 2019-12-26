@@ -93,8 +93,6 @@ Boolean IsThisValid (short where, short who)
 	
 	itsGood = true;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	switch ((*thisHouse)->rooms[where].objects[who].what)
 	{
 		case kObjectIsEmpty:
@@ -116,7 +114,6 @@ Boolean IsThisValid (short where, short who)
 		itsGood = (*thisHouse)->rooms[where].objects[who].data.c.state;
 		break;
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (itsGood);
 }
@@ -261,8 +258,6 @@ void ListOneRoomsObjects (short where)
 	if (roomNum == kRoomIsEmpty)
 		return;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	for (n = 0; n < kMaxRoomObs; n++)
 	{
 		if (numMasterObjects < kMaxMasterObjects)
@@ -292,7 +287,6 @@ void ListOneRoomsObjects (short where)
 				numLocalMasterObjects++;
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  ListAllLocalObjects
@@ -305,9 +299,6 @@ void ListAllLocalObjects (void)
 	numMasterObjects = 0;
 	numLocalMasterObjects = 0;
 	nHotSpots = 0;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	ListOneRoomsObjects(kCentralRoom);
 	
@@ -326,8 +317,6 @@ void ListAllLocalObjects (void)
 		ListOneRoomsObjects(kSouthWestRoom);
 		ListOneRoomsObjects(kNorthWestRoom);
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	for (i = 0; i < numMasterObjects; i++)				// correlate links with…
 	{													// index into this list
@@ -368,8 +357,6 @@ Boolean SetObjectState (short room, short object, short action, short local)
 	char		wasState;
 	Boolean		changed;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	switch ((*thisHouse)->rooms[room].objects[object].what)
 	{
 		case kFloorVent:
@@ -693,7 +680,6 @@ Boolean SetObjectState (short room, short object, short action, short local)
 		break;
 		
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (changed);
 }
@@ -707,8 +693,6 @@ Boolean GetObjectState (short room, short object)
 	
 	theState = true;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	switch ((*thisHouse)->rooms[room].objects[object].what)
 	{
 		case kFloorVent:
@@ -864,8 +848,6 @@ Boolean GetObjectState (short room, short object)
 		case kChimes:
 		break;
 	}
-		
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (theState);
 }
@@ -909,8 +891,6 @@ void BringSendFrontBack (Boolean bringFront)
 		GenerateLinksList();				// Fill in links list with src/dest…
 	}										// data on objects and room numbers.
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);				// Lock down house.
 	thisHousePtr = *thisHouse;				// Get a pointer to house structure.
 	
 	for (i = 0; i < kMaxRoomObs; i++)		// Set up an ordered array.
@@ -980,7 +960,6 @@ void BringSendFrontBack (Boolean bringFront)
 		}
 	}
 	
-	HSetState((Handle)thisHouse, wasState);
 	if (linksList != nil)
 		DisposePtr((Ptr)linksList);
 	

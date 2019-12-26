@@ -150,8 +150,6 @@ void DrawHighScores (void)
 	TextFace(bold);
 	TextSize(12);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 													// message for score #1
 	PasStringCopy(thisHousePtr->highScores.banner, tempStr);
@@ -273,7 +271,6 @@ void DrawHighScores (void)
 	DrawString(tempStr);
 	
 	ForeColor(blackColor);
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  SortHighScores
@@ -287,8 +284,6 @@ void SortHighScores (void)
 	short		i, h, which;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	for (h = 0; h < kMaxScores; h++)
@@ -314,8 +309,6 @@ void SortHighScores (void)
 	}
 	PasStringCopy(thisHousePtr->highScores.banner, tempScores.banner);
 	thisHousePtr->highScores = tempScores;
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  ZeroHighScores
@@ -327,8 +320,6 @@ void ZeroHighScores (void)
 	short		i;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	PasStringCopy(thisHouseName, thisHousePtr->highScores.banner);
@@ -339,8 +330,6 @@ void ZeroHighScores (void)
 		thisHousePtr->highScores.timeStamps[i] = 0L;
 		thisHousePtr->highScores.levels[i] = 0;
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  ZeroAllButHighestScore
@@ -352,8 +341,6 @@ void ZeroAllButHighestScore (void)
 	short		i;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	for (i = 1; i < kMaxScores; i++)
@@ -363,8 +350,6 @@ void ZeroAllButHighestScore (void)
 		thisHousePtr->highScores.timeStamps[i] = 0L;
 		thisHousePtr->highScores.levels[i] = 0;
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  TestHighScore
@@ -381,8 +366,6 @@ Boolean TestHighScore (void)
 	if (resumedSavedGame)
 		return (false);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	lastHighScore = -1;
@@ -414,8 +397,6 @@ Boolean TestHighScore (void)
 		SortHighScores();
 		gameDirty = true;
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	if (placing != -1)
 	{
@@ -770,18 +751,14 @@ Boolean WriteScoresToDisk (void)
 	}
 	
 	byteCount = sizeof(scoresType);
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	theScores = &((*thisHouse)->highScores);
 	
 	theErr = FSWrite(scoresRefNum, &byteCount, (Ptr)theScores);
 	if (!CheckFileError(theErr, PSTR("High Scores File")))
 	{
-		HSetState((Handle)thisHouse, wasState);
 		theErr = FSClose(scoresRefNum);
 		return(false);
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	theErr = SetEOF(scoresRefNum, byteCount);
 	if (!CheckFileError(theErr, PSTR("High Scores File")))
@@ -835,18 +812,14 @@ Boolean ReadScoresFromDisk (void)
 		return (false);
 	}
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	theScores = &((*thisHouse)->highScores);
 	
 	theErr = FSRead(scoresRefNum, &byteCount, theScores);
 	if (!CheckFileError(theErr, PSTR("High Scores File")))
 	{
-		HSetState((Handle)thisHouse, wasState);
 		theErr = FSClose(scoresRefNum);
 		return (false);
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	theErr = FSClose(scoresRefNum);
 	if (!CheckFileError(theErr, PSTR("High Scores File")))

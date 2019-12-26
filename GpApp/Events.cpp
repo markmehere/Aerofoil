@@ -9,7 +9,7 @@
 #include "PLAppleEvents.h"
 #include "PLKeyEncoding.h"
 #include "PLToolUtils.h"
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"

@@ -163,6 +163,8 @@
     <ClInclude Include="HostVOSEventQueue.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="IOStream.h" />
+    <ClInclude Include="IPlotter.h" />
+    <ClInclude Include="LinePlotter.h" />
     <ClInclude Include="MacBinary2.h" />
     <ClInclude Include="MacFileMem.h" />
     <ClInclude Include="MacFileInfo.h" />
@@ -194,6 +196,9 @@
     <ClInclude Include="PLLowMem.h" />
     <ClInclude Include="PLMacTypes.h" />
     <ClInclude Include="MenuManager.h" />
+    <ClInclude Include="PlotDirection.h" />
+    <ClInclude Include="ScanlineMaskBuilder.h" />
+    <ClInclude Include="ScanlineMaskConverter.h" />
     <ClInclude Include="QDGraf.h" />
     <ClInclude Include="QDManager.h" />
     <ClInclude Include="QDPictEmitContext.h" />
@@ -221,7 +226,7 @@
     <ClInclude Include="PLPasStr.h" />
     <ClInclude Include="PLQDOffscreen.h" />
     <ClInclude Include="PLMovies.h" />
-    <ClInclude Include="PLQuickdraw.h" />
+    <ClInclude Include="PLQDraw.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="PLResources.h" />
     <ClInclude Include="PLScript.h" />
@@ -265,6 +270,7 @@
     <ClCompile Include="HostSystemServices.cpp" />
     <ClCompile Include="HostVOSEventQueue.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="LinePlotter.cpp" />
     <ClCompile Include="MacBinary2.cpp" />
     <ClCompile Include="MacFileInfo.cpp" />
     <ClCompile Include="MacFileMem.cpp" />
@@ -286,11 +292,14 @@
     <ClCompile Include="PLNavigation.cpp" />
     <ClCompile Include="PLNumberFormatting.cpp" />
     <ClCompile Include="PLQDOffscreen.cpp" />
-    <ClCompile Include="PLQuickdraw.cpp" />
+    <ClCompile Include="PLQDraw.cpp" />
     <ClCompile Include="PLResourceManager.cpp" />
     <ClCompile Include="PLResources.cpp" />
     <ClCompile Include="PLSound.cpp" />
     <ClCompile Include="PLStringCompare.cpp" />
+    <ClCompile Include="ScanlineMask.cpp" />
+    <ClCompile Include="ScanlineMaskBuilder.cpp" />
+    <ClCompile Include="ScanlineMaskConverter.cpp" />
     <ClCompile Include="QDGraf.cpp" />
     <ClCompile Include="QDManager.cpp" />
     <ClCompile Include="QDPictDecoder.cpp" />

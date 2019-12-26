@@ -447,10 +447,7 @@ void DoRoomInfo (void)
 	ShowWindow(GetDialogWindow(roomInfoDialog));
 	DrawDefaultButton(roomInfoDialog);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	wasFirstRoom = ((*thisHouse)->firstRoom == thisRoomNumber);
-	HSetState((Handle)thisHouse, wasState);
 	SetDialogItemValue(roomInfoDialog, kRoomFirstCheck, (short)wasFirstRoom);
 	
 	if (tempBack >= kUserBackground)
@@ -473,9 +470,7 @@ void DoRoomInfo (void)
 			PasStringCopyNum(tempStr, thisRoom->name, 27);
 			if (wasFirstRoom)
 			{
-				HLock((Handle)thisHouse);
 				(*thisHouse)->firstRoom = thisRoomNumber;
-				HUnlock((Handle)thisHouse);
 			}
 			thisRoom->background = tempBack;
 			if (tempBack < kUserBackground)

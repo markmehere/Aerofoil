@@ -1,7 +1,7 @@
 #include "DisplayDeviceManager.h"
 
 #include "HostDisplayDriver.h"
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 #include "MemoryManager.h"
 #include "QDStandardPalette.h"
 

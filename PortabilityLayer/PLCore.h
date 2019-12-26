@@ -369,11 +369,6 @@ Handle NewHandle(Size size);
 void DisposeHandle(Handle handle);
 long GetHandleSize(Handle handle);
 
-void HNoPurge(Handle hdl);	// Marks a handle as not purgeable
-void MoveHHi(Handle hdl);	// Relocates a block to the top of the heap
-void HLock(Handle hdl);		// Disable relocation
-void HUnlock(Handle hdl);	// Re-enable relocation
-
 OSErr PtrAndHand(const void *data, Handle handle, Size size);	// Appends data to the end of a handle
 void SetHandleSize(Handle hdl, Size newSize);
 
@@ -383,9 +378,6 @@ void DisposePtr(void *ptr);
 
 Size MaxMem(Size *growBytes);
 void PurgeSpace(long *totalFree, long *contiguousFree);
-
-void HSetState(Handle handle, char state);
-char HGetState(Handle handle);
 
 OSErr MemError();
 

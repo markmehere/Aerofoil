@@ -173,8 +173,6 @@ void FireTrigger (short index)
 	}
 	else
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		triggeredIs = masterObjects[triggerIs].localLink;
 		switch ((*thisHouse)->rooms[triggers[index].room].
 				objects[triggers[index].object].what)
@@ -189,7 +187,6 @@ void FireTrigger (short index)
 			}
 			break;
 		}
-		HSetState((Handle)thisHouse, wasState);
 	}
 }
 

@@ -233,15 +233,12 @@ OSErr LoadMusicSounds (void)
 		if (theSound == nil)
 			return (MemError());
 		
-		HLock(theSound);
 		soundDataSize = GetHandleSize(theSound) - 20L;
-		HUnlock(theSound);
 
 		theMusicData[i] = NewPtr(soundDataSize);
 		if (theMusicData[i] == nil)
 			return (MemError());
 
-		HLock(theSound);
 		BlockMove((Ptr)(static_cast<Byte*>(*theSound) + 20L), theMusicData[i], soundDataSize);
 		ReleaseResource(theSound);
 	}

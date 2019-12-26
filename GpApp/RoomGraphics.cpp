@@ -58,10 +58,7 @@ void DrawLocale (void)
 	tvInRoom = false;
 	tvWithMovieNumber = -1;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	roomV = (*thisHouse)->rooms[thisRoomNumber].floor;
-	HSetState((Handle)thisHouse, wasState);
 	
 	for (i = 0; i < 9; i++)
 	{
@@ -147,9 +144,7 @@ void LoadGraphicSpecial (short resID)
 		}
 	}
 	
-	HLock((Handle)thePicture);
 	bounds = (*thePicture)->picFrame.ToRect();
-	HUnlock((Handle)thePicture);
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);
 	
@@ -167,12 +162,9 @@ void DrawRoomBackground (short who, short where, short elevation)
 	
 	if (where == kCentralRoom)
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		thisBackground = (*thisHouse)->rooms[who].background;
 		for (i = 0; i < kNumTiles; i++)
 			thisTiles[i] = (*thisHouse)->rooms[who].tiles[i];
-		HSetState((Handle)thisHouse, wasState);
 	}
 	
 	if ((numLights == 0) && (who != kRoomIsEmpty))
@@ -226,12 +218,9 @@ void DrawRoomBackground (short who, short where, short elevation)
 	}
 	else
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		pictID = (*thisHouse)->rooms[who].background;
 		for (i = 0; i < kNumTiles; i++)
 			tiles[i] = (*thisHouse)->rooms[who].tiles[i];
-		HSetState((Handle)thisHouse, wasState);
 	}
 	
 	SetPort((GrafPtr)workSrcMap);
@@ -436,10 +425,7 @@ void RedrawRoomLighting (void)
 	char		wasState;
 	Boolean		wasLit, isLit;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	roomV = (*thisHouse)->rooms[thisRoomNumber].floor;
-	HSetState((Handle)thisHouse, wasState);
 	
 	wasLit = numLights > 0;
 	numLights = GetNumberOfLights(localNumbers[kCentralRoom]);

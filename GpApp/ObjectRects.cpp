@@ -226,9 +226,7 @@ void GetObjectRect (objectPtr who, Rect *itsRect)
 		}
 		else
 		{
-			HLock((Handle)thePict);
 			*itsRect = (*thePict)->picFrame.ToRect();
-			HUnlock((Handle)thePict);
 		}
 		ZeroRectCorner(itsRect);
 		QOffsetRect(itsRect, 
@@ -1140,9 +1138,6 @@ short GetUpStairsRightEdge (void)
 	
 	rightEdge = kRoomWide;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	for (i = 0; i < kMaxRoomObs; i++)
 	{
 		thisObject = (*thisHouse)->rooms[thisRoomNumber].objects[i];
@@ -1152,8 +1147,6 @@ short GetUpStairsRightEdge (void)
 			break;
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (rightEdge);
 }
@@ -1168,9 +1161,6 @@ short GetDownStairsLeftEdge (void)
 	
 	leftEdge = 0;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	for (i = 0; i < kMaxRoomObs; i++)
 	{
 		thisObject = (*thisHouse)->rooms[thisRoomNumber].objects[i];
@@ -1180,8 +1170,6 @@ short GetDownStairsLeftEdge (void)
 			break;
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (leftEdge);
 }

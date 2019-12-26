@@ -311,8 +311,6 @@ void SaveGame (Boolean doSave)
 	if (twoPlayerGame)
 		return;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	if (doSave)
@@ -342,8 +340,6 @@ void SaveGame (Boolean doSave)
 	{
 		thisHousePtr->hasGame = false;
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	if (doSave)
 	{

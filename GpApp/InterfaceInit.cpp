@@ -83,25 +83,21 @@ void GetExtraCursors (void)
 	handCursorH = GetCursor(kHandCursorID);
 	if (handCursorH == nil)
 		RedAlert(kErrFailedResourceLoad);
-	HLock((Handle)handCursorH);
 	handCursor = **handCursorH;
 	
 	vertCursorH = GetCursor(kVertCursorID);
 	if (vertCursorH == nil)
 		RedAlert(kErrFailedResourceLoad);
-	HLock((Handle)vertCursorH);
 	vertCursor = **vertCursorH;
 	
 	horiCursorH = GetCursor(kHoriCursorID);
 	if (horiCursorH == nil)
 		RedAlert(kErrFailedResourceLoad);
-	HLock((Handle)horiCursorH);
 	horiCursor = **horiCursorH;
 	
 	diagCursorH = GetCursor(kDiagCursorID);
 	if (diagCursorH == nil)
 		RedAlert(kErrFailedResourceLoad);
-	HLock((Handle)diagCursorH);
 	diagCursor = **diagCursorH;
 }
 

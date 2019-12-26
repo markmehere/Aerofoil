@@ -662,7 +662,6 @@ Boolean ReadHouse (void)
 		YellowAlert(kYellowNoMemory, 10);
 		return(false);
 	}
-	MoveHHi((Handle)thisHouse);
 	
 	theErr = SetFPos(houseRefNum, fsFromStart, 0L);
 	if (theErr != noErr)
@@ -671,13 +670,11 @@ Boolean ReadHouse (void)
 		return(false);
 	}
 	
-	HLock((Handle)thisHouse);
 	long readByteCount = byteCount;
 	theErr = FSRead(houseRefNum, &readByteCount, *thisHouse);
 	if (theErr != noErr || readByteCount != byteCount || byteCount < static_cast<long>(houseType::kBinaryDataSize))
 	{
 		CheckFileError(theErr, thisHouseName);
-		HUnlock((Handle)thisHouse);
 		return(false);
 	}
 
@@ -702,7 +699,6 @@ Boolean ReadHouse (void)
 		numberRooms = 0;
 		noRoomAtAll = true;
 		YellowAlert(kYellowNoRooms, 0);
-		HUnlock((Handle)thisHouse);
 		return(false);
 	}
 	
@@ -710,7 +706,6 @@ Boolean ReadHouse (void)
 	if (wasHouseVersion >= kNewHouseVersion)
 	{
 		YellowAlert(kYellowNewerVersion, 0);
-		HUnlock((Handle)thisHouse);
 		return(false);
 	}
 	
@@ -731,8 +726,6 @@ Boolean ReadHouse (void)
 	wardBitSet = (((*thisHouse)->flags & 0x00000001) == 0x00000001);
 	phoneBitSet = (((*thisHouse)->flags & 0x00000002) == 0x00000002);
 	bannerStarCountOn = (((*thisHouse)->flags & 0x00000004) == 0x00000000);
-	
-	HUnlock((Handle)thisHouse);
 	
 	noRoomAtAll = (RealRoomNumberCount() == 0);
 	thisRoomNumber = -1;
@@ -786,7 +779,6 @@ Boolean WriteHouse (Boolean checkIt)
 	if (checkIt)
 		CheckHouseForProblems();
 	
-	HLock((Handle)thisHouse);
 	byteCount = GetHandleSize((Handle)thisHouse);
 	
 	if (fileDirty)
@@ -815,7 +807,6 @@ Boolean WriteHouse (Boolean checkIt)
 	{
 		CheckFileError(theErr, thisHouseName);
 		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
-		HUnlock((Handle)thisHouse);
 		return(false);
 	}
 
@@ -824,7 +815,6 @@ Boolean WriteHouse (Boolean checkIt)
 	{
 		CheckFileError(theErr, thisHouseName);
 		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
-		HUnlock((Handle)thisHouse);
 		return(false);
 	}
 
@@ -834,11 +824,8 @@ Boolean WriteHouse (Boolean checkIt)
 	if (theErr != noErr)
 	{
 		CheckFileError(theErr, thisHouseName);
-		HUnlock((Handle)thisHouse);
 		return(false);
 	}
-	
-	HUnlock((Handle)thisHouse);
 	
 	if (changeLockStateOfHouse)
 	{

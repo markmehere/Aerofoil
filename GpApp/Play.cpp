@@ -528,9 +528,7 @@ void PlayGame (void)
 					thePicture = GetPicture(kScoreboardPictID);
 					if (!thePicture)
 						RedAlert(kErrFailedGraphicLoad);
-					HLock((Handle)thePicture);
 					bounds = (*thePicture)->picFrame.ToRect();
-					HUnlock((Handle)thePicture);
 					QOffsetRect(&bounds, -bounds.left, -bounds.top);
 					QOffsetRect(&bounds, hOffset, 0);
 					DrawPicture(thePicture, &bounds);
@@ -579,9 +577,7 @@ void PlayGame (void)
 		thePicture = GetPicture(kScoreboardPictID);
 		if (!thePicture)
 			RedAlert(kErrFailedGraphicLoad);
-		HLock((Handle)thePicture);
 		bounds = (*thePicture)->picFrame.ToRect();
-		HUnlock((Handle)thePicture);
 		QOffsetRect(&bounds, -bounds.left, -bounds.top);
 		QOffsetRect(&bounds, hOffset, 0);
 		DrawPicture(thePicture, &bounds);
@@ -605,8 +601,6 @@ void SetObjectsToDefaults (void)
 	char		wasState;
 	Boolean		initState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	numRooms = thisHousePtr->nRooms;
@@ -701,7 +695,6 @@ void SetObjectsToDefaults (void)
 			}
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  HideGlider

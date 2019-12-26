@@ -90,12 +90,9 @@ void DrawBanner (Point *topLeft)
 short CountStarsInHouse (void)
 {
 	short		i, h, numRooms, numStars;
-	char		wasState;
 	
 	numStars = 0;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
 	{
@@ -106,7 +103,6 @@ short CountStarsInHouse (void)
 					numStars++;
 			}
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (numStars);
 }
@@ -119,12 +115,8 @@ void DrawBannerMessage (Point topLeft)
 {
 	Str255		bannerStr, subStr;
 	short		count;
-	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	PasStringCopy((*thisHouse)->banner, bannerStr);
-	HSetState((Handle)thisHouse, wasState);
 	
 	TextFont(applFont);
 	TextFace(bold);

@@ -54,8 +54,6 @@ Boolean KeepObjectLegal (void)
 	
 	if (objActive == kInitialGliderSelected)
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		if ((*thisHouse)->initial.h < 0)
 			(*thisHouse)->initial.h = 0;
 		if ((*thisHouse)->initial.v < 0)
@@ -64,7 +62,6 @@ Boolean KeepObjectLegal (void)
 			(*thisHouse)->initial.h = kRoomWide - kGliderWide;
 		if ((*thisHouse)->initial.v > (kTileHigh - kGliderHigh))
 			(*thisHouse)->initial.v = kTileHigh - kGliderHigh;
-		HSetState((Handle)thisHouse, wasState);
 		return (true);
 	}
 	
@@ -605,13 +602,8 @@ void WrapBannerAndTrailer (void)
 {
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	WrapText((*thisHouse)->banner, 40);
 	WrapText((*thisHouse)->trailer, 64);
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  ValidateNumberOfRooms
@@ -623,9 +615,6 @@ void ValidateNumberOfRooms (void)
 	long		countedRooms, reportsRooms;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	reportsRooms = (long)(*thisHouse)->nRooms;
 	countedRooms = (GetHandleSize((Handle)thisHouse) - 
 			sizeof(houseType)) / sizeof(roomType);
@@ -635,8 +624,6 @@ void ValidateNumberOfRooms (void)
 		numberRooms = (*thisHouse)->nRooms;
 		houseErrors++;
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  CheckDuplicateFloorSuite
@@ -653,9 +640,6 @@ void CheckDuplicateFloorSuite (void)
 	pidgeonHoles = (char *)NewPtrClear(sizeof(char) * kRoomsTimesSuites);
 	if (pidgeonHoles == nil)
 		return;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -676,8 +660,6 @@ void CheckDuplicateFloorSuite (void)
 		}
 	}
 	
-	HSetState((Handle)thisHouse, wasState);
-	
 	DisposePtr((Ptr)pidgeonHoles);
 }
 
@@ -690,9 +672,6 @@ void CompressHouse (void)
 	short		wasFirstRoom, roomNumber, probe;
 	char		wasState;
 	Boolean		compressing, probing;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	wasFirstRoom = (*thisHouse)->firstRoom;
 	compressing = true;
@@ -729,8 +708,6 @@ void CompressHouse (void)
 			compressing = false;
 	}
 	while (compressing);
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  LopOffExtraRooms
@@ -743,9 +720,6 @@ void LopOffExtraRooms (void)
 	short		r, count;
 	char		wasState;
 	Str255		message;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	count = 0;
 	r = (*thisHouse)->nRooms;		// begin at last room
@@ -763,19 +737,16 @@ void LopOffExtraRooms (void)
 	{
 		r = (*thisHouse)->nRooms - count;
 		newSize = sizeof(houseType) + (sizeof(roomType) * (long)r);
-		HUnlock((Handle)thisHouse);	// resize house handle (shrink)
-		SetHandleSize((Handle)thisHouse, newSize);
+		SetHandleSize((Handle)thisHouse, newSize);	// resize house handle (shrink)
 		if (MemError() != noErr)	// problem?
 		{
 			ForeColor(redColor);
 			GetLocalizedString(16, message);
 			SetMessageWindowMessage(message);
 		}
-		HLock((Handle)thisHouse);	// reflect new room count
 		(*thisHouse)->nRooms -= count;
 		numberRooms = (*thisHouse)->nRooms;
 	}
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  ValidateRoomNumbers
@@ -787,9 +758,6 @@ void ValidateRoomNumbers (void)
 	short		i, numRooms;
 	char		wasState;
 	Str255		message;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	numRooms = (*thisHouse)->nRooms;
 	if (numRooms < 0)
@@ -823,8 +791,6 @@ void ValidateRoomNumbers (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  CountUntitledRooms
@@ -836,9 +802,6 @@ void CountUntitledRooms (void)
 	short		i, numRooms;
 	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
 	{
@@ -846,8 +809,6 @@ void CountUntitledRooms (void)
 				(EqualString((*thisHouse)->rooms[i].name, PSTR("Untitled Room"), false, true)))
 			houseErrors++;
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  CheckRoomNameLength
@@ -858,9 +819,6 @@ void CheckRoomNameLength (void)
 {
 	short		i, numRooms;
 	char		wasState;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -874,8 +832,6 @@ void CheckRoomNameLength (void)
 			houseErrors++;
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  MakeSureNumObjectsJives
@@ -886,9 +842,6 @@ void MakeSureNumObjectsJives (void)
 {
 	short		i, h, numRooms, count;
 	char		wasState;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -908,8 +861,6 @@ void MakeSureNumObjectsJives (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  KeepAllObjectsLegal
@@ -921,9 +872,6 @@ void KeepAllObjectsLegal (void)
 	short		i, h, numRooms;
 	char		wasState;
 	Str255		message;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -950,8 +898,6 @@ void KeepAllObjectsLegal (void)
 			CopyThisRoomToRoom();
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  CheckForStaircasePairs
@@ -964,9 +910,6 @@ void CheckForStaircasePairs (void)
 	char		wasState;
 	Boolean		hasStairs;
 	Str255		message;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -1040,8 +983,6 @@ void CheckForStaircasePairs (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 #endif
 

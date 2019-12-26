@@ -126,9 +126,6 @@ void FindNewActiveRoomRect (void)
 	
 	activeRoomVisible = false;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	for (i = 0; i < mapRoomsHigh; i++)
 	{
 		for (h = 0; h < mapRoomsWide; h++)
@@ -149,8 +146,6 @@ void FindNewActiveRoomRect (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	if (activeRoomVisible)
 	{
@@ -211,9 +206,6 @@ void RedrawMapContents (void)
 		ClipRect(&newClip);
 	}
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	for (i = 0; i < mapRoomsHigh; i++)
 	{
 		for (h = 0; h < mapRoomsWide; h++)
@@ -265,8 +257,6 @@ void RedrawMapContents (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	ForeColor(blackColor);
 	PenNormal();

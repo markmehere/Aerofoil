@@ -143,11 +143,7 @@ void GetDialogRect (Rect *bounds, short dialogID)
 	dlogHandle = (DialogTHndl)GetResource('DLOG', dialogID);
 	if (dlogHandle != nil)
 	{
-		wasState = HGetState((Handle)dlogHandle);
-		HLock((Handle)dlogHandle);
-		
 		*bounds = (**dlogHandle).boundsRect;
-		HSetState((Handle)dlogHandle, wasState);
 	}
 }
 

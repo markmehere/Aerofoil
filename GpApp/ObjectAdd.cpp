@@ -829,8 +829,6 @@ short FindObjectSlotInRoom (short roomNumber)
 	
 	emptySlot = -1;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	testRoomPtr = &((*thisHouse)->rooms[roomNumber]);
 	
 	for (i = 0; i < kMaxRoomObs; i++)
@@ -839,9 +837,6 @@ short FindObjectSlotInRoom (short roomNumber)
 			emptySlot = i;
 			break;
 		}
-	
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (emptySlot);
 }
@@ -855,8 +850,6 @@ Boolean DoesRoomNumHaveObject (short room, short what)
 	char		wasState;
 	Boolean		hasIt;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	testRoomPtr = &((*thisHouse)->rooms[room]);
 	
 	hasIt = false;
@@ -867,9 +860,6 @@ Boolean DoesRoomNumHaveObject (short room, short what)
 			hasIt = true;
 			break;
 		}
-	
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (hasIt);
 }

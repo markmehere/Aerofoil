@@ -182,9 +182,6 @@ Boolean CreateNewRoom (short h, short v)
 	for (i = 0; i < kMaxRoomObs; i++)		// zero out all objects
 		thisRoom->objects[i].what = kObjectIsEmpty;
 	
-	wasState = HGetState((Handle)thisHouse);
-	MoveHHi((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	availableRoom = -1;						// assume no available rooms
 	if ((*thisHouse)->nRooms > 0)			// look for an empty room
 		for (i = 0; i < (*thisHouse)->nRooms; i++)
@@ -196,18 +193,13 @@ Boolean CreateNewRoom (short h, short v)
 	
 	if (availableRoom == -1)				// found no available rooms
 	{
-		HUnlock((Handle)thisHouse);
 		howMuch = sizeof(roomType);			// add new room to end of house
 		theErr = PtrAndHand((Ptr)thisRoom, (Handle)thisHouse, howMuch);
 		if (theErr != noErr)
 		{
 			YellowAlert(kYellowUnaccounted, theErr);
-			MoveHHi((Handle)thisHouse);
-			HLock((Handle)thisHouse);
 			return (false);
 		}
-		MoveHHi((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		(*thisHouse)->nRooms++;				// increment nRooms
 		numberRooms = (*thisHouse)->nRooms;
 		previousRoom = thisRoomNumber;
@@ -221,8 +213,6 @@ Boolean CreateNewRoom (short h, short v)
 	
 	if (noRoomAtAll)
 		(*thisHouse)->firstRoom = thisRoomNumber;
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	CopyThisRoomToRoom();
 	UpdateEditWindowTitle();
@@ -278,9 +268,7 @@ void ReadyBackground (short theID, short *theTiles)
 		}
 	}
 	
-	HLock((Handle)thePicture);
 	dest = (*thePicture)->picFrame.ToRect();
-	HUnlock((Handle)thePicture);
 	QOffsetRect(&dest, -dest.left, -dest.top);
 	DrawPicture(thePicture, &dest);
 	ReleaseResource((Handle)thePicture);
@@ -359,10 +347,7 @@ void CopyThisRoomToRoom (void)
 	if ((noRoomAtAll) || (thisRoomNumber == -1))
 		return;
 	
-	tagByte = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);		// copy back to house
-	(*thisHouse)->rooms[thisRoomNumber] = *thisRoom;
-	HSetState((Handle)thisHouse, tagByte);
+	(*thisHouse)->rooms[thisRoomNumber] = *thisRoom;	// copy back to house
 }
 
 //--------------------------------------------------------------  ForceThisRoom
@@ -374,13 +359,10 @@ void ForceThisRoom (short roomNumber)
 	if (roomNumber == -1)
 		return;
 	
-	tagByte = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	if (roomNumber < (*thisHouse)->nRooms)
 		*thisRoom = (*thisHouse)->rooms[roomNumber];
 	else
 		YellowAlert(kYellowIllegalRoomNum, 0);
-	HSetState((Handle)thisHouse, tagByte);
 	
 	previousRoom = thisRoomNumber;
 	thisRoomNumber = roomNumber;
@@ -401,8 +383,6 @@ Boolean RoomExists (short suite, short floor, short *roomNum)
 	if (suite < 0)
 		return (foundIt);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	for (i = 0; i < numberRooms; i++)
@@ -415,8 +395,6 @@ Boolean RoomExists (short suite, short floor, short *roomNum)
 			break;
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (foundIt);
 }
@@ -455,14 +433,11 @@ void DeleteRoom (Boolean doWarn)
 	
 	DeselectObject();
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	wasFloor = (*thisHouse)->rooms[thisRoomNumber].floor;
 	wasSuite = (*thisHouse)->rooms[thisRoomNumber].suite;
 	firstDeleted = ((*thisHouse)->firstRoom == thisRoomNumber);	// is room "first"
 	thisRoom->suite = kRoomIsEmpty;
 	(*thisHouse)->rooms[thisRoomNumber].suite = kRoomIsEmpty;
-	HSetState((Handle)thisHouse, wasState);
 	
 	noRoomAtAll = (RealRoomNumberCount() == 0);					// see if now no rooms
 	if (noRoomAtAll)
@@ -472,10 +447,7 @@ void DeleteRoom (Boolean doWarn)
 	
 	if (firstDeleted)
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		(*thisHouse)->firstRoom = thisRoomNumber;
-		HSetState((Handle)thisHouse, wasState);
 	}
 	
 	newRoomNow = false;
@@ -616,8 +588,6 @@ short GetNeighborRoomNumber (short which)
 	}
 	
 	roomNum = kRoomIsEmpty;
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	roomH = (*thisHouse)->rooms[thisRoomNumber].suite + hDelta;
 	roomV = (*thisHouse)->rooms[thisRoomNumber].floor + vDelta;
 	
@@ -630,7 +600,6 @@ short GetNeighborRoomNumber (short which)
 			break;
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (roomNum);
 }
@@ -646,9 +615,6 @@ void SetToNearestNeighborRoom (short wasFloor, short wasSuite)
 	short		testRoomNum, testH, testV;
 	char		wasState;
 	Boolean		finished;
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	
 	finished = false;
 	distance = 1;	// we begin our walk a distance of one from source room
@@ -703,8 +669,6 @@ void SetToNearestNeighborRoom (short wasFloor, short wasSuite)
 			}
 		}
 	} while (!finished);
-	
-	HSetState((Handle)thisHouse, wasState);
 }
 
 //--------------------------------------------------------------  GetRoomFloorSuite
@@ -714,8 +678,6 @@ Boolean GetRoomFloorSuite (short room, short *floor, short *suite)
 	char		wasState;
 	Boolean		isRoom;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	if ((*thisHouse)->rooms[room].suite == kRoomIsEmpty)
 	{
 		*floor = 0;
@@ -728,7 +690,6 @@ Boolean GetRoomFloorSuite (short room, short *floor, short *suite)
 		*floor = (*thisHouse)->rooms[room].floor;
 		isRoom = true;
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (isRoom);
 }
@@ -743,8 +704,6 @@ short GetRoomNumber (short floor, short suite)
 	
 	roomNum = kRoomIsEmpty;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	for (i = 0; i < numberRooms; i++)
 	{
 		if (((*thisHouse)->rooms[i].suite == suite) && 
@@ -754,7 +713,6 @@ short GetRoomNumber (short floor, short suite)
 			break;
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (roomNum);
 }
@@ -769,8 +727,6 @@ Boolean	IsRoomAStructure (short roomNum)
 	if (roomNum == kRoomIsEmpty)
 		return (false);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	if ((*thisHouse)->rooms[roomNum].background >= kUserBackground)
 	{
 		if ((*thisHouse)->rooms[roomNum].bounds != 0)
@@ -807,7 +763,6 @@ Boolean	IsRoomAStructure (short roomNum)
 			break;
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (isStructure);
 }
@@ -950,7 +905,6 @@ short GetOriginalBounding (short theID)
 	else
 	{
 		boundCode = 0;
-		HLock((Handle)boundsRes);
 		if ((*boundsRes)->left)
 			boundCode += 1;
 		if ((*boundsRes)->top)
@@ -959,7 +913,6 @@ short GetOriginalBounding (short theID)
 			boundCode += 4;
 		if ((*boundsRes)->bottom)
 			boundCode += 8;
-		HUnlock((Handle)boundsRes);
 		ReleaseResource((Handle)boundsRes);
 	}
 	
@@ -1033,8 +986,6 @@ short GetNumberOfLights (short where)
 	}
 	else
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		thisHousePtr = *thisHouse;
 		switch (thisHousePtr->rooms[where].background)
 		{
@@ -1094,7 +1045,6 @@ short GetNumberOfLights (short where)
 				}
 			}
 		}
-		HSetState((Handle)thisHouse, wasState);
 	}
 	return (count);
 }

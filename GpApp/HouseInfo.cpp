@@ -57,9 +57,6 @@ long CountTotalHousePoints (void)
 	
 	pointTotal = (long)RealRoomNumberCount() * (long)kRoomVisitScore;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
-	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
 	{
@@ -99,8 +96,6 @@ long CountTotalHousePoints (void)
 			}
 		}
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
 	
 	return (pointTotal);
 }
@@ -218,9 +213,7 @@ void DoHouseInfo (void)
 	houseFilterUPP = NewModalFilterUPP(HouseFilter);
 	tempPhoneBit = phoneBitSet;
 	
-	wasState = HGetState((Handle)thisHouse);
 	numRooms = RealRoomNumberCount();
-	HLock((Handle)thisHouse);
 	PasStringCopy((*thisHouse)->banner, banner);
 	PasStringCopy((*thisHouse)->trailer, trailer);
 	version = (*thisHouse)->version;
@@ -229,7 +222,6 @@ void DoHouseInfo (void)
 		h = (long)(*thisHouse)->rooms[(*thisHouse)->firstRoom].suite;
 		v = (long)(*thisHouse)->rooms[(*thisHouse)->firstRoom].floor;
 	}
-	HSetState((Handle)thisHouse, wasState);
 	
 	NumToString((long)version >> 8, versStr);		// Convert version to two stringsÉ
 	NumToString((long)version % 0x0100, loVers);	// the 1's and 1/10th's part.
@@ -261,8 +253,6 @@ void DoHouseInfo (void)
 			GetDialogString(houseInfoDialog, kBannerTextItem, banner);
 			GetDialogString(houseInfoDialog, kTrailerTextItem, trailer);
 			
-			wasState = HGetState((Handle)thisHouse);
-			HLock((Handle)thisHouse);
 			PasStringCopyNum(banner, (*thisHouse)->banner, 255);
 			PasStringCopyNum(trailer, (*thisHouse)->trailer, 255);
 			if (tempPhoneBit != phoneBitSet)
@@ -273,7 +263,6 @@ void DoHouseInfo (void)
 				else
 					(*thisHouse)->flags = (*thisHouse)->flags & 0xFFFFDFFD;
 			}
-			HSetState((Handle)thisHouse, wasState);
 			
 			fileDirty = true;
 			UpdateMenus(false);

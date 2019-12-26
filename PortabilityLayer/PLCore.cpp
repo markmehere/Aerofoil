@@ -2,7 +2,7 @@
 #include "PLApplication.h"
 #include "PLPasStr.h"
 #include "PLKeyEncoding.h"
-#include "PLQuickdraw.h"
+#include "PLQDraw.h"
 
 #include "AEManager.h"
 #include "DisplayDeviceManager.h"
@@ -901,10 +901,17 @@ void GetDateTime(UInt32 *dateTime)
 
 void GetTime(DateTimeRec *dateTime)
 {
-	PL_NotYetImplemented_TODO("DateTime");
-	dateTime->month = 1;
-	dateTime->hour = 0;
-	dateTime->minute = 0;
+	unsigned int year;
+	unsigned int month;
+	unsigned int day;
+	unsigned int hour;
+	unsigned int minute;
+	unsigned int second;
+	PortabilityLayer::HostSystemServices::GetInstance()->GetLocalDateTime(year, month, day, hour, minute, second);
+
+	dateTime->month = month;
+	dateTime->hour = hour;
+	dateTime->minute = minute;
 }
 
 UInt32 GetDblTime()
@@ -953,22 +960,6 @@ long GetHandleSize(Handle handle)
 
 	PortabilityLayer::MMHandleBlock *block = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle);
 	return static_cast<long>(block->m_size);
-}
-
-void HNoPurge(Handle hdl)
-{
-}
-
-void MoveHHi(Handle hdl)
-{
-}
-
-void HLock(Handle hdl)
-{
-}
-
-void HUnlock(Handle hdl)
-{
 }
 
 OSErr PtrAndHand(const void *data, Handle handle, Size size)

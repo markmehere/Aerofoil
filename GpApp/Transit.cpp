@@ -31,12 +31,8 @@ extern	Boolean		playerDead, playerSuicide, tvOn;
 short WhatAreWeLinkedTo (short where, Byte who)
 {
 	short		what, whatType;
-	char		wasState;
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	what = (*thisHouse)->rooms[where].objects[who].what;
-	HSetState((Handle)thisHouse, wasState);
 	
 	switch (what)
 	{
@@ -430,15 +426,11 @@ void MoveMailToMail (gliderPtr thisGlider)
 void HandleRoomVisitation (void)
 {
 	houseType	*thisHousePtr;
-	char		wasState;
 	
 	if (!thisRoom->visited)
 	{
-		wasState = HGetState((Handle)thisHouse);
-		HLock((Handle)thisHouse);
 		thisHousePtr = *thisHouse;
 		thisHousePtr->rooms[localNumbers[kCentralRoom]].visited = true;
-		HSetState((Handle)thisHouse, wasState);
 		theScore += kRoomVisitScore;
 		thisRoom->visited = true;
 	}
