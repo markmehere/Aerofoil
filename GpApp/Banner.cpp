@@ -115,7 +115,13 @@ void DrawBannerMessage (Point topLeft)
 {
 	Str255		bannerStr, subStr;
 	short		count;
-	
+
+	CGrafPtr wasGWorld;
+	GDHandle wasDevice;
+	GetGWorld(&wasGWorld, &wasDevice);
+
+	SetGWorld(workSrcMap, nullptr);
+
 	PasStringCopy((*thisHouse)->banner, bannerStr);
 	
 	TextFont(applFont);
@@ -156,6 +162,8 @@ void DrawBannerMessage (Point topLeft)
 		DrawString(subStr);
 	}
 	ForeColor(blackColor);
+
+	SetGWorld(wasGWorld, wasDevice);
 }
 
 //--------------------------------------------------------------  BringUpBanner
