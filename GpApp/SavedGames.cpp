@@ -29,7 +29,7 @@ extern	Boolean		twoPlayerGame;
 
 void SaveGame2 (void)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("SaveGame");
 	// Add NavServices later.
 /*
 	StandardFileReply	theReply;
