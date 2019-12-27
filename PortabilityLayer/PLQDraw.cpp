@@ -556,8 +556,12 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 	const size_t srcPitch = srcBitmap->m_pitch;
 	const size_t destPitch = destBitmap->m_pitch;
 
-	assert(srcRectBase->right - srcRectBase->left == destRectBase->right - destRectBase->left);
-	assert(srcRectBase->bottom - srcRectBase->top == destRectBase->bottom - destRectBase->top);
+	if (srcRectBase->right - srcRectBase->left != destRectBase->right - destRectBase->left ||
+		srcRectBase->bottom - srcRectBase->top != destRectBase->bottom - destRectBase->top)
+	{
+		PL_NotYetImplemented_TODO("ScaledBlit");
+		return;
+	}
 
 	if (maskBitmap)
 	{
