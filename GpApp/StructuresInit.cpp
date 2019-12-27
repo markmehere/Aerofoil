@@ -93,7 +93,6 @@ void InitScoreboardMap (void)
 	LoadGraphic(kBadgePictID);
 	
 	boardDestRect = boardSrcRect;
-	QOffsetRect(&boardDestRect, 0, -kScoreboardTall);
 	
 	hOffset = (RectWide(&houseRect) - 640) / 2;
 	if (hOffset < 0)
@@ -123,9 +122,7 @@ void InitScoreboardMap (void)
 	boardPDestRect = boardPSrcRect;
 	QOffsetRect(&boardPDestRect, 570 + hOffset, 5);		// total = 6396 pixels
 	boardPQDestRect = boardPDestRect;
-	QOffsetRect(&boardPQDestRect, 0, -kScoreboardTall);
 	boardGQDestRect = boardGDestRect;
-	QOffsetRect(&boardGQDestRect, 0, -kScoreboardTall);
 	TextFont(applFont);
 	TextSize(12);
 	TextFace(bold);
@@ -149,13 +146,13 @@ void InitScoreboardMap (void)
 	QOffsetRect(&badgesBadgesRects[3], 16, 49);
 	
 	QSetRect(&badgesDestRects[0], 0, 0, 16, 16);		// foil
-	QOffsetRect(&badgesDestRects[0], 432 + hOffset, 2 - kScoreboardTall);
+	QOffsetRect(&badgesDestRects[0], 432 + hOffset, 2);
 	QSetRect(&badgesDestRects[1], 0, 0, 16, 16);		// rubber bands
-	QOffsetRect(&badgesDestRects[1], 449 + hOffset, 2 - kScoreboardTall);
+	QOffsetRect(&badgesDestRects[1], 449 + hOffset, 2);
 	QSetRect(&badgesDestRects[2], 0, 0, 16, 17);		// battery
-	QOffsetRect(&badgesDestRects[2], 467 + hOffset, 1 - kScoreboardTall);
+	QOffsetRect(&badgesDestRects[2], 467 + hOffset, 1);
 	QSetRect(&badgesDestRects[3], 0, 0, 16, 17);		// helium
-	QOffsetRect(&badgesDestRects[3], 467 + hOffset, 1 - kScoreboardTall);
+	QOffsetRect(&badgesDestRects[3], 467 + hOffset, 1);
 	
 	SetGWorld(wasCPort, wasWorld);
 }
