@@ -883,6 +883,8 @@ void FinishGliderMailingLeft (gliderPtr thisGlider)
 			FlagGliderNormal(thisGlider);
 		thisGlider->enteredRect = thisGlider->dest;
 	}
+
+	assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 }
 
 //--------------------------------------------------------------  FinishGliderMailingRight
@@ -921,6 +923,8 @@ void FinishGliderMailingRight (gliderPtr thisGlider)
 			FlagGliderNormal(thisGlider);
 		thisGlider->enteredRect = thisGlider->dest;
 	}
+
+	assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 }
 
 //--------------------------------------------------------------  FinishGliderDuctingIn
@@ -1015,9 +1019,15 @@ void MoveGliderInMailLeft (gliderPtr thisGlider)
 				if (onePlayerLeft)
 				{
 					if (playerDead == kPlayer1)
+					{
 						MoveMailToMail(&theGlider2);
+						assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
+					}
 					else
+					{
 						MoveMailToMail(&theGlider);
+						assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
+					}
 				}
 				else
 				{
@@ -1025,17 +1035,26 @@ void MoveGliderInMailLeft (gliderPtr thisGlider)
 					{
 						otherPlayerEscaped = kNoOneEscaped;
 						MoveMailToMail(thisGlider);
+						assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 					}
 					else
 					{
 						otherPlayerEscaped = kPlayerMailedOut;
 						RefreshScoreboard(kEscapedTitleMode);
 						FlagGliderInLimbo(thisGlider, true);
+
+						// GP: Match rects
+						thisGlider->dest.right = thisGlider->dest.left + (thisGlider->src.right - thisGlider->src.left);
+						thisGlider->mask.right = thisGlider->mask.left + (thisGlider->src.right - thisGlider->src.left);
+						assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 					}
 				}
 			}
 			else
+			{
 				MoveMailToMail(thisGlider);
+				assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
+			}
 		}
 		else
 		{
@@ -1043,8 +1062,12 @@ void MoveGliderInMailLeft (gliderPtr thisGlider)
 			thisGlider->src.right = thisGlider->src.left + hNotClipped;
 			thisGlider->mask.right = thisGlider->mask.left + hNotClipped;
 			thisGlider->destShadow.right = thisGlider->dest.right;
+
+			assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 		}
 	}
+
+	assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 }
 
 //--------------------------------------------------------------  MoveGliderInMailRight
@@ -1122,6 +1145,10 @@ void MoveGliderInMailRight (gliderPtr thisGlider)
 						otherPlayerEscaped = kPlayerMailedOut;
 						RefreshScoreboard(kEscapedTitleMode);
 						FlagGliderInLimbo(thisGlider, true);
+
+						// GP: Match rects
+						thisGlider->dest.left = thisGlider->dest.right + (thisGlider->src.left - thisGlider->src.right);
+						thisGlider->mask.left = thisGlider->mask.right + (thisGlider->src.left - thisGlider->src.right);
 					}
 				}
 			}
@@ -1136,6 +1163,8 @@ void MoveGliderInMailRight (gliderPtr thisGlider)
 			thisGlider->destShadow.left = thisGlider->dest.left;
 		}
 	}
+
+	assert(thisGlider->src.right - thisGlider->src.left == thisGlider->dest.right - thisGlider->dest.left);
 }
 
 //--------------------------------------------------------------  DeckGliderInFoil

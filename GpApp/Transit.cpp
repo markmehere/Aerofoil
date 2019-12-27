@@ -98,6 +98,9 @@ void ReadyGliderFromTransit (gliderPtr thisGlider, short toWhat)
 		thisGlider->destShadow.right = thisGlider->dest.right;
 		thisGlider->whole = thisGlider->dest;
 		thisGlider->wholeShadow = thisGlider->destShadow;
+		// GP: Match rects
+		thisGlider->src.right = thisGlider->src.left;
+		thisGlider->mask.right = thisGlider->mask.left;
 		break;
 		
 		case kLinkedToRightMailbox:
@@ -114,6 +117,9 @@ void ReadyGliderFromTransit (gliderPtr thisGlider, short toWhat)
 		thisGlider->destShadow.right = thisGlider->dest.right;
 		thisGlider->whole = thisGlider->dest;
 		thisGlider->wholeShadow = thisGlider->destShadow;
+		// GP: Match rects
+		thisGlider->src.left = thisGlider->src.right;
+		thisGlider->mask.left = thisGlider->mask.right;
 		break;
 		
 		case kLinkedToCeilingDuct:
