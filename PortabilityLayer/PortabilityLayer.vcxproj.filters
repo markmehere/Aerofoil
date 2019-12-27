@@ -382,7 +382,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ScanlineMaskBuilder.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
