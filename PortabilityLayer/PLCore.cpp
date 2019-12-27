@@ -535,8 +535,62 @@ bool BitTst(const KeyMap &keyMap, int encodedKey)
 
 void NumToString(long number, unsigned char *str)
 {
-	PL_NotYetImplemented_TODO("Strings");
-	str[0] = 0;
+	unsigned char *firstChar = str + 1;
+	unsigned char *outChar = firstChar;
+	unsigned char *firstDigitLoc = firstChar;
+
+	int firstDigit = 0;
+	if (number == LONG_MIN)
+	{
+		*outChar = '-';
+		outChar++;
+		firstDigitLoc++;
+
+		// Non-negatable number
+		const long halfAbsNumberDiv2 = (number >> 1) & ~(static_cast<long>(1) << (sizeof(long) * 8 - 1));
+		const long halfAbsNumberDiv5 = halfAbsNumberDiv2 / 5;
+		const long halfAbsNumberMod5 = halfAbsNumberDiv2 % 5;
+
+		firstDigit = static_cast<int>(halfAbsNumberMod5) * 2;
+		number = halfAbsNumberDiv5;
+	}
+	else if (number < 0)
+	{
+		*outChar = '-';
+		outChar++;
+		firstDigitLoc++;
+
+		number = -number;
+		firstDigit = static_cast<int>(number % 10);
+		number /= 10;
+	}
+	else
+	{
+		firstDigit = static_cast<int>(number % 10);
+		number /= 10;
+	}
+
+	*outChar = '0' + firstDigit;
+	outChar++;
+
+	while (number > 0)
+	{
+		const int digit = number % 10;
+		number /= 10;
+
+		*outChar = '0' + digit;
+		*outChar++;
+	}
+
+	const ptrdiff_t strLength = outChar - firstChar;
+	const size_t numDigits = static_cast<size_t>(outChar - firstDigitLoc);
+	const size_t halfNumDigits = numDigits / 2;
+
+	// Swap to MSD order
+	for (size_t i = 0; i < halfNumDigits; i++)
+		std::swap(firstDigitLoc[i], *(outChar - 1 - i));
+
+	str[0] = static_cast<uint8_t>(strLength);
 }
 
 void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c)
