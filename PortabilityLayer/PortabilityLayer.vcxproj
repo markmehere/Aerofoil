@@ -192,6 +192,7 @@
     <ClInclude Include="PLErrorCodes.h" />
     <ClInclude Include="PLEventQueue.h" />
     <ClInclude Include="PLFolders.h" />
+    <ClInclude Include="PLHacks.h" />
     <ClInclude Include="PLKeyEncoding.h" />
     <ClInclude Include="PLLowMem.h" />
     <ClInclude Include="PLMacTypes.h" />
@@ -287,6 +288,7 @@
     <ClCompile Include="PLCore.cpp" />
     <ClCompile Include="PLDialogs.cpp" />
     <ClCompile Include="PLEventQueue.cpp" />
+    <ClCompile Include="PLHacks.cpp" />
     <ClCompile Include="PLMenus.cpp" />
     <ClCompile Include="PLMovies.cpp" />
     <ClCompile Include="PLNavigation.cpp" />

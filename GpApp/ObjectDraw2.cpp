@@ -15,7 +15,7 @@
 #include "RectUtils.h"
 #include "Room.h"
 #include "Utilities.h"
-
+#include "PLHacks.h"
 
 #define k8WhiteColor			0
 #define kIntenseYellowColor		5
@@ -601,6 +601,18 @@ void DrawSimpleAppliance (short what, Rect *theRect)
 void DrawMacPlus (Rect *theRect, Boolean isOn, Boolean isLit)
 {
 	Rect		screen;
+
+	if (IsMacPlusGraphicBanned())
+	{
+		CGraf *wasGraph = GetGraphicsPort();
+		SetGraphicsPort(backSrcMap);
+
+		ForeColor(blackColor);
+		PaintRect(theRect);
+
+		SetGraphicsPort(wasGraph);
+		return;
+	}
 	
 	if (isLit)
 	{

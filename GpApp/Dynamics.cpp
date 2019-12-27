@@ -10,6 +10,7 @@
 #include "Environ.h"
 #include "MainWindow.h"
 #include "Objects.h"
+#include "PLHacks.h"
 #include "RectUtils.h"
 #include "Room.h"
 
@@ -396,11 +397,27 @@ void HandleMacPlus (short who)
 				AddRectToWorkRects(&dinahs[who].dest);
 			else if (dinahs[who].timer == 1)
 			{
-				PlayPrioritySound(kMacBeepSound, kMacBeepPriority);
-				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
-						(BitMap *)*GetGWorldPixMap(backSrcMap), 
-						&plusScreen2, &dinahs[who].dest, 
+				if (!IsMacPlusSoundBanned())
+					PlayPrioritySound(kMacBeepSound, kMacBeepPriority);
+
+				if (IsMacPlusGraphicBanned())
+				{
+					CGraf *oldPort = GetGraphicsPort();
+					SetGraphicsPort(backSrcMap);
+
+					ForeColor(whiteColor);
+					PaintRect(&dinahs[who].dest);
+
+					SetGraphicsPort(oldPort);
+				}
+				else
+				{
+					CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap),
+						(BitMap *)*GetGWorldPixMap(backSrcMap),
+						&plusScreen2, &dinahs[who].dest,
 						srcCopy, nil);
+				}
+
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 			else if (dinahs[who].timer == 30)
