@@ -117,11 +117,10 @@ void DrawMailboxLeft (Rect *theRect, short down)
 	GWorldPtr	tempMask;
 	long		darkGrayC, lightWoodC, darkWoodC;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -168,15 +167,15 @@ void DrawMailboxLeft (Rect *theRect, short down)
 				theRect->left + 62, down + kMailboxBase + 3, darkGrayC);
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	bounds = srcRects[kMailboxLf];
 	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(kMailboxLeftPictID);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-	SetGWorld(tempMask, nil);
+	SetGraphicsPort(tempMask);
 	LoadGraphic(kMailboxLeftMaskID);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -184,7 +183,7 @@ void DrawMailboxLeft (Rect *theRect, short down)
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&srcRects[kMailboxLf], &srcRects[kMailboxLf], theRect);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
@@ -200,11 +199,10 @@ void DrawMailboxRight (Rect *theRect, short down)
 	GWorldPtr	tempMask;
 	long		darkGrayC, lightWoodC, darkWoodC;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -251,15 +249,15 @@ void DrawMailboxRight (Rect *theRect, short down)
 				theRect->left + 47, down + kMailboxBase + 3, darkGrayC);
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	bounds = srcRects[kMailboxRt];
 	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(kMailboxRightPictID);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-	SetGWorld(tempMask, nil);
+	SetGraphicsPort(tempMask);
 	LoadGraphic(kMailboxRightMaskID);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -267,7 +265,7 @@ void DrawMailboxRight (Rect *theRect, short down)
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&srcRects[kMailboxRt], &srcRects[kMailboxRt], theRect);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
@@ -289,12 +287,11 @@ void DrawSimpleTransport (short what, Rect *theRect)
 void DrawInvisTransport (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, 32);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawLightSwitch
@@ -376,12 +373,11 @@ void DrawKnifeSwitch (Rect *theRect, Boolean state)
 void DrawInvisibleSwitch (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, kIntenseGreenColor);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawTrigger
@@ -389,12 +385,11 @@ void DrawInvisibleSwitch (Rect *theRect)
 void DrawTrigger (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, kIntenseBlueColor);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawSoundTrigger
@@ -402,12 +397,11 @@ void DrawTrigger (Rect *theRect)
 void DrawSoundTrigger (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, kIntenseYellowColor);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawSimpleLight
@@ -427,7 +421,6 @@ void DrawFlourescent (Rect *theRect)
 	Rect		partRect;
 	long		grayC, gray2C, gray3C, gray4C, violetC;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 		
 	if (thisMac.isDepth == 4)
 	{
@@ -446,8 +439,8 @@ void DrawFlourescent (Rect *theRect)
 		violetC = kPaleVioletColor;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	ColorLine(theRect->left + 16, theRect->top, 
 			theRect->right - 17, theRect->top, grayC);
@@ -474,7 +467,7 @@ void DrawFlourescent (Rect *theRect)
 	ColorLine(theRect->left + 16, theRect->top + 11, 
 			theRect->right - 17, theRect->top + 11, violetC);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	partRect = flourescentSrc1;
 	ZeroRectCorner(&partRect);
@@ -505,7 +498,6 @@ void DrawTrackLight (Rect *theRect)
 	long		grayC, gray2C, gray3C, gray4C;
 	short		which, howMany, i, spread;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -522,8 +514,8 @@ void DrawTrackLight (Rect *theRect)
 		gray4C = k8DkGrayColor;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	ColorLine(theRect->left, theRect->top - 3, 
 			theRect->right - 1, theRect->top - 3, gray2C);
@@ -538,7 +530,7 @@ void DrawTrackLight (Rect *theRect)
 	ColorLine(theRect->left, theRect->top + 2, 
 			theRect->right - 1, theRect->top + 2, gray3C);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	partRect = trackLightSrc[0];			// left most track light
 	ZeroRectCorner(&partRect);
@@ -587,12 +579,11 @@ void DrawTrackLight (Rect *theRect)
 void DrawInvisLight (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameOval(theRect, 17);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawSimpleAppliance
@@ -644,20 +635,19 @@ void DrawTV (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 		
 	if (isLit)
 	{
-		GetGWorld(&wasCPort, &wasWorld);
+		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kTV];
 		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-		SetGWorld(tempMap, nil);
+		SetGraphicsPort(tempMap);
 		LoadGraphic(kTVPictID);
 		
 		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-		SetGWorld(tempMask, nil);
+		SetGraphicsPort(tempMask);
 		LoadGraphic(kTVMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -665,7 +655,7 @@ void DrawTV (Rect *theRect, Boolean isOn, Boolean isLit)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&srcRects[kTV], &srcRects[kTV], theRect);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 		
 		DisposeGWorld(tempMap);
 		DisposeGWorld(tempMask);
@@ -738,20 +728,19 @@ void DrawVCR (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
 	if (isLit)
 	{
-		GetGWorld(&wasCPort, &wasWorld);
+		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kVCR];
 		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-		SetGWorld(tempMap, nil);
+		SetGraphicsPort(tempMap);
 		LoadGraphic(kVCRPictID);
 		
 		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-		SetGWorld(tempMask, nil);
+		SetGraphicsPort(tempMask);
 		LoadGraphic(kVCRMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -759,7 +748,7 @@ void DrawVCR (Rect *theRect, Boolean isOn, Boolean isLit)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&srcRects[kVCR], &srcRects[kVCR], theRect);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 		
 		DisposeGWorld(tempMap);
 		DisposeGWorld(tempMask);
@@ -792,21 +781,20 @@ void DrawStereo (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
 	
 	if (isLit)
 	{
-		GetGWorld(&wasCPort, &wasWorld);
+		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kStereo];
 		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-		SetGWorld(tempMap, nil);
+		SetGraphicsPort(tempMap);
 		LoadGraphic(kStereoPictID);
 		
 		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-		SetGWorld(tempMask, nil);
+		SetGraphicsPort(tempMask);
 		LoadGraphic(kStereoMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -814,7 +802,7 @@ void DrawStereo (Rect *theRect, Boolean isOn, Boolean isLit)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&srcRects[kStereo], &srcRects[kStereo], theRect);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 		
 		DisposeGWorld(tempMap);
 		DisposeGWorld(tempMask);
@@ -847,21 +835,20 @@ void DrawMicrowave (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
 	
 	if (isLit)
 	{
-		GetGWorld(&wasCPort, &wasWorld);
+		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kMicrowave];
 		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-		SetGWorld(tempMap, nil);
+		SetGraphicsPort(tempMap);
 		LoadGraphic(kMicrowavePictID);
 		
 		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-		SetGWorld(tempMask, nil);
+		SetGraphicsPort(tempMask);
 		LoadGraphic(kMicrowaveMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -869,7 +856,7 @@ void DrawMicrowave (Rect *theRect, Boolean isOn, Boolean isLit)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&srcRects[kMicrowave], &srcRects[kMicrowave], theRect);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 		
 		DisposeGWorld(tempMap);
 		DisposeGWorld(tempMask);
@@ -987,7 +974,6 @@ void DrawMirror (Rect *mirror)
 	Rect		tempRect;
 	long		grayC;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -998,8 +984,8 @@ void DrawMirror (Rect *mirror)
 		grayC = k8DkGray2Color;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	tempRect = *mirror;
 	ColorRect(&tempRect, k8WhiteColor);
@@ -1011,7 +997,7 @@ void DrawMirror (Rect *mirror)
 	InsetRect(&tempRect, 1, 1);
 	ColorFrameRect(&tempRect, grayC);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawSimpleClutter
@@ -1043,7 +1029,6 @@ void DrawWallWindow (Rect *window)
 	long		brownC, tanC, dkstRedC;
 	short		halfWay;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 		
 	if (thisMac.isDepth == 4)
 	{
@@ -1058,8 +1043,8 @@ void DrawWallWindow (Rect *window)
 		dkstRedC = k8DkRed2Color;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	tempRect = *window;
 	InsetRect(&tempRect, 3, 0);
@@ -1125,7 +1110,7 @@ void DrawWallWindow (Rect *window)
 	ColorLine(tempRect2.left - 5, tempRect2.top - 7, 
 			tempRect2.right + 5, tempRect2.top - 7, tanC);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawCalendar
@@ -1137,10 +1122,9 @@ void DrawCalendar (Rect *theRect)
 	PicHandle	thePicture;
 	Str255		monthStr;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	thePicture = GetPicture(kCalendarPictID);
 	if (thePicture == nil)
@@ -1161,7 +1145,7 @@ void DrawCalendar (Rect *theRect)
 	MoveTo(theRect->left + ((64 - StringWidth(monthStr)) / 2), theRect->top + 55);
 	ColorText(monthStr, kDarkFleshColor);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawBulletin
@@ -1171,10 +1155,9 @@ void DrawBulletin (Rect *theRect)
 	Rect		bounds;
 	PicHandle	thePicture;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	thePicture = GetPicture(kBulletinPictID);
 	if (thePicture == nil)
@@ -1186,7 +1169,7 @@ void DrawBulletin (Rect *theRect)
 	DrawPicture(thePicture, &bounds);
 	ReleaseResource((Handle)thePicture);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawPictObject
@@ -1197,7 +1180,6 @@ void DrawPictObject (short what, Rect *theRect)
 	PicHandle	thePicture;
 	short		pictID;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 		
 	switch (what)
 	{
@@ -1230,8 +1212,8 @@ void DrawPictObject (short what, Rect *theRect)
 		break;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	thePicture = GetPicture(pictID);
 	if (thePicture == nil)
@@ -1242,7 +1224,7 @@ void DrawPictObject (short what, Rect *theRect)
 	DrawPicture(thePicture, &bounds);
 	ReleaseResource((Handle)thePicture);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawPictWithMaskObject
@@ -1254,10 +1236,9 @@ void DrawPictWithMaskObject (short what, Rect *theRect)
 	GWorldPtr	tempMask;
 	short		pictID, maskID;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	switch (what)
 	{
@@ -1274,11 +1255,11 @@ void DrawPictWithMaskObject (short what, Rect *theRect)
 	
 	bounds = srcRects[what];
 	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(pictID);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
-	SetGWorld(tempMask, nil);
+	SetGraphicsPort(tempMask);
 	LoadGraphic(maskID);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -1286,7 +1267,7 @@ void DrawPictWithMaskObject (short what, Rect *theRect)
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&srcRects[what], &srcRects[what], theRect);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
@@ -1302,10 +1283,9 @@ void DrawPictSansWhiteObject (short what, Rect *theRect)
 	CGrafPtr	tempMap;
 	short		pictID;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	switch (what)
 	{
@@ -1392,14 +1372,14 @@ void DrawPictSansWhiteObject (short what, Rect *theRect)
 	
 	bounds = srcRects[what];
 	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(pictID);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&srcRects[what], theRect, transparent, nil);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	DisposeGWorld(tempMap);
 //	SetPort((GrafPtr)backSrcMap);
@@ -1411,22 +1391,21 @@ void DrawCustPictSansWhite (short pictID, Rect *theRect)
 	Rect		bounds;
 	GWorldPtr	tempMap;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	bounds = *theRect;
 	ZeroRectCorner(&bounds);
 	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(pictID);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&bounds, theRect, transparent, nil);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	DisposeGWorld(tempMap);
 //	SetPort((GrafPtr)backSrcMap);

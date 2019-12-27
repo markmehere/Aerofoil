@@ -13,7 +13,6 @@
 #include "Utilities.h"
 
 
-GDHandle	thisGDevice;
 UInt32		theSeed;
 
 
@@ -138,17 +137,6 @@ void RedAlert (short errorNumber)
 	ExitToShell();
 }
 
-//--------------------------------------------------------------  FindOurDevice
-
-// Finds the main device (monitor with the menu bar on it).
-
-void FindOurDevice (void)
-{
-	thisGDevice = GetMainDevice();
-	if (thisGDevice == nil)
-		RedAlert(kErrFailedGetDevice);
-}
-
 //--------------------------------------------------------------  CreateOffScreenBitMap
 // Creates an offscreen bit map (b&w - 1 bit depth).
 
@@ -245,10 +233,10 @@ OSErr CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, short depth)
 {
 	OSErr		theErr;
 	
-	theErr = NewGWorld(theGWorld, depth, bounds, nil, nil, useTempMem);
+	theErr = NewGWorld(theGWorld, depth, bounds, nil, useTempMem);
 	
 	if (theErr)
-		theErr = NewGWorld(theGWorld, depth, bounds, nil, nil, 0);
+		theErr = NewGWorld(theGWorld, depth, bounds, nil, 0);
 
 	if (!theErr)
 		LockPixels(GetGWorldPixMap(*theGWorld));

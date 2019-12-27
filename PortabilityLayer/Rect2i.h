@@ -143,12 +143,12 @@ namespace PortabilityLayer
 		m_bottomRight.m_x = i;
 	}
 
-	bool Rect2i::IsValid() const
+	inline bool Rect2i::IsValid() const
 	{
 		return m_bottomRight.m_x >= m_topLeft.m_x && m_bottomRight.m_y >= m_topLeft.m_y;
 	}
 
-	Rect2i Rect2i::Intersect(const Rect2i &other) const
+	inline Rect2i Rect2i::Intersect(const Rect2i &other) const
 	{
 		const int32_t top = std::max(m_topLeft.m_y, other.m_topLeft.m_y);
 		const int32_t left = std::max(m_topLeft.m_x, other.m_topLeft.m_x);
@@ -158,7 +158,7 @@ namespace PortabilityLayer
 		return Rect2i(top, left, bottom, right);
 	}
 
-	Rect Rect2i::ToShortRect() const
+	inline Rect Rect2i::ToShortRect() const
 	{
 		return Rect::Create(static_cast<int16_t>(m_topLeft.m_y), static_cast<int16_t>(m_topLeft.m_x), static_cast<int16_t>(m_bottomRight.m_y), static_cast<int16_t>(m_bottomRight.m_x));
 	}

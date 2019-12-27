@@ -21,7 +21,6 @@ namespace PortabilityLayer
 		virtual void PutWindowBehind(Window *window, Window *otherWindow) = 0;
 		virtual void ShowWindow(Window *window) = 0;
 		virtual void HideWindow(Window *window) = 0;
-		virtual GDevice **GetWindowDevice(Window *window) = 0;
 		virtual void FindWindow(const Point &point, Window **outWindow, short *outRegion) const = 0;
 
 		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;

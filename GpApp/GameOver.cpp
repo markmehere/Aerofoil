@@ -253,23 +253,22 @@ void InitDiedGameOver (void)
 	#define		kPageBackUp			128
 	short		i;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&pageSrcRect, 0, 0, 25, 32 * 8);
 	theErr = CreateOffScreenGWorld(&gameOverSrcMap, &pageSrcRect, kPreferredDepth);
-	SetGWorld(gameOverSrcMap, nil);
+	SetGraphicsPort(gameOverSrcMap);
 	LoadGraphic(kLettersPictID);
 	
 	QSetRect(&pageSrcRect, 0, 0, 32, 32 * kPageFrames);
 	theErr = CreateOffScreenGWorld(&pageSrcMap, &pageSrcRect, kPreferredDepth);
-	SetGWorld(pageSrcMap, nil);
+	SetGraphicsPort(pageSrcMap);
 	LoadGraphic(kPagesPictID);
 	
 	theErr = CreateOffScreenGWorld(&pageMaskMap, &pageSrcRect, 1);	
-	SetGWorld(pageMaskMap, nil);
+	SetGraphicsPort(pageMaskMap);
 	LoadGraphic(kPagesMaskID);
 	
 	for (i = 0; i < kPageFrames; i++)	// initialize src page rects

@@ -254,20 +254,17 @@ void NewGame (short mode)
 	
 	if (!gameOver)
 	{
-		CGrafPtr	wasCPort;
-		GDHandle	wasWorld;
-		
-		GetGWorld(&wasCPort, &wasWorld);
+		CGrafPtr	wasCPort = GetGraphicsPort();
 		
 		InvalWindowRect(mainWindow, &mainWindowRect);
 		
-		SetGWorld(workSrcMap, nil);
+		SetGraphicsPort(workSrcMap);
 		PaintRect(&workSrcRect);
 		QSetRect(&tempRect, 0, 0, 640, 460);
 		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
 		LoadScaledGraphic(kSplash8BitPICT, &tempRect);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 	}
 	WaitCommandQReleased();
 	demoGoing = false;
@@ -498,10 +495,7 @@ void PlayGame (void)
 			countDown--;
 			if (countDown <= 0)
 			{
-				CGrafPtr	wasCPort;
-				GDHandle	wasWorld;
-				
-				GetGWorld(&wasCPort, &wasWorld);
+				CGrafPtr	wasCPort = GetGraphicsPort();
 				
 				HideGlider(&theGlider);
 				RefreshScoreboard(kNormalTitleMode);
@@ -509,7 +503,7 @@ void PlayGame (void)
 #if BUILD_ARCADE_VERSION
 			// Need to paint over the scoreboard black.
 				
-				SetGWorld(boardSrcMap, nil);
+				SetGraphicsPort(boardSrcMap);
 				PaintRect(&boardSrcRect);
 				
 				CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -543,26 +537,23 @@ void PlayGame (void)
 				else
 					DoGameOver();
 				
-				SetGWorld(wasCPort, wasWorld);
+				SetGraphicsPort(wasCPort);
 			}
 		}
 	}
 	
 #if BUILD_ARCADE_VERSION
 	{
-		CGrafPtr	wasCPort;
-		GDHandle	wasWorld;
+		CGrafPtr	wasCPort = GetGraphicsPort();
 		
-		GetGWorld(&wasCPort, &wasWorld);
-		
-		SetGWorld(boardSrcMap, nil);
+		SetGraphicsPort(boardSrcMap);
 		PaintRect(&boardSrcRect);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
 				&boardSrcRect, &boardDestRect, srcCopy, 0L);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 	}
 	
 	{

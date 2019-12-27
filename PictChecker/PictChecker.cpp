@@ -1270,7 +1270,8 @@ int main(int argc, const char **argv)
 
 	for (const char *filename : files)
 	{
-		std::string filePath = "D:\\Source Code\\GlidePort\\Packaged\\Houses\\";
+		std::string fnameStr = filename;
+		std::string filePath = (fnameStr == "ApplicationResources") ? "D:\\Source Code\\GlidePort\\Packaged\\" : "D:\\Source Code\\GlidePort\\Packaged\\Houses\\";
 		filePath += filename;
 		filePath += ".gpr";
 
@@ -1294,7 +1295,7 @@ int main(int argc, const char **argv)
 			const MMHandleBlock *hBlock = resFile->GetResource('PICT', typeList->m_firstRef[i].m_resID, true);
 			const void *pictData = hBlock->m_contents;
 
-			std::string dumpPath = "D:\\Source Code\\GlidePort\\PictDump\\";
+			std::string dumpPath = "D:\\Source Code\\GlidePort\\DebugData\\PictDump\\";
 
 			dumpPath += filename;
 			

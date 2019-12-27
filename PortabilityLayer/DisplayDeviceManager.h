@@ -3,8 +3,9 @@
 #define __PL_DEVICE_MANAGER_H__
 
 #include <stdint.h>
+#include "GpPixelFormat.h"
 
-struct GDevice;
+struct IGpDisplayDriver;
 
 namespace PortabilityLayer
 {
@@ -14,7 +15,9 @@ namespace PortabilityLayer
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
 
-		virtual GDevice **GetMainDevice() = 0;
+		virtual GpPixelFormat_t GetPixelFormat() const = 0;
+		virtual void SyncPalette(IGpDisplayDriver *displayDriver) = 0;
+
 		virtual void IncrementTickCount(uint32_t count) = 0;
 		virtual uint32_t GetTickCount() = 0;
 

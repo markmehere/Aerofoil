@@ -130,7 +130,7 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 	QOffsetRect(&dragRect, 
 			tileSrc.left + (tileOver * kMiniTileWide), 
 			tileSrc.top);
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
 	FrameRect(&dragRect);
 	mouseWas = mouseIs;
@@ -170,7 +170,7 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 					}
 					ForeColor(blackColor);
 					PenNormal();
-					PenMode(patXor);
+					PenInvertMode(true);
 					PenPat(GetQDGlobalsGray(&dummyPattern));
 					wasTileOver = *newTileOver;
 				}
@@ -191,7 +191,7 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 					Line(kMiniTileWide, 0);
 					ForeColor(blackColor);
 					PenNormal();
-					PenMode(patXor);
+					PenInvertMode(true);
 					PenPat(GetQDGlobalsGray(&dummyPattern));
 					wasTileOver = -1;
 				}
@@ -211,7 +211,7 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 		Line(kMiniTileWide, 0);
 		ForeColor(blackColor);
 		PenNormal();
-		PenMode(patXor);
+		PenInvertMode(true);
 		PenPat(GetQDGlobalsGray(&dummyPattern));
 		wasTileOver = -1;
 	}
@@ -386,10 +386,9 @@ void DoRoomInfo (void)
 	Boolean			leaving, wasFirstRoom, forceDraw;
 	ModalFilterUPP	roomFilterUPP;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	roomFilterUPP = NewModalFilterUPP(RoomFilter);
 	
 	tileOver = -1;
@@ -406,7 +405,7 @@ void DoRoomInfo (void)
 	ParamText(floorStr, suiteStr, objectsStr, PSTR(""));
 	
 	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredDepth);
-	SetGWorld(tileSrcMap, nil);
+	SetGraphicsPort(tileSrcMap);
 //	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
 //	SetPort((GrafPtr)tileSrcMap);
 	if ((tempBack > kStars) && (!PictIDExists(tempBack)))
@@ -420,7 +419,7 @@ void DoRoomInfo (void)
 	else
 		LoadScaledGraphic(tempBack, &tileSrcRect);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	for (i = 0; i < kNumTiles; i++)
 		tempTiles[i] = thisRoom->tiles[i];

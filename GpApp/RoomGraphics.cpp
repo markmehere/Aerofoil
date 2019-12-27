@@ -45,7 +45,6 @@ void DrawLocale (void)
 	short		i, roomV;
 	char		wasState;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 		
 	ZeroFlamesAndTheLike();
 	ZeroDinahs();
@@ -67,8 +66,8 @@ void DrawLocale (void)
 	}
 	ListAllLocalObjects();
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	PaintRect(&backSrcRect);
 	
 	if (numNeighbors > 3)
@@ -115,14 +114,14 @@ void DrawLocale (void)
 	DrawRoomBackground(localNumbers[kCentralRoom], kCentralRoom, roomV);
 	DrawARoomsObjects(kCentralRoom, false);
 	DrawLighting();
-	
+
 	if (numNeighbors > 3)
 		DrawFloorSupport();
 	RestoreWorkMap();
 	shadowVisible = IsShadowVisible();
 	takingTheStairs = false;
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  LoadGraphicSpecial
@@ -170,14 +169,13 @@ void DrawRoomBackground (short who, short where, short elevation)
 	if ((numLights == 0) && (who != kRoomIsEmpty))
 	{
 		CGrafPtr	wasCPort;
-		GDHandle	wasWorld;
 		
-		GetGWorld(&wasCPort, &wasWorld);
-		SetGWorld(backSrcMap, nil);
+		wasCPort = GetGraphicsPort();
+		SetGraphicsPort(backSrcMap);
 		
 		PaintRect(&localRoomsDest[where]);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 		return;
 	}
 	
@@ -186,14 +184,13 @@ void DrawRoomBackground (short who, short where, short elevation)
 		if (wardBitSet)
 		{
 			CGrafPtr	wasCPort;
-			GDHandle	wasWorld;
 			
-			GetGWorld(&wasCPort, &wasWorld);
-			SetGWorld(backSrcMap, nil);
+			wasCPort = GetGraphicsPort();
+			SetGraphicsPort(backSrcMap);
 			
 			PaintRect(&localRoomsDest[where]);
 			
-			SetGWorld(wasCPort, wasWorld);
+			SetGraphicsPort(wasCPort);
 			return;
 		}
 		
@@ -247,10 +244,9 @@ void DrawFloorSupport (void)
 	Rect		src, dest, whoCares;
 	short		i;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	src = suppSrcRect;
 	
 	if (isStructure[kNorthWestRoom])
@@ -360,7 +356,7 @@ void DrawFloorSupport (void)
 			}
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  ReadyBackMap

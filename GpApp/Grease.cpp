@@ -103,19 +103,16 @@ void HandleGrease (void)
 			}
 			
 			{
-				CGrafPtr	wasCPort;
-				GDHandle	wasWorld;
+				CGrafPtr	wasCPort = GetGraphicsPort();
 				
-				GetGWorld(&wasCPort, &wasWorld);
-				
-				SetGWorld(backSrcMap, nil);
+				SetGraphicsPort(backSrcMap);
 				PaintRect(&src);
 				
-				SetGWorld(workSrcMap, nil);
+				SetGraphicsPort(workSrcMap);
 				PaintRect(&src);
 				AddRectToWorkRects(&src);
 				
-				SetGWorld(wasCPort, wasWorld);
+				SetGraphicsPort(wasCPort);
 			}
 			
 			if (grease[i].isRight)
@@ -270,7 +267,6 @@ void SpillGrease (short who, short index)
 void RedrawAllGrease (void)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Rect		src;
 	short		i;
 	
@@ -286,16 +282,16 @@ void RedrawAllGrease (void)
 		{
 			QOffsetRect(&src, playOriginH, playOriginV);
 			
-			GetGWorld(&wasCPort, &wasWorld);
+			wasCPort = GetGraphicsPort();
 			
-			SetGWorld(backSrcMap, nil);
+			SetGraphicsPort(backSrcMap);
 			PaintRect(&src);
 			
-			SetGWorld(workSrcMap, nil);
+			SetGraphicsPort(workSrcMap);
 			PaintRect(&src);
 			AddRectToWorkRects(&src);
 			
-			SetGWorld(wasCPort, wasWorld);
+			SetGraphicsPort(wasCPort);
 		}
 	}
 }

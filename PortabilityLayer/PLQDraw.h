@@ -56,8 +56,9 @@ enum CopyBitsMode
 
 enum PenModeID
 {
-	patOr = transparent + 1,
-	patXor,
+	PenMode_Solid,
+	PenMode_Pattern,
+	PenMode_PatternInvert,
 };
 
 struct CIcon
@@ -80,9 +81,6 @@ struct RGBColor
 	unsigned short green;
 	unsigned short blue;
 };
-
-typedef GDevice *GDPtr;
-typedef GDPtr *GDHandle;
 
 typedef CIcon *CIconPtr;
 typedef CIconPtr *CIconHandle;
@@ -109,8 +107,6 @@ void DisposeCIcon(CIconHandle icon);
 
 void SetRect(Rect *rect, short left, short top, short right, short bottom);
 
-GDHandle GetMainDevice();
-
 void TextSize(int sz);
 void TextFace(int face);
 void TextFont(int fontID);
@@ -132,8 +128,8 @@ void ClipRect(const Rect *rect);	// Sets the clipping area
 void FrameRect(const Rect *rect);
 void FrameOval(const Rect *rect);
 void FrameRoundRect(const Rect *rect, int w, int h);
-void PenMode(CopyBitsMode copyBitsMode);
-void PenMode(PenModeID mode);
+void PenInvertMode(bool invertMode);
+void PenMask(bool maskMode);
 void PenPat(const Pattern *pattern);
 void PenSize(int w, int h);
 void PenNormal();

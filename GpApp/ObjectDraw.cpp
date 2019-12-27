@@ -74,10 +74,9 @@ void DrawTiki (Rect *theRect, short down)
 #define kTikiPoleBase	300
 	long		darkGrayC, lightWoodC, darkWoodC;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -106,7 +105,7 @@ void DrawTiki (Rect *theRect, short down)
 				theRect->left + 15, kTikiPoleBase + down - 1, darkGrayC);
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(blowerSrcMap), 
 			(BitMap *)*GetGWorldPixMap(blowerMaskMap), 
@@ -120,16 +119,15 @@ void DrawInvisibleBlower (Rect *theRect)
 {
 	Rect		tempRect;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	QSetRect(&tempRect, 0, 0, 24, 24);
 	QOffsetRect(&tempRect, theRect->left, theRect->top);
 	
 	ColorFrameRect(&tempRect, 192);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawLiftArea
@@ -137,12 +135,11 @@ void DrawInvisibleBlower (Rect *theRect)
 void DrawLiftArea (Rect *theRect)
 {	
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, 192);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawTable
@@ -156,7 +153,6 @@ void DrawTable (Rect *tableTop, short down)
 	long		brownC, tanC, dkRedC, blackC;
 	short		hCenter, vShadow;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -174,8 +170,8 @@ void DrawTable (Rect *tableTop, short down)
 		blackC = k8BlackColor;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	QSetRect(&tempRect, tableTop->left, 0, tableTop->right, 
 			RectWide(tableTop) / 10);
@@ -183,7 +179,7 @@ void DrawTable (Rect *tableTop, short down)
 			-HalfRectTall(&tempRect) + kTableShadowTop + down);
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patOr);
+	PenMask(true);
 	if (thisMac.isDepth == 4)
 		ColorOval(&tempRect, 15);
 	else
@@ -250,7 +246,7 @@ void DrawTable (Rect *tableTop, short down)
 		}
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	tempRect = tableSrc;
 	QOffsetRect(&tempRect, -HalfRectWide(&tableSrc) + tableTop->left + 
@@ -273,7 +269,6 @@ void DrawShelf (Rect *shelfTop)
 	long		brownC, ltTanC, tanC, dkRedC, blackC;
 	RgnHandle	shadowRgn;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -293,8 +288,8 @@ void DrawShelf (Rect *shelfTop)
 		blackC = k8BlackColor;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	shadowRgn = NewRgn();
 	if (shadowRgn == nil)
@@ -312,7 +307,7 @@ void DrawShelf (Rect *shelfTop)
 	OpenRgn();
 	CloseRgn(shadowRgn);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patOr);
+	PenMask(true);
 	if (thisMac.isDepth == 4)
 		ColorRegion(shadowRgn, 15);
 	else
@@ -343,7 +338,7 @@ void DrawShelf (Rect *shelfTop)
 	ColorLine(shelfTop->right - 1, shelfTop->top + 1, 
 			shelfTop->right - 1, shelfTop->bottom - 2, blackC);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	tempRect = shelfSrc;
 	ZeroRectCorner(&tempRect);
@@ -372,7 +367,6 @@ void DrawCabinet (Rect *cabinet)
 	long		brownC, dkGrayC, ltTanC, tanC, dkRedC, blackC;
 	RgnHandle	shadowRgn;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -394,8 +388,8 @@ void DrawCabinet (Rect *cabinet)
 		blackC = k8BlackColor;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	MoveTo(cabinet->left, cabinet->bottom);
 	shadowRgn = NewRgn();
@@ -409,7 +403,7 @@ void DrawCabinet (Rect *cabinet)
 	LineTo(cabinet->left, cabinet->bottom);
 	CloseRgn(shadowRgn);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patOr);
+	PenMask(true);
 	if (thisMac.isDepth == 4)
 		ColorRegion(shadowRgn, 15);
 	else
@@ -462,7 +456,7 @@ void DrawCabinet (Rect *cabinet)
 	ColorLine(cabinet->left + kCabinetDeep + 10, cabinet->bottom - 10, 
 			cabinet->right - 11, cabinet->bottom - 10, tanC);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	tempRect = hingeSrc;
 	ZeroRectCorner(&tempRect);
@@ -515,7 +509,6 @@ void DrawCounter (Rect *counter)
 	long		brownC, dkGrayC, tanC, blackC, dkstRedC;
 	short		nRects, width, i;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -535,8 +528,8 @@ void DrawCounter (Rect *counter)
 		dkstRedC = k8DkRed2Color;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	MoveTo(counter->right - 2, counter->bottom);
 	shadowRgn = NewRgn();
@@ -551,7 +544,7 @@ void DrawCounter (Rect *counter)
 	LineTo(counter->right - 2, counter->bottom);
 	CloseRgn(shadowRgn);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patOr);
+	PenMask(true);
 	if (thisMac.isDepth == 4)
 		ColorRegion(shadowRgn, 15);
 	else
@@ -628,7 +621,7 @@ void DrawCounter (Rect *counter)
 	ColorLine(counter->left + 1, counter->top + 8, 
 			counter->right - 2, counter->top + 8, dkstRedC);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	nRects = RectWide(counter) / 40;
 	if (nRects == 0)
@@ -660,7 +653,6 @@ void DrawDresser (Rect *dresser)
 	RgnHandle	shadowRgn;
 	short		nRects, height, i;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -680,8 +672,8 @@ void DrawDresser (Rect *dresser)
 		dkstRedC = k8DkRed2Color;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	MoveTo(dresser->left + 10, dresser->bottom + 9);
 	shadowRgn = NewRgn();
@@ -696,7 +688,7 @@ void DrawDresser (Rect *dresser)
 	LineTo(dresser->left + 10, dresser->bottom + 9);
 	CloseRgn(shadowRgn);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patOr);
+	PenMask(true);
 	if (thisMac.isDepth == 4)
 		ColorRegion(shadowRgn, 15);
 	else
@@ -756,7 +748,7 @@ void DrawDresser (Rect *dresser)
 		QOffsetRect(&tempRect, 0, kDresserTopThick + height);
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	dest = leftFootSrc;
 	ZeroRectCorner(&dest);
@@ -789,7 +781,6 @@ void DrawDeckTable (Rect *tableTop, short down)
 	long		bambooC, brownC, dkGrayC;
 	short		hCenter, vShadow;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -805,8 +796,8 @@ void DrawDeckTable (Rect *tableTop, short down)
 		dkGrayC = k8DkstGrayColor;
 	}
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	QSetRect(&tempRect, tableTop->left, 0, tableTop->right, 
 			RectWide(tableTop) / 10);
@@ -814,7 +805,7 @@ void DrawDeckTable (Rect *tableTop, short down)
 			-HalfRectTall(&tempRect) + kTableShadowTop + down);
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patOr);
+	PenMask(true);
 	ColorOval(&tempRect, dkGrayC);
 	PenNormal();
 	
@@ -878,7 +869,7 @@ void DrawDeckTable (Rect *tableTop, short down)
 		}
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	tempRect = deckSrc;
 	ZeroRectCorner(&tempRect);
@@ -897,10 +888,9 @@ void DrawStool (Rect *theRect, short down)
 	#define		kStoolBase	304
 	long		grayC, dkGrayC;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -929,7 +919,7 @@ void DrawStool (Rect *theRect, short down)
 				theRect->left + 26, kStoolBase + down - 1, dkGrayC);
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(furnitureSrcMap), 
 			(BitMap *)*GetGWorldPixMap(furnitureMaskMap), 
@@ -942,12 +932,11 @@ void DrawStool (Rect *theRect, short down)
 void DrawInvisObstacle (Rect *theRect)
 {	
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, k8BrownColor);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawInvisBounce
@@ -955,12 +944,11 @@ void DrawInvisObstacle (Rect *theRect)
 void DrawInvisBounce (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameRect(theRect, k8RedColor);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawRedClock
@@ -1071,10 +1059,9 @@ void DrawCuckoo (Rect *theRect)
 void DrawClockHands (Point where, short bigHand, short littleHand)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	MoveTo(where.h, where.v);
 	switch (bigHand)
 	{
@@ -1179,7 +1166,7 @@ void DrawClockHands (Point where, short bigHand, short littleHand)
 		break;
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawClockHands
@@ -1187,10 +1174,9 @@ void DrawClockHands (Point where, short bigHand, short littleHand)
 void DrawLargeClockHands (Point where, short bigHand, short littleHand)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ForeColor(whiteColor);
 	
 	MoveTo(where.h, where.v);
@@ -1298,7 +1284,7 @@ void DrawLargeClockHands (Point where, short bigHand, short littleHand)
 	}
 	
 	ForeColor(blackColor);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawSimplePrizes
@@ -1317,7 +1303,6 @@ void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
 {
 	Rect		spill, dest;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
 	dest = *theRect;
 	if (state)		// grease upright
@@ -1335,12 +1320,12 @@ void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&greaseSrcRt[3], &greaseSrcRt[3], &dest);
 		
-		GetGWorld(&wasCPort, &wasWorld);
-		SetGWorld(backSrcMap, nil);
+		wasCPort = GetGraphicsPort();
+		SetGraphicsPort(backSrcMap);
 		QSetRect(&spill, 0, -2, distance - 5, 0);
 		QOffsetRect(&spill, dest.right - 1, dest.bottom);
 		PaintRect(&spill);
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 	}
 }
 
@@ -1350,7 +1335,6 @@ void DrawGreaseLf (Rect *theRect, short distance, Boolean state)
 {
 	Rect		spill, dest;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	
 	dest = *theRect;
 	if (state)		// grease upright
@@ -1368,12 +1352,12 @@ void DrawGreaseLf (Rect *theRect, short distance, Boolean state)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&greaseSrcLf[3], &greaseSrcLf[3], &dest);
 		
-		GetGWorld(&wasCPort, &wasWorld);
-		SetGWorld(backSrcMap, nil);
+		wasCPort = GetGraphicsPort();
+		SetGraphicsPort(backSrcMap);
 		QSetRect(&spill, -distance + 5, -2, 0, 0);
 		QOffsetRect(&spill, dest.left + 1, dest.bottom);
 		PaintRect(&spill);
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 	}
 }
 
@@ -1392,12 +1376,11 @@ void DrawFoil (Rect *theRect)
 void DrawInvisBonus (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	ColorFrameOval(theRect, 227);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  DrawSlider
@@ -1405,11 +1388,10 @@ void DrawInvisBonus (Rect *theRect)
 void DrawSlider (Rect *theRect)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
-	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	FrameRect(theRect);
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 

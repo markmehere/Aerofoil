@@ -129,7 +129,7 @@ namespace PortabilityLayer
 
 		void *imageData = m_pixMap->GetPixelData();
 
-		if (m_pixMap->GetPixelFormat() == GpPixelFormats::k8BitStandard)
+		if (m_pixMap->GetPixelFormat() == GpPixelFormats::k8BitStandard || m_pixMap->GetPixelFormat() == GpPixelFormats::kBW1)
 		{
 			switch (m_blitType)
 			{
@@ -232,9 +232,9 @@ namespace PortabilityLayer
 	}
 }
 
-OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, GDHandle device, int flags)
+OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, int flags)
 {
-	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, depth, *bounds, colorTable, device, flags);
+	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, depth, *bounds, colorTable, flags);
 }
 
 void DisposeGWorld(GWorldPtr gworld)
@@ -288,8 +288,7 @@ void DrawPicture(PicHandle pict, Rect *bounds)
 	}
 
 	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
-	PortabilityLayer::QDPort *port;
-	qdManager->GetPort(&port, nullptr);
+	PortabilityLayer::QDPort *port = qdManager->GetPort();
 
 	if (!port)
 		return;
@@ -299,12 +298,15 @@ void DrawPicture(PicHandle pict, Rect *bounds)
 	long handleSize = GetHandleSize(reinterpret_cast<Handle>(pict));
 	PortabilityLayer::MemReaderStream stream(picPtr, handleSize);
 
+	// Adjust draw origin
+	const PortabilityLayer::Vec2i drawOrigin = PortabilityLayer::Vec2i(bounds->left - picPtr->picFrame.left, bounds->top - picPtr->picFrame.top);
+
 	switch (pixMap->GetPixelFormat())
 	{
 	case GpPixelFormats::kBW1:
 	case GpPixelFormats::k8BitStandard:
 		{
-			PortabilityLayer::PixMapBlitEmitter blitEmitter(PortabilityLayer::Vec2i(bounds->left, bounds->top), pixMap);
+			PortabilityLayer::PixMapBlitEmitter blitEmitter(drawOrigin, pixMap);
 			PortabilityLayer::QDPictDecoder decoder;
 
 			decoder.DecodePict(&stream, &blitEmitter);
@@ -317,18 +319,17 @@ void DrawPicture(PicHandle pict, Rect *bounds)
 	};
 }
 
-void GetGWorld(CGrafPtr *gw, GDHandle *gdHandle)
+CGraf *GetGraphicsPort()
 {
-	PortabilityLayer::QDPort *port;
-	PortabilityLayer::QDManager::GetInstance()->GetPort(&port, gdHandle);
+	PortabilityLayer::QDPort *port = PortabilityLayer::QDManager::GetInstance()->GetPort();
 
-	CGrafPtr grafPtr = reinterpret_cast<CGrafPtr>(port);
+	CGraf *grafPtr = reinterpret_cast<CGraf *>(port);
 	assert(&grafPtr->m_port == port);
 
-	*gw = grafPtr;
+	return grafPtr;
 }
 
-void SetGWorld(CGrafPtr gw, GDHandle gdHandle)
+void SetGraphicsPort(CGrafPtr gw)
 {
-	PortabilityLayer::QDManager::GetInstance()->SetPort(&gw->m_port, gdHandle);
+	PortabilityLayer::QDManager::GetInstance()->SetPort(&gw->m_port);
 }

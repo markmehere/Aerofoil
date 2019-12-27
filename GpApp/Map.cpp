@@ -724,19 +724,18 @@ Boolean QueryNewRoom (void)
 void CreateNailOffscreen (void)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
 	if (nailSrcMap == nil)
 	{
-		GetGWorld(&wasCPort, &wasWorld);
+		wasCPort = GetGraphicsPort();
 		
 		QSetRect(&nailSrcRect, 0, 0, kMapRoomWidth, kMapRoomHeight * (kNumBackgrounds + 1));
 		theErr = CreateOffScreenGWorld(&nailSrcMap, &nailSrcRect, kPreferredDepth);
-		SetGWorld(nailSrcMap, nil);
+		SetGraphicsPort(nailSrcMap);
 		LoadGraphic(kThumbnailPictID);
 		
-		SetGWorld(wasCPort, wasWorld);
+		SetGraphicsPort(wasCPort);
 	}
 }
 #endif

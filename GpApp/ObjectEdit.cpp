@@ -2303,11 +2303,10 @@ void DrawThisRoomsObjects (void)
 	Rect		tempRect;
 	short		i;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Pattern		dummyPattern;
 	
-	GetGWorld(&wasCPort, &wasWorld);
-	SetGWorld(backSrcMap, nil);
+	wasCPort = GetGraphicsPort();
+	SetGraphicsPort(backSrcMap);
 	
 	if ((noRoomAtAll) || (!houseUnlocked))
 		return;
@@ -2315,7 +2314,7 @@ void DrawThisRoomsObjects (void)
 	{
 		if (GetNumberOfLights(thisRoomNumber) <= 0)
 		{
-			PenMode(srcOr);
+			PenMask(true);
 			PenPat(GetQDGlobalsGray(&dummyPattern));
 			PaintRect(&backSrcRect);
 			PenNormal();
@@ -2657,8 +2656,6 @@ void DrawThisRoomsObjects (void)
 		}
 	}
 	
-	SetGWorld(wasCPort, wasWorld);
-	
 	if (isFirstRoom)
 	{
 		CopyMask((BitMap *)*GetGWorldPixMap(glidSrcMap), 
@@ -2698,7 +2695,7 @@ void HiliteAllObjects (void)
 	PauseMarquee();
 	SetPort((GrafPtr)mainWindow);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMode(patXor);
+	PenInvertMode(true);
 	
 	for (i = 0; i < kMaxRoomObs; i++)
 		FrameRect(&roomObjectRects[i]);

@@ -289,7 +289,6 @@ void CheckOurEnvirons (void)
 	thisMac.hasQT = DoWeHaveQuickTime();
 	thisMac.hasDrag = DoWeHaveDragManager();
 	
-	FindOurDevice();
 	thisMac.can1Bit = true;
 	thisMac.can4Bit = true;
 	thisMac.can8Bit = true;

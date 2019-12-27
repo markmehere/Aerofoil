@@ -26,7 +26,7 @@ namespace PortabilityLayer
 		WindowImpl();
 		~WindowImpl();
 
-		bool Init(const WindowDef &windowDef, GDevice **device);
+		bool Init(const WindowDef &windowDef);
 		bool Resize(int width, int height);
 
 		WindowImpl *GetWindowAbove() const;
@@ -38,12 +38,9 @@ namespace PortabilityLayer
 		bool IsVisible() const;
 		void SetVisible(bool visible);
 
-		GDevice **GetDevice() const;
-
 	private:
 		WindowImpl *m_windowAbove;
 		WindowImpl *m_windowBelow;
-		GDevice **m_device;
 
 		bool m_visible;
 	};
@@ -59,7 +56,6 @@ namespace PortabilityLayer
 		void PutWindowBehind(Window *window, Window *otherWindow) override;
 		void ShowWindow(Window *window) override;
 		void HideWindow(Window *window) override;
-		GDevice **GetWindowDevice(Window *window) override;
 		void FindWindow(const Point &point, Window **outWindow, short *outRegion) const override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
@@ -82,7 +78,6 @@ namespace PortabilityLayer
 	WindowImpl::WindowImpl()
 		: m_windowAbove(nullptr)
 		, m_windowBelow(nullptr)
-		, m_device(nullptr)
 		, m_visible(true)
 	{
 	}
@@ -92,7 +87,7 @@ namespace PortabilityLayer
 		PL_NotYetImplemented();
 	}
 
-	bool WindowImpl::Init(const WindowDef &windowDef, GDevice **device)
+	bool WindowImpl::Init(const WindowDef &windowDef)
 	{
 		const Rect bounds = windowDef.m_initialRect;
 
@@ -101,10 +96,10 @@ namespace PortabilityLayer
 
 		const Rect adjustedBounds = Rect::Create(0, 0, bounds.bottom - bounds.top, bounds.right - bounds.left);
 
-		if (int errorCode = m_graf.Init(adjustedBounds, (*device)->pixelFormat))
-			return false;
+		GpPixelFormat_t pixelFormat = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
-		m_device = device;
+		if (int errorCode = m_graf.Init(adjustedBounds, pixelFormat))
+			return false;
 
 		return true;
 	}
@@ -148,11 +143,6 @@ namespace PortabilityLayer
 		m_visible = visible;
 	}
 
-	GDevice **WindowImpl::GetDevice() const
-	{
-		return m_device;
-	}
-
 	WindowManagerImpl::WindowManagerImpl()
 		: m_windowStackTop(nullptr)
 		, m_windowStackBottom(nullptr)
@@ -165,14 +155,12 @@ namespace PortabilityLayer
 		if (!windowMem)
 			return nullptr;
 
-		GDevice **device = DisplayDeviceManager::GetInstance()->GetMainDevice();
-
 		Rect portRect = windowDef.m_initialRect;
 		if (!portRect.IsValid())
 			return nullptr;
 
 		WindowImpl *window = new (windowMem) WindowImpl();
-		if (!window->Init(windowDef, device))
+		if (!window->Init(windowDef))
 		{
 			window->~WindowImpl();
 			MemoryManager::GetInstance()->Release(windowMem);
@@ -243,11 +231,6 @@ namespace PortabilityLayer
 		}
 	}
 
-	GDevice **WindowManagerImpl::GetWindowDevice(Window *window)
-	{
-		return static_cast<WindowImpl*>(window)->GetDevice();
-	}
-
 	void WindowManagerImpl::FindWindow(const Point &point, Window **outWindow, short *outRegion) const
 	{
 		// outRegion = One of:
@@ -304,24 +287,15 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)
 	{
-		GDevice **mainDeviceHdl = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetMainDevice();
+		PortabilityLayer::DisplayDeviceManager *dd = PortabilityLayer::DisplayDeviceManager::GetInstance();
 
-		if (mainDeviceHdl)
+		dd->SyncPalette(displayDriver);
+
+		WindowImpl *window = m_windowStackBottom;
+		while (window)
 		{
-			GDevice *mainDevice = *mainDeviceHdl;
-
-			if (mainDevice->paletteIsDirty)
-			{
-				displayDriver->UpdatePalette(mainDevice->paletteStorage + mainDevice->paletteDataOffset);
-				mainDevice->paletteIsDirty = false;
-			}
-
-			WindowImpl *window = m_windowStackBottom;
-			while (window)
-			{
-				RenderWindow(window, displayDriver);
-				window = window->GetWindowAbove();
-			}
+			RenderWindow(window, displayDriver);
+			window = window->GetWindowAbove();
 		}
 	}
 

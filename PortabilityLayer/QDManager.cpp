@@ -16,9 +16,9 @@ namespace PortabilityLayer
 		QDManagerImpl();
 
 		void Init() override;
-		void GetPort(QDPort **port, GDevice ***gdHandle) override;
-		void SetPort(QDPort *gw, GDevice **gdHandle) override;
-		int NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, GDevice **device, int flags) override;
+		QDPort *GetPort() const override;
+		void SetPort(QDPort *gw) override;
+		int NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, int flags) override;
 		void DisposeGWorld(CGraf *gw) override;
 		QDState *GetState() override;
 
@@ -28,14 +28,12 @@ namespace PortabilityLayer
 
 	private:
 		QDPort *m_port;
-		GDHandle m_gdHandle;
 
 		static QDManagerImpl ms_instance;
 	};
 
 	QDManagerImpl::QDManagerImpl()
 		: m_port(nullptr)
-		, m_gdHandle(nullptr)
 	{
 	}
 
@@ -43,21 +41,17 @@ namespace PortabilityLayer
 	{
 	}
 
-	void QDManagerImpl::GetPort(QDPort **port, GDevice ***gdHandle)
+	QDPort *QDManagerImpl::GetPort() const
 	{
-		if (port)
-			*port = m_port;
-		if (gdHandle)
-			*gdHandle = m_gdHandle;
+		return m_port;
 	}
 
-	void QDManagerImpl::SetPort(QDPort *gw, GDevice **gdHandle)
+	void QDManagerImpl::SetPort(QDPort *gw)
 	{
 		m_port = gw;
-		m_gdHandle = gdHandle;
 	}
 
-	int QDManagerImpl::NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, GDevice **device, int flags)
+	int QDManagerImpl::NewGWorld(CGraf **gw, int depth, const Rect &bounds, ColorTable **colorTable, int flags)
 	{
 		GpPixelFormat_t pixelFormat;
 

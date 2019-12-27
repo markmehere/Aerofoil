@@ -42,13 +42,12 @@ extern	Boolean		quickerTransitions, demoGoing, isUseSecondScreen;
 void DrawBanner (Point *topLeft)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	Rect		wholePage, partPage, mapBounds;
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&wholePage, 0, 0, 330, 220);
 	mapBounds = thisMac.screen;
@@ -58,7 +57,7 @@ void DrawBanner (Point *topLeft)
 	topLeft->v = wholePage.top;
 	partPage = wholePage;
 	partPage.bottom = partPage.top + 190;	
-	SetGWorld(workSrcMap, nil);
+	SetGraphicsPort(workSrcMap);
 	LoadScaledGraphic(kBannerPageTopPICT, &partPage);
 	
 	partPage = wholePage;
@@ -66,20 +65,19 @@ void DrawBanner (Point *topLeft)
 	mapBounds = partPage;
 	ZeroRectCorner(&mapBounds);
 	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(kBannerPageBottomPICT);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, 1);	
-	SetGWorld(tempMask, nil);
+	SetGraphicsPort(tempMask);
 	LoadGraphic(kBannerPageBottomMask);
 
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(tempMask), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
 			&mapBounds, &mapBounds, &partPage);
-	SetPort((GrafPtr)workSrcMap);
 
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
 }
@@ -116,11 +114,9 @@ void DrawBannerMessage (Point topLeft)
 	Str255		bannerStr, subStr;
 	short		count;
 
-	CGrafPtr wasGWorld;
-	GDHandle wasDevice;
-	GetGWorld(&wasGWorld, &wasDevice);
+	CGrafPtr wasGWorld = GetGraphicsPort();
 
-	SetGWorld(workSrcMap, nullptr);
+	SetGraphicsPort(workSrcMap);
 
 	PasStringCopy((*thisHouse)->banner, bannerStr);
 	
@@ -163,7 +159,7 @@ void DrawBannerMessage (Point topLeft)
 	}
 	ForeColor(blackColor);
 
-	SetGWorld(wasGWorld, wasDevice);
+	SetGraphicsPort(wasGWorld);
 }
 
 //--------------------------------------------------------------  BringUpBanner

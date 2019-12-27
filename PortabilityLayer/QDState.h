@@ -16,6 +16,8 @@ namespace PortabilityLayer
 		int m_textSize;
 		Region **m_clipRegion;
 		Point m_penPos;
+		bool m_penInvert;
+		bool m_penMask;
 
 		void SetForeColor(const RGBAColor &color);
 		void SetBackColor(const RGBAColor &color);

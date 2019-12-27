@@ -29,7 +29,6 @@ void InitAngel (void);
 
 extern	Rect		suppSrcRect, justRoomsRect;
 extern	Rect		tileSrcRect, angelSrcRect;
-extern	GDHandle	thisGDevice;
 extern	CGrafPtr	tileSrcMap;
 extern	FSSpecPtr	theHousesSpecs;
 extern	hotPtr		hotSpots;
@@ -54,18 +53,17 @@ extern	short		maxFiles;
 void InitClutter (void)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&clutterSrcRect, 0, 0, 128, 69);
 	theErr = CreateOffScreenGWorld(&clutterSrcMap, &clutterSrcRect, kPreferredDepth);
-	SetGWorld(clutterSrcMap, nil);
+	SetGraphicsPort(clutterSrcMap);
 	LoadGraphic(kClutterPictID);
 	
 	theErr = CreateOffScreenGWorld(&clutterMaskMap, &clutterSrcRect, 1);	
-	SetGWorld(clutterMaskMap, nil);
+	SetGraphicsPort(clutterMaskMap);
 	LoadGraphic(kClutterPictID + 1000);
 	
 	QSetRect(&flowerSrc[0], 0, 0, 10, 28);
@@ -86,7 +84,7 @@ void InitClutter (void)
 	QSetRect(&flowerSrc[5], 0, 0, 32, 51);
 	QOffsetRect(&flowerSrc[5], 95, 0);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitSupport
@@ -97,17 +95,16 @@ void InitClutter (void)
 void InitSupport (void)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&suppSrcRect, 0, 0, kRoomWide, kFloorSupportTall);		// 44
 	theErr = CreateOffScreenGWorld(&suppSrcMap, &suppSrcRect, kPreferredDepth);
-	SetGWorld(suppSrcMap, nil);
+	SetGraphicsPort(suppSrcMap);
 	LoadGraphic(kSupportPictID);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitAngel
@@ -118,21 +115,20 @@ void InitSupport (void)
 void InitAngel (void)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&angelSrcRect, 0, 0, 96, 44);
 	theErr = CreateOffScreenGWorld(&angelSrcMap, &angelSrcRect, kPreferredDepth);
-	SetGWorld(angelSrcMap, nil);
+	SetGraphicsPort(angelSrcMap);
 	LoadGraphic(kAngelPictID);
 	
 	theErr = CreateOffScreenGWorld(&angelMaskMap, &angelSrcRect, 1);	
-	SetGWorld(angelMaskMap, nil);
+	SetGraphicsPort(angelMaskMap);
 	LoadGraphic(kAngelPictID + 1);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  CreateOffscreens
@@ -144,10 +140,9 @@ void InitAngel (void)
 void CreateOffscreens (void)
 {
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	justRoomsRect = houseRect;
 	ZeroRectCorner(&justRoomsRect);

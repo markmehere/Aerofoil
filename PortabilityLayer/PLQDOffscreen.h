@@ -25,7 +25,7 @@ enum QDFlags
 	useTempMem = 1,
 };
 
-OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, GDHandle device, int flags);
+OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, int flags);
 void DisposeGWorld(GWorldPtr gworld);
 
 PixMapHandle GetGWorldPixMap(GWorldPtr gworld);
@@ -37,8 +37,8 @@ void OffsetRect(Rect *rect, int right, int down);
 
 void DrawPicture(PicHandle pict, Rect *bounds);
 
-void GetGWorld(CGrafPtr *gw, GDHandle *gdHandle);
-void SetGWorld(CGrafPtr gw, GDHandle gdHandle);
+CGrafPtr GetGraphicsPort();
+void SetGraphicsPort(CGrafPtr gw);
 
 
 #endif

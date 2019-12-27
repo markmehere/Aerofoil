@@ -46,7 +46,6 @@ short			splashOriginH, splashOriginV;
 short			theMode;
 Boolean			fadeGraysOut, isDoColorFade, splashDrawn;
 
-extern	GDHandle	thisGDevice;
 extern	short		toolSelected;
 extern	Boolean		noRoomAtAll, isUseSecondScreen;
 extern	Boolean		quickerTransitions, houseIsReadOnly;

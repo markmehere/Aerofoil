@@ -38,7 +38,7 @@ void DoMarquee (void)
 		return;
 	
 	SetPortWindowPort(mainWindow);
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	DrawMarquee();
 	theMarquee.index++;
@@ -64,7 +64,7 @@ void StartMarquee (Rect *theRect)
 	theMarquee.active = true;
 	theMarquee.paused = false;
 	theMarquee.handled = false;
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	DrawMarquee();
 	PenNormal();
@@ -127,7 +127,7 @@ void StartMarqueeHandled (Rect *theRect, short direction, short dist)
 	theMarquee.direction = direction;
 	theMarquee.dist = dist;
 	
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	DrawMarquee();
 	PenNormal();
@@ -148,7 +148,7 @@ void StopMarquee (void)
 		return;
 	
 	SetPortWindowPort(mainWindow);
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	DrawMarquee();
 	PenNormal();
@@ -192,7 +192,7 @@ void DragOutMarqueeRect (Point start, Rect *theRect)
 	SetPortWindowPort(mainWindow);
 	InitCursor();
 	QSetRect(theRect, start.h, start.v, start.h, start.v);
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	FrameRect(theRect);
 	wasPt = start;
@@ -222,7 +222,7 @@ void DragMarqueeRect (Point start, Rect *theRect, Boolean lockH, Boolean lockV)
 	
 	SetCursor(&handCursor);
 	StopMarquee();
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	theMarquee.bounds = *theRect;
 	FrameRect(&theMarquee.bounds);
@@ -266,7 +266,7 @@ void DragMarqueeHandle (Point start, short *dragged)
 	else
 		SetCursor(&horiCursor);
 	StopMarquee();
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	FrameRect(&theMarquee.bounds);
 	PaintRect(&theMarquee.handle);
@@ -349,7 +349,7 @@ void DragMarqueeCorner (Point start, short *hDragged, short *vDragged, Boolean i
 	
 	SetCursor(&diagCursor);
 	StopMarquee();
-	PenMode(patXor);
+	PenInvertMode(true);
 	PenPat(&theMarquee.pats[theMarquee.index]);
 	FrameRect(&theMarquee.bounds);
 	PaintRect(&theMarquee.handle);

@@ -553,7 +553,7 @@ namespace PortabilityLayer
 		{
 			int depth = PortabilityLayer::QDManager::GetInstance()->DepthForPixelFormat(pixelFormat);
 
-			if (qdManager->NewGWorld(&m_menuBarGraf, depth, menuRect, nullptr, nullptr, 0) != 0)
+			if (qdManager->NewGWorld(&m_menuBarGraf, depth, menuRect, nullptr, 0) != 0)
 				return;
 		}
 
@@ -569,11 +569,9 @@ namespace PortabilityLayer
 
 		RefreshMenuBarLayout();
 
-		CGraf *oldGraf;
-		GDHandle oldDevice;
-		GetGWorld(&oldGraf, &oldDevice);
+		CGraf *oldGraf = GetGraphicsPort();
 
-		SetGWorld(m_menuBarGraf, nullptr);
+		SetGraphicsPort(m_menuBarGraf);
 
 		PortabilityLayer::QDState *qdState = qdManager->GetState();
 
@@ -705,7 +703,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		SetGWorld(oldGraf, oldDevice);
+		SetGraphicsPort(oldGraf);
 
 		m_menuBarGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
 	}
@@ -1019,15 +1017,13 @@ namespace PortabilityLayer
 			GpPixelFormat_t pixelFormat;
 			PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &pixelFormat);
 
-			if (qdManager->NewGWorld(&m_menuGraf, qdManager->DepthForPixelFormat(pixelFormat), menuRect, nullptr, nullptr, 0) != 0)
+			if (qdManager->NewGWorld(&m_menuGraf, qdManager->DepthForPixelFormat(pixelFormat), menuRect, nullptr, 0) != 0)
 				return;
 		}
 
-		CGrafPtr oldGraf = nullptr;
-		GDHandle oldDevice = nullptr;
-		GetGWorld(&oldGraf, &oldDevice);
+		CGrafPtr oldGraf = GetGraphicsPort();
 
-		SetGWorld(m_menuGraf, nullptr);
+		SetGraphicsPort(m_menuGraf);
 
 		QDState *qdState = qdManager->GetState();
 
@@ -1077,7 +1073,7 @@ namespace PortabilityLayer
 
 		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
 
-		SetGWorld(oldGraf, oldDevice);
+		SetGraphicsPort(oldGraf);
 	}
 
 	MenuManager *MenuManager::GetInstance()

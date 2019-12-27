@@ -96,7 +96,6 @@ void DrawHighScores (void)
 {
 	GWorldPtr	tempMap, tempMask;
 	CGrafPtr	wasCPort;
-	GDHandle	wasWorld;
 	OSErr		theErr;
 	houseType	*thisHousePtr;
 	Rect		tempRect, tempRect2;
@@ -107,15 +106,15 @@ void DrawHighScores (void)
 	scoreLeft = ((thisMac.screen.right - thisMac.screen.left) - kScoreWide) / 2;
 	dropIt = 129 + splashOriginV;
 	
-	GetGWorld(&wasCPort, &wasWorld);
+	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&tempRect, 0, 0, 332, 30);
 	theErr = CreateOffScreenGWorld(&tempMap, &tempRect, kPreferredDepth);
-	SetGWorld(tempMap, nil);
+	SetGraphicsPort(tempMap);
 	LoadGraphic(kHighScoresPictID);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &tempRect, 1);	
-	SetGWorld(tempMask, nil);
+	SetGraphicsPort(tempMask);
 	LoadGraphic(kHighScoresMaskID);
 	
 	tempRect2 = tempRect;
@@ -129,7 +128,7 @@ void DrawHighScores (void)
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
 	
-	SetGWorld(wasCPort, wasWorld);
+	SetGraphicsPort(wasCPort);
 	
 	TextFont(applFont);
 	TextFace(bold);
