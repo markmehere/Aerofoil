@@ -58,6 +58,8 @@ namespace PortabilityLayer
 		uint16_t m_height;
 		uint32_t m_dirtyFlags;
 		GpPixelFormat_t m_pixelFormat;
+
+		uint32_t m_debugID;
 	};
 
 	inline QDPortType QDPort::GetPortType() const

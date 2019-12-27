@@ -6,6 +6,8 @@
 
 namespace PortabilityLayer
 {
+	static uint32_t gs_nextQDPortDebugID = 0;
+
 	QDPort::QDPort(QDPortType portType)
 		: m_portType(portType)
 		, m_left(0)
@@ -15,6 +17,7 @@ namespace PortabilityLayer
 		, m_pixMap(nullptr)
 		, m_pixelFormat(GpPixelFormats::kInvalid)
 		, m_dirtyFlags(0)
+		, m_debugID(gs_nextQDPortDebugID++)
 	{
 	}
 
