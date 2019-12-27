@@ -1,6 +1,9 @@
 #include "WindowDef.h"
 #include "IOStream.h"
 #include "CoreDefs.h"
+#include "PLPasStr.h"
+
+#include <algorithm>
 
 namespace PortabilityLayer
 {
@@ -39,5 +42,22 @@ namespace PortabilityLayer
 			m_positionSpec = 0;
 
 		return true;
+	}
+
+	WindowDef WindowDef::Create(const Rect &initialRect, int16_t wdefID, bool isVisible, bool hasCloseBox, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title)
+	{
+		WindowDef wdef;
+		wdef.m_initialRect = initialRect;
+		wdef.m_wdefResID = wdefID;
+		wdef.m_visibilityStatus = isVisible ? 1 : 0;
+		wdef.m_hasCloseBox = hasCloseBox ? 1 : 0;
+		wdef.m_referenceConstant = refConstant;
+		wdef.m_positionSpec = positionSpec;
+
+		const uint8_t titleLength = static_cast<uint8_t>(std::max<size_t>(255, title.Length()));
+		wdef.m_title[0] = titleLength;
+		memcpy(wdef.m_title + 1, title.UChars(), titleLength);
+
+		return wdef;
 	}
 }

@@ -50,7 +50,7 @@ extern	Rect		backSrcRect;
 extern	Rect		mainWindowRect, houseRect;
 extern	houseHand	thisHouse;
 extern	roomPtr		thisRoom;
-extern	WindowPtr	mainWindow, coordWindow;
+extern	WindowPtr	mainWindow, coordWindow, boardWindow;
 extern	long		theScore;
 extern	short		playOriginH, playOriginV;
 extern	short		thisRoomNumber, theMode, batteryTotal, bandsTotal;

@@ -129,6 +129,7 @@ namespace PortabilityLayer
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
 
 		void DrawMenuBar() override;
+		void SetMenuVisible(bool isVisible) override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
@@ -189,6 +190,7 @@ namespace PortabilityLayer
 		Menu **m_lastMenu;
 		bool m_haveMenuBarLayout;
 		bool m_haveIcon;
+		bool m_menuBarVisible;
 
 		uint8_t m_iconColors[16 * 16];
 		uint8_t m_iconMask[32];
@@ -207,6 +209,7 @@ namespace PortabilityLayer
 		, m_haveMenuBarLayout(false)
 		, m_haveIcon(false)
 		, m_iconGraphic(nullptr)
+		, m_menuBarVisible(true)
 	{
 	}
 
@@ -707,8 +710,16 @@ namespace PortabilityLayer
 		m_menuBarGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
 	}
 
+	void MenuManagerImpl::SetMenuVisible(bool isVisible)
+	{
+		m_menuBarVisible = isVisible;
+	}
+
 	void MenuManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)
 	{
+		if (!m_menuBarVisible)
+			return;
+
 		if (m_menuBarGraf)
 		{
 			m_menuBarGraf->PushToDDSurface(displayDriver);

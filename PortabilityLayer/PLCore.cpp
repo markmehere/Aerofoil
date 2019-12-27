@@ -897,7 +897,11 @@ short StringWidth(const PLPasStr &str)
 	if (!rfont)
 		return 0;
 
-	return rfont->MeasureString(str.UChars(), str.Length());
+	const size_t width = rfont->MeasureString(str.UChars(), str.Length());
+	if (width > SHRT_MAX)
+		return SHRT_MAX;
+
+	return static_cast<short>(width);
 }
 
 void GetMouse(Point *point)

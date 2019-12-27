@@ -176,6 +176,7 @@ void VariableInit (void)
 	
 	mirrorRgn = nil;
 	mainWindow = nil;
+	boardWindow = nil;
 	mapWindow = nil;
 	toolsWindow = nil;
 	linkWindow = nil;

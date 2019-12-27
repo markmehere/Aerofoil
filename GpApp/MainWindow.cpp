@@ -13,6 +13,8 @@
 #include "House.h"
 #include "RectUtils.h"
 #include "PLKeyEncoding.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 
 #define kMainWindowID			128
@@ -37,7 +39,7 @@ Cursor			diagCursor;
 Rect			workSrcRect;
 GWorldPtr		workSrcMap;
 Rect			mainWindowRect;
-WindowPtr		mainWindow, menuWindow;
+WindowPtr		mainWindow, menuWindow, boardWindow;
 short			isEditH, isEditV;
 short			playOriginH, playOriginV;
 short			splashOriginH, splashOriginV;
@@ -221,6 +223,20 @@ void OpenMainWindow (void)
 					thisMac.screen.top, true);
 			ShowWindow(menuWindow);
 		}
+		if (boardWindow == nil)
+		{
+			PortabilityLayer::WindowManager *windowManager = PortabilityLayer::WindowManager::GetInstance();
+
+			Rect scorebarRect = thisMac.screen;
+			scorebarRect.bottom = scorebarRect.top + kScoreboardTall;
+
+			PortabilityLayer::WindowDef windowDef = PortabilityLayer::WindowDef::Create(scorebarRect, 0, true, false, 0, 0, PSTR("Scoreboard"));
+			boardWindow = windowManager->CreateWindow(windowDef);
+			if (boardWindow != nil)
+				windowManager->PutWindowBehind(boardWindow, PL_GetPutInFrontWindowPtr());
+			else
+				PL_NotYetImplemented_TODO("Errors");
+		}
 		mainWindowRect = thisMac.screen;
 		ZeroRectCorner(&mainWindowRect);
 		mainWindowRect.bottom -= 20;		// thisMac.menuHigh
@@ -271,6 +287,10 @@ void CloseMainWindow (void)
 	if (mainWindow != nil)
 		DisposeWindow(mainWindow);
 	mainWindow = nil;
+
+	if (boardWindow != nil)
+		DisposeWindow(boardWindow);
+	boardWindow = nil;
 }
 
 //--------------------------------------------------------------  ZoomBetweenWindows

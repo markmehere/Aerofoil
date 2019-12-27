@@ -30,6 +30,7 @@ namespace PortabilityLayer
 		virtual void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) = 0;
 
 		virtual void DrawMenuBar() = 0;
+		virtual void SetMenuVisible(bool isVisible) = 0;
 
 		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;
 

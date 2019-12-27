@@ -3,6 +3,8 @@
 #include "SharedTypes.h"
 #include "PascalStr.h"
 
+class PLPasStr;
+
 namespace PortabilityLayer
 {
 	class IOStream;
@@ -18,5 +20,7 @@ namespace PortabilityLayer
 		uint8_t m_title[256];
 
 		bool Deserialize(IOStream *stream);
+
+		static WindowDef Create(const Rect &initialRect, int16_t wdefID, bool isVisible, bool hasCloseBox, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title);
 	};
 }
