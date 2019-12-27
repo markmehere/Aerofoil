@@ -1062,6 +1062,7 @@ void DrawClockHands (Point where, short bigHand, short littleHand)
 	
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
+	ForeColor(blackColor);
 	MoveTo(where.h, where.v);
 	switch (bigHand)
 	{
