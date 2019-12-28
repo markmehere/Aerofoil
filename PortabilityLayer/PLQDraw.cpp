@@ -179,7 +179,7 @@ static void PlotLine(PortabilityLayer::QDState *qdState, PortabilityLayer::QDPor
 	PortabilityLayer::LinePlotter plotter;
 	plotter.Reset(upperPoint, lowerPoint);
 
-	PortabilityLayer::Vec2i currentPoint = pointA;
+	PortabilityLayer::Vec2i currentPoint = upperPoint;
 	while (currentPoint.m_x < constrainedRect.left || currentPoint.m_y < constrainedRect.top || currentPoint.m_x >= constrainedRect.right)
 	{
 		PortabilityLayer::PlotDirection plotDir = plotter.PlotNext();
