@@ -91,6 +91,7 @@ void DoPause (void)
 	do
 	{
 		GetKeys(theKeys);
+		Delay(1, nullptr);
 	}
 	while ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) || 
 			(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))));
@@ -104,6 +105,8 @@ void DoPause (void)
 			paused = false;
 		else if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
+
+		Delay(1, nullptr);
 	}
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
@@ -113,6 +116,7 @@ void DoPause (void)
 	do
 	{
 		GetKeys(theKeys);
+		Delay(1, nullptr);
 	}
 	while ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
 			(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))));
