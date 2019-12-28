@@ -400,23 +400,10 @@ void HandleMacPlus (short who)
 				if (!IsMacPlusSoundBanned())
 					PlayPrioritySound(kMacBeepSound, kMacBeepPriority);
 
-				if (IsMacPlusGraphicBanned())
-				{
-					CGraf *oldPort = GetGraphicsPort();
-					SetGraphicsPort(backSrcMap);
-
-					ForeColor(whiteColor);
-					PaintRect(&dinahs[who].dest);
-
-					SetGraphicsPort(oldPort);
-				}
-				else
-				{
-					CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap),
-						(BitMap *)*GetGWorldPixMap(backSrcMap),
-						&plusScreen2, &dinahs[who].dest,
-						srcCopy, nil);
-				}
+				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap),
+					(BitMap *)*GetGWorldPixMap(backSrcMap),
+					&plusScreen2, &dinahs[who].dest,
+					srcCopy, nil);
 
 				AddRectToBackRects(&dinahs[who].dest);
 			}

@@ -602,18 +602,6 @@ void DrawMacPlus (Rect *theRect, Boolean isOn, Boolean isLit)
 {
 	Rect		screen;
 
-	if (IsMacPlusGraphicBanned())
-	{
-		CGraf *wasGraph = GetGraphicsPort();
-		SetGraphicsPort(backSrcMap);
-
-		ForeColor(blackColor);
-		PaintRect(theRect);
-
-		SetGraphicsPort(wasGraph);
-		return;
-	}
-	
 	if (isLit)
 	{
 		CopyMask((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
@@ -636,6 +624,30 @@ void DrawMacPlus (Rect *theRect, Boolean isOn, Boolean isLit)
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&plusScreen1, &screen, srcCopy, nil);
+	}
+
+
+	if (IsMacPlusGraphicBanned())
+	{
+		CGraf *oldPort = GetGraphicsPort();
+		SetGraphicsPort(backSrcMap);
+
+		RGBColor beigeColor;
+		beigeColor.red = 255 * 0x0101;
+		beigeColor.green = 255 * 0x0101;
+		beigeColor.blue = 204 * 0x0101;
+
+		RGBForeColor(&beigeColor);
+
+		Rect paintOverRect = *theRect;
+		paintOverRect.left += 8;
+		paintOverRect.top += 35;
+		paintOverRect.right = paintOverRect.left + 17;
+		paintOverRect.bottom = paintOverRect.top + 6;
+
+		PaintRect(&paintOverRect);
+
+		SetGraphicsPort(oldPort);
 	}
 }
 
