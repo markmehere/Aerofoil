@@ -583,10 +583,34 @@ void PaintOval(const Rect *rect)
 	}
 }
 
-void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol)
+static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor, uint8_t bgColor, bool mask)
 {
-	for (size_t col = startCol; col < endCol; col++)
-		rowStart[col] = 255;
+	if (patternByte == 0xff)
+	{
+		for (size_t col = startCol; col < endCol; col++)
+			rowStart[col] = foreColor;
+	}
+	else
+	{
+		if (mask)
+		{
+			for (size_t col = startCol; col < endCol; col++)
+			{
+				if (patternByte & (0x80 >> (col & 7)))
+					rowStart[col] = foreColor;
+			}
+		}
+		else
+		{
+			for (size_t col = startCol; col < endCol; col++)
+			{
+				if (patternByte & (0x80 >> (col & 7)))
+					rowStart[col] = foreColor;
+				else
+					rowStart[col] = bgColor;
+			}
+		}
+	}
 }
 
 void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
@@ -622,7 +646,9 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 			spanRemaining -= iter.Next();
 	}
 
-	uint8_t color8 = 0;
+	uint8_t foreColor8 = 0;
+	uint8_t backColor8 = 0;
+	const bool isMask = qdState->m_penMask;
 
 	const GpPixelFormat_t pixelFormat = pixMap->m_pixelFormat;
 
@@ -630,7 +656,8 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 	switch (pixMap->m_pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
-		color8 = qdState->ResolveForeColor8(nullptr, 256);
+		foreColor8 = qdState->ResolveForeColor8(nullptr, 256);
+		backColor8 = qdState->ResolveBackColor8(nullptr, 256);
 		break;
 	default:
 		PL_NotYetImplemented();
@@ -660,6 +687,7 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 	for (size_t row = 0; row < numRows; row++)
 	{
 		uint8_t *thisRowStart = firstRowStart + row * pitch;
+		uint8_t thisRowPatternRow = pattern8x8[row & 7];
 
 		bool spanState = false;
 
@@ -699,7 +727,7 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 			{
 				const size_t spanEndCol = spanStartCol + currentSpan;
 				if (spanState)
-					FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol);
+					FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8, backColor8, isMask);
 
 				spanStartCol = spanEndCol;
 				paintColsRemaining -= currentSpan;
@@ -712,7 +740,7 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 		if (spanState)
 		{
 			const size_t spanEndCol = firstPortCol + constrainedRectWidth;
-			FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol);
+			FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8, backColor8, isMask);
 		}
 
 		if (row != numRows - 1)
@@ -753,7 +781,7 @@ void FrameRect(const Rect *rect)
 
 void FrameOval(const Rect *rect)
 {
-	PL_NotYetImplemented_TODO("Ovals");
+	FrameRect(rect);
 }
 
 void FrameRoundRect(const Rect *rect, int w, int h)
@@ -775,7 +803,8 @@ void PenMask(bool maskMode)
 
 void PenPat(const Pattern *pattern)
 {
-	PL_NotYetImplemented_TODO("Polys");
+	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
+	qdState->SetPenPattern8x8(*pattern);
 }
 
 void PenSize(int w, int h)
