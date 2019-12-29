@@ -1,16 +1,17 @@
 #pragma once
 
+#include "IPlotter.h"
 #include "PlotDirection.h"
 #include "Vec2i.h"
 
 namespace PortabilityLayer
 {
-	class LinePlotter
+	class LinePlotter final : public IPlotter
 	{
 	public:
 		LinePlotter();
-		PlotDirection PlotNext();
-		const Vec2i &GetPoint() const;
+		PlotDirection PlotNext() override;
+		const Vec2i &GetPoint() const override;
 
 		void Reset(const Vec2i &pointA, const Vec2i &pointB);
 

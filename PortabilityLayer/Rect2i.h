@@ -19,7 +19,7 @@ namespace PortabilityLayer
 		Rect2i(const Rect2i &other);
 		explicit Rect2i(const Rect &other);
 		Rect2i(const Vec2i &topLeft, const Vec2i &bottomRight);
-		Rect2i(int32_t left, int32_t top, int32_t bottom, int32_t right);
+		Rect2i(int32_t top, int32_t left, int32_t bottom, int32_t right);
 
 		Rect2i operator+(const Vec2i &other) const;
 		Rect2i operator-(const Vec2i &other) const;

@@ -1,4 +1,7 @@
 #include "ScanlineMaskConverter.h"
+
+#include "EllipsePlotter.h"
+#include "Rect2i.h"
 #include "ScanlineMask.h"
 #include "Vec2i.h"
 #include "LinePlotter.h"
@@ -252,6 +255,33 @@ namespace PortabilityLayer
 		return ScanlineMask::Create(Rect::Create(minPoint.m_y, minPoint.m_x, minPoint.m_y + static_cast<int16_t>(height), minPoint.m_x + static_cast<int16_t>(width)), maskBuilder);
 	}
 
+	class SinglePointPlotter final : public IPlotter
+	{
+	public:
+		explicit SinglePointPlotter(const Vec2i &point);
+
+		PlotDirection PlotNext() override;
+		const Vec2i &GetPoint() const override;
+
+	private:
+		const Vec2i &m_point;
+	};
+
+	SinglePointPlotter::SinglePointPlotter(const Vec2i &point)
+		: m_point(point)
+	{
+	}
+
+	PlotDirection SinglePointPlotter::PlotNext()
+	{
+		return PlotDirection_Exhausted;
+	}
+
+	const Vec2i &SinglePointPlotter::GetPoint() const
+	{
+		return m_point;
+	}
+
 	class PolyPlotter final : public IPlotter
 	{
 	public:
@@ -321,5 +351,35 @@ namespace PortabilityLayer
 
 		PolyPlotter polyPlotter(points, numPoints);
 		return ComputePlot(width, height, minPoint, polyPlotter);
+	}
+
+	ScanlineMask *ScanlineMaskConverter::CompileEllipse(const Rect2i &rect)
+	{
+		if (!rect.IsValid() || rect.m_topLeft.m_x == rect.m_bottomRight.m_x || rect.m_topLeft.m_y == rect.m_bottomRight.m_y)
+			return nullptr;
+
+		const uint32_t width = rect.m_bottomRight.m_x - rect.m_topLeft.m_x;
+		const uint32_t height = rect.m_bottomRight.m_y - rect.m_topLeft.m_y;
+
+		if (width == 1 || height == 1)
+		{
+			if (width == 1 && height == 1)
+			{
+				SinglePointPlotter plotter(rect.m_topLeft);
+				return ComputePlot(1, 1, rect.m_topLeft, plotter);
+			}
+			else
+			{
+				LinePlotter plotter;
+				plotter.Reset(rect.m_topLeft, rect.m_bottomRight - Vec2i(1, 1));
+				return ComputePlot(width, height, rect.m_topLeft, plotter);
+			}
+		}
+		else
+		{
+			EllipsePlotter plotter;
+			plotter.Reset(rect);
+			return ComputePlot(width, height, rect.m_topLeft, plotter);
+		}
 	}
 }

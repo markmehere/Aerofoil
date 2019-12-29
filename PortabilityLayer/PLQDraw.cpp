@@ -16,6 +16,7 @@
 #include "ResTypeID.h"
 #include "RGBAColor.h"
 #include "ScanlineMask.h"
+#include "ScanlineMaskConverter.h"
 #include "ScanlineMaskIterator.h"
 #include "QDStandardPalette.h"
 #include "WindowManager.h"
@@ -571,7 +572,15 @@ void PaintRect(const Rect *rect)
 
 void PaintOval(const Rect *rect)
 {
-	PL_NotYetImplemented_TODO("Ovals");
+	if (!rect->IsValid())
+		return;
+
+	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect->top, rect->left, rect->bottom, rect->right));
+	if (mask)
+	{
+		FillScanlineMask(mask);
+		mask->Destroy();
+	}
 }
 
 void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol)
