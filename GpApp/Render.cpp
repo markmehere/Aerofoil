@@ -35,7 +35,7 @@ void CopyRectsAssm (void);
 Rect		work2MainRects[kMaxGarbageRects];
 Rect		back2WorkRects[kMaxGarbageRects];
 Rect		shieldRect;
-RgnHandle	mirrorRgn;
+Rect		**mirrorRects;
 Point		shieldPt;
 long		nextFrame;
 short		numWork2Main, numBack2Work;
@@ -155,31 +155,35 @@ void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 		return;
 	
 	SetPort((GrafPtr)workSrcMap);
-	GetClip(wasClip);
-	SetClip(mirrorRgn);
-	
-	if (oneOrTwo)
+
+	long numMirrorRects = GetHandleSize(reinterpret_cast<Handle>(mirrorRects)) / sizeof(Rect);
+
+	for (long i = 0; i < numMirrorRects; i++)
 	{
-		if (showFoil)
-			CopyMask((BitMap *)*GetGWorldPixMap(glid2SrcMap), 
-					(BitMap *)*GetGWorldPixMap(glidMaskMap), 
-					(BitMap *)*GetGWorldPixMap(workSrcMap), 
-					&thisGlider->src, &thisGlider->mask, &dest);
+		const Rect *mirrorRect = (*mirrorRects) + i;
+
+		if (oneOrTwo)
+		{
+			if (showFoil)
+				CopyMaskConstrained((BitMap *)*GetGWorldPixMap(glid2SrcMap), 
+						(BitMap *)*GetGWorldPixMap(glidMaskMap), 
+						(BitMap *)*GetGWorldPixMap(workSrcMap), 
+						&thisGlider->src, &thisGlider->mask, &dest, mirrorRect);
+			else
+				CopyMaskConstrained((BitMap *)*GetGWorldPixMap(glidSrcMap),
+						(BitMap *)*GetGWorldPixMap(glidMaskMap), 
+						(BitMap *)*GetGWorldPixMap(workSrcMap), 
+						&thisGlider->src, &thisGlider->mask, &dest, mirrorRect);
+		}
 		else
-			CopyMask((BitMap *)*GetGWorldPixMap(glidSrcMap), 
+		{
+			CopyMaskConstrained((BitMap *)*GetGWorldPixMap(glid2SrcMap), 
 					(BitMap *)*GetGWorldPixMap(glidMaskMap), 
 					(BitMap *)*GetGWorldPixMap(workSrcMap), 
-					&thisGlider->src, &thisGlider->mask, &dest);
-	}
-	else
-	{
-		CopyMask((BitMap *)*GetGWorldPixMap(glid2SrcMap), 
-				(BitMap *)*GetGWorldPixMap(glidMaskMap), 
-				(BitMap *)*GetGWorldPixMap(workSrcMap), 
-				&thisGlider->src, &thisGlider->mask, &dest);
+					&thisGlider->src, &thisGlider->mask, &dest, mirrorRect);
+		}
 	}
 	
-	SetClip(wasClip);
 	DisposeRgn(wasClip);
 	
 	src =thisGlider->whole;
@@ -211,7 +215,7 @@ void RenderFlames (void)
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[flames[i].who].map), 
 				(BitMap *)*GetGWorldPixMap(workSrcMap), 
-				&flames[i].src, &flames[i].dest, srcCopy, nil);
+				&flames[i].src, &flames[i].dest, srcCopy);
 		
 		AddRectToWorkRects(&flames[i].dest);
 	}
@@ -230,7 +234,7 @@ void RenderFlames (void)
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[tikiFlames[i].who].map), 
 				(BitMap *)*GetGWorldPixMap(workSrcMap), 
-				&tikiFlames[i].src, &tikiFlames[i].dest, srcCopy, nil);
+				&tikiFlames[i].src, &tikiFlames[i].dest, srcCopy);
 		
 		AddRectToWorkRects(&tikiFlames[i].dest);
 	}
@@ -249,7 +253,7 @@ void RenderFlames (void)
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[bbqCoals[i].who].map), 
 				(BitMap *)*GetGWorldPixMap(workSrcMap), 
-				&bbqCoals[i].src, &bbqCoals[i].dest, srcCopy, nil);
+				&bbqCoals[i].src, &bbqCoals[i].dest, srcCopy);
 		
 		AddRectToWorkRects(&bbqCoals[i].dest);
 	}
@@ -312,7 +316,7 @@ void RenderPendulums (void)
 				
 				CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[pendulums[i].who].map), 
 						(BitMap *)*GetGWorldPixMap(workSrcMap), 
-						&pendulums[i].src, &pendulums[i].dest, srcCopy, nil);
+						&pendulums[i].src, &pendulums[i].dest, srcCopy);
 								
 				AddRectToWorkRects(&pendulums[i].dest);
 			}
@@ -440,7 +444,7 @@ void RenderStars (void)
 			
 			CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[theStars[i].who].map), 
 					(BitMap *)*GetGWorldPixMap(workSrcMap), 
-					&theStars[i].src, &theStars[i].dest, srcCopy, nil);
+					&theStars[i].src, &theStars[i].dest, srcCopy);
 			
 			AddRectToWorkRects(&theStars[i].dest);
 		}
@@ -624,7 +628,7 @@ void CopyRectsQD (void)
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(mainWindowGraf),
 				&work2MainRects[i], &work2MainRects[i], 
-				srcCopy, nil);
+				srcCopy);
 	}
 
 	mainWindowGraf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
@@ -634,7 +638,7 @@ void CopyRectsQD (void)
 		CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 				(BitMap *)*GetGWorldPixMap(workSrcMap), 
 				&back2WorkRects[i], &back2WorkRects[i], 
-				srcCopy, nil);
+				srcCopy);
 	}
 }
 
@@ -701,7 +705,7 @@ void CopyRectBackToWork (Rect *theRect)
 {
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
-			theRect, theRect, srcCopy, nil);
+			theRect, theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  CopyRectWorkToBack
@@ -710,7 +714,7 @@ void CopyRectWorkToBack (Rect *theRect)
 {
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
-			theRect, theRect, srcCopy, nil);
+			theRect, theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  CopyRectWorkToMain
@@ -719,7 +723,7 @@ void CopyRectWorkToMain (Rect *theRect)
 {
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-			theRect, theRect, srcCopy, nil);
+			theRect, theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  CopyRectMainToWork
@@ -728,7 +732,7 @@ void CopyRectMainToWork (Rect *theRect)
 {
 	CopyBits(GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
-			theRect, theRect, srcCopy, nil);
+			theRect, theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  CopyRectMainToBack
@@ -737,30 +741,26 @@ void CopyRectMainToBack (Rect *theRect)
 {
 	CopyBits(GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
-			theRect, theRect, srcCopy, nil);
+			theRect, theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  AddToMirrorRegion
 
 void AddToMirrorRegion (Rect *theRect)
 {
-	RgnHandle	tempRgn;
-	
-	if (mirrorRgn == nil)
+	if (mirrorRects == nil)
 	{
-		mirrorRgn = NewRgn();
-		if (mirrorRgn != nil)
-			RectRgn(mirrorRgn, theRect);
+		mirrorRects = reinterpret_cast<Rect**>(NewHandle(sizeof(Rect)));
+		if (mirrorRects != nil)
+			**mirrorRects = *theRect;
 	}
 	else
 	{
-		tempRgn = NewRgn();
-		if (tempRgn != nil)
-		{
-			RectRgn(tempRgn, theRect);
-			UnionRgn(mirrorRgn, tempRgn, mirrorRgn);
-			DisposeRgn(tempRgn);
-		}
+		const long oldSize = GetHandleSize(reinterpret_cast<Handle>(mirrorRects));
+		const long newSize = oldSize + sizeof(Rect);
+
+		if (SetHandleSize(reinterpret_cast<Handle>(mirrorRects), newSize) == noErr)
+			(*mirrorRects)[oldSize / sizeof(Rect)] = *theRect;
 	}
 	hasMirror = true;
 }
@@ -769,9 +769,9 @@ void AddToMirrorRegion (Rect *theRect)
 
 void ZeroMirrorRegion (void)
 {
-	if (mirrorRgn != nil)
-		DisposeRgn(mirrorRgn);
-	mirrorRgn = nil;
+	if (mirrorRects != nil)
+		DisposeHandle(reinterpret_cast<Handle>(mirrorRects));
+	mirrorRects = nil;
 	hasMirror = false;
 }
 

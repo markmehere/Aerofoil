@@ -111,7 +111,7 @@ void DoPause (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-			&bounds, &bounds, srcCopy, nil);
+			&bounds, &bounds, srcCopy);
 	
 	do
 	{

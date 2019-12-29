@@ -302,13 +302,13 @@ void DrawLightSwitch (Rect *theRect, Boolean state)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&lightSwitchSrc[0], theRect, srcCopy, nil);
+				&lightSwitchSrc[0], theRect, srcCopy);
 	}
 	else
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&lightSwitchSrc[1], theRect, srcCopy, nil);
+				&lightSwitchSrc[1], theRect, srcCopy);
 	}
 }
 
@@ -319,11 +319,11 @@ void DrawMachineSwitch (Rect *theRect, Boolean state)
 	if (state)
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&machineSwitchSrc[0], theRect, srcCopy, nil);
+				&machineSwitchSrc[0], theRect, srcCopy);
 	else
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&machineSwitchSrc[1], theRect, srcCopy, nil);
+				&machineSwitchSrc[1], theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  DrawThermostat
@@ -333,11 +333,11 @@ void DrawThermostat (Rect *theRect, Boolean state)
 	if (state)
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&thermostatSrc[0], theRect, srcCopy, nil);
+				&thermostatSrc[0], theRect, srcCopy);
 	else
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&thermostatSrc[1], theRect, srcCopy, nil);
+				&thermostatSrc[1], theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  DrawPowerSwitch
@@ -347,11 +347,11 @@ void DrawPowerSwitch (Rect *theRect, Boolean state)
 	if (state)
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&powerSrc[0], theRect, srcCopy, nil);
+				&powerSrc[0], theRect, srcCopy);
 	else
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&powerSrc[1], theRect, srcCopy, nil);
+				&powerSrc[1], theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  DrawKnifeSwitch
@@ -361,11 +361,11 @@ void DrawKnifeSwitch (Rect *theRect, Boolean state)
 	if (state)
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&knifeSwitchSrc[0], theRect, srcCopy, nil);
+				&knifeSwitchSrc[0], theRect, srcCopy);
 	else
 		CopyBits((BitMap *)*GetGWorldPixMap(switchSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&knifeSwitchSrc[1], theRect, srcCopy, nil);
+				&knifeSwitchSrc[1], theRect, srcCopy);
 }
 
 //--------------------------------------------------------------  DrawInvisibleSwitch
@@ -617,13 +617,13 @@ void DrawMacPlus (Rect *theRect, Boolean isOn, Boolean isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&plusScreen2, &screen, srcCopy, nil);
+				&plusScreen2, &screen, srcCopy);
 	}
 	else
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&plusScreen1, &screen, srcCopy, nil);
+				&plusScreen1, &screen, srcCopy);
 	}
 
 
@@ -693,13 +693,13 @@ void DrawTV (Rect *theRect, Boolean isOn, Boolean isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&tvScreen2, &bounds, srcCopy, nil);
+				&tvScreen2, &bounds, srcCopy);
 	}
 	else
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&tvScreen1, &bounds, srcCopy, nil);
+				&tvScreen1, &bounds, srcCopy);
 	}
 }
 
@@ -724,13 +724,13 @@ void DrawCoffee (Rect *theRect, Boolean isOn, Boolean isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&coffeeLight2, &light, srcCopy, nil);
+				&coffeeLight2, &light, srcCopy);
 	}
 	else
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&coffeeLight1, &light, srcCopy, nil);
+				&coffeeLight1, &light, srcCopy);
 	}
 }
 
@@ -787,13 +787,13 @@ void DrawVCR (Rect *theRect, Boolean isOn, Boolean isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&vcrTime2, &bounds, srcCopy, nil);
+				&vcrTime2, &bounds, srcCopy);
 	}
 	else
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&vcrTime1, &bounds, srcCopy, nil);
+				&vcrTime1, &bounds, srcCopy);
 	}
 }
 
@@ -841,13 +841,13 @@ void DrawStereo (Rect *theRect, Boolean isOn, Boolean isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&stereoLight2, &bounds, srcCopy, nil);
+				&stereoLight2, &bounds, srcCopy);
 	}
 	else
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&stereoLight1, &bounds, srcCopy, nil);
+				&stereoLight1, &bounds, srcCopy);
 	}
 }
 
@@ -895,29 +895,29 @@ void DrawMicrowave (Rect *theRect, Boolean isOn, Boolean isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&microOn, &bounds, srcCopy, nil);
+				&microOn, &bounds, srcCopy);
 		QOffsetRect(&bounds, 16, 0);
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&microOn, &bounds, srcCopy, nil);
+				&microOn, &bounds, srcCopy);
 		QOffsetRect(&bounds, 16, 0);
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&microOn, &bounds, srcCopy, nil);
+				&microOn, &bounds, srcCopy);
 	}
 	else if (isLit)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&microOff, &bounds, srcCopy, nil);
+				&microOff, &bounds, srcCopy);
 		QOffsetRect(&bounds, 16, 0);
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&microOff, &bounds, srcCopy, nil);
+				&microOff, &bounds, srcCopy);
 		QOffsetRect(&bounds, 16, 0);
 		CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&microOff, &bounds, srcCopy, nil);
+				&microOff, &bounds, srcCopy);
 	}
 }
 
@@ -1401,7 +1401,7 @@ void DrawPictSansWhiteObject (short what, Rect *theRect)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
-			&srcRects[what], theRect, transparent, nil);
+			&srcRects[what], theRect, transparent);
 	
 	SetGraphicsPort(wasCPort);
 	
@@ -1427,7 +1427,7 @@ void DrawCustPictSansWhite (short pictID, Rect *theRect)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
-			&bounds, theRect, transparent, nil);
+			&bounds, theRect, transparent);
 	
 	SetGraphicsPort(wasCPort);
 	

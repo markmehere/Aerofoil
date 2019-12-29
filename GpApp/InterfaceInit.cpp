@@ -20,7 +20,7 @@
 #define kDiagCursorID		131
 
 
-extern	RgnHandle		mirrorRgn;
+extern	Rect			**mirrorRects;
 extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
 extern	WindowPtr		menuWindow;
 extern	Rect			shieldRect, boardSrcRect, localRoomsDest[];
@@ -174,7 +174,7 @@ void VariableInit (void)
 	
 	doubleTime = GetDblTime();
 	
-	mirrorRgn = nil;
+	mirrorRects = nil;
 	mainWindow = nil;
 	boardWindow = nil;
 	mapWindow = nil;

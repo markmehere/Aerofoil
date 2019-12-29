@@ -232,7 +232,7 @@ void DrawRoomBackground (short who, short where, short elevation)
 		src.right = src.left + kTileWide;
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		QOffsetRect(&dest, kTileWide, 0);
 	}
 }
@@ -256,7 +256,7 @@ void DrawFloorSupport (void)
 				localRoomsDest[kCentralRoom].top - suppSrcRect.bottom);
 		CopyBits((BitMap *)*GetGWorldPixMap(suppSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		
 		for (i = 0; i < numTempManholes; i++)
 			if (SectRect(&dest, &tempManholes[i], &whoCares))
@@ -274,7 +274,7 @@ void DrawFloorSupport (void)
 				localRoomsDest[kCentralRoom].bottom);
 		CopyBits((BitMap *)*GetGWorldPixMap(suppSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		
 		for (i = 0; i < numTempManholes; i++)
 			if (SectRect(&dest, &tempManholes[i], &whoCares))
@@ -292,7 +292,7 @@ void DrawFloorSupport (void)
 				localRoomsDest[kCentralRoom].top - suppSrcRect.bottom);
 		CopyBits((BitMap *)*GetGWorldPixMap(suppSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		for (i = 0; i < numTempManholes; i++)
 			if (SectRect(&dest, &tempManholes[i], &whoCares))
 			{
@@ -309,7 +309,7 @@ void DrawFloorSupport (void)
 				localRoomsDest[kCentralRoom].bottom);
 		CopyBits((BitMap *)*GetGWorldPixMap(suppSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		
 		for (i = 0; i < numTempManholes; i++)
 			if (SectRect(&dest, &tempManholes[i], &whoCares))
@@ -327,7 +327,7 @@ void DrawFloorSupport (void)
 				localRoomsDest[kCentralRoom].top - suppSrcRect.bottom);
 		CopyBits((BitMap *)*GetGWorldPixMap(suppSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		
 		for (i = 0; i < numTempManholes; i++)
 			if (SectRect(&dest, &tempManholes[i], &whoCares))
@@ -345,7 +345,7 @@ void DrawFloorSupport (void)
 				localRoomsDest[kCentralRoom].bottom);
 		CopyBits((BitMap *)*GetGWorldPixMap(suppSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		
 		for (i = 0; i < numTempManholes; i++)
 			if (SectRect(&dest, &tempManholes[i], &whoCares))
@@ -365,7 +365,7 @@ void ReadyBackMap (void)
 {
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
-			&workSrcRect, &workSrcRect, srcCopy, nil);
+			&workSrcRect, &workSrcRect, srcCopy);
 }
 
 //--------------------------------------------------------------  RestoreWorkMap
@@ -378,7 +378,7 @@ void RestoreWorkMap (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
-			&backSrcRect, &backSrcRect, srcCopy, nil);
+			&backSrcRect, &backSrcRect, srcCopy);
 }
 
 //--------------------------------------------------------------  ReadyLevel

@@ -11,6 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "MenuManager.h"
 #include "RectUtils.h"
 #include "PLKeyEncoding.h"
 #include "WindowDef.h"
@@ -109,11 +110,19 @@ void RedrawSplashScreen (void)
 	LoadScaledGraphic(kSplash8BitPICT, &tempRect);
 	DrawOnSplash();
 	SetPortWindowPort(mainWindow);
+
+	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
+		GetPortBitMapForCopyBits(GetWindowPort(mainWindow)),
+		&workSrcRect, &workSrcRect, srcCopy);
+
 //	if (quickerTransitions)
 //		DissBitsChunky(&workSrcRect);
 //	else
 //		DissBits(&workSrcRect);
 	CopyRectMainToWork(&workSrcRect);
+
+	mainWindow->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
 }
 
 //--------------------------------------------------------------  UpdateMainWindow
@@ -126,15 +135,15 @@ void UpdateMainWindow (void)
 	RgnHandle	dummyRgn;
 	
 	dummyRgn = NewRgn();
+	GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn);
 	SetPortWindowPort(mainWindow);
 	
 	if (theMode == kEditMode)
 	{
 		PauseMarquee();
-		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
+		CopyBitsConstrained((BitMap *)*GetGWorldPixMap(workSrcMap),
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&mainWindowRect, &mainWindowRect, srcCopy, 
-				GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn));
+				&mainWindowRect, &mainWindowRect, srcCopy, &(*dummyRgn)->rect);
 		ResumeMarquee();
 	}
 	else if ((theMode == kSplashMode) || (theMode == kPlayMode))
@@ -144,10 +153,9 @@ void UpdateMainWindow (void)
 		QSetRect(&tempRect, 0, 0, 640, 460);
 		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
 		LoadScaledGraphic(kSplash8BitPICT, &tempRect);
-		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
+		CopyBitsConstrained((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&workSrcRect, &mainWindowRect, srcCopy, 
-				GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn));
+				&workSrcRect, &mainWindowRect, srcCopy, &(*dummyRgn)->rect);
 		SetPortWindowPort(mainWindow);
 		
 		DrawOnSplash();

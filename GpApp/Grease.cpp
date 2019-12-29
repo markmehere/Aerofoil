@@ -73,11 +73,11 @@ void HandleGrease (void)
 			CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[grease[i].mapNum].map), 
 					(BitMap *)*GetGWorldPixMap(workSrcMap), 
 					&src, &grease[i].dest, 
-					srcCopy, nil);
+					srcCopy);
 			CopyBits((BitMap *)*GetGWorldPixMap(savedMaps[grease[i].mapNum].map), 
 					(BitMap *)*GetGWorldPixMap(backSrcMap), 
 					&src, &grease[i].dest, 
-					srcCopy, nil);
+					srcCopy);
 			
 			AddRectToWorkRects(&grease[i].dest);
 			if (grease[i].isRight)
@@ -145,7 +145,7 @@ void BackupGrease (Rect *src, short index, Boolean isRight)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 				(BitMap *)*GetGWorldPixMap(savedMaps[index].map), 
-				src, &dest, srcCopy, nil);
+				src, &dest, srcCopy);
 		
 		if (isRight)
 		{

@@ -20,11 +20,14 @@ namespace PortabilityLayer
 		, m_clipRegion(nullptr)
 		, m_penInvert(false)
 		, m_penMask(false)
+		, m_havePattern8x8(false)
 	{
 		m_backUnresolvedColor.r = m_backUnresolvedColor.g = m_backUnresolvedColor.b = m_backUnresolvedColor.a = 255;
 		m_foreUnresolvedColor.r = m_foreUnresolvedColor.g = m_foreUnresolvedColor.b = 0;
 		m_foreUnresolvedColor.a = 255;
 		m_penPos.h = m_penPos.v = 0;
+
+		memset(m_pattern8x8, 0, sizeof(m_pattern8x8));
 	}
 
 	void QDState::SetForeColor(const RGBAColor &color)
@@ -80,5 +83,40 @@ namespace PortabilityLayer
 
 			return resolvedColor;
 		}
+	}
+
+	void QDState::SetPenPattern8x8(const uint8_t *pattern)
+	{
+		if (!pattern)
+		{
+			m_havePattern8x8 = false;
+			return;
+		}
+
+		bool isSolid = true;
+		for (int i = 0; i < 8; i++)
+		{
+			if (pattern[i] != 0xff)
+			{
+				isSolid = false;
+				break;
+			}
+		}
+
+		if (isSolid)
+			m_havePattern8x8 = false;
+		else
+		{
+			m_havePattern8x8 = true;
+			memcpy(m_pattern8x8, pattern, sizeof(m_pattern8x8));
+		}
+	}
+
+	const uint8_t *QDState::GetPattern8x8() const
+	{
+		if (m_havePattern8x8)
+			return m_pattern8x8;
+
+		return nullptr;
 	}
 }

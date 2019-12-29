@@ -69,7 +69,7 @@ void RefreshScoreboard (SInt16 mode)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
-			&boardSrcRect, &boardDestRect, srcCopy, 0L);
+			&boardSrcRect, &boardDestRect, srcCopy);
 
 	MarkScoreboardPortDirty();
 	
@@ -197,7 +197,7 @@ void RefreshRoomTitle (short mode)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardTSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
-			&boardTSrcRect, &boardTDestRect, srcCopy, nil);
+			&boardTSrcRect, &boardTDestRect, srcCopy);
 }
 
 //--------------------------------------------------------------  RefreshNumGliders
@@ -236,7 +236,7 @@ void RefreshNumGliders (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
-			&boardGSrcRect, &boardGDestRect, srcCopy, nil);
+			&boardGSrcRect, &boardGDestRect, srcCopy);
 }
 
 //--------------------------------------------------------------  RefreshPoints
@@ -271,7 +271,7 @@ void RefreshPoints (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
-			&boardPSrcRect, &boardPDestRect, srcCopy, nil);
+			&boardPSrcRect, &boardPDestRect, srcCopy);
 	
 	displayedScore = theScore;
 }
@@ -308,7 +308,7 @@ void QuickGlidersRefresh (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
-			&boardGSrcRect, &boardGQDestRect, srcCopy, nil);
+			&boardGSrcRect, &boardGQDestRect, srcCopy);
 
 	MarkScoreboardPortDirty();
 }
@@ -345,7 +345,7 @@ void QuickScoreRefresh (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
-			&boardPSrcRect, &boardPQDestRect, srcCopy, nil);
+			&boardPSrcRect, &boardPQDestRect, srcCopy);
 
 	MarkScoreboardPortDirty();
 }
@@ -360,7 +360,7 @@ void QuickBatteryRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBadgesRects[kBatteryBadge], 
 				&badgesDestRects[kBatteryBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 	else if ((batteryTotal < 0) && (!flash))
 	{
@@ -368,7 +368,7 @@ void QuickBatteryRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBadgesRects[kHeliumBadge], 
 				&badgesDestRects[kHeliumBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 	else
 	{
@@ -376,7 +376,7 @@ void QuickBatteryRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBlankRects[kBatteryBadge], 
 				&badgesDestRects[kBatteryBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 
 	MarkScoreboardPortDirty();
@@ -392,7 +392,7 @@ void QuickBandsRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBadgesRects[kBandsBadge], 
 				&badgesDestRects[kBandsBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 	else
 	{
@@ -400,7 +400,7 @@ void QuickBandsRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBlankRects[kBandsBadge], 
 				&badgesDestRects[kBandsBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 
 	MarkScoreboardPortDirty();
@@ -416,7 +416,7 @@ void QuickFoilRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBadgesRects[kFoilBadge], 
 				&badgesDestRects[kFoilBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 	else
 	{
@@ -424,7 +424,7 @@ void QuickFoilRefresh (Boolean flash)
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 				&badgesBlankRects[kFoilBadge], 
 				&badgesDestRects[kFoilBadge], 
-				srcCopy, nil);
+				srcCopy);
 	}
 
 	MarkScoreboardPortDirty();

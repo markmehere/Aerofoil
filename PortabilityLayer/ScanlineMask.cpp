@@ -1,6 +1,7 @@
 #include "CoreDefs.h"
 #include "ScanlineMask.h"
 #include "ScanlineMaskBuilder.h"
+#include "ScanlineMaskIterator.h"
 
 #include <stdlib.h>
 #include <new>
@@ -13,7 +14,17 @@ namespace PortabilityLayer
 		free(this);
 	}
 
-	ScanlineMask *ScanlineMask::Create(const ScanlineMaskBuilder &builder)
+	const Rect &ScanlineMask::GetRect() const
+	{
+		return m_rect;
+	}
+
+	ScanlineMaskIterator ScanlineMask::GetIterator() const
+	{
+		return ScanlineMaskIterator(m_data, m_dataStorage);
+	}
+
+	ScanlineMask *ScanlineMask::Create(const Rect &rect, const ScanlineMaskBuilder &builder)
 	{
 		size_t alignedPrefixSize = sizeof(ScanlineMask) + PL_SYSTEM_MEMORY_ALIGNMENT - 1;
 		alignedPrefixSize -= alignedPrefixSize % PL_SYSTEM_MEMORY_ALIGNMENT;
@@ -23,18 +34,18 @@ namespace PortabilityLayer
 		const size_t *spans = builder.GetSpans();
 
 		size_t storageSize = numSpans;
-		DataStorage dataStorage = DataStorage_UInt8;
+		ScanlineMaskDataStorage dataStorage = ScanlineMaskDataStorage_UInt8;
 		if (longestSpan <= 0xff)
-			dataStorage = DataStorage_UInt8;
+			dataStorage = ScanlineMaskDataStorage_UInt8;
 		else if (longestSpan <= 0xffff)
 		{
 			storageSize *= 2;
-			dataStorage = DataStorage_UInt16;
+			dataStorage = ScanlineMaskDataStorage_UInt16;
 		}
 		else if (longestSpan <= 0xffffffff)
 		{
 			storageSize *= 4;
-			dataStorage = DataStorage_UInt32;
+			dataStorage = ScanlineMaskDataStorage_UInt32;
 		}
 		else
 			return nullptr;
@@ -45,19 +56,19 @@ namespace PortabilityLayer
 
 		void *spanStorage = static_cast<uint8_t*>(storage) + alignedPrefixSize;
 
-		ScanlineMask *mask = new (storage) ScanlineMask(dataStorage, spanStorage, numSpans);
+		ScanlineMask *mask = new (storage) ScanlineMask(rect, dataStorage, spanStorage, numSpans);
 
 		for (size_t i = 0; i < numSpans; i++)
 		{
 			switch (dataStorage)
 			{
-			case DataStorage_UInt8:
+			case ScanlineMaskDataStorage_UInt8:
 				static_cast<uint8_t*>(spanStorage)[i] = static_cast<uint8_t>(spans[i]);
 				break;
-			case DataStorage_UInt16:
+			case ScanlineMaskDataStorage_UInt16:
 				static_cast<uint16_t*>(spanStorage)[i] = static_cast<uint16_t>(spans[i]);
 				break;
-			case DataStorage_UInt32:
+			case ScanlineMaskDataStorage_UInt32:
 				static_cast<uint32_t*>(spanStorage)[i] = static_cast<uint32_t>(spans[i]);
 				break;
 			}
@@ -66,10 +77,11 @@ namespace PortabilityLayer
 		return mask;
 	}
 
-	ScanlineMask::ScanlineMask(DataStorage dataStorage, const void *data, size_t numSpans)
+	ScanlineMask::ScanlineMask(const Rect &rect, ScanlineMaskDataStorage dataStorage, const void *data, size_t numSpans)
 		: m_dataStorage(dataStorage)
 		, m_data(data)
 		, m_numSpans(numSpans)
+		, m_rect(rect)
 	{
 	}
 

@@ -278,7 +278,7 @@ void RenderFish (short who)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(fishSrcMap), 
 				(BitMap *)*GetGWorldPixMap(workSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		AddRectToBackRects(&dest);
 		dest = dinahs[who].whole;
 		QOffsetRect(&dest, playOriginH, playOriginV);
@@ -403,7 +403,7 @@ void HandleMacPlus (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap),
 					(BitMap *)*GetGWorldPixMap(backSrcMap),
 					&plusScreen2, &dinahs[who].dest,
-					srcCopy, nil);
+					srcCopy);
 
 				AddRectToBackRects(&dinahs[who].dest);
 			}
@@ -420,7 +420,7 @@ void HandleMacPlus (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&plusScreen1, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -459,7 +459,7 @@ void HandleTV (short who)
 					CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 							(BitMap *)*GetGWorldPixMap(backSrcMap), 
 							&tvScreen2, &dinahs[who].dest, 
-							srcCopy, nil);
+							srcCopy);
 					AddRectToBackRects(&dinahs[who].dest);
 				}
 			}
@@ -474,7 +474,7 @@ void HandleTV (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&tvScreen1, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -501,7 +501,7 @@ void HandleCoffee (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&coffeeLight2, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 			else if (dinahs[who].timer == 100)
@@ -520,7 +520,7 @@ void HandleCoffee (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&coffeeLight1, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -574,7 +574,7 @@ void HandleOutlet (short who)
 					(BitMap *)*GetGWorldPixMap(workSrcMap), 
 					&outletSrc[dinahs[who].frame], 
 					&dinahs[who].dest, 
-					srcCopy, nil);
+					srcCopy);
 		}
 		else
 		{
@@ -624,7 +624,7 @@ void HandleVCR (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&vcrTime2, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 			else if (dinahs[who].timer == 100)
@@ -640,7 +640,7 @@ void HandleVCR (short who)
 					CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 							(BitMap *)*GetGWorldPixMap(backSrcMap), 
 							&vcrTime2, &dinahs[who].dest, 
-							srcCopy, nil);
+							srcCopy);
 					AddRectToBackRects(&dinahs[who].dest);
 				}
 				else
@@ -648,7 +648,7 @@ void HandleVCR (short who)
 					CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 							(BitMap *)*GetGWorldPixMap(backSrcMap), 
 							&vcrTime1, &dinahs[who].dest, 
-							srcCopy, nil);
+							srcCopy);
 					AddRectToBackRects(&dinahs[who].dest);
 				}
 			}
@@ -663,7 +663,7 @@ void HandleVCR (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&vcrTime1, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -690,7 +690,7 @@ void HandleStereo (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&stereoLight2, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -707,7 +707,7 @@ void HandleStereo (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&stereoLight1, &dinahs[who].dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -735,17 +735,17 @@ void HandleMicrowave (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&microOn, &dest, 
-						srcCopy, nil);
+						srcCopy);
 				QOffsetRect(&dest, 16, 0);
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&microOn, &dest, 
-						srcCopy, nil);
+						srcCopy);
 				QOffsetRect(&dest, 16, 0);
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&microOn, &dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}
@@ -761,17 +761,17 @@ void HandleMicrowave (short who)
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&microOff, &dest, 
-						srcCopy, nil);
+						srcCopy);
 				QOffsetRect(&dest, 16, 0);
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&microOff, &dest, 
-						srcCopy, nil);
+						srcCopy);
 				QOffsetRect(&dest, 16, 0);
 				CopyBits((BitMap *)*GetGWorldPixMap(applianceSrcMap), 
 						(BitMap *)*GetGWorldPixMap(backSrcMap), 
 						&microOff, &dest, 
-						srcCopy, nil);
+						srcCopy);
 				AddRectToBackRects(&dinahs[who].dest);
 			}
 		}

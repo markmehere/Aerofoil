@@ -15,6 +15,8 @@
 #include "ResourceManager.h"
 #include "ResTypeID.h"
 #include "RGBAColor.h"
+#include "ScanlineMask.h"
+#include "ScanlineMaskIterator.h"
 #include "QDStandardPalette.h"
 #include "WindowManager.h"
 #include "QDGraf.h"
@@ -572,9 +574,155 @@ void PaintOval(const Rect *rect)
 	PL_NotYetImplemented_TODO("Ovals");
 }
 
-void PaintRgn(RgnHandle region)
+void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol)
 {
-	PL_NotYetImplemented_TODO("Polys");
+	for (size_t col = startCol; col < endCol; col++)
+		rowStart[col] = 255;
+}
+
+void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
+{
+	if (!scanlineMask)
+		return;
+
+	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
+	PortabilityLayer::QDState *qdState = qdManager->GetState();
+
+	const PortabilityLayer::QDPort *port = qdManager->GetPort();
+	PixMap *pixMap = *port->GetPixMap();
+	const Rect portRect = port->GetRect();
+	const Rect maskRect = scanlineMask->GetRect();
+
+	const Rect constrainedRect = portRect.Intersect(maskRect);
+	if (!constrainedRect.IsValid())
+		return;
+
+	const size_t firstMaskRow = static_cast<size_t>(constrainedRect.top - maskRect.top);
+	const size_t firstMaskCol = static_cast<size_t>(constrainedRect.left - maskRect.left);
+	const size_t firstPortRow = static_cast<size_t>(constrainedRect.top - portRect.top);
+	const size_t firstPortCol = static_cast<size_t>(constrainedRect.left - portRect.left);
+	const size_t pitch = pixMap->m_pitch;
+	const size_t maskSpanWidth = scanlineMask->GetRect().right - scanlineMask->GetRect().left;
+
+	// Skip mask rows
+	PortabilityLayer::ScanlineMaskIterator iter = scanlineMask->GetIterator();
+	for (size_t i = 0; i < firstMaskRow; i++)
+	{
+		size_t spanRemaining = maskSpanWidth;
+		while (spanRemaining > 0)
+			spanRemaining -= iter.Next();
+	}
+
+	uint8_t color8 = 0;
+
+	const GpPixelFormat_t pixelFormat = pixMap->m_pixelFormat;
+
+	size_t pixelSize = 0;
+	switch (pixMap->m_pixelFormat)
+	{
+	case GpPixelFormats::k8BitStandard:
+		color8 = qdState->ResolveForeColor8(nullptr, 256);
+		break;
+	default:
+		PL_NotYetImplemented();
+		return;
+	}
+
+	uint8_t pattern8x8[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	bool havePattern = false;
+	if (const uint8_t *statePattern = qdState->GetPattern8x8())
+	{
+		memcpy(pattern8x8, statePattern, 8);
+		for (int i = 0; i < 8; i++)
+		{
+			if (pattern8x8[i] != 0xff)
+			{
+				havePattern = true;
+				break;
+			}
+		}
+	}
+
+	const size_t constrainedRectWidth = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
+
+	uint8_t *pixMapData = static_cast<uint8_t*>(pixMap->m_data);
+	uint8_t *firstRowStart = pixMapData + (constrainedRect.top * pitch);
+	const size_t numRows = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
+	for (size_t row = 0; row < numRows; row++)
+	{
+		uint8_t *thisRowStart = firstRowStart + row * pitch;
+
+		bool spanState = false;
+
+		size_t currentSpan = iter.Next();
+		{
+			// Skip prefix cols.  If the span ends at the first col, this must not advance the iterator to it (currentSpan should be 0 instead)
+			size_t prefixColsRemaining = firstMaskCol;
+
+			while (prefixColsRemaining > 0)
+			{
+				if (prefixColsRemaining <= currentSpan)
+				{
+					currentSpan -= prefixColsRemaining;
+					break;
+				}
+				else
+				{
+					prefixColsRemaining -= currentSpan;
+					currentSpan = iter.Next();
+					spanState = !spanState;
+				}
+			}
+		}
+
+		// Paint in-bound cols.  If the span ends at the end of the mask, this must not advance the iterator beyond it (currentSpan should be 0 instead)
+		size_t paintColsRemaining = constrainedRectWidth;
+		size_t spanStartCol = firstPortCol;
+
+		while (paintColsRemaining > 0)
+		{
+			if (paintColsRemaining <= currentSpan)
+			{
+				currentSpan -= paintColsRemaining;
+				break;
+			}
+			else
+			{
+				const size_t spanEndCol = spanStartCol + currentSpan;
+				if (spanState)
+					FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol);
+
+				spanStartCol = spanEndCol;
+				paintColsRemaining -= currentSpan;
+				currentSpan = iter.Next();
+				spanState = !spanState;
+			}
+		}
+
+		// Flush any lingering span
+		if (spanState)
+		{
+			const size_t spanEndCol = firstPortCol + constrainedRectWidth;
+			FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol);
+		}
+
+		if (row != numRows - 1)
+		{
+			size_t terminalColsRemaining = maskSpanWidth - constrainedRectWidth - firstMaskCol;
+
+			assert(currentSpan <= terminalColsRemaining);
+
+			terminalColsRemaining -= currentSpan;
+
+			while (terminalColsRemaining > 0)
+			{
+				currentSpan = iter.Next();
+
+				assert(currentSpan <= terminalColsRemaining);
+				terminalColsRemaining -= currentSpan;
+			}
+		}
+	}
 }
 
 void ClipRect(const Rect *rect)
@@ -703,7 +851,7 @@ void GetIndPattern(Pattern *pattern, int patListID, int index)
 	memcpy(pattern, patternRes + 2 + (index - 1) * 8, 8);
 }
 
-static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, RgnHandle maskRegion)
+static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *maskConstraintRect)
 {
 	assert(srcBitmap->m_pixelFormat == destBitmap->m_pixelFormat);
 
@@ -736,7 +884,10 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 
 	{
 		const Rect constrainedSrcRect = srcRectBase->Intersect(srcBounds);
-		const Rect constrainedDestRect = destRectBase->Intersect(destBounds);
+		Rect constrainedDestRect = destRectBase->Intersect(destBounds);
+
+		if (maskConstraintRect)
+			constrainedDestRect = constrainedDestRect.Intersect(*maskConstraintRect);
 
 		const int32_t leftNudge = std::max(constrainedSrcRect.left - srcRectBase->left, constrainedDestRect.left - destRectBase->left);
 		const int32_t topNudge = std::max(constrainedSrcRect.top - srcRectBase->top, constrainedDestRect.top - destRectBase->top);
@@ -792,44 +943,30 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 	assert(destRect.left >= destBounds.left);
 	assert(destRect.right <= destBounds.right);
 
-	const Region *mask = nullptr;
-
-	if (maskRegion)
-		mask = *maskRegion;
-
-	const Rect constrainedDestRect = mask ? destRect.Intersect(mask->rect) : destRect;
-	if (!constrainedDestRect.IsValid())
-		return;
-
 	Rect constrainedSrcRect = srcRect;
-	constrainedSrcRect.left += constrainedDestRect.left - destRect.left;
-	constrainedSrcRect.right += constrainedDestRect.right - destRect.right;
-	constrainedSrcRect.top += constrainedDestRect.top - destRect.top;
-	constrainedSrcRect.bottom += constrainedDestRect.bottom - destRect.bottom;
+	constrainedSrcRect.left += destRect.left - destRect.left;
+	constrainedSrcRect.right += destRect.right - destRect.right;
+	constrainedSrcRect.top += destRect.top - destRect.top;
+	constrainedSrcRect.bottom += destRect.bottom - destRect.bottom;
 
 	Rect constrainedMaskRect = maskRect;
 	if (maskRectBase != nullptr)
 	{
-		constrainedMaskRect.left += constrainedDestRect.left - destRect.left;
-		constrainedMaskRect.right += constrainedDestRect.right - destRect.right;
-		constrainedMaskRect.top += constrainedDestRect.top - destRect.top;
-		constrainedMaskRect.bottom += constrainedDestRect.bottom - destRect.bottom;
+		constrainedMaskRect.left += destRect.left - destRect.left;
+		constrainedMaskRect.right += destRect.right - destRect.right;
+		constrainedMaskRect.top += destRect.top - destRect.top;
+		constrainedMaskRect.bottom += destRect.bottom - destRect.bottom;
 	}
 
 	const size_t srcFirstCol = constrainedSrcRect.left - srcBitmap->m_rect.left;
 	const size_t srcFirstRow = constrainedSrcRect.top - srcBitmap->m_rect.top;
 
-	const size_t destFirstCol = constrainedDestRect.left - destBitmap->m_rect.left;
-	const size_t destFirstRow = constrainedDestRect.top - destBitmap->m_rect.top;
+	const size_t destFirstCol = destRect.left - destBitmap->m_rect.left;
+	const size_t destFirstRow = destRect.top - destBitmap->m_rect.top;
 
 	const size_t maskFirstCol = maskBitmap ? constrainedMaskRect.left - maskBitmap->m_rect.left : 0;
 	const size_t maskFirstRow = maskBitmap ? constrainedMaskRect.top - maskBitmap->m_rect.top : 0;
 
-	if (mask && mask->size != sizeof(Region))
-	{
-		PL_NotYetImplemented();
-	}
-	else
 	{
 		size_t pixelSizeBytes = 0;
 
@@ -900,7 +1037,12 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 	}
 }
 
-void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *destRectBase, CopyBitsMode copyMode, RgnHandle maskRegion)
+void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *destRectBase, CopyBitsMode copyMode)
+{
+	CopyBitsConstrained(srcBitmap, destBitmap, srcRectBase, destRectBase, copyMode, nullptr);
+}
+
+void CopyBitsConstrained(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *destRectBase, CopyBitsMode copyMode, const Rect *constrainRect)
 {
 	const BitMap *maskBitmap = nullptr;
 	const Rect *maskRect = nullptr;
@@ -910,7 +1052,12 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBa
 		maskRect = srcRectBase;
 	}
 
-	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRect, destRectBase, maskRegion);
+	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRect, destRectBase, constrainRect);
+}
+
+void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *constrainRect)
+{
+	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, constrainRect);
 }
 
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase)

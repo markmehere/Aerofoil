@@ -78,7 +78,7 @@ void UpdateRoomInfoDialog (DialogPtr theDialog)
 	
 	CopyBits(GetPortBitMapForCopyBits(tileSrcMap), 
 			GetPortBitMapForCopyBits(GetDialogPort(theDialog)), 
-			&tileSrcRect, &tileSrc, srcCopy, nil);
+			&tileSrcRect, &tileSrc, srcCopy);
 	/*
 	CopyBits(&((GrafPtr)tileSrcMap)->portBits, 
 			&(((GrafPtr)theDialog)->portBits), 
@@ -93,7 +93,7 @@ void UpdateRoomInfoDialog (DialogPtr theDialog)
 		
 		CopyBits(GetPortBitMapForCopyBits(tileSrcMap), 
 				GetPortBitMapForCopyBits(GetDialogPort(theDialog)), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		/*
 		CopyBits(&((GrafPtr)tileSrcMap)->portBits, 
 				&(((GrafPtr)theDialog)->portBits), 

@@ -2676,7 +2676,7 @@ void DrawThisRoomsObjects (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
-			&backSrcRect, &backSrcRect, srcCopy, nil);
+			&backSrcRect, &backSrcRect, srcCopy);
 }
 #endif
 

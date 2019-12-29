@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <algorithm>
 
-#define PL_SCANLINE_MASKS_DEBUGGING 1
+#define PL_SCANLINE_MASKS_DEBUGGING 0
 
 #if PL_SCANLINE_MASKS_DEBUGGING
 #include "stb_image_write.h"
@@ -240,9 +240,16 @@ namespace PortabilityLayer
 			}
 		}
 
+#if PL_SCANLINE_MASKS_DEBUGGING
+		static int debugID = 0;
+		char path[256];
+		sprintf_s(path, "DebugData/ScanlineMask%i.png", debugID++);
+		stbi_write_png(path, width, height, 4, flagBits, width * 4);
+#endif
+
 		free(storage);
 
-		return ScanlineMask::Create(maskBuilder);
+		return ScanlineMask::Create(Rect::Create(minPoint.m_y, minPoint.m_x, minPoint.m_y + static_cast<int16_t>(height), minPoint.m_x + static_cast<int16_t>(width)), maskBuilder);
 	}
 
 	class PolyPlotter final : public IPlotter

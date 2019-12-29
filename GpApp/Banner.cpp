@@ -184,7 +184,7 @@ void BringUpBanner (void)
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
-			&wholePage, &wholePage, srcCopy, nil);
+			&wholePage, &wholePage, srcCopy);
 
 	
 	if (demoGoing)

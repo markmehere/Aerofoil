@@ -11,6 +11,11 @@
 
 #include "PLMenus.h"
 
+namespace PortabilityLayer
+{
+	class ScanlineMask;
+}
+
 #define kPreferredDepth				8
 
 
@@ -123,7 +128,7 @@ void BackSpinCursor (short);
 void ColorText (StringPtr, long);						// --- ColorUtils.c
 void ColorRect (Rect *, long);
 void ColorOval (Rect *, long);
-void ColorRegion (RgnHandle, long);
+void ColorRegion (PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex);
 void ColorLine (short, short, short, short, long);
 void HiliteRect (Rect *, short, short);
 void ColorFrameRect (Rect *, long);

@@ -253,7 +253,7 @@ void ReadyBackground (short theID, short *theTiles)
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&workSrcRect, &workSrcRect, srcCopy, nil);
+				&workSrcRect, &workSrcRect, srcCopy);
 		return;
 	}
 	
@@ -281,7 +281,7 @@ void ReadyBackground (short theID, short *theTiles)
 		src.right = src.left + kTileWide;
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&src, &dest, srcCopy, nil);
+				&src, &dest, srcCopy);
 		QOffsetRect(&dest, kTileWide, 0);
 	}
 	
@@ -289,7 +289,7 @@ void ReadyBackground (short theID, short *theTiles)
 	QSetRect(&dest, 0, 0, kRoomWide, kTileHigh);
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
-			&src, &dest, srcCopy, nil);
+			&src, &dest, srcCopy);
 }
 
 //--------------------------------------------------------------  ReflectCurrentRoom

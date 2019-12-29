@@ -2,3 +2,4 @@
 
 bool IsMacPlusGraphicBanned();
 bool IsMacPlusSoundBanned();
+bool IsHighScoreDisabled();

@@ -176,7 +176,7 @@ void DrawToolTiles (void)
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(toolSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(toolsWindow)), 
-				&srcRect, &destRect, srcCopy, nil);
+				&srcRect, &destRect, srcCopy);
 	}
 }
 #endif

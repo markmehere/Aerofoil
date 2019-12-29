@@ -370,7 +370,7 @@ void DisposeHandle(Handle handle);
 long GetHandleSize(Handle handle);
 
 OSErr PtrAndHand(const void *data, Handle handle, Size size);	// Appends data to the end of a handle
-void SetHandleSize(Handle hdl, Size newSize);
+OSErr SetHandleSize(Handle hdl, Size newSize);
 
 void *NewPtr(Size size);
 void *NewPtrClear(Size size);

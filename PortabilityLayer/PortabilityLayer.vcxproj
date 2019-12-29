@@ -238,6 +238,8 @@
     <ClInclude Include="ResTypeID.h" />
     <ClInclude Include="ResTypeIDCodec.h" />
     <ClInclude Include="RGBAColor.h" />
+    <ClInclude Include="ScanlineMaskDataStorage.h" />
+    <ClInclude Include="ScanlineMaskIterator.h" />
     <ClInclude Include="SharedTypes.h" />
     <ClInclude Include="SimpleGraphic.h" />
     <ClInclude Include="Vec2i.h" />
@@ -315,6 +317,7 @@
     <ClCompile Include="RandomNumberGenerator.cpp" />
     <ClCompile Include="ResourceCompiledRef.cpp" />
     <ClCompile Include="ResourceFile.cpp" />
+    <ClCompile Include="ScanlineMaskIterator.cpp" />
     <ClCompile Include="SimpleGraphic.cpp" />
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />

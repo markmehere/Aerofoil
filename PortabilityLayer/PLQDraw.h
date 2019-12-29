@@ -6,6 +6,11 @@
 #include "QDGraf.h"
 #include "SharedTypes.h"
 
+namespace PortabilityLayer
+{
+	class ScanlineMask;
+}
+
 struct Dialog;
 
 enum IconAlignmentType
@@ -49,7 +54,6 @@ enum SystemColorID
 enum CopyBitsMode
 {
 	srcCopy,
-	srcOr,
 	srcXor,
 	transparent,
 };
@@ -122,7 +126,7 @@ void RGBForeColor(const RGBColor *color);
 void DrawString(const PLPasStr &str);
 void PaintRect(const Rect *rect);
 void PaintOval(const Rect *rect);
-void PaintRgn(RgnHandle region);
+void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask);
 
 void ClipRect(const Rect *rect);	// Sets the clipping area
 void FrameRect(const Rect *rect);
@@ -146,8 +150,10 @@ void GetIndPattern(Pattern *pattern, int patListID, int index);
 
 void DebugPixMap(PixMap **pixMap, const char *outName);
 
-void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *destRect, CopyBitsMode copyMode, RgnHandle maskRegion);
+void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *destRect, CopyBitsMode copyMode);
+void CopyBitsConstrained(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *destRect, CopyBitsMode copyMode, const Rect *constraintRect);
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *maskRect, const Rect *destRect);
+void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *constraintRect);
 
 RgnHandle NewRgn();
 void RectRgn(RgnHandle region, const Rect *rect);

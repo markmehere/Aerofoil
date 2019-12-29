@@ -66,14 +66,14 @@ void ColorOval (Rect *theRect, long color)
 // Given a region and color index, this function draws a solid…
 // region in that color.  Current port, pen mode, etc. assumed.
 
-void ColorRegion (RgnHandle theRgn, long color)
+void ColorRegion (PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex)
 {
 	RGBColor	theRGBColor, wasColor;
 	
 	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
+	Index2Color(colorIndex, &theRGBColor);
 	RGBForeColor(&theRGBColor);
-	PaintRgn(theRgn);
+	FillScanlineMask(scanlineMask);
 	RGBForeColor(&wasColor);
 }
 

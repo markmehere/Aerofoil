@@ -41,7 +41,6 @@ void DrawPages (void);
 
 pageType	pages[8];
 Rect		pageSrcRect, pageSrc[kPageFrames], lettersSrc[8], angelSrcRect;
-RgnHandle	roomRgn;
 GWorldPtr	pageSrcMap, gameOverSrcMap, angelSrcMap;
 GWorldPtr	pageMaskMap, angelMaskMap;
 short		countDown, stopPages, pagesStuck;
@@ -301,9 +300,7 @@ void InitDiedGameOver (void)
 		QSetRect(&lettersSrc[i], 0, 0, 25, 32);
 		QOffsetRect(&lettersSrc[i], 0, 32 * i);
 	}
-	
-	roomRgn = NewRgn();
-	RectRgn(roomRgn, &justRoomsRect);
+
 	pagesStuck = 0;
 	stopPages = ((thisMac.screen.bottom - thisMac.screen.top) / 2) - 16;
 }
@@ -405,10 +402,10 @@ void DrawPages (void)
 	{
 		if (pages[i].stuck)
 		{
-			CopyBits((BitMap *)*GetGWorldPixMap(gameOverSrcMap), 
+			CopyBitsConstrained((BitMap *)*GetGWorldPixMap(gameOverSrcMap), 
 					(BitMap *)*GetGWorldPixMap(workSrcMap), 
 					&lettersSrc[i], &pages[i].dest, 
-					srcCopy, roomRgn);
+					srcCopy, &justRoomsRect);
 		}
 		else
 		{
@@ -477,9 +474,6 @@ void DoDiedGameOver (void)
 		while (TickCount() < nextLoop);
 		nextLoop = TickCount() + 2;
 	}
-	
-	if (roomRgn != nil)
-		DisposeRgn(roomRgn);
 	
 	DisposeGWorld(pageSrcMap);
 	pageSrcMap = nil;

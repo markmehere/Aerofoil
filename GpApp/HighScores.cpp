@@ -7,6 +7,7 @@
 
 
 #include "PLFolders.h"
+#include "PLHacks.h"
 #include "PLKeyEncoding.h"
 #include "PLNumberFormatting.h"
 #include "PLScript.h"
@@ -364,6 +365,9 @@ Boolean TestHighScore (void)
 	
 	if (resumedSavedGame)
 		return (false);
+
+	if (IsHighScoreDisabled())
+		return false;
 	
 	thisHousePtr = *thisHouse;
 	

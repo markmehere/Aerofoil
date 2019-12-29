@@ -9,6 +9,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "MainWindow.h"
+#include "PLQDraw.h"
 #include "RectUtils.h"
 
 
@@ -56,7 +57,7 @@ void PourScreenOn (Rect *theRect)
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&columnRects[i], &columnRects[i], srcCopy, nil);
+				&columnRects[i], &columnRects[i], srcCopy);
 				
 		QOffsetRect(&columnRects[i], 0, kChipHigh);
 		columnProgress[i]++;
@@ -112,12 +113,13 @@ void WipeScreenOn (short direction, Rect *theRect)
 	}
 	
 	dummyRgn = NewRgn();
+	GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn);
 	
 	for (i = 0; i < count; i++)
 	{
-		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
+		CopyBitsConstrained((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&wipeRect, &wipeRect, srcCopy, GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn));
+				&wipeRect, &wipeRect, srcCopy, &(*dummyRgn)->rect);
 		
 		QOffsetRect(&wipeRect, hOffset, vOffset);
 		
@@ -142,7 +144,7 @@ void DumpScreenOn (Rect *theRect)
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			GetPortBitMapForCopyBits(graf),
-			theRect, theRect, srcCopy, nil);
+			theRect, theRect, srcCopy);
 
 	graf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }

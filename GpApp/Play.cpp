@@ -394,7 +394,7 @@ void HandlePlayEvent (void)
 			BeginUpdate(mainWindow);
 			CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 					GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-					&justRoomsRect, &justRoomsRect, srcCopy, nil);
+					&justRoomsRect, &justRoomsRect, srcCopy);
 			RefreshScoreboard(kNormalTitleMode);
 			EndUpdate(mainWindow);
 			SetPort(wasPort);
@@ -507,8 +507,8 @@ void PlayGame (void)
 				PaintRect(&boardSrcRect);
 				
 				CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
-						GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-						&boardSrcRect, &boardDestRect, srcCopy, 0L);
+						GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
+						&boardSrcRect, &boardDestRect, srcCopy);
 				
 				{
 					Rect		bounds;
@@ -550,8 +550,8 @@ void PlayGame (void)
 		PaintRect(&boardSrcRect);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
-				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&boardSrcRect, &boardDestRect, srcCopy, 0L);
+				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)), 
+				&boardSrcRect, &boardDestRect, srcCopy);
 		
 		SetGraphicsPort(wasCPort);
 	}
@@ -560,6 +560,10 @@ void PlayGame (void)
 		Rect		bounds;
 		PicHandle	thePicture;
 		SInt16		hOffset;
+
+		CGrafPtr	wasCPort = GetGraphicsPort();
+
+		SetGraphicsPort(boardSrcMap);
 		
 		if (boardSrcRect.right >= 640)
 			hOffset = (RectWide(&boardSrcRect) - kMaxViewWidth) / 2;
@@ -573,6 +577,8 @@ void PlayGame (void)
 		QOffsetRect(&bounds, hOffset, 0);
 		DrawPicture(thePicture, &bounds);
 		ReleaseResource((Handle)thePicture);
+
+		SetGraphicsPort(wasCPort);
 	}
 	
 #else

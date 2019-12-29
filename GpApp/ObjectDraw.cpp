@@ -267,7 +267,6 @@ void DrawShelf (Rect *shelfTop)
 	#define		kShelfShadowOff		12
 	Rect		tempRect;
 	long		brownC, ltTanC, tanC, dkRedC, blackC;
-	RgnHandle	shadowRgn;
 	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
 	
@@ -290,10 +289,6 @@ void DrawShelf (Rect *shelfTop)
 	
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
-	
-	shadowRgn = NewRgn();
-	if (shadowRgn == nil)
-		RedAlert(kErrUnnaccounted);
 
 	PortabilityLayer::Vec2i poly[5];
 	poly[0] = PortabilityLayer::Vec2i(shelfTop->left, shelfTop->bottom);
@@ -302,19 +297,19 @@ void DrawShelf (Rect *shelfTop)
 	poly[3] = poly[2] + PortabilityLayer::Vec2i(0, -kShelfThick + 1);
 	poly[4] = poly[3] + PortabilityLayer::Vec2i(-kShelfShadowOff, -kShelfShadowOff);
 
-	//PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompilePoly(poly, sizeof(poly) / sizeof(poly[0]));
+	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompilePoly(poly, sizeof(poly) / sizeof(poly[0]));
 
-	OpenRgn();
-	CloseRgn(shadowRgn);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMask(true);
-	if (thisMac.isDepth == 4)
-		ColorRegion(shadowRgn, 15);
-	else
-		ColorRegion(shadowRgn, k8DkstGrayColor);
-	PenNormal();
-	DisposeRgn(shadowRgn);
-	//mask->Destroy();
+	if (mask)
+	{
+		PenPat(GetQDGlobalsGray(&dummyPattern));
+		PenMask(true);
+		if (thisMac.isDepth == 4)
+			ColorRegion(mask, 15);
+		else
+			ColorRegion(mask, k8DkstGrayColor);
+		PenNormal();
+		mask->Destroy();
+	}
 
 	MoveTo(shelfTop->left, shelfTop->bottom);
 	InsetRect(shelfTop, 0, 1);
@@ -365,7 +360,6 @@ void DrawCabinet (Rect *cabinet)
 	#define		kCabinetShadowOff	6
 	Rect		tempRect;
 	long		brownC, dkGrayC, ltTanC, tanC, dkRedC, blackC;
-	RgnHandle	shadowRgn;
 	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
 	
@@ -392,24 +386,31 @@ void DrawCabinet (Rect *cabinet)
 	SetGraphicsPort(backSrcMap);
 	
 	MoveTo(cabinet->left, cabinet->bottom);
-	shadowRgn = NewRgn();
-	if (shadowRgn == nil)
-		RedAlert(kErrUnnaccounted);
-	OpenRgn();
-	Line(kCabinetShadowOff, kCabinetShadowOff);
-	Line(RectWide(cabinet), 0);
-	Line(0, -RectTall(cabinet) + kCabinetDeep);
-	Line(-kCabinetShadowOff, -kCabinetShadowOff);
-	LineTo(cabinet->left, cabinet->bottom);
-	CloseRgn(shadowRgn);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMask(true);
-	if (thisMac.isDepth == 4)
-		ColorRegion(shadowRgn, 15);
-	else
-		ColorRegion(shadowRgn, dkGrayC);
-	PenNormal();
-	DisposeRgn(shadowRgn);
+
+	{
+
+		PortabilityLayer::Vec2i poly[5];
+		poly[0] = PortabilityLayer::Vec2i(cabinet->left, cabinet->bottom);
+		poly[1] = poly[0] + PortabilityLayer::Vec2i(kCabinetShadowOff, kCabinetShadowOff);
+		poly[2] = poly[1] + PortabilityLayer::Vec2i(RectWide(cabinet), 0);
+		poly[3] = poly[2] + PortabilityLayer::Vec2i(0, -RectTall(cabinet) + kCabinetDeep);
+		poly[4] = poly[3] + PortabilityLayer::Vec2i(-kCabinetShadowOff, -kCabinetShadowOff);
+
+		PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompilePoly(poly, sizeof(poly) / sizeof(poly[0]));
+
+		if (mask)
+		{
+			PenPat(GetQDGlobalsGray(&dummyPattern));
+			PenMask(true);
+			if (thisMac.isDepth == 4)
+				ColorRegion(mask, 15);
+			else
+				ColorRegion(mask, dkGrayC);
+			PenNormal();
+
+			mask->Destroy();
+		}
+	}
 	
 	InsetRect(cabinet, 1, 1);		// fill bulk of cabinet brown
 	ColorRect(cabinet, brownC);
@@ -498,19 +499,18 @@ void DrawSimpleFurniture (short what, Rect *theRect)
 
 //--------------------------------------------------------------  DrawCounter
 
-void DrawCounter (Rect *counter)
+void DrawCounter(Rect *counter)
 {
-	#define		kCounterFooterHigh	12
-	#define		kCounterStripWide	6
-	#define		kCounterStripTall	29
-	#define		kCounterPanelDrop	12
+#define		kCounterFooterHigh	12
+#define		kCounterStripWide	6
+#define		kCounterStripTall	29
+#define		kCounterPanelDrop	12
 	Rect		tempRect;
-	RgnHandle	shadowRgn;
 	long		brownC, dkGrayC, tanC, blackC, dkstRedC;
 	short		nRects, width, i;
 	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
-	
+
 	if (thisMac.isDepth == 4)
 	{
 		brownC = 11;
@@ -527,30 +527,36 @@ void DrawCounter (Rect *counter)
 		blackC = k8BlackColor;
 		dkstRedC = k8DkRed2Color;
 	}
-	
+
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
-	
+
 	MoveTo(counter->right - 2, counter->bottom);
-	shadowRgn = NewRgn();
-	if (shadowRgn == nil)
-		RedAlert(kErrUnnaccounted);
-	OpenRgn();
-	Line(10, -10);
-	Line(0, -RectTall(counter) + 29);
-	Line(2, 0);
-	Line(0, -7);
-	Line(-12, -12);
-	LineTo(counter->right - 2, counter->bottom);
-	CloseRgn(shadowRgn);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMask(true);
-	if (thisMac.isDepth == 4)
-		ColorRegion(shadowRgn, 15);
-	else
-		ColorRegion(shadowRgn, dkGrayC);
-	PenNormal();
-	DisposeRgn(shadowRgn);
+
+	{
+		PortabilityLayer::Vec2i poly[6];
+		poly[0] = PortabilityLayer::Vec2i(counter->right - 2, counter->bottom);
+		poly[1] = poly[0] + PortabilityLayer::Vec2i(10, -10);
+		poly[2] = poly[1] + PortabilityLayer::Vec2i(0, -RectTall(counter) + 29);
+		poly[3] = poly[2] + PortabilityLayer::Vec2i(2, 0);
+		poly[4] = poly[3] + PortabilityLayer::Vec2i(0, -7);
+		poly[5] = poly[4] + PortabilityLayer::Vec2i(-12, -12);
+
+		PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompilePoly(poly, sizeof(poly) / sizeof(poly[0]));
+
+		if (mask)
+		{
+			PenPat(GetQDGlobalsGray(&dummyPattern));
+			PenMask(true);
+			if (thisMac.isDepth == 4)
+				ColorRegion(mask, 15);
+			else
+				ColorRegion(mask, dkGrayC);
+			PenNormal();
+
+			mask->Destroy();
+		}
+	}
 	
 	InsetRect(counter, 2, 2);
 	ColorRect(counter, brownC);
@@ -642,19 +648,19 @@ void DrawCounter (Rect *counter)
 
 //--------------------------------------------------------------  DrawDresser
 
-void DrawDresser (Rect *dresser)
+void DrawDresser(Rect *dresser)
 {
-	#define		kDresserTopThick	4
-	#define		kDresserCrease		9
-	#define		kDresserDrawerDrop	12
-	#define		kDresserSideSpare	14
+#define		kDresserTopThick	4
+#define		kDresserCrease		9
+#define		kDresserDrawerDrop	12
+#define		kDresserSideSpare	14
 	Rect		tempRect, dest;
 	long		yellowC, brownC, dkGrayC, ltTanC, dkstRedC;
 	RgnHandle	shadowRgn;
 	short		nRects, height, i;
 	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
-	
+
 	if (thisMac.isDepth == 4)
 	{
 		yellowC = 9;
@@ -671,30 +677,23 @@ void DrawDresser (Rect *dresser)
 		ltTanC = k8LtTanColor;
 		dkstRedC = k8DkRed2Color;
 	}
-	
+
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
-	
+
 	MoveTo(dresser->left + 10, dresser->bottom + 9);
-	shadowRgn = NewRgn();
-	if (shadowRgn == nil)
-		RedAlert(kErrUnnaccounted);
-	OpenRgn();
-	Line(RectWide(dresser) - 11, 0);
-	Line(9, -9);
-	Line(0, -RectTall(dresser) + 12);
-	Line(-9, -9);
-	Line(-RectWide(dresser) + 11, 0);
-	LineTo(dresser->left + 10, dresser->bottom + 9);
-	CloseRgn(shadowRgn);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMask(true);
-	if (thisMac.isDepth == 4)
-		ColorRegion(shadowRgn, 15);
-	else
-		ColorRegion(shadowRgn, k8DkstGrayColor);
-	PenNormal();
-	DisposeRgn(shadowRgn);
+
+	{
+		PortabilityLayer::Vec2i poly[6];
+		poly[0] = PortabilityLayer::Vec2i(dresser->left + 10, dresser->bottom + 9);
+		poly[1] = poly[0] + PortabilityLayer::Vec2i(RectWide(dresser) - 11, 0);
+		poly[2] = poly[1] + PortabilityLayer::Vec2i(9, -9);
+		poly[3] = poly[2] + PortabilityLayer::Vec2i(0, -RectTall(dresser) + 12);
+		poly[4] = poly[3] + PortabilityLayer::Vec2i(-9, -9);
+		poly[5] = poly[4] + PortabilityLayer::Vec2i(-RectWide(dresser) + 11, 0);
+
+		PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompilePoly(poly, sizeof(poly) / sizeof(poly[0]));
+	}
 	
 	InsetRect(dresser, 2, 2);
 	ColorRect(dresser, k8PumpkinColor);
@@ -736,14 +735,14 @@ void DrawDresser (Rect *dresser)
 		QOffsetRect(&dest, tempRect.left, tempRect.top);
 		CopyBits((BitMap *)*GetGWorldPixMap(furnitureSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&knobSrc, &dest, srcCopy, nil);
+				&knobSrc, &dest, srcCopy);
 		
 		QSetRect(&dest, -4, -4, 4, 4);
 		QOffsetRect(&dest, -HalfRectTall(&tempRect), HalfRectTall(&tempRect));
 		QOffsetRect(&dest, tempRect.right, tempRect.top);
 		CopyBits((BitMap *)*GetGWorldPixMap(furnitureSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
-				&knobSrc, &dest, srcCopy, nil);
+				&knobSrc, &dest, srcCopy);
 		
 		QOffsetRect(&tempRect, 0, kDresserTopThick + height);
 	}
@@ -988,7 +987,7 @@ void DrawClockDigit (short number, Rect *dest)
 {
 	CopyBits((BitMap *)*GetGWorldPixMap(bonusSrcMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
-			&digits[number], dest, srcCopy, nil);
+			&digits[number], dest, srcCopy);
 }
 
 //--------------------------------------------------------------  DrawBlueClock

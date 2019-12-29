@@ -235,7 +235,7 @@ void RedrawMapContents (void)
 					QOffsetRect(&src, 0, type * kMapRoomHeight);
 					CopyBits((BitMap *)*GetGWorldPixMap(nailSrcMap), 
 							GetPortBitMapForCopyBits(GetWindowPort(mapWindow)), 
-							&src, &aRoom, srcCopy, nil);
+							&src, &aRoom, srcCopy);
 				}
 				
 				if (whoCares == thisRoomNumber)

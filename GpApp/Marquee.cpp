@@ -435,7 +435,7 @@ void DrawGliderMarquee (void)
 			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
 			&leftStartGliderSrc, 
 			&marqueeGliderRect, 
-			srcXor, nil);
+			srcXor);
 }
 
 //--------------------------------------------------------------  SetMarqueeGliderCenter

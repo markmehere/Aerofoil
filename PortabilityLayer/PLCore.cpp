@@ -1026,9 +1026,13 @@ OSErr PtrAndHand(const void *data, Handle handle, Size size)
 	return noErr;
 }
 
-void SetHandleSize(Handle hdl, Size newSize)
+OSErr SetHandleSize(Handle hdl, Size newSize)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+	if (!mm->ResizeHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(hdl), newSize))
+		return genericErr;
+
+	return noErr;
 }
 
 void *NewPtr(Size size)
