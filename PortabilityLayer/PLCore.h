@@ -39,7 +39,6 @@ typedef unsigned char *StringPtr;
 
 class PLPasStr;
 struct CGraf;
-struct Region;
 struct Menu;
 
 typedef void *Ptr;
@@ -169,14 +168,12 @@ typedef Cursor *CursPtr;
 typedef CCursor *CCrsrPtr;
 typedef FSSpec *FSSpecPtr;
 typedef Menu *MenuPtr;
-typedef Region *RgnPtr;
 typedef CInfoPBRec *CInfoPBPtr;
 typedef VersionRecord *VersRecPtr;
 
 typedef CursPtr *CursHandle;
 typedef CCrsrPtr *CCrsrHandle;
 typedef MenuPtr *MenuHandle;
-typedef RgnPtr *RgnHandle;
 typedef VersRecPtr *VersRecHndl;
 
 typedef WindowPtr WindowRef;	// wtf?

@@ -181,7 +181,7 @@ void LoadGraphicPlus (short resID, Rect *theRect)
 void RedrawMapContents (void)
 {
 	Rect		newClip, aRoom, src;
-	RgnHandle	wasClip;
+	Rect		wasClip;
 	short		h, i, groundLevel;
 	short		floor, suite, whoCares, type;
 	char		wasState;
@@ -199,12 +199,9 @@ void RedrawMapContents (void)
 	newClip.bottom = mapWindowRect.bottom + 2 - kMapScrollBarWidth;
 	
 	SetPort((GrafPtr)mapWindow);
-	wasClip = NewRgn();
-	if (wasClip != nil)
-	{
-		GetClip(wasClip);
-		ClipRect(&newClip);
-	}
+
+	GetClip(&wasClip);
+	ClipRect(&newClip);
 	
 	for (i = 0; i < mapRoomsHigh; i++)
 	{
@@ -285,11 +282,7 @@ void RedrawMapContents (void)
 		InsetRect(&activeRoomRect, -1, -1);
 	}
 	
-	if (wasClip != nil)
-	{
-		SetClip(wasClip);
-		DisposeRgn(wasClip);
-	}
+	ClipRect(&wasClip);
 }
 #endif
 

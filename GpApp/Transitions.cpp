@@ -76,7 +76,6 @@ void WipeScreenOn (short direction, Rect *theRect)
 {
 	#define		kWipeRectThick	4
 	Rect		wipeRect;
-	RgnHandle	dummyRgn;
 	short		hOffset, vOffset;
 	short		i, count;
 	
@@ -112,14 +111,11 @@ void WipeScreenOn (short direction, Rect *theRect)
 		break;
 	}
 	
-	dummyRgn = NewRgn();
-	GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn);
-	
 	for (i = 0; i < count; i++)
 	{
-		CopyBitsConstrained((BitMap *)*GetGWorldPixMap(workSrcMap), 
+		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&wipeRect, &wipeRect, srcCopy, &(*dummyRgn)->rect);
+				&wipeRect, &wipeRect, srcCopy);
 		
 		QOffsetRect(&wipeRect, hOffset, vOffset);
 		
@@ -132,8 +128,6 @@ void WipeScreenOn (short direction, Rect *theRect)
 		else if (wipeRect.bottom > theRect->bottom)
 			wipeRect.bottom = theRect->bottom;
 	}
-	
-	DisposeRgn(dummyRgn);
 }
 
 //--------------------------------------------------------------  DumpScreenOn

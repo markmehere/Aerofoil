@@ -24,7 +24,6 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 {
 	objectType	thisObject;
 	Rect		whoCares, itsRect, rectA, rectB, testRect;
-	RgnHandle	theRgn;
 	short		i, legit, dynamicNum, n;
 	short		floor, suite, room, obj;
 	char		wasState;
@@ -683,10 +682,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						GetMovieBox(theMovie, &movieRect);
 						CenterRectInRect(&movieRect, &whoCares);
 						SetMovieBox(theMovie, &movieRect);
-						theRgn = NewRgn();
-						RectRgn(theRgn, &whoCares);
-						SetMovieDisplayClipRgn(theMovie, theRgn);
-						DisposeRgn(theRgn);
+						SetMovieDisplayClipRgn(theMovie, &whoCares);
 						tvOn = thisObject.data.g.state;
 					}
 #endif

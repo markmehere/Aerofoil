@@ -214,7 +214,6 @@
     <ClInclude Include="QDRegion.h" />
     <ClInclude Include="QDStandardPalette.h" />
     <ClInclude Include="QDState.h" />
-    <ClInclude Include="QDUtils.h" />
     <ClInclude Include="RandomNumberGenerator.h" />
     <ClInclude Include="Rect2i.h" />
     <ClInclude Include="RenderedFont.h" />
@@ -315,7 +314,6 @@
     <ClCompile Include="QDPort.cpp" />
     <ClCompile Include="QDStandardPalette.cpp" />
     <ClCompile Include="QDState.cpp" />
-    <ClCompile Include="QDUtils.cpp" />
     <ClCompile Include="RandomNumberGenerator.cpp" />
     <ClCompile Include="ResourceCompiledRef.cpp" />
     <ClCompile Include="ResourceFile.cpp" />

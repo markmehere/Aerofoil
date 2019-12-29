@@ -59,6 +59,6 @@ void SetMovieActive(Movie movie, Boolean active);
 void StartMovie(Movie movie);
 void MoviesTask(Movie movie, int unknown);
 void SetMovieBox(Movie movie, const Rect *rect);
-void SetMovieDisplayClipRgn(Movie movie, RgnHandle region);
+void SetMovieDisplayClipRgn(Movie movie, const Rect *rect);
 
 #endif

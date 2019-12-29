@@ -135,7 +135,6 @@ void AddRectToWorkRectsWhole (Rect *theRect)
 
 void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 {
-	RgnHandle	wasClip;
 	Rect		src, dest;
 	short		which;
 	
@@ -149,10 +148,6 @@ void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 	
 	dest = thisGlider->dest;
 	QOffsetRect(&dest, playOriginH - 20, playOriginV - 16);
-	
-	wasClip = NewRgn();
-	if (wasClip == nil)
-		return;
 	
 	SetPort((GrafPtr)workSrcMap);
 
@@ -183,8 +178,6 @@ void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 					&thisGlider->src, &thisGlider->mask, &dest, mirrorRect);
 		}
 	}
-	
-	DisposeRgn(wasClip);
 	
 	src =thisGlider->whole;
 	QOffsetRect(&src, playOriginH - 20, playOriginV - 16);

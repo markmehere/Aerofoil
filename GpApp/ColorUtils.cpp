@@ -209,17 +209,3 @@ void DkGrayForeColor (void)
 	
 	RGBForeColor(&color);
 }
-
-//--------------------------------------------------------------  RestoreColorsSlam
-
-// This function forces the Macintosh to rebuild the palette.  It is…
-// called to restore a sense or normality after some serious munging…
-// with the palette.
-
-void RestoreColorsSlam (void)
-{
-	RestoreDeviceClut(nil);
-	PaintBehind(nil, GetGrayRgn());
-	DrawMenuBar();
-}
-

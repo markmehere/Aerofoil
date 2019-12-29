@@ -17,7 +17,7 @@ namespace PortabilityLayer
 		, m_isBackResolved16(false)
 		, m_isForeResolved8(false)
 		, m_isBackResolved8(false)
-		, m_clipRegion(nullptr)
+		, m_clipRect(Rect::Create(INT16_MIN, INT16_MIN, INT16_MAX, INT16_MAX))
 		, m_penInvert(false)
 		, m_penMask(false)
 		, m_havePattern8x8(false)

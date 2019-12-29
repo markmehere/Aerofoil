@@ -128,7 +128,9 @@ void PaintRect(const Rect *rect);
 void PaintOval(const Rect *rect);
 void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask);
 
-void ClipRect(const Rect *rect);	// Sets the clipping area
+void ClipRect(const Rect *rect);
+void GetClip(Rect *rect);
+
 void FrameRect(const Rect *rect);
 void FrameOval(const Rect *rect);
 void FrameRoundRect(const Rect *rect, int w, int h);
@@ -140,7 +142,7 @@ void PenNormal();
 void EraseRect(const Rect *rect);
 void InvertRect(const Rect *rect);
 void InsetRect(Rect *rect, int x, int y);
-void Line(int x, int y);	// FIXME: Is this relative or absolute?
+void Line(int x, int y);
 Pattern *GetQDGlobalsGray(Pattern *pattern);
 Pattern *GetQDGlobalsBlack(Pattern *pattern);
 
@@ -155,20 +157,10 @@ void CopyBitsConstrained(const BitMap *srcBitmap, BitMap *destBitmap, const Rect
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *maskRect, const Rect *destRect);
 void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *constraintRect);
 
-RgnHandle NewRgn();
-void RectRgn(RgnHandle region, const Rect *rect);
-void UnionRgn(RgnHandle regionA, RgnHandle regionB, RgnHandle regionC);
-void DisposeRgn(RgnHandle rgn);
-void OpenRgn();
-void CloseRgn(RgnHandle rgn);
-Boolean PtInRgn(Point point, RgnHandle rgn);
-
-void GetClip(RgnHandle rgn);
-void SetClip(RgnHandle rgn);
+bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMask);
 
 BitMap *GetPortBitMapForCopyBits(CGrafPtr grafPtr);
 CGrafPtr GetWindowPort(WindowPtr window);
-RgnHandle GetPortVisibleRegion(CGrafPtr port, RgnHandle region);
 
 // Computes A - B and returns it packed?
 Int32 DeltaPoint(Point pointA, Point pointB);
@@ -181,8 +173,5 @@ Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection);
 Boolean PtInRect(Point point, const Rect *rect);
 
 void RestoreDeviceClut(void *unknown);
-void PaintBehind(void *unknown, RgnHandle region);
-
-RgnHandle GetGrayRgn();	// Returns the region not occupied by the menu bar
 
 #endif

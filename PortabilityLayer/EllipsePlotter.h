@@ -55,7 +55,7 @@ namespace PortabilityLayer
 		int32_t m_xChangeCostStaticFactor;
 		int32_t m_yChangeCostStaticFactor;
 
-#if PL_DEBUG_ELLIPSE_PLOTTER 1
+#if PL_DEBUG_ELLIPSE_PLOTTER
 		Vec2i m_2offsetFromCenter;
 #endif
 	};

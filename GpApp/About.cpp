@@ -13,6 +13,7 @@
 #include "DialogUtils.h"
 #include "Environ.h"
 #include "Externs.h"
+#include "ScanlineMask.h"
 
 
 static void HiLiteOkayButton (void);
@@ -21,7 +22,7 @@ static void UpdateMainPict (DialogPtr);
 static Boolean AboutFilter (DialogPtr, EventRecord *theEvent, short *hit);
 
 
-static RgnHandle		okayButtRgn;
+static PortabilityLayer::ScanlineMask	*okayButtScanlineMask;
 static Rect				okayButtonBounds, mainPICTBounds;
 static Boolean			okayButtIsHiLit, clickedDownInOkay;
 
@@ -63,6 +64,8 @@ void DoAbout (void)
 	}
 	
 	GetDialogItem(aboutDialog, kOkayButton, &itemType, &itemHandle, &okayButtonBounds);
+#if 0
+	PL_NotYetImplemented_TODO("Misc");
 	okayButtRgn = NewRgn();					// Create diagonal button region
 	OpenRgn();
 	MoveTo(okayButtonBounds.left + 1, okayButtonBounds.top + 45);
@@ -71,6 +74,7 @@ void DoAbout (void)
 	Line(-44, 44);
 	Line(-16, -16);
 	CloseRgn(okayButtRgn);
+#endif
 	okayButtIsHiLit = false;				// Initially, button is not hilit
 	clickedDownInOkay = false;				// Initially, didn't click in okay button
 	GetDialogItem(aboutDialog, kPictItemMain, &itemType, &itemHandle, &mainPICTBounds);
@@ -79,10 +83,10 @@ void DoAbout (void)
 	{
 		ModalDialog(aboutFilterUPP, &hit);
 	}
-	while ((hit != kOkayButton) && (okayButtRgn != nil));
+	while ((hit != kOkayButton) && (okayButtScanlineMask != nil));
 	
-	if (okayButtRgn != nil)
-		DisposeRgn(okayButtRgn);			// Clean up!
+	if (okayButtScanlineMask != nil)
+		okayButtScanlineMask->Destroy();			// Clean up!
 	DisposeDialog(aboutDialog);
 	DisposeModalFilterUPP(aboutFilterUPP);
 	
@@ -175,7 +179,7 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 	if (Button() && clickedDownInOkay)
 	{
 		GetMouse(&mousePt);
-		if(PtInRgn(mousePt, okayButtRgn))
+		if(PointInScanlineMask(mousePt, okayButtScanlineMask))
 			HiLiteOkayButton();
 		else
 			UnHiLiteOkayButton();
@@ -203,7 +207,7 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 		case mouseDown:
 		mousePt = theEvent->where;
 		GlobalToLocal(&mousePt);
-		if(PtInRgn(mousePt, okayButtRgn))
+		if(PointInScanlineMask(mousePt, okayButtScanlineMask))
 		{
 			clickedDownInOkay = true;
 			handledIt = false;
@@ -215,7 +219,7 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 		case mouseUp:
 		mousePt = theEvent->where;
 		GlobalToLocal(&mousePt);
-		if(PtInRgn(mousePt, okayButtRgn) && clickedDownInOkay)
+		if(PointInScanlineMask(mousePt, okayButtScanlineMask) && clickedDownInOkay)
 		{
 			UnHiLiteOkayButton();
 			*hit = kOkayButton;

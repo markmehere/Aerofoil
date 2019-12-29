@@ -3,8 +3,6 @@
 #include "RGBAColor.h"
 #include "SharedTypes.h"
 
-struct Region;
-
 namespace PortabilityLayer
 {
 	struct QDState
@@ -14,7 +12,7 @@ namespace PortabilityLayer
 		int m_fontID;
 		int m_textFace;
 		int m_textSize;
-		Region **m_clipRegion;
+		Rect m_clipRect;
 		Point m_penPos;
 		bool m_penInvert;
 		bool m_penMask;

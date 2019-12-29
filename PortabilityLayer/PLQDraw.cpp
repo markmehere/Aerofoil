@@ -22,7 +22,6 @@
 #include "WindowManager.h"
 #include "QDGraf.h"
 #include "QDPixMap.h"
-#include "QDUtils.h"
 #include "Vec2i.h"
 
 #include <algorithm>
@@ -154,16 +153,7 @@ static void PlotLine(PortabilityLayer::QDState *qdState, PortabilityLayer::QDPor
 
 	Rect constrainedRect = qdPort->GetRect();
 
-	if (qdState->m_clipRegion)
-	{
-		const Region &region = **qdState->m_clipRegion;
-
-		if (region.size > sizeof(Region))
-			PL_NotYetImplemented();
-
-		constrainedRect = constrainedRect.Intersect(region.rect);
-	}
-
+	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(lineRect);
 
 	if (!constrainedRect.IsValid())
@@ -508,17 +498,7 @@ void PaintRectWithPCR(const Rect &rect, PaintColorResolution pcr)
 	Rect constrainedRect = rect;
 
 	PortabilityLayer::QDState *qdState = qdPort->GetState();
-
-	if (qdState->m_clipRegion)
-	{
-		const Region &region = **qdState->m_clipRegion;
-
-		if (region.size > sizeof(Region))
-			PL_NotYetImplemented();
-
-		constrainedRect = constrainedRect.Intersect(region.rect);
-	}
-
+	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(qdPort->GetRect());
 
 	if (!constrainedRect.IsValid())
@@ -762,21 +742,52 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 	}
 }
 
+void GetClip(Rect *rect)
+{
+	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
+	*rect = qdState->m_clipRect;
+}
+
 void ClipRect(const Rect *rect)
 {
 	if (!rect->IsValid())
 		return;
 
 	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	if (!qdState->m_clipRegion)
-		qdState->m_clipRegion = PortabilityLayer::QDUtils::CreateRegion(*rect);
-	else
-		PortabilityLayer::QDUtils::ResetRegionToRect(qdState->m_clipRegion, *rect);
+	qdState->m_clipRect = *rect;
 }
 
 void FrameRect(const Rect *rect)
 {
-	PL_NotYetImplemented_TODO("Rects");
+	if (!rect->IsValid())
+		return;
+
+	uint16_t width = rect->right - rect->left;
+	uint16_t height = rect->bottom - rect->top;
+
+	if (width <= 2 || height <= 2)
+		PaintRect(rect);
+	else
+	{
+		// This is stupid, especially in the vertical case, but oh well
+		Rect edgeRect;
+
+		edgeRect = *rect;
+		edgeRect.right = edgeRect.left + 1;
+		PaintRect(&edgeRect);
+
+		edgeRect = *rect;
+		edgeRect.left = edgeRect.right - 1;
+		PaintRect(&edgeRect);
+
+		edgeRect = *rect;
+		edgeRect.bottom = edgeRect.top + 1;
+		PaintRect(&edgeRect);
+
+		edgeRect = *rect;
+		edgeRect.top = edgeRect.bottom - 1;
+		PaintRect(&edgeRect);
+	}
 }
 
 void FrameOval(const Rect *rect)
@@ -1097,78 +1108,17 @@ void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitM
 	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, constrainRect);
 }
 
-void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase)
-{
-	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
-}
 
-RgnHandle NewRgn()
-{
-	PortabilityLayer::MMHandleBlock *handle = PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(sizeof(Region));
-
-	Region *rgn = static_cast<Region*>(handle->m_contents);
-
-	rgn->size = sizeof(Region);
-	rgn->rect = Rect::Create(0, 0, 0, 0);
-
-	return reinterpret_cast<Region**>(&handle->m_contents);
-}
-
-void RectRgn(RgnHandle region, const Rect *rect)
-{
-	Region *rgn = *region;
-
-	if (rgn->size != sizeof(Region))
-	{
-		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
-		PortabilityLayer::MMHandleBlock *hdlBlock = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(region);
-
-		// OK if this fails, I guess
-		if (mm->ResizeHandle(hdlBlock, sizeof(Region)))
-			rgn = static_cast<Region*>(hdlBlock->m_contents);
-
-		rgn->size = sizeof(Region);
-	}
-
-	rgn->rect = *rect;
-}
-
-void UnionRgn(RgnHandle regionA, RgnHandle regionB, RgnHandle regionC)
-{
-	PL_NotYetImplemented_TODO("Polys");
-}
-
-void DisposeRgn(RgnHandle rgn)
-{
-	DisposeHandle(reinterpret_cast<Handle>(rgn));
-}
-
-void OpenRgn()
-{
-	PL_NotYetImplemented_TODO("Polys");
-}
-
-void CloseRgn(RgnHandle rgn)
-{
-	PL_NotYetImplemented_TODO("Polys");
-}
-
-Boolean PtInRgn(Point point, RgnHandle rgn)
+bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMask)
 {
 	PL_NotYetImplemented();
 	return false;
 }
 
-void GetClip(RgnHandle rgn)
+void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase)
 {
-	PL_NotYetImplemented_TODO("Polys");
+	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
 }
-
-void SetClip(RgnHandle rgn)
-{
-	PL_NotYetImplemented_TODO("Polys");
-}
-
 
 BitMap *GetPortBitMapForCopyBits(CGrafPtr grafPtr)
 {
@@ -1178,14 +1128,6 @@ BitMap *GetPortBitMapForCopyBits(CGrafPtr grafPtr)
 CGrafPtr GetWindowPort(WindowPtr window)
 {
 	return &window->m_graf;
-}
-
-RgnHandle GetPortVisibleRegion(CGrafPtr port, RgnHandle region)
-{
-	const Rect rect = port->m_port.GetRect();
-
-	RectRgn(region, &rect);
-	return region;
 }
 
 
@@ -1220,17 +1162,6 @@ Boolean PtInRect(Point point, const Rect *rect)
 void RestoreDeviceClut(void *unknown)
 {
 	PL_NotYetImplemented();
-}
-
-void PaintBehind(void *unknown, RgnHandle region)
-{
-	PL_NotYetImplemented();
-}
-
-RgnHandle GetGrayRgn()
-{
-	PL_NotYetImplemented();
-	return nullptr;
 }
 
 void BitMap::Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, void *dataPtr)

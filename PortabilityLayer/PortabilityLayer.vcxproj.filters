@@ -291,9 +291,6 @@
     <ClInclude Include="WindowManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="QDUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="QDPort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -534,9 +531,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WindowManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="QDUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QDPort.cpp">

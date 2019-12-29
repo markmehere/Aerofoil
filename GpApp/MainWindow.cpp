@@ -26,7 +26,6 @@
 void DrawOnSplash (void);
 void SetPaletteToGrays (void);
 void HardDrawMainWindow (void);
-void RestoreColorsSlam (void);
 
 
 CTabHandle		theCTab;
@@ -132,18 +131,15 @@ void RedrawSplashScreen (void)
 void UpdateMainWindow (void)
 {
 	Rect		tempRect;
-	RgnHandle	dummyRgn;
 	
-	dummyRgn = NewRgn();
-	GetPortVisibleRegion(GetWindowPort(mainWindow), dummyRgn);
 	SetPortWindowPort(mainWindow);
 	
 	if (theMode == kEditMode)
 	{
 		PauseMarquee();
-		CopyBitsConstrained((BitMap *)*GetGWorldPixMap(workSrcMap),
+		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&mainWindowRect, &mainWindowRect, srcCopy, &(*dummyRgn)->rect);
+				&mainWindowRect, &mainWindowRect, srcCopy);
 		ResumeMarquee();
 	}
 	else if ((theMode == kSplashMode) || (theMode == kPlayMode))
@@ -153,15 +149,14 @@ void UpdateMainWindow (void)
 		QSetRect(&tempRect, 0, 0, 640, 460);
 		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
 		LoadScaledGraphic(kSplash8BitPICT, &tempRect);
-		CopyBitsConstrained((BitMap *)*GetGWorldPixMap(workSrcMap), 
+		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-				&workSrcRect, &mainWindowRect, srcCopy, &(*dummyRgn)->rect);
+				&workSrcRect, &mainWindowRect, srcCopy);
 		SetPortWindowPort(mainWindow);
 		
 		DrawOnSplash();
 	}
 	
-	DisposeRgn(dummyRgn);
 	splashDrawn = true;
 }
 

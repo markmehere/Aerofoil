@@ -134,7 +134,7 @@ void SetMovieBox(Movie movie, const Rect *rect)
 	PL_NotYetImplemented();
 }
 
-void SetMovieDisplayClipRgn(Movie movie, RgnHandle region)
+void SetMovieDisplayClipRgn(Movie movie, const Rect *rect)
 {
 	PL_NotYetImplemented();
 }

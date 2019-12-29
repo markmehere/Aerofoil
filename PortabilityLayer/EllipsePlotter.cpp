@@ -17,7 +17,7 @@ namespace PortabilityLayer
 	EllipsePlotter::EllipsePlotter()
 		: m_2center(0, 0)
 		, m_point(0, 0)
-#if PL_DEBUG_ELLIPSE_PLOTTER 1
+#if PL_DEBUG_ELLIPSE_PLOTTER
 		, m_2offsetFromCenter(0, 0)
 #endif
 		, m_quadrant(Quadrant_PxPy)

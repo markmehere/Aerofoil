@@ -656,7 +656,6 @@ void DrawDresser(Rect *dresser)
 #define		kDresserSideSpare	14
 	Rect		tempRect, dest;
 	long		yellowC, brownC, dkGrayC, ltTanC, dkstRedC;
-	RgnHandle	shadowRgn;
 	short		nRects, height, i;
 	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
