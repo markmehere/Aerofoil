@@ -9,6 +9,7 @@ namespace PortabilityLayer
 		EFilePermission_Any,
 		EFilePermission_Read,
 		EFilePermission_ReadWrite,
+		EFilePermission_Write,
 	};
 }
 

@@ -10,6 +10,7 @@
 #include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "IOStream.h"
 #include "House.h"
 
 
@@ -30,7 +31,8 @@ extern Str31		highBanner;
 extern Str15		leftName, rightName, batteryName, bandName;
 extern Str15		highName;
 //extern long		encryptedNumber;
-extern short		maxFiles, numNeighbors, houseRefNum, willMaxFiles;
+extern short		maxFiles, numNeighbors, willMaxFiles;
+extern PortabilityLayer::IOStream	*houseStream;
 extern short		isEditH, isEditV, isMapH, isMapV;
 extern short		isToolsH, isToolsV, isCoordH, isCoordV;
 extern short		isLinkH, isLinkV, toolMode, mapLeftRoom, mapTopRoom;
@@ -285,7 +287,7 @@ int gpAppMain()
 {
 //	long		wasSeed;
 	long		theErr;
-	OSErr		fileErr;
+	PLError_t		fileErr;
 	Boolean		whoCares, copyGood;
 
 	PL_Init();
@@ -332,7 +334,7 @@ int gpAppMain()
 	if (thisMac.hasQT)
 	{
 		theErr = EnterMovies();
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 			thisMac.hasQT = false;
 	}
 	
@@ -376,7 +378,7 @@ int gpAppMain()
 		if (!CloseHouse())
 		{
 			CloseHouseResFork();
-			fileErr = FSClose(houseRefNum);
+			houseStream->Close();
 			houseOpen = false;
 		}
 	}

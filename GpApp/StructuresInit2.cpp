@@ -30,7 +30,7 @@ void InitAngel (void);
 extern	Rect		suppSrcRect, justRoomsRect;
 extern	Rect		tileSrcRect, angelSrcRect;
 extern	CGrafPtr	tileSrcMap;
-extern	FSSpecPtr	theHousesSpecs;
+extern	VFileSpec	*theHousesSpecs;
 extern	hotPtr		hotSpots;
 extern	sparklePtr	sparkles;
 extern	flyingPtPtr	flyingPoints;
@@ -53,16 +53,16 @@ extern	short		maxFiles;
 void InitClutter (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&clutterSrcRect, 0, 0, 128, 69);
-	theErr = CreateOffScreenGWorld(&clutterSrcMap, &clutterSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&clutterSrcMap, &clutterSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(clutterSrcMap);
 	LoadGraphic(kClutterPictID);
 	
-	theErr = CreateOffScreenGWorld(&clutterMaskMap, &clutterSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&clutterMaskMap, &clutterSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(clutterMaskMap);
 	LoadGraphic(kClutterPictID + 1000);
 	
@@ -95,12 +95,12 @@ void InitClutter (void)
 void InitSupport (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&suppSrcRect, 0, 0, kRoomWide, kFloorSupportTall);		// 44
-	theErr = CreateOffScreenGWorld(&suppSrcMap, &suppSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&suppSrcMap, &suppSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(suppSrcMap);
 	LoadGraphic(kSupportPictID);
 	
@@ -115,16 +115,16 @@ void InitSupport (void)
 void InitAngel (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&angelSrcRect, 0, 0, 96, 44);
-	theErr = CreateOffScreenGWorld(&angelSrcMap, &angelSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&angelSrcMap, &angelSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(angelSrcMap);
 	LoadGraphic(kAngelPictID);
 	
-	theErr = CreateOffScreenGWorld(&angelMaskMap, &angelSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&angelMaskMap, &angelSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(angelMaskMap);
 	LoadGraphic(kAngelPictID + 1);
 	
@@ -140,7 +140,7 @@ void InitAngel (void)
 void CreateOffscreens (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
@@ -149,11 +149,11 @@ void CreateOffscreens (void)
 	
 	workSrcRect = houseRect;			// Set up work map
 	ZeroRectCorner(&workSrcRect);
-	theErr = CreateOffScreenGWorld(&workSrcMap, &workSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&workSrcMap, &workSrcRect, kPreferredPixelFormat);
 	
 	backSrcRect = houseRect;			// Set up background map
 	ZeroRectCorner(&backSrcRect);
-	theErr = CreateOffScreenGWorld(&backSrcMap, &backSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&backSrcMap, &backSrcRect, kPreferredPixelFormat);
 	
 	InitScoreboardMap();	SpinCursor(1);
 	InitGliderMap();		SpinCursor(1);
@@ -269,7 +269,7 @@ void CreatePointers (void)
 		RedAlert(kErrNoMemory);
 	
 	theHousesSpecs = nil;
-	theHousesSpecs = (FSSpecPtr)NewPtr(sizeof(FSSpec) * maxFiles);
+	theHousesSpecs = (VFileSpec*)NewPtr(sizeof(VFileSpec) * maxFiles);
 	if (theHousesSpecs == nil)
 		RedAlert(kErrNoMemory);
 	

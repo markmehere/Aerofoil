@@ -25,7 +25,7 @@ namespace PortabilityLayer
 		
 		void SetResLoad(bool load) override;
 
-		short OpenResFork(EVirtualDirectory virtualDir, const PLPasStr &filename) override;
+		short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
 		MMHandleBlock *GetResource(const ResTypeID &resType, int id) override;
 
 		short GetCurrentResFile() const override;
@@ -60,7 +60,7 @@ namespace PortabilityLayer
 
 	void ResourceManagerImpl::Init()
 	{
-		m_currentResFile = OpenResFork(EVirtualDirectory_ApplicationData, PSTR("ApplicationResources"));
+		m_currentResFile = OpenResFork(VirtualDirectories::kApplicationData, PSTR("ApplicationResources"));
 	}
 
 	void ResourceManagerImpl::Shutdown()
@@ -91,7 +91,7 @@ namespace PortabilityLayer
 		m_load = load;
 	}
 
-	short ResourceManagerImpl::OpenResFork(EVirtualDirectory virtualDir, const PLPasStr &filename)
+	short ResourceManagerImpl::OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename)
 	{
 		const size_t numSlots = m_resFiles.size();
 		size_t resFileIndex = numSlots;
@@ -109,7 +109,7 @@ namespace PortabilityLayer
 			return -1;
 
 		IOStream *fStream = nullptr;
-		if (FileManager::GetInstance()->RawOpenFileRF(virtualDir, filename, EFilePermission_Read, true, &fStream) != noErr)
+		if (FileManager::GetInstance()->RawOpenFileRF(virtualDir, filename, EFilePermission_Read, true, fStream) != PLErrors::kNone)
 			return -1;
 
 		ResourceFile *resFile = new ResourceFile();

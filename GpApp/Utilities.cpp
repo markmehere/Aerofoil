@@ -156,7 +156,7 @@ void CreateOffScreenBitMap (Rect *theRect, GrafPtr *offScreen)
 	if (theBitMap.baseAddr == nil)
 		RedAlert(kErrNoMemory);
 	theBitMap.bounds = *theRect;
-	if (MemError() != noErr)
+	if (MemError() != PLErrors::kNone)
 		RedAlert(kErrNoMemory);
 	SetPortBits(&theBitMap);
 	ClipRect(theRect);
@@ -175,7 +175,7 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 	CGrafPtr	newCGrafPtr;
 	Ptr			theseBits;
 	long		sizeOfOff, offRowBytes;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		thisDepth;
 	char		wasState;
 	
@@ -229,17 +229,11 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 //--------------------------------------------------------------------  CreateOffScreenGWorld
 // Creates an offscreen GWorldÊusing the depth passed in.
 
-OSErr CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, short depth)
+PLError_t CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
-	theErr = NewGWorld(theGWorld, depth, bounds, nil, useTempMem);
-	
-	if (theErr)
-		theErr = NewGWorld(theGWorld, depth, bounds, nil, 0);
-
-	if (!theErr)
-		LockPixels(GetGWorldPixMap(*theGWorld));
+	theErr = NewGWorld(theGWorld, pixelFormat, bounds, nil);
 	
 	return theErr;
 }
@@ -318,11 +312,11 @@ void LoadScaledGraphic (short resID, Rect *theRect)
 
 void LargeIconPlot (Rect *theRect, short theID)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	Handle		theSuite;
 	
 	theErr = GetIconSuite(&theSuite, theID, svAllLargeData);
-	if (theErr == noErr)
+	if (theErr == PLErrors::kNone)
 		theErr = PlotIconSuite(theRect, atNone, ttNone, theSuite);
 }
 
@@ -522,7 +516,7 @@ void DelayTicks (long howLong)
 void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 {
 	long		longVol;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 //	if (hasSM3)
 //	{
@@ -545,7 +539,7 @@ void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 void  UnivSetSoundVolume (short volume, Boolean hasSM3)
 {
 	long		longVol;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (volume > 7)
 		volume = 7;

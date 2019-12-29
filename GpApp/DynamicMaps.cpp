@@ -70,7 +70,7 @@ void NilSavedMaps (void)
 short BackUpToSavedMap (Rect *theRect, short where, short who)
 {
 	Rect		mapRect;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (numSavedMaps >= kMaxSavedMaps)
 		return(-1);
@@ -79,7 +79,7 @@ short BackUpToSavedMap (Rect *theRect, short where, short who)
 	ZeroRectCorner(&mapRect);
 	savedMaps[numSavedMaps].dest = *theRect;
 //	CreateOffScreenPixMap(&mapRect, &savedMaps[numSavedMaps].map);
-	theErr = CreateOffScreenGWorld(&savedMaps[numSavedMaps].map, &mapRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&savedMaps[numSavedMaps].map, &mapRect, kPreferredPixelFormat);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			GetPortBitMapForCopyBits(savedMaps[numSavedMaps].map), 

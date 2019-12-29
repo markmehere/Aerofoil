@@ -10,6 +10,7 @@
 #include "PLSound.h"
 #include "Externs.h"
 #include "SoundSync.h"
+#include "VirtualDirectory.h"
 
 
 #define kBaseBufferSoundID			1000
@@ -19,10 +20,10 @@
 void CallBack0 (SndChannelPtr, SndCommand *);
 void CallBack1 (SndChannelPtr, SndCommand *);
 void CallBack2 (SndChannelPtr, SndCommand *);
-OSErr LoadBufferSounds (void);
+PLError_t LoadBufferSounds (void);
 void DumpBufferSounds (void);
-OSErr OpenSoundChannels (void);
-OSErr CloseSoundChannels (void);
+PLError_t OpenSoundChannels (void);
+PLError_t CloseSoundChannels (void);
 
 
 SndCallBackUPP		callBack0UPP, callBack1UPP, callBack2UPP;
@@ -76,7 +77,7 @@ void PlayPrioritySound (short which, short priority)
 void FlushAnyTriggerPlaying (void)
 {
 	SndCommand	theCommand;
-	OSErr		theErr;
+	PLError_t		theErr;
 
 	SoundSyncState ss = SoundSync_ReadAll();
 	
@@ -122,7 +123,7 @@ void FlushAnyTriggerPlaying (void)
 void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPriority, short newPriority)
 {
 	SndCommand	theCommand;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (failedSound || dontLoadSounds)
 		return;
@@ -143,7 +144,7 @@ void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPrior
 		return;
 	}
 
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	if (isSoundOn)
 	{
 		if (oldPriority != 0)
@@ -174,7 +175,7 @@ void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPrior
 		theCommand.param2 = 0;
 		theErr = SndDoCommand(channel, &theCommand, true);
 
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 			SoundSync_ClearPriority(channelIndex);
 	}
 }
@@ -202,24 +203,24 @@ void CallBack2 (SndChannelPtr theChannel, SndCommand *theCommand)
 
 //--------------------------------------------------------------  LoadTriggerSound
 
-OSErr LoadTriggerSound (short soundID)
+PLError_t LoadTriggerSound (short soundID)
 {
 	Handle		theSound;
 	long		soundDataSize;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if ((dontLoadSounds) || (theSoundData[kMaxSounds - 1] != nil))
-		theErr = -1;
+		theErr = PLErrors::kFileNotFound;
 	else
 	{
 //		FlushAnyTriggerPlaying();
 		
-		theErr = noErr;
+		theErr = PLErrors::kNone;
 		
 		theSound = GetResource('snd ', soundID);
 		if (theSound == nil)
 		{
-			theErr = -1;
+			theErr = PLErrors::kFileNotFound;
 		}
 		else
 		{
@@ -228,7 +229,7 @@ OSErr LoadTriggerSound (short soundID)
 			if (theSoundData[kMaxSounds - 1] == nil)
 			{
 				ReleaseResource(theSound);
-				theErr = MemError();
+				theErr = PLErrors::kOutOfMemory;
 			}
 			else
 			{
@@ -252,26 +253,26 @@ void DumpTriggerSound (void)
 
 //--------------------------------------------------------------  LoadBufferSounds
 
-OSErr LoadBufferSounds (void)
+PLError_t LoadBufferSounds (void)
 {
 	Handle		theSound;
 	long		soundDataSize;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		i;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	for (i = 0; i < kMaxSounds - 1; i++)
 	{
 		theSound = GetResource('snd ', i + kBaseBufferSoundID);
 		if (theSound == nil)
-			return (MemError());
+			return (PLErrors::kOutOfMemory);
 		
 		soundDataSize = GetHandleSize(theSound) - 20L;
 		
 		theSoundData[i] = NewPtr(soundDataSize);
 		if (theSoundData[i] == nil)
-			return (MemError());
+			return (PLErrors::kOutOfMemory);
 		
 		BlockMove((Ptr)((Byte*)(*theSound) + 20L), theSoundData[i], soundDataSize);
 		ReleaseResource(theSound);
@@ -298,15 +299,15 @@ void DumpBufferSounds (void)
 
 //--------------------------------------------------------------  OpenSoundChannels
 
-OSErr OpenSoundChannels (void)
+PLError_t OpenSoundChannels (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	callBack0UPP = NewSndCallBackProc(CallBack0);
 	callBack1UPP = NewSndCallBackProc(CallBack1);
 	callBack2UPP = NewSndCallBackProc(CallBack2);
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	if (channelOpen)
 		return (theErr);
@@ -314,7 +315,7 @@ OSErr OpenSoundChannels (void)
 	theErr = SndNewChannel(&channel0, 
 			sampledSynth, initNoInterp + initMono, 
 			(SndCallBackUPP)callBack0UPP);
-	if (theErr == noErr)
+	if (theErr == PLErrors::kNone)
 		channelOpen = true;
 	else
 		return (theErr);
@@ -322,7 +323,7 @@ OSErr OpenSoundChannels (void)
 	theErr = SndNewChannel(&channel1, 
 			sampledSynth, initNoInterp + initMono, 
 			(SndCallBackUPP)callBack1UPP);
-	if (theErr == noErr)
+	if (theErr == PLErrors::kNone)
 		channelOpen = true;
 	else
 		return (theErr);
@@ -330,7 +331,7 @@ OSErr OpenSoundChannels (void)
 	theErr = SndNewChannel(&channel2, 
 			sampledSynth, initNoInterp + initMono, 
 			(SndCallBackUPP)callBack2UPP);
-	if (theErr == noErr)
+	if (theErr == PLErrors::kNone)
 		channelOpen = true;
 	
 	return (theErr);
@@ -338,11 +339,11 @@ OSErr OpenSoundChannels (void)
 
 //--------------------------------------------------------------  CloseSoundChannels
 
-OSErr CloseSoundChannels (void)
+PLError_t CloseSoundChannels (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	if (!channelOpen)
 		return (theErr);
@@ -359,7 +360,7 @@ OSErr CloseSoundChannels (void)
 		theErr = SndDisposeChannel(channel2, true);
 	channel2 = nil;
 	
-	if (theErr == noErr)
+	if (theErr == PLErrors::kNone)
 		channelOpen = false;
 	
 	DisposeSndCallBackUPP(callBack0UPP);
@@ -373,7 +374,7 @@ OSErr CloseSoundChannels (void)
 
 void InitSound (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 		
 	if (dontLoadSounds)
 		return;
@@ -389,7 +390,7 @@ void InitSound (void)
 	SoundSync_ClearPriority(2);
 	
 	theErr = LoadBufferSounds();
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 	{
 		YellowAlert(kYellowFailedSound, theErr);
 		failedSound = true;
@@ -398,7 +399,7 @@ void InitSound (void)
 	if (!failedSound)
 	{
 		theErr = OpenSoundChannels();
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowFailedSound, theErr);
 			failedSound = true;
@@ -410,7 +411,7 @@ void InitSound (void)
 
 void KillSound (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (dontLoadSounds)
 		return;

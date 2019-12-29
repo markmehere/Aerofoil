@@ -624,7 +624,7 @@ void UpdateSettingsSound (DialogPtr theDialog)
 
 void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	isSoundOn = (newVolume != 0);
 	
@@ -637,7 +637,7 @@ void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 			if (!isMusicOn)
 			{
 				theErr = StartMusic();
-				if (theErr != noErr)
+				if (theErr != PLErrors::kNone)
 				{
 					YellowAlert(kYellowNoMusic, theErr);
 					failedMusic = true;
@@ -751,7 +751,7 @@ void DoSoundPrefs (void)
 	Rect			tempRect;
 	DialogPtr		prefDlg;
 	short			wasLoudness, tempVolume;
-	OSErr			theErr;
+	PLError_t			theErr;
 	short			itemHit;
 	Boolean			leaving;
 	ModalFilterUPP	soundFilterUPP;
@@ -791,7 +791,7 @@ void DoSoundPrefs (void)
 					if (wasLoudness != 0)
 					{
 						theErr = StartMusic();
-						if (theErr != noErr)
+						if (theErr != PLErrors::kNone)
 						{
 							YellowAlert(kYellowNoMusic, theErr);
 							failedMusic = true;
@@ -846,7 +846,7 @@ void DoSoundPrefs (void)
 				if (tempVolume != 0)
 				{
 					theErr = StartMusic();
-					if (theErr != noErr)
+					if (theErr != PLErrors::kNone)
 					{
 						YellowAlert(kYellowNoMusic, theErr);
 						failedMusic = true;
@@ -1207,7 +1207,7 @@ void DoDisplayPrefs (void)
 
 void SetAllDefaults (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 								// Default brain settings
 	willMaxFiles = 48;
 	doZooms = true;
@@ -1234,7 +1234,7 @@ void SetAllDefaults (void)
 	if (!isMusicOn)
 	{
 		theErr = StartMusic();
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowNoMusic, theErr);
 			failedMusic = true;

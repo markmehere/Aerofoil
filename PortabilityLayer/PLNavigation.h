@@ -14,14 +14,13 @@ struct NavReplyRecord
 	int vRefNum;
 	long parID;	// Directory?
 	AEDescList selection;
-	ScriptCode keyScript;	// ???
 };
 
 struct NavDialogOptions
 {
 };
 
-OSErr NavGetDefaultDialogOptions(NavDialogOptions *options);
-OSErr NavPutFile(AEDesc *defaultLocation, NavReplyRecord *reply, NavDialogOptions *dlgOptions, void *unknown, UInt32 fileType, UInt32 fileCreator, void *unknown2);
+PLError_t NavGetDefaultDialogOptions(NavDialogOptions *options);
+PLError_t NavPutFile(AEDesc *defaultLocation, NavReplyRecord *reply, NavDialogOptions *dlgOptions, void *unknown, UInt32 fileType, UInt32 fileCreator, void *unknown2);
 
 #endif

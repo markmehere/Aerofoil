@@ -202,12 +202,6 @@ Rect BERect::ToRect() const
 	return rect;
 }
 
-OSErr FSClose(short fsRef)
-{
-	PL_NotYetImplemented();
-	return noErr;
-}
-
 CursHandle GetCursor(int cursorID)
 {
 	return reinterpret_cast<CursHandle>(GetResource('CURS', cursorID));
@@ -465,7 +459,7 @@ long MenuSelect(Point point)
 long MenuKey(int charCode)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
 long TickCount()
@@ -605,23 +599,10 @@ UInt32 FreeMem()
 	return 256 * 1024 * 1024;
 }
 
-OSErr AEProcessAppleEvent(EventRecord *evt)
+PLError_t AEProcessAppleEvent(EventRecord *evt)
 {
 	PL_NotYetImplemented();
-	return noErr;
-}
-
-OSErr FindFolder(int refNum, int posType, bool createFolder, short *volumeRef, long *dirID)
-{
-	switch (posType)
-	{
-	case kPreferencesFolderType:
-		*volumeRef = 0;
-		*dirID = PortabilityLayer::EVirtualDirectory_Prefs;
-		return noErr;
-	default:
-		return genericErr;
-	}
+	return PLErrors::kNone;
 }
 
 void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
@@ -649,41 +630,46 @@ void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
 	}
 }
 
-OSErr PBDirCreate(HFileParam *fileParam, bool asynchronous)
+PLError_t PBDirCreate(HFileParam *fileParam, bool asynchronous)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr FSMakeFSSpec(int refNum, long dirID, const PLPasStr &fileName, FSSpec *spec)
+
+VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr &fileName)
 {
+	VFileSpec spec;
 
-	if (fileName.Length() >= sizeof(spec->name))
-		return genericErr;
+	assert(fileName.Length() < sizeof(spec.m_name));
 
-	PortabilityLayer::Utils::MakePStr(spec->name, fileName.Length(), fileName.Chars());
-	spec->vRefNum = refNum;
-	spec->parID = dirID;
+	spec.m_dir = dir;
+	spec.m_name[0] = static_cast<uint8_t>(fileName.Length());
+	memcpy(spec.m_name + 1, fileName.UChars(), fileName.Length());
 
-	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(dirID, fileName))
-		return fnfErr;
-
-	return noErr;
+	return spec;
 }
 
-OSErr FSpCreate(const FSSpec *spec, UInt32 creator, UInt32 fileType, ScriptCode scriptTag)
+PLError_t FSpCreate(const VFileSpec &spec, UInt32 creator, UInt32 fileType)
+{
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
+
+	PortabilityLayer::MacFileProperties props;
+	PortabilityLayer::ResTypeIDCodec::Encode(creator, props.m_fileCreator);
+	PortabilityLayer::ResTypeIDCodec::Encode(fileType, props.m_fileType);
+
+	PL_NotYetImplemented_TODO("DateTime");
+
+	return fm->CreateFile(spec.m_dir, spec.m_name, props);
+}
+
+PLError_t FSpDirCreate(const VFileSpec &spec, long *outDirID)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr FSpDirCreate(const FSSpec *spec, ScriptCode script, long *outDirID)
-{
-	PL_NotYetImplemented();
-	return noErr;
-}
-
-OSErr FSpOpenDF(const FSSpec *spec, int permission, short *refNum)
+PLError_t FSpOpenDF(const VFileSpec &spec, int permission, PortabilityLayer::IOStream *&stream)
 {
 	PortabilityLayer::EFilePermission perm = PortabilityLayer::EFilePermission_Any;
 	switch (permission)
@@ -699,85 +685,47 @@ OSErr FSpOpenDF(const FSSpec *spec, int permission, short *refNum)
 		perm = PortabilityLayer::EFilePermission_Any;
 		break;
 	default:
-		return permErr;
+		return PLErrors::kAccessDenied;
 	}
 
-	return PortabilityLayer::FileManager::GetInstance()->OpenFileDF(spec->parID, spec->name, perm, refNum);
+	return PortabilityLayer::FileManager::GetInstance()->OpenFileDF(spec.m_dir, spec.m_name, perm, stream);
 }
 
-OSErr FSWrite(short refNum, long *byteCount, const void *data)
+PLError_t FSpDelete(const VFileSpec &spec)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr FSRead(short refNum, long *byteCount, void *data)
-{
-	PortabilityLayer::IOStream *stream = PortabilityLayer::FileManager::GetInstance()->GetFileStream(refNum);
-
-	const size_t bytesRead = stream->Read(data, static_cast<size_t>(*byteCount));
-	*byteCount = static_cast<long>(bytesRead);
-
-	return noErr;
-}
-
-OSErr FSpDelete(const FSSpec *spec)
-{
-	PL_NotYetImplemented();
-	return noErr;
-}
-
-OSErr FSpGetFInfo(const FSSpec *spec, FInfo *finfo)
+PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfo)
 {
 	PortabilityLayer::MacFileProperties mfp;
-	if (!PortabilityLayer::FileManager::GetInstance()->ReadFileProperties(static_cast<uint32_t>(spec->parID), spec->name, mfp))
-		return fnfErr;
+	if (!PortabilityLayer::FileManager::GetInstance()->ReadFileProperties(spec.m_dir, spec.m_name, mfp))
+		return PLErrors::kFileNotFound;
 
-	finfo->fdType = PortabilityLayer::ResTypeIDCodec::Decode(mfp.m_fileType);
+	finfo.m_type = PortabilityLayer::ResTypeID(mfp.m_fileType);
+	finfo.m_creator = PortabilityLayer::ResTypeID(mfp.m_fileCreator);
 
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr SetFPos(short refNum, SetFPosWhere where, long offset)
-{
-	switch (where)
-	{
-	case fsFromStart:
-		if (!PortabilityLayer::FileManager::GetInstance()->GetFileStream(refNum)->SeekStart(static_cast<PortabilityLayer::UFilePos_t>(offset)))
-			return ioErr;
-		break;
-	default:
-		return genericErr;
-	}
-
-	return noErr;
-}
-
-OSErr GetEOF(short refNum, long *byteCount)
-{
-	const PortabilityLayer::UFilePos_t fileSize = PortabilityLayer::FileManager::GetInstance()->GetFileStream(refNum)->Size();
-
-	*byteCount = static_cast<long>(fileSize);
-	return noErr;
-}
-
-OSErr SetEOF(short refNum, long byteCount)
+PLError_t SetEOF(short refNum, long byteCount)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async)
+PLError_t PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-DirectoryFileListEntry *GetDirectoryFiles(long dirID)
+DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 	PortabilityLayer::HostFileSystem *fs = PortabilityLayer::HostFileSystem::GetInstance();
-	PortabilityLayer::HostDirectoryCursor *dirCursor = fs->ScanDirectory(static_cast<PortabilityLayer::EVirtualDirectory>(dirID));
+	PortabilityLayer::HostDirectoryCursor *dirCursor = fs->ScanDirectory(dirID);
 
 	DirectoryFileListEntry *firstDFL = nullptr;
 	DirectoryFileListEntry *lastDFL = nullptr;
@@ -798,7 +746,7 @@ DirectoryFileListEntry *GetDirectoryFiles(long dirID)
 		if (!strcmp(&filename[fnLen - 4], ".gpf"))
 		{
 			const size_t dotPos = fnLen - 4;
-			PortabilityLayer::IOStream *stream = fs->OpenFile(static_cast<PortabilityLayer::EVirtualDirectory>(dirID), filename, false, false);
+			PortabilityLayer::IOStream *stream = fs->OpenFile(dirID, filename, false, false);
 			if (!stream)
 				continue;
 
@@ -1020,19 +968,19 @@ long GetHandleSize(Handle handle)
 	return static_cast<long>(block->m_size);
 }
 
-OSErr PtrAndHand(const void *data, Handle handle, Size size)
+PLError_t PtrAndHand(const void *data, Handle handle, Size size)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr SetHandleSize(Handle hdl, Size newSize)
+PLError_t SetHandleSize(Handle hdl, Size newSize)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 	if (!mm->ResizeHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(hdl), newSize))
-		return genericErr;
+		return PLErrors::kOutOfMemory;
 
-	return noErr;
+	return PLErrors::kNone;
 }
 
 void *NewPtr(Size size)
@@ -1065,12 +1013,6 @@ void HSetState(Handle handle, char state)
 
 char HGetState(Handle handle)
 {
-	return 0;
-}
-
-OSErr MemError()
-{
-	PL_NotYetImplemented();
 	return 0;
 }
 

@@ -14,16 +14,16 @@
 #define kNoPrintingAlert			1031
 
 
-OSErr DoOpenAppAE (const AppleEvent *, AppleEvent *, UInt32);
-OSErr DoOpenDocAE (const AppleEvent *, AppleEvent *, UInt32);
-OSErr DoPrintDocAE (const AppleEvent *, AppleEvent *, UInt32);
-OSErr DoQuitAE (const AppleEvent *, AppleEvent *, UInt32);
-OSErr MyGotRequiredParams (const AppleEvent *);
+PLError_t DoOpenAppAE (const AppleEvent *, AppleEvent *, UInt32);
+PLError_t DoOpenDocAE (const AppleEvent *, AppleEvent *, UInt32);
+PLError_t DoPrintDocAE (const AppleEvent *, AppleEvent *, UInt32);
+PLError_t DoQuitAE (const AppleEvent *, AppleEvent *, UInt32);
+PLError_t MyGotRequiredParams (const AppleEvent *);
 
 AEEventHandlerUPP	openAppAEUPP, openDocAEUPP, printDocAEUPP, quitAEUPP;
 
 
-extern	FSSpecPtr	theHousesSpecs;
+extern	VFileSpec	*theHousesSpecs;
 extern	long		incrementModeTime;
 extern	short		thisHouseIndex, splashOriginH, splashOriginV;
 extern	Boolean		quitting;
@@ -33,9 +33,9 @@ extern	Boolean		quitting;
 //--------------------------------------------------------------  DoOpenAppAE
 // Handles an "Open Application" Apple Event.
 
-OSErr DoOpenAppAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
+PLError_t DoOpenAppAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	theErr = MyGotRequiredParams(theAE);
 	return (theErr);
@@ -44,34 +44,34 @@ OSErr DoOpenAppAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 //--------------------------------------------------------------  DoOpenDocAE
 // Handles an "Open Document" Apple Event.
 
-OSErr DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
+PLError_t DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 {
-	FSSpec			oneFSS;
-	FInfo			finderInfo;
+	VFileSpec		oneFSS;
+	VFileInfo		finderInfo;
 	AEDescList		docList;
 	long			itemsInList;
 	Size			actualSize;
 	AEKeyword		keywd;
 	DescType		returnedType;
-	OSErr			theErr, whoCares;
+	PLError_t			theErr, whoCares;
 	short			i;
 	
 	theErr = AEGetParamDesc(theAE, keyDirectObject, typeAEList, &docList);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 	{
 		YellowAlert(kYellowAppleEventErr, theErr);
 		return (theErr);
 	}
 	
 	theErr = MyGotRequiredParams(theAE);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 	{
 		whoCares = AEDisposeDesc(&docList);
 		return (theErr);
 	}
 	
 	theErr = AECountItems(&docList, &itemsInList);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 	{
 		whoCares = AEDisposeDesc(&docList);
 		return (theErr);
@@ -82,28 +82,28 @@ OSErr DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 	{
 		theErr = AEGetNthPtr(&docList, i, typeFSS, &keywd, &returnedType,
 				&oneFSS, sizeof(oneFSS), &actualSize);
-		if (theErr == noErr)
+		if (theErr == PLErrors::kNone)
 		{
-			theErr = FSpGetFInfo(&oneFSS, &finderInfo);
-			if ((theErr == noErr) && (finderInfo.fdType == 'gliH'))
-				AddExtraHouse(&oneFSS);
+			theErr = FSpGetFInfo(oneFSS, finderInfo);
+			if ((theErr == PLErrors::kNone) && (finderInfo.m_type == 'gliH'))
+				AddExtraHouse(oneFSS);
 		}
 	}
 	if (itemsInList > 0)
 	{
 		theErr = AEGetNthPtr(&docList, 1, typeFSS, &keywd, &returnedType,
 				&oneFSS, sizeof(oneFSS), &actualSize);
-		if (theErr == noErr)
+		if (theErr == PLErrors::kNone)
 		{
-			theErr = FSpGetFInfo(&oneFSS, &finderInfo);
-			if ((theErr == noErr) && (finderInfo.fdType == 'gliH'))
+			theErr = FSpGetFInfo(oneFSS, finderInfo);
+			if ((theErr == PLErrors::kNone) && (finderInfo.m_type == 'gliH'))
 			{
-				whoCares = CloseHouse();
-				PasStringCopy(oneFSS.name, thisHouseName);
+				CloseHouse();
+				PasStringCopy(oneFSS.m_name, thisHouseName);
 				BuildHouseList();
 				if (OpenHouse())
-					whoCares = ReadHouse();
-				PasStringCopy(theHousesSpecs[thisHouseIndex].name, thisHouseName);
+					ReadHouse();
+				PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
 				OpenCloseEditWindows();
 				incrementModeTime = TickCount() + kIdleSplashTicks;
 				if ((theMode == kSplashMode) || (theMode == kPlayMode))
@@ -126,25 +126,25 @@ OSErr DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 //--------------------------------------------------------------  DoPrintDocAE
 // Handles a "Print Document" Apple Event.
 
-OSErr DoPrintDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
+PLError_t DoPrintDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 {
 	short		hitWhat;
 	
 //	CenterAlert(kNoPrintingAlert);
 	hitWhat = Alert(kNoPrintingAlert, nil);
 	
-	return errAEEventNotHandled;
+	return PLErrors::kInvalidParameter;
 }
 
 //--------------------------------------------------------------  DoQuitAE
 // Handles a "Quit Application" Apple Event.
 
-OSErr DoQuitAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
+PLError_t DoQuitAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 {
-	OSErr			isHuman;
+	PLError_t			isHuman;
 	
 	isHuman = MyGotRequiredParams(theAE);
-	if (isHuman == noErr)
+	if (isHuman == PLErrors::kNone)
 		quitting = true;
 	
 	return isHuman;
@@ -153,14 +153,14 @@ OSErr DoQuitAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 //--------------------------------------------------------------  MyGotRequiredParams
 // Have no clue!  :)
 
-OSErr MyGotRequiredParams (const AppleEvent *theAE)
+PLError_t MyGotRequiredParams (const AppleEvent *theAE)
 {
 	DescType		returnedType;
 	Size			actualSize;
 	
 	return (AEGetAttributePtr(theAE, keyMissedKeywordAttr, typeWildCard,
-			&returnedType, 0L, 0, &actualSize) == errAEDescNotFound) ? noErr :
-			errAEParamMissed;
+			&returnedType, 0L, 0, &actualSize) == errAEDescNotFound) ? PLErrors::kNone :
+			PLErrors::kInvalidParameter;
 }
 
 //--------------------------------------------------------------  SetUpAppleEvents
@@ -168,7 +168,7 @@ OSErr MyGotRequiredParams (const AppleEvent *theAE)
 
 void SetUpAppleEvents (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	openAppAEUPP = NewAEEventHandlerProc(DoOpenAppAE);
 	openDocAEUPP = NewAEEventHandlerProc(DoOpenDocAE);
@@ -177,26 +177,26 @@ void SetUpAppleEvents (void)
 	
 	theErr = AEInstallEventHandler(kCoreEventClass,		// install oapp 
 			kAEOpenApplication, openAppAEUPP, 0, false);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 		YellowAlert(kYellowAppleEventErr, theErr);
 	
 	theErr = AEInstallEventHandler(kCoreEventClass, 	// install odoc 
 			kAEOpenDocuments, openDocAEUPP, 0, false);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 		YellowAlert(kYellowAppleEventErr, theErr);
 	
 	theErr = AEInstallEventHandler(kCoreEventClass, 	// install pdoc 
 			kAEPrintDocuments, printDocAEUPP, 0, false);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 		YellowAlert(kYellowAppleEventErr, theErr);
 	
 	theErr = AEInstallEventHandler(kCoreEventClass, 	// install quit 
 			kAEQuitApplication, quitAEUPP, 0, false);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 		YellowAlert(kYellowAppleEventErr, theErr);
 	
 	theErr = AESetInteractionAllowed(kAEInteractWithAll);
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 		YellowAlert(kYellowAppleEventErr, theErr);
 }
 

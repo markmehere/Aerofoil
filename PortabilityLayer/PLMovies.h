@@ -34,22 +34,22 @@ typedef TimeBaseObject *TimeBase;
 typedef MovieObject *Movie;
 
 
-OSErr EnterMovies();
+PLError_t EnterMovies();
 
 UserData GetMovieUserData(Movie movie);
 int CountUserDataType(UserData userData, UInt32 type);
-OSErr RemoveUserData(UserData userData, UInt32 type, int index);	// Index is 1-based
-OSErr AddUserData(UserData userData, Handle data, UInt32 type);
-OSErr OpenMovieFile(const FSSpec *fsSpec, short *outRefNum, int permissions);
-OSErr NewMovieFromFile(Movie *movie, short refNum, const short *optResId, StringPtr resName, int flags, Boolean *unused);
-OSErr CloseMovieFile(short refNum);
-OSErr GoToBeginningOfMovie(Movie movie);
-OSErr LoadMovieIntoRam(Movie movie, TimeValue time, TimeValue duration, int flags);
+PLError_t RemoveUserData(UserData userData, UInt32 type, int index);	// Index is 1-based
+PLError_t AddUserData(UserData userData, Handle data, UInt32 type);
+PLError_t OpenMovieFile(const VFileSpec &fsSpec, short *outRefNum, int permissions);
+PLError_t NewMovieFromFile(Movie *movie, short refNum, const short *optResId, StringPtr resName, int flags, Boolean *unused);
+PLError_t CloseMovieFile(short refNum);
+PLError_t GoToBeginningOfMovie(Movie movie);
+PLError_t LoadMovieIntoRam(Movie movie, TimeValue time, TimeValue duration, int flags);
 TimeValue GetMovieTime(Movie movie, TimeRecord *outCurrentTime);
 TimeValue GetMovieDuration(Movie movie);
-OSErr PrerollMovie(Movie movie, TimeValue time, UInt32 rate);
+PLError_t PrerollMovie(Movie movie, TimeValue time, UInt32 rate);
 TimeBase GetMovieTimeBase(Movie movie);
-OSErr SetTimeBaseFlags(TimeBase timeBase, int flags);
+PLError_t SetTimeBaseFlags(TimeBase timeBase, int flags);
 void SetMovieMasterTimeBase(Movie movie, TimeBase timeBase, void *unused);
 void GetMovieBox(Movie movie, Rect *rect);
 void StopMovie(Movie movie);

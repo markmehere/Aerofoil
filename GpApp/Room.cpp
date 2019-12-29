@@ -161,7 +161,7 @@ Boolean CreateNewRoom (short h, short v)
 {
 	KeyMap		theKeys;
 	long		howMuch;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		i, availableRoom;
 	char		wasState;
 	
@@ -195,7 +195,7 @@ Boolean CreateNewRoom (short h, short v)
 	{
 		howMuch = sizeof(roomType);			// add new room to end of house
 		theErr = PtrAndHand((Ptr)thisRoom, (Handle)thisHouse, howMuch);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowUnaccounted, theErr);
 			return (false);

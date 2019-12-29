@@ -74,14 +74,14 @@ Boolean			isToolsOpen;
 void CreateToolsOffscreen (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (toolSrcMap == nil)
 	{
 		wasCPort = GetGraphicsPort();
 		
 		QSetRect(&toolSrcRect, 0, 0, 360, 216);
-		theErr = CreateOffScreenGWorld(&toolSrcMap, &toolSrcRect, kPreferredDepth);
+		theErr = CreateOffScreenGWorld(&toolSrcMap, &toolSrcRect, kPreferredPixelFormat);
 		SetGraphicsPort(toolSrcMap);
 		LoadGraphic(kToolsPictID);
 		

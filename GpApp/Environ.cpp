@@ -66,7 +66,7 @@ extern	Boolean		dontLoadMusic, dontLoadSounds;
 /*
 short GetThisVolumeRefNum (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		vRef;
 	
 	theErr = GetVol(nil, &vRef);

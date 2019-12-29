@@ -102,11 +102,11 @@ void SetPortDialogPort(Dialog *dialog);
 void BeginUpdate(WindowPtr graf);
 void EndUpdate(WindowPtr graf);
 
-OSErr GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags);
-OSErr PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite);
+PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags);
+PLError_t PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite);
 
 CIconHandle GetCIcon(short resID);
-OSErr PlotCIcon(Rect *rect, CIconHandle icon);
+PLError_t PlotCIcon(Rect *rect, CIconHandle icon);
 void DisposeCIcon(CIconHandle icon);
 
 void SetRect(Rect *rect, short left, short top, short right, short bottom);

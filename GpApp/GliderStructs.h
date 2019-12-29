@@ -143,7 +143,7 @@ typedef struct
 
 typedef struct
 {
-	FSSpec		house;						// 70
+	VFileSpec	house;						// 70
 	short		version;					// 2
 	short		wasStarsLeft;				// 2
 	long		timeStamp;					// 4

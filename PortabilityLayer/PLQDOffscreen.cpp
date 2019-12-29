@@ -232,9 +232,9 @@ namespace PortabilityLayer
 	}
 }
 
-OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, int flags)
+PLError_t NewGWorld(GWorldPtr *gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable)
 {
-	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, depth, *bounds, colorTable, flags);
+	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, pixelFormat, *bounds, colorTable);
 }
 
 void DisposeGWorld(GWorldPtr gworld)
@@ -248,11 +248,6 @@ PixMapHandle GetGWorldPixMap(GWorldPtr gworld)
 		return nullptr;
 
 	return gworld->m_port.GetPixMap();
-}
-
-void LockPixels(PixMapHandle pixmap)
-{
-	(void)pixmap;
 }
 
 PicHandle GetPicture(short resID)

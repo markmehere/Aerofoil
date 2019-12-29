@@ -8,6 +8,8 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FileManager.h"
+#include "IOStream.h"
 
 
 #define	kPrefCreatorType	'ozm5'
@@ -20,11 +22,9 @@
 
 
 Boolean CanUseFindFolder (void);
-Boolean GetPrefsFPath (long *, short *);
-Boolean CreatePrefsFolder (short *);
-Boolean WritePrefs (long *, short *, prefsInfo *);
-OSErr ReadPrefs (long *, short *, prefsInfo *);
-Boolean DeletePrefs (long *, short *);
+Boolean WritePrefs (const prefsInfo *);
+PLError_t ReadPrefs (prefsInfo *);
+Boolean DeletePrefs ();
 void BringUpDeletePrefsAlert (void);
 
 
@@ -36,93 +36,43 @@ Boolean CanUseFindFolder (void)
 	return true;
 }
 
-//--------------------------------------------------------------  GetPrefsFPath
-
-Boolean GetPrefsFPath (long *prefDirID, short *systemVolRef)
-{
-	OSErr		theErr;
-	
-	theErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kCreateFolder, 
-		systemVolRef, prefDirID);
-	if (theErr != noErr)
-		return(false);
-	
-	return(true);
-}
-
-//--------------------------------------------------------------  CreatePrefsFolder
-
-Boolean CreatePrefsFolder (short *systemVolRef)
-{
-	HFileParam	fileParamBlock;
-	Str255		folderName;
-	OSErr		theErr;
-	
-	GetIndString(folderName, kPrefsStringsID, kPrefsFNameIndex);
-	
-	fileParamBlock.ioVRefNum = *systemVolRef;
-	fileParamBlock.ioDirID = 0;
-	fileParamBlock.ioNamePtr = folderName;
-	fileParamBlock.ioCompletion = nil;
-	
-	theErr = PBDirCreate(&fileParamBlock, false);
-	if (theErr != noErr)
-	{
-		CheckFileError(theErr, PSTR("Preferences"));
-		return(false);
-	}
-	return(true);
-}
-
 //--------------------------------------------------------------  WritePrefs
 
-Boolean WritePrefs (long *prefDirID, short *systemVolRef, prefsInfo *thePrefs)
+Boolean WritePrefs (const prefsInfo *thePrefs)
 {
-	OSErr		theErr;
-	short		fileRefNum;
+	PLError_t		theErr;
+	PortabilityLayer::IOStream *fileStream;
 	long		byteCount;
-	FSSpec		theSpecs;
 	Str255		fileName;
 	
 	PasStringCopy(kPrefFileName, fileName);
 	
-	theErr = FSMakeFSSpec(*systemVolRef, *prefDirID, fileName, &theSpecs);
-	if (theErr != noErr)
+	VFileSpec theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
+	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(PortabilityLayer::VirtualDirectories::kPrefs, fileName))
 	{
-		if (theErr != fnfErr)
-		{
-			CheckFileError(theErr, PSTR("Preferences"));
-			return(false);
-		}
-		theErr = FSpCreate(&theSpecs, kPrefCreatorType, kPrefFileType, smSystemScript);
-		if (theErr != noErr)
+		theErr = FSpCreate(theSpecs, kPrefCreatorType, kPrefFileType);
+		if (theErr != PLErrors::kNone)
 		{
 			CheckFileError(theErr, PSTR("Preferences"));
 			return(false);
 		}
 	}
-	theErr = FSpOpenDF(&theSpecs, fsRdWrPerm, &fileRefNum);
-	if (theErr != noErr)
+	theErr = FSpOpenDF(theSpecs, fsRdWrPerm, fileStream);
+	if (theErr != PLErrors::kNone)
 	{
 		CheckFileError(theErr, PSTR("Preferences"));
 		return(false);
 	}
 	
 	byteCount = sizeof(*thePrefs);
-	
-	theErr = FSWrite(fileRefNum, &byteCount, thePrefs);
-	if (theErr != noErr)
+
+	if (fileStream->Write(thePrefs, byteCount) != byteCount)
 	{
-		CheckFileError(theErr, PSTR("Preferences"));
+		CheckFileError(PLErrors::kIOError, PSTR("Preferences"));
 		return(false);
 	}
-	
-	theErr = FSClose(fileRefNum);
-	if (theErr != noErr)
-	{
-		CheckFileError(theErr, PSTR("Preferences"));
-		return(false);
-	}
+
+	fileStream->Close();
 	
 	return(true);
 }
@@ -131,15 +81,9 @@ Boolean WritePrefs (long *prefDirID, short *systemVolRef, prefsInfo *thePrefs)
 
 Boolean SavePrefs (prefsInfo *thePrefs, short versionNow)
 {
-	long		prefDirID;
-	short		systemVolRef;
-	
 	thePrefs->prefVersion = versionNow;
 	
-	if (!GetPrefsFPath(&prefDirID, &systemVolRef))
-		return(false);
-	
-	if (!WritePrefs(&prefDirID, &systemVolRef, thePrefs))
+	if (!WritePrefs(thePrefs))
 		return(false);
 	
 	return(true);
@@ -147,77 +91,57 @@ Boolean SavePrefs (prefsInfo *thePrefs, short versionNow)
 
 //--------------------------------------------------------------  ReadPrefs
 
-OSErr ReadPrefs (long *prefDirID, short *systemVolRef, prefsInfo *thePrefs)
+PLError_t ReadPrefs (prefsInfo *thePrefs)
 {
-	OSErr		theErr;
-	short		fileRefNum;
+	PLError_t		theErr;
+	PortabilityLayer::IOStream		*fileStream;
 	long		byteCount;
-	FSSpec		theSpecs;
+	VFileSpec	theSpecs;
 	Str255		fileName;
 	
 	PasStringCopy(kPrefFileName, fileName);
 	
-	theErr = FSMakeFSSpec(*systemVolRef, *prefDirID, fileName, &theSpecs);
-	if (theErr != noErr)
-	{
-		if (theErr == fnfErr)
-			return(theErr);
-		else
-		{
-			CheckFileError(theErr, PSTR("Preferences"));
-			return(theErr);
-		}
-	}
+	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectory_t::kPrefs, fileName);
+
+	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(theSpecs.m_dir, theSpecs.m_name))
+		return PLErrors::kFileNotFound;
 	
-	theErr = FSpOpenDF(&theSpecs, fsRdWrPerm, &fileRefNum);
-	if (theErr != noErr)
+	theErr = FSpOpenDF(theSpecs, fsRdWrPerm, fileStream);
+	if (theErr != PLErrors::kNone)
 	{
 		CheckFileError(theErr, PSTR("Preferences"));
 		return(theErr);
 	}
 	
 	byteCount = sizeof(*thePrefs);
-	
-	theErr = FSRead(fileRefNum, &byteCount, thePrefs);
-	if (theErr != noErr)
+
+	if (fileStream->Read(thePrefs, byteCount) != byteCount)
 	{
-		if (theErr == eofErr)
-			theErr = FSClose(fileRefNum);
-		else
-		{
-			CheckFileError(theErr, PSTR("Preferences"));
-			theErr = FSClose(fileRefNum);
-		}
+		CheckFileError(PLErrors::kIOError, PSTR("Preferences"));
+		fileStream->Close();
 		return(theErr);
 	}
 	
-	theErr = FSClose(fileRefNum);
-	if (theErr != noErr)
-	{
-		CheckFileError(theErr, PSTR("Preferences"));
-		return(theErr);
-	}
-	
+	fileStream->Close();
+
 	return(theErr);
 }
 
 //--------------------------------------------------------------  DeletePrefs
 
-Boolean DeletePrefs (long *dirID, short *volRef)
+Boolean DeletePrefs ()
 {
-	FSSpec		theSpecs;
+	VFileSpec	theSpecs;
 	Str255		fileName;
-	OSErr		theErr;
+	PLError_t		theErr;
 
 	PasStringCopy(kPrefFileName, fileName);
 	
-	theErr = FSMakeFSSpec(*volRef, *dirID, fileName, &theSpecs);
-	if (theErr != noErr)
-		return(false);
-	else
-		theErr = FSpDelete(&theSpecs);
+	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
+
+	theErr = FSpDelete(theSpecs);
 	
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 		return(false);
 	
 	return(true);
@@ -227,29 +151,25 @@ Boolean DeletePrefs (long *dirID, short *volRef)
 
 Boolean LoadPrefs (prefsInfo *thePrefs, short versionNeed)
 {
-	long		prefDirID;
-	OSErr		theErr;
-	short		systemVolRef;
+	PLError_t		theErr;
 	Boolean		noProblems;
 	
-	noProblems = GetPrefsFPath(&prefDirID, &systemVolRef);
-	if (!noProblems)
-		return(false);
-	
-	theErr = ReadPrefs(&prefDirID, &systemVolRef, thePrefs);
-	if (theErr == eofErr)
+	theErr = ReadPrefs(thePrefs);
+
+	if (theErr == PLErrors::kFileNotFound)
+		return (false);
+
+	if (theErr != PLErrors::kNone)
 	{
 		BringUpDeletePrefsAlert();
-		noProblems = DeletePrefs(&prefDirID, &systemVolRef);
+		noProblems = DeletePrefs();
 		return (false);
 	}
-	else if (theErr != noErr)
-		return (false);
 	
 	if (thePrefs->prefVersion != versionNeed)
 	{
 		BringUpDeletePrefsAlert();
-		noProblems = DeletePrefs(&prefDirID, &systemVolRef);
+		noProblems = DeletePrefs();
 		return(false);
 	}
 	

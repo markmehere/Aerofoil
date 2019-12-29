@@ -112,9 +112,12 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 		}
 
 		m_prefsDir.append(L"\\GlidePort");
+		m_scoresDir = m_prefsDir + L"\\Scores";
 
 		CreateDirectoryW(m_prefsDir.c_str(), nullptr);
+		CreateDirectoryW(m_scoresDir.c_str(), nullptr);
 		m_prefsDir.append(L"\\");
+		m_scoresDir.append(L"\\");
 	}
 
 	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
@@ -159,7 +162,7 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 	}
 }
 
-bool GpFileSystem_Win32::FileExists(PortabilityLayer::EVirtualDirectory virtualDirectory, const char *path)
+bool GpFileSystem_Win32::FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path)
 {
 	wchar_t winPath[MAX_PATH + 1];
 
@@ -169,7 +172,7 @@ bool GpFileSystem_Win32::FileExists(PortabilityLayer::EVirtualDirectory virtualD
 	return PathFileExistsW(winPath) != 0;
 }
 
-PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::EVirtualDirectory virtualDirectory, const char *path, bool writeAccess, bool create)
+PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, bool create)
 {
 	wchar_t winPath[MAX_PATH + 1];
 
@@ -179,14 +182,14 @@ PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::EVirt
 	const DWORD desiredAccess = writeAccess ? (GENERIC_WRITE | GENERIC_READ) : GENERIC_READ;
 	const DWORD creationDisposition = create ? OPEN_ALWAYS : OPEN_EXISTING;
 
-	HANDLE h = CreateFileW(winPath, desiredAccess, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	HANDLE h = CreateFileW(winPath, desiredAccess, FILE_SHARE_READ, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h == INVALID_HANDLE_VALUE)
 		return false;
 
 	return new GpFileStream_Win32(h, true, writeAccess, true);
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(PortabilityLayer::EVirtualDirectory virtualDirectory)
+PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory)
 {
 	wchar_t winPath[MAX_PATH + 2];
 
@@ -212,23 +215,26 @@ GpFileSystem_Win32 *GpFileSystem_Win32::GetInstance()
 	return &ms_instance;
 }
 
-bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::EVirtualDirectory virtualDirectory, const char *path, wchar_t *outPath)
+bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, wchar_t *outPath)
 {
 	const wchar_t *baseDir = nullptr;
 
 	switch (virtualDirectory)
 	{
-	case PortabilityLayer::EVirtualDirectory_ApplicationData:
+	case PortabilityLayer::VirtualDirectories::kApplicationData:
 		baseDir = m_packagedDir.c_str();
 		break;
-	case PortabilityLayer::EVirtualDirectory_GameData:
+	case PortabilityLayer::VirtualDirectories::kGameData:
 		baseDir = m_housesDir.c_str();
 		break;
-	case PortabilityLayer::EVirtualDirectory_Prefs:
+	case PortabilityLayer::VirtualDirectories::kPrefs:
 		baseDir = m_prefsDir.c_str();
 		break;
-	case PortabilityLayer::EVirtualDirectory_Fonts:
+	case PortabilityLayer::VirtualDirectories::kFonts:
 		baseDir = m_resourcesDir.c_str();
+		break;
+	case PortabilityLayer::VirtualDirectories::kHighScores:
+		baseDir = m_scoresDir.c_str();
 		break;
 	default:
 		return false;

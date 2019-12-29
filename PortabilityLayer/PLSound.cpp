@@ -232,7 +232,7 @@ namespace PortabilityLayer
 
 }
 
-OSErr GetDefaultOutputVolume(long *vol)
+PLError_t GetDefaultOutputVolume(long *vol)
 {
 	short leftVol = 0x100;
 	short rightVol = 0x100;
@@ -241,12 +241,12 @@ OSErr GetDefaultOutputVolume(long *vol)
 
 	*vol = (leftVol) | (rightVol << 16);
 
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr SetDefaultOutputVolume(long vol)
+PLError_t SetDefaultOutputVolume(long vol)
 {
-	return noErr;
+	return PLErrors::kNone;
 }
 
 
@@ -259,19 +259,19 @@ void DisposeSndCallBackUPP(SndCallBackUPP upp)
 {
 }
 
-OSErr SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initFlags, SndCallBackUPP callback)
+PLError_t SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initFlags, SndCallBackUPP callback)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 	void *storage = mm->Alloc(sizeof(PortabilityLayer::AudioChannelImpl));
 	if (!storage)
-		return mFulErr;
+		return PLErrors::kOutOfMemory;
 
 	PortabilityLayer::HostAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
 	PortabilityLayer::HostAudioChannel *audioChannel = audioDriver->CreateChannel();
 	if (!audioChannel)
 	{
 		mm->Release(storage);
-		return genericErr;
+		return PLErrors::kAudioError;
 	}
 
 	PortabilityLayer::HostMutex *mutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
@@ -279,7 +279,7 @@ OSErr SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initF
 	{
 		audioChannel->Destroy();
 		mm->Release(storage);
-		return genericErr;
+		return PLErrors::kAudioError;
 	}
 
 	PortabilityLayer::HostThreadEvent *threadEvent = PortabilityLayer::HostSystemServices::GetInstance()->CreateThreadEvent(true, false);
@@ -288,15 +288,15 @@ OSErr SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initF
 		mutex->Destroy();
 		audioChannel->Destroy();
 		mm->Release(storage);
-		return genericErr;
+		return PLErrors::kAudioError;
 	}
 
 	*outChannel = new (storage) PortabilityLayer::AudioChannelImpl(audioChannel, callback, threadEvent, mutex);
 	
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr SndDisposeChannel(SndChannelPtr channel, Boolean flush)
+PLError_t SndDisposeChannel(SndChannelPtr channel, Boolean flush)
 {
 	if (flush)
 	{
@@ -316,20 +316,20 @@ OSErr SndDisposeChannel(SndChannelPtr channel, Boolean flush)
 
 	PortabilityLayer::MemoryManager::GetInstance()->Release(audioChannelImpl);
 
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr SndDoCommand(SndChannelPtr channel, const SndCommand *command, Boolean failIfFull)
+PLError_t SndDoCommand(SndChannelPtr channel, const SndCommand *command, Boolean failIfFull)
 {
 	PortabilityLayer::AudioChannelImpl *audioChannelImpl = static_cast<PortabilityLayer::AudioChannelImpl*>(channel);
 
 	if (!audioChannelImpl->PushCommand(*command, failIfFull == 0))
-		return queueFull;
+		return PLErrors::kAudioError;
 
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr SndDoImmediate(SndChannelPtr channel, const SndCommand *command)
+PLError_t SndDoImmediate(SndChannelPtr channel, const SndCommand *command)
 {
 	PortabilityLayer::AudioChannelImpl *audioChannelImpl = static_cast<PortabilityLayer::AudioChannelImpl*>(channel);
 
@@ -340,8 +340,8 @@ OSErr SndDoImmediate(SndChannelPtr channel, const SndCommand *command)
 	else
 	{
 		assert(false);
-		return genericErr;
+		return PLErrors::kAudioError;
 	}
 
-	return noErr;
+	return PLErrors::kNone;
 }

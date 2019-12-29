@@ -368,7 +368,7 @@ void DoGameMenu (short theItem)
 void DoOptionsMenu (short theItem)
 {
 #ifndef COMPILEDEMO
-	OSErr		theErr;
+	PLError_t		theErr;
 #endif
 	
 	switch (theItem)
@@ -393,7 +393,7 @@ void DoOptionsMenu (short theItem)
 			if (isPlayMusicIdle)
 			{
 				theErr = StartMusic();
-				if (theErr != noErr)
+				if (theErr != PLErrors::kNone)
 				{
 					YellowAlert(kYellowNoMusic, theErr);
 					failedMusic = true;

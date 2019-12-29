@@ -13,6 +13,7 @@
 #include "PLSound.h"
 #include "DialogUtils.h"
 #include "Externs.h"
+#include "FileManager.h"
 #include "House.h"
 #include "RectUtils.h"
 
@@ -52,30 +53,35 @@ Boolean CreateNewHouse (void)
 	Size				actualSize;
 	NavReplyRecord		theReply;
 	NavDialogOptions	dialogOptions;
-	FSSpec				tempSpec;
-	FSSpec				theSpec;
-	OSErr				theErr;
+	VFileSpec			tempSpec;
+	VFileSpec			theSpec;
+	PLError_t			theErr;
 	
 	theErr = NavGetDefaultDialogOptions(&dialogOptions);
 	theErr = NavPutFile(nil, &theReply, &dialogOptions, nil, 'gliH', 'ozm5', nil);
-	if (theErr == userCanceledErr)
+	if (theErr == PLErrors::kUserCancelled_TEMP)
 		return false;
 	if (!theReply.validRecord)
 		return (false);
 	
 	theErr = AEGetNthPtr(&(theReply.selection), 1, typeFSS, &theKeyword, 
-			&actualType, &theSpec, sizeof(FSSpec), &actualSize);
-	
+			&actualType, &theSpec, sizeof(VFileSpec), &actualSize);
+
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
+
 	if (theReply.replacing)
 	{
-		theErr = FSMakeFSSpec(theSpec.vRefNum, theSpec.parID, 
-				theSpec.name, &tempSpec);
-		if (!CheckFileError(theErr, theSpec.name))
+		if (fm->FileExists(theSpec.m_dir, theSpec.m_name))
+		{
+			CheckFileError(PLErrors::kFileNotFound, theSpec.m_name);
 			return (false);
-		
-		theErr = FSpDelete(&tempSpec);
-		if (!CheckFileError(theErr, theSpec.name))
+		}
+
+		if (!fm->DeleteFile(theSpec.m_dir, theSpec.m_name))
+		{
+			CheckFileError(PLErrors::kAccessDenied, theSpec.m_name);
 			return (false);
+		}
 	}
 	
 	if (houseOpen)
@@ -84,15 +90,15 @@ Boolean CreateNewHouse (void)
 			return (false);
 	}
 	
-	theErr = FSpCreate(&theSpec, 'ozm5', 'gliH', theReply.keyScript);
+	theErr = FSpCreate(theSpec, 'ozm5', 'gliH');
 	if (!CheckFileError(theErr, PSTR("New House")))
 		return (false);
-	HCreateResFile(theSpec.vRefNum, theSpec.parID, theSpec.name);
-	if (ResError() != noErr)
+	HCreateResFile(theSpec.m_dir, theSpec.m_name);
+	if (ResError() != PLErrors::kNone)
 		YellowAlert(kYellowFailedResCreate, ResError());
 	
-	PasStringCopy(theSpec.name, thisHouseName);
-	AddExtraHouse(&theSpec);
+	PasStringCopy(theSpec.m_name, thisHouseName);
+	AddExtraHouse(theSpec);
 	BuildHouseList();
 	InitCursor();
 	if (!OpenHouse())

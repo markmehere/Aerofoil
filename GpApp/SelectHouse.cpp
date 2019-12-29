@@ -6,7 +6,6 @@
 //============================================================================
 
 
-#include "PLAliases.h"
 #include "PLKeyEncoding.h"
 #include "PLResources.h"
 #include "PLSound.h"
@@ -14,6 +13,7 @@
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FileManager.h"
 #include "House.h"
 #include "RectUtils.h"
 #include "VirtualDirectory.h"
@@ -46,8 +46,8 @@ void DoDirSearch (void);
 
 
 Rect		loadHouseRects[12];
-FSSpecPtr	theHousesSpecs;
-FSSpec		extraHouseSpecs[kMaxExtraHouses];
+VFileSpec	*theHousesSpecs;
+VFileSpec	extraHouseSpecs[kMaxExtraHouses];
 long		lastWhenClick;
 Point		lastWhereClick;
 short		housesFound, thisHouseIndex, maxFiles, willMaxFiles;
@@ -101,8 +101,7 @@ void UpdateLoadDialog (DialogPtr theDialog)
 		
 		if (SectRect(&dialogRect, &tempRect, &dummyRect))
 		{
-			isResFile = HOpenResFile(theHousesSpecs[i].vRefNum, 
-					theHousesSpecs[i].parID, theHousesSpecs[i].name, fsRdPerm);
+			isResFile = HOpenResFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name, fsRdPerm);
 			if (isResFile != -1)
 			{
 				if (Get1Resource('icl8', -16455) != nil)
@@ -119,13 +118,13 @@ void UpdateLoadDialog (DialogPtr theDialog)
 						kDefaultHousePict8);
 		}
 		
-		fileFirstChar[count] = theHousesSpecs[i].name[1];
+		fileFirstChar[count] = theHousesSpecs[i].m_name[1];
 		if ((fileFirstChar[count] <= 0x7A) && (fileFirstChar[count] > 0x60))
 			fileFirstChar[count] -= 0x20;
 		count++;
 		
 		DrawDialogUserText(theDialog, kLoadNameFirstItem + i - housePage, 
-				theHousesSpecs[i].name, i == (thisHouseIndex + housePage));
+				theHousesSpecs[i].m_name, i == (thisHouseIndex + housePage));
 		
 	}
 	
@@ -416,7 +415,7 @@ void DoLoadHouse (void)
 			if (thisHouseIndex != wasIndex)
 			{
 				whoCares = CloseHouse();
-				PasStringCopy(theHousesSpecs[thisHouseIndex].name, 
+				PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 						thisHouseName);
 				if (OpenHouse())
 					whoCares = ReadHouse();
@@ -455,7 +454,7 @@ void DoLoadHouse (void)
 					MyDisableControl(theDial, kOkayButton);
 					MyDisableControl(theDial, kCancelButton);
 					whoCares = CloseHouse();
-					PasStringCopy(theHousesSpecs[thisHouseIndex].name, 
+					PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 							thisHouseName);
 					if (OpenHouse())
 						whoCares = ReadHouse();
@@ -490,7 +489,7 @@ void DoLoadHouse (void)
 					MyDisableControl(theDial, kOkayButton);
 					MyDisableControl(theDial, kCancelButton);
 					whoCares = CloseHouse();
-					PasStringCopy(theHousesSpecs[thisHouseIndex].name, 
+					PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 							thisHouseName);
 					if (OpenHouse())
 						whoCares = ReadHouse();
@@ -517,7 +516,7 @@ void DoLoadHouse (void)
 
 void SortHouseList (void)
 {
-	FSSpec		tempSpec;
+	VFileSpec	tempSpec;
 	short		i, h, whosFirst;
 	
 	i = 0;			// remove exact duplicate houses
@@ -526,9 +525,8 @@ void SortHouseList (void)
 		h = i + 1;
 		while (h < housesFound)
 		{
-			if ((EqualString(theHousesSpecs[i].name, theHousesSpecs[h].name, true, true)) && 
-					(theHousesSpecs[i].vRefNum == theHousesSpecs[i].vRefNum) && 
-					(theHousesSpecs[i].parID == theHousesSpecs[i].parID))
+			if ((EqualString(theHousesSpecs[i].m_name, theHousesSpecs[h].m_name, true, true)) &&
+					(theHousesSpecs[i].m_dir == theHousesSpecs[i].m_dir))
 			{
 				theHousesSpecs[h] = theHousesSpecs[housesFound - 1];
 				housesFound--;
@@ -542,8 +540,8 @@ void SortHouseList (void)
 	{
 		for (h = 0; h < (housesFound - i - 1); h++)
 		{
-			whosFirst = WhichStringFirst(theHousesSpecs[h].name, 
-					theHousesSpecs[h + 1].name);
+			whosFirst = WhichStringFirst(theHousesSpecs[h].m_name,
+					theHousesSpecs[h + 1].m_name);
 			if (whosFirst == 1)
 			{
 				tempSpec = theHousesSpecs[h + 1];
@@ -559,20 +557,23 @@ void SortHouseList (void)
 void DoDirSearch (void)
 {
 	#define		kMaxDirectories		32
-	long		theDirs[kMaxDirectories];
-	OSErr		theErr, notherErr;
-	short		count, i, currentDir, numDirs;
+	PortabilityLayer::VirtualDirectory_t		theDirs[kMaxDirectories];
+	PLError_t		theErr, notherErr;
+	short		count, i, numDirs;
+	int currentDir;
 	
 	for (i = 0; i < kMaxDirectories; i++)
-		theDirs[i] = 0L;
+		theDirs[i] = PortabilityLayer::VirtualDirectories::kUnspecified;
 	currentDir = 0;
-	theDirs[currentDir] = PortabilityLayer::EVirtualDirectory_GameData;
+	theDirs[currentDir] = PortabilityLayer::VirtualDirectories::kGameData;
 	numDirs = 1;
+
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 	
 	while ((currentDir < numDirs) && (currentDir < kMaxDirectories))
 	{
 		count = 1;
-		theErr = noErr;
+		theErr = PLErrors::kNone;
 
 		long dirID = theDirs[currentDir];
 
@@ -584,8 +585,9 @@ void DoDirSearch (void)
 
 			if ((f->finderInfo.fdType == 'gliH') && (f->finderInfo.fdCreator == 'ozm5') && (housesFound < maxFiles))
 			{
-				notherErr = FSMakeFSSpec(thisMac.vRefNum, theDirs[currentDir], f->name, &theHousesSpecs[housesFound]);
-				if (notherErr == noErr)
+				theHousesSpecs[housesFound] = MakeVFileSpec(theDirs[currentDir], f->name);
+
+				if (fm->FileExists(theDirs[currentDir], f->name))
 					housesFound++;
 			}
 		}
@@ -606,18 +608,18 @@ void DoDirSearch (void)
 		thisHouseIndex = 0;
 		for (i = 0; i < housesFound; i++)
 		{
-			if (EqualString(theHousesSpecs[i].name, thisHouseName, false, true))
+			if (EqualString(theHousesSpecs[i].m_name, thisHouseName, false, true))
 			{
 				thisHouseIndex = i;
 				break;
 			}
 		}
-		PasStringCopy(theHousesSpecs[thisHouseIndex].name, thisHouseName);
+		PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
 		
 		demoHouseIndex = -1;
 		for (i = 0; i < housesFound; i++)
 		{
-			if (EqualString(theHousesSpecs[i].name, PSTR("Demo House"), false, true))
+			if (EqualString(theHousesSpecs[i].m_name, PSTR("Demo House"), false, true))
 			{
 				demoHouseIndex = i;
 				break;
@@ -646,12 +648,12 @@ void BuildHouseList (void)
 
 //--------------------------------------------------------------  AddExtraHouse
 
-void AddExtraHouse (FSSpec *newHouse)
+void AddExtraHouse (const VFileSpec &newHouse)
 {
 	if (numExtraHouses >= kMaxExtraHouses)
 		return;
 	
-	extraHouseSpecs[numExtraHouses] = *newHouse;
+	extraHouseSpecs[numExtraHouses] = newHouse;
 	numExtraHouses++;
 }
 

@@ -42,15 +42,15 @@ typedef SndCallBackProc SndCallBackUPP;
 
 // Vol seems to be a packed stereo DWord
 
-OSErr GetDefaultOutputVolume(long *vol);
-OSErr SetDefaultOutputVolume(long vol);
+PLError_t GetDefaultOutputVolume(long *vol);
+PLError_t SetDefaultOutputVolume(long vol);
 
 
 SndCallBackUPP NewSndCallBackProc(SndCallBackProc callback);
 void DisposeSndCallBackUPP(SndCallBackUPP upp);
-OSErr SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initFlags, SndCallBackUPP callback);
-OSErr SndDisposeChannel(SndChannelPtr channel, Boolean flush);
-OSErr SndDoCommand(SndChannelPtr channel, const SndCommand *command, Boolean failIfFull);
-OSErr SndDoImmediate(SndChannelPtr channel, const SndCommand *command);
+PLError_t SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initFlags, SndCallBackUPP callback);
+PLError_t SndDisposeChannel(SndChannelPtr channel, Boolean flush);
+PLError_t SndDoCommand(SndChannelPtr channel, const SndCommand *command, Boolean failIfFull);
+PLError_t SndDoImmediate(SndChannelPtr channel, const SndCommand *command);
 
 #endif

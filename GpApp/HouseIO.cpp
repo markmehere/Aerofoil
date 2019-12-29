@@ -6,7 +6,6 @@
 //============================================================================
 
 
-#include "PLAliases.h"
 #include "PLMovies.h"
 #include "PLResources.h"
 #include "PLStringCompare.h"
@@ -15,6 +14,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "IOStream.h"
 #include "ObjectEdit.h"
 
 
@@ -26,17 +26,18 @@
 void LoopMovie (void);
 void OpenHouseMovie (void);
 void CloseHouseMovie (void);
-Boolean IsFileReadOnly (FSSpec *);
+Boolean IsFileReadOnly (const VFileSpec &);
 
 
 Movie		theMovie;
 Rect		movieRect;
-short		houseRefNum, houseResFork, wasHouseVersion;
+short		houseResFork, wasHouseVersion;
+PortabilityLayer::IOStream *houseStream;
 Boolean		houseOpen, fileDirty, gameDirty;
 Boolean		changeLockStateOfHouse, saveHouseLocked, houseIsReadOnly;
 Boolean		hasMovie, tvInRoom;
 
-extern	FSSpecPtr	theHousesSpecs;
+extern	VFileSpec	*theHousesSpecs;
 extern	short		thisHouseIndex, tvWithMovieNumber;
 extern	short		numberRooms, housesFound;
 extern	Boolean		noRoomAtAll, quitting, wardBitSet;
@@ -69,32 +70,32 @@ void OpenHouseMovie (void)
 {
 #ifdef COMPILEQT
 	TimeBase	theTime;
-	FSSpec		theSpec;
-	FInfo		finderInfo;
+	VFileSpec	theSpec;
+	VFileInfo	finderInfo;
 	Handle		spaceSaver;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		movieRefNum;
 	Boolean		dataRefWasChanged;
 	
 	if (thisMac.hasQT)
 	{
 		theSpec = theHousesSpecs[thisHouseIndex];
-		PasStringConcat(theSpec.name, PSTR(".mov"));
+		PasStringConcat(theSpec.m_name, PSTR(".mov"));
 		
-		theErr = FSpGetFInfo(&theSpec, &finderInfo);
-		if (theErr != noErr)
+		theErr = FSpGetFInfo(theSpec, finderInfo);
+		if (theErr != PLErrors::kNone)
 			return;
 		
-		theErr = OpenMovieFile(&theSpec, &movieRefNum, fsCurPerm);
-		if (theErr != noErr)
+		theErr = OpenMovieFile(theSpec, &movieRefNum, fsCurPerm);
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);
 			return;
 		}
 		
-		theErr = NewMovieFromFile(&theMovie, movieRefNum, nil, theSpec.name, 
+		theErr = NewMovieFromFile(&theMovie, movieRefNum, nil, theSpec.m_name, 
 				newMovieActive, &dataRefWasChanged);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);
 			theErr = CloseMovieFile(movieRefNum);
@@ -113,7 +114,7 @@ void OpenHouseMovie (void)
 		GoToBeginningOfMovie(theMovie);
 		theErr = LoadMovieIntoRam(theMovie, 
 				GetMovieTime(theMovie, 0L), GetMovieDuration(theMovie), 0);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);
 			DisposeHandle(spaceSaver);
@@ -123,7 +124,7 @@ void OpenHouseMovie (void)
 		DisposeHandle(spaceSaver);
 				
 		theErr = PrerollMovie(theMovie, 0, 0x000F0000);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);
 			CloseHouseMovie();
@@ -147,7 +148,7 @@ void OpenHouseMovie (void)
 void CloseHouseMovie (void)
 {
 #ifdef COMPILEQT
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if ((thisMac.hasQT) && (hasMovie))
 	{
@@ -164,8 +165,7 @@ void CloseHouseMovie (void)
 
 Boolean OpenHouse (void)
 {
-	OSErr		theErr;
-	Boolean		targetIsFolder, wasAliased;
+	PLError_t		theErr;
 	
 	if (houseOpen)
 	{
@@ -175,19 +175,14 @@ Boolean OpenHouse (void)
 	if ((housesFound < 1) || (thisHouseIndex == -1))
 		return(false);
 	
-	theErr = ResolveAliasFile(&theHousesSpecs[thisHouseIndex], true, 
-			&targetIsFolder, &wasAliased);
-	if (!CheckFileError(theErr, thisHouseName))
-		return (false);
-	
 	#ifdef COMPILEDEMO
 	if (!EqualString(theHousesSpecs[thisHouseIndex].name, "\pDemo House", false, true))
 		return (false);
 	#endif
 	
-	houseIsReadOnly = IsFileReadOnly(&theHousesSpecs[thisHouseIndex]);
+	houseIsReadOnly = IsFileReadOnly(theHousesSpecs[thisHouseIndex]);
 	
-	theErr = FSpOpenDF(&theHousesSpecs[thisHouseIndex], fsCurPerm, &houseRefNum);
+	theErr = FSpOpenDF(theHousesSpecs[thisHouseIndex], fsCurPerm, houseStream);
 	if (!CheckFileError(theErr, thisHouseName))
 		return (false);
 	
@@ -206,7 +201,7 @@ Boolean OpenHouse (void)
 // Opens the specific house passed in.
 
 #ifndef COMPILEDEMO
-Boolean OpenSpecificHouse (FSSpec *specs)
+Boolean OpenSpecificHouse (const VFileSpec &specs)
 {
 	short		i;
 	Boolean		itOpened;
@@ -218,12 +213,11 @@ Boolean OpenSpecificHouse (FSSpec *specs)
 	
 	for (i = 0; i < housesFound; i++)
 	{
-		if ((theHousesSpecs[i].vRefNum == specs->vRefNum) && 
-				(theHousesSpecs[i].parID == specs->parID) && 
-				(EqualString(theHousesSpecs[i].name, specs->name, false, true)))
+		if ((theHousesSpecs[i].m_dir == specs.m_dir) &&
+				(EqualString(theHousesSpecs[i].m_name, specs.m_name, false, true)))
 		{
 			thisHouseIndex = i;
-			PasStringCopy(theHousesSpecs[thisHouseIndex].name, thisHouseName);
+			PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
 			if (OpenHouse())
 				itOpened = ReadHouse();
 			else
@@ -245,7 +239,7 @@ Boolean SaveHouseAs (void)
 /*
 	StandardFileReply	theReply;
 	FSSpec				oldHouse;
-	OSErr				theErr;
+	PLError_t				theErr;
 	Boolean				noProblems;
 	Str255				tempStr;
 	
@@ -259,7 +253,7 @@ Boolean SaveHouseAs (void)
 			
 		CloseHouseResFork();						// close this house file
 		theErr = FSClose(houseRefNum);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			CheckFileError(theErr, "\pPreferences");
 			return(false);
@@ -270,7 +264,7 @@ Boolean SaveHouseAs (void)
 			return (false);
 		HCreateResFile(theReply.sfFile.vRefNum, theReply.sfFile.parID, 
 				theReply.sfFile.name);
-		if (ResError() != noErr)
+		if (ResError() != PLErrors::kNone)
 			YellowAlert(kYellowFailedResCreate, ResError());
 		PasStringCopy(theReply.sfFile.name, thisHouseName);
 													// open new house data fork
@@ -612,7 +606,7 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes)
 Boolean ReadHouse (void)
 {
 	long		byteCount;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		whichRoom;
 
 	// There should be no padding remaining the house type
@@ -637,13 +631,8 @@ Boolean ReadHouse (void)
 		else if (!WriteHouse(false))
 			return(false);
 	}
-	
-	theErr = GetEOF(houseRefNum, &byteCount);
-	if (theErr != noErr)
-	{
-		CheckFileError(theErr, thisHouseName);
-		return(false);
-	}
+
+	byteCount = houseStream->Size();
 	
 	#ifdef COMPILEDEMO
 	if (byteCount != 16526L)
@@ -663,18 +652,16 @@ Boolean ReadHouse (void)
 		return(false);
 	}
 	
-	theErr = SetFPos(houseRefNum, fsFromStart, 0L);
-	if (theErr != noErr)
+	if (!houseStream->SeekStart(0))
 	{
-		CheckFileError(theErr, thisHouseName);
+		CheckFileError(PLErrors::kIOError, thisHouseName);
 		return(false);
 	}
 	
-	long readByteCount = byteCount;
-	theErr = FSRead(houseRefNum, &readByteCount, *thisHouse);
-	if (theErr != noErr || readByteCount != byteCount || byteCount < static_cast<long>(houseType::kBinaryDataSize))
+	const size_t readByteCount = houseStream->Read(*thisHouse, byteCount);
+	if (readByteCount != byteCount || readByteCount < houseType::kBinaryDataSize)
 	{
-		CheckFileError(theErr, thisHouseName);
+		CheckFileError(PLErrors::kIOError, thisHouseName);
 		return(false);
 	}
 
@@ -757,7 +744,7 @@ Boolean WriteHouse (Boolean checkIt)
 {
 	UInt32			timeStamp;
 	long			byteCount;
-	OSErr			theErr;
+	PLError_t			theErr;
 
 	PL_NotYetImplemented();
 	
@@ -766,11 +753,10 @@ Boolean WriteHouse (Boolean checkIt)
 		YellowAlert(kYellowUnaccounted, 4);
 		return (false);
 	}
-	
-	theErr = SetFPos(houseRefNum, fsFromStart, 0L);
-	if (theErr != noErr)
+
+	if (!houseStream->SeekStart(0))
 	{
-		CheckFileError(theErr, thisHouseName);
+		CheckFileError(PLErrors::kIOError, thisHouseName);
 		return(false);
 	}
 	
@@ -802,28 +788,25 @@ Boolean WriteHouse (Boolean checkIt)
 	long headerSize = houseType::kBinaryDataSize;
 	long roomsSize = sizeof(roomType) * (*thisHouse)->nRooms;
 
-	theErr = FSWrite(houseRefNum, &headerSize, *thisHouse);
-	if (theErr != noErr)
+	if (houseStream->Write(*thisHouse, headerSize) != headerSize)
 	{
-		CheckFileError(theErr, thisHouseName);
+		CheckFileError(PLErrors::kIOError, thisHouseName);
 		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 		return(false);
 	}
 
-	theErr = FSWrite(houseRefNum, &roomsSize, (*thisHouse)->rooms);
-	if (theErr != noErr)
+	if (houseStream->Write((*thisHouse)->rooms, roomsSize) != roomsSize)
 	{
-		CheckFileError(theErr, thisHouseName);
+		CheckFileError(PLErrors::kIOError, thisHouseName);
 		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 		return(false);
 	}
 
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
 
-	theErr = SetEOF(houseRefNum, byteCount);
-	if (theErr != noErr)
+	if (!houseStream->Truncate(byteCount))
 	{
-		CheckFileError(theErr, thisHouseName);
+		CheckFileError(PLErrors::kIOError, thisHouseName);
 		return(false);
 	}
 	
@@ -844,7 +827,7 @@ Boolean WriteHouse (Boolean checkIt)
 
 Boolean CloseHouse (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (!houseOpen)
 		return (true);
@@ -869,13 +852,8 @@ Boolean CloseHouse (void)
 	
 	CloseHouseResFork();
 	CloseHouseMovie();
-	
-	theErr = FSClose(houseRefNum);
-	if (theErr != noErr)
-	{
-		CheckFileError(theErr, thisHouseName);
-		return(false);
-	}
+
+	houseStream->Close();
 	
 	houseOpen = false;
 	
@@ -889,7 +867,7 @@ void OpenHouseResFork (void)
 {
 	if (houseResFork == -1)
 	{
-		houseResFork = FSpOpenResFile(&theHousesSpecs[thisHouseIndex], fsCurPerm);
+		houseResFork = FSpOpenResFile(theHousesSpecs[thisHouseIndex], fsCurPerm);
 		if (houseResFork == -1)
 			YellowAlert(kYellowFailedResOpen, ResError());
 		else
@@ -977,15 +955,16 @@ void YellowAlert (short whichAlert, short identifier)
 
 //--------------------------------------------------------------  IsFileReadOnly
 
-Boolean IsFileReadOnly (FSSpec *theSpec)
-{	
-	return false;
+Boolean IsFileReadOnly (const VFileSpec &)
+{
+	PL_NotYetImplemented_TODO("FileSystem");
+	return true;
 	/*
 	Str255			tempStr;
 	ParamBlockRec	theBlock;
 	HParamBlockRec	hBlock;
 	VolumeParam		*volPtr;
-	OSErr			theErr;
+	PLError_t			theErr;
 	
 	volPtr = (VolumeParam *)&theBlock;
 	volPtr->ioCompletion = nil;

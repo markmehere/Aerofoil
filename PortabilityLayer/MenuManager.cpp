@@ -551,9 +551,7 @@ namespace PortabilityLayer
 
 		if (m_menuBarGraf == nullptr)
 		{
-			int depth = PortabilityLayer::QDManager::GetInstance()->DepthForPixelFormat(pixelFormat);
-
-			if (qdManager->NewGWorld(&m_menuBarGraf, depth, menuRect, nullptr, 0) != 0)
+			if (qdManager->NewGWorld(&m_menuBarGraf, pixelFormat, menuRect, nullptr) != 0)
 				return;
 		}
 
@@ -1017,7 +1015,7 @@ namespace PortabilityLayer
 			GpPixelFormat_t pixelFormat;
 			PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &pixelFormat);
 
-			if (qdManager->NewGWorld(&m_menuGraf, qdManager->DepthForPixelFormat(pixelFormat), menuRect, nullptr, 0) != 0)
+			if (qdManager->NewGWorld(&m_menuGraf, pixelFormat, menuRect, nullptr) != 0)
 				return;
 		}
 

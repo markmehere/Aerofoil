@@ -31,58 +31,22 @@ Boolean CheckFileError (short resultCode, const PLPasStr &fileName)
 	short			dummyInt, stringIndex;
 	Str255			errMessage, errNumString;
 	
-	if (resultCode == noErr)		// No problems?  Then cruise
+	if (resultCode == PLErrors::kNone)		// No problems?  Then cruise
 		return(true);
 	
 	switch (resultCode)
 	{
-		case dirFulErr:
-			stringIndex = 2;
-			break;
-		case dskFulErr:
-			stringIndex = 3;
-			break;
-		case ioErr:
+		case PLErrors::kIOError:
 			stringIndex = 4;
 			break;
-		case bdNamErr:
+		case PLErrors::kBadFileName:
 			stringIndex = 5;
 			break;
-		case fnOpnErr:
+		case PLErrors::kAccessDenied:
 			stringIndex = 6;
 			break;
-		case mFulErr:
+		case PLErrors::kOutOfMemory:
 			stringIndex = 7;
-			break;
-		case tmfoErr:
-			stringIndex = 8;
-			break;
-		case wPrErr:
-			stringIndex = 9;
-			break;
-		case fLckdErr:
-			stringIndex = 10;
-			break;
-		case vLckdErr:
-			stringIndex = 11;
-			break;
-		case fBsyErr:
-			stringIndex = 12;
-			break;
-		case dupFNErr:
-			stringIndex = 13;
-			break;
-		case opWrErr:
-			stringIndex = 14;
-			break;
-		case volOffLinErr:
-			stringIndex = 15;
-			break;
-		case permErr:
-			stringIndex = 16;
-			break;
-		case wrPermErr:
-			stringIndex = 17;
 			break;
 		default:
 			stringIndex = 1;

@@ -19,7 +19,7 @@ void SavedGameMismatchError (StringPtr);
 
 gameType	smallGame;
 
-extern	FSSpecPtr	theHousesSpecs;
+extern	VFileSpec	*theHousesSpecs;
 extern	short		numStarsRemaining, thisHouseIndex;
 extern	Boolean		twoPlayerGame;
 
@@ -36,7 +36,7 @@ void SaveGame2 (void)
 	FSSpec				tempSpec;
 	Str255				gameNameStr;
 	Size				byteCount;
-	OSErr				theErr;
+	PLError_t				theErr;
 	houseType			*thisHousePtr;
 	roomType			*srcRoom;
 	savedRoom			*destRoom;
@@ -58,7 +58,7 @@ void SaveGame2 (void)
 	savedGame = (gamePtr)NewPtr(byteCount);
 	if (savedGame == nil)
 	{
-		YellowAlert(kYellowFailedSaveGame, MemError());
+		YellowAlert(kYellowFailedSaveGame, PLErrors::kOutOfMemory);
 		return;
 	}
 	
@@ -177,7 +177,7 @@ return false;		// TEMP fix this iwth NavServices
 	savedRoom			*srcRoom;
 	gamePtr				savedGame;
 	long				byteCount;
-	OSErr				theErr;
+	PLError_t				theErr;
 	short				r, i, gameRefNum;
 	char				wasState;
 	
@@ -201,7 +201,7 @@ return false;		// TEMP fix this iwth NavServices
 	savedGame = (gamePtr)NewPtr(byteCount);
 	if (savedGame == nil)
 	{
-		YellowAlert(kYellowFailedSaveGame, MemError());
+		YellowAlert(kYellowFailedSaveGame, PLErrors::kOutOfMemory);
 		theErr = FSClose(gameRefNum);
 		return(false);
 	}

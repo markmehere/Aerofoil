@@ -2,15 +2,21 @@
 
 namespace PortabilityLayer
 {
-	enum EVirtualDirectory
+	namespace VirtualDirectories
 	{
-		EVirtualDirectory_Unspecified = 0,
+		enum VirtualDirectory
+		{
+			kUnspecified = 0,
 
-		EVirtualDirectory_ApplicationData = 1,
-		EVirtualDirectory_GameData,
-		EVirtualDirectory_UserData,
-		EVirtualDirectory_Prefs,
-		EVirtualDirectory_Fonts,
-		EVirtualDirectory_Cursors,
-	};
+			kApplicationData = 1,
+			kGameData,
+			kUserData,
+			kPrefs,
+			kFonts,
+			kCursors,
+			kHighScores,
+		};
+	}
+
+	typedef VirtualDirectories::VirtualDirectory VirtualDirectory_t;
 }

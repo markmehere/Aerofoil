@@ -25,11 +25,10 @@ enum QDFlags
 	useTempMem = 1,
 };
 
-OSErr NewGWorld(GWorldPtr *gworld, int depth, const Rect *bounds, CTabHandle colorTable, int flags);
+PLError_t NewGWorld(GWorldPtr *gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable);
 void DisposeGWorld(GWorldPtr gworld);
 
 PixMapHandle GetGWorldPixMap(GWorldPtr gworld);
-void LockPixels(PixMapHandle pixmap);
 
 PicHandle GetPicture(short resID);
 

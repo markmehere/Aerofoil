@@ -61,7 +61,7 @@ void InitScoreboardMap (void)
 	Rect		bounds;
 	PicHandle	thePicture;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		hOffset;
 	
 	wasCPort = GetGraphicsPort();
@@ -70,7 +70,7 @@ void InitScoreboardMap (void)
 	boardSrcRect = houseRect;
 	ZeroRectCorner(&boardSrcRect);
 	boardSrcRect.bottom = kScoreboardTall;
-	theErr = CreateOffScreenGWorld(&boardSrcMap, &boardSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&boardSrcMap, &boardSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(boardSrcMap);
 	
 	if (boardSrcRect.right >= 640)
@@ -87,7 +87,7 @@ void InitScoreboardMap (void)
 	ReleaseResource((Handle)thePicture);
 	
 	QSetRect(&badgeSrcRect, 0, 0, 32, 66);				// 2144 pixels
-	theErr = CreateOffScreenGWorld(&badgeSrcMap, &badgeSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&badgeSrcMap, &badgeSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(badgeSrcMap);
 	LoadGraphic(kBadgePictID);
 	
@@ -98,7 +98,7 @@ void InitScoreboardMap (void)
 		hOffset = -128;
 	
 	QSetRect(&boardTSrcRect, 0, 0, 256, 12);			// room title
-	theErr = CreateOffScreenGWorld(&boardTSrcMap, &boardTSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&boardTSrcMap, &boardTSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(boardTSrcMap);
 	boardTDestRect = boardTSrcRect;
 	QOffsetRect(&boardTDestRect, 137 + hOffset, 5);
@@ -107,7 +107,7 @@ void InitScoreboardMap (void)
 	TextFace(bold);
 	
 	QSetRect(&boardGSrcRect, 0, 0, 20, 10);				// # gliders
-	theErr = CreateOffScreenGWorld(&boardGSrcMap, &boardGSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&boardGSrcMap, &boardGSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(boardGSrcMap);
 	boardGDestRect = boardGSrcRect;
 	QOffsetRect(&boardGDestRect, 526 + hOffset, 5);
@@ -116,7 +116,7 @@ void InitScoreboardMap (void)
 	TextFace(bold);
 	
 	QSetRect(&boardPSrcRect, 0, 0, 64, 10);				// points
-	theErr = CreateOffScreenGWorld(&boardPSrcMap, &boardPSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&boardPSrcMap, &boardPSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(boardPSrcMap);
 	boardPDestRect = boardPSrcRect;
 	QOffsetRect(&boardPDestRect, 570 + hOffset, 5);		// total = 6396 pixels
@@ -163,21 +163,21 @@ void InitScoreboardMap (void)
 void InitGliderMap (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		i;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&glidSrcRect, 0, 0, kGliderWide, 668);	// 32112 pixels
-	theErr = CreateOffScreenGWorld(&glidSrcMap, &glidSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&glidSrcMap, &glidSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(glidSrcMap);
 	LoadGraphic(kGliderPictID);
 	
-	theErr = CreateOffScreenGWorld(&glid2SrcMap, &glidSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&glid2SrcMap, &glidSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(glid2SrcMap);
 	LoadGraphic(kGlider2PictID);
 	
-	theErr = CreateOffScreenGWorld(&glidMaskMap, &glidSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&glidMaskMap, &glidSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(glidMaskMap);
 	LoadGraphic(kGliderPictID + 1000);
 	
@@ -198,11 +198,11 @@ void InitGliderMap (void)
 	QOffsetRect(&gliderSrc[30], 0, 648);
 	
 	QSetRect(&shadowSrcRect, 0, 0, kGliderWide, kShadowHigh * kNumShadowSrcRects);
-	theErr = CreateOffScreenGWorld(&shadowSrcMap, &shadowSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&shadowSrcMap, &shadowSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(shadowSrcMap);
 	LoadGraphic(kShadowPictID);
 	
-	theErr = CreateOffScreenGWorld(&shadowMaskMap, &shadowSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&shadowMaskMap, &shadowSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(shadowMaskMap);
 	LoadGraphic(kShadowPictID + 1000);
 	
@@ -213,11 +213,11 @@ void InitGliderMap (void)
 	}
 	
 	QSetRect(&bandsSrcRect, 0, 0, 16, 18);		// 304 pixels
-	theErr = CreateOffScreenGWorld(&bandsSrcMap, &bandsSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&bandsSrcMap, &bandsSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(bandsSrcMap);
 	LoadGraphic(kRubberBandsPictID);
 	
-	theErr = CreateOffScreenGWorld(&bandsMaskMap, &bandsSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&bandsMaskMap, &bandsSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(bandsMaskMap);
 	LoadGraphic(kRubberBandsPictID + 1000);
 	
@@ -238,16 +238,16 @@ void InitBlowers (void)
 {
 	CGrafPtr	wasCPort;
 	short		i;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&blowerSrcRect, 0, 0, 48, 402);	// 19344 pixels
-	theErr = CreateOffScreenGWorld(&blowerSrcMap, &blowerSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&blowerSrcMap, &blowerSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(blowerSrcMap);
 	LoadGraphic(kBlowerPictID);
 	
-	theErr = CreateOffScreenGWorld(&blowerMaskMap, &blowerSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&blowerMaskMap, &blowerSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(blowerMaskMap);
 	LoadGraphic(kBlowerPictID + 1000);
 	
@@ -285,16 +285,16 @@ void InitBlowers (void)
 void InitFurniture (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&furnitureSrcRect, 0, 0, 64, 278);		// 17856 pixels
-	theErr = CreateOffScreenGWorld(&furnitureSrcMap, &furnitureSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&furnitureSrcMap, &furnitureSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(furnitureSrcMap);
 	LoadGraphic(kFurniturePictID);
 	
-	theErr = CreateOffScreenGWorld(&furnitureMaskMap, &furnitureSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&furnitureMaskMap, &furnitureSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(furnitureMaskMap);
 	LoadGraphic(kFurniturePictID + 1000);
 	
@@ -333,16 +333,16 @@ void InitPrizes (void)
 {
 	CGrafPtr	wasCPort;
 	short		i;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&bonusSrcRect, 0, 0, 88, 378);		// 33264 pixels
-	theErr = CreateOffScreenGWorld(&bonusSrcMap, &bonusSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&bonusSrcMap, &bonusSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(bonusSrcMap);
 	LoadGraphic(kBonusPictID);
 	
-	theErr = CreateOffScreenGWorld(&bonusMaskMap, &bonusSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&bonusMaskMap, &bonusSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(bonusMaskMap);
 	LoadGraphic(kBonusPictID + 1000);
 	
@@ -391,11 +391,11 @@ void InitPrizes (void)
 	sparkleSrc[1] = sparkleSrc[3];
 	
 	QSetRect(&pointsSrcRect, 0, 0, 24, 120);		// 2880 pixels
-	theErr = CreateOffScreenGWorld(&pointsSrcMap, &pointsSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&pointsSrcMap, &pointsSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(pointsSrcMap);
 	LoadGraphic(kPointsPictID);
 	
-	theErr = CreateOffScreenGWorld(&pointsMaskMap, &pointsSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&pointsMaskMap, &pointsSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(pointsMaskMap);
 	LoadGraphic(kPointsPictID + 1000);
 	
@@ -415,16 +415,16 @@ void InitPrizes (void)
 void InitTransports (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 
 	wasCPort = GetGraphicsPort();
 
 	QSetRect(&transSrcRect, 0, 0, 56, 32);	// 1848 pixels
-	theErr = CreateOffScreenGWorld(&transSrcMap, &transSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&transSrcMap, &transSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(transSrcMap);
 	LoadGraphic(kTransportPictID);
 	
-	theErr = CreateOffScreenGWorld(&transMaskMap, &transSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&transMaskMap, &transSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(transMaskMap);
 	LoadGraphic(kTransportPictID + 1000);
 	
@@ -438,12 +438,12 @@ void InitTransports (void)
 void InitSwitches (void)
 {
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&switchSrcRect, 0, 0, 32, 104);	// 3360 pixels
-	theErr = CreateOffScreenGWorld(&switchSrcMap, &switchSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&switchSrcMap, &switchSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(switchSrcMap);
 	LoadGraphic(kSwitchPictID);
 	
@@ -483,16 +483,16 @@ void InitLights (void)
 {
 	CGrafPtr	wasCPort;
 	short		i;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&lightSrcRect, 0, 0, 72, 126);		// 9144 pixels
-	theErr = CreateOffScreenGWorld(&lightSrcMap, &lightSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&lightSrcMap, &lightSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(lightSrcMap);
 	LoadGraphic(kLightPictID);
 	
-	theErr = CreateOffScreenGWorld(&lightMaskMap, &lightSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&lightMaskMap, &lightSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(lightMaskMap);
 	LoadGraphic(kLightPictID + 1000);
 	
@@ -519,34 +519,34 @@ void InitAppliances (void)
 {
 	CGrafPtr	wasCPort;
 	short		i;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&applianceSrcRect, 0, 0, 80, 269);		// 21600 pixels
-	theErr = CreateOffScreenGWorld(&applianceSrcMap, &applianceSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&applianceSrcMap, &applianceSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(applianceSrcMap);
 	LoadGraphic(kAppliancePictID);
 	
-	theErr = CreateOffScreenGWorld(&applianceMaskMap, &applianceSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&applianceMaskMap, &applianceSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(applianceMaskMap);
 	LoadGraphic(kAppliancePictID + 1000);
 	
 	QSetRect(&toastSrcRect, 0, 0, 32, 174);			// 5600 pixels
-	theErr = CreateOffScreenGWorld(&toastSrcMap, &toastSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&toastSrcMap, &toastSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(toastSrcMap);
 	LoadGraphic(kToastPictID);
 	
-	theErr = CreateOffScreenGWorld(&toastMaskMap, &toastSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&toastMaskMap, &toastSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(toastMaskMap);
 	LoadGraphic(kToastPictID + 1000);
 	
 	QSetRect(&shredSrcRect, 0, 0, 40, 35);			// 1440 pixels
-	theErr = CreateOffScreenGWorld(&shredSrcMap, &shredSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&shredSrcMap, &shredSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(shredSrcMap);
 	LoadGraphic(kShreddedPictID);
 	
-	theErr = CreateOffScreenGWorld(&shredMaskMap, &shredSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&shredMaskMap, &shredSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(shredMaskMap);
 	LoadGraphic(kShreddedPictID + 1000);
 	
@@ -603,70 +603,70 @@ void InitEnemies (void)
 {
 	CGrafPtr	wasCPort;
 	short		i;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&balloonSrcRect, 0, 0, 24, 30 * kNumBalloonFrames);
-	theErr = CreateOffScreenGWorld(&balloonSrcMap, &balloonSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&balloonSrcMap, &balloonSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(balloonSrcMap);
 	LoadGraphic(kBalloonPictID);
 	
-	theErr = CreateOffScreenGWorld(&balloonMaskMap, &balloonSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&balloonMaskMap, &balloonSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(balloonMaskMap);
 	LoadGraphic(kBalloonPictID + 1000);
 	
 	QSetRect(&copterSrcRect, 0, 0, 32, 30 * kNumCopterFrames);
-	theErr = CreateOffScreenGWorld(&copterSrcMap, &copterSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&copterSrcMap, &copterSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(copterSrcMap);
 	LoadGraphic(kCopterPictID);
 	
-	theErr = CreateOffScreenGWorld(&copterMaskMap, &copterSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&copterMaskMap, &copterSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(copterMaskMap);
 	LoadGraphic(kCopterPictID + 1000);
 	
 	QSetRect(&dartSrcRect, 0, 0, 64, 19 * kNumDartFrames);
-	theErr = CreateOffScreenGWorld(&dartSrcMap, &dartSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&dartSrcMap, &dartSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(dartSrcMap);
 	LoadGraphic(kDartPictID);
 	
-	theErr = CreateOffScreenGWorld(&dartMaskMap, &dartSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&dartMaskMap, &dartSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(dartMaskMap);
 	LoadGraphic(kDartPictID + 1000);
 	
 	QSetRect(&ballSrcRect, 0, 0, 32, 32 * kNumBallFrames);
-	theErr = CreateOffScreenGWorld(&ballSrcMap, &ballSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&ballSrcMap, &ballSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(ballSrcMap);
 	LoadGraphic(kBallPictID);
 	
-	theErr = CreateOffScreenGWorld(&ballMaskMap, &ballSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&ballMaskMap, &ballSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(ballMaskMap);
 	LoadGraphic(kBallPictID + 1000);
 	
 	QSetRect(&dripSrcRect, 0, 0, 16, 12 * kNumDripFrames);
-	theErr = CreateOffScreenGWorld(&dripSrcMap, &dripSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&dripSrcMap, &dripSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(dripSrcMap);
 	LoadGraphic(kDripPictID);
 	
-	theErr = CreateOffScreenGWorld(&dripMaskMap, &dripSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&dripMaskMap, &dripSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(dripMaskMap);
 	LoadGraphic(kDripPictID + 1000);
 	
 	QSetRect(&enemySrcRect, 0, 0, 36, 33);
-	theErr = CreateOffScreenGWorld(&enemySrcMap, &enemySrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&enemySrcMap, &enemySrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(enemySrcMap);
 	LoadGraphic(kEnemyPictID);
 	
-	theErr = CreateOffScreenGWorld(&enemyMaskMap, &enemySrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&enemyMaskMap, &enemySrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(enemyMaskMap);
 	LoadGraphic(kEnemyPictID + 1000);
 	
 	QSetRect(&fishSrcRect, 0, 0, 16, 16 * kNumFishFrames);
-	theErr = CreateOffScreenGWorld(&fishSrcMap, &fishSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&fishSrcMap, &fishSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(fishSrcMap);
 	LoadGraphic(kFishPictID);
 	
-	theErr = CreateOffScreenGWorld(&fishMaskMap, &fishSrcRect, 1);	
+	theErr = CreateOffScreenGWorld(&fishMaskMap, &fishSrcRect, GpPixelFormats::kBW1);
 	SetGraphicsPort(fishMaskMap);
 	LoadGraphic(kFishPictID + 1000);
 	

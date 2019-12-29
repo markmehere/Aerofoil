@@ -885,7 +885,7 @@ void BringSendFrontBack (Boolean bringFront)
 		linksList = (linksPtr)NewPtr(sizeof(linksType) * numLinks);
 		if (linksList == nil)
 		{
-			YellowAlert(kYellowCantOrderLinks, MemError());
+			YellowAlert(kYellowCantOrderLinks, PLErrors::kOutOfMemory);
 			return;
 		}
 		GenerateLinksList();				// Fill in links list with src/dest…

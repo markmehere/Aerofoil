@@ -54,7 +54,7 @@ Boolean		playing, evenFrame, twoPlayerGame, showFoil, demoGoing;
 Boolean		doBackground, playerSuicide, phoneBitSet, tvOn;
 
 extern	WindowPtr	menuWindow;
-extern	FSSpecPtr	theHousesSpecs;
+extern	VFileSpec	*theHousesSpecs;
 extern	demoPtr		demoData;
 extern	gameType	smallGame;
 extern	Rect		gliderSrc[kNumGliderSrcRects];
@@ -74,7 +74,7 @@ extern	Boolean		switchedOut;
 void NewGame (short mode)
 {
 	Rect		tempRect;
-	OSErr		theErr;
+	PLError_t		theErr;
 	Boolean		wasPlayMusicPref;
 	
 	AdjustScoreboardHeight();
@@ -85,7 +85,7 @@ void NewGame (short mode)
 		if (!isMusicOn)
 		{
 			theErr = StartMusic();
-			if (theErr != noErr)
+			if (theErr != PLErrors::kNone)
 			{
 				YellowAlert(kYellowNoMusic, theErr);
 				failedMusic = true;
@@ -234,7 +234,7 @@ void NewGame (short mode)
 		if (!isMusicOn)
 		{
 			theErr = StartMusic();
-			if (theErr != noErr)
+			if (theErr != PLErrors::kNone)
 			{
 				YellowAlert(kYellowNoMusic, theErr);
 				failedMusic = true;
@@ -281,7 +281,7 @@ void DoDemoGame (void)
 	wasHouseIndex = thisHouseIndex;
 	whoCares = CloseHouse();
 	thisHouseIndex = demoHouseIndex;
-	PasStringCopy(theHousesSpecs[thisHouseIndex].name, thisHouseName);
+	PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
 	if (OpenHouse())
 	{
 		whoCares = ReadHouse();
@@ -290,7 +290,7 @@ void DoDemoGame (void)
 	}
 	whoCares = CloseHouse();
 	thisHouseIndex = wasHouseIndex;
-	PasStringCopy(theHousesSpecs[thisHouseIndex].name, thisHouseName);
+	PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
 	if (OpenHouse())
 		whoCares = ReadHouse();
 	incrementModeTime = TickCount() + kIdleSplashTicks;

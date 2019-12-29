@@ -111,7 +111,7 @@ void ShiftWholeHouse (SInt16);
 void DoHouseInfo (void);								// --- HouseInfo.c
 
 Boolean OpenHouse (void);								// --- HouseIO.c
-Boolean OpenSpecificHouse (FSSpec *);
+Boolean OpenSpecificHouse (const VFileSpec &);
 Boolean SaveHouseAs (void);
 Boolean ReadHouse (void);
 Boolean WriteHouse (Boolean);
@@ -223,7 +223,7 @@ void StartGliderFoilGoing (gliderPtr);
 void StartGliderFoilLosing (gliderPtr);
 void TagGliderIdle (gliderPtr);
 
-OSErr StartMusic (void);								// --- Music.c
+PLError_t StartMusic (void);								// --- Music.c
 void StopTheMusic (void);
 void ToggleMusicWhilePlaying (void);
 void SetMusicalMode (SInt16);
@@ -440,14 +440,14 @@ Boolean HasDragManager (void);
 
 void DoLoadHouse (void);								// --- SelectHouse.c
 void BuildHouseList (void);
-void AddExtraHouse (FSSpec *);
+void AddExtraHouse (const VFileSpec &);
 
 void DoSettingsMain (void);								// --- Settings.c
 
 void PlayPrioritySound (SInt16, SInt16);					// --- Sound.c
 void FlushAnyTriggerPlaying (void);
 void PlayExclusiveSoundChannel (SInt16, SInt16, SInt16, SInt16);
-OSErr LoadTriggerSound (SInt16);
+PLError_t LoadTriggerSound (SInt16);
 void DumpTriggerSound (void);
 void InitSound (void);
 void KillSound (void);

@@ -36,15 +36,15 @@ namespace PortabilityLayer
 		}
 	}
 
-	int QDPort::Init(const Rect &rect, GpPixelFormat_t pixelFormat)
+	PLError_t QDPort::Init(const Rect &rect, GpPixelFormat_t pixelFormat)
 	{
 		m_pixMap = nullptr;
 		m_pixelFormat = pixelFormat;
 
 		if (!Resize(rect))
-			return mFulErr;
+			return PLErrors::kOutOfMemory;
 
-		return noErr;
+		return PLErrors::kNone;
 	}
 
 	bool QDPort::Resize(const Rect &rect)

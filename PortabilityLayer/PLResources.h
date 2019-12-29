@@ -19,10 +19,10 @@ Handle Get1Resource(UInt32 resID, int index);
 Handle Get1IndResource(UInt32 resID, int index);
 int Count1Resources(UInt32 resType);
 
-void HCreateResFile(int refNum, long dirID, const PLPasStr &name);
-OSErr ResError();
+void HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name);
+PLError_t ResError();
 
-short FSpOpenResFile(const FSSpec *spec, int permission);
+short FSpOpenResFile(const VFileSpec &spec, int permission);
 void CloseResFile(short refNum);
 
 void SetResLoad(Boolean load);	// Sets whether resources should be loaded when requested
@@ -31,7 +31,7 @@ long GetMaxResourceSize(Handle res);
 void GetResInfo(Handle res, short *resID, ResType *resType, Str255 resName);
 
 // This should return -1 on error?
-short HOpenResFile(short refNum, long parID, const PLPasStr &name, int permissions);
+short HOpenResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name, int permissions);
 
 
 #endif

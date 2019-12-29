@@ -23,10 +23,10 @@
 
 
 void MusicCallBack (SndChannelPtr, SndCommand *);
-OSErr LoadMusicSounds (void);
-OSErr DumpMusicSounds (void);
-OSErr OpenMusicChannel (void);
-OSErr CloseMusicChannel (void);
+PLError_t LoadMusicSounds (void);
+PLError_t DumpMusicSounds (void);
+PLError_t OpenMusicChannel (void);
+PLError_t CloseMusicChannel (void);
 
 
 SndCallBackUPP	musicCallBackUPP;
@@ -54,13 +54,13 @@ extern	Boolean		isSoundOn;
 //==============================================================  Functions
 //--------------------------------------------------------------  StartMusic
 
-OSErr StartMusic (void)
+PLError_t StartMusic (void)
 {
 	SndCommand	theCommand;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		soundVolume;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	if (dontLoadMusic)
 		return(theErr);
@@ -76,7 +76,7 @@ OSErr StartMusic (void)
 		theCommand.param1 = 0;
 		theCommand.param2 = (intptr_t)(theMusicData[musicState.musicSoundID]);
 		theErr = SndDoCommand(musicChannel, &theCommand, false);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 			return (theErr);
 		
 		// GP: No idea what "1964" means
@@ -84,7 +84,7 @@ OSErr StartMusic (void)
 		theCommand.param1 = 1964;
 		theCommand.param2 = 0;
 		theErr = SndDoCommand(musicChannel, &theCommand, false);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 			return (theErr);
 		
 		musicState.musicCursor++;
@@ -96,7 +96,7 @@ OSErr StartMusic (void)
 		theCommand.param1 = 0;
 		theCommand.param2 = (intptr_t)(theMusicData[musicState.musicSoundID]);
 		theErr = SndDoCommand(musicChannel, &theCommand, false);
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 			return (theErr);
 		
 		theCommand.cmd = callBackCmd;
@@ -115,12 +115,12 @@ OSErr StartMusic (void)
 void StopTheMusic (void)
 {
 	SndCommand	theCommand;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (dontLoadMusic)
 		return;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	if ((isMusicOn) && (!failedMusic))
 	{
 		theCommand.cmd = flushCmd;
@@ -141,7 +141,7 @@ void StopTheMusic (void)
 
 void ToggleMusicWhilePlaying (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (dontLoadMusic)
 		return;
@@ -188,7 +188,7 @@ void SetMusicalMode (short newMode)
 
 void MusicCallBack (SndChannelPtr theChannel, SndCommand *theCommand)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 //	gameA5 = theCommand.param2;
 //	thisA5 = SetA5(gameA5);
@@ -236,14 +236,14 @@ void MusicCallBack (SndChannelPtr theChannel, SndCommand *theCommand)
 
 //--------------------------------------------------------------  LoadMusicSounds
 
-OSErr LoadMusicSounds (void)
+PLError_t LoadMusicSounds (void)
 {
 	Handle		theSound;
 	long		soundDataSize;
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		i;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	for (i = 0; i < kMaxMusic; i++)
 		theMusicData[i] = nil;
@@ -252,13 +252,13 @@ OSErr LoadMusicSounds (void)
 	{
 		theSound = GetResource('snd ', i + kBaseBufferMusicID);
 		if (theSound == nil)
-			return (MemError());
+			return PLErrors::kOutOfMemory;
 		
 		soundDataSize = GetHandleSize(theSound) - 20L;
 
 		theMusicData[i] = NewPtr(soundDataSize);
 		if (theMusicData[i] == nil)
-			return (MemError());
+			return PLErrors::kOutOfMemory;
 
 		BlockMove((Ptr)(static_cast<Byte*>(*theSound) + 20L), theMusicData[i], soundDataSize);
 		ReleaseResource(theSound);
@@ -268,12 +268,12 @@ OSErr LoadMusicSounds (void)
 
 //--------------------------------------------------------------  DumpMusicSounds
 
-OSErr DumpMusicSounds (void)
+PLError_t DumpMusicSounds (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		i;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	for (i = 0; i < kMaxMusic; i++)
 	{
@@ -287,13 +287,13 @@ OSErr DumpMusicSounds (void)
 
 //--------------------------------------------------------------  OpenMusicChannel
 
-OSErr OpenMusicChannel (void)
+PLError_t OpenMusicChannel (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	musicCallBackUPP = NewSndCallBackProc(MusicCallBack);
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	if (musicChannel != nil)
 		return (theErr);
@@ -308,11 +308,11 @@ OSErr OpenMusicChannel (void)
 
 //--------------------------------------------------------------  CloseMusicChannel
 
-OSErr CloseMusicChannel (void)
+PLError_t CloseMusicChannel (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
-	theErr = noErr;
+	theErr = PLErrors::kNone;
 	
 	if (musicChannel != nil)
 		theErr = SndDisposeChannel(musicChannel, true);
@@ -327,7 +327,7 @@ OSErr CloseMusicChannel (void)
 
 void InitMusic (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (dontLoadMusic)
 		return;
@@ -337,7 +337,7 @@ void InitMusic (void)
 	failedMusic = false;
 	isMusicOn = false;
 	theErr = LoadMusicSounds();
-	if (theErr != noErr)
+	if (theErr != PLErrors::kNone)
 	{
 		YellowAlert(kYellowNoMusic, theErr);
 		failedMusic = true;
@@ -380,7 +380,7 @@ void InitMusic (void)
 	if (isPlayMusicIdle)
 	{
 		theErr = StartMusic();
-		if (theErr != noErr)
+		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowNoMusic, theErr);
 			failedMusic = true;
@@ -392,7 +392,7 @@ void InitMusic (void)
 
 void KillMusic (void)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (dontLoadMusic)
 		return;

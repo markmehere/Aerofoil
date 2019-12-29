@@ -16,11 +16,17 @@
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FileManager.h"
 #include "House.h"
+#include "IOStream.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
 #include "Utilities.h"
 
+namespace PortabilityLayer
+{
+	class IOStream;
+}
 
 #define kHighScoresPictID		1994
 #define kHighScoresMaskID		1998
@@ -39,9 +45,7 @@ void GetHighScoreName (short);
 void UpdateBannerDialog (DialogPtr);
 Boolean BannerFilter (DialogPtr, EventRecord *, short *);
 void GetHighScoreBanner (void);
-Boolean CreateScoresFolder (long *);
-Boolean FindHighScoresFolder (short *, long *);
-Boolean OpenHighScoresFile (FSSpec *, short *);
+Boolean OpenHighScoresFile (const VFileSpec &spec, PortabilityLayer::IOStream *&outStream);
 
 
 Str31		highBanner;
@@ -97,7 +101,7 @@ void DrawHighScores (void)
 {
 	GWorldPtr	tempMap, tempMask;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	houseType	*thisHousePtr;
 	Rect		tempRect, tempRect2;
 	Str255		tempStr;
@@ -110,11 +114,11 @@ void DrawHighScores (void)
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&tempRect, 0, 0, 332, 30);
-	theErr = CreateOffScreenGWorld(&tempMap, &tempRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &tempRect, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(kHighScoresPictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &tempRect, 1);	
+	theErr = CreateOffScreenGWorld(&tempMask, &tempRect, GpPixelFormats::kBW1);	
 	SetGraphicsPort(tempMask);
 	LoadGraphic(kHighScoresMaskID);
 	
@@ -622,97 +626,19 @@ void GetHighScoreBanner (void)
 	DisposeModalFilterUPP(bannerFilterUPP);
 }
 
-//--------------------------------------------------------------  CreateScoresFolder
-
-Boolean CreateScoresFolder (long *scoresDirID)
-{
-	FSSpec		scoresSpec;
-	long		prefsDirID;
-	OSErr		theErr;
-	short		volRefNum;
-	
-	theErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kCreateFolder, 
-			&volRefNum, &prefsDirID);
-	if (!CheckFileError(theErr, PSTR("Prefs Folder")))
-		return (false);
-	
-	theErr = FSMakeFSSpec(volRefNum, prefsDirID, PSTR("G-PRO Scores Ä"), &scoresSpec);
-	
-	theErr = FSpDirCreate(&scoresSpec, smSystemScript, scoresDirID);
-	if (!CheckFileError(theErr, PSTR("High Scores Folder")))
-		return (false);
-	
-	return (true);
-}
-
-//--------------------------------------------------------------  FindHighScoresFolder
-
-Boolean FindHighScoresFolder (short *volRefNum, long *scoresDirID)
-{
-	CInfoPBRec	theBlock;
-	Str255		nameString;
-	long		prefsDirID;
-	OSErr		theErr;
-	short		count;
-	Boolean		foundIt;
-	
-	theErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kCreateFolder, 
-			volRefNum, &prefsDirID);
-	if (!CheckFileError(theErr, PSTR("Prefs Folder")))
-		return (false);
-	
-	PasStringCopy(PSTR("G-PRO Scores Ä"), nameString);
-	count = 1;
-	foundIt = false;
-	
-	theBlock.dirInfo.ioCompletion = nil;
-	theBlock.dirInfo.ioVRefNum = *volRefNum;
-	theBlock.dirInfo.ioNamePtr = nameString;
-	
-	while ((theErr == noErr) && (!foundIt))
-	{
-		theBlock.dirInfo.ioFDirIndex = count;
-		theBlock.dirInfo.ioDrDirID = prefsDirID;
-		theErr = PBGetCatInfo(&theBlock, false);
-		if (theErr == noErr)
-		{
-			if ((theBlock.dirInfo.ioFlAttrib & 0x10) == 0x10)
-			{
-				if (EqualString(theBlock.dirInfo.ioNamePtr, PSTR("G-PRO Scores Ä"), 
-						true, true))
-				{
-					foundIt = true;
-					*scoresDirID = theBlock.dirInfo.ioDrDirID;
-				}
-			}
-			count++;
-		}
-	}
-	
-	if (theErr == fnfErr)
-	{
-		if (CreateScoresFolder(scoresDirID))
-			return (true);
-		else
-			return (false);
-	}
-	else
-		return (true);
-}
-
 //--------------------------------------------------------------  OpenHighScoresFile
 
-Boolean OpenHighScoresFile (FSSpec *scoreSpec, short *scoresRefNum)
+Boolean OpenHighScoresFile (const VFileSpec &scoreSpec, PortabilityLayer::IOStream *&scoresStream)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
-	theErr = FSpOpenDF(scoreSpec, fsCurPerm, scoresRefNum);
-	if (theErr == fnfErr)
+	theErr = PortabilityLayer::FileManager::GetInstance()->OpenFileDF(scoreSpec.m_dir, scoreSpec.m_name, PortabilityLayer::EFilePermission_Any, scoresStream);
+	if (theErr == PLErrors::kFileNotFound)
 	{
-		theErr = FSpCreate(scoreSpec, 'ozm5', 'gliS', smSystemScript);
+		theErr = FSpCreate(scoreSpec, 'ozm5', 'gliS');
 		if (!CheckFileError(theErr, PSTR("New High Scores File")))
 			return (false);
-		theErr = FSpOpenDF(scoreSpec, fsCurPerm, scoresRefNum);
+		theErr = FSpOpenDF(scoreSpec, fsCurPerm, scoresStream);
 		if (!CheckFileError(theErr, PSTR("High Score")))
 			return (false);
 	}
@@ -727,53 +653,46 @@ Boolean OpenHighScoresFile (FSSpec *scoreSpec, short *scoresRefNum)
 Boolean WriteScoresToDisk (void)
 {
 	scoresType	*theScores;
-	FSSpec		scoreSpec;
-	long		dirID, byteCount;
-	OSErr		theErr;
-	short		volRefNum, scoresRefNum;
+	VFileSpec	scoreSpec;
+	long		byteCount;
+	PLError_t		theErr;
+	short		volRefNum;
 	char		wasState;
+	PortabilityLayer::IOStream	*scoresStream = nil;
 	
-	if (!FindHighScoresFolder(&volRefNum, &dirID))
+	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
+	if (!OpenHighScoresFile(scoreSpec, scoresStream))
 	{
 		SysBeep(1);
 		return (false);
 	}
-	
-	theErr = FSMakeFSSpec(volRefNum, dirID, thisHouseName, &scoreSpec);
-	if (!OpenHighScoresFile(&scoreSpec, &scoresRefNum))
+
+	if (!scoresStream->SeekStart(0))
 	{
-		SysBeep(1);
-		return (false);
-	}
-	
-	theErr = SetFPos(scoresRefNum, fsFromStart, 0L);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
-	{
-		theErr = FSClose(scoresRefNum);
+		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
+		scoresStream->Close();
 		return(false);
 	}
 	
 	byteCount = sizeof(scoresType);
 	theScores = &((*thisHouse)->highScores);
-	
-	theErr = FSWrite(scoresRefNum, &byteCount, (Ptr)theScores);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
+
+	if (scoresStream->Write(theScores, byteCount) != byteCount)
 	{
-		theErr = FSClose(scoresRefNum);
+		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
+		scoresStream->Close();
 		return(false);
 	}
-	
-	theErr = SetEOF(scoresRefNum, byteCount);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
+
+	if (!scoresStream->Truncate(byteCount))
 	{
-		theErr = FSClose(scoresRefNum);
+		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
+		scoresStream->Close();
 		return(false);
 	}
-	
-	theErr = FSClose(scoresRefNum);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
-		return(false);
-	
+
+	scoresStream->Close();
+
 	return (true);
 }
 
@@ -782,52 +701,32 @@ Boolean WriteScoresToDisk (void)
 Boolean ReadScoresFromDisk (void)
 {
 	scoresType	*theScores;
-	FSSpec		scoreSpec;
-	long		dirID, byteCount;
-	OSErr		theErr;
-	short		volRefNum, scoresRefNum;
+	PortabilityLayer::UFilePos_t		byteCount;
+	PLError_t		theErr;
+	short		volRefNum;
 	char		wasState;
+	PortabilityLayer::IOStream *scoresStream = nil;
 	
-	if (!FindHighScoresFolder(&volRefNum, &dirID))
+	VFileSpec	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
+	if (!OpenHighScoresFile(scoreSpec, scoresStream))
 	{
 		SysBeep(1);
 		return (false);
 	}
 	
-	theErr = FSMakeFSSpec(volRefNum, dirID, thisHouseName, &scoreSpec);
-	if (!OpenHighScoresFile(&scoreSpec, &scoresRefNum))
-	{
-		SysBeep(1);
-		return (false);
-	}
-	
-	theErr = GetEOF(scoresRefNum, &byteCount);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
-	{
-		theErr = FSClose(scoresRefNum);
-		return (false);
-	}
-	
-	theErr = SetFPos(scoresRefNum, fsFromStart, 0L);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
-	{
-		theErr = FSClose(scoresRefNum);
-		return (false);
-	}
+	byteCount = scoresStream->Size();
 	
 	theScores = &((*thisHouse)->highScores);
-	
-	theErr = FSRead(scoresRefNum, &byteCount, theScores);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
+
+	if (scoresStream->Read(theScores, byteCount) != byteCount)
 	{
-		theErr = FSClose(scoresRefNum);
+		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
+		scoresStream->Close();
 		return (false);
 	}
 	
-	theErr = FSClose(scoresRefNum);
-	if (!CheckFileError(theErr, PSTR("High Scores File")))
-		return(false);
-	
+	scoresStream->Close();
+
 	return (true);
 }
 

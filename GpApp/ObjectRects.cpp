@@ -921,7 +921,7 @@ short CreateActiveRects (short who)
 		case kSoundTrigger:
 		QSetRect(&bounds, 0, 0, 48, 48);
 		QOffsetRect(&bounds, theObject.data.e.topLeft.h, theObject.data.e.topLeft.v);
-		if (LoadTriggerSound(theObject.data.e.where) == noErr)
+		if (LoadTriggerSound(theObject.data.e.where) == PLErrors::kNone)
 			hotSpotNumber = AddActiveRect(&bounds, kSoundIt, who, true, false);
 		break;
 		

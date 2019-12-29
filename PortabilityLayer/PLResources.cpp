@@ -63,22 +63,22 @@ int Count1Resources(UInt32 resType)
 	return 0;
 }
 
-void HCreateResFile(int refNum, long dirID, const PLPasStr &name)
+void HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name)
 {
 	PL_NotYetImplemented();
 }
 
-OSErr ResError()
+PLError_t ResError()
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-short FSpOpenResFile(const FSSpec *spec, int permission)
+short FSpOpenResFile(const VFileSpec &spec, int permission)
 {
 	PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
 
-	return rm->OpenResFork(static_cast<PortabilityLayer::EVirtualDirectory>(spec->parID), PLPasStr(spec->name));
+	return rm->OpenResFork(spec.m_dir, spec.m_name);
 }
 
 void CloseResFile(short refNum)
@@ -103,7 +103,7 @@ void GetResInfo(Handle res, short *resID, ResType *resType, Str255 resName)
 	PL_NotYetImplemented();
 }
 
-short HOpenResFile(short refNum, long parID, const PLPasStr &name, int permissions)
+short HOpenResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name, int permissions)
 {
 	PL_NotYetImplemented();
 	return 0;

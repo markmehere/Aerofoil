@@ -379,7 +379,7 @@ void HandleUpdateEvent (EventRecord *theEvent)
 
 void HandleOSEvent (EventRecord *theEvent)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	short		buttonHit;
 	
 	if (theEvent->message & 0x01000000)		// suspend or resume event
@@ -408,7 +408,7 @@ void HandleOSEvent (EventRecord *theEvent)
 			if ((isPlayMusicIdle) && (theMode != kEditMode))
 			{
 				theErr = StartMusic();
-				if (theErr != noErr)
+				if (theErr != PLErrors::kNone)
 				{
 					YellowAlert(kYellowNoMusic, theErr);
 					failedMusic = true;
@@ -436,10 +436,10 @@ void HandleOSEvent (EventRecord *theEvent)
 
 void HandleHighLevelEvent (EventRecord *theEvent)
 {
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	theErr = AEProcessAppleEvent(theEvent);
-	if ((theErr != noErr) && (theErr != errAEEventNotHandled))
+	if ((theErr != PLErrors::kNone) && (theErr != errAEEventNotHandled))
 		YellowAlert(kYellowAppleEventErr, theErr);
 }
 

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "GpPixelFormat.h"
+#include "PLErrorCodes.h"
 #include "QDState.h"
 
 struct PixMap;
@@ -29,7 +30,7 @@ namespace PortabilityLayer
 		explicit QDPort(QDPortType portType);
 		~QDPort();
 
-		int Init(const Rect &rect, GpPixelFormat_t pixelFormat);
+		PLError_t Init(const Rect &rect, GpPixelFormat_t pixelFormat);
 		QDPortType GetPortType() const;
 
 		PixMap **GetPixMap() const;

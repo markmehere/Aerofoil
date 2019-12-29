@@ -17,7 +17,7 @@ namespace PortabilityLayer
 
 		virtual void SetResLoad(bool load) = 0;
 
-		virtual short OpenResFork(EVirtualDirectory virtualDir, const PLPasStr &filename) = 0;
+		virtual short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
 		virtual MMHandleBlock *GetResource(const ResTypeID &resType, int id) = 0;
 
 		virtual short GetCurrentResFile() const = 0;

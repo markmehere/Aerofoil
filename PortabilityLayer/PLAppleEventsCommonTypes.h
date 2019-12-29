@@ -2,6 +2,8 @@
 #ifndef __PL_APPLE_EVENTS_COMMON_TYPES_H__
 #define __PL_APPLE_EVENTS_COMMON_TYPES_H__
 
+#include "PLErrorCodes.h"
+
 #include <stdint.h>
 
 struct AppleEvent;
@@ -45,6 +47,6 @@ enum AEInteractAllowed
 	kAEInteractWithAll
 };
 
-typedef int(*AEEventHandler)(const AppleEvent *theAE, AppleEvent *reply, uint32_t ref);
+typedef PLError_t (*AEEventHandler)(const AppleEvent *theAE, AppleEvent *reply, uint32_t ref);
 
 #endif

@@ -1,46 +1,46 @@
 #include "PLAppleEvents.h"
 #include "AEManager.h"
 
-OSErr AEGetParamDesc(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, AEDescList *descList)
+PLError_t AEGetParamDesc(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, AEDescList *descList)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr AEDisposeDesc(AEDescList *descList)
+PLError_t AEDisposeDesc(AEDescList *descList)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr AECountItems(AEDescList *descList, long *count)
+PLError_t AECountItems(AEDescList *descList, long *count)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr AEGetNthPtr(AEDescList *descList, long index, DescType desiredType, AEKeyword *keyword, DescType *type, void *data, Size maxSize, Size *actualSize)
+PLError_t AEGetNthPtr(AEDescList *descList, long index, DescType desiredType, AEKeyword *keyword, DescType *type, void *data, Size maxSize, Size *actualSize)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr AEGetAttributePtr(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, DescType *type, void *data, Size maxSize, Size *actualSize)
+PLError_t AEGetAttributePtr(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, DescType *type, void *data, Size maxSize, Size *actualSize)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr AEInstallEventHandler(AEEventClass eventClass, AEEventID eventID, AEEventHandlerUPP handler, UInt32 ref, bool isSysHandler)
+PLError_t AEInstallEventHandler(AEEventClass eventClass, AEEventID eventID, AEEventHandlerUPP handler, UInt32 ref, bool isSysHandler)
 {
 	PortabilityLayer::AEManager::GetInstance()->InstallEventHandler(eventClass, eventID, handler, ref, isSysHandler);
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr AESetInteractionAllowed(AEInteractAllowed level)
+PLError_t AESetInteractionAllowed(AEInteractAllowed level)
 {
 	PortabilityLayer::AEManager::GetInstance()->SetInteractAllowed(level);
-	return noErr;
+	return PLErrors::kNone;
 }
 
 AEEventHandlerUPP NewAEEventHandlerProc(AEEventHandler handler)

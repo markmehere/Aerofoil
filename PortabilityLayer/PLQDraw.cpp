@@ -57,16 +57,16 @@ void EndUpdate(WindowPtr graf)
 	graf->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-OSErr GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags)
+PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
-OSErr PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite)
+PLError_t PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
 CIconHandle GetCIcon(short resID)
@@ -75,10 +75,10 @@ CIconHandle GetCIcon(short resID)
 	return nullptr;
 }
 
-OSErr PlotCIcon(Rect *rect, CIconHandle icon)
+PLError_t PlotCIcon(Rect *rect, CIconHandle icon)
 {
 	PL_NotYetImplemented();
-	return noErr;
+	return PLErrors::kNone;
 }
 
 void DisposeCIcon(CIconHandle icon)

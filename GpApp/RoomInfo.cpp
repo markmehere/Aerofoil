@@ -386,7 +386,7 @@ void DoRoomInfo (void)
 	Boolean			leaving, wasFirstRoom, forceDraw;
 	ModalFilterUPP	roomFilterUPP;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	roomFilterUPP = NewModalFilterUPP(RoomFilter);
@@ -404,7 +404,7 @@ void DoRoomInfo (void)
 	NumToString(thisRoom->numObjects, objectsStr);
 	ParamText(floorStr, suiteStr, objectsStr, PSTR(""));
 	
-	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredPixelFormat);
 	SetGraphicsPort(tileSrcMap);
 //	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
 //	SetPort((GrafPtr)tileSrcMap);

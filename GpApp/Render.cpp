@@ -752,7 +752,7 @@ void AddToMirrorRegion (Rect *theRect)
 		const long oldSize = GetHandleSize(reinterpret_cast<Handle>(mirrorRects));
 		const long newSize = oldSize + sizeof(Rect);
 
-		if (SetHandleSize(reinterpret_cast<Handle>(mirrorRects), newSize) == noErr)
+		if (SetHandleSize(reinterpret_cast<Handle>(mirrorRects), newSize) == PLErrors::kNone)
 			(*mirrorRects)[oldSize / sizeof(Rect)] = *theRect;
 	}
 	hasMirror = true;

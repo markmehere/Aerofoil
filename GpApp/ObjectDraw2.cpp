@@ -117,7 +117,7 @@ void DrawMailboxLeft (Rect *theRect, short down)
 	GWorldPtr	tempMask;
 	long		darkGrayC, lightWoodC, darkWoodC;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
@@ -170,11 +170,11 @@ void DrawMailboxLeft (Rect *theRect, short down)
 	SetGraphicsPort(wasCPort);
 	
 	bounds = srcRects[kMailboxLf];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(kMailboxLeftPictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+	theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);	
 	SetGraphicsPort(tempMask);
 	LoadGraphic(kMailboxLeftMaskID);
 	
@@ -199,7 +199,7 @@ void DrawMailboxRight (Rect *theRect, short down)
 	GWorldPtr	tempMask;
 	long		darkGrayC, lightWoodC, darkWoodC;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
@@ -252,11 +252,11 @@ void DrawMailboxRight (Rect *theRect, short down)
 	SetGraphicsPort(wasCPort);
 	
 	bounds = srcRects[kMailboxRt];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(kMailboxRightPictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+	theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);	
 	SetGraphicsPort(tempMask);
 	LoadGraphic(kMailboxRightMaskID);
 	
@@ -659,18 +659,18 @@ void DrawTV (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 		
 	if (isLit)
 	{
 		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kTV];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 		SetGraphicsPort(tempMap);
 		LoadGraphic(kTVPictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);	
 		SetGraphicsPort(tempMask);
 		LoadGraphic(kTVMaskID);
 		
@@ -752,18 +752,18 @@ void DrawVCR (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	if (isLit)
 	{
 		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kVCR];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 		SetGraphicsPort(tempMap);
 		LoadGraphic(kVCRPictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
 		SetGraphicsPort(tempMask);
 		LoadGraphic(kVCRMaskID);
 		
@@ -805,7 +805,7 @@ void DrawStereo (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	
 	if (isLit)
@@ -813,11 +813,11 @@ void DrawStereo (Rect *theRect, Boolean isOn, Boolean isLit)
 		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kStereo];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 		SetGraphicsPort(tempMap);
 		LoadGraphic(kStereoPictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
 		SetGraphicsPort(tempMask);
 		LoadGraphic(kStereoMaskID);
 		
@@ -859,7 +859,7 @@ void DrawMicrowave (Rect *theRect, Boolean isOn, Boolean isLit)
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	
 	if (isLit)
@@ -867,11 +867,11 @@ void DrawMicrowave (Rect *theRect, Boolean isOn, Boolean isLit)
 		wasCPort = GetGraphicsPort();
 		
 		bounds = srcRects[kMicrowave];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 		SetGraphicsPort(tempMap);
 		LoadGraphic(kMicrowavePictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
 		SetGraphicsPort(tempMask);
 		LoadGraphic(kMicrowaveMaskID);
 		
@@ -1260,7 +1260,7 @@ void DrawPictWithMaskObject (short what, Rect *theRect)
 	GWorldPtr	tempMask;
 	short		pictID, maskID;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
@@ -1278,11 +1278,11 @@ void DrawPictWithMaskObject (short what, Rect *theRect)
 	}
 	
 	bounds = srcRects[what];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(pictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &bounds, 1);	
+	theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
 	SetGraphicsPort(tempMask);
 	LoadGraphic(maskID);
 	
@@ -1307,7 +1307,7 @@ void DrawPictSansWhiteObject (short what, Rect *theRect)
 	CGrafPtr	tempMap;
 	short		pictID;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
@@ -1395,7 +1395,7 @@ void DrawPictSansWhiteObject (short what, Rect *theRect)
 	}
 	
 	bounds = srcRects[what];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(pictID);
 	
@@ -1415,13 +1415,13 @@ void DrawCustPictSansWhite (short pictID, Rect *theRect)
 	Rect		bounds;
 	GWorldPtr	tempMap;
 	CGrafPtr	wasCPort;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	bounds = *theRect;
 	ZeroRectCorner(&bounds);
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(pictID);
 	

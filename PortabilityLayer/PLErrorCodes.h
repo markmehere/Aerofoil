@@ -2,32 +2,30 @@
 #ifndef __PL_ERROR_CODES_H__
 #define __PL_ERROR_CODES_H__
 
-enum ErrorCodes
+
+namespace PLErrors
 {
-	noErr,
+	enum PLError
+	{
+		kNone = 0,
 
-	fnfErr,
-	eofErr,
-	userCanceledErr,
-	dirFulErr,
-	dskFulErr,
-	ioErr,
-	bdNamErr,
-	fnOpnErr,
-	mFulErr,
-	tmfoErr,
-	wPrErr,
-	fLckdErr,
-	vLckdErr,
-	fBsyErr,
-	dupFNErr,
-	opWrErr,
-	volOffLinErr,
-	permErr,
-	wrPermErr,
-	queueFull,
+		kInvalidParameter,
 
-	genericErr,
-};
+		kFileHandlesExhausted,
+		kBadFileName,
+		kFileNotFound,
+		kAccessDenied,
+
+		kOutOfMemory,
+
+		kAudioError,
+
+		kIOError,
+
+		kUserCancelled_TEMP,
+	};
+}
+
+typedef PLErrors::PLError PLError_t;
 
 #endif

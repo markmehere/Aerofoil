@@ -737,7 +737,7 @@ void LopOffExtraRooms (void)
 	{
 		r = (*thisHouse)->nRooms - count;
 		newSize = sizeof(houseType) + (sizeof(roomType) * (long)r);
-		if (SetHandleSize((Handle)thisHouse, newSize) != noErr)	// resize house handle (shrink)
+		if (SetHandleSize((Handle)thisHouse, newSize) != PLErrors::kNone)	// resize house handle (shrink)
 		{
 			ForeColor(redColor);
 			GetLocalizedString(16, message);

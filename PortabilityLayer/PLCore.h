@@ -7,6 +7,8 @@
 #include "SharedTypes.h"
 #include "QDPort.h"
 #include "QDGraf.h"
+#include "ResTypeID.h"
+#include "VirtualDirectory.h"
 
 #ifdef _MSC_VER
 #pragma warning(error:4311)	// Pointer truncation to int
@@ -17,6 +19,7 @@ struct IGpColorCursor;
 namespace PortabilityLayer
 {
 	struct MMHandleBlock;
+	class IOStream;
 }
 
 typedef uint8_t Boolean;
@@ -25,7 +28,6 @@ typedef uint8_t UInt8;
 typedef int16_t SInt16;
 typedef int32_t Int32;
 typedef uint32_t UInt32;
-typedef int OSErr;
 
 typedef size_t Size;
 
@@ -132,17 +134,17 @@ struct ColorSpec
 	uint8_t r, g, b;
 };
 
-struct FSSpec
+struct VFileSpec
 {
-	Str63 name;
-	UInt32 parID;	// Directory ID
-	SInt16 vRefNum;	// Volume ID
+	PortabilityLayer::VirtualDirectory_t m_dir;
+	Str63 m_name;
 };
 
-typedef struct FInfo
+struct VFileInfo
 {
-	UInt32 fdType;
-} FInfo;
+	PortabilityLayer::ResTypeID m_type;
+	PortabilityLayer::ResTypeID m_creator;
+};
 
 struct HFileParam
 {
@@ -166,7 +168,6 @@ typedef CGrafPtr GWorldPtr;
 typedef Window *WindowPtr;
 typedef Cursor *CursPtr;
 typedef CCursor *CCrsrPtr;
-typedef FSSpec *FSSpecPtr;
 typedef Menu *MenuPtr;
 typedef CInfoPBRec *CInfoPBPtr;
 typedef VersionRecord *VersRecPtr;
@@ -210,26 +211,6 @@ enum EventCode
 	kHighLevelEvent,
 };
 
-enum ScriptCode
-{
-	smSystemScript,
-};
-
-enum FindFolderRefNum
-{
-	kOnSystemDisk,
-};
-
-enum FindFolderType
-{
-	kPreferencesFolderType,
-};
-
-enum SetFPosWhere
-{
-	fsFromStart,
-};
-
 enum BuiltinWDEFs
 {
 	noGrowDocProc = 4,		// Movable, not resizable
@@ -260,8 +241,6 @@ static const Boolean FALSE = 0;
 static const int nullEvent = 0;
 
 //void FlushEvents(int eventMask, int stopMask);
-
-OSErr FSClose(short fsRef);
 
 void InitCursor();
 CursHandle GetCursor(int cursorID);
@@ -319,28 +298,24 @@ void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, cons
 
 UInt32 FreeMem();
 
-OSErr AEProcessAppleEvent(EventRecord *evt);
+PLError_t AEProcessAppleEvent(EventRecord *evt);
 
-OSErr FindFolder(int refNum, int posType, bool createFolder, short *volumeRef, long *dirID);
+PLError_t FindFolder(int refNum, int posType, bool createFolder, short *volumeRef, long *dirID);
 void GetIndString(unsigned char *str, int stringsID, int fnameIndex);	// Fetches a string resource of some sort
-OSErr PBDirCreate(HFileParam *fileParam, bool asynchronous);
+PLError_t PBDirCreate(HFileParam *fileParam, bool asynchronous);
 
-OSErr FSMakeFSSpec(int refNum, long dirID, const PLPasStr &fileName, FSSpec *spec);
-OSErr FSpCreate(const FSSpec *spec, UInt32 creator, UInt32 fileType, ScriptCode scriptTag);
-OSErr FSpDirCreate(const FSSpec *spec, ScriptCode script, long *outDirID);
-OSErr FSpOpenDF(const FSSpec *spec, int permission, short *refNum);
-OSErr FSpOpenRF(const FSSpec *spec, int permission, short *refNum);
-OSErr FSWrite(short refNum, long *byteCount, const void *data);
-OSErr FSRead(short refNum, long *byteCount, void *data);
-OSErr FSpDelete(const FSSpec *spec);
-OSErr FSpGetFInfo(const FSSpec *spec, FInfo *finfo);
-OSErr SetFPos(short refNum, SetFPosWhere where, long offset); 
-OSErr GetEOF(short refNum, long *byteCount);
-OSErr SetEOF(short refNum, long byteCount);
+VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr &fileName);
 
-OSErr PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async);
+PLError_t FSpCreate(const VFileSpec &spec, UInt32 creator, UInt32 fileType);
+PLError_t FSpDirCreate(const VFileSpec &spec, long *outDirID);
+PLError_t FSpOpenDF(const VFileSpec &spec, int permission, PortabilityLayer::IOStream *&stream);
+PLError_t FSpOpenRF(const VFileSpec &spec, int permission, PortabilityLayer::IOStream *&stream);
+PLError_t FSpDelete(const VFileSpec &spec);
+PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfoOut);
 
-DirectoryFileListEntry *GetDirectoryFiles(long dirID);
+PLError_t PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async);
+
+DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID);
 void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL);
 
 short StringWidth(const PLPasStr &str);
@@ -366,8 +341,8 @@ Handle NewHandle(Size size);
 void DisposeHandle(Handle handle);
 long GetHandleSize(Handle handle);
 
-OSErr PtrAndHand(const void *data, Handle handle, Size size);	// Appends data to the end of a handle
-OSErr SetHandleSize(Handle hdl, Size newSize);
+PLError_t PtrAndHand(const void *data, Handle handle, Size size);	// Appends data to the end of a handle
+PLError_t SetHandleSize(Handle hdl, Size newSize);
 
 void *NewPtr(Size size);
 void *NewPtrClear(Size size);
@@ -376,7 +351,7 @@ void DisposePtr(void *ptr);
 Size MaxMem(Size *growBytes);
 void PurgeSpace(long *totalFree, long *contiguousFree);
 
-OSErr MemError();
+PLError_t MemError();
 
 void BlockMove(const void *src, void *dest, Size size);
 

@@ -30,7 +30,7 @@ namespace PortabilityLayer
 		uint32_t m_creationDate;
 		uint32_t m_modifiedDate;
 
-		void Serialize(void *buffer);
+		void Serialize(void *buffer) const;
 		void Deserialize(const void *buffer);
 	};
 

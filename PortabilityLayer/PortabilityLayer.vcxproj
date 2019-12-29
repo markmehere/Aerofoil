@@ -180,7 +180,6 @@
     <ClInclude Include="PascalStr.h" />
     <ClInclude Include="PascalStrLiteral.h" />
     <ClInclude Include="PixelFormat.h" />
-    <ClInclude Include="PLAliases.h" />
     <ClInclude Include="HostMemoryBuffer.h" />
     <ClInclude Include="HostFileSystem.h" />
     <ClInclude Include="PLAppleEvents.h" />
@@ -284,7 +283,6 @@
     <ClCompile Include="MenuManager.cpp" />
     <ClCompile Include="MMBlock.cpp" />
     <ClCompile Include="MMHandleBlock.cpp" />
-    <ClCompile Include="PLAliases.cpp" />
     <ClCompile Include="PLAppleEvents.cpp" />
     <ClCompile Include="PLApplication.cpp" />
     <ClCompile Include="PLControlDefinitions.cpp" />

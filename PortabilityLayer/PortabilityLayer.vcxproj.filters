@@ -117,9 +117,6 @@
     <ClInclude Include="PLDialogs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLAliases.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLStringCompare.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -429,9 +426,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLAppleEvents.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PLAliases.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLStringCompare.cpp">

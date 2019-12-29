@@ -45,7 +45,7 @@ void DrawBanner (Point *topLeft)
 	Rect		wholePage, partPage, mapBounds;
 	GWorldPtr	tempMap;
 	GWorldPtr	tempMask;
-	OSErr		theErr;
+	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
@@ -64,11 +64,11 @@ void DrawBanner (Point *topLeft)
 	partPage.top = partPage.bottom - 30;
 	mapBounds = partPage;
 	ZeroRectCorner(&mapBounds);
-	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds, kPreferredDepth);
+	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds, kPreferredPixelFormat);
 	SetGraphicsPort(tempMap);
 	LoadGraphic(kBannerPageBottomPICT);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, 1);	
+	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, GpPixelFormats::kBW1);	
 	SetGraphicsPort(tempMask);
 	LoadGraphic(kBannerPageBottomMask);
 

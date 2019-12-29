@@ -6,6 +6,7 @@
 #include "MacFileMem.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
+#include "ResTypeID.h"
 
 #include <vector>
 
@@ -16,62 +17,89 @@ namespace PortabilityLayer
 	class FileManagerImpl final : public FileManager
 	{
 	public:
-		bool FileExists(uint32_t dirID, const PLPasStr &filename) override;
+		bool FileExists(VirtualDirectory_t dirID, const PLPasStr &filename) override;
+		bool DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename) override;
 
-		int OpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, short *outRefNum) override;
-		int OpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, short *outRefNum) override;
-		bool ReadFileProperties(uint32_t dirID, const PLPasStr &filename, MacFileProperties &properties) override;
-		IOStream *GetFileStream(int fileID) override;
+		PLError_t CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp) override;
 
-		int RawOpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream **outStream) override;
-		int RawOpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream **outStream) override;
+		PLError_t OpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
+		PLError_t OpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
+		bool ReadFileProperties(VirtualDirectory_t dirID, const PLPasStr &filename, MacFileProperties &properties) override;
+
+		PLError_t RawOpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
+		PLError_t RawOpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
 
 		static FileManagerImpl *GetInstance();
 
 	private:
 		typedef char ExtendedFileName_t[64 + 4];
 
-		struct OpenedFile
-		{
-			EVirtualDirectory m_dirID;
-			PascalStr<64> m_fileName;
-
-			IOStream *m_stream;
-		};
-
-		int OpenFileFork(uint32_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, short *outRefNum);
-		int RawOpenFileFork(uint32_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, IOStream **outStream);
+		PLError_t OpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, IOStream *&outRefNum);
+		PLError_t RawOpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, bool create, IOStream *&outStream);
 
 		static bool ConstructFilename(ExtendedFileName_t& extFN, const PLPasStr &fn, const char *extension);
-
-		std::vector<OpenedFile> m_refs;
 
 		static FileManagerImpl ms_instance;
 	};
 
-	bool FileManagerImpl::FileExists(uint32_t dirID, const PLPasStr &filename)
+	bool FileManagerImpl::FileExists(VirtualDirectory_t dirID, const PLPasStr &filename)
 	{
 		ExtendedFileName_t extFN;
 		if (!ConstructFilename(extFN, filename, ".gpf"))
 			return false;
 
-		return HostFileSystem::GetInstance()->FileExists(static_cast<EVirtualDirectory>(dirID), extFN);
+		return HostFileSystem::GetInstance()->FileExists(dirID, extFN);
 	}
 
-	int FileManagerImpl::OpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission permission, short *outRefNum)
+	bool FileManagerImpl::DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename)
 	{
-		return OpenFileFork(dirID, filename, ".gpd", permission, outRefNum);
+		ExtendedFileName_t extFN;
+		if (!ConstructFilename(extFN, filename, ".gpf"))
+			return false;
+
+		// PL_NotYetImplemented_TODO("FileSystem")
+		return false;
 	}
 
-	int FileManagerImpl::OpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission permission, short *outRefNum)
+	PLError_t FileManagerImpl::CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp)
 	{
-		return OpenFileFork(dirID, filename, ".gpr", permission, outRefNum);
+		MacFilePropertiesSerialized serialized;
+		serialized.Serialize(mfp);
+
+		ExtendedFileName_t extFN;
+		if (!ConstructFilename(extFN, filename, ".gpf"))
+			return PLErrors::kBadFileName;
+
+		IOStream *stream = nullptr;
+		PLError_t err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Write, true, true, stream);
+		if (err)
+			return err;
+
+		if (stream->Write(serialized.m_data, sizeof(serialized.m_data)) != sizeof(serialized.m_data))
+		{
+			stream->Close();
+			return PLErrors::kIOError;
+		}
+
+		stream->Close();
+
+		return PLErrors::kNone;
 	}
 
-	bool FileManagerImpl::ReadFileProperties(uint32_t dirID, const PLPasStr &filename, MacFileProperties &properties)
+	PLError_t FileManagerImpl::OpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
+	{
+		return OpenFileFork(dirID, filename, ".gpd", permission, outStream);
+	}
+
+	PLError_t FileManagerImpl::OpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
+	{
+		return OpenFileFork(dirID, filename, ".gpr", permission, outStream);
+	}
+
+	bool FileManagerImpl::ReadFileProperties(VirtualDirectory_t dirID, const PLPasStr &filename, MacFileProperties &properties)
 	{
 		IOStream *stream = nullptr;
-		int err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Read, true, &stream);
+		PLError_t err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Read, true, false, stream);
 		if (err)
 			return false;
 
@@ -85,19 +113,14 @@ namespace PortabilityLayer
 		return readOk;
 	}
 
-	IOStream *FileManagerImpl::GetFileStream(int fileID)
+	PLError_t FileManagerImpl::RawOpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
 	{
-		return m_refs[fileID].m_stream;
+		return RawOpenFileFork(dirID, filename, ".gpd", permission, ignoreMeta, false, outStream);
 	}
 
-	int FileManagerImpl::RawOpenFileDF(uint32_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream **outStream)
+	PLError_t FileManagerImpl::RawOpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
 	{
-		return RawOpenFileFork(dirID, filename, ".gpd", permission, ignoreMeta, outStream);
-	}
-
-	int FileManagerImpl::RawOpenFileRF(uint32_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream **outStream)
-	{
-		return RawOpenFileFork(dirID, filename, ".gpr", permission, ignoreMeta, outStream);
+		return RawOpenFileFork(dirID, filename, ".gpr", permission, ignoreMeta, false, outStream);
 	}
 
 	FileManagerImpl *FileManagerImpl::GetInstance()
@@ -105,91 +128,72 @@ namespace PortabilityLayer
 		return &ms_instance;
 	}
 
-	int FileManagerImpl::OpenFileFork(uint32_t dirID, const PLPasStr &filename, const char *extension, EFilePermission permission, short *outRefNum)
+	PLError_t FileManagerImpl::OpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension, EFilePermission permission, IOStream *&outStream)
 	{
-		const size_t numRefs = m_refs.size();
-		size_t refIndex = m_refs.size();
-		for (size_t i = 0; i < numRefs; i++)
-		{
-			if (m_refs[i].m_stream == nullptr)
-			{
-				refIndex = i;
-				break;
-			}
-		}
-
-		if (refIndex == 0x8000)
-			return tmfoErr;
-
+		bool isWriteAccess = (permission == EFilePermission_Any || permission == EFilePermission_ReadWrite || permission == EFilePermission_Write);
 		IOStream *stream = nullptr;
-		int openError = RawOpenFileFork(dirID, filename, extension, permission, false, &stream);
-		if (openError != 0)
+		PLError_t openError = RawOpenFileFork(dirID, filename, extension, permission, false, isWriteAccess, stream);
+		if (openError != PLErrors::kNone)
 			return openError;
 
-		if (refIndex == numRefs)
-			m_refs.push_back(OpenedFile());
+		outStream = stream;
 
-		OpenedFile &of = m_refs[refIndex];
-		of.m_stream = stream;
-		of.m_dirID = static_cast<EVirtualDirectory>(dirID);
-		of.m_fileName.Set(filename.Length(), filename.Chars());
-
-		*outRefNum = static_cast<short>(refIndex);
-
-		return noErr;
+		return PLErrors::kNone;
 	}
 
-	int FileManagerImpl::RawOpenFileFork(uint32_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, IOStream **outStream)
+	PLError_t FileManagerImpl::RawOpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, bool create, IOStream *&outStream)
 	{
 		ExtendedFileName_t gpfExtFN;
 		ExtendedFileName_t extFN;
 
 		if (filename.Length() > 63)
-			return bdNamErr;
+			return PLErrors::kBadFileName;
 
 		if (!ignoreMeta)
 		{
 			if (!ConstructFilename(gpfExtFN, filename, ".gpf"))
-				return bdNamErr;
+				return PLErrors::kBadFileName;
 
-			if (!HostFileSystem::GetInstance()->FileExists(static_cast<EVirtualDirectory>(dirID), gpfExtFN))
-				return fnfErr;
+			if (!HostFileSystem::GetInstance()->FileExists(dirID, gpfExtFN))
+				return PLErrors::kFileNotFound;
 		}
 
 		if (!ConstructFilename(extFN, filename, ext))
-			return bdNamErr;
+			return PLErrors::kBadFileName;
 
-		const bool needToCreate = !(ignoreMeta || HostFileSystem::GetInstance()->FileExists(static_cast<EVirtualDirectory>(dirID), extFN));
+		const bool needToCreate = create && !HostFileSystem::GetInstance()->FileExists(dirID, extFN);
 
 		IOStream *fstream = nullptr;
 		switch (permission)
 		{
 		case EFilePermission_Any:
-			fstream = HostFileSystem::GetInstance()->OpenFile(static_cast<EVirtualDirectory>(dirID), extFN, true, needToCreate);
+			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, needToCreate);
 			if (fstream)
 				permission = EFilePermission_ReadWrite;
 			else
 			{
 				permission = EFilePermission_Read;
-				fstream = HostFileSystem::GetInstance()->OpenFile(static_cast<EVirtualDirectory>(dirID), extFN, false, needToCreate);
+				fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, needToCreate);
 			}
 			break;
 		case EFilePermission_Read:
-			fstream = HostFileSystem::GetInstance()->OpenFile(static_cast<EVirtualDirectory>(dirID), extFN, false, needToCreate);
+			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, needToCreate);
 			break;
 		case EFilePermission_ReadWrite:
-			fstream = HostFileSystem::GetInstance()->OpenFile(static_cast<EVirtualDirectory>(dirID), extFN, true, needToCreate);
+		case EFilePermission_Write:
+			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, needToCreate);
 			break;
 		}
 
 		if (!fstream)
-			return permErr;
+			return PLErrors::kAccessDenied;
 
-		*outStream = fstream;
-		return noErr;
+		outStream = fstream;
+
+		return PLErrors::kNone;
 	}
 
-	bool FileManagerImpl::ConstructFilename(ExtendedFileName_t& extFN, const PLPasStr &fn, const char *extension)
+	bool FileManagerImpl::ConstructFilename(ExtendedFileName_t &extFN, const PLPasStr &fn, const char *extension)
 	{
 		const size_t fnameSize = fn.Length();
 		if (fnameSize >= 64)

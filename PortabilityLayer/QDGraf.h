@@ -25,12 +25,12 @@ struct CGraf final
 	{
 	}
 
-	int Init(const Rect &rect, GpPixelFormat_t pixelFormat)
+	PLError_t Init(const Rect &rect, GpPixelFormat_t pixelFormat)
 	{
-		if (int errorCode = m_port.Init(rect, pixelFormat))
+		if (PLError_t errorCode = m_port.Init(rect, pixelFormat))
 			return errorCode;
 
-		return 0;
+		return PLErrors::kNone;
 	}
 
 	bool Resize(const Rect &rect)

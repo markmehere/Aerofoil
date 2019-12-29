@@ -6,6 +6,7 @@
 
 
 #include "PLQDOffscreen.h"
+#include "GpPixelFormat.h"
 
 
-OSErr CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, short depth);
+PLError_t CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat);

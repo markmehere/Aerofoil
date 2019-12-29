@@ -17,6 +17,7 @@ namespace PortabilityLayer
 }
 
 #define kPreferredDepth				8
+#define kPreferredPixelFormat		(GpPixelFormats::k8BitStandard)
 
 
 #define	kNilPointer					0L
