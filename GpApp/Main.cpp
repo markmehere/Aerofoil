@@ -14,7 +14,7 @@
 #include "House.h"
 
 
-#define kPrefsVersion			0x0034
+#define kPrefsVersion			0x0035
 
 
 void ReadInPrefs (void);
@@ -72,6 +72,13 @@ void ReadInPrefs (void)
 		theGlider.rightKey = thePrefs.wasRightMap;
 		theGlider.battKey = thePrefs.wasBattMap;
 		theGlider.bandKey = thePrefs.wasBandMap;
+		theGlider.gamepadLeftKey = thePrefs.wasGPLeftMap;
+		theGlider.gamepadRightKey = thePrefs.wasGPRightMap;
+		theGlider.gamepadBandKey = thePrefs.wasGPBandMap;
+		theGlider.gamepadBattKey = thePrefs.wasGPBattMap;
+		theGlider.gamepadFlipKey = thePrefs.wasGPFlipMap;
+		theGlider.gamepadFaceRightKey = thePrefs.wasGPFaceRightMap;
+		theGlider.gamepadFaceLeftKey = thePrefs.wasGPFaceLeftMap;
 #ifndef COMPILEDEMO
 #ifndef COMPILENOCP
 		encryptedNumber = thePrefs.encrypted;
@@ -138,7 +145,14 @@ void ReadInPrefs (void)
 		theGlider.rightKey = PL_KEY_SPECIAL(kRightArrow);
 		theGlider.battKey = PL_KEY_SPECIAL(kDownArrow);
 		theGlider.bandKey = PL_KEY_SPECIAL(kUpArrow);
-		
+		theGlider.gamepadLeftKey = PL_KEY_GAMEPAD_BUTTON(kDPadLeft, 0);
+		theGlider.gamepadRightKey = PL_KEY_GAMEPAD_BUTTON(kDPadRight, 0);
+		theGlider.gamepadBandKey = PL_KEY_GAMEPAD_BUTTON(kFaceDown, 0);
+		theGlider.gamepadBattKey = PL_KEY_GAMEPAD_BUTTON(kFaceLeft, 0);
+		theGlider.gamepadFlipKey = PL_KEY_GAMEPAD_BUTTON(kFaceUp, 0);
+		theGlider.gamepadFaceRightKey = PL_KEY_GAMEPAD_BUTTON(kRightBumper, 0);
+		theGlider.gamepadFaceLeftKey = PL_KEY_GAMEPAD_BUTTON(kLeftBumper, 0);
+
 		UnivGetSoundVolume(&isVolume, thisMac.hasSM3);
 		if (isVolume < 1)
 			isVolume = 1;
@@ -228,6 +242,13 @@ void WriteOutPrefs (void)
 	thePrefs.wasRightMap = theGlider.rightKey;
 	thePrefs.wasBattMap = theGlider.battKey;
 	thePrefs.wasBandMap = theGlider.bandKey;
+	thePrefs.wasGPLeftMap = theGlider.gamepadLeftKey;
+	thePrefs.wasGPRightMap = theGlider.gamepadRightKey;
+	thePrefs.wasGPBattMap = theGlider.gamepadBattKey;
+	thePrefs.wasGPBandMap = theGlider.gamepadBandKey;
+	thePrefs.wasGPFlipMap = theGlider.gamepadFlipKey;
+	thePrefs.wasGPFaceLeftMap = theGlider.gamepadFaceLeftKey;
+	thePrefs.wasGPFaceRightMap = theGlider.gamepadFaceRightKey;
 #ifndef COMPILEDEMO
 #ifndef COMPILENOCP
 	thePrefs.encrypted = encryptedNumber;

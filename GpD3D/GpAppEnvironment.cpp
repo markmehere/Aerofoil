@@ -6,6 +6,7 @@
 #include "GpPLGlueDisplayDriver.h"
 #include "HostSuspendCallArgument.h"
 #include "IGpFiber.h"
+#include "IGpInputDriver.h"
 
 #include <assert.h>
 
@@ -13,6 +14,8 @@ GpAppEnvironment::GpAppEnvironment()
 	: m_applicationState(ApplicationState_NotStarted)
 	, m_displayDriver(nullptr)
 	, m_audioDriver(nullptr)
+	, m_inputDrivers(nullptr)
+	, m_numInputDrivers(0)
 	, m_fontHandler(nullptr)
 	, m_vosEventQueue(nullptr)
 	, m_applicationFiber(nullptr)
@@ -53,6 +56,7 @@ void GpAppEnvironment::Tick(IGpFiber *vosFiber)
 		case ApplicationState_WaitingForEvents:
 			return;
 		case ApplicationState_Running:
+			SynchronizeState();
 			m_applicationFiber->YieldTo();
 			break;
 		case ApplicationState_SystemCall:
@@ -96,6 +100,12 @@ void GpAppEnvironment::SetAudioDriver(IGpAudioDriver *audioDriver)
 	m_audioDriver = audioDriver;
 }
 
+void GpAppEnvironment::SetInputDrivers(IGpInputDriver *const* inputDrivers, size_t numDrivers)
+{
+	m_inputDrivers = inputDrivers;
+	m_numInputDrivers = numDrivers;
+}
+
 void GpAppEnvironment::SetFontHandler(PortabilityLayer::HostFontHandler *fontHandler)
 {
 	m_fontHandler = fontHandler;
@@ -125,13 +135,15 @@ void GpAppEnvironment::InitializeApplicationState()
 	GpAppInterface_Get()->PL_HostFontHandler_SetInstance(m_fontHandler);
 	GpAppInterface_Get()->PL_HostVOSEventQueue_SetInstance(m_vosEventQueue);
 
-	SynchronizeState();
+	GpPLGlueDisplayDriver::GetInstance()->SetGpDisplayDriver(m_displayDriver);
+	GpPLGlueAudioDriver::GetInstance()->SetGpAudioDriver(m_audioDriver);
 }
 
 void GpAppEnvironment::SynchronizeState()
 {
-	GpPLGlueDisplayDriver::GetInstance()->SetGpDisplayDriver(m_displayDriver);
-	GpPLGlueAudioDriver::GetInstance()->SetGpAudioDriver(m_audioDriver);
+	const size_t numInputDrivers = m_numInputDrivers;
+	for (size_t i = 0; i < numInputDrivers; i++)
+		m_inputDrivers[i]->ProcessInput();
 }
 
 void GpAppEnvironment::StaticSuspendHookFunc(void *context, PortabilityLayer::HostSuspendCallID callID, const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue)

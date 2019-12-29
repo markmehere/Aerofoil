@@ -5,6 +5,7 @@
 #include "GpGlobalConfig.h"
 #include "GpFiber_Win32.h"
 #include "GpFileSystem_Win32.h"
+#include "GpInputDriverFactory.h"
 #include "GpAppInterface.h"
 #include "GpSystemServices_Win32.h"
 #include "GpVOSEvent.h"
@@ -21,6 +22,7 @@ GpWindowsGlobals g_gpWindowsGlobals;
 
 extern "C" __declspec(dllimport) IGpAudioDriver *GpDriver_CreateAudioDriver_XAudio2(const GpAudioDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpDisplayDriver *GpDriver_CreateDisplayDriver_D3D11(const GpDisplayDriverProperties &properties);
+extern "C" __declspec(dllimport) IGpInputDriver *GpDriver_CreateInputDriver_XInput(const GpInputDriverProperties &properties);
 
 static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y)
 {
@@ -372,10 +374,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpWindowsGlobals.m_translateWindowsMessageFunc = TranslateWindowsMessage;
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_D3D11;
+	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_XAudio2;
+
+	EGpInputDriverType inputDrivers[] =
+	{
+		EGpInputDriverType_XInput
+	};
+
+	g_gpGlobalConfig.m_inputDriverTypes = inputDrivers;
+	g_gpGlobalConfig.m_numInputDrivers = sizeof(inputDrivers) / sizeof(inputDrivers[0]);
+
 	g_gpGlobalConfig.m_osGlobals = &g_gpWindowsGlobals;
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_D3D11, GpDriver_CreateDisplayDriver_D3D11);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);
+	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_XInput, GpDriver_CreateInputDriver_XInput);
 
 	return GpMain::Run();
 }

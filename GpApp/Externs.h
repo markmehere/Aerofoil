@@ -89,6 +89,10 @@ typedef struct
 //	long		encrypted, fakeLong;
 	long		wasLeftMap, wasRightMap;
 	long		wasBattMap, wasBandMap;
+	long		wasGPLeftMap, wasGPRightMap;
+	long		wasGPBattMap, wasGPBandMap;
+	long		wasGPFlipMap;
+	long		wasGPFaceLeftMap, wasGPFaceRightMap;
 	short		wasVolume;
 	short		prefVersion;
 	short		wasMaxFiles;

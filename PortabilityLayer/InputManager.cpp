@@ -13,13 +13,18 @@ namespace PortabilityLayer
 		InputManagerImpl();
 
 		void GetKeys(KeyMap &keyMap) const override;
-		void ApplyEvent(const GpKeyboardInputEvent &vosEvent) override;
+		void ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent) override;
+		void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) override;
+		int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) override;
 
 		static InputManagerImpl *GetInstance();
 
 	private:
 		void ApplyEventAsKey(const GpKeyboardInputEvent &vosEvent, bool bit);
+		void ApplyAnalogAxisEvent(const GpGamepadAnalogAxisEvent &axisEvent);
+
 		KeyMap m_keyMap;
+		int16_t m_axisStates[PL_INPUT_MAX_PLAYERS][GpGamepadAxes::kCount];
 
 		static InputManagerImpl ms_instance;
 	};
@@ -29,12 +34,25 @@ namespace PortabilityLayer
 		keyMap = m_keyMap;
 	}
 
-	void InputManagerImpl::ApplyEvent(const GpKeyboardInputEvent &vosEvent)
+	void InputManagerImpl::ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent)
 	{
 		if (vosEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
 			ApplyEventAsKey(vosEvent, true);
 		else if (vosEvent.m_eventType == GpKeyboardInputEventTypes::kUp)
 			ApplyEventAsKey(vosEvent, false);
+	}
+
+	void InputManagerImpl::ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent)
+	{
+		if (vosEvent.m_eventType == GpGamepadInputEventTypes::kAnalogAxisChanged)
+			ApplyAnalogAxisEvent(vosEvent.m_event.m_analogAxisEvent);
+	}
+
+	int16_t InputManagerImpl::GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis)
+	{
+		assert(playerNum < PL_INPUT_MAX_PLAYERS);
+
+		return m_axisStates[playerNum][gamepadAxis];
 	}
 
 	void InputManagerImpl::ApplyEventAsKey(const GpKeyboardInputEvent &vosEvent, bool bit)
@@ -70,10 +88,20 @@ namespace PortabilityLayer
 		case GpKeyIDSubsets::kFKey:
 			m_keyMap.m_fKey.Set(vosEvent.m_key.m_fKey - 1, bit);
 			break;
+		case GpKeyIDSubsets::kGamepadButton:
+			if (vosEvent.m_key.m_gamepadKey.m_player < PL_INPUT_MAX_PLAYERS)
+				m_keyMap.m_gamepadButtons[vosEvent.m_key.m_gamepadKey.m_player].Set(vosEvent.m_key.m_gamepadKey.m_button, bit);
+			break;
 		default:
 			assert(false);
 			break;
 		}
+	}
+
+	void InputManagerImpl::ApplyAnalogAxisEvent(const GpGamepadAnalogAxisEvent &axisEvent)
+	{
+		if (axisEvent.m_player < PL_INPUT_MAX_PLAYERS)
+			m_axisStates[axisEvent.m_player][axisEvent.m_axis] = axisEvent.m_state;
 	}
 
 	InputManagerImpl *InputManagerImpl::GetInstance()
@@ -83,6 +111,7 @@ namespace PortabilityLayer
 
 	InputManagerImpl::InputManagerImpl()
 	{
+		memset(m_axisStates, 0, sizeof(m_axisStates));
 	}
 
 	InputManagerImpl InputManagerImpl::ms_instance;

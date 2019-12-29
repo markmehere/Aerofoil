@@ -6,7 +6,7 @@
 
 
 #include "PLQDOffscreen.h"
-
+#include "GpVOSEvent.h"
 
 typedef struct
 {
@@ -208,6 +208,10 @@ typedef struct
 	Rect		clip, enteredRect;
 	Int32		leftKey, rightKey;
 	Int32		battKey, bandKey;
+	Int32		gamepadLeftKey, gamepadRightKey;
+	Int32		gamepadBattKey, gamepadBandKey;
+	Int32		gamepadFlipKey;
+	Int32		gamepadFaceLeftKey, gamepadFaceRightKey;
 	short		hVel, vVel;
 	short		wasHVel, wasVVel;
 	short		vDesiredVel, hDesiredVel;
@@ -215,7 +219,7 @@ typedef struct
 	Boolean		facing, tipped;
 	Boolean		sliding, ignoreLeft, ignoreRight;
 	Boolean		fireHeld, which;
-	Boolean		heldLeft, heldRight;
+	Boolean		heldLeft, heldRight, heldFlip;
 	Boolean		dontDraw, ignoreGround;
 } gliderType, *gliderPtr;
 

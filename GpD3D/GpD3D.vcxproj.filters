@@ -78,6 +78,9 @@
     <ClCompile Include="GpColorCursor_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GpInputDriverFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GpWindows.h">
@@ -90,12 +93,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpMain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EGpDisplayDriverType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpDisplayDriverProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpGlobalConfig.h">
@@ -138,12 +135,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpAudioDriverFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EGpAudioDriverType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpAudioDriverProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpPLGlueAudioDriver.h">
@@ -189,6 +180,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpInputDriverFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\EGpInputDriverType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\GpInputDriverProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

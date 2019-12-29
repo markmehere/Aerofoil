@@ -14,5 +14,5 @@ public:
 	static void RegisterDisplayDriverFactory(EGpDisplayDriverType type, FactoryFunc_t func);
 
 private:
-	static FactoryFunc_t ms_Registry[EGpDisplayDriverType_Count];
+	static FactoryFunc_t ms_registry[EGpDisplayDriverType_Count];
 };

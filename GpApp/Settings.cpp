@@ -1225,6 +1225,13 @@ void SetAllDefaults (void)
 	theGlider.rightKey = PL_KEY_SPECIAL(kRightArrow);
 	theGlider.battKey = PL_KEY_SPECIAL(kDownArrow);
 	theGlider.bandKey = PL_KEY_SPECIAL(kUpArrow);
+	theGlider.gamepadLeftKey = PL_KEY_GAMEPAD_BUTTON(kDPadLeft, 0);
+	theGlider.gamepadRightKey = PL_KEY_GAMEPAD_BUTTON(kDPadRight, 0);
+	theGlider.gamepadBandKey = PL_KEY_GAMEPAD_BUTTON(kFaceDown, 0);
+	theGlider.gamepadBattKey = PL_KEY_GAMEPAD_BUTTON(kFaceLeft, 0);
+	theGlider.gamepadFlipKey = PL_KEY_GAMEPAD_BUTTON(kFaceUp, 0);
+	theGlider.gamepadFaceRightKey = PL_KEY_GAMEPAD_BUTTON(kRightBumper, 0);
+	theGlider.gamepadFaceLeftKey = PL_KEY_GAMEPAD_BUTTON(kLeftBumper, 0);
 	isEscPauseKey = false;
 								// Default sound settings
 	isPlayMusicIdle = true;

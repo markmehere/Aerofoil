@@ -7,8 +7,8 @@ IGpDisplayDriver *GpDisplayDriverFactory::CreateDisplayDriver(const GpDisplayDri
 {
 	assert(properties.m_type < EGpDisplayDriverType_Count);
 
-	if (ms_Registry[properties.m_type])
-		return ms_Registry[properties.m_type](properties);
+	if (ms_registry[properties.m_type])
+		return ms_registry[properties.m_type](properties);
 	else
 		return nullptr;
 }
@@ -17,7 +17,7 @@ void GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType t
 {
 	assert(type < EGpDisplayDriverType_Count);
 
-	ms_Registry[type] = func;
+	ms_registry[type] = func;
 }
 
-GpDisplayDriverFactory::FactoryFunc_t GpDisplayDriverFactory::ms_Registry[EGpDisplayDriverType_Count];
+GpDisplayDriverFactory::FactoryFunc_t GpDisplayDriverFactory::ms_registry[EGpDisplayDriverType_Count];

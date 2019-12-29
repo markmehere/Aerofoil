@@ -140,6 +140,10 @@ void VariableInit (void)
 	theGlider2.rightKey = PL_KEY_ASCII('D');
 	theGlider2.battKey = PL_KEY_ASCII('S');
 	theGlider2.bandKey = PL_KEY_ASCII('W');
+	theGlider2.gamepadLeftKey = PL_KEY_GAMEPAD_BUTTON(kDPadLeft, 1);
+	theGlider2.gamepadRightKey = PL_KEY_GAMEPAD_BUTTON(kDPadRight, 1);
+	theGlider2.gamepadBandKey = PL_KEY_GAMEPAD_BUTTON(kFaceDown, 1);
+	theGlider2.gamepadBattKey = PL_KEY_GAMEPAD_BUTTON(kFaceLeft, 1);
 	theGlider2.which = kPlayer2;
 	
 	theMode = kSplashMode;

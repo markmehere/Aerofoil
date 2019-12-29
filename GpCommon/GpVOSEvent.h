@@ -21,10 +21,61 @@ namespace GpKeyIDSubsets
 		kNumPadNumber,
 		kNumPadSpecial,
 		kFKey,	// Key value is a raw F number
+		kGamepadButton,
+
+		kCount,
 	};
 }
 
 typedef GpKeyIDSubsets::GpKeyIDSubset GpKeyIDSubset_t;
+
+namespace GpGamepadButtons
+{
+	enum GpGamepadButton
+	{
+		kDPadUp,
+		kDPadDown,
+		kDPadLeft,
+		kDPadRight,
+
+		kFaceUp,
+		kFaceDown,
+		kFaceLeft,
+		kFaceRight,
+
+		kLeftStick,
+		kRightStick,
+
+		kLeftBumper,
+		kRightBumper,
+
+		kMisc1,
+		kMisc2,
+
+		kCount,
+	};
+}
+
+typedef GpGamepadButtons::GpGamepadButton GpGamepadButton_t;
+
+namespace GpGamepadAxes
+{
+	enum GpGamepadAxis
+	{
+		kLeftStickX,
+		kLeftStickY,
+
+		kRightStickX,
+		kRightStickY,
+
+		kLeftTrigger,
+		kRightTrigger,
+
+		kCount,
+	};
+}
+
+typedef GpGamepadAxes::GpGamepadAxis GpGamepadAxis_t;
 
 namespace GpKeySpecials
 {
@@ -90,6 +141,22 @@ namespace GpKeyboardInputEventTypes
 
 typedef GpKeyboardInputEventTypes::GpKeyboardInputEventType GpKeyboardInputEventType_t;
 
+namespace GpGamepadInputEventTypes
+{
+	enum GpGamepadInputEventType
+	{
+		kAnalogAxisChanged,
+	};
+}
+
+typedef GpGamepadInputEventTypes::GpGamepadInputEventType GpGamepadInputEventTypes_t;
+
+struct GpGamepadButtonAndPlayer
+{
+	GpGamepadButton_t m_button;
+	uint8_t m_player;
+};
+
 struct GpKeyboardInputEvent
 {
 	union KeyUnion
@@ -100,11 +167,30 @@ struct GpKeyboardInputEvent
 		char m_asciiChar;
 		uint32_t m_unicodeChar;
 		unsigned char m_fKey;
+		GpGamepadButtonAndPlayer m_gamepadKey;
 	};
 
 	GpKeyboardInputEventType_t m_eventType;
 	GpKeyIDSubset_t m_keyIDSubset;
 	KeyUnion m_key;
+};
+
+struct GpGamepadAnalogAxisEvent
+{
+	GpGamepadAxis_t m_axis;
+	int16_t m_state;	// Ranges from -32767 to 32767, is never -32768
+	uint8_t m_player;
+};
+
+struct GpGamepadInputEvent
+{
+	union EventUnion
+	{
+		GpGamepadAnalogAxisEvent m_analogAxisEvent;
+	};
+
+	GpGamepadInputEventTypes_t m_eventType;
+	EventUnion m_event;
 };
 
 namespace GpMouseEventTypes
@@ -149,6 +235,7 @@ namespace GpVOSEventTypes
 	{
 		kKeyboardInput,
 		kMouseInput,
+		kGamepadInput,
 	};
 }
 
@@ -160,6 +247,7 @@ struct GpVOSEvent
 	{
 		GpKeyboardInputEvent m_keyboardInputEvent;
 		GpMouseInputEvent m_mouseInputEvent;
+		GpGamepadInputEvent m_gamepadInputEvent;
 	};
 
 	EventUnion m_event;

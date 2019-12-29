@@ -551,8 +551,8 @@
 #define kGliderBurningHigh			26
 #define kShadowHigh					9
 #define kShadowTop					306
-#define kFaceRight					TRUE
-#define kFaceLeft					FALSE
+static const Boolean kFaceRight = TRUE;	// Conflicts with GP input driver
+static const Boolean kFaceLeft = FALSE;	// Conflicts with GP input driver
 #define kPlayer1					TRUE
 #define kPlayer2					FALSE
 #define kNumGliderSrcRects			31
@@ -623,3 +623,5 @@
 #define kScoreboardPictID			1997
 
 #define kDemoLength					6702
+
+#define kGamepadDeadzone			4096	// Out of 32768

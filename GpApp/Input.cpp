@@ -9,6 +9,7 @@
 #include "PLDialogs.h"
 #include "PLKeyEncoding.h"
 #include "Externs.h"
+#include "InputManager.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
 
@@ -197,10 +198,14 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		
 #if BUILD_ARCADE_VERSION
 		
-		if ((BitTst(theKeys, thisGlider->leftKey)) || 
-				(BitTst(theKeys, thisGlider->rightKey)) || 
-				(BitTst(theKeys, thisGlider->battKey)) || 
-				(BitTst(theKeys, thisGlider->bandKey)))
+		if ((BitTst(theKeys, thisGlider->leftKey)) ||
+			(BitTst(theKeys, thisGlider->gamepadLeftKey)) ||
+				(BitTst(theKeys, thisGlider->rightKey)) ||
+				(BitTst(theKeys, thisGlider->gamepadRightKey)) ||
+				(BitTst(theKeys, thisGlider->battKey)) ||
+				(BitTst(theKeys, thisGlider->gamepadBattKey)) ||
+				(BitTst(theKeys, thisGlider->bandKey)) ||
+				(BitTst(theKeys, thisGlider->gamepadBandKey)))
 		{
 			playing = false;
 			paused = false;
@@ -302,38 +307,96 @@ void GetInput (gliderPtr thisGlider)
 	}
 	else
 	{
+		bool continuousFlipState = false;
+		bool holdFlipState = false;
+		bool leftState = false;
+		bool rightState = false;
+
+		if (BitTst(theKeys, thisGlider->rightKey) || BitTst(theKeys, thisGlider->gamepadRightKey))			// right key
+		{
+			PL_NotYetImplemented_TODO("FixDemo");	// Flips aren't recorded in the demo properly
+
+			if (BitTst(theKeys, thisGlider->leftKey) || BitTst(theKeys, thisGlider->gamepadLeftKey))
+				continuousFlipState = true;
+			else
+				rightState = true;
+		}
+		else if (BitTst(theKeys, thisGlider->leftKey) || BitTst(theKeys, thisGlider->gamepadLeftKey))		// left key
+			leftState = true;
+		else
+			thisGlider->tipped = false;
+
+		if (BitTst(theKeys, thisGlider->gamepadRightKey))
+			rightState = true;
+
+		if (BitTst(theKeys, thisGlider->gamepadLeftKey))
+			leftState = true;
+
+		if (BitTst(theKeys, thisGlider->gamepadFaceLeftKey) && thisGlider->facing == kFaceRight)
+			continuousFlipState = true;
+
+		if (BitTst(theKeys, thisGlider->gamepadFaceRightKey) && thisGlider->facing == kFaceLeft)
+			continuousFlipState = true;
+
+		if (BitTst(theKeys, thisGlider->gamepadFlipKey))
+			holdFlipState = true;
+
+		if (thisGlider->which == kPlayer1 || thisGlider->which == kPlayer2)
+		{
+			unsigned int playerNum = 0;
+			if (thisGlider->which == kPlayer1)
+				playerNum = 0;
+			else if (thisGlider->which == kPlayer2)
+				playerNum = 1;
+
+			int16_t inputAxis = PortabilityLayer::InputManager::GetInstance()->GetGamepadAxis(playerNum, GpGamepadAxes::kLeftStickX);
+			if (inputAxis <= -kGamepadDeadzone)
+				leftState = true;
+			else if (inputAxis >= kGamepadDeadzone)
+				rightState = true;
+		}
+
+		// gamepad flip key
+		//if (BitTst(theKeys, thisGlider->gamepadFlipKey))
+		//	holdFlipState = true;
+
 		thisGlider->heldLeft = false;
 		thisGlider->heldRight = false;
-		if (BitTst(theKeys, thisGlider->rightKey))			// right key
+		if (continuousFlipState)
 		{
-		#ifdef CREATEDEMODATA
-			LogDemoKey(0);
-		#endif
-			if (BitTst(theKeys, thisGlider->leftKey))
+			leftState = false;
+			rightState = false;
+			ToggleGliderFacing(thisGlider);
+		}
+		else if (holdFlipState)
+		{
+			if (!thisGlider->heldFlip)
 			{
 				ToggleGliderFacing(thisGlider);
-				thisGlider->heldLeft = true;
-			}
-			else
-			{
-				thisGlider->hDesiredVel += kNormalThrust;
-				thisGlider->tipped = (thisGlider->facing == kFaceLeft);
-				thisGlider->heldRight = true;
+				thisGlider->heldFlip = true;
 			}
 		}
-		else if (BitTst(theKeys, thisGlider->leftKey))		// left key
+		else
+			thisGlider->heldFlip = false;
+
+		if (rightState && !leftState)
 		{
-		#ifdef CREATEDEMODATA
-			LogDemoKey(1);
-		#endif
+			thisGlider->hDesiredVel += kNormalThrust;
+			thisGlider->tipped = (thisGlider->facing == kFaceLeft);
+			thisGlider->heldRight = true;
+		}
+
+		if (leftState && !rightState)
+		{
 			thisGlider->hDesiredVel -= kNormalThrust;
 			thisGlider->tipped = (thisGlider->facing == kFaceRight);
 			thisGlider->heldLeft = true;
 		}
-		else
+
+		if (!leftState && !rightState)
 			thisGlider->tipped = false;
-		
-		if ((BitTst(theKeys, thisGlider->battKey)) && (batteryTotal != 0) && 
+
+		if ((BitTst(theKeys, thisGlider->battKey) || BitTst(theKeys, thisGlider->gamepadBattKey)) && (batteryTotal != 0) && 
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
@@ -347,7 +410,7 @@ void GetInput (gliderPtr thisGlider)
 		else
 			batteryWasEngaged = false;
 		
-		if ((BitTst(theKeys, thisGlider->bandKey)) && (bandsTotal > 0) && 
+		if ((BitTst(theKeys, thisGlider->bandKey) || BitTst(theKeys, thisGlider->gamepadBandKey)) && (bandsTotal > 0) &&
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA

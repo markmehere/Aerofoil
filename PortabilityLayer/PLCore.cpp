@@ -98,12 +98,24 @@ static void TranslateMouseInputEvent(const GpMouseInputEvent &vosEvent, Portabil
 	}
 }
 
-static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
+static void TranslateGamepadInputEvent(const GpGamepadInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
 {
 	PortabilityLayer::InputManager *inputManager = PortabilityLayer::InputManager::GetInstance();
 
+	inputManager->ApplyGamepadEvent(vosEvent);
+
+	PL_DEAD(queue);
+}
+
+static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
+{
+	PL_STATIC_ASSERT((1 << PL_INPUT_PLAYER_INDEX_BITS) >= PL_INPUT_MAX_PLAYERS);
+	PL_STATIC_ASSERT((1 << PL_INPUT_TYPE_CODE_BITS) >= KeyEventType_Count);
+
+	PortabilityLayer::InputManager *inputManager = PortabilityLayer::InputManager::GetInstance();
+
 	if (vosEvent.m_eventType == GpKeyboardInputEventTypes::kUp || vosEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
-		inputManager->ApplyEvent(vosEvent);
+		inputManager->ApplyKeyboardEvent(vosEvent);
 
 	intptr_t msg = 0;
 
@@ -133,6 +145,9 @@ static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, Po
 				break;
 			}
 		}
+		break;
+	case GpKeyIDSubsets::kGamepadButton:
+		msg = PL_KEY_GAMEPAD_BUTTON_ENCODE(vosEvent.m_key.m_gamepadKey.m_button, vosEvent.m_key.m_gamepadKey.m_player);
 		break;
 	default:
 		PL_NotYetImplemented();
@@ -170,6 +185,9 @@ static void TranslateVOSEvent(const GpVOSEvent *vosEvent, PortabilityLayer::Even
 		break;
 	case GpVOSEventTypes::kKeyboardInput:
 		TranslateKeyboardInputEvent(vosEvent->m_event.m_keyboardInputEvent, queue);
+		break;
+	case GpVOSEventTypes::kGamepadInput:
+		TranslateGamepadInputEvent(vosEvent->m_event.m_gamepadInputEvent, queue);
 		break;
 	}
 }
@@ -521,6 +539,15 @@ bool BitTst(const KeyMap &keyMap, int encodedKey)
 		return keyMap.m_fKey.Get(evtValue - 1);
 	case KeyEventType_EitherSpecial:
 		return BitTestEitherSpecial(keyMap, evtValue);
+	case KeyEventType_GamepadButton:
+		{
+			unsigned int playerNum = evtValue & ((1 << PL_INPUT_PLAYER_INDEX_BITS) - 1);
+			assert(playerNum < PL_INPUT_MAX_PLAYERS);
+			unsigned int button = evtValue >> PL_INPUT_PLAYER_INDEX_BITS;
+
+			return keyMap.m_gamepadButtons[playerNum].Get(button);
+		}
+		break;
 	default:
 		assert(false);
 		return false;
