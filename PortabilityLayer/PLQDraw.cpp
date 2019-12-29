@@ -781,7 +781,7 @@ void FrameRect(const Rect *rect)
 
 void FrameOval(const Rect *rect)
 {
-	FrameRect(rect);
+	PL_NotYetImplemented_TODO("Editor");
 }
 
 void FrameRoundRect(const Rect *rect, int w, int h)
@@ -850,7 +850,6 @@ void Line(int x, int y)
 	const PortabilityLayer::Vec2i newPos = PortabilityLayer::Vec2i(qdState->m_penPos.h, qdState->m_penPos.v);
 
 	PlotLine(qdState, qdManager->GetPort(), oldPos, newPos);
-
 }
 
 Pattern *GetQDGlobalsGray(Pattern *pattern)
