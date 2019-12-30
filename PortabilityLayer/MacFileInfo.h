@@ -27,8 +27,8 @@ namespace PortabilityLayer
 		int16_t m_yPos;
 		uint16_t m_finderFlags;
 		uint8_t m_protected;
-		uint32_t m_creationDate;
-		uint32_t m_modifiedDate;
+		int64_t m_creationDate;
+		int64_t m_modifiedDate;
 
 		void Serialize(void *buffer) const;
 		void Deserialize(const void *buffer);
@@ -43,9 +43,9 @@ namespace PortabilityLayer
 		static const unsigned int kOffsetFinderFlags = 12;
 		static const unsigned int kProtected = 14;
 		static const unsigned int kCreationDate = 15;
-		static const unsigned int kModifiedDate = 19;
+		static const unsigned int kModifiedDate = 23;
 
-		static const unsigned int kSize = 23;
+		static const unsigned int kSize = 31;
 
 		uint8_t m_data[kSize];
 

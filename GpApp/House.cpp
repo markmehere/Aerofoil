@@ -90,7 +90,7 @@ Boolean CreateNewHouse (void)
 			return (false);
 	}
 	
-	theErr = FSpCreate(theSpec, 'ozm5', 'gliH');
+	theErr = fm->CreateFileAtCurrentTime(theSpec.m_dir, theSpec.m_name, 'ozm5', 'gliH');
 	if (!CheckFileError(theErr, PSTR("New House")))
 		return (false);
 	HCreateResFile(theSpec.m_dir, theSpec.m_name);

@@ -7,7 +7,7 @@ static volatile uint64_t gs_prioritiesBlob = 0;
 
 SoundSyncState SoundSync_ReadAll()
 {
-	const uint16_t priorities = gs_prioritiesBlob;
+	const uint64_t priorities = gs_prioritiesBlob;
 
 	SoundSyncState state;
 	state.priority0 = static_cast<uint16_t>((priorities >> 0) & 0xffff);

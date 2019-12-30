@@ -13,6 +13,7 @@
 #include "DialogUtils.h"
 #include "Environ.h"
 #include "Externs.h"
+#include "HostSystemServices.h"
 #include "ScanlineMask.h"
 
 
@@ -143,13 +144,15 @@ static void UnHiLiteOkayButton (void)
 static void UpdateMainPict (DialogPtr theDial)
 {
 	Str255		theStr, theStr2;
-	long		totalSize, contigSize;
+	uint64_t	freeMemory;
 	
 	DrawDialog(theDial);
+
+	freeMemory = PortabilityLayer::HostSystemServices::GetInstance()->GetFreeMemoryCosmetic();
 	
 	PasStringCopy(PSTR("Memory:   "), theStr);		// display free memory
-	PurgeSpace(&totalSize, &contigSize);
-	totalSize /= 1024;
+
+	long totalSize = static_cast<long>(freeMemory / 1024);
 	NumToString(totalSize, theStr2);
 	PasStringConcat(theStr, theStr2);
 	PasStringConcat(theStr, PSTR("K"));

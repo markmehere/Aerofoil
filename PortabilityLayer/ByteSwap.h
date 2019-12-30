@@ -10,8 +10,10 @@ namespace PortabilityLayer
 	{
 		void BigInt16(int16_t &v);
 		void BigInt32(int32_t &v);
+		void BigInt64(int64_t &v);
 		void BigUInt16(uint16_t &v);
 		void BigUInt32(uint32_t &v);
+		void BigUInt64(uint64_t &v);
 	}
 }
 

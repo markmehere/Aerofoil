@@ -33,8 +33,8 @@ namespace PortabilityLayer
 		PortabilityLayer::ByteSwap::BigInt16(props.m_xPos);
 		PortabilityLayer::ByteSwap::BigInt16(props.m_yPos);
 		PortabilityLayer::ByteSwap::BigUInt16(props.m_finderFlags);
-		PortabilityLayer::ByteSwap::BigUInt32(props.m_creationDate);
-		PortabilityLayer::ByteSwap::BigUInt32(props.m_modifiedDate);
+		PortabilityLayer::ByteSwap::BigInt64(props.m_creationDate);
+		PortabilityLayer::ByteSwap::BigInt64(props.m_modifiedDate);
 	}
 
 	void MacFilePropertiesSerialized::Serialize(const MacFileProperties &props)
@@ -57,7 +57,7 @@ namespace PortabilityLayer
 		memcpy(m_data + kOffsetYPos, &yPos, 2);
 		memcpy(m_data + kOffsetFinderFlags, &finderFlags, 2);
 		memcpy(m_data + kProtected, &props.m_protected, 1);
-		memcpy(m_data + kCreationDate, &creationDate, 4);
-		memcpy(m_data + kModifiedDate, &modifiedDate, 4);
+		memcpy(m_data + kCreationDate, &creationDate, 8);
+		memcpy(m_data + kModifiedDate, &modifiedDate, 8);
 	}
 }

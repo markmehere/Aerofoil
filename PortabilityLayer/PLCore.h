@@ -300,17 +300,11 @@ UInt32 FreeMem();
 
 PLError_t AEProcessAppleEvent(EventRecord *evt);
 
-PLError_t FindFolder(int refNum, int posType, bool createFolder, short *volumeRef, long *dirID);
 void GetIndString(unsigned char *str, int stringsID, int fnameIndex);	// Fetches a string resource of some sort
 PLError_t PBDirCreate(HFileParam *fileParam, bool asynchronous);
 
 VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr &fileName);
 
-PLError_t FSpCreate(const VFileSpec &spec, UInt32 creator, UInt32 fileType);
-PLError_t FSpDirCreate(const VFileSpec &spec, long *outDirID);
-PLError_t FSpOpenDF(const VFileSpec &spec, int permission, PortabilityLayer::IOStream *&stream);
-PLError_t FSpOpenRF(const VFileSpec &spec, int permission, PortabilityLayer::IOStream *&stream);
-PLError_t FSpDelete(const VFileSpec &spec);
 PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfoOut);
 
 PLError_t PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async);
@@ -348,10 +342,7 @@ void *NewPtr(Size size);
 void *NewPtrClear(Size size);
 void DisposePtr(void *ptr);
 
-Size MaxMem(Size *growBytes);
 void PurgeSpace(long *totalFree, long *contiguousFree);
-
-PLError_t MemError();
 
 void BlockMove(const void *src, void *dest, Size size);
 

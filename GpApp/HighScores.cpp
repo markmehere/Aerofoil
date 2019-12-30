@@ -631,14 +631,16 @@ void GetHighScoreBanner (void)
 Boolean OpenHighScoresFile (const VFileSpec &scoreSpec, PortabilityLayer::IOStream *&scoresStream)
 {
 	PLError_t		theErr;
+
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 	
-	theErr = PortabilityLayer::FileManager::GetInstance()->OpenFileDF(scoreSpec.m_dir, scoreSpec.m_name, PortabilityLayer::EFilePermission_Any, scoresStream);
+	theErr = fm->OpenFileData(scoreSpec.m_dir, scoreSpec.m_name, PortabilityLayer::EFilePermission_Any, scoresStream);
 	if (theErr == PLErrors::kFileNotFound)
 	{
-		theErr = FSpCreate(scoreSpec, 'ozm5', 'gliS');
+		theErr = fm->CreateFileAtCurrentTime(scoreSpec.m_dir, scoreSpec.m_name, 'ozm5', 'gliS');
 		if (!CheckFileError(theErr, PSTR("New High Scores File")))
 			return (false);
-		theErr = FSpOpenDF(scoreSpec, fsCurPerm, scoresStream);
+		theErr = fm->OpenFileData(scoreSpec.m_dir, scoreSpec.m_name, PortabilityLayer::EFilePermission_Any, scoresStream);
 		if (!CheckFileError(theErr, PSTR("High Score")))
 			return (false);
 	}

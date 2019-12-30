@@ -13,6 +13,7 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FileManager.h"
 #include "House.h"
 #include "IOStream.h"
 #include "ObjectEdit.h"
@@ -182,7 +183,7 @@ Boolean OpenHouse (void)
 	
 	houseIsReadOnly = IsFileReadOnly(theHousesSpecs[thisHouseIndex]);
 	
-	theErr = FSpOpenDF(theHousesSpecs[thisHouseIndex], fsCurPerm, houseStream);
+	theErr = PortabilityLayer::FileManager::GetInstance()->OpenFileData(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name, PortabilityLayer::EFilePermission_Any, houseStream);
 	if (!CheckFileError(theErr, thisHouseName))
 		return (false);
 	

@@ -44,20 +44,22 @@ Boolean WritePrefs (const prefsInfo *thePrefs)
 	PortabilityLayer::IOStream *fileStream;
 	long		byteCount;
 	Str255		fileName;
-	
+
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
+
 	PasStringCopy(kPrefFileName, fileName);
 	
 	VFileSpec theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
-	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(PortabilityLayer::VirtualDirectories::kPrefs, fileName))
+	if (!fm->FileExists(PortabilityLayer::VirtualDirectories::kPrefs, fileName))
 	{
-		theErr = FSpCreate(theSpecs, kPrefCreatorType, kPrefFileType);
+		theErr = fm->CreateFileAtCurrentTime(theSpecs.m_dir, theSpecs.m_name, kPrefCreatorType, kPrefFileType);
 		if (theErr != PLErrors::kNone)
 		{
 			CheckFileError(theErr, PSTR("Preferences"));
 			return(false);
 		}
 	}
-	theErr = FSpOpenDF(theSpecs, fsRdWrPerm, fileStream);
+	theErr = fm->OpenFileData(theSpecs.m_dir, theSpecs.m_name, PortabilityLayer::EFilePermission_Write, fileStream);
 	if (theErr != PLErrors::kNone)
 	{
 		CheckFileError(theErr, PSTR("Preferences"));
@@ -98,6 +100,8 @@ PLError_t ReadPrefs (prefsInfo *thePrefs)
 	long		byteCount;
 	VFileSpec	theSpecs;
 	Str255		fileName;
+
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 	
 	PasStringCopy(kPrefFileName, fileName);
 	
@@ -106,7 +110,7 @@ PLError_t ReadPrefs (prefsInfo *thePrefs)
 	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(theSpecs.m_dir, theSpecs.m_name))
 		return PLErrors::kFileNotFound;
 	
-	theErr = FSpOpenDF(theSpecs, fsRdWrPerm, fileStream);
+	theErr = fm->OpenFileData(theSpecs.m_dir, theSpecs.m_name, PortabilityLayer::EFilePermission_Read, fileStream);
 	if (theErr != PLErrors::kNone)
 	{
 		CheckFileError(theErr, PSTR("Preferences"));
@@ -139,12 +143,7 @@ Boolean DeletePrefs ()
 	
 	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
 
-	theErr = FSpDelete(theSpecs);
-	
-	if (theErr != PLErrors::kNone)
-		return(false);
-	
-	return(true);
+	return PortabilityLayer::FileManager::GetInstance()->DeleteFile(theSpecs.m_dir, theSpecs.m_name);
 }
 
 //--------------------------------------------------------------  LoadPrefs

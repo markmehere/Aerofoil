@@ -109,7 +109,7 @@ namespace PortabilityLayer
 			return -1;
 
 		IOStream *fStream = nullptr;
-		if (FileManager::GetInstance()->RawOpenFileRF(virtualDir, filename, EFilePermission_Read, true, fStream) != PLErrors::kNone)
+		if (FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Read, true, fStream) != PLErrors::kNone)
 			return -1;
 
 		ResourceFile *resFile = new ResourceFile();

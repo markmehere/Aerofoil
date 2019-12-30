@@ -7,6 +7,7 @@
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
 #include "ResTypeID.h"
+#include "HostSystemServices.h"
 
 #include <vector>
 
@@ -21,13 +22,14 @@ namespace PortabilityLayer
 		bool DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename) override;
 
 		PLError_t CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp) override;
+		PLError_t CreateFileAtCurrentTime(VirtualDirectory_t dirID, const PLPasStr &filename, const ResTypeID &fileCreator, const ResTypeID &fileType) override;
 
-		PLError_t OpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
-		PLError_t OpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
+		PLError_t OpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
+		PLError_t OpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
 		bool ReadFileProperties(VirtualDirectory_t dirID, const PLPasStr &filename, MacFileProperties &properties) override;
 
-		PLError_t RawOpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
-		PLError_t RawOpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
+		PLError_t RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
+		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
 
 		static FileManagerImpl *GetInstance();
 
@@ -86,12 +88,22 @@ namespace PortabilityLayer
 		return PLErrors::kNone;
 	}
 
-	PLError_t FileManagerImpl::OpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
+	PLError_t FileManagerImpl::CreateFileAtCurrentTime(VirtualDirectory_t dirID, const PLPasStr &filename, const ResTypeID &fileCreator, const ResTypeID &fileType)
+	{
+		MacFileProperties mfp;
+		fileCreator.ExportAsChars(mfp.m_fileCreator);
+		fileType.ExportAsChars(mfp.m_fileType);
+		mfp.m_creationDate = mfp.m_modifiedDate = PortabilityLayer::HostSystemServices::GetInstance()->GetTime();
+
+		return CreateFile(dirID, filename, mfp);
+	}
+
+	PLError_t FileManagerImpl::OpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
 	{
 		return OpenFileFork(dirID, filename, ".gpd", permission, outStream);
 	}
 
-	PLError_t FileManagerImpl::OpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
+	PLError_t FileManagerImpl::OpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
 	{
 		return OpenFileFork(dirID, filename, ".gpr", permission, outStream);
 	}
@@ -113,12 +125,12 @@ namespace PortabilityLayer
 		return readOk;
 	}
 
-	PLError_t FileManagerImpl::RawOpenFileDF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
+	PLError_t FileManagerImpl::RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
 	{
 		return RawOpenFileFork(dirID, filename, ".gpd", permission, ignoreMeta, false, outStream);
 	}
 
-	PLError_t FileManagerImpl::RawOpenFileRF(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
+	PLError_t FileManagerImpl::RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
 	{
 		return RawOpenFileFork(dirID, filename, ".gpr", permission, ignoreMeta, false, outStream);
 	}

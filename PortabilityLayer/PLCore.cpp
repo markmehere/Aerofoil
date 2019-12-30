@@ -677,53 +677,6 @@ VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr
 	return spec;
 }
 
-PLError_t FSpCreate(const VFileSpec &spec, UInt32 creator, UInt32 fileType)
-{
-	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
-
-	PortabilityLayer::MacFileProperties props;
-	PortabilityLayer::ResTypeIDCodec::Encode(creator, props.m_fileCreator);
-	PortabilityLayer::ResTypeIDCodec::Encode(fileType, props.m_fileType);
-
-	PL_NotYetImplemented_TODO("DateTime");
-
-	return fm->CreateFile(spec.m_dir, spec.m_name, props);
-}
-
-PLError_t FSpDirCreate(const VFileSpec &spec, long *outDirID)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
-PLError_t FSpOpenDF(const VFileSpec &spec, int permission, PortabilityLayer::IOStream *&stream)
-{
-	PortabilityLayer::EFilePermission perm = PortabilityLayer::EFilePermission_Any;
-	switch (permission)
-	{
-	case fsRdPerm:
-		perm = PortabilityLayer::EFilePermission_Read;
-		break;
-	case fsWrPerm:
-	case fsRdWrPerm:
-		perm = PortabilityLayer::EFilePermission_ReadWrite;
-		break;
-	case fsCurPerm:
-		perm = PortabilityLayer::EFilePermission_Any;
-		break;
-	default:
-		return PLErrors::kAccessDenied;
-	}
-
-	return PortabilityLayer::FileManager::GetInstance()->OpenFileDF(spec.m_dir, spec.m_name, perm, stream);
-}
-
-PLError_t FSpDelete(const VFileSpec &spec)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
 PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfo)
 {
 	PortabilityLayer::MacFileProperties mfp;
@@ -733,18 +686,6 @@ PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfo)
 	finfo.m_type = PortabilityLayer::ResTypeID(mfp.m_fileType);
 	finfo.m_creator = PortabilityLayer::ResTypeID(mfp.m_fileCreator);
 
-	return PLErrors::kNone;
-}
-
-PLError_t SetEOF(short refNum, long byteCount)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
-PLError_t PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async)
-{
-	PL_NotYetImplemented();
 	return PLErrors::kNone;
 }
 
@@ -1027,20 +968,6 @@ void *NewPtrClear(Size size)
 void DisposePtr(void *ptr)
 {
 	PL_NotYetImplemented();
-}
-
-void PurgeSpace(long *totalFree, long *contiguousFree)
-{
-	PL_NotYetImplemented();
-}
-
-void HSetState(Handle handle, char state)
-{
-}
-
-char HGetState(Handle handle)
-{
-	return 0;
 }
 
 void BlockMove(const void *src, void *dest, Size size)

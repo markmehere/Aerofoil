@@ -18,6 +18,8 @@ namespace PortabilityLayer
 		bool operator==(const ResTypeID &other) const;
 		bool operator!=(const ResTypeID &other) const;
 
+		void ExportAsChars(char *chars) const;
+
 	private:
 		char m_id[4];
 	};
@@ -62,6 +64,11 @@ namespace PortabilityLayer
 	inline bool ResTypeID::operator!=(const ResTypeID &other) const
 	{
 		return memcmp(m_id, other.m_id, 4) != 0;
+	}
+
+	inline void ResTypeID::ExportAsChars(char *chars) const
+	{
+		memcpy(chars, m_id, 4);
 	}
 }
 
