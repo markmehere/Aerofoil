@@ -63,27 +63,10 @@ int Count1Resources(UInt32 resType)
 	return 0;
 }
 
-void HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name)
-{
-	PL_NotYetImplemented();
-}
-
-PLError_t ResError()
+PLError_t HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name)
 {
 	PL_NotYetImplemented();
 	return PLErrors::kNone;
-}
-
-short FSpOpenResFile(const VFileSpec &spec, int permission)
-{
-	PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
-
-	return rm->OpenResFork(spec.m_dir, spec.m_name);
-}
-
-void CloseResFile(short refNum)
-{
-	PL_NotYetImplemented();
 }
 
 void SetResLoad(Boolean load)
@@ -96,11 +79,6 @@ long GetMaxResourceSize(Handle res)
 	const PortabilityLayer::MMHandleBlock *hBlock = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(res);
 	const PortabilityLayer::ResourceCompiledRef *resRef = hBlock->m_rmSelfRef;
 	return resRef->GetSize();
-}
-
-void GetResInfo(Handle res, short *resID, ResType *resType, Str255 resName)
-{
-	PL_NotYetImplemented();
 }
 
 short HOpenResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name, int permissions)

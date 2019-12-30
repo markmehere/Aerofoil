@@ -7,6 +7,7 @@ class PLPasStr;
 namespace PortabilityLayer
 {
 	struct MMHandleBlock;
+	struct ResourceCompiledRef;
 	class ResTypeID;
 
 	class ResourceManager
@@ -18,10 +19,15 @@ namespace PortabilityLayer
 		virtual void SetResLoad(bool load) = 0;
 
 		virtual short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
+		virtual void CloseResFile(short ref) = 0;
+
 		virtual MMHandleBlock *GetResource(const ResTypeID &resType, int id) = 0;
 
 		virtual short GetCurrentResFile() const = 0;
 		virtual void SetCurrentResFile(short ref) = 0;
+
+		virtual void DissociateHandle(MMHandleBlock *hdl) const = 0;
+		virtual const ResourceCompiledRef *ResourceForHandle(MMHandleBlock *hdl) const = 0;
 
 		static ResourceManager *GetInstance();
 	};

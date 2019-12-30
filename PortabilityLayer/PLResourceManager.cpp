@@ -7,6 +7,9 @@
 #include "MacBinary2.h"
 #include "MacFileMem.h"
 #include "MemReaderStream.h"
+#include "MemoryManager.h"
+#include "MMHandleBlock.h"
+#include "ResourceCompiledTypeList.h"
 #include "ResourceFile.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
@@ -15,6 +18,8 @@
 
 namespace PortabilityLayer
 {
+	struct MMHandleBlock;
+
 	class ResourceManagerImpl final : public ResourceManager
 	{
 	public:
@@ -26,10 +31,15 @@ namespace PortabilityLayer
 		void SetResLoad(bool load) override;
 
 		short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
+		void CloseResFile(short ref) override;
+
 		MMHandleBlock *GetResource(const ResTypeID &resType, int id) override;
 
 		short GetCurrentResFile() const override;
 		void SetCurrentResFile(short ref) override;
+
+		void DissociateHandle(MMHandleBlock *hdl) const override;
+		const ResourceCompiledRef *ResourceForHandle(MMHandleBlock *hdl) const override;
 
 		static ResourceManagerImpl *GetInstance();
 
@@ -38,8 +48,10 @@ namespace PortabilityLayer
 		{
 			short m_prevFile;
 			short m_nextFile;
-			ResourceFile* m_resourceFile;
+			ResourceFile *m_resourceFile;
 		};
+
+		void UnloadAndDestroyResourceFile(ResourceFile *rf);
 
 		std::vector<ResFileSlot> m_resFiles;
 		short m_firstResFile;
@@ -66,7 +78,10 @@ namespace PortabilityLayer
 	void ResourceManagerImpl::Shutdown()
 	{
 		for (std::vector<ResFileSlot>::iterator it = m_resFiles.begin(), itEnd = m_resFiles.end(); it != itEnd; ++it)
-			delete it->m_resourceFile;
+		{
+			if (it->m_resourceFile)
+				UnloadAndDestroyResourceFile(it->m_resourceFile);
+		}
 
 		m_resFiles.clear();
 	}
@@ -79,6 +94,43 @@ namespace PortabilityLayer
 	void ResourceManagerImpl::SetCurrentResFile(short ref)
 	{
 		m_currentResFile = ref;
+	}
+
+	void ResourceManagerImpl::DissociateHandle(MMHandleBlock *hdl) const
+	{
+		assert(hdl->m_rmSelfRef);
+		assert(hdl->m_rmSelfRef->m_handle == hdl);
+		hdl->m_rmSelfRef->m_handle = nullptr;
+		hdl->m_rmSelfRef = nullptr;
+	}
+
+	const ResourceCompiledRef *ResourceManagerImpl::ResourceForHandle(MMHandleBlock *hdl) const
+	{
+		return hdl->m_rmSelfRef;
+	}
+
+	void ResourceManagerImpl::UnloadAndDestroyResourceFile(ResourceFile *rf)
+	{
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+		ResourceCompiledTypeList *rtls = nullptr;
+		size_t numRTLs = 0;
+		rf->GetAllResourceTypeLists(rtls, numRTLs);
+
+		for (size_t i = 0; i < numRTLs; i++)
+		{
+			const ResourceCompiledTypeList &rtl = rtls[i];
+
+			const size_t numRefs = rtl.m_numRefs;
+			for (size_t r = 0; r < numRefs; r++)
+			{
+				const ResourceCompiledRef &ref = rtl.m_firstRef[r];
+				if (MMHandleBlock *hdl = ref.m_handle)
+					mm->ReleaseHandle(hdl);
+			}
+		}
+
+		delete rf;
 	}
 
 	ResourceManagerImpl *ResourceManagerImpl::GetInstance()
@@ -144,6 +196,32 @@ namespace PortabilityLayer
 		m_currentResFile = rfid;	// Resource Manager is supposed to reset the search stack on new file open
 
 		return rfid;
+	}
+
+	void ResourceManagerImpl::CloseResFile(short ref)
+	{
+		ResFileSlot &slot = m_resFiles[ref];
+		delete slot.m_resourceFile;
+		slot.m_resourceFile = nullptr;
+
+		if (m_lastResFile == ref)
+			m_lastResFile = slot.m_prevFile;
+
+		if (slot.m_prevFile >= 0)
+		{
+			ResFileSlot &prevFileSlot = m_resFiles[slot.m_prevFile];
+			prevFileSlot.m_nextFile = slot.m_nextFile;
+		}
+
+		if (slot.m_nextFile >= 0)
+		{
+			ResFileSlot &nextFileSlot = m_resFiles[slot.m_nextFile];
+			nextFileSlot.m_prevFile = slot.m_prevFile;
+		}
+
+		slot.m_nextFile = slot.m_prevFile = -1;
+
+		m_currentResFile = m_lastResFile;
 	}
 
 	MMHandleBlock *ResourceManagerImpl::GetResource(const ResTypeID &resType, int id)

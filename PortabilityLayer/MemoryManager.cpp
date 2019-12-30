@@ -2,6 +2,7 @@
 #include "MMBlock.h"
 #include "MMHandleBlock.h"
 #include "ResourceCompiledRef.h"
+#include "ResourceManager.h"
 
 #include <stdlib.h>
 #include <new>
@@ -142,7 +143,8 @@ namespace PortabilityLayer
 		if (!hdl)
 			return;
 
-		assert(hdl->m_rmSelfRef == nullptr);
+		if (hdl->m_rmSelfRef)
+			PortabilityLayer::ResourceManager::GetInstance()->DissociateHandle(hdl);
 
 		if (hdl->m_contents)
 			Release(hdl->m_contents);

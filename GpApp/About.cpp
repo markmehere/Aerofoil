@@ -109,7 +109,7 @@ static void HiLiteOkayButton (void)
 		if (thePict != nil)
 		{
 			DrawPicture(thePict, &okayButtonBounds);
-			ReleaseResource((Handle)thePict);
+			DisposeHandle((Handle)thePict);
 			
 			okayButtIsHiLit = true;
 		}
@@ -131,7 +131,7 @@ static void UnHiLiteOkayButton (void)
 		if (thePict != nil)
 		{
 			DrawPicture(thePict, &okayButtonBounds);
-			ReleaseResource((Handle)thePict);
+			DisposeHandle((Handle)thePict);
 			
 			okayButtIsHiLit = false;
 		}

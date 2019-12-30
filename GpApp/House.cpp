@@ -93,9 +93,10 @@ Boolean CreateNewHouse (void)
 	theErr = fm->CreateFileAtCurrentTime(theSpec.m_dir, theSpec.m_name, 'ozm5', 'gliH');
 	if (!CheckFileError(theErr, PSTR("New House")))
 		return (false);
-	HCreateResFile(theSpec.m_dir, theSpec.m_name);
-	if (ResError() != PLErrors::kNone)
-		YellowAlert(kYellowFailedResCreate, ResError());
+
+	theErr = HCreateResFile(theSpec.m_dir, theSpec.m_name);
+	if (theErr != PLErrors::kNone)
+		YellowAlert(kYellowFailedResCreate, theErr);
 	
 	PasStringCopy(theSpec.m_name, thisHouseName);
 	AddExtraHouse(theSpec);

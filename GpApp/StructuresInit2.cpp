@@ -289,7 +289,7 @@ void CreatePointers (void)
 	else
 	{
 		BlockMove(*tempHandle, demoData, kDemoLength);
-		ReleaseResource(tempHandle);
+		DisposeHandle(tempHandle);
 	}
 #endif
 }

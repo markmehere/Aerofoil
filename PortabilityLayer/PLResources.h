@@ -4,14 +4,8 @@
 
 #include "PLCore.h"
 
-struct ResType
-{
-};
 
 class PLPasStr;
-
-void DetachResource(Handle hdl);
-void ReleaseResource(Handle hdl);
 
 short CurResFile();
 void UseResFile(short fid);
@@ -19,16 +13,11 @@ Handle Get1Resource(UInt32 resID, int index);
 Handle Get1IndResource(UInt32 resID, int index);
 int Count1Resources(UInt32 resType);
 
-void HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name);
-PLError_t ResError();
-
-short FSpOpenResFile(const VFileSpec &spec, int permission);
-void CloseResFile(short refNum);
+PLError_t HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name);
 
 void SetResLoad(Boolean load);	// Sets whether resources should be loaded when requested
 
 long GetMaxResourceSize(Handle res);
-void GetResInfo(Handle res, short *resID, ResType *resType, Str255 resName);
 
 // This should return -1 on error?
 short HOpenResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name, int permissions);

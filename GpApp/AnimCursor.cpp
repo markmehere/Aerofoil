@@ -36,7 +36,6 @@ typedef struct
 } compiledAcurRec, *compiledAcurPtr, **compiledAcurHandle;
 
 
-Boolean GetMonoCursors (acurHandle, compiledAcurHandle);
 Boolean GetColorCursors (acurHandle, compiledAcurHandle);
 void InitAnimatedCursor (acurHandle);
 
@@ -47,36 +46,6 @@ Boolean				useColorCursor = false;
 
 
 //==============================================================  Functions
-//--------------------------------------------------------------  GetMonoCursors
-
-// Loads b&w cursors (for animated beach ball).
-
-Boolean GetMonoCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCursH)
-{
-	short			i, j;
-	CursHandle		cursHdl;
-	
-	if (ballCursH)							// Were we passed a legit acur handle?
-	{
-		j = (*ballCursH)->n;				// Get number of 'frames' in the acur
-		for (i = 0; i < j; i++)				// Start walking the frames
-		{
-			cursHdl = GetCursor((*ballCursH)->frame[i].resID);
-			if (cursHdl == nil)		// Did the cursor load? It didn't?...
-			{								// Well then, toss what we got.
-				for (j = 0; j < i; j++)
-					DisposeHandle((*compiledBallCursH)->frame[j].cursorHdl);
-				return(false);				// And report this to mother.
-			}								// However!...
-			else							// If cursor loaded ok...
-			{								// Detach it from the resource map...
-				DetachResource((Handle)cursHdl);	// And assign to our struct
-				(*compiledBallCursH)->frame[i].cursorHdl = (Handle)cursHdl;
-			}
-		}
-	}
-	return(true);
-}
 
 //--------------------------------------------------------------  GetColorCursors
 
@@ -133,8 +102,6 @@ void InitAnimatedCursor (acurHandle ballCursH)
 
 		if (useColor)
 			useColor = GetColorCursors(ballCursH, compiledBallCursorH);
-		if (!useColor && !GetMonoCursors(ballCursH, compiledBallCursorH))
-			RedAlert(kErrFailedResourceLoad);
 		DisposCursors();
 
 		animCursorH = ballCursH;
@@ -189,7 +156,7 @@ void DisposCursors (void)
 
 	if (animCursorH != nil)
 	{
-		ReleaseResource((Handle)animCursorH);
+		DisposeHandle((Handle)animCursorH);
 		animCursorH = nil;
 	}
 }

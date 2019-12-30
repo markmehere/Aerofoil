@@ -533,10 +533,10 @@ namespace PortabilityLayer
 			}
 
 			if (icsHandle)
-				ReleaseResource(icsHandle);
+				DisposeHandle(icsHandle);
 
 			if (ics8Handle)
-				ReleaseResource(ics8Handle);
+				DisposeHandle(ics8Handle);
 
 			m_haveIcon = true;
 		}

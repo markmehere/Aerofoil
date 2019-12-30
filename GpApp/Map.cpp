@@ -172,7 +172,7 @@ void LoadGraphicPlus (short resID, Rect *theRect)
 		}
 	}
 	DrawPicture(thePicture, theRect);
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 }
 
 //--------------------------------------------------------------  RedrawMapContents

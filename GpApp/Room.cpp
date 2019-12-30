@@ -271,7 +271,7 @@ void ReadyBackground (short theID, short *theTiles)
 	dest = (*thePicture)->picFrame.ToRect();
 	QOffsetRect(&dest, -dest.left, -dest.top);
 	DrawPicture(thePicture, &dest);
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 	
 	QSetRect(&src, 0, 0, kTileWide, kTileHigh);
 	QSetRect(&dest, 0, 0, kTileWide, kTileHigh);
@@ -913,7 +913,7 @@ short GetOriginalBounding (short theID)
 			boundCode += 4;
 		if ((*boundsRes)->bottom)
 			boundCode += 8;
-		ReleaseResource((Handle)boundsRes);
+		DisposeHandle((Handle)boundsRes);
 	}
 	
 	return (boundCode);

@@ -13,6 +13,8 @@
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "RectUtils.h"
+#include "ResourceCompiledRef.h"
+#include "ResourceManager.h"
 #include "Utilities.h"
 
 
@@ -843,10 +845,10 @@ Boolean PictIDExists (short theID)
 			foundIt = false;
 		}
 		else
-			ReleaseResource((Handle)thePicture);
+			DisposeHandle((Handle)thePicture);
 	}
 	else
-		ReleaseResource((Handle)thePicture);
+		DisposeHandle((Handle)thePicture);
 	
 //	foundIt = false;
 //	numPicts = Count1Resources('PICT');
@@ -874,15 +876,13 @@ short GetFirstPICT (void)
 {
 	Handle		resHandle;
 	Str255		resName;
-	ResType		resType;
-	short		resID;
 	
 	resHandle = Get1IndResource('PICT', 1);
 	if (resHandle != nil)
 	{
-		GetResInfo(resHandle, &resID, &resType, resName);
-		ReleaseResource(resHandle);
-		return (resID);
+		const PortabilityLayer::ResourceCompiledRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(resHandle));
+		DisposeHandle(resHandle);
+		return resRef->m_resID;
 	}
 	else
 		return (-1);

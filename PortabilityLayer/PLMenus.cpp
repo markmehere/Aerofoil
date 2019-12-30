@@ -27,7 +27,7 @@ MenuHandle GetMenu(int resID)
 		return nullptr;
 
 	const MenuHandle menu = PortabilityLayer::MenuManager::GetInstance()->DeserializeMenu(*menuRes);
-	ReleaseResource(menuRes);
+	DisposeHandle(menuRes);
 
 	return menu;
 }

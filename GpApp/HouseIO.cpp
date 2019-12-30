@@ -17,6 +17,7 @@
 #include "House.h"
 #include "IOStream.h"
 #include "ObjectEdit.h"
+#include "ResourceManager.h"
 
 
 #define kSaveChangesAlert		1002
@@ -866,11 +867,12 @@ Boolean CloseHouse (void)
 
 void OpenHouseResFork (void)
 {
+	PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
 	if (houseResFork == -1)
 	{
-		houseResFork = FSpOpenResFile(theHousesSpecs[thisHouseIndex], fsCurPerm);
-		if (houseResFork == -1)
-			YellowAlert(kYellowFailedResOpen, ResError());
+		houseResFork = rm->OpenResFork(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name);
+		if (houseResFork < 0)
+			YellowAlert(kYellowFailedResOpen, PLErrors::kResourceError);
 		else
 			UseResFile(houseResFork);
 	}
@@ -883,7 +885,9 @@ void CloseHouseResFork (void)
 {
 	if (houseResFork != -1)
 	{
-		CloseResFile(houseResFork);
+		PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
+
+		rm->CloseResFile(houseResFork);
 		houseResFork = -1;
 	}
 }

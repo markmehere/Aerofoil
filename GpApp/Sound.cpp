@@ -228,13 +228,13 @@ PLError_t LoadTriggerSound (short soundID)
 			theSoundData[kMaxSounds - 1] = NewPtr(soundDataSize);
 			if (theSoundData[kMaxSounds - 1] == nil)
 			{
-				ReleaseResource(theSound);
+				DisposeHandle(theSound);
 				theErr = PLErrors::kOutOfMemory;
 			}
 			else
 			{
 				BlockMove((Ptr)((Byte*)(*theSound) + 20L), theSoundData[kMaxSounds - 1], soundDataSize);
-				ReleaseResource(theSound);
+				DisposeHandle(theSound);
 			}
 		}
 	}
@@ -275,7 +275,7 @@ PLError_t LoadBufferSounds (void)
 			return (PLErrors::kOutOfMemory);
 		
 		BlockMove((Ptr)((Byte*)(*theSound) + 20L), theSoundData[i], soundDataSize);
-		ReleaseResource(theSound);
+		DisposeHandle(theSound);
 	}
 	
 	theSoundData[kMaxSounds - 1] = nil;
@@ -436,7 +436,7 @@ long SoundBytesNeeded (void)
 		if (theSound == nil)
 		{
 			SetResLoad(true);
-			return ((long)ResError());
+			return -1;
 		}
 		totalBytes += GetMaxResourceSize(theSound);
 //		ReleaseResource(theSound);

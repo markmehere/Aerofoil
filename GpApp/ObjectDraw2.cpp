@@ -1158,7 +1158,7 @@ void DrawCalendar (Rect *theRect)
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, theRect->left, theRect->top);
 	DrawPicture(thePicture, &bounds);
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 	
 	SetPort((GrafPtr)backSrcMap);
 	TextFace(bold);
@@ -1191,7 +1191,7 @@ void DrawBulletin (Rect *theRect)
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, theRect->left, theRect->top);
 	DrawPicture(thePicture, &bounds);
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 	
 	SetGraphicsPort(wasCPort);
 }
@@ -1246,7 +1246,7 @@ void DrawPictObject (short what, Rect *theRect)
 	bounds = srcRects[what];
 	QOffsetRect(&bounds, theRect->left, theRect->top);
 	DrawPicture(thePicture, &bounds);
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 	
 	SetGraphicsPort(wasCPort);
 }

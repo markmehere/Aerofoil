@@ -17,11 +17,12 @@ namespace PortabilityLayer
 	class ResourceFile
 	{
 	public:
-
 		ResourceFile();
 		~ResourceFile();
 
 		bool Load(IOStream *stream);
+
+		void GetAllResourceTypeLists(ResourceCompiledTypeList *&outTypeLists, size_t &outCount) const;
 
 		const ResourceCompiledTypeList *GetResourceTypeList(const ResTypeID &resType);
 		MMHandleBlock *GetResource(const ResTypeID &resType, int id, bool load);

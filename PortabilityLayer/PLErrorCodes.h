@@ -22,6 +22,8 @@ namespace PLErrors
 
 		kIOError,
 
+		kResourceError,
+
 		kUserCancelled_TEMP,
 	};
 }

@@ -13,15 +13,6 @@ namespace PortabilityLayer
 
 struct Dialog;
 
-enum IconAlignmentType
-{
-	atNone
-};
-
-enum IconTransformType
-{
-	ttNone
-};
 
 enum IconSuiteFlags
 {
@@ -103,7 +94,7 @@ void BeginUpdate(WindowPtr graf);
 void EndUpdate(WindowPtr graf);
 
 PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags);
-PLError_t PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite);
+PLError_t PlotIconSuite(Rect *rect, Handle iconSuite);
 
 CIconHandle GetCIcon(short resID);
 PLError_t PlotCIcon(Rect *rect, CIconHandle icon);

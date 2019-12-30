@@ -288,7 +288,7 @@ void LoadGraphic (short resID)
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);
 	
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 }
 
 //--------------------------------------------------------------  LoadScaledGraphic
@@ -304,7 +304,7 @@ void LoadScaledGraphic (short resID, Rect *theRect)
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	DrawPicture(thePicture, theRect);
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 }
 
 //--------------------------------------------------------------  LargeIconPlot
@@ -317,7 +317,7 @@ void LargeIconPlot (Rect *theRect, short theID)
 	
 	theErr = GetIconSuite(&theSuite, theID, svAllLargeData);
 	if (theErr == PLErrors::kNone)
-		theErr = PlotIconSuite(theRect, atNone, ttNone, theSuite);
+		theErr = PlotIconSuite(theRect, theSuite);
 }
 
 //--------------------------------------------------------------  DrawCIcon

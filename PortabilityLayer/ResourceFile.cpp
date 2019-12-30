@@ -338,6 +338,12 @@ namespace PortabilityLayer
 		return memcmp(&resTypeID, &typeList.m_resType, 4);
 	}
 
+	void ResourceFile::GetAllResourceTypeLists(ResourceCompiledTypeList *&outTypeLists, size_t &outCount) const
+	{
+		outTypeLists = m_compiledTypeListBlob;
+		outCount = m_numResourceTypes;
+	}
+
 	const ResourceCompiledTypeList *ResourceFile::GetResourceTypeList(const ResTypeID &resType)
 	{
 		const ResourceCompiledTypeList *tlStart = m_compiledTypeListBlob;

@@ -526,7 +526,7 @@ void PlayGame (void)
 					QOffsetRect(&bounds, -bounds.left, -bounds.top);
 					QOffsetRect(&bounds, hOffset, 0);
 					DrawPicture(thePicture, &bounds);
-					ReleaseResource((Handle)thePicture);
+					DisposeHandle((Handle)thePicture);
 				}
 #else
 //				ShowMenuBarOld();	// TEMP
@@ -576,7 +576,7 @@ void PlayGame (void)
 		QOffsetRect(&bounds, -bounds.left, -bounds.top);
 		QOffsetRect(&bounds, hOffset, 0);
 		DrawPicture(thePicture, &bounds);
-		ReleaseResource((Handle)thePicture);
+		DisposeHandle((Handle)thePicture);
 
 		SetGraphicsPort(wasCPort);
 	}

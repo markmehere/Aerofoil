@@ -261,7 +261,7 @@ PLError_t LoadMusicSounds (void)
 			return PLErrors::kOutOfMemory;
 
 		BlockMove((Ptr)(static_cast<Byte*>(*theSound) + 20L), theMusicData[i], soundDataSize);
-		ReleaseResource(theSound);
+		DisposeHandle(theSound);
 	}
 	return (theErr);
 }
@@ -418,7 +418,7 @@ long MusicBytesNeeded (void)
 		if (theSound == nil)
 		{
 			SetResLoad(true);
-			return ((long)ResError());
+			return -1;
 		}
 		totalBytes += GetMaxResourceSize(theSound);
 //		ReleaseResource(theSound);

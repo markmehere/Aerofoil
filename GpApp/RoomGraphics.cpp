@@ -147,7 +147,7 @@ void LoadGraphicSpecial (short resID)
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);
 	
-	ReleaseResource((Handle)thePicture);
+	DisposeHandle((Handle)thePicture);
 }
 
 //--------------------------------------------------------------  DrawRoomBackground

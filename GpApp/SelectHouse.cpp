@@ -16,6 +16,7 @@
 #include "FileManager.h"
 #include "House.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 #include "VirtualDirectory.h"
 
 
@@ -111,7 +112,7 @@ void UpdateLoadDialog (DialogPtr theDialog)
 				else
 					LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage, 
 							kDefaultHousePict8);
-				CloseResFile(isResFile);
+				PortabilityLayer::ResourceManager::GetInstance()->CloseResFile(isResFile);
 			}
 			else
 				LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage, 

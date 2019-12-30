@@ -63,7 +63,7 @@ PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags)
 	return PLErrors::kNone;
 }
 
-PLError_t PlotIconSuite(Rect *rect, IconAlignmentType alignType, IconTransformType transformType, Handle iconSuite)
+PLError_t PlotIconSuite(Rect *rect, Handle iconSuite)
 {
 	PL_NotYetImplemented();
 	return PLErrors::kNone;
