@@ -172,7 +172,8 @@ void DrawRoomBackground (short who, short where, short elevation)
 		
 		wasCPort = GetGraphicsPort();
 		SetGraphicsPort(backSrcMap);
-		
+
+		ForeColor(blackColor);
 		PaintRect(&localRoomsDest[where]);
 		
 		SetGraphicsPort(wasCPort);
