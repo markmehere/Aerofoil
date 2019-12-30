@@ -165,14 +165,14 @@ void LoadGraphicPlus (short resID, Rect *theRect)
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)
 	{
-		thePicture = (PicHandle)GetResource('Date', resID);
+		thePicture = GetResource('Date', resID).StaticCast<Picture>();
 		if (thePicture == nil)
 		{
 			return;
 		}
 	}
 	DrawPicture(thePicture, theRect);
-	DisposeHandle((Handle)thePicture);
+	thePicture.Dispose();
 }
 
 //--------------------------------------------------------------  RedrawMapContents

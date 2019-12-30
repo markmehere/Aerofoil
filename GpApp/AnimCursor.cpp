@@ -25,15 +25,19 @@ typedef struct
 		BEInt16_t	resID;
 		BEInt16_t	reserved;
 	} frame[1];
-} acurRec, *acurPtr, **acurHandle;
+} acurRec;
+
+typedef THandle<acurRec> acurHandle;
 
 typedef struct
 {
 	struct
 	{
-		Handle cursorHdl;
+		THandle<CCursor> cursorHdl;
 	} frame[1];
-} compiledAcurRec, *compiledAcurPtr, **compiledAcurHandle;
+} compiledAcurRec;
+
+typedef THandle<compiledAcurRec> compiledAcurHandle;
 
 
 Boolean GetColorCursors (acurHandle, compiledAcurHandle);
@@ -73,7 +77,7 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 			}
 			else							// But, if the cursor loaded ok
 			{								// add it to our list or cursor handles
-				(*compiledBallCursH)->frame[i].cursorHdl = (Handle)cursHdl;
+				(*compiledBallCursH)->frame[i].cursorHdl = cursHdl;
 				SetCCursor((CCrsrHandle)(*compiledBallCursH)->frame[i].cursorHdl);
 			}
 		}
@@ -93,10 +97,10 @@ void InitAnimatedCursor (acurHandle ballCursH)
 	
 	useColor = thisMac.hasColor;
 	if (ballCursH == nil) 
-		ballCursH = reinterpret_cast<acurHandle>(GetResource('acur', 128));
+		ballCursH = GetResource('acur', 128).StaticCast<acurRec>();
 	if (ballCursH && ballCursH != animCursorH)
 	{
-		compiledBallCursorH = (compiledAcurHandle)NewHandle(sizeof(compiledAcurRec) * (*ballCursH)->n);
+		compiledBallCursorH = NewHandle(sizeof(compiledAcurRec) * (*ballCursH)->n).StaticCast<compiledAcurRec>();
 		if (!compiledBallCursorH)
 			RedAlert(kErrFailedResourceLoad);
 
@@ -120,7 +124,7 @@ void InitAnimatedCursor (acurHandle ballCursH)
 
 void LoadCursors (void)
 {
-	InitAnimatedCursor((acurHandle)GetResource('acur', rAcurID));
+	InitAnimatedCursor(GetResource('acur', rAcurID).StaticCast<acurRec>());
 }
 
 //--------------------------------------------------------------  DisposCursors
@@ -147,16 +151,16 @@ void DisposCursors (void)
 			for (i = 0; i < j; i++)
 			{
 				if ((*compiledAnimCursorH)->frame[i].cursorHdl != nil)
-					DisposeHandle((Handle)(*compiledAnimCursorH)->frame[i].cursorHdl);
+					(*compiledAnimCursorH)->frame[i].cursorHdl.Dispose();
 			}
 		}
-		DisposeHandle((Handle)compiledAnimCursorH);
+		compiledAnimCursorH.Dispose();
 		compiledAnimCursorH = nil;
 	}
 
 	if (animCursorH != nil)
 	{
-		DisposeHandle((Handle)animCursorH);
+		animCursorH.Dispose();
 		animCursorH = nil;
 	}
 }

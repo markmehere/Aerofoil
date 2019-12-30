@@ -8,8 +8,7 @@ struct Control
 {
 };
 
-typedef Control *ControlPtr;
-typedef ControlPtr *ControlHandle;
+typedef THandle<Control> ControlHandle;
 
 typedef void(*ControlActionProc)(ControlHandle control, short part);
 typedef ControlActionProc ControlActionUPP;

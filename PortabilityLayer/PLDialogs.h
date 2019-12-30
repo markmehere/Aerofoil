@@ -5,6 +5,7 @@
 #include "PLCore.h"
 
 class PLPasStr;
+struct Control;
 
 struct Dialog : public PortabilityLayer::QDPort
 {
@@ -23,8 +24,7 @@ enum TEMode
 
 typedef Dialog *DialogPtr;
 
-typedef DialogTemplate *DialogTPtr;
-typedef DialogTPtr *DialogTHndl;
+typedef THandle<DialogTemplate> DialogTHndl;
 
 
 typedef Boolean(*ModalFilterUPP)(DialogPtr dial, EventRecord *event, short *item);
@@ -34,11 +34,11 @@ WindowPtr GetDialogWindow(DialogPtr dialog);
 DialogPtr GetNewDialog(int resID, void *unknown, WindowPtr behind);
 CGrafPtr GetDialogPort(DialogPtr dialog);
 
-void GetDialogItem(DialogPtr dialog, int index, short *itemType, Handle *itemHandle, Rect *itemRect);
-void GetDialogItemText(Handle handle, StringPtr str);
+void GetDialogItem(DialogPtr dialog, int index, short *itemType, THandle<Control> *itemHandle, Rect *itemRect);
+void GetDialogItemText(THandle<Control> handle, StringPtr str);
 
-void SetDialogItem(DialogPtr dialog, int index, short itemType, Handle itemHandle, const Rect *itemRect);
-void SetDialogItemText(Handle handle, const PLPasStr &str);
+void SetDialogItem(DialogPtr dialog, int index, short itemType, THandle<Control> itemHandle, const Rect *itemRect);
+void SetDialogItemText(THandle<Control> handle, const PLPasStr &str);
 
 void SelectDialogItemText(DialogPtr dialog, int item, int firstSelChar, int lastSelCharExclusive);
 

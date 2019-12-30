@@ -199,7 +199,9 @@ typedef struct
 	roomType	rooms[1];					// 348 * nRooms
 
 	static const size_t kBinaryDataSize = 866;
-} houseType, *housePtr, **houseHand;		// total = 866 +
+} houseType, *housePtr;						// total = 866 +
+
+typedef THandle<houseType> houseHand;
 
 typedef struct
 {
@@ -277,7 +279,10 @@ typedef struct
 	Boolean		top;
 	Boolean		right;
 	Boolean		bottom;
-} boundsType, *boundsPtr, **boundsHand;
+} boundsType, *boundsPtr;
+
+typedef THandle<boundsType> boundsHand;
+
 
 typedef struct
 {

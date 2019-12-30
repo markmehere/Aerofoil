@@ -261,7 +261,7 @@ PLError_t LoadMusicSounds (void)
 			return PLErrors::kOutOfMemory;
 
 		BlockMove((Ptr)(static_cast<Byte*>(*theSound) + 20L), theMusicData[i], soundDataSize);
-		DisposeHandle(theSound);
+		theSound.Dispose();
 	}
 	return (theErr);
 }

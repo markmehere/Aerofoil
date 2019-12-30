@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VirtualDirectory.h"
+#include "PLHandle.h"
 
 class PLPasStr;
 
@@ -21,7 +22,7 @@ namespace PortabilityLayer
 		virtual short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
 		virtual void CloseResFile(short ref) = 0;
 
-		virtual MMHandleBlock *GetResource(const ResTypeID &resType, int id) = 0;
+		virtual THandle<void> GetResource(const ResTypeID &resType, int id) = 0;
 
 		virtual short GetCurrentResFile() const = 0;
 		virtual void SetCurrentResFile(short ref) = 0;

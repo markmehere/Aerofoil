@@ -222,7 +222,7 @@ Rect BERect::ToRect() const
 
 CursHandle GetCursor(int cursorID)
 {
-	return reinterpret_cast<CursHandle>(GetResource('CURS', cursorID));
+	return GetResource('CURS', cursorID).ReinterpretCast<Cursor>();
 }
 
 CCrsrHandle GetCCursor(int cursorID)
@@ -271,7 +271,7 @@ void DisposeCCursor(CCrsrHandle handle)
 {
 	(*handle)->hwCursor->Destroy();
 
-	PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle));
+	PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(handle.MMBlock());
 }
 
 void Delay(int ticks, UInt32 *endTickCount)
@@ -298,11 +298,7 @@ short Alert(int dialogID, void *unknown)
 
 Handle GetResource(int32_t resType, int id)
 {
-	PortabilityLayer::MMHandleBlock *block = PortabilityLayer::ResourceManager::GetInstance()->GetResource(PortabilityLayer::ResTypeID(resType), id);
-	if (!block)
-		return nullptr;
-
-	return &block->m_contents;
+	return PortabilityLayer::ResourceManager::GetInstance()->GetResource(PortabilityLayer::ResTypeID(resType), id);
 }
 
 Handle GetResource(const char(&resTypeLiteral)[5], int id)
@@ -637,10 +633,10 @@ void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
 	if (fnameIndex < 1)
 		return;
 
-	PortabilityLayer::MMHandleBlock *istrRes = PortabilityLayer::ResourceManager::GetInstance()->GetResource('STR#', stringsID);
-	if (istrRes && istrRes->m_contents)
+	THandle<uint8_t> istrRes = PortabilityLayer::ResourceManager::GetInstance()->GetResource('STR#', stringsID).StaticCast<uint8_t>();
+	if (istrRes && *istrRes)
 	{
-		const uint8_t *contentsBytes = static_cast<const uint8_t *>(istrRes->m_contents);
+		const uint8_t *contentsBytes = *istrRes;
 		const BEUInt16_t *pArraySize = reinterpret_cast<const BEUInt16_t*>(contentsBytes);
 
 		const uint16_t arraySize = *pArraySize;
@@ -922,18 +918,12 @@ Handle NewHandle(Size size)
 	return &hBlock->m_contents;
 }
 
-void DisposeHandle(Handle handle)
-{
-	PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle));
-}
-
 long GetHandleSize(Handle handle)
 {
 	if (!handle)
 		return 0;
 
-	PortabilityLayer::MMHandleBlock *block = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(handle);
-	return static_cast<long>(block->m_size);
+	return handle.MMBlock()->m_size;
 }
 
 PLError_t PtrAndHand(const void *data, Handle handle, Size size)
@@ -945,7 +935,7 @@ PLError_t PtrAndHand(const void *data, Handle handle, Size size)
 PLError_t SetHandleSize(Handle hdl, Size newSize)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
-	if (!mm->ResizeHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(hdl), newSize))
+	if (!mm->ResizeHandle(hdl.MMBlock(), newSize))
 		return PLErrors::kOutOfMemory;
 
 	return PLErrors::kNone;

@@ -134,7 +134,7 @@ void LoadGraphicSpecial (short resID)
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)
 	{
-		thePicture = (PicHandle)GetResource('Date', resID);
+		thePicture = GetResource('Date', resID).StaticCast<Picture>();
 		if (thePicture == nil)
 		{
 			thePicture = GetPicture(2000);
@@ -146,8 +146,8 @@ void LoadGraphicSpecial (short resID)
 	bounds = (*thePicture)->picFrame.ToRect();
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);
-	
-	DisposeHandle((Handle)thePicture);
+
+	thePicture.Dispose();
 }
 
 //--------------------------------------------------------------  DrawRoomBackground

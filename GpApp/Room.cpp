@@ -194,7 +194,7 @@ Boolean CreateNewRoom (short h, short v)
 	if (availableRoom == -1)				// found no available rooms
 	{
 		howMuch = sizeof(roomType);			// add new room to end of house
-		theErr = PtrAndHand((Ptr)thisRoom, (Handle)thisHouse, howMuch);
+		theErr = PtrAndHand((Ptr)thisRoom, thisHouse.StaticCast<void>(), howMuch);
 		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowUnaccounted, theErr);
@@ -260,7 +260,7 @@ void ReadyBackground (short theID, short *theTiles)
 	thePicture = GetPicture(theID);
 	if (thePicture == nil)
 	{
-		thePicture = (PicHandle)GetResource('Date', theID);
+		thePicture = GetResource('Date', theID).StaticCast<Picture>();
 		if (thePicture == nil)
 		{
 			YellowAlert(kYellowNoBackground, 0);
@@ -271,7 +271,7 @@ void ReadyBackground (short theID, short *theTiles)
 	dest = (*thePicture)->picFrame.ToRect();
 	QOffsetRect(&dest, -dest.left, -dest.top);
 	DrawPicture(thePicture, &dest);
-	DisposeHandle((Handle)thePicture);
+	thePicture.Dispose();
 	
 	QSetRect(&src, 0, 0, kTileWide, kTileHigh);
 	QSetRect(&dest, 0, 0, kTileWide, kTileHigh);
@@ -895,7 +895,7 @@ short GetOriginalBounding (short theID)
 	boundsHand	boundsRes;
 	short		boundCode;
 	
-	boundsRes = (boundsHand)GetResource('bnds', theID);
+	boundsRes = GetResource('bnds', theID).StaticCast<boundsType>();
 	if (boundsRes == nil)
 	{
 		if (PictIDExists(theID))
@@ -913,7 +913,7 @@ short GetOriginalBounding (short theID)
 			boundCode += 4;
 		if ((*boundsRes)->bottom)
 			boundCode += 8;
-		DisposeHandle((Handle)boundsRes);
+		boundsRes.Dispose();
 	}
 	
 	return (boundCode);

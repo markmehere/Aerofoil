@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __PL_CORE_H__
-#define __PL_CORE_H__
 
 #include "DataTypes.h"
 #include "PLErrorCodes.h"
@@ -9,6 +7,7 @@
 #include "QDGraf.h"
 #include "ResTypeID.h"
 #include "VirtualDirectory.h"
+#include "PLHandle.h"
 
 #ifdef _MSC_VER
 #pragma warning(error:4311)	// Pointer truncation to int
@@ -44,7 +43,6 @@ struct CGraf;
 struct Menu;
 
 typedef void *Ptr;
-typedef Ptr *Handle;
 
 #define PL_DEAD(n) ((void)0)
 
@@ -172,10 +170,10 @@ typedef Menu *MenuPtr;
 typedef CInfoPBRec *CInfoPBPtr;
 typedef VersionRecord *VersRecPtr;
 
-typedef CursPtr *CursHandle;
-typedef CCrsrPtr *CCrsrHandle;
-typedef MenuPtr *MenuHandle;
-typedef VersRecPtr *VersRecHndl;
+typedef THandle<Cursor> CursHandle;
+typedef THandle<CCursor> CCrsrHandle;
+typedef THandle<Menu> MenuHandle;
+typedef THandle<VersionRecord> VersRecHndl;
 
 typedef WindowPtr WindowRef;	// wtf?
 
@@ -332,7 +330,6 @@ void ExitToShell();
 void InvalWindowRect(WindowPtr window, const Rect *rect);
 
 Handle NewHandle(Size size);
-void DisposeHandle(Handle handle);
 long GetHandleSize(Handle handle);
 
 PLError_t PtrAndHand(const void *data, Handle handle, Size size);	// Appends data to the end of a handle
@@ -362,6 +359,3 @@ void PL_NotYetImplemented();
 void PL_NotYetImplemented_Minor();
 void PL_NotYetImplemented_TODO(const char *category);
 void PL_Init();
-
-
-#endif

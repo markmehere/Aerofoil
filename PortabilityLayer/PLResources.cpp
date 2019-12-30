@@ -17,24 +17,6 @@ struct PLOpenedResFile
 static const unsigned int kPLMaxOpenedResFiles = 64;
 static PLOpenedResFile gs_resFiles[kPLMaxOpenedResFiles];
 
-void DetachResource(Handle hdl)
-{
-	if (!hdl)
-		return;
-
-	PortabilityLayer::MMHandleBlock *block = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(hdl);
-	assert(block->m_rmSelfRef);
-	assert(block->m_rmSelfRef->m_handle == block);
-	block->m_rmSelfRef->m_handle = nullptr;
-	block->m_rmSelfRef = nullptr;
-}
-
-void ReleaseResource(Handle hdl)
-{
-	DetachResource(hdl);
-	DisposeHandle(hdl);
-}
-
 short CurResFile()
 {
 	return PortabilityLayer::ResourceManager::GetInstance()->GetCurrentResFile();
@@ -76,7 +58,7 @@ void SetResLoad(Boolean load)
 
 long GetMaxResourceSize(Handle res)
 {
-	const PortabilityLayer::MMHandleBlock *hBlock = reinterpret_cast<PortabilityLayer::MMHandleBlock*>(res);
+	const PortabilityLayer::MMHandleBlock *hBlock = res.MMBlock();
 	const PortabilityLayer::ResourceCompiledRef *resRef = hBlock->m_rmSelfRef;
 	return resRef->GetSize();
 }

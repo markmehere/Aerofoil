@@ -5,6 +5,7 @@
 //============================================================================
 
 #include "PLKeyEncoding.h"
+#include "PLControlDefinitions.h"
 #include "PLNumberFormatting.h"
 #include "PLResources.h"
 #include "PLSound.h"
@@ -42,7 +43,7 @@ void DoAbout (void)
 	Str255			longVersion;
 	StringPtr		messagePtr;
 	VersRecHndl		version;
-	Handle			itemHandle;
+	ControlHandle	itemHandle;
 	short			itemType, hit, wasResFile;
 	ModalFilterUPP	aboutFilterUPP;
 	
@@ -55,7 +56,7 @@ void DoAbout (void)
 //	if (aboutDialog == nil)
 //		RedAlert(kErrDialogDidntLoad);
 	
-	version = (VersRecHndl)GetResource('vers', 1);
+	version = GetResource('vers', 1).StaticCast<VersionRecord>();
 	if (version != nil)
 	{
 		messagePtr = (**version).shortVersion + 1 + (**version).shortVersion[0];
@@ -109,7 +110,7 @@ static void HiLiteOkayButton (void)
 		if (thePict != nil)
 		{
 			DrawPicture(thePict, &okayButtonBounds);
-			DisposeHandle((Handle)thePict);
+			thePict.Dispose();
 			
 			okayButtIsHiLit = true;
 		}
@@ -131,7 +132,7 @@ static void UnHiLiteOkayButton (void)
 		if (thePict != nil)
 		{
 			DrawPicture(thePict, &okayButtonBounds);
-			DisposeHandle((Handle)thePict);
+			thePict.Dispose();
 			
 			okayButtIsHiLit = false;
 		}

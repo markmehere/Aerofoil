@@ -18,7 +18,7 @@ typedef PixMap *PixMapPtr;
 typedef PixMapPtr *PixMapHandle;
 
 typedef Picture *PicPtr;
-typedef PicPtr *PicHandle;
+typedef THandle<Picture> PicHandle;
 
 enum QDFlags
 {

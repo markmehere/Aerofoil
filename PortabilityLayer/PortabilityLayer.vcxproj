@@ -193,6 +193,7 @@
     <ClInclude Include="PLEventQueue.h" />
     <ClInclude Include="PLFolders.h" />
     <ClInclude Include="PLHacks.h" />
+    <ClInclude Include="PLHandle.h" />
     <ClInclude Include="PLKeyEncoding.h" />
     <ClInclude Include="PLLowMem.h" />
     <ClInclude Include="PLMacTypes.h" />
@@ -317,6 +318,7 @@
     <ClCompile Include="ResourceFile.cpp" />
     <ClCompile Include="ScanlineMaskIterator.cpp" />
     <ClCompile Include="SimpleGraphic.cpp" />
+    <ClCompile Include="PLHandle.cpp" />
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />
     <ClCompile Include="XModemCRC.cpp" />

@@ -252,7 +252,7 @@ PixMapHandle GetGWorldPixMap(GWorldPtr gworld)
 
 PicHandle GetPicture(short resID)
 {
-	return reinterpret_cast<PicHandle>(PortabilityLayer::ResourceManager::GetInstance()->GetResource('PICT', resID));
+	return PortabilityLayer::ResourceManager::GetInstance()->GetResource('PICT', resID).StaticCast<Picture>();
 }
 
 void OffsetRect(Rect *rect, int right, int down)
@@ -290,7 +290,7 @@ void DrawPicture(PicHandle pict, Rect *bounds)
 
 	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*port->GetPixMap());
 
-	long handleSize = GetHandleSize(reinterpret_cast<Handle>(pict));
+	long handleSize = pict.MMBlock()->m_size;
 	PortabilityLayer::MemReaderStream stream(picPtr, handleSize);
 
 	// Adjust draw origin

@@ -33,7 +33,7 @@ namespace PortabilityLayer
 		short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
 		void CloseResFile(short ref) override;
 
-		MMHandleBlock *GetResource(const ResTypeID &resType, int id) override;
+		THandle<void> GetResource(const ResTypeID &resType, int id) override;
 
 		short GetCurrentResFile() const override;
 		void SetCurrentResFile(short ref) override;
@@ -224,7 +224,7 @@ namespace PortabilityLayer
 		m_currentResFile = m_lastResFile;
 	}
 
-	MMHandleBlock *ResourceManagerImpl::GetResource(const ResTypeID &resType, int id)
+	THandle<void> ResourceManagerImpl::GetResource(const ResTypeID &resType, int id)
 	{
 		short searchIndex = m_currentResFile;
 		while (searchIndex >= 0)
@@ -233,7 +233,7 @@ namespace PortabilityLayer
 			assert(slot.m_resourceFile);
 
 			if (MMHandleBlock *block = slot.m_resourceFile->GetResource(resType, id, m_load))
-				return block;
+				return THandle<void>(block);
 
 			searchIndex = slot.m_prevFile;
 		}

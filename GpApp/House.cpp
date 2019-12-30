@@ -120,9 +120,9 @@ Boolean InitializeEmptyHouse (void)
 	Str255			tempStr;
 	
 	if (thisHouse != nil)
-		DisposeHandle((Handle)thisHouse);
+		thisHouse.Dispose();
 	
-	thisHouse = (houseHand)NewHandle(sizeof(houseType));
+	thisHouse = NewHandle(sizeof(houseType)).StaticCast<houseType>();
 	
 	if (thisHouse == nil)
 	{

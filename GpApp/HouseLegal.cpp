@@ -616,7 +616,7 @@ void ValidateNumberOfRooms (void)
 	char		wasState;
 	
 	reportsRooms = (long)(*thisHouse)->nRooms;
-	countedRooms = (GetHandleSize((Handle)thisHouse) - 
+	countedRooms = (GetHandleSize(thisHouse.StaticCast<void>()) - 
 			sizeof(houseType)) / sizeof(roomType);
 	if (reportsRooms != countedRooms)
 	{
@@ -737,7 +737,7 @@ void LopOffExtraRooms (void)
 	{
 		r = (*thisHouse)->nRooms - count;
 		newSize = sizeof(houseType) + (sizeof(roomType) * (long)r);
-		if (SetHandleSize((Handle)thisHouse, newSize) != PLErrors::kNone)	// resize house handle (shrink)
+		if (SetHandleSize(thisHouse.StaticCast<void>(), newSize) != PLErrors::kNone)	// resize house handle (shrink)
 		{
 			ForeColor(redColor);
 			GetLocalizedString(16, message);

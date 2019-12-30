@@ -288,7 +288,7 @@ void LoadGraphic (short resID)
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	DrawPicture(thePicture, &bounds);
 	
-	DisposeHandle((Handle)thePicture);
+	thePicture.Dispose();
 }
 
 //--------------------------------------------------------------  LoadScaledGraphic
@@ -304,7 +304,7 @@ void LoadScaledGraphic (short resID, Rect *theRect)
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	DrawPicture(thePicture, theRect);
-	DisposeHandle((Handle)thePicture);
+	thePicture.Dispose();
 }
 
 //--------------------------------------------------------------  LargeIconPlot

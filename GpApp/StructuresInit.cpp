@@ -84,7 +84,7 @@ void InitScoreboardMap (void)
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, hOffset, 0);
 	DrawPicture(thePicture, &bounds);
-	DisposeHandle((Handle)thePicture);
+	thePicture.Dispose();
 	
 	QSetRect(&badgeSrcRect, 0, 0, 32, 66);				// 2144 pixels
 	theErr = CreateOffScreenGWorld(&badgeSrcMap, &badgeSrcRect, kPreferredPixelFormat);

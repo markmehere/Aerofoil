@@ -533,10 +533,10 @@ namespace PortabilityLayer
 			}
 
 			if (icsHandle)
-				DisposeHandle(icsHandle);
+				icsHandle.Dispose();
 
 			if (ics8Handle)
-				DisposeHandle(ics8Handle);
+				ics8Handle.Dispose();
 
 			m_haveIcon = true;
 		}

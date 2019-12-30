@@ -839,16 +839,16 @@ Boolean PictIDExists (short theID)
 	thePicture = GetPicture(theID);
 	if (thePicture == nil)
 	{
-		thePicture = (PicHandle)GetResource('Date', theID);
+		thePicture = GetResource('Date', theID).StaticCast<Picture>();
 		if (thePicture == nil)
 		{
 			foundIt = false;
 		}
 		else
-			DisposeHandle((Handle)thePicture);
+			thePicture.Dispose();
 	}
 	else
-		DisposeHandle((Handle)thePicture);
+		thePicture.Dispose();
 	
 //	foundIt = false;
 //	numPicts = Count1Resources('PICT');
@@ -880,8 +880,8 @@ short GetFirstPICT (void)
 	resHandle = Get1IndResource('PICT', 1);
 	if (resHandle != nil)
 	{
-		const PortabilityLayer::ResourceCompiledRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(reinterpret_cast<PortabilityLayer::MMHandleBlock*>(resHandle));
-		DisposeHandle(resHandle);
+		const PortabilityLayer::ResourceCompiledRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(resHandle.MMBlock());
+		resHandle.Dispose();
 		return resRef->m_resID;
 	}
 	else

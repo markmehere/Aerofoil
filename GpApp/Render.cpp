@@ -29,13 +29,12 @@ void RenderStars (void);
 void RenderBands (void);
 void RenderShreds (void);
 void CopyRectsQD (void);
-void CopyRectsAssm (void);
 
 
 Rect		work2MainRects[kMaxGarbageRects];
 Rect		back2WorkRects[kMaxGarbageRects];
 Rect		shieldRect;
-Rect		**mirrorRects;
+THandle<Rect>	mirrorRects;
 Point		shieldPt;
 long		nextFrame;
 short		numWork2Main, numBack2Work;
@@ -151,7 +150,7 @@ void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 	
 	SetPort((GrafPtr)workSrcMap);
 
-	long numMirrorRects = GetHandleSize(reinterpret_cast<Handle>(mirrorRects)) / sizeof(Rect);
+	long numMirrorRects = GetHandleSize(mirrorRects.StaticCast<void>()) / sizeof(Rect);
 
 	for (long i = 0; i < numMirrorRects; i++)
 	{
@@ -743,16 +742,16 @@ void AddToMirrorRegion (Rect *theRect)
 {
 	if (mirrorRects == nil)
 	{
-		mirrorRects = reinterpret_cast<Rect**>(NewHandle(sizeof(Rect)));
+		mirrorRects = NewHandle(sizeof(Rect)).StaticCast<Rect>();
 		if (mirrorRects != nil)
 			**mirrorRects = *theRect;
 	}
 	else
 	{
-		const long oldSize = GetHandleSize(reinterpret_cast<Handle>(mirrorRects));
+		const long oldSize = GetHandleSize(mirrorRects.StaticCast<void>());
 		const long newSize = oldSize + sizeof(Rect);
 
-		if (SetHandleSize(reinterpret_cast<Handle>(mirrorRects), newSize) == PLErrors::kNone)
+		if (SetHandleSize(mirrorRects.StaticCast<void>(), newSize) == PLErrors::kNone)
 			(*mirrorRects)[oldSize / sizeof(Rect)] = *theRect;
 	}
 	hasMirror = true;
@@ -763,7 +762,7 @@ void AddToMirrorRegion (Rect *theRect)
 void ZeroMirrorRegion (void)
 {
 	if (mirrorRects != nil)
-		DisposeHandle(reinterpret_cast<Handle>(mirrorRects));
+		mirrorRects.Dispose();
 	mirrorRects = nil;
 	hasMirror = false;
 }

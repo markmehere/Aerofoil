@@ -20,7 +20,7 @@
 #define kDiagCursorID		131
 
 
-extern	Rect			**mirrorRects;
+extern	THandle<Rect>	mirrorRects;
 extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
 extern	WindowPtr		menuWindow;
 extern	Rect			shieldRect, boardSrcRect, localRoomsDest[];

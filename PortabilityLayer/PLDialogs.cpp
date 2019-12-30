@@ -23,22 +23,22 @@ CGrafPtr GetDialogPort(DialogPtr dialog)
 	return nullptr;
 }
 
-void GetDialogItem(DialogPtr dialog, int index, short *itemType, Handle *itemHandle, Rect *itemRect)
+void GetDialogItem(DialogPtr dialog, int index, short *itemType, THandle<Control> *itemHandle, Rect *itemRect)
 {
 	PL_NotYetImplemented();
 }
 
-void GetDialogItemText(Handle handle, StringPtr str)
+void GetDialogItemText(THandle<Control> handle, StringPtr str)
 {
 	PL_NotYetImplemented();
 }
 
-void SetDialogItem(DialogPtr dialog, int index, short itemType, Handle itemHandle, const Rect *itemRect)
+void SetDialogItem(DialogPtr dialog, int index, short itemType, THandle<Control> itemHandle, const Rect *itemRect)
 {
 	PL_NotYetImplemented();
 }
 
-void SetDialogItemText(Handle handle, const PLPasStr &str)
+void SetDialogItemText(THandle<Control> handle, const PLPasStr &str)
 {
 	PL_NotYetImplemented();
 }

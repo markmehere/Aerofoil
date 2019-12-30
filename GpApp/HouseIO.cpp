@@ -51,19 +51,19 @@ extern	Boolean		phoneBitSet, bannerStarCountOn;
 
 void LoopMovie (void)
 {
-	Handle		theLoop;
-	UserData	theUserData;
-	short		theCount;
+	THandle<long>	theLoop;
+	UserData		theUserData;
+	short			theCount;
 	
-	theLoop = NewHandle(sizeof(long));
-	(** (long **) theLoop) = 0;
+	theLoop = NewHandle(sizeof(long)).StaticCast<long>();
+	(**theLoop) = 0;
 	theUserData = GetMovieUserData(theMovie);
 	theCount = CountUserDataType(theUserData, 'LOOP');
 	while (theCount--)
 	{
 		RemoveUserData(theUserData, 'LOOP', 1);
 	}
-	AddUserData(theUserData, theLoop, 'LOOP');
+	AddUserData(theUserData, theLoop.StaticCast<void>(), 'LOOP');
 }
 
 //--------------------------------------------------------------  OpenHouseMovie
@@ -119,11 +119,11 @@ void OpenHouseMovie (void)
 		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);
-			DisposeHandle(spaceSaver);
+			spaceSaver.Dispose();
 			CloseHouseMovie();
 			return;
 		}
-		DisposeHandle(spaceSaver);
+		spaceSaver.Dispose();
 				
 		theErr = PrerollMovie(theMovie, 0, 0x000F0000);
 		if (theErr != PLErrors::kNone)
@@ -642,12 +642,12 @@ Boolean ReadHouse (void)
 	#endif
 	
 	if (thisHouse != nil)
-		DisposeHandle((Handle)thisHouse);
+		thisHouse.Dispose();
 
 	// GP: Correct for padding
 	const size_t alignmentPadding = sizeof(houseType) - sizeof(roomType) - houseType::kBinaryDataSize;
 	
-	thisHouse = (houseHand)NewHandle(byteCount + alignmentPadding);
+	thisHouse = NewHandle(byteCount + alignmentPadding).StaticCast<houseType>();
 	if (thisHouse == nil)
 	{
 		YellowAlert(kYellowNoMemory, 10);
@@ -767,7 +767,7 @@ Boolean WriteHouse (Boolean checkIt)
 	if (checkIt)
 		CheckHouseForProblems();
 	
-	byteCount = GetHandleSize((Handle)thisHouse);
+	byteCount = GetHandleSize(thisHouse.StaticCast<void>());
 	
 	if (fileDirty)
 	{

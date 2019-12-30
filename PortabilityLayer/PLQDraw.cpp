@@ -889,8 +889,8 @@ void GetIndPattern(Pattern *pattern, int patListID, int index)
 	if (index < 1)
 		return;
 
-	PortabilityLayer::MMHandleBlock *patternList = PortabilityLayer::ResourceManager::GetInstance()->GetResource('PAT#', patListID);
-	const uint8_t *patternRes = static_cast<const uint8_t*>(patternList->m_contents);
+	THandle<uint8_t> patternList = PortabilityLayer::ResourceManager::GetInstance()->GetResource('PAT#', patListID).StaticCast<uint8_t>();
+	const uint8_t *patternRes = *patternList;
 
 	int numPatterns = (patternRes[0] << 8) | patternRes[1];
 	if (index > numPatterns)
