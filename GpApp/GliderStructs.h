@@ -7,6 +7,7 @@
 
 #include "PLQDOffscreen.h"
 #include "GpVOSEvent.h"
+#include "ByteSwap.h"
 
 typedef struct
 {
@@ -346,7 +347,7 @@ typedef struct
 
 typedef struct
 {
-	Int32		frame;
+	BEInt32_t	frame;
 	char		key;
 	char		padding;
 } demoType, *demoPtr;
