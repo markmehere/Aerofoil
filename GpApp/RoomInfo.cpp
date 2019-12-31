@@ -38,13 +38,13 @@
 #define kFloorSupportCheck			12
 
 
-void UpdateRoomInfoDialog (DialogPtr);
+void UpdateRoomInfoDialog (Dialog *);
 void DragMiniTile (DrawSurface *, Point, short *);
 void HiliteTileOver (DrawSurface *, Point);
-Boolean RoomFilter (DialogPtr, EventRecord *, short *);
+Boolean RoomFilter (Dialog *, EventRecord *, short *);
 short ChooseOriginalArt (short);
-void UpdateOriginalArt (DialogPtr);
-Boolean OriginalArtFilter (DialogPtr, EventRecord *, short *);
+void UpdateOriginalArt (Dialog *);
+Boolean OriginalArtFilter (Dialog *, EventRecord *, short *);
 Boolean PictIDExists (short);
 short GetFirstPICT (void);
 void BitchAboutPICTNotFound (void);
@@ -66,7 +66,7 @@ extern	short		houseResFork, lastBackground;
 //--------------------------------------------------------------  UpdateRoomInfoDialog
 
 #ifndef COMPILEDEMO
-void UpdateRoomInfoDialog (DialogPtr theDialog)
+void UpdateRoomInfoDialog (Dialog *theDialog)
 {
 	Rect		src, dest;
 	short		i;
@@ -346,7 +346,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 //--------------------------------------------------------------  RoomFilter
 #ifndef COMPILEDEMO
 
-Boolean RoomFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean RoomFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	Point		mouseIs;
 	short		newTileOver;
@@ -428,7 +428,7 @@ void DoRoomInfo (void)
 {
 #ifndef COMPILEDEMO
 	#define			kBackgroundsMenuID		140
-	DialogPtr		roomInfoDialog;
+	Dialog			*roomInfoDialog;
 	MenuHandle		backgroundsMenu;
 	Str255			floorStr, suiteStr, objectsStr, tempStr;
 	short			item, i, newBack;
@@ -609,7 +609,7 @@ void DoRoomInfo (void)
 //--------------------------------------------------------------  UpdateOriginalArt
 
 #ifndef COMPILEDEMO
-void UpdateOriginalArt (DialogPtr theDialog)
+void UpdateOriginalArt (Dialog *theDialog)
 {
 	Pattern		dummyPattern;
 	
@@ -663,7 +663,7 @@ void UpdateOriginalArt (DialogPtr theDialog)
 //--------------------------------------------------------------  OriginalArtFilter
 #ifndef COMPILEDEMO
 
-Boolean OriginalArtFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean OriginalArtFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	Point		mouseIs;
 	
@@ -746,7 +746,7 @@ Boolean OriginalArtFilter (DialogPtr dial, EventRecord *event, short *item)
 #ifndef COMPILEDEMO
 short ChooseOriginalArt (short was)
 {
-	DialogPtr		theDialog;
+	Dialog			*theDialog;
 	long			longID;
 	short			item, newPictID, tempShort, wasPictID;
 	Boolean			leaving;

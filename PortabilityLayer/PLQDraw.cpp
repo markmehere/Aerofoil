@@ -1020,6 +1020,12 @@ void DrawSurface::FrameRect(const Rect &rect)
 	}
 }
 
+void DrawSurface::FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight)
+{
+	PL_NotYetImplemented_TODO("RoundRect");
+	this->FrameRect(rect);
+}
+
 void DrawSurface::InvertFrameRect(const Rect &rect, const uint8_t *pattern)
 {
 	PL_NotYetImplemented();

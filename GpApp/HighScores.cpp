@@ -41,11 +41,11 @@ namespace PortabilityLayer
 
 
 void DrawHighScores (DrawSurface *);
-void UpdateNameDialog (DialogPtr);
-Boolean NameFilter (DialogPtr, EventRecord *, short *);
+void UpdateNameDialog (Dialog *);
+Boolean NameFilter (Dialog *, EventRecord *, short *);
 void GetHighScoreName (short);
-void UpdateBannerDialog (DialogPtr);
-Boolean BannerFilter (DialogPtr, EventRecord *, short *);
+void UpdateBannerDialog (Dialog *);
+Boolean BannerFilter (Dialog *, EventRecord *, short *);
 void GetHighScoreBanner (void);
 Boolean OpenHighScoresFile (const VFileSpec &spec, PortabilityLayer::IOStream *&outStream);
 
@@ -419,7 +419,7 @@ Boolean TestHighScore (void)
 //--------------------------------------------------------------  UpdateNameDialog
 // Redraws the "Enter High Score Name" dialog.
 
-void UpdateNameDialog (DialogPtr theDialog)
+void UpdateNameDialog (Dialog *theDialog)
 {
 	short		nChars;
 	
@@ -433,7 +433,7 @@ void UpdateNameDialog (DialogPtr theDialog)
 //--------------------------------------------------------------  NameFilter
 // Dialog filter for the "Enter High Score Name" dialog.
 
-Boolean NameFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean NameFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	short		nChars;
 	
@@ -487,7 +487,7 @@ Boolean NameFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void GetHighScoreName (short place)
 {
-	DialogPtr		theDial;
+	Dialog			*theDial;
 	Str255			scoreStr, placeStr, tempStr;
 	short			item;
 	Boolean			leaving;
@@ -525,7 +525,7 @@ void GetHighScoreName (short place)
 //--------------------------------------------------------------  UpdateBannerDialog
 // Redraws the "Enter Message" dialog.
 
-void UpdateBannerDialog (DialogPtr theDialog)
+void UpdateBannerDialog (Dialog *theDialog)
 {
 	short		nChars;
 	
@@ -539,7 +539,7 @@ void UpdateBannerDialog (DialogPtr theDialog)
 //--------------------------------------------------------------  BannerFilter
 // Dialog filter for the "Enter Message" dialog.
 
-Boolean BannerFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean BannerFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	short		nChars;
 	
@@ -596,7 +596,7 @@ Boolean BannerFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void GetHighScoreBanner (void)
 {
-	DialogPtr		theDial;
+	Dialog			*theDial;
 	Str255			tempStr;
 	short			item;
 	Boolean			leaving;

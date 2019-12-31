@@ -65,32 +65,32 @@
 #define kGotoButton2				14
 
 
-void UpdateBlowerInfo (DialogPtr);
-void UpdateFurnitureInfo (DialogPtr);
-void UpdateCustPictInfo (DialogPtr);
-void UpdateSwitchInfo (DialogPtr);
-void UpdateTriggerInfo (DialogPtr);
-void UpdateLightInfo (DialogPtr);
-void UpdateApplianceInfo (DialogPtr);
-void UpdateMicrowaveInfo (DialogPtr);
-void UpdateGreaseInfo (DialogPtr);
-void UpdateInvisBonusInfo (DialogPtr);
-void UpdateTransInfo (DialogPtr);
-void UpdateEnemyInfo (DialogPtr);
-void UpdateFlowerInfo (DialogPtr);
-Boolean BlowerFilter (DialogPtr, EventRecord *, short *);
-Boolean FurnitureFilter (DialogPtr, EventRecord *, short *);
-Boolean CustPictFilter (DialogPtr, EventRecord *, short *);
-Boolean SwitchFilter (DialogPtr, EventRecord *, short *);
-Boolean TriggerFilter (DialogPtr, EventRecord *, short *);
-Boolean LightFilter (DialogPtr, EventRecord *, short *);
-Boolean ApplianceFilter (DialogPtr, EventRecord *, short *);
-Boolean MicrowaveFilter (DialogPtr, EventRecord *, short *);
-Boolean GreaseFilter (DialogPtr, EventRecord *, short *);
-Boolean InvisBonusFilter (DialogPtr, EventRecord *, short *);
-Boolean TransFilter (DialogPtr, EventRecord *, short *);
-Boolean EnemyFilter (DialogPtr, EventRecord *, short *);
-Boolean FlowerFilter (DialogPtr, EventRecord *, short *);
+void UpdateBlowerInfo (Dialog *);
+void UpdateFurnitureInfo (Dialog *);
+void UpdateCustPictInfo (Dialog *);
+void UpdateSwitchInfo (Dialog *);
+void UpdateTriggerInfo (Dialog *);
+void UpdateLightInfo (Dialog *);
+void UpdateApplianceInfo (Dialog *);
+void UpdateMicrowaveInfo (Dialog *);
+void UpdateGreaseInfo (Dialog *);
+void UpdateInvisBonusInfo (Dialog *);
+void UpdateTransInfo (Dialog *);
+void UpdateEnemyInfo (Dialog *);
+void UpdateFlowerInfo (Dialog *);
+Boolean BlowerFilter (Dialog *, EventRecord *, short *);
+Boolean FurnitureFilter (Dialog *, EventRecord *, short *);
+Boolean CustPictFilter (Dialog *, EventRecord *, short *);
+Boolean SwitchFilter (Dialog *, EventRecord *, short *);
+Boolean TriggerFilter (Dialog *, EventRecord *, short *);
+Boolean LightFilter (Dialog *, EventRecord *, short *);
+Boolean ApplianceFilter (Dialog *, EventRecord *, short *);
+Boolean MicrowaveFilter (Dialog *, EventRecord *, short *);
+Boolean GreaseFilter (Dialog *, EventRecord *, short *);
+Boolean InvisBonusFilter (Dialog *, EventRecord *, short *);
+Boolean TransFilter (Dialog *, EventRecord *, short *);
+Boolean EnemyFilter (Dialog *, EventRecord *, short *);
+Boolean FlowerFilter (Dialog *, EventRecord *, short *);
 void DoBlowerObjectInfo (short);
 void DoFurnitureObjectInfo (void);
 void DoCustPictObjectInfo (void);
@@ -120,7 +120,7 @@ extern	Boolean		linkerIsSwitch;
 //==============================================================  Functions
 //--------------------------------------------------------------  UpdateBlowerInfo
 
-void UpdateBlowerInfo (DialogPtr theDialog)
+void UpdateBlowerInfo (Dialog *theDialog)
 {
 	#define		kArrowheadLength	4
 	Rect		bounds;
@@ -232,7 +232,7 @@ void UpdateBlowerInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateFurnitureInfo
 
-void UpdateFurnitureInfo (DialogPtr theDialog)
+void UpdateFurnitureInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -241,7 +241,7 @@ void UpdateFurnitureInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateCustPictInfo
 
-void UpdateCustPictInfo (DialogPtr theDialog)
+void UpdateCustPictInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -250,7 +250,7 @@ void UpdateCustPictInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateSwitchInfo
 
-void UpdateSwitchInfo (DialogPtr theDialog)
+void UpdateSwitchInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -262,7 +262,7 @@ void UpdateSwitchInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateTriggerInfo
 
-void UpdateTriggerInfo (DialogPtr theDialog)
+void UpdateTriggerInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -272,7 +272,7 @@ void UpdateTriggerInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateLightInfo
 
-void UpdateLightInfo (DialogPtr theDialog)
+void UpdateLightInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -281,7 +281,7 @@ void UpdateLightInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateApplianceInfo
 
-void UpdateApplianceInfo (DialogPtr theDialog)
+void UpdateApplianceInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -290,7 +290,7 @@ void UpdateApplianceInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateMicrowaveInfo
 
-void UpdateMicrowaveInfo (DialogPtr theDialog)
+void UpdateMicrowaveInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -299,7 +299,7 @@ void UpdateMicrowaveInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateGreaseInfo
 
-void UpdateGreaseInfo (DialogPtr theDialog)
+void UpdateGreaseInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -308,7 +308,7 @@ void UpdateGreaseInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateInvisBonusInfo
 
-void UpdateInvisBonusInfo (DialogPtr theDialog)
+void UpdateInvisBonusInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -319,7 +319,7 @@ void UpdateInvisBonusInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateTransInfo
 
-void UpdateTransInfo (DialogPtr theDialog)
+void UpdateTransInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -329,7 +329,7 @@ void UpdateTransInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateEnemyInfo
 
-void UpdateEnemyInfo (DialogPtr theDialog)
+void UpdateEnemyInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -338,7 +338,7 @@ void UpdateEnemyInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateFlowerInfo
 
-void UpdateFlowerInfo (DialogPtr theDialog)
+void UpdateFlowerInfo (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -347,7 +347,7 @@ void UpdateFlowerInfo (DialogPtr theDialog)
 
 //--------------------------------------------------------------  BlowerFilter
 
-Boolean BlowerFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean BlowerFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -401,7 +401,7 @@ Boolean BlowerFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  FurnitureFilter
 
-Boolean FurnitureFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean FurnitureFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -436,7 +436,7 @@ Boolean FurnitureFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  CustPictFilter
 
-Boolean CustPictFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean CustPictFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -471,7 +471,7 @@ Boolean CustPictFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  SwitchFilter
 
-Boolean SwitchFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean SwitchFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -512,7 +512,7 @@ Boolean SwitchFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  TriggerFilter
 
-Boolean TriggerFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean TriggerFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -558,7 +558,7 @@ Boolean TriggerFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  LightFilter
 
-Boolean LightFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean LightFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -607,7 +607,7 @@ Boolean LightFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  ApplianceFilter
 
-Boolean ApplianceFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean ApplianceFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -661,7 +661,7 @@ Boolean ApplianceFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  MicrowaveFilter
 
-Boolean MicrowaveFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean MicrowaveFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -710,7 +710,7 @@ Boolean MicrowaveFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  GreaseFilter
 
-Boolean GreaseFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean GreaseFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -751,7 +751,7 @@ Boolean GreaseFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  InvisBonusFilter
 
-Boolean InvisBonusFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean InvisBonusFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -786,7 +786,7 @@ Boolean InvisBonusFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  TransFilter
 
-Boolean TransFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean TransFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -827,7 +827,7 @@ Boolean TransFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  EnemyFilter
 
-Boolean EnemyFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean EnemyFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -881,7 +881,7 @@ Boolean EnemyFilter (DialogPtr dial, EventRecord *event, short *item)
 
 //--------------------------------------------------------------  EnemyFilter
 
-Boolean FlowerFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean FlowerFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -932,7 +932,7 @@ Boolean FlowerFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void DoBlowerObjectInfo (short what)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr, distStr;
 	short			item, initial;
 	Boolean			leaving, doReturn, leftFacing;
@@ -1105,7 +1105,7 @@ void DoBlowerObjectInfo (short what)
 
 void DoFurnitureObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	short			item;
 	Boolean			leaving, doReturn;
@@ -1170,7 +1170,7 @@ void DoFurnitureObjectInfo (void)
 
 void DoCustPictObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	long			wasPict;
 	short			item;
@@ -1267,7 +1267,7 @@ void DoCustPictObjectInfo (void)
 
 void DoSwitchObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr, roomStr, tempStr, objStr;
 	short			item, floor, suite;
 	Boolean			leaving, doLink, doGoTo, doReturn;
@@ -1389,7 +1389,7 @@ void DoSwitchObjectInfo (void)
 
 void DoTriggerObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr, roomStr, tempStr, objStr;
 	long			delayIs;
 	short			item, floor, suite;
@@ -1545,7 +1545,7 @@ void DoTriggerObjectInfo (void)
 
 void DoLightObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	short			item, initial;
 	Boolean			leaving, doReturn;
@@ -1631,7 +1631,7 @@ void DoLightObjectInfo (void)
 
 void DoApplianceObjectInfo (short what)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	long			delay;
 	short			item, initial;
@@ -1747,7 +1747,7 @@ void DoApplianceObjectInfo (short what)
 
 void DoMicrowaveObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	short			item, initial, kills;
 	Boolean			leaving, doReturn;
@@ -1871,7 +1871,7 @@ void DoMicrowaveObjectInfo (void)
 
 void DoGreaseObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	short			item;
 	Boolean			leaving, wasSpilled, doReturn;
@@ -1945,7 +1945,7 @@ void DoGreaseObjectInfo (void)
 
 void DoInvisBonusObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	short			item;
 	Boolean			leaving, doReturn;
@@ -2058,7 +2058,7 @@ void DoInvisBonusObjectInfo (void)
 
 void DoTransObjectInfo (short what)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr, roomStr, tempStr, objStr;
 	short			item, floor, suite;
 	Boolean			leaving, doLink, doGoTo, doReturn, wasState;
@@ -2181,7 +2181,7 @@ void DoTransObjectInfo (short what)
 
 void DoEnemyObjectInfo (short what)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	long			delay;
 	short			item, initial;
@@ -2291,7 +2291,7 @@ void DoEnemyObjectInfo (short what)
 
 void DoFlowerObjectInfo (void)
 {
-	DialogPtr		infoDial;
+	Dialog			*infoDial;
 	Str255			numberStr, kindStr;
 	short			item, flower;
 	Boolean			leaving, doReturn;

@@ -26,8 +26,8 @@ void UpdateMenusEditMode (void);
 void UpdateMenusNonEditMode (void);
 void UpdateMenusHouseOpen (void);
 void UpdateMenusHouseClosed (void);
-void UpdateResumeDialog (DialogPtr);
-Boolean ResumeFilter (DialogPtr, EventRecord *, short *);
+void UpdateResumeDialog (Dialog *);
+Boolean ResumeFilter (Dialog *, EventRecord *, short *);
 short QueryResumeGame (void);
 void HeyYourPissingAHighScore (void);
 
@@ -659,7 +659,7 @@ void UpdateCoordinateCheckmark (Boolean checkIt)
 //--------------------------------------------------------------  UpdateResumeDialog
 // Update function for Resume dialog (below).
 
-void UpdateResumeDialog (DialogPtr theDialog)
+void UpdateResumeDialog (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -668,7 +668,7 @@ void UpdateResumeDialog (DialogPtr theDialog)
 //--------------------------------------------------------------  ResumeFilter
 // Dialog filter for the Resume dialog (below).
 
-Boolean ResumeFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean ResumeFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -712,7 +712,7 @@ Boolean ResumeFilter (DialogPtr dial, EventRecord *event, short *item)
 short QueryResumeGame (void)
 {
 	#define			kResumeGameDial		1025
-	DialogPtr		theDial;
+	Dialog			*theDial;
 	houseType		*thisHousePtr;
 	Str255			scoreStr, glidStr;
 	long			hadPoints;

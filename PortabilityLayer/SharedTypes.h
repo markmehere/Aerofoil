@@ -26,6 +26,8 @@ struct Rect
 	bool IsValid() const;
 	Rect Intersect(const Rect &rect) const;
 	Rect MakeValid() const;
+	Rect operator-(const Point &point) const;
+	Rect operator+(const Point &point) const;
 
 	static Rect Create(int16_t top, int16_t left, int16_t bottom, int16_t right);
 	static Rect CreateFromPoints(const Point &topLeft, const Point &bottomRight);
@@ -150,6 +152,16 @@ inline Rect Rect::MakeValid() const
 		result.bottom = result.top;
 
 	return result;
+}
+
+inline Rect Rect::operator-(const Point &point) const
+{
+	return Rect::Create(this->top - point.v, this->left - point.h, this->bottom - point.v, this->right - point.h);
+}
+
+inline Rect Rect::operator+(const Point &point) const
+{
+	return Rect::Create(this->top + point.v, this->left + point.h, this->bottom + point.v, this->right + point.h);
 }
 
 inline Rect Rect::Create(int16_t top, int16_t left, int16_t bottom, int16_t right)

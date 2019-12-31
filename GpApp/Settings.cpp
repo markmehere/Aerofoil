@@ -59,29 +59,29 @@
 #define kDoBitchDlgsCheck		14
 
 
-void SetBrainsToDefaults (DialogPtr);
-void UpdateSettingsBrains (DialogPtr);
-Boolean BrainsFilter (DialogPtr, EventRecord *, short *);
+void SetBrainsToDefaults (Dialog *);
+void UpdateSettingsBrains (Dialog *);
+Boolean BrainsFilter (Dialog *, EventRecord *, short *);
 void DoBrainsPrefs (void);
-void SetControlsToDefaults (DialogPtr);
-void UpdateControlKeyName (DialogPtr);
-void UpdateSettingsControl (DialogPtr);
-Boolean ControlFilter (DialogPtr, EventRecord *, short *);
+void SetControlsToDefaults (Dialog *);
+void UpdateControlKeyName (Dialog *);
+void UpdateSettingsControl (Dialog *);
+Boolean ControlFilter (Dialog *, EventRecord *, short *);
 void DoControlPrefs (void);
-void SoundDefaults (DialogPtr);
-void UpdateSettingsSound (DialogPtr);
+void SoundDefaults (Dialog *);
+void UpdateSettingsSound (Dialog *);
 void HandleSoundMusicChange (short, Boolean);
-Boolean SoundFilter (DialogPtr, EventRecord *, short *);
+Boolean SoundFilter (Dialog *, EventRecord *, short *);
 void DoSoundPrefs (void);
 void DisplayDefaults (void);
-void FrameDisplayIcon (DialogPtr);
-void DisplayUpdate (DialogPtr);
-Boolean DisplayFilter (DialogPtr, EventRecord *, short *);
+void FrameDisplayIcon (Dialog *);
+void DisplayUpdate (Dialog *);
+Boolean DisplayFilter (Dialog *, EventRecord *, short *);
 void DoDisplayPrefs (void);
 void SetAllDefaults (void);
 void FlashSettingsButton (short);
-void UpdateSettingsMain (DialogPtr);
-Boolean PrefsFilter (DialogPtr, EventRecord *, short *);
+void UpdateSettingsMain (Dialog *);
+Boolean PrefsFilter (Dialog *, EventRecord *, short *);
 void BitchAboutChanges (void);
 
 
@@ -105,7 +105,7 @@ extern	Boolean		changeLockStateOfHouse, saveHouseLocked, doPrettyMap;
 //==============================================================  Functions
 //--------------------------------------------------------------  SetBrainsToDefaults
 
-void SetBrainsToDefaults (DialogPtr theDialog)
+void SetBrainsToDefaults (Dialog *theDialog)
 {
 	SetDialogNumToStr(theDialog, kMaxFilesItem, 24L);
 #ifdef powerc
@@ -130,7 +130,7 @@ void SetBrainsToDefaults (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateSettingsBrains
 
-void UpdateSettingsBrains (DialogPtr theDialog)
+void UpdateSettingsBrains (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -143,7 +143,7 @@ void UpdateSettingsBrains (DialogPtr theDialog)
 
 //--------------------------------------------------------------  BrainsFilter
 
-Boolean BrainsFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean BrainsFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -221,7 +221,7 @@ Boolean BrainsFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void DoBrainsPrefs (void)
 {
-	DialogPtr		prefDlg;
+	Dialog			*prefDlg;
 	long			tempLong;
 	short			itemHit, wasMaxFiles;
 	Boolean			leaving;
@@ -325,7 +325,7 @@ void DoBrainsPrefs (void)
 
 //--------------------------------------------------------------  SetControlsToDefaults
 
-void SetControlsToDefaults (DialogPtr theDialog)
+void SetControlsToDefaults (Dialog *theDialog)
 {
 	PasStringCopy(PSTR("lf arrow"), tempLeftStr);
 	PasStringCopy(PSTR("rt arrow"), tempRightStr);
@@ -342,7 +342,7 @@ void SetControlsToDefaults (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateControlKeyName
 
-void UpdateControlKeyName (DialogPtr theDialog)
+void UpdateControlKeyName (Dialog *theDialog)
 {
 	DrawDialogUserText(theDialog, kRightControl + 4, tempRightStr, whichCtrl == 0);
 	DrawDialogUserText(theDialog, kLeftControl + 4, tempLeftStr, whichCtrl == 1);
@@ -352,7 +352,7 @@ void UpdateControlKeyName (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateSettingsControl
 
-void UpdateSettingsControl (DialogPtr theDialog)
+void UpdateSettingsControl (Dialog *theDialog)
 {
 	short		i;
 	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
@@ -385,7 +385,7 @@ void UpdateSettingsControl (DialogPtr theDialog)
 
 //--------------------------------------------------------------  ControlFilter
 
-Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean ControlFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	intptr_t		wasKeyMap;
 	
@@ -508,7 +508,7 @@ Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void DoControlPrefs (void)
 {
-	DialogPtr		prefDlg;
+	Dialog			*prefDlg;
 	short			i, itemHit;
 	Boolean			leaving;
 	ModalFilterUPP	controlFilterUPP;
@@ -614,7 +614,7 @@ void DoControlPrefs (void)
 
 //--------------------------------------------------------------  SoundDefaults
 
-void SoundDefaults (DialogPtr theDialog)
+void SoundDefaults (Dialog *theDialog)
 {	
 	wasIdle = true;
 	wasPlay = true;
@@ -627,7 +627,7 @@ void SoundDefaults (DialogPtr theDialog)
 
 //--------------------------------------------------------------  UpdateSettingsSound
 
-void UpdateSettingsSound (DialogPtr theDialog)
+void UpdateSettingsSound (Dialog *theDialog)
 {
 	short		howLoudNow;
 	
@@ -676,7 +676,7 @@ void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 
 //--------------------------------------------------------------  SoundFilter
 
-Boolean SoundFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean SoundFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	short		newVolume;
 	
@@ -772,7 +772,7 @@ Boolean SoundFilter (DialogPtr dial, EventRecord *event, short *item)
 void DoSoundPrefs (void)
 {
 	Rect			tempRect;
-	DialogPtr		prefDlg;
+	Dialog			*prefDlg;
 	short			wasLoudness, tempVolume;
 	PLError_t			theErr;
 	short			itemHit;
@@ -907,7 +907,7 @@ void DisplayDefaults (void)
 
 //--------------------------------------------------------------  FrameDisplayIcon
 
-void FrameDisplayIcon (DialogPtr theDialog)
+void FrameDisplayIcon (Dialog *theDialog)
 {
 	Rect		theRect;
 	
@@ -941,7 +941,7 @@ void FrameDisplayIcon (DialogPtr theDialog)
 
 //--------------------------------------------------------------  DisplayUpdate
 
-void DisplayUpdate (DialogPtr theDialog)
+void DisplayUpdate (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -962,7 +962,7 @@ void DisplayUpdate (DialogPtr theDialog)
 
 //--------------------------------------------------------------  DisplayFilter
 
-Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean DisplayFilter (Dialog *dial, EventRecord *event, short *item)
 {	
 	switch (event->what)
 	{
@@ -1118,7 +1118,7 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void DoDisplayPrefs (void)
 {
-	DialogPtr		prefDlg;
+	Dialog			*prefDlg;
 	short			itemHit, wasNeighbors;
 	Boolean			leaving;
 	ModalFilterUPP	displayFilterUPP;
@@ -1297,7 +1297,7 @@ void FlashSettingsButton (short who)
 
 //--------------------------------------------------------------  UpdateSettingsMain
 
-void UpdateSettingsMain (DialogPtr theDialog)
+void UpdateSettingsMain (Dialog *theDialog)
 {
 	Str255		theStr;
 	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
@@ -1323,7 +1323,7 @@ void UpdateSettingsMain (DialogPtr theDialog)
 
 //--------------------------------------------------------------  PrefsFilter
 
-Boolean PrefsFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean PrefsFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	Point		testPt;
 	short		i;
@@ -1410,7 +1410,7 @@ Boolean PrefsFilter (DialogPtr dial, EventRecord *event, short *item)
 void DoSettingsMain (void)
 {
 	#define			kAllDefaultsButton		11
-	DialogPtr		prefDlg;
+	Dialog			*prefDlg;
 	short			itemHit;
 	Boolean			leaving;
 	ModalFilterUPP	prefsFilterUPP;

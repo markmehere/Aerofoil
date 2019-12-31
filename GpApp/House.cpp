@@ -21,8 +21,8 @@
 #define kGoToDialogID			1043
 
 
-void UpdateGoToDialog (DialogPtr);
-Boolean GoToFilter (DialogPtr, EventRecord *, short *);
+void UpdateGoToDialog (Dialog *);
+Boolean GoToFilter (Dialog *, EventRecord *, short *);
 
 
 houseHand	thisHouse;
@@ -593,7 +593,7 @@ void GenerateRetroLinks (void)
 //--------------------------------------------------------------  UpdateGoToDialog
 // Redraws the "Go To Room..." dialog.
 
-void UpdateGoToDialog (DialogPtr theDialog)
+void UpdateGoToDialog (Dialog *theDialog)
 {
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
@@ -603,7 +603,7 @@ void UpdateGoToDialog (DialogPtr theDialog)
 //--------------------------------------------------------------  GoToFilter
 // Dialog filter for the "Go To Room..." dialog.
 
-Boolean GoToFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	switch (event->what)
 	{
@@ -647,7 +647,7 @@ Boolean GoToFilter (DialogPtr dial, EventRecord *event, short *item)
  	#define			kGoToFSButt			4
  	#define			kFloorEditText		5
  	#define			kSuiteEditText		6
- 	DialogPtr		theDialog;
+	Dialog			*theDialog;
  	long			tempLong;
 	short			item, roomToGoTo;
 	Boolean			leaving, canceled;

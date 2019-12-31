@@ -186,6 +186,8 @@
     <ClInclude Include="PLAppleEvents.h" />
     <ClInclude Include="PLAppleEventsCommonTypes.h" />
     <ClInclude Include="PLApplication.h" />
+    <ClInclude Include="PLArrayView.h" />
+    <ClInclude Include="PLArrayViewIterator.h" />
     <ClInclude Include="PLBigEndian.h" />
     <ClInclude Include="PLControlDefinitions.h" />
     <ClInclude Include="PLCore.h" />

@@ -1,9 +1,8 @@
 #pragma once
 
-#ifndef __PL_PASCALSTR_H__
-#define __PL_PASCALSTR_H__
-
 #include "UnsafePascalStr.h"
+
+class PLPasStr;
 
 namespace PortabilityLayer
 {
@@ -13,10 +12,12 @@ namespace PortabilityLayer
 	public:
 		PascalStr();
 		PascalStr(size_t size, const char *str);
+		explicit PascalStr(const PLPasStr &pstr);
 	};
 }
 
 #include <string.h>
+#include "PLPasStr.h"
 
 namespace PortabilityLayer
 {
@@ -31,6 +32,10 @@ namespace PortabilityLayer
 		: UnsafePascalStr<TSize, true>(size, str)
 	{
 	}
-}
 
-#endif
+	template<size_t TSize>
+	PascalStr<TSize>::PascalStr(const PLPasStr &pstr)
+		: UnsafePascalStr<TSize, true>(pstr.Length(), pstr.Chars())
+	{
+	}
+}

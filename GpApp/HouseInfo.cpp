@@ -28,8 +28,8 @@
 
 
 long CountTotalHousePoints (void);
-void UpdateHouseInfoDialog (DialogPtr);
-Boolean HouseFilter (DialogPtr, EventRecord *, short *);
+void UpdateHouseInfoDialog (Dialog *);
+Boolean HouseFilter (Dialog *, EventRecord *, short *);
 Boolean WarnLockingHouse (void);
 void HowToZeroScores (void);
 
@@ -103,7 +103,7 @@ long CountTotalHousePoints (void)
 
 //--------------------------------------------------------------  UpdateHouseInfoDialog
 
-void UpdateHouseInfoDialog (DialogPtr theDialog)
+void UpdateHouseInfoDialog (Dialog *theDialog)
 {
 	short		nChars;
 	
@@ -119,7 +119,7 @@ void UpdateHouseInfoDialog (DialogPtr theDialog)
 
 //--------------------------------------------------------------  HouseFilter
 
-Boolean HouseFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	Point		mouseIs;
 	short		nChars;
@@ -202,7 +202,7 @@ Boolean HouseFilter (DialogPtr dial, EventRecord *event, short *item)
 
 void DoHouseInfo (void)
 {
-	DialogPtr		houseInfoDialog;
+	Dialog			*houseInfoDialog;
 	Str255			versStr, loVers, nRoomsStr;
 	long			h, v;
 	short			item, numRooms, version;

@@ -39,10 +39,10 @@
 #define kMaxExtraHouses			8
 
 
-void UpdateLoadDialog (DialogPtr);
-void PageUpHouses (DialogPtr);
-void PageDownHouses (DialogPtr);
-Boolean LoadFilter (DialogPtr, EventRecord *, short *);
+void UpdateLoadDialog (Dialog *);
+void PageUpHouses (Dialog *);
+void PageDownHouses (Dialog *);
+Boolean LoadFilter (Dialog *, EventRecord *, short *);
 void SortHouseList (void);
 void DoDirSearch (void);
 
@@ -63,7 +63,7 @@ extern	UInt32			doubleTime;
 //--------------------------------------------------------------  UpdateLoadWindow
 
 #ifndef COMPILEDEMO
-void UpdateLoadDialog (DialogPtr theDialog)
+void UpdateLoadDialog (Dialog *theDialog)
 {
 	Rect		tempRect, dialogRect, dummyRect;
 	short		houseStart, houseStop, i, wasResFile, isResFile, count;
@@ -138,7 +138,7 @@ void UpdateLoadDialog (DialogPtr theDialog)
 //--------------------------------------------------------------  PageUpHouses
 
 #ifndef COMPILEDEMO
-void PageUpHouses (DialogPtr theDial)
+void PageUpHouses (Dialog *theDial)
 {
 	Rect		tempRect;
 	DrawSurface	*surface = theDial->GetWindow()->GetDrawSurface();
@@ -172,7 +172,7 @@ void PageUpHouses (DialogPtr theDial)
 //--------------------------------------------------------------  PageDownHouses
 
 #ifndef COMPILEDEMO
-void PageDownHouses (DialogPtr theDial)
+void PageDownHouses (Dialog *theDial)
 {
 	Rect		tempRect;
 	DrawSurface	*surface = theDial->GetWindow()->GetDrawSurface();
@@ -205,7 +205,7 @@ void PageDownHouses (DialogPtr theDial)
 //--------------------------------------------------------------  LoadFilter
 #ifndef COMPILEDEMO
 
-Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
+Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
 {
 	short		screenCount, i, wasIndex;
 	
@@ -364,7 +364,7 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 void DoLoadHouse (void)
 {
 	Rect			tempRect;
-	DialogPtr		theDial;
+	Dialog			*theDial;
 	short			i, item, wasIndex, screenCount;
 	Boolean			leaving, whoCares;
 	ModalFilterUPP	loadFilterUPP;

@@ -4,19 +4,22 @@
 
 #include "PLCore.h"
 
+template<class T>
+class ArrayView;
+
 class PLPasStr;
 struct Control;
+
+struct DialogItem
+{
+	virtual Rect GetRect() const = 0;
+};
 
 struct Dialog
 {
 	virtual void Destroy() = 0;
 	virtual Window *GetWindow() const = 0;
-};
-
-struct DialogTemplate
-{
-	// FIXME: Audit
-	Rect boundsRect;
+	virtual ArrayView<DialogItem*const> GetItems() const = 0;
 };
 
 enum TEMode
@@ -24,33 +27,28 @@ enum TEMode
 	teCenter
 };
 
-typedef Dialog *DialogPtr;
+typedef Boolean(*ModalFilterUPP)(Dialog *dial, EventRecord *event, short *item);
 
-typedef THandle<DialogTemplate> DialogTHndl;
+void DrawDialog(Dialog *dialog);
+DrawSurface *GetDialogPort(Dialog *dialog);
 
-
-typedef Boolean(*ModalFilterUPP)(DialogPtr dial, EventRecord *event, short *item);
-
-void DrawDialog(DialogPtr dialog);
-DrawSurface *GetDialogPort(DialogPtr dialog);
-
-void GetDialogItem(DialogPtr dialog, int index, short *itemType, THandle<Control> *itemHandle, Rect *itemRect);
+void GetDialogItem(Dialog *dialog, int index, short *itemType, THandle<Control> *itemHandle, Rect *itemRect);
 void GetDialogItemText(THandle<Control> handle, StringPtr str);
 
-void SetDialogItem(DialogPtr dialog, int index, short itemType, THandle<Control> itemHandle, const Rect *itemRect);
+void SetDialogItem(Dialog *dialog, int index, short itemType, THandle<Control> itemHandle, const Rect *itemRect);
 void SetDialogItemText(THandle<Control> handle, const PLPasStr &str);
 
-void SelectDialogItemText(DialogPtr dialog, int item, int firstSelChar, int lastSelCharExclusive);
+void SelectDialogItemText(Dialog *dialog, int item, int firstSelChar, int lastSelCharExclusive);
 
 ModalFilterUPP NewModalFilterUPP(ModalFilterUPP func);
 
 void ModalDialog(ModalFilterUPP filter, short *item);
 
-void DisposeDialog(DialogPtr dialog);
+void DisposeDialog(Dialog *dialog);
 void DisposeModalFilterUPP(ModalFilterUPP upp);
 
-void ShowDialogItem(DialogPtr dialog, int item);
-void HideDialogItem(DialogPtr dialog, int item);
+void ShowDialogItem(Dialog *dialog, int item);
+void HideDialogItem(Dialog *dialog, int item);
 
 void TETextBox(const PLPasStr &str, short len, const Rect *rect, TEMode teMode);
 

@@ -54,6 +54,7 @@ struct DrawSurface final
 	void FillRect(const Rect &rect);
 	void FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern);
 	void FrameRect(const Rect &rect);
+	void FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight);
 	void InvertFrameRect(const Rect &rect, const uint8_t *pattern);
 	void InvertFillRect(const Rect &rect, const uint8_t *pattern);
 

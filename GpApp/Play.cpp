@@ -247,7 +247,7 @@ void NewGame (short mode)
 	}
 	NilSavedMaps();
 	SetPortWindowPort(mainWindow);
-	BlackenScoreboard(mainWindow->GetDrawSurface());
+
 	UpdateMenus(false);
 	
 	if (!gameOver)

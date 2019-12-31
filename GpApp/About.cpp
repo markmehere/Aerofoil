@@ -21,8 +21,8 @@
 
 static void HiLiteOkayButton (DrawSurface *surface);
 static void UnHiLiteOkayButton (DrawSurface *surface);
-static void UpdateMainPict (DialogPtr);
-static Boolean AboutFilter (DialogPtr, EventRecord *theEvent, short *hit);
+static void UpdateMainPict (Dialog *);
+static Boolean AboutFilter (Dialog *, EventRecord *theEvent, short *hit);
 
 
 static PortabilityLayer::ScanlineMask	*okayButtScanlineMask;
@@ -40,7 +40,7 @@ void DoAbout (void)
 	#define			kTextItemVers			2		// item number of version text
 	#define			kPictItemMain			4		// item number of main PICT
 	
-	DialogPtr		aboutDialog;
+	Dialog			*aboutDialog;
 	Str255			longVersion;
 	StringPtr		messagePtr;
 	VersRecHndl		version;
@@ -143,7 +143,7 @@ static void UnHiLiteOkayButton (DrawSurface *surface)
 //--------------------------------------------------------------  UpdateMainPict
 // Redraws the main graphic in the dialog (in response to an update event).
 
-static void UpdateMainPict (DialogPtr theDial)
+static void UpdateMainPict (Dialog *theDial)
 {
 	Str255		theStr, theStr2;
 	uint64_t	freeMemory;
@@ -175,7 +175,7 @@ static void UpdateMainPict (DialogPtr theDial)
 //--------------------------------------------------------------  AboutFilter
 // Dialog filter for the About dialog.
 
-static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit)
+static Boolean AboutFilter (Dialog *theDial, EventRecord *theEvent, short *hit)
 {
 	Point		mousePt;
 	UInt32		dummyLong;
