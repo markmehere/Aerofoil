@@ -9,6 +9,7 @@
 #include "PLResources.h"
 #include "PLSound.h"
 #include "Externs.h"
+#include "MemoryManager.h"
 #include "SoundSync.h"
 #include "VirtualDirectory.h"
 
@@ -17,17 +18,16 @@
 #define kMaxSounds					64
 
 
-void CallBack0 (SndChannelPtr, SndCommand *);
-void CallBack1 (SndChannelPtr, SndCommand *);
-void CallBack2 (SndChannelPtr, SndCommand *);
+void CallBack0 (PortabilityLayer::AudioChannel *);
+void CallBack1 (PortabilityLayer::AudioChannel *);
+void CallBack2 (PortabilityLayer::AudioChannel *);
 PLError_t LoadBufferSounds (void);
 void DumpBufferSounds (void);
 PLError_t OpenSoundChannels (void);
-PLError_t CloseSoundChannels (void);
+void CloseSoundChannels (void);
 
 
-SndCallBackUPP		callBack0UPP, callBack1UPP, callBack2UPP;
-SndChannelPtr		channel0, channel1, channel2;
+PortabilityLayer::AudioChannel *channel0, *channel1, *channel2;
 Ptr					theSoundData[kMaxSounds];
 short				numSoundsLoaded;
 Boolean				soundLoaded[kMaxSounds], dontLoadSounds;
@@ -76,129 +76,95 @@ void PlayPrioritySound (short which, short priority)
 
 void FlushAnyTriggerPlaying (void)
 {
-	SndCommand	theCommand;
-	PLError_t		theErr;
-
 	SoundSyncState ss = SoundSync_ReadAll();
 	
 	if (ss.priority0 == kTriggerPriority)
 	{
-		theCommand.cmd = quietCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoImmediate(channel0, &theCommand);
-		theCommand.cmd = flushCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoImmediate(channel0, &theCommand);
+		channel0->ClearAllCommands();
+		channel0->Stop();
 	}
 	
 	if (ss.priority1 == kTriggerPriority)
 	{
-		theCommand.cmd = quietCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoImmediate(channel1, &theCommand);
-		theCommand.cmd = flushCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoImmediate(channel1, &theCommand);
+		channel1->ClearAllCommands();
+		channel1->Stop();
 	}
 	
 	if (ss.priority2 == kTriggerPriority)
 	{
-		theCommand.cmd = quietCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoImmediate(channel2, &theCommand);
-		theCommand.cmd = flushCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoImmediate(channel2, &theCommand);
-	}
-}
-
-//--------------------------------------------------------------  PlaySound0
-
-void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPriority, short newPriority)
-{
-	SndCommand	theCommand;
-	PLError_t		theErr;
-	
-	if (failedSound || dontLoadSounds)
-		return;
-
-	SndChannelPtr channel = nil;
-	switch (channelIndex)
-	{
-	case 0:
-		channel = channel0;
-		break;
-	case 1:
-		channel = channel2;
-		break;
-	case 2:
-		channel = channel2;
-		break;
-	default:
-		return;
-	}
-
-	theErr = PLErrors::kNone;
-	if (isSoundOn)
-	{
-		if (oldPriority != 0)
-		{
-			// Flush the queue and stop the channel, which will remove the pending callback
-			theCommand.cmd = flushCmd;
-			theCommand.param1 = 0;
-			theCommand.param2 = 0;
-			theErr = SndDoImmediate(channel, &theCommand);
-
-			theCommand.cmd = quietCmd;
-			theCommand.param1 = 0;
-			theCommand.param2 = 0;
-			theErr = SndDoImmediate(channel, &theCommand);
-
-			SoundSync_ClearPriority(channelIndex);
-		}
-
-		SoundSync_PutPriority(channelIndex, newPriority);
-
-		theCommand.cmd = bufferCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theSoundData[soundID]);
-		theErr = SndDoCommand(channel, &theCommand, true);
-		
-		theCommand.cmd = callBackCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoCommand(channel, &theCommand, true);
-
-		if (theErr != PLErrors::kNone)
-			SoundSync_ClearPriority(channelIndex);
+		channel2->ClearAllCommands();
+		channel2->Stop();
 	}
 }
 
 //--------------------------------------------------------------  CallBack0
 
-void CallBack0 (SndChannelPtr theChannel, SndCommand *theCommand)
+void CallBack0(PortabilityLayer::AudioChannel *theChannel)
 {
 	SoundSync_ClearPriority(0);
 }
 
 //--------------------------------------------------------------  CallBack1
 
-void CallBack1 (SndChannelPtr theChannel, SndCommand *theCommand)
+void CallBack1(PortabilityLayer::AudioChannel *theChannel)
 {
 	SoundSync_ClearPriority(1);
 }
 
 //--------------------------------------------------------------  CallBack2
 
-void CallBack2 (SndChannelPtr theChannel, SndCommand *theCommand)
+void CallBack2(PortabilityLayer::AudioChannel *theChannel)
 {
 	SoundSync_ClearPriority(2);
+}
+
+//--------------------------------------------------------------  PlaySound0
+
+void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPriority, short newPriority)
+{	
+	if (failedSound || dontLoadSounds)
+		return;
+
+	PortabilityLayer::AudioChannel *channel = nil;
+	PortabilityLayer::AudioChannelCallback_t callback = nil;
+
+	switch (channelIndex)
+	{
+	case 0:
+		channel = channel0;
+		callback = CallBack0;
+		break;
+	case 1:
+		channel = channel1;
+		callback = CallBack1;
+		break;
+	case 2:
+		channel = channel2;
+		callback = CallBack2;
+		break;
+	default:
+		return;
+	}
+
+	if (isSoundOn)
+	{
+		if (oldPriority != 0)
+		{
+			// Flush the queue and stop the channel, which will remove the pending callback
+			channel->ClearAllCommands();
+			channel->Stop();
+
+			SoundSync_ClearPriority(channelIndex);
+		}
+
+		SoundSync_PutPriority(channelIndex, newPriority);
+
+		bool succeeded = channel->AddBuffer(theSoundData[soundID], false);
+		succeeded &= channel->AddCallback(callback, false);
+		
+		if (!succeeded)
+			SoundSync_ClearPriority(channelIndex);
+	}
 }
 
 //--------------------------------------------------------------  LoadTriggerSound
@@ -225,7 +191,7 @@ PLError_t LoadTriggerSound (short soundID)
 		else
 		{
 			soundDataSize = GetHandleSize(theSound) - 20L;
-			theSoundData[kMaxSounds - 1] = NewPtr(soundDataSize);
+			theSoundData[kMaxSounds - 1] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
 			if (theSoundData[kMaxSounds - 1] == nil)
 			{
 				theSound.Dispose();
@@ -247,7 +213,7 @@ PLError_t LoadTriggerSound (short soundID)
 void DumpTriggerSound (void)
 {
 	if (theSoundData[kMaxSounds - 1] != nil)
-		DisposePtr(theSoundData[kMaxSounds - 1]);
+		PortabilityLayer::MemoryManager::GetInstance()->Release(theSoundData[kMaxSounds - 1]);
 	theSoundData[kMaxSounds - 1] = nil;
 }
 
@@ -270,7 +236,7 @@ PLError_t LoadBufferSounds (void)
 		
 		soundDataSize = GetHandleSize(theSound) - 20L;
 		
-		theSoundData[i] = NewPtr(soundDataSize);
+		theSoundData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
 		if (theSoundData[i] == nil)
 			return (PLErrors::kOutOfMemory);
 		
@@ -292,7 +258,7 @@ void DumpBufferSounds (void)
 	for (i = 0; i < kMaxSounds; i++)
 	{
 		if (theSoundData[i] != nil)
-			DisposePtr(theSoundData[i]);
+			PortabilityLayer::MemoryManager::GetInstance()->Release(theSoundData[i]);
 		theSoundData[i] = nil;
 	}
 }
@@ -301,73 +267,50 @@ void DumpBufferSounds (void)
 
 PLError_t OpenSoundChannels (void)
 {
-	PLError_t		theErr;
-	
-	callBack0UPP = NewSndCallBackProc(CallBack0);
-	callBack1UPP = NewSndCallBackProc(CallBack1);
-	callBack2UPP = NewSndCallBackProc(CallBack2);
-	
-	theErr = PLErrors::kNone;
-	
 	if (channelOpen)
-		return (theErr);
+		return PLErrors::kAudioError;
 	
-	theErr = SndNewChannel(&channel0, 
-			sampledSynth, initNoInterp + initMono, 
-			(SndCallBackUPP)callBack0UPP);
-	if (theErr == PLErrors::kNone)
+	channel0 = PortabilityLayer::SoundSystem::GetInstance()->CreateChannel();
+	if (channel0)
 		channelOpen = true;
 	else
-		return (theErr);
-	
-	theErr = SndNewChannel(&channel1, 
-			sampledSynth, initNoInterp + initMono, 
-			(SndCallBackUPP)callBack1UPP);
-	if (theErr == PLErrors::kNone)
+		return PLErrors::kAudioError;
+
+	channel1 = PortabilityLayer::SoundSystem::GetInstance()->CreateChannel();
+	if (channel1)
 		channelOpen = true;
 	else
-		return (theErr);
-	
-	theErr = SndNewChannel(&channel2, 
-			sampledSynth, initNoInterp + initMono, 
-			(SndCallBackUPP)callBack2UPP);
-	if (theErr == PLErrors::kNone)
+		return PLErrors::kAudioError;
+
+	channel2 = PortabilityLayer::SoundSystem::GetInstance()->CreateChannel();
+	if (channel2)
 		channelOpen = true;
+	else
+		return PLErrors::kAudioError;
 	
-	return (theErr);
+	return PLErrors::kNone;
 }
 
 //--------------------------------------------------------------  CloseSoundChannels
 
-PLError_t CloseSoundChannels (void)
+void CloseSoundChannels (void)
 {
-	PLError_t		theErr;
-	
-	theErr = PLErrors::kNone;
-	
 	if (!channelOpen)
-		return (theErr);
+		return;
 	
 	if (channel0 != nil)
-		theErr = SndDisposeChannel(channel0, true);
+		channel0->Destroy(false);
 	channel0 = nil;
 	
 	if (channel1 != nil)
-		theErr = SndDisposeChannel(channel1, true);
+		channel1->Destroy(false);
 	channel1 = nil;
 	
 	if (channel2 != nil)
-		theErr = SndDisposeChannel(channel2, true);
+		channel2->Destroy(false);
 	channel2 = nil;
-	
-	if (theErr == PLErrors::kNone)
-		channelOpen = false;
-	
-	DisposeSndCallBackUPP(callBack0UPP);
-	DisposeSndCallBackUPP(callBack1UPP);
-	DisposeSndCallBackUPP(callBack2UPP);
-	
-	return (theErr);
+
+	channelOpen = false;
 }
 
 //--------------------------------------------------------------  InitSound
@@ -411,13 +354,11 @@ void InitSound (void)
 
 void KillSound (void)
 {
-	PLError_t		theErr;
-	
 	if (dontLoadSounds)
 		return;
 	
 	DumpBufferSounds();
-	theErr = CloseSoundChannels();
+	CloseSoundChannels();
 }
 
 //--------------------------------------------------------------  SoundBytesNeeded

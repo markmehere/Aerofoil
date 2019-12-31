@@ -194,7 +194,6 @@
     <ClInclude Include="PLDialogs.h" />
     <ClInclude Include="PLErrorCodes.h" />
     <ClInclude Include="PLEventQueue.h" />
-    <ClInclude Include="PLFolders.h" />
     <ClInclude Include="PLHacks.h" />
     <ClInclude Include="PLHandle.h" />
     <ClInclude Include="PLKeyEncoding.h" />

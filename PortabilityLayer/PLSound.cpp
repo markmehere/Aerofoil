@@ -12,25 +12,53 @@
 
 namespace PortabilityLayer
 {
-	class AudioChannelImpl : public SndChannel, public ClientAudioChannelContext
+	namespace AudioCommandTypes
+	{
+		enum AudioCommandType
+		{
+			kBuffer,
+			kCallback,
+		};
+	}
+
+	typedef AudioCommandTypes::AudioCommandType AudioCommandType_t;
+
+	struct AudioCommand
+	{
+		union AudioCommandParam
+		{
+			const void *m_ptr;
+			AudioChannelCallback_t m_callback;
+		};
+
+		AudioCommandType_t m_commandType;
+		AudioCommandParam m_param;
+	};
+
+	class AudioChannelImpl final : public AudioChannel, public ClientAudioChannelContext
 	{
 	public:
-		explicit AudioChannelImpl(PortabilityLayer::HostAudioChannel *channel, SndCallBackUPP callback, HostThreadEvent *threadEvent, HostMutex *mutex);
+		explicit AudioChannelImpl(PortabilityLayer::HostAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex);
 		~AudioChannelImpl();
 
-		bool PushCommand(const SndCommand &command, bool blocking);
-		void ClearAllCommands();
-		void Stop();
+		void Destroy(bool wait) override;
+		bool AddBuffer(const void *smBuffer, bool blocking) override;
+		bool AddCallback(AudioChannelCallback_t callback, bool blocking) override;
+		void ClearAllCommands() override;
+		void Stop() override;
 
 		void NotifyBufferFinished() override;
 
 	private:
+		bool PushCommand(const AudioCommand &command, bool blocking);
+
 		enum WorkingState
 		{
 			State_Idle,				// No thread is playing sound, the sound thread is out of work
 			State_PlayingAsync,		// Sound thread is playing sound.  When it finishes, it will digest queue events under a lock.
 			State_PlayingBlocked,	// Sound thread is playing sound.  When it finishes, it will transition to Idle and fire the thread event.
 			State_FlushStarting,	// Sound thread is aborting.  When it aborts, it will transition to Idle and fire the thread event.
+			State_ShuttingDown,		// Sound thread is shutting down.  When it finishes, it will transition to idle and fire the thread event.
 		};
 
 		static const unsigned int kMaxQueuedCommands = 64;
@@ -39,12 +67,12 @@ namespace PortabilityLayer
 		void DigestBufferCommand(const void *dataPointer);
 
 		PortabilityLayer::HostAudioChannel *m_audioChannel;
-		SndCallBackUPP m_callback;
+		;
 
 		HostMutex *m_mutex;
 		HostThreadEvent *m_threadEvent;
 
-		SndCommand m_commandQueue[kMaxQueuedCommands];
+		AudioCommand m_commandQueue[kMaxQueuedCommands];
 		size_t m_numQueuedCommands;
 		size_t m_nextInsertCommandPos;
 		size_t m_nextDequeueCommandPos;
@@ -52,9 +80,8 @@ namespace PortabilityLayer
 		bool m_isIdle;
 	};
 
-	AudioChannelImpl::AudioChannelImpl(PortabilityLayer::HostAudioChannel *channel, SndCallBackUPP callback, HostThreadEvent *threadEvent, HostMutex *mutex)
+	AudioChannelImpl::AudioChannelImpl(PortabilityLayer::HostAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex)
 		: m_audioChannel(channel)
-		, m_callback(callback)
 		, m_threadEvent(threadEvent)
 		, m_mutex(mutex)
 		, m_nextInsertCommandPos(0)
@@ -81,13 +108,59 @@ namespace PortabilityLayer
 			m_state = State_Idle;
 			DigestQueueItems();
 		}
-		else if (m_state == State_PlayingBlocked || m_state == State_FlushStarting)
+		else if (m_state == State_PlayingBlocked || m_state == State_FlushStarting || m_state == State_ShuttingDown)
 		{
 			m_state = State_Idle;
 			m_threadEvent->Signal();
 		}
 
 		m_mutex->Unlock();
+	}
+
+	void AudioChannelImpl::Destroy(bool wait)
+	{
+		ClearAllCommands();
+
+		if (!wait)
+			Stop();
+		else
+		{
+			m_mutex->Lock();
+
+			if (m_state == State_PlayingAsync)
+			{
+				m_state = State_ShuttingDown;
+				m_mutex->Unlock();
+
+				m_threadEvent->Wait();
+			}
+			else
+			{
+				assert(m_state == State_Idle);
+				m_mutex->Unlock();
+			}
+		}
+
+		this->~AudioChannelImpl();
+		PortabilityLayer::MemoryManager::GetInstance()->Release(this);
+	}
+
+	bool AudioChannelImpl::AddBuffer(const void *smBuffer, bool blocking)
+	{
+		AudioCommand cmd;
+		cmd.m_commandType = AudioCommandTypes::kBuffer;
+		cmd.m_param.m_ptr = smBuffer;
+
+		return this->PushCommand(cmd, blocking);
+	}
+
+	bool AudioChannelImpl::AddCallback(AudioChannelCallback_t callback, bool blocking)
+	{
+		AudioCommand cmd;
+		cmd.m_commandType = AudioCommandTypes::kCallback;
+		cmd.m_param.m_ptr = callback;
+
+		return this->PushCommand(cmd, blocking);
 	}
 
 	void AudioChannelImpl::DigestQueueItems()
@@ -98,29 +171,22 @@ namespace PortabilityLayer
 
 		while (m_numQueuedCommands > 0)
 		{
-			const SndCommand &command = m_commandQueue[m_nextDequeueCommandPos];
+			const AudioCommand &command = m_commandQueue[m_nextDequeueCommandPos];
 			m_numQueuedCommands--;
 			m_nextDequeueCommandPos = (m_nextDequeueCommandPos + 1) % static_cast<size_t>(kMaxQueuedCommands);
 
-			switch (command.cmd)
+			switch (command.m_commandType)
 			{
-			case nullCmd:
-				break;
-			case bufferCmd:
-				DigestBufferCommand(reinterpret_cast<const void*>(command.param2));
+			case AudioCommandTypes::kBuffer:
+				DigestBufferCommand(command.m_param.m_ptr);
 				assert(m_state == State_PlayingAsync);
 				m_mutex->Unlock();
 				return;
-			case callBackCmd:
-				{
-					SndCommand commandCopy = command;
-					m_callback(this, &commandCopy);
-				}
+			case AudioCommandTypes::kCallback:
+				command.m_param.m_callback(this);
 				break;
 			default:
-			case flushCmd:
-			case quietCmd:
-				assert(false);	// These shouldn't be in the queue
+				assert(false);
 				break;
 			}
 		}
@@ -152,14 +218,14 @@ namespace PortabilityLayer
 		m_state = State_PlayingAsync;
 	}
 
-	bool AudioChannelImpl::PushCommand(const SndCommand &command, bool failIfFull)
+	bool AudioChannelImpl::PushCommand(const AudioCommand &command, bool blocking)
 	{
 		bool digestOnThisThread = false;
 
 		m_mutex->Lock();
 		if (m_numQueuedCommands == kMaxQueuedCommands)
 		{
-			if (failIfFull)
+			if (!blocking)
 			{
 				m_mutex->Unlock();
 				return false;
@@ -250,98 +316,78 @@ PLError_t SetDefaultOutputVolume(long vol)
 }
 
 
-SndCallBackUPP NewSndCallBackProc(SndCallBackProc callback)
+namespace PortabilityLayer
 {
-	return callback;
-}
-
-void DisposeSndCallBackUPP(SndCallBackUPP upp)
-{
-}
-
-PLError_t SndNewChannel(SndChannelPtr *outChannel, SndSynthType synthType, int initFlags, SndCallBackUPP callback)
-{
-	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
-	void *storage = mm->Alloc(sizeof(PortabilityLayer::AudioChannelImpl));
-	if (!storage)
-		return PLErrors::kOutOfMemory;
-
-	PortabilityLayer::HostAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
-	PortabilityLayer::HostAudioChannel *audioChannel = audioDriver->CreateChannel();
-	if (!audioChannel)
+	class SoundSystemImpl final : public SoundSystem
 	{
-		mm->Release(storage);
-		return PLErrors::kAudioError;
+	public:
+		AudioChannel *CreateChannel() override;
+
+		void SetVolume(uint8_t vol) override;
+		uint8_t GetVolume() const override;
+
+		static SoundSystemImpl *GetInstance();
+
+	private:
+		static SoundSystemImpl ms_instance;
+	};
+
+	AudioChannel *SoundSystemImpl::CreateChannel()
+	{
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+		void *storage = mm->Alloc(sizeof(PortabilityLayer::AudioChannelImpl));
+		if (!storage)
+			return nullptr;
+
+		PortabilityLayer::HostAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
+		PortabilityLayer::HostAudioChannel *audioChannel = audioDriver->CreateChannel();
+		if (!audioChannel)
+		{
+			mm->Release(storage);
+			return nullptr;
+		}
+
+		PortabilityLayer::HostMutex *mutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
+		if (!mutex)
+		{
+			audioChannel->Destroy();
+			mm->Release(storage);
+			return nullptr;
+		}
+
+		PortabilityLayer::HostThreadEvent *threadEvent = PortabilityLayer::HostSystemServices::GetInstance()->CreateThreadEvent(true, false);
+		if (!threadEvent)
+		{
+			mutex->Destroy();
+			audioChannel->Destroy();
+			mm->Release(storage);
+			return nullptr;
+		}
+
+		return new (storage) PortabilityLayer::AudioChannelImpl(audioChannel, threadEvent, mutex);
 	}
 
-	PortabilityLayer::HostMutex *mutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
-	if (!mutex)
+
+	void SoundSystemImpl::SetVolume(uint8_t vol)
 	{
-		audioChannel->Destroy();
-		mm->Release(storage);
-		return PLErrors::kAudioError;
+		PL_NotYetImplemented_TODO("Volume");
 	}
 
-	PortabilityLayer::HostThreadEvent *threadEvent = PortabilityLayer::HostSystemServices::GetInstance()->CreateThreadEvent(true, false);
-	if (!threadEvent)
+	uint8_t SoundSystemImpl::GetVolume() const
 	{
-		mutex->Destroy();
-		audioChannel->Destroy();
-		mm->Release(storage);
-		return PLErrors::kAudioError;
+		PL_NotYetImplemented_TODO("Volume");
+		return 255;
 	}
 
-	*outChannel = new (storage) PortabilityLayer::AudioChannelImpl(audioChannel, callback, threadEvent, mutex);
-	
-	return PLErrors::kNone;
-}
-
-PLError_t SndDisposeChannel(SndChannelPtr channel, Boolean flush)
-{
-	if (flush)
+	SoundSystemImpl *SoundSystemImpl::GetInstance()
 	{
-		SndCommand cmd;
-		cmd.cmd = flushCmd;
-		cmd.param1 = cmd.param2 = 0;
-
-		SndDoImmediate(channel, &cmd);
-
-		cmd.cmd = quietCmd;
-		cmd.param1 = cmd.param2 = 0;
-		SndDoImmediate(channel, &cmd);
+		return &ms_instance;
 	}
 
-	PortabilityLayer::AudioChannelImpl *audioChannelImpl = static_cast<PortabilityLayer::AudioChannelImpl*>(channel);
-	audioChannelImpl->~AudioChannelImpl();
+	SoundSystemImpl SoundSystemImpl::ms_instance;
 
-	PortabilityLayer::MemoryManager::GetInstance()->Release(audioChannelImpl);
-
-	return PLErrors::kNone;
-}
-
-PLError_t SndDoCommand(SndChannelPtr channel, const SndCommand *command, Boolean failIfFull)
-{
-	PortabilityLayer::AudioChannelImpl *audioChannelImpl = static_cast<PortabilityLayer::AudioChannelImpl*>(channel);
-
-	if (!audioChannelImpl->PushCommand(*command, failIfFull == 0))
-		return PLErrors::kAudioError;
-
-	return PLErrors::kNone;
-}
-
-PLError_t SndDoImmediate(SndChannelPtr channel, const SndCommand *command)
-{
-	PortabilityLayer::AudioChannelImpl *audioChannelImpl = static_cast<PortabilityLayer::AudioChannelImpl*>(channel);
-
-	if (command->cmd == flushCmd)
-		audioChannelImpl->ClearAllCommands();
-	else if (command->cmd == quietCmd)
-		audioChannelImpl->Stop();
-	else
+	SoundSystem *SoundSystem::GetInstance()
 	{
-		assert(false);
-		return PLErrors::kAudioError;
+		return SoundSystemImpl::GetInstance();
 	}
-
-	return PLErrors::kNone;
 }

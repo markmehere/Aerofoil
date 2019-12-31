@@ -123,9 +123,6 @@
     <ClInclude Include="PLTextUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLFolders.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -511,8 +511,8 @@ void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 	
 //	if (hasSM3)
 //	{
-		theErr = GetDefaultOutputVolume(&longVol);
-		*volume = LoWord(longVol) / 0x0024;
+		longVol = PortabilityLayer::SoundSystem::GetInstance()->GetVolume();
+		*volume = longVol / 0x0024;
 //	}
 //	else
 //		GetSoundVol(volume);
@@ -530,7 +530,6 @@ void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 void  UnivSetSoundVolume (short volume, Boolean hasSM3)
 {
 	long		longVol;
-	PLError_t		theErr;
 	
 	if (volume > 7)
 		volume = 7;
@@ -542,8 +541,8 @@ void  UnivSetSoundVolume (short volume, Boolean hasSM3)
 		longVol = (long)volume * 0x0025;
 		if (longVol > 0x00000100)
 			longVol = 0x00000100;
-		longVol = longVol + (longVol << 16);
-		theErr = SetDefaultOutputVolume(longVol);
+
+		PortabilityLayer::SoundSystem::GetInstance()->SetVolume(longVol);
 //	}
 //	else
 //		SetSoundVol(volume);

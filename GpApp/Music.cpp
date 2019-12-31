@@ -14,6 +14,7 @@
 #include "SoundSync.h"
 #include "HostMutex.h"
 #include "HostSystemServices.h"
+#include "MemoryManager.h"
 
 
 #define kBaseBufferMusicID			2000
@@ -22,15 +23,14 @@
 #define kLastGamePiece				6
 
 
-void MusicCallBack (SndChannelPtr, SndCommand *);
+void MusicCallBack (PortabilityLayer::AudioChannel *channel);
 PLError_t LoadMusicSounds (void);
 PLError_t DumpMusicSounds (void);
 PLError_t OpenMusicChannel (void);
 PLError_t CloseMusicChannel (void);
 
 
-SndCallBackUPP	musicCallBackUPP;
-SndChannelPtr	musicChannel;
+PortabilityLayer::AudioChannel	*musicChannel;
 Ptr				theMusicData[kMaxMusic];
 short			musicScore[kLastMusicPiece];
 short			gameScore[kLastGamePiece];
@@ -56,7 +56,6 @@ extern	Boolean		isSoundOn;
 
 PLError_t StartMusic (void)
 {
-	SndCommand	theCommand;
 	PLError_t		theErr;
 	short		soundVolume;
 	
@@ -72,37 +71,16 @@ PLError_t StartMusic (void)
 	
 	if ((soundVolume != 0) && (!failedMusic))
 	{
-		theCommand.cmd = bufferCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theMusicData[musicState.musicSoundID]);
-		theErr = SndDoCommand(musicChannel, &theCommand, false);
-		if (theErr != PLErrors::kNone)
-			return (theErr);
-		
-		// GP: No idea what "1964" means
-		theCommand.cmd = nullCmd;
-		theCommand.param1 = 1964;
-		theCommand.param2 = 0;
-		theErr = SndDoCommand(musicChannel, &theCommand, false);
-		if (theErr != PLErrors::kNone)
-			return (theErr);
-		
+		musicChannel->AddBuffer(theMusicData[musicState.musicSoundID], true);
+
+		// Don't need to lock here because the callback should not trigger until queued
 		musicState.musicCursor++;
 		if (musicState.musicCursor >= kLastMusicPiece)
 			musicState.musicCursor = 0;
 		musicState.musicSoundID = musicScore[musicState.musicCursor];
-		
-		theCommand.cmd = bufferCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = (intptr_t)(theMusicData[musicState.musicSoundID]);
-		theErr = SndDoCommand(musicChannel, &theCommand, false);
-		if (theErr != PLErrors::kNone)
-			return (theErr);
-		
-		theCommand.cmd = callBackCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0;
-		theErr = SndDoCommand(musicChannel, &theCommand, false);
+
+		musicChannel->AddBuffer(theMusicData[musicState.musicSoundID], true);
+		musicChannel->AddCallback(MusicCallBack, true);
 		
 		isMusicOn = true;
 	}
@@ -114,7 +92,6 @@ PLError_t StartMusic (void)
 
 void StopTheMusic (void)
 {
-	SndCommand	theCommand;
 	PLError_t		theErr;
 	
 	if (dontLoadMusic)
@@ -123,15 +100,8 @@ void StopTheMusic (void)
 	theErr = PLErrors::kNone;
 	if ((isMusicOn) && (!failedMusic))
 	{
-		theCommand.cmd = flushCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0L;
-		theErr = SndDoImmediate(musicChannel, &theCommand);
-		
-		theCommand.cmd = quietCmd;
-		theCommand.param1 = 0;
-		theCommand.param2 = 0L;
-		theErr = SndDoImmediate(musicChannel, &theCommand);
+		musicChannel->ClearAllCommands();
+		musicChannel->Stop();
 		
 		isMusicOn = false;
 	}
@@ -186,12 +156,9 @@ void SetMusicalMode (short newMode)
 
 //--------------------------------------------------------------  MusicCallBack
 
-void MusicCallBack (SndChannelPtr theChannel, SndCommand *theCommand)
+void MusicCallBack (PortabilityLayer::AudioChannel *theChannel)
 {
 	PLError_t		theErr;
-	
-//	gameA5 = theCommand.param2;
-//	thisA5 = SetA5(gameA5);
 
 	musicMutex->Lock();
 	switch (musicState.musicMode)
@@ -222,16 +189,9 @@ void MusicCallBack (SndChannelPtr theChannel, SndCommand *theCommand)
 
 	short musicSoundID = musicState.musicSoundID;
 	musicMutex->Unlock();
-	
-	theCommand->cmd = bufferCmd;
-	theCommand->param1 = 0;
-	theCommand->param2 = (intptr_t)(theMusicData[musicSoundID]);
-	theErr = SndDoCommand(musicChannel, theCommand, false);
-	
-	theCommand->cmd = callBackCmd;
-	theCommand->param1 = 0;
-	theCommand->param2 = 0;
-	theErr = SndDoCommand(musicChannel, theCommand, false);
+
+	theChannel->AddBuffer(theMusicData[musicSoundID], true);
+	theChannel->AddCallback(MusicCallBack, true);
 }
 
 //--------------------------------------------------------------  LoadMusicSounds
@@ -256,7 +216,7 @@ PLError_t LoadMusicSounds (void)
 		
 		soundDataSize = GetHandleSize(theSound) - 20L;
 
-		theMusicData[i] = NewPtr(soundDataSize);
+		theMusicData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
 		if (theMusicData[i] == nil)
 			return PLErrors::kOutOfMemory;
 
@@ -278,7 +238,7 @@ PLError_t DumpMusicSounds (void)
 	for (i = 0; i < kMaxMusic; i++)
 	{
 		if (theMusicData[i] != nil)
-			DisposePtr(theMusicData[i]);
+			PortabilityLayer::MemoryManager::GetInstance()->Release(theMusicData[i]);
 		theMusicData[i] = nil;
 	}
 	
@@ -291,18 +251,16 @@ PLError_t OpenMusicChannel (void)
 {
 	PLError_t		theErr;
 	
-	musicCallBackUPP = NewSndCallBackProc(MusicCallBack);
-	
 	theErr = PLErrors::kNone;
 	
 	if (musicChannel != nil)
 		return (theErr);
 	
-	musicChannel = nil;
-	theErr = SndNewChannel(&musicChannel, 
-			sampledSynth, initNoInterp + initMono, 
-			(SndCallBackUPP)musicCallBackUPP);
-	
+	musicChannel = PortabilityLayer::SoundSystem::GetInstance()->CreateChannel();
+
+	if (musicChannel == nil)
+		theErr = PLErrors::kAudioError;
+
 	return (theErr);
 }
 
@@ -315,10 +273,8 @@ PLError_t CloseMusicChannel (void)
 	theErr = PLErrors::kNone;
 	
 	if (musicChannel != nil)
-		theErr = SndDisposeChannel(musicChannel, true);
+		musicChannel->Destroy(false);
 	musicChannel = nil;
-	
-	DisposeSndCallBackUPP(musicCallBackUPP);
 	
 	return (theErr);
 }
