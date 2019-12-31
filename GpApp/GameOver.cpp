@@ -7,7 +7,9 @@
 
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
+#include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FontManager.h"
@@ -138,8 +140,8 @@ void SetUpFinalScreen (void)
 void DoGameOverStarAnimation (void)
 {
 	#define		kStarFalls	8
-	EventRecord	theEvent;
-	KeyMap		theKeys;
+	TimeTaggedVOSEvent	theEvent;
+	KeyDownStates		theKeys;
 	Rect		angelDest;
 	long		nextLoop;
 	short		which, i, count, pass;
@@ -213,9 +215,12 @@ void DoGameOverStarAnimation (void)
 			GetKeys(theKeys);
 			if ((BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift))))
 				noInteruption = false;
-			if (GetNextEvent(everyEvent, &theEvent))
-				if ((theEvent.what == mouseDown) || (theEvent.what == keyDown))
+
+			if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
+			{
+				if (theEvent.IsLMouseDownEvent() || theEvent.IsKeyDownEvent())
 					noInteruption = false;
+			}
 
 			Delay(1, nullptr);
 		}
@@ -436,10 +441,10 @@ void DrawPages (void)
 
 void DoDiedGameOver (void)
 {
-	EventRecord	theEvent;
-	KeyMap		theKeys;
-	long		nextLoop;
-	Boolean		userAborted;
+	TimeTaggedVOSEvent	theEvent;
+	KeyDownStates		theKeys;
+	long				nextLoop;
+	Boolean				userAborted;
 	
 	userAborted = false;
 	InitDiedGameOver();
@@ -460,12 +465,15 @@ void DoDiedGameOver (void)
 				pagesStuck = 8;
 				userAborted = true;
 			}
-			if (GetNextEvent(everyEvent, &theEvent))
-				if ((theEvent.what == mouseDown) || (theEvent.what == keyDown))
+
+			if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
+			{
+				if (theEvent.IsLMouseDownEvent() || theEvent.IsKeyDownEvent())
 				{
 					pagesStuck = 8;
 					userAborted = true;
 				}
+			}
 
 			Delay(1, nullptr);
 		}

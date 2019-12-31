@@ -4,14 +4,16 @@
 
 #include <stdint.h>
 
+struct TimeTaggedVOSEvent;
+
 namespace PortabilityLayer
 {
 	class EventQueue
 	{
 	public:
-		virtual bool Dequeue(EventRecord *evt) = 0;
-		virtual const EventRecord *Peek() const = 0;
-		virtual EventRecord *Enqueue() = 0;
+		virtual bool Dequeue(TimeTaggedVOSEvent *evt) = 0;
+		virtual const TimeTaggedVOSEvent *Peek() const = 0;
+		virtual TimeTaggedVOSEvent *Enqueue() = 0;
 
 		static EventQueue *GetInstance();
 	};

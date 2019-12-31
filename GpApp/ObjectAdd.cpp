@@ -48,7 +48,7 @@ short		wasFlower;
 
 Boolean AddNewObject (Point where, short what, Boolean showItNow)
 {
-	KeyMap		theseKeys;
+	KeyDownStates		theseKeys;
 	Rect		srcRect, newRect;
 	short		direction, dist;
 	Boolean		handled, drawWholeRoom;

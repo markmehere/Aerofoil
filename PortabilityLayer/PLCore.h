@@ -14,6 +14,8 @@
 #endif
 
 struct IGpColorCursor;
+struct GpVOSEvent;
+struct TimeTaggedVOSEvent;
 
 namespace PortabilityLayer
 {
@@ -177,7 +179,7 @@ typedef THandle<VersionRecord> VersRecHndl;
 
 typedef WindowPtr WindowRef;	// wtf?
 
-struct KeyMap;
+struct KeyDownStates;
 
 enum RegionID
 {
@@ -277,18 +279,15 @@ void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront);
 void ShowWindow(WindowPtr window);
 void SetWTitle(WindowPtr window, const PLPasStr &title);
 
-bool PeekNextEvent(int32_t eventMask, EventRecord *event);
-bool GetNextEvent(int32_t eventMask, EventRecord *event);
-
 long MenuSelect(Point point);	// Breaks into menu select routine (in practice we'll just forward one from the queue?)
 
 long MenuKey(int charCode);
 long TickCount();
-void GetKeys(KeyMap &keyMap);
+void GetKeys(KeyDownStates &keyMap);
 
 short LoWord(Int32 v);
 short HiWord(Int32 v);
-bool BitTst(const KeyMap &keyMap, int bit);
+bool BitTst(const KeyDownStates &keyMap, int bit);
 
 void NumToString(long number, unsigned char *str);
 void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c);
@@ -338,11 +337,9 @@ void *NewPtr(Size size);
 void *NewPtrClear(Size size);
 void DisposePtr(void *ptr);
 
-void PurgeSpace(long *totalFree, long *contiguousFree);
-
 void BlockMove(const void *src, void *dest, Size size);
 
-Boolean WaitNextEvent(int eventMask, EventRecord *eventOut, long sleep, void *unknown);
+bool WaitForEvent(TimeTaggedVOSEvent *evt, uint32_t ticks);
 
 void DrawControls(WindowPtr window);
 void DrawGrowIcon(WindowPtr window);

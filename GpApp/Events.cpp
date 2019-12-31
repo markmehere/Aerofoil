@@ -8,6 +8,7 @@
 
 #include "PLAppleEvents.h"
 #include "PLKeyEncoding.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "PLToolUtils.h"
 #include "PLQDraw.h"
 #include "Externs.h"
@@ -17,8 +18,8 @@
 
 
 short BitchAboutColorDepth (void);
-void HandleMouseEvent (EventRecord *);
-void HandleKeyEvent (EventRecord *);
+void HandleMouseEvent (const GpMouseInputEvent &, uint32_t);
+void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent &);
 void HandleUpdateEvent (EventRecord *);
 void HandleOSEvent (EventRecord *);
 void HandleHighLevelEvent (EventRecord *);
@@ -59,24 +60,25 @@ short BitchAboutColorDepth (void)
 //--------------------------------------------------------------  HandleMouseEvent
 // Handle a mouse click event.
 
-void HandleMouseEvent (EventRecord *theEvent)
+void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 {
 	WindowPtr	whichWindow;
 	long		menuChoice, newSize;
 	short		thePart, hDelta, vDelta;
 	Boolean		isDoubleClick;
+	Point		evtPoint = Point::Create(theEvent.m_x, theEvent.m_y);
 	
-	thePart = FindWindow(theEvent->where, &whichWindow);
+	thePart = FindWindow(evtPoint, &whichWindow);
 	
 	switch (thePart)
 	{
 		case inMenuBar:
-		menuChoice = MenuSelect(theEvent->where);
+		menuChoice = MenuSelect(evtPoint);
 		DoMenuChoice(menuChoice);
 		break;
 		
 		case inDrag:
-		DragWindow(whichWindow, theEvent->where, &thisMac.screen);
+		DragWindow(whichWindow, evtPoint, &thisMac.screen);
 		if (whichWindow == mainWindow)
 		{
 			SendBehind(mainWindow, (WindowPtr)0L);
@@ -94,7 +96,7 @@ void HandleMouseEvent (EventRecord *theEvent)
 		break;
 		
 		case inGoAway:
-		if (TrackGoAway(whichWindow,theEvent->where))
+		if (TrackGoAway(whichWindow, evtPoint))
 		{
 			if (whichWindow == mapWindow)
 				ToggleMapWindow();
@@ -110,43 +112,43 @@ void HandleMouseEvent (EventRecord *theEvent)
 		case inGrow:
 		if (whichWindow == mapWindow)
 		{
-			newSize = GrowWindow(mapWindow, theEvent->where, &thisMac.gray);
+			newSize = GrowWindow(mapWindow, evtPoint, &thisMac.gray);
 			ResizeMapWindow(LoWord(newSize), HiWord(newSize));
 		}
 		break;
 		
 		case inZoomIn:
 		case inZoomOut:
-		if (TrackBox(whichWindow, theEvent->where, thePart))
+		if (TrackBox(whichWindow, evtPoint, thePart))
 			ZoomWindow(whichWindow, thePart, true);
 		break;
 		
 		case inContent:
 		if (whichWindow == mainWindow)
 		{
-			hDelta = theEvent->where.h - lastWhere.h;
+			hDelta = evtPoint.h - lastWhere.h;
 			if (hDelta < 0)
 				hDelta = -hDelta;
-			vDelta = theEvent->where.v - lastWhere.v;
+			vDelta = evtPoint.v - lastWhere.v;
 			if (vDelta < 0)
 				vDelta = -vDelta;
-			if (((theEvent->when - lastUp) < doubleTime) && (hDelta < 5) && 
+			if (((tick - lastUp) < doubleTime) && (hDelta < 5) &&
 					(vDelta < 5))
 				isDoubleClick = true;
 			else
 			{
 				isDoubleClick = false;
-				lastUp = theEvent->when;
-				lastWhere = theEvent->where;
+				lastUp = tick;
+				lastWhere = evtPoint;
 			}
-			HandleMainClick(theEvent->where, isDoubleClick);
+			HandleMainClick(evtPoint, isDoubleClick);
 		}
 		else if (whichWindow == mapWindow)
 			HandleMapClick(theEvent);
 		else if (whichWindow == toolsWindow)
-			HandleToolsClick(theEvent->where);
+			HandleToolsClick(evtPoint);
 		else if (whichWindow == linkWindow)
-			HandleLinkClick(theEvent->where);
+			HandleLinkClick(evtPoint);
 		break;
 		
 		default:
@@ -157,15 +159,12 @@ void HandleMouseEvent (EventRecord *theEvent)
 //--------------------------------------------------------------  HandleKeyEvent
 // Handle a key-down event.
 
-void HandleKeyEvent (EventRecord *theEvent)
+void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent &theEvent)
 {
-	intptr_t	theChar;
-	Boolean		shiftDown, commandDown, optionDown;
-	
-	theChar = theEvent->message;
-	shiftDown = ((theEvent->modifiers & shiftKey) != 0);
-	commandDown = ((theEvent->modifiers & cmdKey) != 0);
-	optionDown = ((theEvent->modifiers & optionKey) != 0);
+	const intptr_t theChar = PackVOSKeyCode(theEvent);
+	const bool shiftDown = BitTst(keyStates, PL_KEY_EITHER_SPECIAL(kShift));
+	const bool commandDown = BitTst(keyStates, PL_KEY_EITHER_SPECIAL(kControl));
+	const bool optionDown = BitTst(keyStates, PL_KEY_EITHER_SPECIAL(kAlt));
 	
 	if ((commandDown) && (!optionDown))
 		DoMenuChoice(MenuKey(static_cast<int>(theChar)));
@@ -324,6 +323,7 @@ void HandleKeyEvent (EventRecord *theEvent)
 //--------------------------------------------------------------  HandleUpdateEvent
 // Handle an update event.
 
+#if 0
 void HandleUpdateEvent (EventRecord *theEvent)
 {	
 	if ((WindowPtr)theEvent->message == mainWindow)
@@ -431,6 +431,7 @@ void HandleHighLevelEvent (EventRecord *theEvent)
 	if ((theErr != PLErrors::kNone) && (theErr != errAEEventNotHandled))
 		YellowAlert(kYellowAppleEventErr, theErr);
 }
+#endif
 
 //--------------------------------------------------------------  HandleIdleTask
 // Handle some processing during event lulls.
@@ -457,10 +458,10 @@ void HandleIdleTask (void)
 
 void HandleEvent (void)
 {
-	KeyMap		eventKeys;
-	EventRecord	theEvent;
-	long		sleep = 2;
-	Boolean		itHappened = true;
+	KeyDownStates		eventKeys;
+	TimeTaggedVOSEvent	theEvent;
+	uint32_t			sleep = 2;
+	bool				itHappened = true;
 	
 	GetKeys(eventKeys);
 	if ((BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kControl))) && 
@@ -475,39 +476,32 @@ void HandleEvent (void)
 		SelectTool(kSelectTool);
 	}
 
-	// GP: Use WaitNextEvent to yield to the host
-	//if (thisMac.hasWNE)
-		itHappened = WaitNextEvent(everyEvent, &theEvent, sleep, nil);
-	//else
-	//{
-	//	//		SystemTask();
-	//	itHappened = GetNextEvent(everyEvent, &theEvent);
-	//}
+	itHappened = WaitForEvent(&theEvent, sleep);
 	
 	if (itHappened)
 	{
-		switch (theEvent.what)
+		if (theEvent.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 		{
-			case mouseDown:
-			HandleMouseEvent(&theEvent);
-			break;
-			
-			case keyDown:
-			case autoKey:
-			HandleKeyEvent(&theEvent);
-			break;
-			
-			case updateEvt:
-			HandleUpdateEvent(&theEvent);
-			break;
-			
-			case osEvt:
-			HandleOSEvent(&theEvent);
-			break;
-			
-			case kHighLevelEvent:
-			HandleHighLevelEvent(&theEvent);
-			break;
+			switch (theEvent.m_vosEvent.m_event.m_mouseInputEvent.m_eventType)
+			{
+			case GpMouseEventTypes::kDown:
+				HandleMouseEvent(theEvent.m_vosEvent.m_event.m_mouseInputEvent, theEvent.m_timestamp);
+				break;
+			default:
+				break;
+			}
+		}
+		else if (theEvent.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
+		{
+			switch (theEvent.m_vosEvent.m_event.m_keyboardInputEvent.m_eventType)
+			{
+			case GpKeyboardInputEventTypes::kDown:
+			case GpKeyboardInputEventTypes::kAuto:
+				HandleKeyEvent(eventKeys, theEvent.m_vosEvent.m_event.m_keyboardInputEvent);
+				break;
+			default:
+				break;
+			}
 		}
 	}
 	else

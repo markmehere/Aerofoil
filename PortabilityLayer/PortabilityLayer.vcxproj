@@ -203,6 +203,7 @@
     <ClInclude Include="MenuManager.h" />
     <ClInclude Include="PlotDirection.h" />
     <ClInclude Include="PLStandardColors.h" />
+    <ClInclude Include="PLTimeTaggedVOSEvent.h" />
     <ClInclude Include="ResolvedColor.h" />
     <ClInclude Include="ScanlineMaskBuilder.h" />
     <ClInclude Include="ScanlineMaskConverter.h" />
@@ -308,6 +309,7 @@
     <ClCompile Include="PLSound.cpp" />
     <ClCompile Include="PLStandardColors.cpp" />
     <ClCompile Include="PLStringCompare.cpp" />
+    <ClCompile Include="PLTimeTaggedVOSEvent.cpp" />
     <ClCompile Include="ScanlineMask.cpp" />
     <ClCompile Include="ScanlineMaskBuilder.cpp" />
     <ClCompile Include="ScanlineMaskConverter.cpp" />

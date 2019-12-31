@@ -159,6 +159,8 @@ void UpdateMainWindow (void)
 		
 		DrawOnSplash(mainWindow->GetDrawSurface());
 	}
+
+	mainWindow->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	
 	splashDrawn = true;
 }
@@ -370,7 +372,7 @@ void UpdateEditWindowTitle (void)
 
 void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 {
-	KeyMap		theseKeys;
+	KeyDownStates		theseKeys;
 	
 	if ((theMode != kEditMode) || (mainWindow == nil) || 
 			(!houseUnlocked))

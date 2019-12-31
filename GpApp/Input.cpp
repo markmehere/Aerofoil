@@ -31,7 +31,7 @@ Boolean QuerySaveGame (void);
 
 
 demoPtr		demoData;
-KeyMap		theKeys;
+KeyDownStates		theKeys;
 Dialog		*saveDial;
 short		demoIndex, batteryFrame;
 Boolean		isEscPauseKey, paused, batteryWasEngaged;

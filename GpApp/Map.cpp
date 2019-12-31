@@ -554,7 +554,7 @@ void LiveVScrollAction (ControlHandle theControl, short thePart)
 
 //--------------------------------------------------------------  HandleMapClick
 
-void HandleMapClick (EventRecord *theEvent)
+void HandleMapClick (const GpMouseInputEvent &theEvent)
 {
 #ifndef COMPILEDEMO
 	Rect				aRoom;
@@ -565,7 +565,7 @@ void HandleMapClick (EventRecord *theEvent)
 	short				roomH, roomV, itsNumber;
 	ControlActionUPP	scrollHActionUPP, scrollVActionUPP;
 	
-	wherePt = theEvent->where;
+	wherePt = Point::Create(theEvent.m_x, theEvent.m_y);
 	
 	scrollHActionUPP = NewControlActionUPP(LiveHScrollAction);
 	scrollVActionUPP = NewControlActionUPP(LiveVScrollAction);

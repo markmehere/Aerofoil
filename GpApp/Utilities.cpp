@@ -4,11 +4,13 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+#include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
 #include "PLPasStr.h"
 #include "PLResources.h"
 #include "PLSound.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "Externs.h"
 #include "Utilities.h"
 
@@ -372,10 +374,10 @@ long LongSquareRoot (long theNumber)
 
 Boolean WaitForInputEvent (short seconds)
 {
-	EventRecord	theEvent;
-	KeyMap		theKeys;
-	long		timeToBail;
-	Boolean		waiting, didResume;
+	TimeTaggedVOSEvent	theEvent;
+	KeyDownStates		theKeys;
+	long				timeToBail;
+	Boolean				waiting, didResume;
 	
 	timeToBail = TickCount() + 60L * (long)seconds;
 	FlushEvents(everyEvent, 0);
@@ -387,22 +389,11 @@ Boolean WaitForInputEvent (short seconds)
 		GetKeys(theKeys);
 		if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)) || BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt)) || BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift)))
 			waiting = false;
-		if (GetNextEvent(everyEvent, &theEvent))
+
+		if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
 		{
-			if ((theEvent.what == mouseDown) || (theEvent.what == keyDown))
+			if (theEvent.IsLMouseDownEvent() || theEvent.IsKeyDownEvent())
 				waiting = false;
-			else if ((theEvent.what == osEvt) && (theEvent.message & 0x01000000)) 
-			{
-				if (theEvent.message & 0x00000001)		// resuming
-				{
-					didResume = true;
-					waiting = false;
-				}
-				else									// suspending
-				{
-					InitCursor();
-				}
-			}
 		}
 		if ((seconds != -1) && (TickCount() >= timeToBail))
 			waiting = false;
@@ -419,7 +410,7 @@ Boolean WaitForInputEvent (short seconds)
 
 void WaitCommandQReleased (void)
 {
-	KeyMap		theKeys;
+	KeyDownStates		theKeys;
 	Boolean		waiting;
 	
 	waiting = true;
@@ -469,7 +460,7 @@ void GetKeyName (intptr_t message, StringPtr theName)
 
 Boolean OptionKeyDown (void)
 {
-	KeyMap		theKeys;
+	KeyDownStates		theKeys;
 	
 	GetKeys(theKeys);
 	if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt)))

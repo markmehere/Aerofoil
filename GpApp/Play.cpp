@@ -35,7 +35,6 @@ typedef struct
 void InitGlider (gliderPtr, short);
 void SetHouseToFirstRoom (void);
 void SetHouseToSavedRoom (void);
-void HandlePlayEvent (void);
 void PlayGame (void);
 void HandleRoomVisitation (void);
 void SetObjectsToDefaults (void);
@@ -364,48 +363,6 @@ void SetHouseToSavedRoom (void)
 	ForceThisRoom(smallGame.roomNumber);
 }
 
-//--------------------------------------------------------------  HandlePlayEvent
-
-void HandlePlayEvent (void)
-{
-	EventRecord	theEvent;
-	GrafPtr		wasPort;
-	long		sleep = 2;
-	
-	if (WaitNextEvent(everyEvent, &theEvent, sleep, nil))
-	{
-		if ((theEvent.what == updateEvt) && 
-				((WindowPtr)theEvent.message == mainWindow))
-		{
-			GetPort(&wasPort);
-			SetPortWindowPort(mainWindow);
-			CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-					GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-					&justRoomsRect, &justRoomsRect, srcCopy);
-			RefreshScoreboard(kNormalTitleMode);
-			EndUpdate(mainWindow);
-			SetPort(wasPort);
-		}
-		else if ((theEvent.what == osEvt) && (theEvent.message & 0x01000000))
-		{
-			if (theEvent.message & 0x00000001)	// resume event
-			{
-				switchedOut = false;
-				ToggleMusicWhilePlaying();
-				HideCursor();
-//				HideMenuBarOld();	// TEMP
-			}
-			else								// suspend event
-			{
-				InitCursor();
-				switchedOut = true;
-				ToggleMusicWhilePlaying();
-//				ShowMenuBarOld();		// TEMP replace with Carbon calls
-			}
-		}
-	}
-}
-
 //--------------------------------------------------------------  PlayGame
 
 void PlayGame (void)
@@ -417,10 +374,7 @@ void PlayGame (void)
 		
 		if (doBackground)
 		{
-			do
-			{
-				HandlePlayEvent();
-			} while (switchedOut);
+			Delay(2, nil);
 		}
 		
 		HandleTelephone();

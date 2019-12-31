@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+struct GpMouseInputEvent;
 
 //--------------------------------------------------------------  Prototypes
 
@@ -163,7 +164,7 @@ void ResizeMapWindow (SInt16, SInt16);
 void OpenMapWindow (void);
 void CloseMapWindow (void);
 void ToggleMapWindow (void);
-void HandleMapClick (EventRecord *);
+void HandleMapClick (const GpMouseInputEvent &);
 void MoveRoom (Point);
 
 void DoMarquee (void);									// --- Marquee.c

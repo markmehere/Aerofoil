@@ -2683,7 +2683,7 @@ void DrawThisRoomsObjects (void)
 void HiliteAllObjects (void)
 {
 #ifndef COMPILEDEMO
-	KeyMap		theseKeys;
+	KeyDownStates		theseKeys;
 	short		i;
 	Pattern		dummyPattern;
 	

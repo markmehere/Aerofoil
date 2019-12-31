@@ -1,4 +1,5 @@
 #include "PLEventQueue.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 #include <stdint.h>
 
@@ -10,16 +11,16 @@ namespace PortabilityLayer
 		EventQueueImpl();
 		~EventQueueImpl();
 
-		bool Dequeue(EventRecord *evt) override;
-		const EventRecord *Peek() const override;
-		EventRecord *Enqueue() override;
+		bool Dequeue(TimeTaggedVOSEvent *evt) override;
+		const TimeTaggedVOSEvent *Peek() const override;
+		TimeTaggedVOSEvent *Enqueue() override;
 
 		static EventQueueImpl *GetInstance();
 
 	private:
 		static const size_t kMaxEvents = 10000;
 
-		EventRecord m_events[kMaxEvents];
+		TimeTaggedVOSEvent m_events[kMaxEvents];
 		size_t m_firstEvent;
 		size_t m_numQueuedEvents;
 
@@ -36,7 +37,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool EventQueueImpl::Dequeue(EventRecord *evt)
+	bool EventQueueImpl::Dequeue(TimeTaggedVOSEvent *evt)
 	{
 		if (m_numQueuedEvents == 0)
 			return false;
@@ -53,7 +54,7 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	const EventRecord *EventQueueImpl::Peek() const
+	const TimeTaggedVOSEvent *EventQueueImpl::Peek() const
 	{
 		if (m_numQueuedEvents == 0)
 			return nullptr;
@@ -62,7 +63,7 @@ namespace PortabilityLayer
 	}
 
 
-	EventRecord *EventQueueImpl::Enqueue()
+	TimeTaggedVOSEvent *EventQueueImpl::Enqueue()
 	{
 		if (m_numQueuedEvents == kMaxEvents)
 			return nullptr;
@@ -73,8 +74,8 @@ namespace PortabilityLayer
 
 		m_numQueuedEvents++;
 
-		EventRecord *evt = m_events + nextEvent;
-		memset(evt, 0, sizeof(EventRecord));
+		TimeTaggedVOSEvent *evt = m_events + nextEvent;
+		memset(evt, 0, sizeof(TimeTaggedVOSEvent));
 
 		return evt;
 	}

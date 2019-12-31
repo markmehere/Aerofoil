@@ -168,12 +168,6 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		if (EventRecord *evt = PortabilityLayer::EventQueue::GetInstance()->Enqueue())
-		{
-			evt->what = updateEvt;
-			evt->message = reinterpret_cast<intptr_t>(static_cast<Window*>(window));
-		}
-
 		return window;
 	}
 
@@ -312,12 +306,6 @@ namespace PortabilityLayer
 	void WindowManagerImpl::ResizeWindow(Window *window, int width, int height)
 	{
 		static_cast<WindowImpl*>(window)->Resize(width, height);
-
-		if (EventRecord *evt = PortabilityLayer::EventQueue::GetInstance()->Enqueue())
-		{
-			evt->what = updateEvt;
-			evt->message = reinterpret_cast<intptr_t>(window);
-		}
 	}
 
 	void WindowManagerImpl::MoveWindow(Window *window, int x, int y)

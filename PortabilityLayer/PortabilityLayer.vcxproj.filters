@@ -408,6 +408,9 @@
     <ClInclude Include="PLArrayViewIterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PLTimeTaggedVOSEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -615,6 +618,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLStandardColors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLTimeTaggedVOSEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

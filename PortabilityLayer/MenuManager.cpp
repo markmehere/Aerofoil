@@ -12,6 +12,7 @@
 #include "PLCore.h"
 #include "PLPasStr.h"
 #include "PLResources.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "PLQDOffscreen.h"
 #include "RenderedFont.h"
 #include "QDGraf.h"
@@ -463,23 +464,28 @@ namespace PortabilityLayer
 			return;
 		}
 
-		EventRecord evt;
+		TimeTaggedVOSEvent evt;
 		bool canDismiss = false;
 		while (!canDismiss)
 		{
-			if (WaitNextEvent(everyEvent, &evt, 1, nullptr))
+			if (WaitForEvent(&evt, 1))
 			{
-				const EventCode eventCode = static_cast<EventCode>(evt.what);
-
-				switch (eventCode)
+				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 				{
-				case mouseMove:
-				case mouseDown:	// It's possible to get a mouse down event again if the mouse leaves the window and is downed again inside
-					ProcessMouseMoveTo(PortabilityLayer::Vec2i(evt.where.h, evt.where.v));
-					break;
-				case mouseUp:
-					canDismiss = true;
-					break;
+					switch (evt.m_vosEvent.m_event.m_mouseInputEvent.m_eventType)
+					{
+					case GpMouseEventTypes::kMove:
+						ProcessMouseMoveTo(PortabilityLayer::Vec2i(evt.m_vosEvent.m_event.m_mouseInputEvent.m_x, evt.m_vosEvent.m_event.m_mouseInputEvent.m_y));
+						break;
+					case GpMouseEventTypes::kDown:
+						if (evt.m_vosEvent.m_event.m_mouseInputEvent.m_button == GpMouseButtons::kLeft)
+							ProcessMouseMoveTo(PortabilityLayer::Vec2i(evt.m_vosEvent.m_event.m_mouseInputEvent.m_x, evt.m_vosEvent.m_event.m_mouseInputEvent.m_y));
+						break;
+					case GpMouseEventTypes::kUp:
+						if (evt.m_vosEvent.m_event.m_mouseInputEvent.m_button == GpMouseButtons::kLeft)
+							canDismiss = true;
+						break;
+					}
 				}
 			}
 		}

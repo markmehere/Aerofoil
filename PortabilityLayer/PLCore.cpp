@@ -33,6 +33,7 @@
 #include "PLBigEndian.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "QDManager.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
@@ -64,37 +65,25 @@ static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 	return true;
 }
 
-static void TranslateMouseInputEvent(const GpMouseInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
+static void TranslateMouseInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
+	const GpMouseInputEvent &vosEvent = vosEventBase.m_event.m_mouseInputEvent;
+
+	bool requeue = false;
 	if (vosEvent.m_button == GpMouseButtons::kLeft)
 	{
 		if (vosEvent.m_eventType == GpMouseEventTypes::kDown)
-		{
-			if (EventRecord *evt = queue->Enqueue())
-			{
-				evt->what = mouseDown;
-				evt->where.h = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_x));
-				evt->where.v = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_y));
-			}
-		}
+			requeue = true;
 		else if (vosEvent.m_eventType == GpMouseEventTypes::kUp)
-		{
-			if (EventRecord *evt = queue->Enqueue())
-			{
-				evt->what = mouseUp;
-				evt->where.h = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_x));
-				evt->where.v = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_y));
-			}
-		}
+			requeue = true;
 	}
 	else if (vosEvent.m_eventType == GpMouseEventTypes::kMove)
+		requeue = true;
+
+	if (requeue)
 	{
-		if (EventRecord *evt = queue->Enqueue())
-		{
-			evt->what = mouseMove;
-			evt->where.h = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_x));
-			evt->where.v = std::min<int32_t>(INT16_MAX, std::max<int32_t>(INT16_MIN, vosEvent.m_y));
-		}
+		if (TimeTaggedVOSEvent *evt = queue->Enqueue())
+			*evt = TimeTaggedVOSEvent::Create(vosEventBase, timestamp);
 	}
 }
 
@@ -107,8 +96,10 @@ static void TranslateGamepadInputEvent(const GpGamepadInputEvent &vosEvent, Port
 	PL_DEAD(queue);
 }
 
-static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)
+static void TranslateKeyboardInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
+	const GpKeyboardInputEvent &vosEvent = vosEventBase.m_event.m_keyboardInputEvent;
+
 	PL_STATIC_ASSERT((1 << PL_INPUT_PLAYER_INDEX_BITS) >= PL_INPUT_MAX_PLAYERS);
 	PL_STATIC_ASSERT((1 << PL_INPUT_TYPE_CODE_BITS) >= KeyEventType_Count);
 
@@ -117,74 +108,51 @@ static void TranslateKeyboardInputEvent(const GpKeyboardInputEvent &vosEvent, Po
 	if (vosEvent.m_eventType == GpKeyboardInputEventTypes::kUp || vosEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
 		inputManager->ApplyKeyboardEvent(vosEvent);
 
-	intptr_t msg = 0;
+	if (TimeTaggedVOSEvent *evt = queue->Enqueue())
+		*evt = TimeTaggedVOSEvent::Create(vosEventBase, timestamp);
+}
 
+intptr_t PackVOSKeyCode(const GpKeyboardInputEvent &vosEvent)
+{
 	switch (vosEvent.m_keyIDSubset)
 	{
 	case GpKeyIDSubsets::kASCII:
-		msg = PL_KEY_ASCII(vosEvent.m_key.m_asciiChar);
-		break;
+		return PL_KEY_ASCII(vosEvent.m_key.m_asciiChar);
 	case GpKeyIDSubsets::kFKey:
-		msg = PL_KEY_FKEY(vosEvent.m_key.m_fKey);
-		break;
+		return PL_KEY_FKEY(vosEvent.m_key.m_fKey);
 	case GpKeyIDSubsets::kNumPadNumber:
-		msg = PL_KEY_NUMPAD_NUMBER(vosEvent.m_key.m_numPadNumber);
-		break;
+		return PL_KEY_NUMPAD_NUMBER(vosEvent.m_key.m_numPadNumber);
 	case GpKeyIDSubsets::kSpecial:
-		msg = PL_KEY_SPECIAL_ENCODE(vosEvent.m_key.m_specialKey);
+		return PL_KEY_SPECIAL_ENCODE(vosEvent.m_key.m_specialKey);
 		break;
 	case GpKeyIDSubsets::kNumPadSpecial:
-		msg = PL_KEY_NUMPAD_SPECIAL_ENCODE(vosEvent.m_key.m_numPadSpecialKey);
+		return PL_KEY_NUMPAD_SPECIAL_ENCODE(vosEvent.m_key.m_numPadSpecialKey);
 		break;
 	case GpKeyIDSubsets::kUnicode:
 		for (int i = 128; i < 256; i++)
 		{
 			if (PortabilityLayer::MacRoman::g_toUnicode[i] == vosEvent.m_key.m_unicodeChar)
-			{
-				msg = PL_KEY_MACROMAN(i);
-				break;
-			}
+				return PL_KEY_MACROMAN(i);
 		}
 		break;
 	case GpKeyIDSubsets::kGamepadButton:
-		msg = PL_KEY_GAMEPAD_BUTTON_ENCODE(vosEvent.m_key.m_gamepadKey.m_button, vosEvent.m_key.m_gamepadKey.m_player);
-		break;
+		return PL_KEY_GAMEPAD_BUTTON_ENCODE(vosEvent.m_key.m_gamepadKey.m_button, vosEvent.m_key.m_gamepadKey.m_player);
 	default:
-		PL_NotYetImplemented();
+		return 0;
 	}
 
-	if (msg == 0)
-		return;
-
-	EventRecord *evt = queue->Enqueue();
-
-	switch (vosEvent.m_eventType)
-	{
-	case GpKeyboardInputEventTypes::kUp:
-		evt->what = keyUp;
-		break;
-	case GpKeyboardInputEventTypes::kDown:
-		evt->what = keyUp;
-		break;
-	case GpKeyboardInputEventTypes::kAuto:
-		evt->what = autoKey;
-		break;
-	};
-
-	evt->message = msg;
-
-	PL_NotYetImplemented_TODO("Modifiers");
+	return 0;
 }
 
-static void TranslateVOSEvent(const GpVOSEvent *vosEvent, PortabilityLayer::EventQueue *queue)
+static void TranslateVOSEvent(const GpVOSEvent *vosEvent, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
 	switch (vosEvent->m_eventType)
 	{
 	case GpVOSEventTypes::kMouseInput:
-		TranslateMouseInputEvent(vosEvent->m_event.m_mouseInputEvent, queue);
+		TranslateMouseInputEvent(*vosEvent, timestamp, queue);
 		break;
 	case GpVOSEventTypes::kKeyboardInput:
-		TranslateKeyboardInputEvent(vosEvent->m_event.m_keyboardInputEvent, queue);
+		TranslateKeyboardInputEvent(*vosEvent, timestamp, queue);
 		break;
 	case GpVOSEventTypes::kGamepadInput:
 		TranslateGamepadInputEvent(vosEvent->m_event.m_gamepadInputEvent, queue);
@@ -192,14 +160,14 @@ static void TranslateVOSEvent(const GpVOSEvent *vosEvent, PortabilityLayer::Even
 	}
 }
 
-static void ImportVOSEvents()
+static void ImportVOSEvents(uint32_t timestamp)
 {
 	PortabilityLayer::EventQueue *plQueue = PortabilityLayer::EventQueue::GetInstance();
 
 	PortabilityLayer::HostVOSEventQueue *evtQueue = PortabilityLayer::HostVOSEventQueue::GetInstance();
 	while (const GpVOSEvent *evt = evtQueue->GetNext())
 	{
-		TranslateVOSEvent(evt, plQueue);
+		TranslateVOSEvent(evt, timestamp, plQueue);
 		evtQueue->DischargeOne();
 	}
 }
@@ -283,7 +251,7 @@ void Delay(int ticks, UInt32 *endTickCount)
 
 		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_Delay, args, nullptr);
 
-		ImportVOSEvents();
+		ImportVOSEvents(PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount());
 	}
 
 	if (endTickCount)
@@ -436,30 +404,6 @@ void SetWTitle(WindowPtr window, const PLPasStr &title)
 	PL_NotYetImplemented();
 }
 
-bool PeekNextEvent(int32_t eventMask, EventRecord *event)
-{
-	assert(eventMask == everyEvent);	// We don't support other use cases
-
-	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
-	const EventRecord *record = queue->Peek();
-
-	if (record)
-	{
-		*event = *record;
-		return PL_TRUE;
-	}
-	else
-		return PL_FALSE;
-}
-
-bool GetNextEvent(int32_t eventMask, EventRecord *event)
-{
-	assert(eventMask == everyEvent);	// We don't support other use cases
-
-	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
-	return queue->Dequeue(event) ? PL_TRUE : PL_FALSE;
-}
-
 long MenuSelect(Point point)
 {
 	int16_t menuID = 0;
@@ -481,7 +425,7 @@ long TickCount()
 	return PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount();
 }
 
-void GetKeys(KeyMap &keyMap)
+void GetKeys(KeyDownStates &keyMap)
 {
 	PortabilityLayer::InputManager::GetInstance()->GetKeys(keyMap);
 }
@@ -496,7 +440,7 @@ short HiWord(Int32 v)
 	return (((v >> 16) ^ 0x8000) & 0xffff) - 0x8000;
 }
 
-static bool BitTestEitherSpecial(const KeyMap &keyMap, int eitherSpecial)
+static bool BitTestEitherSpecial(const KeyDownStates &keyMap, int eitherSpecial)
 {
 	switch (eitherSpecial)
 	{
@@ -512,7 +456,7 @@ static bool BitTestEitherSpecial(const KeyMap &keyMap, int eitherSpecial)
 	}
 }
 
-bool BitTst(const KeyMap &keyMap, int encodedKey)
+bool BitTst(const KeyDownStates &keyMap, int encodedKey)
 {
 	const KeyEventType evtType = PL_KEY_GET_EVENT_TYPE(encodedKey);
 	const int evtValue = PL_KEY_GET_VALUE(encodedKey);
@@ -947,23 +891,22 @@ void BlockMove(const void *src, void *dest, Size size)
 	memcpy(dest, src, size);
 }
 
-Boolean WaitNextEvent(int eventMask, EventRecord *eventOut, long sleep, void *unknown)
+bool WaitForEvent(TimeTaggedVOSEvent *eventOut, uint32_t ticks)
 {
 	for (;;)
 	{
-		Boolean hasEvent = GetNextEvent(eventMask, eventOut);
-		if (hasEvent)
-			return hasEvent;
+		if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(eventOut))
+			return true;
 
 		Delay(1, nullptr);
 
-		if (sleep == 0)
+		if (ticks == 0)
 			break;
 
-		sleep--;
+		ticks--;
 	}
 
-	return PL_FALSE;
+	return false;
 }
 
 void DrawControls(WindowPtr window)

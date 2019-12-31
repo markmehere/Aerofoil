@@ -384,6 +384,8 @@ int gpAppMain()
 //		numSMWarnings++;
 //		BitchAboutSM3();
 //	}
+
+	UpdateMainWindow();
 	
 	while (!quitting)		// this is the main loop
 		HandleEvent();

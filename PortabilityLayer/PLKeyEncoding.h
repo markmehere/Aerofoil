@@ -3,6 +3,8 @@
 #include "GpVOSEvent.h"
 #include "GpBitfield.h"
 
+struct GpKeyboardInputEvent;
+
 enum KeyEventType
 {
 	KeyEventType_Special,
@@ -44,10 +46,12 @@ namespace KeyEventEitherSpecialCategories
 #define PL_KEY_GAMEPAD_BUTTON(k, pl)		((KeyEventType_GamepadButton) | (pl << PL_INPUT_TYPE_CODE_BITS) | ((GpGamepadButtons::k) << (PL_INPUT_TYPE_CODE_BITS + PL_INPUT_PLAYER_INDEX_BITS)))
 #define PL_KEY_GAMEPAD_BUTTON_ENCODE(k, pl)	((KeyEventType_GamepadButton) | (pl << PL_INPUT_TYPE_CODE_BITS) | ((k) << (PL_INPUT_TYPE_CODE_BITS + PL_INPUT_PLAYER_INDEX_BITS)))
 
-#define PL_KEY_GET_EVENT_TYPE(k)	(static_cast<KeyEventType>(k & ((1 << PL_INPUT_TYPE_CODE_BITS) - 1)))
-#define PL_KEY_GET_VALUE(k)			((k) >> PL_INPUT_TYPE_CODE_BITS)
+#define PL_KEY_GET_EVENT_TYPE(k)			(static_cast<KeyEventType>(k & ((1 << PL_INPUT_TYPE_CODE_BITS) - 1)))
+#define PL_KEY_GET_VALUE(k)					((k) >> PL_INPUT_TYPE_CODE_BITS)
 
-struct KeyMap
+intptr_t PackVOSKeyCode(const GpKeyboardInputEvent &evt);
+
+struct KeyDownStates
 {
 	GpBitfield<GpKeySpecials::kCount> m_special;
 	GpBitfield<128> m_ascii;

@@ -160,7 +160,7 @@ void SetInitialTiles (short background, Boolean doRoom)
 #ifndef COMPILEDEMO
 Boolean CreateNewRoom (short h, short v)
 {
-	KeyMap		theKeys;
+	KeyDownStates		theKeys;
 	long		howMuch;
 	PLError_t		theErr;
 	short		i, availableRoom;
