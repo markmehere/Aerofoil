@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GpDisplayDriverTickStatus.h"
 #include "GpVOSEventQueue.h"
 #include "HostSuspendCallID.h"
 
@@ -25,7 +26,7 @@ public:
 
 	void Init();
 
-	void Tick(IGpFiber *vosFiber);
+	GpDisplayDriverTickStatus_t Tick(IGpFiber *vosFiber);
 	void Render();
 
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);

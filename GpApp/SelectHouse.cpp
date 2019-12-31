@@ -533,7 +533,7 @@ void SortHouseList (void)
 		h = i + 1;
 		while (h < housesFound)
 		{
-			if ((EqualString(theHousesSpecs[i].m_name, theHousesSpecs[h].m_name, true, true)) &&
+			if ((StrCmp::Equal(theHousesSpecs[i].m_name, theHousesSpecs[h].m_name)) &&
 					(theHousesSpecs[i].m_dir == theHousesSpecs[i].m_dir))
 			{
 				theHousesSpecs[h] = theHousesSpecs[housesFound - 1];
@@ -616,7 +616,7 @@ void DoDirSearch (void)
 		thisHouseIndex = 0;
 		for (i = 0; i < housesFound; i++)
 		{
-			if (EqualString(theHousesSpecs[i].m_name, thisHouseName, false, true))
+			if (StrCmp::Equal(theHousesSpecs[i].m_name, thisHouseName))
 			{
 				thisHouseIndex = i;
 				break;
@@ -627,7 +627,7 @@ void DoDirSearch (void)
 		demoHouseIndex = -1;
 		for (i = 0; i < housesFound; i++)
 		{
-			if (EqualString(theHousesSpecs[i].m_name, PSTR("Demo House"), false, true))
+			if (StrCmp::Equal(theHousesSpecs[i].m_name, PSTR("Demo House")))
 			{
 				demoHouseIndex = i;
 				break;

@@ -226,7 +226,7 @@ return false;		// TEMP fix this iwth NavServices
 	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
-	if (!EqualString(savedGame->house.name, thisHouseName, true, true))
+	if (!StrCmp::Equal(savedGame->house.name, thisHouseName))
 	{
 		SavedGameMismatchError(savedGame->house.name);
 		HSetState((Handle)thisHouse, wasState);

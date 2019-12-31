@@ -191,6 +191,9 @@
     <ClInclude Include="..\GpCommon\GpInputDriverProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GpD3D.rc">

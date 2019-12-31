@@ -805,7 +805,7 @@ void CountUntitledRooms (void)
 	for (i = 0; i < numRooms; i++)
 	{
 		if (((*thisHouse)->rooms[i].suite != kRoomIsEmpty) && 
-				(EqualString((*thisHouse)->rooms[i].name, PSTR("Untitled Room"), false, true)))
+				(StrCmp::EqualCaseInsensitive((*thisHouse)->rooms[i].name, PSTR("Untitled Room"))))
 			houseErrors++;
 	}
 }

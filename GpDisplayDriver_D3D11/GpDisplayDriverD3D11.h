@@ -70,7 +70,7 @@ private:
 	~GpDisplayDriverD3D11();
 
 	bool InitResources();
-	bool PresentFrameAndSync();
+	GpDisplayDriverTickStatus_t PresentFrameAndSync();
 
 	void SynchronizeCursors();
 	void ChangeToCursor(HCURSOR cursor);

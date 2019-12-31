@@ -4,6 +4,7 @@
 #include "GpFontHandlerFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpDisplayDriverProperties.h"
+#include "GpDisplayDriverTickStatus.h"
 #include "GpInputDriverFactory.h"
 #include "GpInputDriverProperties.h"
 #include "GpGlobalConfig.h"
@@ -17,9 +18,9 @@
 
 namespace
 {
-	void TickAppEnvironment(void *context, IGpFiber *vosFiber)
+	GpDisplayDriverTickStatus_t TickAppEnvironment(void *context, IGpFiber *vosFiber)
 	{
-		static_cast<GpAppEnvironment*>(context)->Tick(vosFiber);
+		return static_cast<GpAppEnvironment*>(context)->Tick(vosFiber);
 	}
 
 	void RenderAppEnvironment(void *context)

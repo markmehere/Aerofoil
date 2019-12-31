@@ -73,7 +73,8 @@ namespace PortabilityLayer
 		WindowImpl *m_windowStackBottom;
 
 		static WindowManagerImpl ms_instance;
-		static Window ms_putInFront;
+
+		static uint8_t ms_putInFrontSentinel;
 	};
 
 	WindowImpl::WindowImpl()
@@ -335,7 +336,7 @@ namespace PortabilityLayer
 
 	Window *WindowManagerImpl::GetPutInFrontSentinel() const
 	{
-		return &ms_putInFront;
+		return reinterpret_cast<Window*>(&ms_putInFrontSentinel);
 	}
 
 	void WindowManagerImpl::RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver)
@@ -356,7 +357,7 @@ namespace PortabilityLayer
 	}
 
 	WindowManagerImpl WindowManagerImpl::ms_instance;
-	Window WindowManagerImpl::ms_putInFront;
+	uint8_t WindowManagerImpl::ms_putInFrontSentinel;
 
 	WindowManager *WindowManager::GetInstance()
 	{

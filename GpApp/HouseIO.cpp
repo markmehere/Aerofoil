@@ -178,7 +178,7 @@ Boolean OpenHouse (void)
 		return(false);
 	
 	#ifdef COMPILEDEMO
-	if (!EqualString(theHousesSpecs[thisHouseIndex].name, "\pDemo House", false, true))
+	if (!StrCmp::EqualCaseInsensitive(theHousesSpecs[thisHouseIndex].name, "\pDemo House"))
 		return (false);
 	#endif
 	
@@ -216,7 +216,7 @@ Boolean OpenSpecificHouse (const VFileSpec &specs)
 	for (i = 0; i < housesFound; i++)
 	{
 		if ((theHousesSpecs[i].m_dir == specs.m_dir) &&
-				(EqualString(theHousesSpecs[i].m_name, specs.m_name, false, true)))
+				(StrCmp::EqualCaseInsensitive(theHousesSpecs[i].m_name, specs.m_name)))
 		{
 			thisHouseIndex = i;
 			PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);

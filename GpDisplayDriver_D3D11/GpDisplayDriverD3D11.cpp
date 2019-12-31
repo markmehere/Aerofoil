@@ -309,7 +309,7 @@ bool GpDisplayDriverD3D11::InitResources()
 }
 
 
-bool GpDisplayDriverD3D11::PresentFrameAndSync()
+GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 {
 	SynchronizeCursors();
 
@@ -341,16 +341,16 @@ bool GpDisplayDriverD3D11::PresentFrameAndSync()
 	UINT lastPresentCount = 0;
 
 	if (FAILED(m_swapChain->GetLastPresentCount(&lastPresentCount)))
-		return false;
+		return GpDisplayDriverTickStatuses::kNonFatalFault;
 
 	if (FAILED(m_swapChain->Present1(1, 0, &presentParams)))
-		return false;
+		return GpDisplayDriverTickStatuses::kNonFatalFault;
 
 	//DebugPrintf("r: %i\n", static_cast<int>(r));
 
 	DXGI_FRAME_STATISTICS stats;
 	if (FAILED(m_swapChain->GetFrameStatistics(&stats)))
-		return false;
+		return GpDisplayDriverTickStatuses::kNonFatalFault;
 
 	if (stats.SyncQPCTime.QuadPart != 0)
 	{
@@ -440,12 +440,15 @@ bool GpDisplayDriverD3D11::PresentFrameAndSync()
 		m_frameTimeAccumulated += frameTimeStep;
 		while (m_frameTimeAccumulated >= m_frameTimeSliceSize)
 		{
-			m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
+			GpDisplayDriverTickStatus_t tickStatus = m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
 			m_frameTimeAccumulated -= m_frameTimeSliceSize;
+
+			if (tickStatus != GpDisplayDriverTickStatuses::kOK)
+				return tickStatus;
 		}
 	}
 
-	return true;
+	return GpDisplayDriverTickStatuses::kOK;
 }
 
 void GpDisplayDriverD3D11::SynchronizeCursors()
@@ -591,7 +594,9 @@ void GpDisplayDriverD3D11::Run()
 		}
 		else
 		{
-			PresentFrameAndSync();
+			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
+			if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault || tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
+				break;
 		}
 	}
 

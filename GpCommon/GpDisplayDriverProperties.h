@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EGpDisplayDriverType.h"
+#include "GpDisplayDriverTickStatus.h"
 
 struct IGpDisplayDriver;
 struct IGpFiber;
@@ -8,7 +9,7 @@ struct IGpVOSEventQueue;
 
 struct GpDisplayDriverProperties
 {
-	typedef void(*TickFunc_t)(void *context, IGpFiber *vosFiber);
+	typedef GpDisplayDriverTickStatus_t (*TickFunc_t)(void *context, IGpFiber *vosFiber);
 	typedef void(*RenderFunc_t)(void *context);
 
 	EGpDisplayDriverType m_type;

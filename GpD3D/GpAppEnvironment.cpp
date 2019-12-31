@@ -1,10 +1,12 @@
 #include "GpAppEnvironment.h"
 #include "GpFiberStarter.h"
 #include "GpAppInterface.h"
+#include "GpDisplayDriverTickStatus.h"
 #include "GpFontHandlerFactory.h"
 #include "GpPLGlueAudioDriver.h"
 #include "GpPLGlueDisplayDriver.h"
 #include "HostSuspendCallArgument.h"
+#include "IGpDisplayDriver.h"
 #include "IGpFiber.h"
 #include "IGpInputDriver.h"
 
@@ -35,7 +37,7 @@ void GpAppEnvironment::Init()
 {
 }
 
-void GpAppEnvironment::Tick(IGpFiber *vosFiber)
+GpDisplayDriverTickStatus_t GpAppEnvironment::Tick(IGpFiber *vosFiber)
 {
 	GpAppInterface_Get()->PL_IncrementTickCounter(1);
 
@@ -54,7 +56,7 @@ void GpAppEnvironment::Tick(IGpFiber *vosFiber)
 			m_applicationState = ApplicationState_Running;
 			break;
 		case ApplicationState_WaitingForEvents:
-			return;
+			return GpDisplayDriverTickStatuses::kOK;
 		case ApplicationState_Running:
 			SynchronizeState();
 			m_applicationFiber->YieldTo();
@@ -75,9 +77,13 @@ void GpAppEnvironment::Tick(IGpFiber *vosFiber)
 			else
 			{
 				m_delaySuspendTicks--;
-				return;
+				return GpDisplayDriverTickStatuses::kOK;
 			}
 			break;
+		case ApplicationState_Terminated:
+			m_applicationFiber->Destroy();
+			m_applicationFiber = nullptr;
+			return GpDisplayDriverTickStatuses::kApplicationTerminated;
 		default:
 			assert(false);
 			break;
@@ -124,6 +130,9 @@ void GpAppEnvironment::StaticAppThreadFunc(void *context)
 void GpAppEnvironment::AppThreadFunc()
 {
 	GpAppInterface_Get()->ApplicationMain();
+
+	m_applicationState = ApplicationState_Terminated;
+	m_vosFiber->YieldTo();
 }
 
 void GpAppEnvironment::InitializeApplicationState()
