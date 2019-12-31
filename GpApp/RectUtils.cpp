@@ -16,7 +16,7 @@
 // Given the top left corner and a width and height, this functionÉ
 // simply creates the necessary rectangle and frames it.
 
-void FrameWHRect (short left, short top, short wide, short high)
+void FrameWHRect (DrawSurface *surface, short left, short top, short wide, short high)
 {
 	Rect		theRect;
 	
@@ -24,7 +24,7 @@ void FrameWHRect (short left, short top, short wide, short high)
 	theRect.top = top;
 	theRect.right = left + wide;
 	theRect.bottom = top + high;
-	FrameRect(&theRect);
+	surface->FrameRect(theRect);
 }
 
 //--------------------------------------------------------------  NormalizeRect
@@ -296,23 +296,3 @@ void QUnionSimilarRect (Rect *rectA, Rect *rectB, Rect *rectC)
 	else
 		rectC->bottom = rectB->bottom;
 }
-
-//--------------------------------------------------------------  FrameRectSansCorners
-// This is similar to the ToolBox FrameRect() call.  However, it doesn'tÉ
-// draw the pixels in the 4 corners of the Rect.
-
-void FrameRectSansCorners (Rect *theRect)
-{
-	MoveTo(theRect->left + 1, theRect->top);
-	LineTo(theRect->right - 2, theRect->top);
-	
-	MoveTo(theRect->right - 1, theRect->top + 1);
-	LineTo(theRect->right - 1, theRect->bottom - 2);
-	
-	MoveTo(theRect->left + 1, theRect->bottom - 1);
-	LineTo(theRect->right - 2, theRect->bottom - 1);
-	
-	MoveTo(theRect->left, theRect->top + 1);
-	LineTo(theRect->left, theRect->bottom - 2);
-}
-

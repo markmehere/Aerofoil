@@ -8,5 +8,5 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr		bandsSrcMap;
-extern GWorldPtr		bandsMaskMap;
+extern DrawSurface	*bandsSrcMap;
+extern DrawSurface	*bandsMaskMap;

@@ -25,19 +25,17 @@ enum QDFlags
 	useTempMem = 1,
 };
 
-PLError_t NewGWorld(GWorldPtr *gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable);
-void DisposeGWorld(GWorldPtr gworld);
+PLError_t NewGWorld(DrawSurface **gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable);
+void DisposeGWorld(DrawSurface *gworld);
 
-PixMapHandle GetGWorldPixMap(GWorldPtr gworld);
+PixMapHandle GetGWorldPixMap(DrawSurface *gworld);
 
 PicHandle GetPicture(short resID);
 
 void OffsetRect(Rect *rect, int right, int down);
 
-void DrawPicture(PicHandle pict, Rect *bounds);
-
-CGrafPtr GetGraphicsPort();
-void SetGraphicsPort(CGrafPtr gw);
+DrawSurface *GetGraphicsPort();
+void SetGraphicsPort(DrawSurface *gw);
 
 
 #endif

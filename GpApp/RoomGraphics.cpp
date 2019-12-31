@@ -6,6 +6,7 @@
 
 
 #include "PLResources.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "MainWindow.h"
@@ -16,7 +17,7 @@
 #define kManholeThruFloor		3957
 
 
-void LoadGraphicSpecial (short);
+void LoadGraphicSpecial (DrawSurface *surface, short);
 void DrawRoomBackground (short, short, short);
 void DrawFloorSupport (void);
 void ReadyBackMap (void);
@@ -25,7 +26,7 @@ void DrawLighting (void);
 
 
 Rect		suppSrcRect;
-GWorldPtr	suppSrcMap;
+DrawSurface	*suppSrcMap;
 Rect		localRoomsDest[9];
 Rect		houseRect;
 short		numNeighbors, numLights, thisTiles[kNumTiles];
@@ -44,7 +45,7 @@ void DrawLocale (void)
 {
 	short		i, roomV;
 	char		wasState;
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 		
 	ZeroFlamesAndTheLike();
 	ZeroDinahs();
@@ -67,8 +68,9 @@ void DrawLocale (void)
 	ListAllLocalObjects();
 	
 	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	PaintRect(&backSrcRect);
+
+	backSrcMap->SetForeColor(StdColors::Black());
+	backSrcMap->FillRect(backSrcRect);
 	
 	if (numNeighbors > 3)
 	{
@@ -126,7 +128,7 @@ void DrawLocale (void)
 
 //--------------------------------------------------------------  LoadGraphicSpecial
 
-void LoadGraphicSpecial (short resID)
+void LoadGraphicSpecial (DrawSurface *surface, short resID)
 {
 	Rect		bounds;
 	PicHandle	thePicture;
@@ -145,7 +147,7 @@ void LoadGraphicSpecial (short resID)
 	
 	bounds = (*thePicture)->picFrame.ToRect();
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
-	DrawPicture(thePicture, &bounds);
+	surface->DrawPicture(thePicture, bounds);
 
 	thePicture.Dispose();
 }
@@ -168,15 +170,9 @@ void DrawRoomBackground (short who, short where, short elevation)
 	
 	if ((numLights == 0) && (who != kRoomIsEmpty))
 	{
-		CGrafPtr	wasCPort;
+		backSrcMap->SetForeColor(StdColors::Black());
+		backSrcMap->FillRect(localRoomsDest[where]);
 		
-		wasCPort = GetGraphicsPort();
-		SetGraphicsPort(backSrcMap);
-
-		ForeColor(blackColor);
-		PaintRect(&localRoomsDest[where]);
-		
-		SetGraphicsPort(wasCPort);
 		return;
 	}
 	
@@ -184,14 +180,8 @@ void DrawRoomBackground (short who, short where, short elevation)
 	{
 		if (wardBitSet)
 		{
-			CGrafPtr	wasCPort;
-			
-			wasCPort = GetGraphicsPort();
-			SetGraphicsPort(backSrcMap);
-			
-			PaintRect(&localRoomsDest[where]);
-			
-			SetGraphicsPort(wasCPort);
+			backSrcMap->SetForeColor(StdColors::Black());
+			backSrcMap->FillRect(localRoomsDest[where]);
 			return;
 		}
 		
@@ -221,8 +211,7 @@ void DrawRoomBackground (short who, short where, short elevation)
 			tiles[i] = (*thisHouse)->rooms[who].tiles[i];
 	}
 	
-	SetPort((GrafPtr)workSrcMap);
-	LoadGraphicSpecial(pictID);
+	LoadGraphicSpecial(workSrcMap, pictID);
 	
 	QSetRect(&src, 0, 0, kTileWide, kTileHigh);
 	QSetRect(&dest, 0, 0, kTileWide, kTileHigh);
@@ -244,10 +233,9 @@ void DrawFloorSupport (void)
 {
 	Rect		src, dest, whoCares;
 	short		i;
-	CGrafPtr	wasCPort;
 
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
+	DrawSurface *surface = backSrcMap;
+
 	src = suppSrcRect;
 	
 	if (isStructure[kNorthWestRoom])
@@ -264,7 +252,7 @@ void DrawFloorSupport (void)
 			{
 				tempManholes[i].top = dest.top;
 				tempManholes[i].bottom = dest.bottom;
-				LoadScaledGraphic(kManholeThruFloor, &tempManholes[i]);
+				LoadScaledGraphic(surface, kManholeThruFloor, &tempManholes[i]);
 			}
 	}
 	
@@ -282,7 +270,7 @@ void DrawFloorSupport (void)
 			{
 				tempManholes[i].top = dest.top;
 				tempManholes[i].bottom = dest.bottom;
-				LoadScaledGraphic(kManholeThruFloor, &tempManholes[i]);
+				LoadScaledGraphic(surface, kManholeThruFloor, &tempManholes[i]);
 			}
 	}
 	
@@ -299,7 +287,7 @@ void DrawFloorSupport (void)
 			{
 				tempManholes[i].top = dest.top;
 				tempManholes[i].bottom = dest.bottom;
-				LoadScaledGraphic(kManholeThruFloor, &tempManholes[i]);
+				LoadScaledGraphic(surface, kManholeThruFloor, &tempManholes[i]);
 			}
 	}
 	
@@ -317,7 +305,7 @@ void DrawFloorSupport (void)
 			{
 				tempManholes[i].top = dest.top;
 				tempManholes[i].bottom = dest.bottom;
-				LoadScaledGraphic(kManholeThruFloor, &tempManholes[i]);
+				LoadScaledGraphic(surface, kManholeThruFloor, &tempManholes[i]);
 			}
 	}
 	
@@ -335,7 +323,7 @@ void DrawFloorSupport (void)
 			{
 				tempManholes[i].top = dest.top;
 				tempManholes[i].bottom = dest.bottom;
-				LoadScaledGraphic(kManholeThruFloor, &tempManholes[i]);
+				LoadScaledGraphic(surface, kManholeThruFloor, &tempManholes[i]);
 			}
 	}
 	
@@ -353,11 +341,9 @@ void DrawFloorSupport (void)
 			{
 				tempManholes[i].top = dest.top;
 				tempManholes[i].bottom = dest.bottom;
-				LoadScaledGraphic(kManholeThruFloor, &tempManholes[i]);
+				LoadScaledGraphic(surface, kManholeThruFloor, &tempManholes[i]);
 			}
 	}
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  ReadyBackMap

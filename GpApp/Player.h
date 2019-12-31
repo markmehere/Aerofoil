@@ -8,5 +8,5 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr		shadowSrcMap;
-extern GWorldPtr		shadowMaskMap;
+extern DrawSurface	*shadowSrcMap;
+extern DrawSurface	*shadowMaskMap;

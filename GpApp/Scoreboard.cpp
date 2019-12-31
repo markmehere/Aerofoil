@@ -11,6 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "MenuManager.h"
+#include "QDStandardPalette.h"
 #include "RectUtils.h"
 
 
@@ -29,16 +30,16 @@ void RefreshPoints (void);
 
 
 Rect		boardSrcRect, badgeSrcRect, boardDestRect;
-GWorldPtr	boardSrcMap, badgeSrcMap;
+DrawSurface	*boardSrcMap, *badgeSrcMap;
 Rect		boardTSrcRect, boardTDestRect;
-GWorldPtr	boardTSrcMap;
+DrawSurface	*boardTSrcMap;
 Rect		boardGSrcRect, boardGDestRect;
-GWorldPtr	boardGSrcMap;
+DrawSurface	*boardGSrcMap;
 Rect		boardPSrcRect, boardPDestRect;
 Rect		boardPQDestRect, boardGQDestRect;
 Rect		badgesBlankRects[4], badgesBadgesRects[4];
 Rect		badgesDestRects[4];
-GWorldPtr	boardPSrcMap;
+DrawSurface	*boardPSrcMap;
 long		displayedScore;
 short		wasScoreboardMode;
 Boolean		doRollScore;
@@ -148,52 +149,52 @@ void RefreshScoreboard (SInt16 mode)
 
 void RefreshRoomTitle (short mode)
 {
-	RGBColor	theRGBColor, wasColor;
+	DrawSurface *surface = boardTSrcMap;
+
+	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	
-	SetPort((GrafPtr)boardTSrcMap);
+	wasColor = surface->GetForeColor();
+	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+	surface->SetForeColor(theRGBColor);
+	surface->FillRect(boardTSrcRect);
+	surface->SetForeColor(wasColor);
 	
-	GetForeColor(&wasColor);
-	if (thisMac.isDepth == 4)
-		Index2Color(kGrayBackgroundColor4, &theRGBColor);
-	else
-		Index2Color(kGrayBackgroundColor, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	PaintRect(&boardTSrcRect);
-	RGBForeColor(&wasColor);
-	
-	MoveTo(1, 10);
-	ForeColor(blackColor);
+	const Point strShadowPoint = Point::Create(1, 10);
+	const Point strPoint = Point::Create(0, 9);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+
 	switch (mode)
 	{
 		case kEscapedTitleMode:
-		DrawString(PSTR("Hit Delete key if unable to Follow"));
+		surface->DrawString(strShadowPoint, PSTR("Hit Delete key if unable to Follow"));
 		break;
 		
 		case kSavingTitleMode:
-		DrawString(PSTR("Saving GameÉ"));
+		surface->DrawString(strShadowPoint, PSTR("Saving GameÉ"));
 		break;
 		
 		default:
-		DrawString(thisRoom->name);
+		surface->DrawString(strShadowPoint, thisRoom->name);
 		break;
 	}
-	MoveTo(0, 9);
-	ForeColor(whiteColor);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+
 	switch (mode)
 	{
 		case kEscapedTitleMode:
-		DrawString(PSTR("Hit Delete key if unable to Follow"));
+		surface->DrawString(strPoint, PSTR("Hit Delete key if unable to Follow"));
 		break;
 		
 		case kSavingTitleMode:
-		DrawString(PSTR("Saving GameÉ"));
+		surface->DrawString(strPoint, PSTR("Saving GameÉ"));
 		break;
 		
 		default:
-		DrawString(thisRoom->name);
+		surface->DrawString(strPoint, thisRoom->name);
 		break;
 	}
-	ForeColor(blackColor);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardTSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -204,35 +205,30 @@ void RefreshRoomTitle (short mode)
 
 void RefreshNumGliders (void)
 {
-	RGBColor	theRGBColor, wasColor;
+	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		nGlidersStr;
 	long		displayMortals;
-	
-	SetPort((GrafPtr)boardGSrcMap);
-	
-	GetForeColor(&wasColor);
-	if (thisMac.isDepth == 4)
-		Index2Color(kGrayBackgroundColor4, &theRGBColor);
-	else
-		Index2Color(kGrayBackgroundColor, &theRGBColor);		
-	RGBForeColor(&theRGBColor);
-	PaintRect(&boardGSrcRect);
-	RGBForeColor(&wasColor);
+	DrawSurface	*surface = boardGSrcMap;
+
+	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+
+	wasColor = surface->GetForeColor();
+	surface->SetForeColor(theRGBColor);
+	surface->FillRect(boardGSrcRect);
 	
 	displayMortals = mortals;
 	if (displayMortals < 0)
 		displayMortals = 0;
 	NumToString(displayMortals, nGlidersStr);
+
+	const Point shadowPoint = Point::Create(1, 10);
+	const Point textPoint = Point::Create(0, 9);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+	surface->DrawString(shadowPoint, nGlidersStr);
 	
-	MoveTo(1, 10);
-	ForeColor(blackColor);
-	DrawString(nGlidersStr);
-	
-	MoveTo(0, 9);
-	ForeColor(whiteColor);
-	DrawString(nGlidersStr);
-	
-	ForeColor(blackColor);
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+	surface->DrawString(textPoint, nGlidersStr);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -243,32 +239,26 @@ void RefreshNumGliders (void)
 
 void RefreshPoints (void)
 {
-	RGBColor	theRGBColor, wasColor;
+	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		scoreStr;
-	
-	SetPort((GrafPtr)boardPSrcMap);
-	
-	GetForeColor(&wasColor);
-	if (thisMac.isDepth == 4)
-		Index2Color(kGrayBackgroundColor4, &theRGBColor);
-	else
-		Index2Color(kGrayBackgroundColor, &theRGBColor);	
-	RGBForeColor(&theRGBColor);
-	PaintRect(&boardPSrcRect);
-	RGBForeColor(&wasColor);
+	DrawSurface	*surface = boardPSrcMap;
+
+	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+
+	surface->SetForeColor(theRGBColor);
+	surface->FillRect(boardPSrcRect);
 	
 	NumToString(theScore, scoreStr);
+
+	const Point shadowPoint = Point::Create(1, 10);
+	const Point textPoint = Point::Create(0, 9);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+	surface->DrawString(shadowPoint, scoreStr);
 	
-	MoveTo(1, 10);
-	ForeColor(blackColor);
-	DrawString(scoreStr);
-	
-	MoveTo(0, 9);
-	ForeColor(whiteColor);
-	DrawString(scoreStr);
-	
-	ForeColor(blackColor);
-	
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+	surface->DrawString(textPoint, scoreStr);
+
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
 			&boardPSrcRect, &boardPDestRect, srcCopy);
@@ -280,32 +270,26 @@ void RefreshPoints (void)
 
 void QuickGlidersRefresh (void)
 {
-	RGBColor	theRGBColor, wasColor;
+	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		nGlidersStr;
-	
-	SetPort((GrafPtr)boardGSrcMap);
-	
-	GetForeColor(&wasColor);
-	if (thisMac.isDepth == 4)
-		Index2Color(kGrayBackgroundColor4, &theRGBColor);
-	else
-		Index2Color(kGrayBackgroundColor, &theRGBColor);	
-	RGBForeColor(&theRGBColor);
-	PaintRect(&boardGSrcRect);
-	RGBForeColor(&wasColor);
+	DrawSurface	*surface = boardGSrcMap;
+
+	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+
+	surface->SetForeColor(theRGBColor);
+	surface->FillRect(boardGSrcRect);
 	
 	NumToString((long)mortals, nGlidersStr);
+
+	const Point shadowPoint = Point::Create(1, 10);
+	const Point textPoint = Point::Create(0, 9);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+	surface->DrawString(shadowPoint, nGlidersStr);
 	
-	MoveTo(1, 10);
-	ForeColor(blackColor);
-	DrawString(nGlidersStr);
-	
-	MoveTo(0, 9);
-	ForeColor(whiteColor);
-	DrawString(nGlidersStr);
-	
-	ForeColor(blackColor);
-	
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+	surface->DrawString(textPoint, nGlidersStr);
+
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
 			&boardGSrcRect, &boardGQDestRect, srcCopy);
@@ -317,31 +301,24 @@ void QuickGlidersRefresh (void)
 
 void QuickScoreRefresh (void)
 {
-	RGBColor	theRGBColor, wasColor;
+	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		scoreStr;
-	
-	SetPort((GrafPtr)boardPSrcMap);
-	
-	GetForeColor(&wasColor);
-	if (thisMac.isDepth == 4)
-		Index2Color(kGrayBackgroundColor4, &theRGBColor);
-	else
-		Index2Color(kGrayBackgroundColor, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	PaintRect(&boardPSrcRect);
-	RGBForeColor(&wasColor);
+	DrawSurface	*surface = boardPSrcMap;
+
+	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+	surface->SetForeColor(theRGBColor);
+	surface->FillRect(boardPSrcRect);
 	
 	NumToString(displayedScore, scoreStr);
-	
-	MoveTo(1, 10);
-	ForeColor(blackColor);
-	DrawString(scoreStr);
-	
-	MoveTo(0, 9);
-	ForeColor(whiteColor);
-	DrawString(scoreStr);
-	
-	ForeColor(blackColor);
+
+	const Point shadowPoint = Point::Create(1, 10);
+	const Point textPoint = Point::Create(0, 9);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+	surface->DrawString(shadowPoint, scoreStr);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+	surface->DrawString(textPoint, scoreStr);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
@@ -473,8 +450,8 @@ void AdjustScoreboardHeight (void)
 
 //--------------------------------------------------------------  BlackenScoreboard
 
-void BlackenScoreboard (void)
+void BlackenScoreboard (DrawSurface *surface)
 {
-	UpdateMenuBarWindow();
+	UpdateMenuBarWindow(surface);
 }
 

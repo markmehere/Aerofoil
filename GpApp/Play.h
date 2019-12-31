@@ -8,6 +8,6 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr		glidSrcMap;
-extern GWorldPtr		glid2SrcMap;
-extern GWorldPtr		glidMaskMap;
+extern DrawSurface	*glidSrcMap;
+extern DrawSurface	*glid2SrcMap;
+extern DrawSurface	*glidMaskMap;

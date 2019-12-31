@@ -54,7 +54,7 @@ void SetMovieMasterTimeBase(Movie movie, TimeBase timeBase, void *unused);
 void GetMovieBox(Movie movie, Rect *rect);
 void StopMovie(Movie movie);
 void DisposeMovie(Movie movie);
-void SetMovieGWorld(Movie movie, CGrafPtr graf, void *unknown);
+void SetMovieGWorld(Movie movie, DrawSurface *graf, void *unknown);
 void SetMovieActive(Movie movie, Boolean active);
 void StartMovie(Movie movie);
 void MoviesTask(Movie movie, int unknown);

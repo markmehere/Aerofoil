@@ -10,6 +10,8 @@
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
+#include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "RectUtils.h"
@@ -37,8 +39,8 @@
 
 
 void UpdateRoomInfoDialog (DialogPtr);
-void DragMiniTile (Point, short *);
-void HiliteTileOver (Point);
+void DragMiniTile (DrawSurface *, Point, short *);
+void HiliteTileOver (DrawSurface *, Point);
 Boolean RoomFilter (DialogPtr, EventRecord *, short *);
 short ChooseOriginalArt (short);
 void UpdateOriginalArt (DialogPtr);
@@ -50,7 +52,7 @@ void BitchAboutPICTNotFound (void);
 
 Rect		tileSrc, tileDest, tileSrcRect, editTETextBox;
 Rect		leftBound, topBound, rightBound, bottomBound;
-CGrafPtr	tileSrcMap;
+DrawSurface	*tileSrcMap;
 short		tempTiles[kNumTiles];
 short		tileOver, tempBack, cursorIs;
 Boolean		originalLeftOpen, originalTopOpen, originalRightOpen, originalBottomOpen;
@@ -119,7 +121,7 @@ void UpdateRoomInfoDialog (DialogPtr theDialog)
 //--------------------------------------------------------------  DragMiniTile
 
 #ifndef COMPILEDEMO
-void DragMiniTile (Point mouseIs, short *newTileOver)
+void DragMiniTile (DrawSurface *surface, Point mouseIs, short *newTileOver)
 {
 	Rect		dragRect;
 	Point		mouseWas;
@@ -132,48 +134,65 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 	QOffsetRect(&dragRect, 
 			tileSrc.left + (tileOver * kMiniTileWide), 
 			tileSrc.top);
-	PenInvertMode(true);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	FrameRect(&dragRect);
+
+	const uint8_t *pattern = *GetQDGlobalsGray(&dummyPattern);
+
+	surface->InvertFrameRect(dragRect, pattern);
+
 	mouseWas = mouseIs;
 	while (WaitMouseUp())							// loop until mouse button let up
 	{
 		GetMouse(&mouseIs);							// get mouse coords
 		if (DeltaPoint(mouseWas, mouseIs) != 0L)	// the mouse has moved
 		{
-			FrameRect(&dragRect);
+			surface->InvertFrameRect(dragRect, pattern);
 			QOffsetRect(&dragRect, mouseIs.h - mouseWas.h, 0);
-			FrameRect(&dragRect);
-			
+			surface->InvertFrameRect(dragRect, pattern);
+
 			if (PtInRect(mouseIs, &tileDest))		// is cursor in the drop rect
 			{
 				*newTileOver = (mouseIs.h - tileDest.left) / kMiniTileWide;
 				if (*newTileOver != wasTileOver)
 				{
-					PenNormal();
-					PenSize(1, 2);
-					ForeColor(blueColor);
-					MoveTo(tileDest.left + (*newTileOver * kMiniTileWide), 
-							tileDest.top - 3);
-					Line(kMiniTileWide, 0);
-					MoveTo(tileDest.left + (*newTileOver * kMiniTileWide), 
-							tileDest.bottom + 1);
-					Line(kMiniTileWide, 0);
+					surface->SetForeColor(StdColors::Blue());
+
+					for (int offset = 0; offset < 2; offset++)
+					{
+						Point pointA = Point::Create(tileDest.left + (*newTileOver * kMiniTileWide), tileDest.top - 3 + offset);
+						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+						surface->DrawLine(pointA, pointB);
+					}
+
+					for (int offset = 0; offset < 2; offset++)
+					{
+						Point pointA = Point::Create(tileDest.left + (*newTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
+						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+						surface->DrawLine(pointA, pointB);
+					}
 					
 					if (wasTileOver != -1)
 					{
-						ForeColor(whiteColor);
-						MoveTo(tileDest.left + (wasTileOver * kMiniTileWide), 
-								tileDest.top - 3);
-						Line(kMiniTileWide, 0);
-						MoveTo(tileDest.left + (wasTileOver * kMiniTileWide), 
-								tileDest.bottom + 1);
-						Line(kMiniTileWide, 0);
+						surface->SetForeColor(StdColors::White());
+
+						for (int offset = 0; offset < 2; offset++)
+						{
+							Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3 + offset);
+							Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+							surface->DrawLine(pointA, pointB);
+						}
+
+						for (int offset = 0; offset < 2; offset++)
+						{
+							Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
+							Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+							surface->DrawLine(pointA, pointB);
+						}
 					}
-					ForeColor(blackColor);
-					PenNormal();
-					PenInvertMode(true);
-					PenPat(GetQDGlobalsGray(&dummyPattern));
+
 					wasTileOver = *newTileOver;
 				}
 			}
@@ -182,19 +201,24 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 				*newTileOver = -1;					// we're not in the drop zone
 				if (wasTileOver != -1)
 				{
-					PenNormal();
-					PenSize(1, 2);
-					ForeColor(whiteColor);
-					MoveTo(tileDest.left + (wasTileOver * kMiniTileWide), 
-							tileDest.top - 3);
-					Line(kMiniTileWide, 0);
-					MoveTo(tileDest.left + (wasTileOver * kMiniTileWide), 
-							tileDest.bottom + 1);
-					Line(kMiniTileWide, 0);
-					ForeColor(blackColor);
-					PenNormal();
-					PenInvertMode(true);
-					PenPat(GetQDGlobalsGray(&dummyPattern));
+					surface->SetForeColor(StdColors::White());
+
+					for (int offset = 0; offset < 2; offset++)
+					{
+						Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3 + offset);
+						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+						surface->DrawLine(pointA, pointB);
+					}
+
+					for (int offset = 0; offset < 2; offset++)
+					{
+						Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
+						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+						surface->DrawLine(pointA, pointB);
+					}
+
 					wasTileOver = -1;
 				}
 			}
@@ -204,28 +228,34 @@ void DragMiniTile (Point mouseIs, short *newTileOver)
 	}
 	if (wasTileOver != -1)
 	{
-		PenNormal();
-		PenSize(1, 2);
-		ForeColor(whiteColor);
-		MoveTo(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3);
-		Line(kMiniTileWide, 0);
-		MoveTo(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1);
-		Line(kMiniTileWide, 0);
-		ForeColor(blackColor);
-		PenNormal();
-		PenInvertMode(true);
-		PenPat(GetQDGlobalsGray(&dummyPattern));
+		surface->SetForeColor(StdColors::White());
+
+		for (int offset = 0; offset < 2; offset++)
+		{
+			Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3 + offset);
+			Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+			surface->DrawLine(pointA, pointB);
+		}
+
+		for (int offset = 0; offset < 2; offset++)
+		{
+			Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
+			Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
+
+			surface->DrawLine(pointA, pointB);
+		}
+
 		wasTileOver = -1;
 	}
-	FrameRect(&dragRect);
-	PenNormal();
+	surface->InvertFrameRect(dragRect, pattern);
 }
 #endif
 
 //--------------------------------------------------------------  HiliteTileOver
 
 #ifndef COMPILEDEMO
-void HiliteTileOver (Point mouseIs)
+void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 {
 	short		newTileOver;
 	
@@ -240,23 +270,32 @@ void HiliteTileOver (Point mouseIs)
 		newTileOver = (mouseIs.h - tileSrc.left) / kMiniTileWide;
 		if (newTileOver != tileOver)
 		{
-			PenSize(1, 2);
-			ForeColor(redColor);
-			MoveTo(tileSrc.left + (newTileOver * kMiniTileWide), tileSrc.top - 3);
-			Line(kMiniTileWide, 0);
-			MoveTo(tileSrc.left + (newTileOver * kMiniTileWide), tileSrc.bottom + 1);
-			Line(kMiniTileWide, 0);
+			surface->SetForeColor(StdColors::Red());
+
+			{
+				const Point tileLineTopLeft = Point::Create(tileSrc.left + (newTileOver * kMiniTileWide), tileSrc.top - 3);
+				const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
+				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+			}
 			
 			if (tileOver != -1)
 			{
-				ForeColor(whiteColor);
-				MoveTo(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.top - 3);
-				Line(kMiniTileWide, 0);
-				MoveTo(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.bottom + 1);
-				Line(kMiniTileWide, 0);
+				surface->SetForeColor(StdColors::White());
+
+				{
+					const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.top - 3);
+					const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
+					surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+				}
+
+				{
+					const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.bottom + 1);
+					const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
+					surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+				}
 			}
-			ForeColor(blackColor);
-			PenNormal();
+
+			surface->SetForeColor(StdColors::Black());
 			
 			tileOver = newTileOver;
 		}
@@ -265,13 +304,21 @@ void HiliteTileOver (Point mouseIs)
 	{
 		if (tileOver != -1)
 		{
-			PenSize(1, 2);
-			ForeColor(whiteColor);
-			MoveTo(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.top - 3);
-			Line(kMiniTileWide, 0);
-			MoveTo(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.bottom + 1);
-			Line(kMiniTileWide, 0);
-			ForeColor(blackColor);
+			surface->SetForeColor(StdColors::White());
+
+			{
+				const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.top - 3);
+				const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
+				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+			}
+
+			{
+				const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.bottom + 1);
+				const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
+				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+			}
+
+			surface->SetForeColor(StdColors::Black());
 			PenNormal();
 			tileOver = -1;
 		}
@@ -303,6 +350,8 @@ Boolean RoomFilter (DialogPtr dial, EventRecord *event, short *item)
 {
 	Point		mouseIs;
 	short		newTileOver;
+
+	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 	
 	switch (event->what)
 	{
@@ -339,7 +388,7 @@ Boolean RoomFilter (DialogPtr dial, EventRecord *event, short *item)
 		{
 			if (StillDown())
 			{
-				DragMiniTile(mouseIs, &newTileOver);
+				DragMiniTile(surface, mouseIs, &newTileOver);
 				if ((newTileOver >= 0) && (newTileOver < kNumTiles))
 				{
 					tempTiles[newTileOver] = tileOver;
@@ -358,16 +407,15 @@ Boolean RoomFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateRoomInfoDialog(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
 		
 		default:
 		GetMouse(&mouseIs);
-		HiliteTileOver(mouseIs);
+		HiliteTileOver(surface, mouseIs);
 		return(false);
 		break;
 	}
@@ -387,10 +435,8 @@ void DoRoomInfo (void)
 	char			wasState;
 	Boolean			leaving, wasFirstRoom, forceDraw;
 	ModalFilterUPP	roomFilterUPP;
-	CGrafPtr	wasCPort;
 	PLError_t		theErr;
 	
-	wasCPort = GetGraphicsPort();
 	roomFilterUPP = NewModalFilterUPP(RoomFilter);
 	
 	tileOver = -1;
@@ -407,7 +453,6 @@ void DoRoomInfo (void)
 	ParamText(floorStr, suiteStr, objectsStr, PSTR(""));
 	
 	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(tileSrcMap);
 //	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
 //	SetPort((GrafPtr)tileSrcMap);
 	if ((tempBack > kStars) && (!PictIDExists(tempBack)))
@@ -417,17 +462,15 @@ void DoRoomInfo (void)
 	}
 	if ((tempBack == 2002) || (tempBack == 2011) || 
 			(tempBack == 2016) || (tempBack == 2017))
-		LoadScaledGraphic(tempBack - 800, &tileSrcRect);
+		LoadScaledGraphic(tileSrcMap, tempBack - 800, &tileSrcRect);
 	else
-		LoadScaledGraphic(tempBack, &tileSrcRect);
-	
-	SetGraphicsPort(wasCPort);
+		LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
 	
 	for (i = 0; i < kNumTiles; i++)
 		tempTiles[i] = thisRoom->tiles[i];
 	
 //	CenterDialog(kRoomInfoDialogID);
-	roomInfoDialog = GetNewDialog(kRoomInfoDialogID, nil, kPutInFront);
+	roomInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kRoomInfoDialogID, kPutInFront);
 	if (roomInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)roomInfoDialog);
@@ -445,7 +488,7 @@ void DoRoomInfo (void)
 	GetDialogItemRect(roomInfoDialog, kRoomNameItem, &editTETextBox);
 	SelectDialogItemText(roomInfoDialog, kRoomNameItem, 0, 1024);
 	
-	ShowWindow(GetDialogWindow(roomInfoDialog));
+	ShowWindow(roomInfoDialog->GetWindow());
 	DrawDefaultButton(roomInfoDialog);
 	
 	wasFirstRoom = ((*thisHouse)->firstRoom == thisRoomNumber);
@@ -507,10 +550,9 @@ void DoRoomInfo (void)
 				if ((tempBack != newBack) || (forceDraw))
 				{
 					tempBack = newBack;
-					SetPort((GrafPtr)tileSrcMap);
-					LoadScaledGraphic(tempBack, &tileSrcRect);
-					InvalWindowRect(GetDialogWindow(roomInfoDialog), &tileSrc);
-					InvalWindowRect(GetDialogWindow(roomInfoDialog), &tileDest);
+					LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+					InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
+					InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
 				}
 			}
 			else
@@ -532,14 +574,13 @@ void DoRoomInfo (void)
 			if (newBack != tempBack)
 			{
 				tempBack = newBack;
-				SetPort((GrafPtr)tileSrcMap);
 				if ((tempBack == 2002) || (tempBack == 2011) || 
 						(tempBack == 2016) || (tempBack == 2017))
-					LoadScaledGraphic(tempBack - 800, &tileSrcRect);
+					LoadScaledGraphic(tileSrcMap, tempBack - 800, &tileSrcRect);
 				else
-					LoadScaledGraphic(tempBack, &tileSrcRect);
-				InvalWindowRect(GetDialogWindow(roomInfoDialog), &tileSrc);
-				InvalWindowRect(GetDialogWindow(roomInfoDialog), &tileDest);
+					LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+				InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
+				InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
 			}
 		}
 		else if (item == kBoundsButton)
@@ -548,10 +589,9 @@ void DoRoomInfo (void)
 			if (tempBack != newBack)
 			{
 				tempBack = newBack;
-				SetPort((GrafPtr)tileSrcMap);
-				LoadScaledGraphic(tempBack, &tileSrcRect);
-				InvalWindowRect(GetDialogWindow(roomInfoDialog), &tileSrc);
-				InvalWindowRect(GetDialogWindow(roomInfoDialog), &tileDest);
+				LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+				InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
+				InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
 			}
 		}
 	}
@@ -688,9 +728,8 @@ Boolean OriginalArtFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateOriginalArt(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;

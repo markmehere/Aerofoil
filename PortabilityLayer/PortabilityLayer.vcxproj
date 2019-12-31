@@ -138,6 +138,7 @@
     <ClInclude Include="CFileStream.h" />
     <ClInclude Include="ClientAudioChannelContext.h" />
     <ClInclude Include="DataTypes.h" />
+    <ClInclude Include="DialogManager.h" />
     <ClInclude Include="DisplayDeviceManager.h" />
     <ClInclude Include="EllipsePlotter.h" />
     <ClInclude Include="FileManager.h" />
@@ -199,6 +200,8 @@
     <ClInclude Include="PLMacTypes.h" />
     <ClInclude Include="MenuManager.h" />
     <ClInclude Include="PlotDirection.h" />
+    <ClInclude Include="PLStandardColors.h" />
+    <ClInclude Include="ResolvedColor.h" />
     <ClInclude Include="ScanlineMaskBuilder.h" />
     <ClInclude Include="ScanlineMaskConverter.h" />
     <ClInclude Include="QDGraf.h" />
@@ -260,6 +263,7 @@
     <ClCompile Include="BinHex4.cpp" />
     <ClCompile Include="ByteSwap.cpp" />
     <ClCompile Include="CFileStream.cpp" />
+    <ClCompile Include="DialogManager.cpp" />
     <ClCompile Include="DisplayDeviceManager.cpp" />
     <ClCompile Include="EllipsePlotter.cpp" />
     <ClCompile Include="FileManager.cpp" />
@@ -300,6 +304,7 @@
     <ClCompile Include="PLResourceManager.cpp" />
     <ClCompile Include="PLResources.cpp" />
     <ClCompile Include="PLSound.cpp" />
+    <ClCompile Include="PLStandardColors.cpp" />
     <ClCompile Include="PLStringCompare.cpp" />
     <ClCompile Include="ScanlineMask.cpp" />
     <ClCompile Include="ScanlineMaskBuilder.cpp" />

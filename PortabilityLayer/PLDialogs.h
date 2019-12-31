@@ -7,8 +7,10 @@
 class PLPasStr;
 struct Control;
 
-struct Dialog : public PortabilityLayer::QDPort
+struct Dialog
 {
+	virtual void Destroy() = 0;
+	virtual Window *GetWindow() const = 0;
 };
 
 struct DialogTemplate
@@ -30,9 +32,7 @@ typedef THandle<DialogTemplate> DialogTHndl;
 typedef Boolean(*ModalFilterUPP)(DialogPtr dial, EventRecord *event, short *item);
 
 void DrawDialog(DialogPtr dialog);
-WindowPtr GetDialogWindow(DialogPtr dialog);
-DialogPtr GetNewDialog(int resID, void *unknown, WindowPtr behind);
-CGrafPtr GetDialogPort(DialogPtr dialog);
+DrawSurface *GetDialogPort(DialogPtr dialog);
 
 void GetDialogItem(DialogPtr dialog, int index, short *itemType, THandle<Control> *itemHandle, Rect *itemRect);
 void GetDialogItemText(THandle<Control> handle, StringPtr str);

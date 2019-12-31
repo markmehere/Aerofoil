@@ -4,13 +4,16 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "DialogManager.h"
 #include "PLControlDefinitions.h"
 #include "PLLowMem.h"
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
+#include "QDStandardPalette.h"
 #include "DialogUtils.h"
 #include "Externs.h"
+#include "FontFamily.h"
 
 
 #define kActive						0
@@ -24,12 +27,13 @@
 
 void BringUpDialog (DialogPtr *theDialog, short dialogID)
 {
+	*theDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(dialogID, kPutInFront);
+
 //	CenterDialog(dialogID);
-	*theDialog = GetNewDialog(dialogID, nil, kPutInFront);
 	if (*theDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)*theDialog);
-	ShowWindow(GetDialogWindow(*theDialog));
+	ShowWindow((*theDialog)->GetWindow());
 	DrawDefaultButton(*theDialog);
 }
 
@@ -616,9 +620,10 @@ void DrawDialogUserText (DialogPtr dial, short item, StringPtr text, Boolean inv
 	ControlHandle	iHandle;
 	Str255			newString, stringCopy;
 	short			iType, textLong, i, inset;
-	
-	TextFont(applFont);
-	TextSize(9);
+
+	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
+
+	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
 	
 	PasStringCopy(text, stringCopy);
 	GetDialogItem(dial, item, &iType, &iHandle, &iRect);
@@ -629,7 +634,11 @@ void DrawDialogUserText (DialogPtr dial, short item, StringPtr text, Boolean inv
 		newString[i] = stringCopy[i + 1];
 	
 	OffsetRect(&iRect, 0, 1);
-	EraseRect(&iRect);
+
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(iRect);
+	surface->SetForeColor(StdColors::Black());
+
 	OffsetRect(&iRect, 0, -1);
 	
 	inset = ((iRect.right - iRect.left) - (StringWidth(stringCopy) + 2)) / 2;
@@ -655,16 +664,17 @@ void DrawDialogUserText2 (DialogPtr dial, short item, StringPtr text)
 	ControlHandle	iHandle;
 	Str255			stringCopy;
 	short			iType;
-	
-	TextFont(applFont);
-	TextSize(9);
+
+	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
+	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
 	
 	PasStringCopy(text, stringCopy);
 	GetDialogItem(dial, item, &iType, &iHandle, &iRect);
 	if ((StringWidth(stringCopy) + 2) > (iRect.right - iRect.left))
 		CollapseStringToWidth(stringCopy, iRect.right - iRect.left - 2);
-	MoveTo(iRect.left, iRect.bottom);
-	DrawString(stringCopy);
+
+	surface->SetForeColor(StdColors::Black());
+	surface->DrawString(Point::Create(iRect.left, iRect.bottom), stringCopy);
 }
 
 //--------------------------------------------------------------  LoadDialogPICT
@@ -681,7 +691,7 @@ void LoadDialogPICT (DialogPtr theDialog, short item, short theID)
 	GetDialogItem(theDialog, item, &iType, &iHandle, &iRect);
 	thePict = GetPicture(theID);
 	if (thePict)
-		DrawPicture(thePict, &iRect);
+		theDialog->GetWindow()->GetDrawSurface()->DrawPicture(thePict, iRect);
 }
 
 //--------------------------------------------------------------  FrameDialogItem
@@ -692,9 +702,10 @@ void FrameDialogItem (DialogPtr theDialog, short item)
 	Rect			itemRect;
 	ControlHandle	itemHandle;
 	short			itemType;
+	DrawSurface		*surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	FrameRect(&itemRect);
+	surface->FrameRect(itemRect);
 }
 
 //--------------------------------------------------------------  FrameDialogItemC
@@ -702,17 +713,17 @@ void FrameDialogItem (DialogPtr theDialog, short item)
 
 void FrameDialogItemC (DialogPtr theDialog, short item, long color)
 {
-	RGBColor		theRGBColor, wasColor;
 	Rect			itemRect;
 	ControlHandle	itemHandle;
 	short			itemType;
+	DrawSurface		*surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	FrameRect(&itemRect);
-	RGBForeColor(&wasColor);
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color]);
+	surface->FrameRect(itemRect);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  FrameOvalDialogItem
@@ -725,7 +736,8 @@ void FrameOvalDialogItem (DialogPtr theDialog, short item)
 	short			itemType;
 	
 	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	FrameOval(&itemRect);
+
+	theDialog->GetWindow()->GetDrawSurface()->FrameEllipse(itemRect);
 }
 
 //--------------------------------------------------------------  BorderDialogItem
@@ -744,29 +756,35 @@ void BorderDialogItem (DialogPtr theDialog, short item, short sides)
 	// 8 = right ... so 6 = top & bottom, 15 = all 4 sides
 	
 	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	
+
+	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
+
 	if (sides >= 8)				// 8 = right
 	{
-		MoveTo(itemRect.right, itemRect.top);
-		LineTo(itemRect.right, itemRect.bottom);
+		const Point pointA = Point::Create(itemRect.right, itemRect.top);
+		const Point pointB = Point::Create(itemRect.right, itemRect.bottom);
+		surface->DrawLine(pointA, pointB);
 		sides -= 8;
 	}
 	if (sides >= 4)				// 4 = bottom
 	{
-		MoveTo(itemRect.left, itemRect.bottom);
-		LineTo(itemRect.right, itemRect.bottom);
+		const Point pointA = Point::Create(itemRect.left, itemRect.bottom);
+		const Point pointB = Point::Create(itemRect.right, itemRect.bottom);
+		surface->DrawLine(pointA, pointB);
 		sides -= 4;
 	}
 	if (sides >= 2)				// 2 = top
 	{
-		MoveTo(itemRect.left, itemRect.top - 1);
-		LineTo(itemRect.right, itemRect.top - 1);
+		const Point pointA = Point::Create(itemRect.left, itemRect.top - 1);
+		const Point pointB = Point::Create(itemRect.right, itemRect.top - 1);
+		surface->DrawLine(pointA, pointB);
 		sides -= 2;
 	}
 	if (sides >= 1)				// 1 = left
 	{
-		MoveTo(itemRect.left - 1, itemRect.top);
-		LineTo(itemRect.left - 1, itemRect.bottom);
+		const Point pointA = Point::Create(itemRect.left - 1, itemRect.top);
+		const Point pointB = Point::Create(itemRect.left - 1, itemRect.bottom);
+		surface->DrawLine(pointA, pointB);
 	}
 }
 
@@ -778,14 +796,18 @@ void ShadowDialogItem (DialogPtr theDialog, short item, short thickness)
 	Rect			itemRect;
 	ControlHandle	itemHandle;
 	short			itemType;
+
+	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	PenSize(thickness, thickness);
-	MoveTo(itemRect.left + thickness, itemRect.bottom);
-	Line(itemRect.right - itemRect.left - thickness, 0);
-	MoveTo(itemRect.right, itemRect.top + thickness);
-	Line(0, itemRect.bottom - itemRect.top - thickness);
-	PenNormal();
+
+	surface->SetForeColor(StdColors::Black());
+	const Point bottomLeftCorner = Point::Create(itemRect.left + thickness, itemRect.bottom);
+	const Point topRightCorner = Point::Create(itemRect.right, itemRect.top + thickness);
+	const Point bottomRightCorner = Point::Create(itemRect.right + thickness, itemRect.bottom + thickness);
+
+	surface->FillRect(Rect::Create(topRightCorner.v, topRightCorner.h, bottomRightCorner.v, bottomRightCorner.h));
+	surface->FillRect(Rect::Create(bottomLeftCorner.v, bottomLeftCorner.h, bottomRightCorner.v, bottomRightCorner.h));
 }
 
 //--------------------------------------------------------------  EraseDialogItem
@@ -798,6 +820,10 @@ void EraseDialogItem (DialogPtr theDialog, short item)
 	short			itemType;
 	
 	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	EraseRect(&itemRect);
+
+	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(itemRect);
+	surface->SetForeColor(StdColors::Black());
 }
 

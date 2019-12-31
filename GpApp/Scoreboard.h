@@ -8,8 +8,8 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr		boardSrcMap;
-extern GWorldPtr		badgeSrcMap;
-extern GWorldPtr		boardTSrcMap;
-extern GWorldPtr		boardGSrcMap;
-extern GWorldPtr		boardPSrcMap;
+extern DrawSurface	*boardSrcMap;
+extern DrawSurface	*badgeSrcMap;
+extern DrawSurface	*boardTSrcMap;
+extern DrawSurface	*boardGSrcMap;
+extern DrawSurface	*boardPSrcMap;

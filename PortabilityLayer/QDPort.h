@@ -14,7 +14,7 @@ namespace PortabilityLayer
 	{
 		QDPortType_Invalid,
 
-		QDPortType_CGraf,
+		QDPortType_DrawSurface,
 		QDPortType_Window,
 	};
 

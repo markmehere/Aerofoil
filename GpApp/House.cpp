@@ -624,9 +624,8 @@ Boolean GoToFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateGoToDialog(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;

@@ -18,8 +18,8 @@ namespace PortabilityLayer
 		void Init() override;
 		QDPort *GetPort() const override;
 		void SetPort(QDPort *gw) override;
-		PLError_t NewGWorld(CGraf **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) override;
-		void DisposeGWorld(CGraf *gw) override;
+		PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) override;
+		void DisposeGWorld(DrawSurface *gw) override;
 		QDState *GetState() override;
 
 		static QDManagerImpl *GetInstance();
@@ -49,16 +49,16 @@ namespace PortabilityLayer
 		m_port = gw;
 	}
 
-	PLError_t QDManagerImpl::NewGWorld(CGraf **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable)
+	PLError_t QDManagerImpl::NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable)
 	{
-		void *grafStorage = MemoryManager::GetInstance()->Alloc(sizeof(CGraf));
+		void *grafStorage = MemoryManager::GetInstance()->Alloc(sizeof(DrawSurface));
 		if (!grafStorage)
 			return PLErrors::kOutOfMemory;
 
 		if (!bounds.IsValid())
 			return PLErrors::kInvalidParameter;
 
-		CGraf *graf = new (grafStorage) CGraf();
+		DrawSurface *graf = new (grafStorage) DrawSurface();
 		PLError_t initError = graf->Init(bounds, pixelFormat);
 		if (initError)
 		{
@@ -70,9 +70,9 @@ namespace PortabilityLayer
 		return PLErrors::kNone;
 	}
 
-	void QDManagerImpl::DisposeGWorld(CGraf *gw)
+	void QDManagerImpl::DisposeGWorld(DrawSurface *gw)
 	{
-		gw->~CGraf();
+		gw->~DrawSurface();
 		MemoryManager::GetInstance()->Release(gw);
 	}
 

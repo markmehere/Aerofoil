@@ -43,8 +43,8 @@ void HandleIdleGlider (gliderPtr);
 
 gliderType	theGlider, theGlider2;
 Rect		shadowSrcRect;
-GWorldPtr	shadowSrcMap;
-GWorldPtr	shadowMaskMap;
+DrawSurface	*shadowSrcMap;
+DrawSurface	*shadowMaskMap;
 Rect		shadowSrc[kNumShadowSrcRects];
 Rect		gliderSrc[kNumGliderSrcRects];
 Rect		transRect;
@@ -1175,10 +1175,8 @@ void DeckGliderInFoil (gliderPtr thisGlider)
 	
 	if (twoPlayerGame)
 	{
-		SetPort((GrafPtr)glidSrcMap);
-		LoadGraphic(kGliderFoilPictID);
-		SetPort((GrafPtr)glid2SrcMap);
-		LoadGraphic(kGliderFoil2PictID);
+		LoadGraphic(glidSrcMap, kGliderFoilPictID);
+		LoadGraphic(glidSrcMap, kGliderFoil2PictID);
 	}
 	
 	if (thisGlider->facing == kFaceLeft)
@@ -1235,10 +1233,8 @@ void RemoveFoilFromGlider (gliderPtr thisGlider)
 	
 	if (twoPlayerGame)
 	{
-		SetPort((GrafPtr)glidSrcMap);
-		LoadGraphic(kGliderPictID);
-		SetPort((GrafPtr)glid2SrcMap);
-		LoadGraphic(kGlider2PictID);
+		LoadGraphic(glidSrcMap, kGliderPictID);
+		LoadGraphic(glid2SrcMap, kGlider2PictID);
 	}
 	
 	if (thisGlider->facing == kFaceLeft)

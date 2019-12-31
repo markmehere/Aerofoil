@@ -7,6 +7,8 @@
 
 #include "PLResources.h"
 #include "Externs.h"
+#include "FontFamily.h"
+#include "FontManager.h"
 #include "Objects.h"
 #include "Play.h"
 #include "Player.h"
@@ -60,18 +62,15 @@ void InitScoreboardMap (void)
 {
 	Rect		bounds;
 	PicHandle	thePicture;
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 	PLError_t		theErr;
 	short		hOffset;
-	
-	wasCPort = GetGraphicsPort();
 	
 	wasScoreboardMode = kScoreboardHigh;
 	boardSrcRect = houseRect;
 	ZeroRectCorner(&boardSrcRect);
 	boardSrcRect.bottom = kScoreboardTall;
 	theErr = CreateOffScreenGWorld(&boardSrcMap, &boardSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(boardSrcMap);
 	
 	if (boardSrcRect.right >= 640)
 		hOffset = (RectWide(&boardSrcRect) - kMaxViewWidth) / 2;
@@ -83,13 +82,12 @@ void InitScoreboardMap (void)
 	bounds = (*thePicture)->picFrame.ToRect();
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, hOffset, 0);
-	DrawPicture(thePicture, &bounds);
+	boardSrcMap->DrawPicture(thePicture, bounds);
 	thePicture.Dispose();
 	
 	QSetRect(&badgeSrcRect, 0, 0, 32, 66);				// 2144 pixels
 	theErr = CreateOffScreenGWorld(&badgeSrcMap, &badgeSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(badgeSrcMap);
-	LoadGraphic(kBadgePictID);
+	LoadGraphic(badgeSrcMap, kBadgePictID);
 	
 	boardDestRect = boardSrcRect;
 	
@@ -99,33 +97,27 @@ void InitScoreboardMap (void)
 	
 	QSetRect(&boardTSrcRect, 0, 0, 256, 12);			// room title
 	theErr = CreateOffScreenGWorld(&boardTSrcMap, &boardTSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(boardTSrcMap);
 	boardTDestRect = boardTSrcRect;
 	QOffsetRect(&boardTDestRect, 137 + hOffset, 5);
-	TextFont(applFont);
-	TextSize(12);
-	TextFace(bold);
+
+	boardTSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 	
 	QSetRect(&boardGSrcRect, 0, 0, 20, 10);				// # gliders
 	theErr = CreateOffScreenGWorld(&boardGSrcMap, &boardGSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(boardGSrcMap);
 	boardGDestRect = boardGSrcRect;
 	QOffsetRect(&boardGDestRect, 526 + hOffset, 5);
-	TextFont(applFont);
-	TextSize(12);
-	TextFace(bold);
+
+	boardGSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 	
 	QSetRect(&boardPSrcRect, 0, 0, 64, 10);				// points
 	theErr = CreateOffScreenGWorld(&boardPSrcMap, &boardPSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(boardPSrcMap);
 	boardPDestRect = boardPSrcRect;
 	QOffsetRect(&boardPDestRect, 570 + hOffset, 5);		// total = 6396 pixels
 	boardPQDestRect = boardPDestRect;
 	boardGQDestRect = boardGDestRect;
-	TextFont(applFont);
-	TextSize(12);
-	TextFace(bold);
-	
+
+	boardPSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+
 	QSetRect(&badgesBlankRects[0], 0, 0, 16, 16);		// foil
 	QOffsetRect(&badgesBlankRects[0], 0, 0);
 	QSetRect(&badgesBlankRects[1], 0, 0, 16, 16);		// rubber bands
@@ -152,8 +144,6 @@ void InitScoreboardMap (void)
 	QOffsetRect(&badgesDestRects[2], 467 + hOffset, 1);
 	QSetRect(&badgesDestRects[3], 0, 0, 16, 17);		// helium
 	QOffsetRect(&badgesDestRects[3], 467 + hOffset, 1);
-
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitGliderMap
@@ -162,24 +152,18 @@ void InitScoreboardMap (void)
 
 void InitGliderMap (void)
 {
-	CGrafPtr	wasCPort;
 	PLError_t		theErr;
 	short		i;
 	
-	wasCPort = GetGraphicsPort();
-	
 	QSetRect(&glidSrcRect, 0, 0, kGliderWide, 668);	// 32112 pixels
 	theErr = CreateOffScreenGWorld(&glidSrcMap, &glidSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(glidSrcMap);
-	LoadGraphic(kGliderPictID);
+	LoadGraphic(glidSrcMap, kGliderPictID);
 	
 	theErr = CreateOffScreenGWorld(&glid2SrcMap, &glidSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(glid2SrcMap);
-	LoadGraphic(kGlider2PictID);
+	LoadGraphic(glid2SrcMap, kGlider2PictID);
 	
 	theErr = CreateOffScreenGWorld(&glidMaskMap, &glidSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(glidMaskMap);
-	LoadGraphic(kGliderPictID + 1000);
+	LoadGraphic(glidMaskMap, kGliderPictID + 1000);
 	
 	for (i = 0; i <= 20; i++)
 	{
@@ -199,12 +183,10 @@ void InitGliderMap (void)
 	
 	QSetRect(&shadowSrcRect, 0, 0, kGliderWide, kShadowHigh * kNumShadowSrcRects);
 	theErr = CreateOffScreenGWorld(&shadowSrcMap, &shadowSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(shadowSrcMap);
-	LoadGraphic(kShadowPictID);
+	LoadGraphic(shadowSrcMap, kShadowPictID);
 	
 	theErr = CreateOffScreenGWorld(&shadowMaskMap, &shadowSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(shadowMaskMap);
-	LoadGraphic(kShadowPictID + 1000);
+	LoadGraphic(shadowMaskMap, kShadowPictID + 1000);
 	
 	for (i = 0; i < kNumShadowSrcRects; i++)
 	{
@@ -214,20 +196,16 @@ void InitGliderMap (void)
 	
 	QSetRect(&bandsSrcRect, 0, 0, 16, 18);		// 304 pixels
 	theErr = CreateOffScreenGWorld(&bandsSrcMap, &bandsSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(bandsSrcMap);
-	LoadGraphic(kRubberBandsPictID);
+	LoadGraphic(bandsSrcMap, kRubberBandsPictID);
 	
 	theErr = CreateOffScreenGWorld(&bandsMaskMap, &bandsSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(bandsMaskMap);
-	LoadGraphic(kRubberBandsPictID + 1000);
+	LoadGraphic(bandsMaskMap, kRubberBandsPictID + 1000);
 	
 	for (i = 0; i < 3; i++)
 	{
 		QSetRect(&bandRects[i], 0, 0, 16, 6);
 		QOffsetRect(&bandRects[i], 0, 6 * i);
 	}
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitBlowers
@@ -236,20 +214,15 @@ void InitGliderMap (void)
 
 void InitBlowers (void)
 {
-	CGrafPtr	wasCPort;
 	short		i;
 	PLError_t		theErr;
 	
-	wasCPort = GetGraphicsPort();
-	
 	QSetRect(&blowerSrcRect, 0, 0, 48, 402);	// 19344 pixels
 	theErr = CreateOffScreenGWorld(&blowerSrcMap, &blowerSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(blowerSrcMap);
-	LoadGraphic(kBlowerPictID);
+	LoadGraphic(blowerSrcMap, kBlowerPictID);
 	
 	theErr = CreateOffScreenGWorld(&blowerMaskMap, &blowerSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(blowerMaskMap);
-	LoadGraphic(kBlowerPictID + 1000);
+	LoadGraphic(blowerMaskMap, kBlowerPictID + 1000);
 	
 	for (i = 0; i < kNumCandleFlames; i++)
 	{
@@ -274,8 +247,6 @@ void InitBlowers (void)
 	
 	QSetRect(&rightStartGliderSrc, 0, 0, 48, 16);
 	QOffsetRect(&rightStartGliderSrc, 0, 374);
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitFurniture
@@ -284,19 +255,17 @@ void InitBlowers (void)
 
 void InitFurniture (void)
 {
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 	PLError_t		theErr;
 	
 	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&furnitureSrcRect, 0, 0, 64, 278);		// 17856 pixels
 	theErr = CreateOffScreenGWorld(&furnitureSrcMap, &furnitureSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(furnitureSrcMap);
-	LoadGraphic(kFurniturePictID);
+	LoadGraphic(furnitureSrcMap, kFurniturePictID);
 	
 	theErr = CreateOffScreenGWorld(&furnitureMaskMap, &furnitureSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(furnitureMaskMap);
-	LoadGraphic(kFurniturePictID + 1000);
+	LoadGraphic(furnitureMaskMap, kFurniturePictID + 1000);
 	
 	QSetRect(&tableSrc, 0, 0, 64, 22);
 	QOffsetRect(&tableSrc, 0, 0);
@@ -331,20 +300,15 @@ void InitFurniture (void)
 
 void InitPrizes (void)
 {
-	CGrafPtr	wasCPort;
 	short		i;
 	PLError_t		theErr;
 	
-	wasCPort = GetGraphicsPort();
-	
 	QSetRect(&bonusSrcRect, 0, 0, 88, 378);		// 33264 pixels
 	theErr = CreateOffScreenGWorld(&bonusSrcMap, &bonusSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(bonusSrcMap);
-	LoadGraphic(kBonusPictID);
+	LoadGraphic(bonusSrcMap, kBonusPictID);
 	
 	theErr = CreateOffScreenGWorld(&bonusMaskMap, &bonusSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(bonusMaskMap);
-	LoadGraphic(kBonusPictID + 1000);
+	LoadGraphic(bonusMaskMap, kBonusPictID + 1000);
 	
 	for (i = 0; i < 11; i++)
 	{
@@ -392,20 +356,16 @@ void InitPrizes (void)
 	
 	QSetRect(&pointsSrcRect, 0, 0, 24, 120);		// 2880 pixels
 	theErr = CreateOffScreenGWorld(&pointsSrcMap, &pointsSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(pointsSrcMap);
-	LoadGraphic(kPointsPictID);
+	LoadGraphic(pointsSrcMap, kPointsPictID);
 	
 	theErr = CreateOffScreenGWorld(&pointsMaskMap, &pointsSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(pointsMaskMap);
-	LoadGraphic(kPointsPictID + 1000);
+	LoadGraphic(pointsMaskMap, kPointsPictID + 1000);
 	
 	for (i = 0; i < 15; i++)
 	{
 		QSetRect(&pointsSrc[i], 0, 0, 24, 8);
 		QOffsetRect(&pointsSrc[i], 0, i * 8);
 	}
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitTransports
@@ -414,21 +374,14 @@ void InitPrizes (void)
 
 void InitTransports (void)
 {
-	CGrafPtr	wasCPort;
 	PLError_t		theErr;
-
-	wasCPort = GetGraphicsPort();
 
 	QSetRect(&transSrcRect, 0, 0, 56, 32);	// 1848 pixels
 	theErr = CreateOffScreenGWorld(&transSrcMap, &transSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(transSrcMap);
-	LoadGraphic(kTransportPictID);
+	LoadGraphic(transSrcMap, kTransportPictID);
 	
 	theErr = CreateOffScreenGWorld(&transMaskMap, &transSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(transMaskMap);
-	LoadGraphic(kTransportPictID + 1000);
-	
-	SetGraphicsPort(wasCPort);
+	LoadGraphic(transMaskMap, kTransportPictID + 1000);
 }
 
 //--------------------------------------------------------------  InitSwitches
@@ -437,15 +390,11 @@ void InitTransports (void)
 
 void InitSwitches (void)
 {
-	CGrafPtr	wasCPort;
 	PLError_t		theErr;
-	
-	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&switchSrcRect, 0, 0, 32, 104);	// 3360 pixels
 	theErr = CreateOffScreenGWorld(&switchSrcMap, &switchSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(switchSrcMap);
-	LoadGraphic(kSwitchPictID);
+	LoadGraphic(switchSrcMap, kSwitchPictID);
 	
 	QSetRect(&lightSwitchSrc[0], 0, 0, 15, 24);
 	QOffsetRect(&lightSwitchSrc[0], 0, 0);
@@ -471,8 +420,6 @@ void InitSwitches (void)
 	QOffsetRect(&knifeSwitchSrc[0], 0, 80);
 	QSetRect(&knifeSwitchSrc[1], 0, 0, 16, 24);
 	QOffsetRect(&knifeSwitchSrc[1], 16, 80);
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitLights
@@ -481,20 +428,15 @@ void InitSwitches (void)
 
 void InitLights (void)
 {
-	CGrafPtr	wasCPort;
 	short		i;
 	PLError_t		theErr;
 	
-	wasCPort = GetGraphicsPort();
-	
 	QSetRect(&lightSrcRect, 0, 0, 72, 126);		// 9144 pixels
 	theErr = CreateOffScreenGWorld(&lightSrcMap, &lightSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(lightSrcMap);
-	LoadGraphic(kLightPictID);
+	LoadGraphic(lightSrcMap, kLightPictID);
 	
 	theErr = CreateOffScreenGWorld(&lightMaskMap, &lightSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(lightMaskMap);
-	LoadGraphic(kLightPictID + 1000);
+	LoadGraphic(lightMaskMap, kLightPictID + 1000);
 	
 	QSetRect(&flourescentSrc1, 0, 0, 16, 12);
 	QOffsetRect(&flourescentSrc1, 0, 78);
@@ -507,8 +449,6 @@ void InitLights (void)
 		QSetRect(&trackLightSrc[i], 0, 0, 24, 24);
 		QOffsetRect(&trackLightSrc[i], 24 * i, 102);
 	}
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitAppliances
@@ -517,38 +457,29 @@ void InitLights (void)
 
 void InitAppliances (void)
 {
-	CGrafPtr	wasCPort;
 	short		i;
 	PLError_t		theErr;
 	
-	wasCPort = GetGraphicsPort();
-	
 	QSetRect(&applianceSrcRect, 0, 0, 80, 269);		// 21600 pixels
 	theErr = CreateOffScreenGWorld(&applianceSrcMap, &applianceSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(applianceSrcMap);
-	LoadGraphic(kAppliancePictID);
+	LoadGraphic(applianceSrcMap, kAppliancePictID);
 	
 	theErr = CreateOffScreenGWorld(&applianceMaskMap, &applianceSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(applianceMaskMap);
-	LoadGraphic(kAppliancePictID + 1000);
+	LoadGraphic(applianceMaskMap, kAppliancePictID + 1000);
 	
 	QSetRect(&toastSrcRect, 0, 0, 32, 174);			// 5600 pixels
 	theErr = CreateOffScreenGWorld(&toastSrcMap, &toastSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(toastSrcMap);
-	LoadGraphic(kToastPictID);
+	LoadGraphic(toastSrcMap, kToastPictID);
 	
 	theErr = CreateOffScreenGWorld(&toastMaskMap, &toastSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(toastMaskMap);
-	LoadGraphic(kToastPictID + 1000);
+	LoadGraphic(toastMaskMap, kToastPictID + 1000);
 	
 	QSetRect(&shredSrcRect, 0, 0, 40, 35);			// 1440 pixels
 	theErr = CreateOffScreenGWorld(&shredSrcMap, &shredSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(shredSrcMap);
-	LoadGraphic(kShreddedPictID);
+	LoadGraphic(shredSrcMap, kShreddedPictID);
 	
 	theErr = CreateOffScreenGWorld(&shredMaskMap, &shredSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(shredMaskMap);
-	LoadGraphic(kShreddedPictID + 1000);
+	LoadGraphic(shredMaskMap, kShreddedPictID + 1000);
 	
 	QSetRect(&plusScreen1, 0, 0, 32, 22);
 	QOffsetRect(&plusScreen1, 48, 127);
@@ -591,8 +522,6 @@ void InitAppliances (void)
 	QOffsetRect(&microOn, 64, 222);
 	QSetRect(&microOff, 0, 0, 16, 35);
 	QOffsetRect(&microOff, 64, 187);
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitEnemies
@@ -601,74 +530,57 @@ void InitAppliances (void)
 
 void InitEnemies (void)
 {
-	CGrafPtr	wasCPort;
 	short		i;
 	PLError_t		theErr;
 	
-	wasCPort = GetGraphicsPort();
-	
 	QSetRect(&balloonSrcRect, 0, 0, 24, 30 * kNumBalloonFrames);
 	theErr = CreateOffScreenGWorld(&balloonSrcMap, &balloonSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(balloonSrcMap);
-	LoadGraphic(kBalloonPictID);
+	LoadGraphic(balloonSrcMap, kBalloonPictID);
 	
 	theErr = CreateOffScreenGWorld(&balloonMaskMap, &balloonSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(balloonMaskMap);
-	LoadGraphic(kBalloonPictID + 1000);
+	LoadGraphic(balloonMaskMap, kBalloonPictID + 1000);
 	
 	QSetRect(&copterSrcRect, 0, 0, 32, 30 * kNumCopterFrames);
 	theErr = CreateOffScreenGWorld(&copterSrcMap, &copterSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(copterSrcMap);
-	LoadGraphic(kCopterPictID);
+	LoadGraphic(copterSrcMap, kCopterPictID);
 	
 	theErr = CreateOffScreenGWorld(&copterMaskMap, &copterSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(copterMaskMap);
-	LoadGraphic(kCopterPictID + 1000);
+	LoadGraphic(copterMaskMap, kCopterPictID + 1000);
 	
 	QSetRect(&dartSrcRect, 0, 0, 64, 19 * kNumDartFrames);
 	theErr = CreateOffScreenGWorld(&dartSrcMap, &dartSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(dartSrcMap);
-	LoadGraphic(kDartPictID);
+	LoadGraphic(dartSrcMap, kDartPictID);
 	
 	theErr = CreateOffScreenGWorld(&dartMaskMap, &dartSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(dartMaskMap);
-	LoadGraphic(kDartPictID + 1000);
+	LoadGraphic(dartMaskMap, kDartPictID + 1000);
 	
 	QSetRect(&ballSrcRect, 0, 0, 32, 32 * kNumBallFrames);
 	theErr = CreateOffScreenGWorld(&ballSrcMap, &ballSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(ballSrcMap);
-	LoadGraphic(kBallPictID);
+	LoadGraphic(ballSrcMap, kBallPictID);
 	
 	theErr = CreateOffScreenGWorld(&ballMaskMap, &ballSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(ballMaskMap);
-	LoadGraphic(kBallPictID + 1000);
+	LoadGraphic(ballMaskMap, kBallPictID + 1000);
 	
 	QSetRect(&dripSrcRect, 0, 0, 16, 12 * kNumDripFrames);
 	theErr = CreateOffScreenGWorld(&dripSrcMap, &dripSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(dripSrcMap);
-	LoadGraphic(kDripPictID);
+	LoadGraphic(dripSrcMap, kDripPictID);
 	
 	theErr = CreateOffScreenGWorld(&dripMaskMap, &dripSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(dripMaskMap);
-	LoadGraphic(kDripPictID + 1000);
+	LoadGraphic(dripMaskMap, kDripPictID + 1000);
 	
 	QSetRect(&enemySrcRect, 0, 0, 36, 33);
 	theErr = CreateOffScreenGWorld(&enemySrcMap, &enemySrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(enemySrcMap);
-	LoadGraphic(kEnemyPictID);
+	LoadGraphic(enemySrcMap, kEnemyPictID);
 	
 	theErr = CreateOffScreenGWorld(&enemyMaskMap, &enemySrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(enemyMaskMap);
-	LoadGraphic(kEnemyPictID + 1000);
+	LoadGraphic(enemyMaskMap, kEnemyPictID + 1000);
 	
 	QSetRect(&fishSrcRect, 0, 0, 16, 16 * kNumFishFrames);
 	theErr = CreateOffScreenGWorld(&fishSrcMap, &fishSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(fishSrcMap);
-	LoadGraphic(kFishPictID);
+	LoadGraphic(fishSrcMap, kFishPictID);
 	
 	theErr = CreateOffScreenGWorld(&fishMaskMap, &fishSrcRect, GpPixelFormats::kBW1);
-	SetGraphicsPort(fishMaskMap);
-	LoadGraphic(kFishPictID + 1000);
+	LoadGraphic(fishMaskMap, kFishPictID + 1000);
 	
 	for (i = 0; i < kNumBalloonFrames; i++)
 	{
@@ -705,7 +617,5 @@ void InitEnemies (void)
 		QSetRect(&fishSrc[i], 0, 0, 16, 16);
 		QOffsetRect(&fishSrc[i], 0, 16 * i);
 	}
-	
-	SetGraphicsPort(wasCPort);
 }
 

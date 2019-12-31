@@ -9,9 +9,11 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "Objects.h"
+#include "QDManager.h"
 #include "RectUtils.h"
 #include "Room.h"
 #include "Vec2i.h"
+#include "PLStandardColors.h"
 #include "ScanlineMask.h"
 #include "ScanlineMaskConverter.h"
 
@@ -73,10 +75,6 @@ void DrawTiki (Rect *theRect, short down)
 {
 #define kTikiPoleBase	300
 	long		darkGrayC, lightWoodC, darkWoodC;
-	CGrafPtr	wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -93,19 +91,17 @@ void DrawTiki (Rect *theRect, short down)
 	
 	if (theRect->bottom < kTikiPoleBase + down)
 	{
-		ColorLine(theRect->left + 11, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 11, theRect->bottom - 1,
 				theRect->left + 11, kTikiPoleBase + down - 1, darkGrayC);
-		ColorLine(theRect->left + 12, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 12, theRect->bottom - 1,
 				theRect->left + 12, kTikiPoleBase + down, lightWoodC);
-		ColorLine(theRect->left + 13, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 13, theRect->bottom - 1,
 				theRect->left + 13, kTikiPoleBase + down, darkWoodC);
-		ColorLine(theRect->left + 14, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 14, theRect->bottom - 1,
 				theRect->left + 14, kTikiPoleBase + down, darkWoodC);
-		ColorLine(theRect->left + 15, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 15, theRect->bottom - 1,
 				theRect->left + 15, kTikiPoleBase + down - 1, darkGrayC);
 	}
-	
-	SetGraphicsPort(wasCPort);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(blowerSrcMap), 
 			(BitMap *)*GetGWorldPixMap(blowerMaskMap), 
@@ -118,28 +114,18 @@ void DrawTiki (Rect *theRect, short down)
 void DrawInvisibleBlower (Rect *theRect)
 {
 	Rect		tempRect;
-	CGrafPtr	wasCPort;
 
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	
 	QSetRect(&tempRect, 0, 0, 24, 24);
 	QOffsetRect(&tempRect, theRect->left, theRect->top);
 	
-	ColorFrameRect(&tempRect, 192);
-	SetGraphicsPort(wasCPort);
+	ColorFrameRect(backSrcMap, tempRect, 192);
 }
 
 //--------------------------------------------------------------  DrawLiftArea
 
 void DrawLiftArea (Rect *theRect)
 {	
-	CGrafPtr	wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	ColorFrameRect(theRect, 192);
-	SetGraphicsPort(wasCPort);
+	ColorFrameRect(backSrcMap, *theRect, 192);
 }
 
 //--------------------------------------------------------------  DrawTable
@@ -152,7 +138,6 @@ void DrawTable (Rect *tableTop, short down)
 	Rect		tempRect;
 	long		brownC, tanC, dkRedC, blackC;
 	short		hCenter, vShadow;
-	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -170,83 +155,81 @@ void DrawTable (Rect *tableTop, short down)
 		blackC = k8BlackColor;
 	}
 	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	
 	QSetRect(&tempRect, tableTop->left, 0, tableTop->right, 
 			RectWide(tableTop) / 10);
 	QOffsetRect(&tempRect, 0, 
 			-HalfRectTall(&tempRect) + kTableShadowTop + down);
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMask(true);
+
+	backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
+	backSrcMap->SetMaskMode(true);
+
 	if (thisMac.isDepth == 4)
-		ColorOval(&tempRect, 15);
+		ColorOval(backSrcMap, tempRect, 15);
 	else
-		ColorOval(&tempRect, k8DkstGrayColor);
-	PenNormal();
+		ColorOval(backSrcMap, tempRect, k8DkstGrayColor);
+	backSrcMap->ClearPattern();
+	backSrcMap->SetMaskMode(false);
 	
 	InsetRect(tableTop, 0, 1);
-	ColorRect(tableTop, brownC);
+	ColorRect(backSrcMap, *tableTop, brownC);
 	InsetRect(tableTop, 0, -1);
 	
-	ColorLine(tableTop->left, tableTop->top + 1, 
+	ColorLine(backSrcMap, tableTop->left, tableTop->top + 1,
 			tableTop->left, tableTop->top + 1, k8WhiteColor);
-	ColorLine(tableTop->left + 1, tableTop->top, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->top,
 			tableTop->right - 2, tableTop->top, k8WhiteColor);
-	ColorLine(tableTop->right - 1, tableTop->top + 1, 
+	ColorLine(backSrcMap, tableTop->right - 1, tableTop->top + 1,
 			tableTop->right - 1, tableTop->top + 1, k8WhiteColor);
 	
-	ColorLine(tableTop->left + 1, tableTop->top + 1, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->top + 1,
 			tableTop->right - 2, tableTop->top + 1, tanC);
-	ColorLine(tableTop->left, tableTop->top + 2, 
+	ColorLine(backSrcMap, tableTop->left, tableTop->top + 2,
 			tableTop->left, tableTop->bottom - 2, tanC);
 	
-	ColorLine(tableTop->left + 1, tableTop->bottom - 1, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->bottom - 1,
 			tableTop->right - 2, tableTop->bottom - 1, blackC);
-	ColorLine(tableTop->right - 1, tableTop->top + 2, 
+	ColorLine(backSrcMap, tableTop->right - 1, tableTop->top + 2,
 			tableTop->right - 1, tableTop->bottom - 2, blackC);
 	
-	ColorLine(tableTop->left + 1, tableTop->bottom - 2, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->bottom - 2,
 			tableTop->right - 2, tableTop->bottom - 2, dkRedC);
 	
 	if (tableTop->bottom < kTableBaseTop + down)
 	{
 		hCenter = (tableTop->left + tableTop->right) / 2;
 		
-		ColorLine(hCenter - 3, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter - 3, tableTop->bottom,
 				hCenter - 3, kTableBaseTop + down, blackC);
-		ColorLine(hCenter - 2, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter - 2, tableTop->bottom,
 				hCenter - 2, kTableBaseTop + down, k8LtGrayColor);
-		ColorLine(hCenter - 1, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter - 1, tableTop->bottom,
 				hCenter - 1, kTableBaseTop + down, k8GrayColor);
-		ColorLine(hCenter, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter, tableTop->bottom,
 				hCenter, kTableBaseTop + down, k8DkGrayColor);
-		ColorLine(hCenter + 1, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter + 1, tableTop->bottom,
 				hCenter + 1, kTableBaseTop + down, blackC);
 	
 		vShadow = tableTop->bottom + RectWide(tableTop) / 4 - 2;
 		if (vShadow > kTableBaseTop + down)
 		{
-			ColorLine(hCenter - 2, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 2, tableTop->bottom,
 					hCenter - 2, kTableBaseTop + down, k8DkGrayColor);
-			ColorLine(hCenter - 1, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 1, tableTop->bottom,
 					hCenter - 1, kTableBaseTop + down, k8DkGrayColor);
-			ColorLine(hCenter, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter, tableTop->bottom,
 					hCenter, kTableBaseTop + down, blackC);
 		}
 		else
 		{
-			ColorLine(hCenter - 2, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 2, tableTop->bottom,
 					hCenter - 2, vShadow, k8DkGrayColor);
-			ColorLine(hCenter - 1, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 1, tableTop->bottom,
 					hCenter - 1, vShadow + 1, k8DkGrayColor);
-			ColorLine(hCenter, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter, tableTop->bottom,
 					hCenter, vShadow + 2, blackC);
 		}
 	}
-	
-	SetGraphicsPort(wasCPort);
 	
 	tempRect = tableSrc;
 	QOffsetRect(&tempRect, -HalfRectWide(&tableSrc) + tableTop->left + 
@@ -267,7 +250,6 @@ void DrawShelf (Rect *shelfTop)
 	#define		kShelfShadowOff		12
 	Rect		tempRect;
 	long		brownC, ltTanC, tanC, dkRedC, blackC;
-	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -286,9 +268,6 @@ void DrawShelf (Rect *shelfTop)
 		dkRedC = k8DkRed2Color;
 		blackC = k8BlackColor;
 	}
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
 
 	PortabilityLayer::Vec2i poly[5];
 	poly[0] = PortabilityLayer::Vec2i(shelfTop->left, shelfTop->bottom);
@@ -301,39 +280,37 @@ void DrawShelf (Rect *shelfTop)
 
 	if (mask)
 	{
-		PenPat(GetQDGlobalsGray(&dummyPattern));
-		PenMask(true);
+		backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
+		backSrcMap->SetMaskMode(true);
 		if (thisMac.isDepth == 4)
-			ColorRegion(mask, 15);
+			ColorRegion(backSrcMap, mask, 15);
 		else
-			ColorRegion(mask, k8DkstGrayColor);
-		PenNormal();
+			ColorRegion(backSrcMap, mask, k8DkstGrayColor);
+		backSrcMap->ClearPattern();
+		backSrcMap->SetMaskMode(false);
 		mask->Destroy();
 	}
 
-	MoveTo(shelfTop->left, shelfTop->bottom);
 	InsetRect(shelfTop, 0, 1);
-	ColorRect(shelfTop, brownC);
+	ColorRect(backSrcMap, *shelfTop, brownC);
 	InsetRect(shelfTop, 0, -1);
 	
-	ColorLine(shelfTop->left + 1, shelfTop->top, 
+	ColorLine(backSrcMap, shelfTop->left + 1, shelfTop->top,
 			shelfTop->left + 1 + kShelfDeep, shelfTop->top, ltTanC);
-	ColorLine(shelfTop->left, shelfTop->top + 1, 
+	ColorLine(backSrcMap, shelfTop->left, shelfTop->top + 1,
 			shelfTop->left + kShelfDeep, shelfTop->top + 1, tanC);
-	ColorLine(shelfTop->left, shelfTop->top + 2, 
+	ColorLine(backSrcMap, shelfTop->left, shelfTop->top + 2,
 			shelfTop->left + kShelfDeep, shelfTop->top + 2, tanC);
-	ColorLine(shelfTop->left, shelfTop->top + 3, 
+	ColorLine(backSrcMap, shelfTop->left, shelfTop->top + 3,
 			shelfTop->left + kShelfDeep, shelfTop->top + 3, tanC);
-	ColorLine(shelfTop->left + 1, shelfTop->bottom - 1, 
+	ColorLine(backSrcMap, shelfTop->left + 1, shelfTop->bottom - 1,
 			shelfTop->left + 1 + kShelfDeep, shelfTop->bottom - 1, dkRedC);
-	ColorLine(shelfTop->left + 2 + kShelfDeep, shelfTop->bottom - 1, 
+	ColorLine(backSrcMap, shelfTop->left + 2 + kShelfDeep, shelfTop->bottom - 1,
 			shelfTop->right - 2, shelfTop->bottom - 1, blackC);
-	ColorLine(shelfTop->left + 2 + kShelfDeep, shelfTop->top, 
+	ColorLine(backSrcMap, shelfTop->left + 2 + kShelfDeep, shelfTop->top,
 			shelfTop->right - 2, shelfTop->top, tanC);
-	ColorLine(shelfTop->right - 1, shelfTop->top + 1, 
+	ColorLine(backSrcMap, shelfTop->right - 1, shelfTop->top + 1,
 			shelfTop->right - 1, shelfTop->bottom - 2, blackC);
-	
-	SetGraphicsPort(wasCPort);
 	
 	tempRect = shelfSrc;
 	ZeroRectCorner(&tempRect);
@@ -360,7 +337,6 @@ void DrawCabinet (Rect *cabinet)
 	#define		kCabinetShadowOff	6
 	Rect		tempRect;
 	long		brownC, dkGrayC, ltTanC, tanC, dkRedC, blackC;
-	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -381,11 +357,6 @@ void DrawCabinet (Rect *cabinet)
 		dkRedC = k8DkRed2Color;
 		blackC = k8BlackColor;
 	}
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	
-	MoveTo(cabinet->left, cabinet->bottom);
 
 	{
 
@@ -400,64 +371,63 @@ void DrawCabinet (Rect *cabinet)
 
 		if (mask)
 		{
-			PenPat(GetQDGlobalsGray(&dummyPattern));
-			PenMask(true);
+			backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
+			backSrcMap->SetMaskMode(true);
 			if (thisMac.isDepth == 4)
-				ColorRegion(mask, 15);
+				ColorRegion(backSrcMap, mask, 15);
 			else
-				ColorRegion(mask, dkGrayC);
-			PenNormal();
+				ColorRegion(backSrcMap, mask, dkGrayC);
+			backSrcMap->ClearPattern();
+			backSrcMap->SetMaskMode(false);
 
 			mask->Destroy();
 		}
 	}
 	
 	InsetRect(cabinet, 1, 1);		// fill bulk of cabinet brown
-	ColorRect(cabinet, brownC);
+	ColorRect(backSrcMap, *cabinet, brownC);
 	InsetRect(cabinet, -1, -1);
 	
 	tempRect = *cabinet;			// add lighter left side
 	tempRect.right = tempRect.left + kCabinetDeep;
-	ColorRect(&tempRect, tanC);
+	ColorRect(backSrcMap, tempRect, tanC);
 									// hilight top edge
-	ColorLine(cabinet->left + 1, cabinet->top + 1, 
+	ColorLine(backSrcMap, cabinet->left + 1, cabinet->top + 1,
 			cabinet->left + kCabinetDeep, cabinet->top + 1, ltTanC);
-	ColorLine(cabinet->left + kCabinetDeep, cabinet->top + 1, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep, cabinet->top + 1,
 			cabinet->right - 3, cabinet->top + 1, tanC);
 									// shadow bottom edge
 	
-	ColorLine(cabinet->left + kCabinetDeep + 3, cabinet->top + 5, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 3, cabinet->top + 5,
 			cabinet->left + kCabinetDeep + 3, cabinet->bottom - 6, tanC);
-	ColorLine(cabinet->left + kCabinetDeep + 4, cabinet->top + 5, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 4, cabinet->top + 5,
 			cabinet->left + kCabinetDeep + 4, cabinet->bottom - 6, tanC);
-	ColorLine(cabinet->left + kCabinetDeep + 9, cabinet->top + 10, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 9, cabinet->top + 10,
 			cabinet->left + kCabinetDeep + 9, cabinet->bottom - 11, dkGrayC);
 	
-	ColorLine(cabinet->right - 4, cabinet->top + 6, 
+	ColorLine(backSrcMap, cabinet->right - 4, cabinet->top + 6,
 			cabinet->right - 4, cabinet->bottom - 5, dkRedC);
-	ColorLine(cabinet->right - 5, cabinet->top + 5, 
+	ColorLine(backSrcMap, cabinet->right - 5, cabinet->top + 5,
 			cabinet->right - 5, cabinet->bottom - 6, dkGrayC);
-	ColorLine(cabinet->right - 10, cabinet->top + 10, 
+	ColorLine(backSrcMap, cabinet->right - 10, cabinet->top + 10,
 			cabinet->right - 10, cabinet->bottom - 11, tanC);
 	
-	ColorLine(cabinet->left + kCabinetDeep + 4, cabinet->top + 4, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 4, cabinet->top + 4,
 			cabinet->left + kCabinetDeep + 4, cabinet->top + 4, ltTanC);
-	ColorLine(cabinet->left + kCabinetDeep + 5, cabinet->top + 4, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 5, cabinet->top + 4,
 			cabinet->right - 6, cabinet->top + 4, tanC);
-	ColorLine(cabinet->left + kCabinetDeep + 10, cabinet->top + 9, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 10, cabinet->top + 9,
 			cabinet->right - 11, cabinet->top + 9, dkGrayC);
 	
-	ColorLine(cabinet->right - 5, cabinet->bottom - 5, 
+	ColorLine(backSrcMap, cabinet->right - 5, cabinet->bottom - 5,
 			cabinet->right - 5, cabinet->bottom - 5, dkRedC);
-	ColorLine(cabinet->left + kCabinetDeep + 6, cabinet->bottom - 4, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 6, cabinet->bottom - 4,
 			cabinet->right - 5, cabinet->bottom - 4, dkRedC);
-	ColorLine(cabinet->left + kCabinetDeep + 5, cabinet->bottom - 5, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 5, cabinet->bottom - 5,
 			cabinet->right - 6, cabinet->bottom - 5, dkGrayC);
 	
-	ColorLine(cabinet->left + kCabinetDeep + 10, cabinet->bottom - 10, 
+	ColorLine(backSrcMap, cabinet->left + kCabinetDeep + 10, cabinet->bottom - 10,
 			cabinet->right - 11, cabinet->bottom - 10, tanC);
-	
-	SetGraphicsPort(wasCPort);
 	
 	tempRect = hingeSrc;
 	ZeroRectCorner(&tempRect);
@@ -483,8 +453,8 @@ void DrawCabinet (Rect *cabinet)
 			(BitMap *)*GetGWorldPixMap(furnitureMaskMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&handleSrc, &handleSrc, &tempRect);
-	
-	FrameRect(cabinet);
+
+	backSrcMap->FrameRect(*cabinet);
 }
 
 //--------------------------------------------------------------  DrawSimpleFurniture
@@ -508,7 +478,7 @@ void DrawCounter(Rect *counter)
 	Rect		tempRect;
 	long		brownC, dkGrayC, tanC, blackC, dkstRedC;
 	short		nRects, width, i;
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 	Pattern		dummyPattern;
 
 	if (thisMac.isDepth == 4)
@@ -528,11 +498,6 @@ void DrawCounter(Rect *counter)
 		dkstRedC = k8DkRed2Color;
 	}
 
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-
-	MoveTo(counter->right - 2, counter->bottom);
-
 	{
 		PortabilityLayer::Vec2i poly[6];
 		poly[0] = PortabilityLayer::Vec2i(counter->right - 2, counter->bottom);
@@ -546,88 +511,87 @@ void DrawCounter(Rect *counter)
 
 		if (mask)
 		{
-			PenPat(GetQDGlobalsGray(&dummyPattern));
-			PenMask(true);
+			backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
+			backSrcMap->SetMaskMode(true);
 			if (thisMac.isDepth == 4)
-				ColorRegion(mask, 15);
+				ColorRegion(backSrcMap, mask, 15);
 			else
-				ColorRegion(mask, dkGrayC);
-			PenNormal();
+				ColorRegion(backSrcMap, mask, dkGrayC);
+			backSrcMap->ClearPattern();
+			backSrcMap->SetMaskMode(false);
 
 			mask->Destroy();
 		}
 	}
 	
 	InsetRect(counter, 2, 2);
-	ColorRect(counter, brownC);
+	ColorRect(backSrcMap, *counter, brownC);
 	InsetRect(counter, -2, -2);
 	
 	tempRect = *counter;
 	tempRect.top = tempRect.bottom - kCounterFooterHigh;
 	tempRect.left += 2;
 	tempRect.right -= 2;
-	ColorRect(&tempRect, dkGrayC);
-	ColorLine(counter->left + 2, counter->bottom - kCounterFooterHigh, 
+	ColorRect(backSrcMap, tempRect, dkGrayC);
+	ColorLine(backSrcMap, counter->left + 2, counter->bottom - kCounterFooterHigh,
 			counter->right - 3, counter->bottom - kCounterFooterHigh, blackC);
-	ColorLine(counter->left + 2, counter->bottom - kCounterFooterHigh + 1, 
+	ColorLine(backSrcMap, counter->left + 2, counter->bottom - kCounterFooterHigh + 1,
 			counter->right - 3, counter->bottom - kCounterFooterHigh + 1, blackC);
-	ColorLine(counter->right - 3, counter->bottom - kCounterFooterHigh, 
+	ColorLine(backSrcMap, counter->right - 3, counter->bottom - kCounterFooterHigh,
 			counter->right - 3, counter->bottom - 1, blackC);
-	ColorLine(counter->left + 2, counter->bottom - kCounterFooterHigh, 
+	ColorLine(backSrcMap, counter->left + 2, counter->bottom - kCounterFooterHigh,
 			counter->left + 2, counter->bottom - 1, k8DkGrayColor);
 	
-	ColorLine(counter->right - 2, counter->top, 
+	ColorLine(backSrcMap, counter->right - 2, counter->top,
 			counter->right - 2, counter->bottom - kCounterFooterHigh - 1, dkstRedC);
-	ColorLine(counter->left + 1, counter->top + 8, 
+	ColorLine(backSrcMap, counter->left + 1, counter->top + 8,
 			counter->left + 1, counter->bottom - kCounterFooterHigh - 1, tanC);
 	
 	if (thisMac.isDepth == 4)
 	{
-		ColorLine(counter->left - 1, counter->top, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top,
 				counter->right, counter->top, 1);
-		ColorLine(counter->left - 1, counter->top + 1, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 1,
 				counter->right, counter->top + 1, 2);
-		ColorLine(counter->left - 1, counter->top + 2, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 2,
 				counter->right, counter->top + 2, 3);
-		ColorLine(counter->left - 1, counter->top + 3, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 3,
 				counter->right, counter->top + 3, 4);
-		ColorLine(counter->left - 1, counter->top + 4, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 4,
 				counter->right, counter->top + 4, 5);
-		ColorLine(counter->left - 1, counter->top + 5, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 5,
 				counter->right, counter->top + 5, 5);
-		ColorLine(counter->left - 1, counter->top + 6, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 6,
 				counter->right, counter->top + 6, 5);
-		ColorLine(counter->left - 1, counter->top, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top,
 				counter->left - 1, counter->top + 6, 1);
 	}
 	else
 	{
-		ColorLine(counter->left - 1, counter->top, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top,
 				counter->right, counter->top, k8LtstGrayColor);
-		ColorLine(counter->left - 1, counter->top + 1, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 1,
 				counter->right, counter->top + 1, k8LtstGray2Color);
-		ColorLine(counter->left - 1, counter->top + 2, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 2,
 				counter->right, counter->top + 2, k8LtstGray3Color);
-		ColorLine(counter->left - 1, counter->top + 3, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 3,
 				counter->right, counter->top + 3, k8LtstGray4Color);
-		ColorLine(counter->left - 1, counter->top + 4, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 4,
 				counter->right, counter->top + 4, k8LtstGray5Color);
-		ColorLine(counter->left - 1, counter->top + 5, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 5,
 				counter->right, counter->top + 5, k8LtstGray5Color);
-		ColorLine(counter->left - 1, counter->top + 6, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top + 6,
 				counter->right, counter->top + 6, k8LtstGray5Color);
-		ColorLine(counter->left - 1, counter->top, 
+		ColorLine(backSrcMap, counter->left - 1, counter->top,
 				counter->left - 1, counter->top + 6, k8LtstGrayColor);
 	}
 	
-	ColorLine(counter->right, counter->top, 
+	ColorLine(backSrcMap, counter->right, counter->top,
 			counter->right, counter->top + 6, k8LtGrayColor);
-	ColorLine(counter->left + 1, counter->top + 7, 
+	ColorLine(backSrcMap, counter->left + 1, counter->top + 7,
 			counter->right - 2, counter->top + 7, dkstRedC);
-	ColorLine(counter->left + 1, counter->top + 8, 
+	ColorLine(backSrcMap, counter->left + 1, counter->top + 8,
 			counter->right - 2, counter->top + 8, dkstRedC);
-	
-	SetGraphicsPort(wasCPort);
 	
 	nRects = RectWide(counter) / 40;
 	if (nRects == 0)
@@ -638,9 +602,9 @@ void DrawCounter(Rect *counter)
 			counter->top + kCounterPanelDrop);
 	for (i = 0; i < nRects; i++)
 	{
-		HiliteRect(&tempRect, tanC, dkstRedC);
+		HiliteRect(backSrcMap, tempRect, tanC, dkstRedC);
 		InsetRect(&tempRect, 4, 4);
-		HiliteRect(&tempRect, dkstRedC, tanC);
+		HiliteRect(backSrcMap, tempRect, dkstRedC, tanC);
 		InsetRect(&tempRect, -4, -4);
 		QOffsetRect(&tempRect, kCounterStripWide + width, 0);
 	}
@@ -657,8 +621,10 @@ void DrawDresser(Rect *dresser)
 	Rect		tempRect, dest;
 	long		yellowC, brownC, dkGrayC, ltTanC, dkstRedC;
 	short		nRects, height, i;
-	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
+
+	DrawSurface *surface = reinterpret_cast<DrawSurface*>(PortabilityLayer::QDManager::GetInstance()->GetPort());
+	//surface = backSrcMap;
 
 	if (thisMac.isDepth == 4)
 	{
@@ -677,11 +643,6 @@ void DrawDresser(Rect *dresser)
 		dkstRedC = k8DkRed2Color;
 	}
 
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-
-	MoveTo(dresser->left + 10, dresser->bottom + 9);
-
 	{
 		PortabilityLayer::Vec2i poly[6];
 		poly[0] = PortabilityLayer::Vec2i(dresser->left + 10, dresser->bottom + 9);
@@ -695,20 +656,20 @@ void DrawDresser(Rect *dresser)
 	}
 	
 	InsetRect(dresser, 2, 2);
-	ColorRect(dresser, k8PumpkinColor);
-	HiliteRect(dresser, k8OrangeColor, dkstRedC);
+	ColorRect(backSrcMap, *dresser, k8PumpkinColor);
+	HiliteRect(backSrcMap, *dresser, k8OrangeColor, dkstRedC);
 	InsetRect(dresser, -2, -2);
 	
 	tempRect = *dresser;
 	tempRect.bottom = tempRect.top + kDresserTopThick;
-	ColorRect(&tempRect, k8PissYellowColor);
-	HiliteRect(&tempRect, ltTanC, dkstRedC);
-	ColorLine(dresser->left + 2, dresser->top + kDresserTopThick, 
+	ColorRect(backSrcMap, tempRect, k8PissYellowColor);
+	HiliteRect(backSrcMap, tempRect, ltTanC, dkstRedC);
+	ColorLine(backSrcMap, dresser->left + 2, dresser->top + kDresserTopThick,
 			dresser->right - 3, dresser->top + kDresserTopThick, k8Red4Color);
 	
-	ColorLine(dresser->left + kDresserCrease, dresser->top + kDresserTopThick + 1, 
+	ColorLine(backSrcMap, dresser->left + kDresserCrease, dresser->top + kDresserTopThick + 1,
 			dresser->left + kDresserCrease, dresser->bottom - 4, k8Red4Color);
-	ColorLine(dresser->right - kDresserCrease, dresser->top + kDresserTopThick + 1, 
+	ColorLine(backSrcMap, dresser->right - kDresserCrease, dresser->top + kDresserTopThick + 1,
 			dresser->right - kDresserCrease, dresser->bottom - 4, k8OrangeColor);
 	
 	nRects = RectTall(dresser) / 30;
@@ -719,14 +680,14 @@ void DrawDresser(Rect *dresser)
 	QOffsetRect(&tempRect, dresser->left + 7, dresser->top + 10);
 	for (i = 0; i < nRects; i++)
 	{
-		ColorLine(tempRect.left + 1, tempRect.bottom, 
+		ColorLine(backSrcMap, tempRect.left + 1, tempRect.bottom,
 				tempRect.right, tempRect.bottom, dkstRedC);
-		ColorLine(tempRect.right, tempRect.top + 1, 
+		ColorLine(backSrcMap, tempRect.right, tempRect.top + 1,
 				tempRect.right, tempRect.bottom, dkstRedC);
-		ColorRect(&tempRect, yellowC);
-		HiliteRect(&tempRect, ltTanC, brownC);
+		ColorRect(backSrcMap, tempRect, yellowC);
+		HiliteRect(backSrcMap, tempRect, ltTanC, brownC);
 		InsetRect(&tempRect, 1, 1);
-		HiliteRect(&tempRect, ltTanC, brownC);
+		HiliteRect(backSrcMap, tempRect, ltTanC, brownC);
 		InsetRect(&tempRect, -1, -1);
 		
 		QSetRect(&dest, -4, -4, 4, 4);
@@ -745,8 +706,6 @@ void DrawDresser(Rect *dresser)
 		
 		QOffsetRect(&tempRect, 0, kDresserTopThick + height);
 	}
-	
-	SetGraphicsPort(wasCPort);
 	
 	dest = leftFootSrc;
 	ZeroRectCorner(&dest);
@@ -778,7 +737,7 @@ void DrawDeckTable (Rect *tableTop, short down)
 	Rect		tempRect;
 	long		bambooC, brownC, dkGrayC;
 	short		hCenter, vShadow;
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 	Pattern		dummyPattern;
 	
 	if (thisMac.isDepth == 4)
@@ -794,9 +753,6 @@ void DrawDeckTable (Rect *tableTop, short down)
 		dkGrayC = k8DkstGrayColor;
 	}
 	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	
 	QSetRect(&tempRect, tableTop->left, 0, tableTop->right, 
 			RectWide(tableTop) / 10);
 	QOffsetRect(&tempRect, 0, 
@@ -804,70 +760,68 @@ void DrawDeckTable (Rect *tableTop, short down)
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
 	PenPat(GetQDGlobalsGray(&dummyPattern));
 	PenMask(true);
-	ColorOval(&tempRect, dkGrayC);
+	ColorOval(backSrcMap, tempRect, dkGrayC);
 	PenNormal();
 	
 	InsetRect(tableTop, 0, 1);
-	ColorRect(tableTop, kGoldColor);
+	ColorRect(backSrcMap, *tableTop, kGoldColor);
 	InsetRect(tableTop, 0, -1);
 	
-	ColorLine(tableTop->left, tableTop->top + 1, 
+	ColorLine(backSrcMap, tableTop->left, tableTop->top + 1,
 			tableTop->left, tableTop->top + 1, k8WhiteColor);
-	ColorLine(tableTop->left + 1, tableTop->top, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->top,
 			tableTop->right - 2, tableTop->top, k8WhiteColor);
-	ColorLine(tableTop->right - 1, tableTop->top + 1, 
+	ColorLine(backSrcMap, tableTop->right - 1, tableTop->top + 1,
 			tableTop->right - 1, tableTop->top + 1, k8WhiteColor);
 	
-	ColorLine(tableTop->left + 1, tableTop->top + 1, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->top + 1,
 			tableTop->right - 2, tableTop->top + 1, kYellowColor);
-	ColorLine(tableTop->left, tableTop->top + 2, 
+	ColorLine(backSrcMap, tableTop->left, tableTop->top + 2,
 			tableTop->left, tableTop->bottom - 2, kYellowColor);
 	
-	ColorLine(tableTop->left + 1, tableTop->bottom - 1, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->bottom - 1,
 			tableTop->right - 2, tableTop->bottom - 1, brownC);
-	ColorLine(tableTop->right - 1, tableTop->top + 2, 
+	ColorLine(backSrcMap, tableTop->right - 1, tableTop->top + 2,
 			tableTop->right - 1, tableTop->bottom - 2, brownC);
 	
-	ColorLine(tableTop->left + 1, tableTop->bottom - 2, 
+	ColorLine(backSrcMap, tableTop->left + 1, tableTop->bottom - 2,
 			tableTop->right - 2, tableTop->bottom - 2, bambooC);
 	
 	if (tableTop->bottom < kTableBaseTop + down)
 	{
 		hCenter = (tableTop->left + tableTop->right) / 2;
 		
-		ColorLine(hCenter - 3, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter - 3, tableTop->bottom,
 				hCenter - 3, kTableBaseTop + down, dkGrayC);
-		ColorLine(hCenter - 2, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter - 2, tableTop->bottom,
 				hCenter - 2, kTableBaseTop + down, k8WhiteColor);
-		ColorLine(hCenter - 1, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter - 1, tableTop->bottom,
 				hCenter - 1, kTableBaseTop + down, k8WhiteColor);
-		ColorLine(hCenter, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter, tableTop->bottom,
 				hCenter, kTableBaseTop + down, k8LtGrayColor);
-		ColorLine(hCenter + 1, tableTop->bottom, 
+		ColorLine(backSrcMap, hCenter + 1, tableTop->bottom,
 				hCenter + 1, kTableBaseTop + down, dkGrayC);
 		
 		vShadow = tableTop->bottom + RectWide(tableTop) / 4 - 2;
 		if (vShadow > kTableBaseTop + down)
 		{
-			ColorLine(hCenter - 2, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 2, tableTop->bottom,
 					hCenter - 2, kTableBaseTop + down, k8LtGrayColor);
-			ColorLine(hCenter - 1, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 1, tableTop->bottom,
 					hCenter - 1, kTableBaseTop + down, k8LtGrayColor);
-			ColorLine(hCenter, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter, tableTop->bottom,
 					hCenter, kTableBaseTop + down, dkGrayC);
 		}
 		else
 		{
-			ColorLine(hCenter - 2, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 2, tableTop->bottom,
 					hCenter - 2, vShadow, k8LtGrayColor);
-			ColorLine(hCenter - 1, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter - 1, tableTop->bottom,
 					hCenter - 1, vShadow + 1, k8LtGrayColor);
-			ColorLine(hCenter, tableTop->bottom, 
+			ColorLine(backSrcMap, hCenter, tableTop->bottom,
 					hCenter, vShadow + 2, dkGrayC);
 		}
 	}
-	
-	SetGraphicsPort(wasCPort);
 	
 	tempRect = deckSrc;
 	ZeroRectCorner(&tempRect);
@@ -885,10 +839,6 @@ void DrawStool (Rect *theRect, short down)
 {
 	#define		kStoolBase	304
 	long		grayC, dkGrayC;
-	CGrafPtr	wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
 	
 	if (thisMac.isDepth == 4)
 	{
@@ -903,21 +853,19 @@ void DrawStool (Rect *theRect, short down)
 	
 	if (theRect->bottom < kStoolBase + down)
 	{
-		ColorLine(theRect->left + 21, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 21, theRect->bottom - 1,
 				theRect->left + 21, kStoolBase + down - 1, k8DkGrayColor);
-		ColorLine(theRect->left + 22, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 22, theRect->bottom - 1,
 				theRect->left + 22, kStoolBase + down, k8Gray2Color);
-		ColorLine(theRect->left + 23, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 23, theRect->bottom - 1,
 				theRect->left + 23, kStoolBase + down, k8DkGrayColor);
-		ColorLine(theRect->left + 24, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 24, theRect->bottom - 1,
 				theRect->left + 24, kStoolBase + down, k8DkGray3Color);
-		ColorLine(theRect->left + 25, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 25, theRect->bottom - 1,
 				theRect->left + 25, kStoolBase + down, grayC);
-		ColorLine(theRect->left + 26, theRect->bottom - 1, 
+		ColorLine(backSrcMap, theRect->left + 26, theRect->bottom - 1,
 				theRect->left + 26, kStoolBase + down - 1, dkGrayC);
 	}
-	
-	SetGraphicsPort(wasCPort);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(furnitureSrcMap), 
 			(BitMap *)*GetGWorldPixMap(furnitureMaskMap), 
@@ -929,24 +877,14 @@ void DrawStool (Rect *theRect, short down)
 
 void DrawInvisObstacle (Rect *theRect)
 {	
-	CGrafPtr	wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	ColorFrameRect(theRect, k8BrownColor);
-	SetGraphicsPort(wasCPort);
+	ColorFrameRect(backSrcMap, *theRect, k8BrownColor);
 }
 
 //--------------------------------------------------------------  DrawInvisBounce
 
 void DrawInvisBounce (Rect *theRect)
 {
-	CGrafPtr	wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	ColorFrameRect(theRect, k8RedColor);
-	SetGraphicsPort(wasCPort);
+	ColorFrameRect(backSrcMap, *theRect, k8RedColor);
 }
 
 //--------------------------------------------------------------  DrawRedClock
@@ -1056,234 +994,236 @@ void DrawCuckoo (Rect *theRect)
 
 void DrawClockHands (Point where, short bigHand, short littleHand)
 {
-	CGrafPtr	wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	ForeColor(blackColor);
-	MoveTo(where.h, where.v);
+	DrawSurface	*surface = backSrcMap;
+
+	surface->SetForeColor(StdColors::Black());
+	const Point midPoint = Point::Create(where.h, where.v);
+	Point otherPoint = midPoint;
+
 	switch (bigHand)
 	{
 		case 0:
-		Line(0, -6);
+		otherPoint = midPoint + Point::Create(0, -6);
 		break;
 		
 		case 1:
-		Line(3, -5);
+		otherPoint = midPoint + Point::Create(3, -5);
 		break;
 		
 		case 2:
-		Line(5, -3);
+		otherPoint = midPoint + Point::Create(5, -3);
 		break;
 		
 		case 3:
-		Line(6, 0);
+		otherPoint = midPoint + Point::Create(6, 0);
 		break;
 		
 		case 4:
-		Line(5, 3);
+		otherPoint = midPoint + Point::Create(5, 3);
 		break;
 		
 		case 5:
-		Line(3, 5);
+		otherPoint = midPoint + Point::Create(3, 5);
 		break;
 		
 		case 6:
-		Line(0, 6);
+		otherPoint = midPoint + Point::Create(0, 6);
 		break;
 		
 		case 7:
-		Line(-3, 5);
+		otherPoint = midPoint + Point::Create(-3, 5);
 		break;
 		
 		case 8:
-		Line(-5, 3);
+		otherPoint = midPoint + Point::Create(-5, 3);
 		break;
 		
 		case 9:
-		Line(-6, 0);
+		otherPoint = midPoint + Point::Create(-6, 0);
 		break;
 		
 		case 10:
-		Line(-5, -3);
+		otherPoint = midPoint + Point::Create(-5, -3);
 		break;
 		
 		case 11:
-		Line(-3, -5);
+		otherPoint = midPoint + Point::Create(-3, -5);
 		break;
 	}
+
+	surface->DrawLine(midPoint, otherPoint);
 	
-	MoveTo(where.h, where.v);
 	switch (littleHand)
 	{
 		case 0:
-		Line(0, -4);
+		otherPoint = midPoint + Point::Create(0, -4);
 		break;
 		
 		case 1:
-		Line(2, -3);
+		otherPoint = midPoint + Point::Create(2, -3);
 		break;
 		
 		case 2:
-		Line(3, -2);
+		otherPoint = midPoint + Point::Create(3, -2);
 		break;
 		
 		case 3:
-		Line(4, 0);
+		otherPoint = midPoint + Point::Create(4, 0);
 		break;
 		
 		case 4:
-		Line(3, 2);
+		otherPoint = midPoint + Point::Create(3, 2);
 		break;
 		
 		case 5:
-		Line(2, 3);
+		otherPoint = midPoint + Point::Create(2, 3);
 		break;
 		
 		case 6:
-		Line(0, 4);
+		otherPoint = midPoint + Point::Create(0, 4);
 		break;
 		
 		case 7:
-		Line(-2, 3);
+		otherPoint = midPoint + Point::Create(-2, 3);
 		break;
 		
 		case 8:
-		Line(-3, 2);
+		otherPoint = midPoint + Point::Create(-3, 2);
 		break;
 		
 		case 9:
-		Line(-4, 0);
+		otherPoint = midPoint + Point::Create(-4, 0);
 		break;
 		
 		case 10:
-		Line(-3, -2);
+		otherPoint = midPoint + Point::Create(-3, -2);
 		break;
 		
 		case 11:
-		Line(-2, -3);
+		otherPoint = midPoint + Point::Create(-2, -3);
 		break;
 	}
-	
-	SetGraphicsPort(wasCPort);
+
+	surface->DrawLine(midPoint, otherPoint);
 }
 
 //--------------------------------------------------------------  DrawClockHands
 
 void DrawLargeClockHands (Point where, short bigHand, short littleHand)
 {
-	CGrafPtr	wasCPort;
+	DrawSurface	*surface = backSrcMap;
+
+	surface->SetForeColor(StdColors::White());
 	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	ForeColor(whiteColor);
-	
-	MoveTo(where.h, where.v);
+	const Point midPoint = Point::Create(where.h, where.v);
+	Point otherPoint = midPoint;
+
 	switch (bigHand)
 	{
 		case 0:
-		Line(0, -10);
+		otherPoint = midPoint + Point::Create(0, -10);
 		break;
 		
 		case 1:
-		Line(5, -9);
+		otherPoint = midPoint + Point::Create(5, -9);
 		break;
 		
 		case 2:
-		Line(9, -5);
+		otherPoint = midPoint + Point::Create(9, -5);
 		break;
 		
 		case 3:
-		Line(10, 0);
+		otherPoint = midPoint + Point::Create(10, 0);
 		break;
 		
 		case 4:
-		Line(9, 5);
+		otherPoint = midPoint + Point::Create(9, 5);
 		break;
 		
 		case 5:
-		Line(5, 9);
+		otherPoint = midPoint + Point::Create(5, 9);
 		break;
 		
 		case 6:
-		Line(0, 10);
+		otherPoint = midPoint + Point::Create(0, 10);
 		break;
 		
 		case 7:
-		Line(-5, 9);
+		otherPoint = midPoint + Point::Create(-5, 9);
 		break;
 		
 		case 8:
-		Line(-9, 5);
+		otherPoint = midPoint + Point::Create(-9, 5);
 		break;
 		
 		case 9:
-		Line(-10, 0);
+		otherPoint = midPoint + Point::Create(-10, 0);
 		break;
 		
 		case 10:
-		Line(-9, -5);
+		otherPoint = midPoint + Point::Create(-9, -5);
 		break;
 		
 		case 11:
-		Line(-5, -9);
+		otherPoint = midPoint + Point::Create(-5, -9);
 		break;
 	}
+
+	surface->DrawLine(midPoint, otherPoint);
 	
-	MoveTo(where.h, where.v);
 	switch (littleHand)
 	{
 		case 0:
-		Line(0, -6);
+		otherPoint = midPoint + Point::Create(0, -6);
 		break;
 		
 		case 1:
-		Line(3, -5);
+		otherPoint = midPoint + Point::Create(3, -5);
 		break;
 		
 		case 2:
-		Line(5, -3);
+		otherPoint = midPoint + Point::Create(5, -3);
 		break;
 		
 		case 3:
-		Line(6, 0);
+		otherPoint = midPoint + Point::Create(6, 0);
 		break;
 		
 		case 4:
-		Line(5, 3);
+		otherPoint = midPoint + Point::Create(5, 3);
 		break;
 		
 		case 5:
-		Line(3, 5);
+		otherPoint = midPoint + Point::Create(3, 5);
 		break;
 		
 		case 6:
-		Line(0, 6);
+		otherPoint = midPoint + Point::Create(0, 6);
 		break;
 		
 		case 7:
-		Line(-3, 5);
+		otherPoint = midPoint + Point::Create(-3, 5);
 		break;
 		
 		case 8:
-		Line(-5, 3);
+		otherPoint = midPoint + Point::Create(-5, 3);
 		break;
 		
 		case 9:
-		Line(-6, 0);
+		otherPoint = midPoint + Point::Create(-6, 0);
 		break;
 		
 		case 10:
-		Line(-5, -3);
+		otherPoint = midPoint + Point::Create(-5, -3);
 		break;
 		
 		case 11:
-		Line(-3, -5);
+		otherPoint = midPoint + Point::Create(-3, -5);
 		break;
 	}
-	
-	ForeColor(blackColor);
-	SetGraphicsPort(wasCPort);
+
+	surface->DrawLine(midPoint, otherPoint);
+	surface->SetForeColor(StdColors::Black());
 }
 
 //--------------------------------------------------------------  DrawSimplePrizes
@@ -1301,7 +1241,6 @@ void DrawSimplePrizes (short what, Rect *theRect)
 void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
 {
 	Rect		spill, dest;
-	CGrafPtr	wasCPort;
 	
 	dest = *theRect;
 	if (state)		// grease upright
@@ -1319,12 +1258,11 @@ void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&greaseSrcRt[3], &greaseSrcRt[3], &dest);
 		
-		wasCPort = GetGraphicsPort();
-		SetGraphicsPort(backSrcMap);
 		QSetRect(&spill, 0, -2, distance - 5, 0);
 		QOffsetRect(&spill, dest.right - 1, dest.bottom);
-		PaintRect(&spill);
-		SetGraphicsPort(wasCPort);
+
+		backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+		backSrcMap->FillRect(spill);
 	}
 }
 
@@ -1333,7 +1271,7 @@ void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
 void DrawGreaseLf (Rect *theRect, short distance, Boolean state)
 {
 	Rect		spill, dest;
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 	
 	dest = *theRect;
 	if (state)		// grease upright
@@ -1350,13 +1288,12 @@ void DrawGreaseLf (Rect *theRect, short distance, Boolean state)
 				(BitMap *)*GetGWorldPixMap(bonusMaskMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&greaseSrcLf[3], &greaseSrcLf[3], &dest);
-		
-		wasCPort = GetGraphicsPort();
-		SetGraphicsPort(backSrcMap);
+
+		backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+
 		QSetRect(&spill, -distance + 5, -2, 0, 0);
 		QOffsetRect(&spill, dest.left + 1, dest.bottom);
-		PaintRect(&spill);
-		SetGraphicsPort(wasCPort);
+		backSrcMap->FillRect(spill);
 	}
 }
 
@@ -1374,23 +1311,15 @@ void DrawFoil (Rect *theRect)
 
 void DrawInvisBonus (Rect *theRect)
 {
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	ColorFrameOval(theRect, 227);
-	SetGraphicsPort(wasCPort);
+	ColorFrameOval(backSrcMap, *theRect, 227);
 }
 
 //--------------------------------------------------------------  DrawSlider
 
 void DrawSlider (Rect *theRect)
 {
-	CGrafPtr	wasCPort;
-
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
-	FrameRect(theRect);
-	SetGraphicsPort(wasCPort);
+	backSrcMap->FrameRect(*theRect);
 }
 

@@ -57,6 +57,7 @@ namespace PortabilityLayer
 		void ShowWindow(Window *window) override;
 		void HideWindow(Window *window) override;
 		void FindWindow(const Point &point, Window **outWindow, short *outRegion) const override;
+		void DestroyWindow(Window *window) override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
@@ -236,7 +237,6 @@ namespace PortabilityLayer
 		// outRegion = One of:
 		/*
 		inMenuBar,
-		inSysWindow,
 		inContent,
 		inDrag,
 		inGrow,
@@ -283,6 +283,16 @@ namespace PortabilityLayer
 
 		if (outRegion)
 			*outRegion = 0;
+	}
+
+	void WindowManagerImpl::DestroyWindow(Window *window)
+	{
+		WindowImpl *windowImpl = static_cast<WindowImpl*>(window);
+
+		DetachWindow(window);
+
+		windowImpl->~WindowImpl();
+		PortabilityLayer::MemoryManager::GetInstance()->Release(windowImpl);
 	}
 
 	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)
@@ -342,7 +352,7 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver)
 	{
-		CGraf &graf = window->m_graf;
+		DrawSurface &graf = window->m_graf;
 
 		graf.PushToDDSurface(displayDriver);
 

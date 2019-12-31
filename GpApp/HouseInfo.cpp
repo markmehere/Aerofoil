@@ -10,6 +10,7 @@
 #include "PLKeyEncoding.h"
 #include "PLPasStr.h"
 #include "Externs.h"
+#include "DialogManager.h"
 #include "DialogUtils.h"
 
 
@@ -166,9 +167,8 @@ Boolean HouseFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateHouseInfoDialog(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -230,11 +230,11 @@ void DoHouseInfo (void)
 	ParamText(versStr, loVers, nRoomsStr, PSTR(""));
 	
 //	CenterDialog(kHouseInfoDialogID);
-	houseInfoDialog = GetNewDialog(kHouseInfoDialogID, nil, kPutInFront);
+	houseInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kHouseInfoDialogID, kPutInFront);
 	if (houseInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)houseInfoDialog);
-	ShowWindow(GetDialogWindow(houseInfoDialog));
+	ShowWindow(houseInfoDialog->GetWindow());
 	
 	SetDialogString(houseInfoDialog, kBannerTextItem, banner);
 	SetDialogString(houseInfoDialog, kTrailerTextItem, trailer);

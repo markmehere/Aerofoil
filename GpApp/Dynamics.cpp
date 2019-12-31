@@ -578,8 +578,7 @@ void HandleOutlet (short who)
 		}
 		else
 		{
-//			SetPort((GrafPtr)workSrcMap);
-			PaintRect(&dinahs[who].dest);
+			workSrcMap->FillRect(dinahs[who].dest);
 		}
 		AddRectToWorkRects(&dinahs[who].dest);
 	}

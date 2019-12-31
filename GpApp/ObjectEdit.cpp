@@ -20,8 +20,8 @@
 
 
 short FindObjectSelected (Point);
-void DragHandle (Point);
-void DragObject (Point);
+void DragHandle (DrawSurface *, Point);
+void DragObject (DrawSurface *, Point);
 void AddObjectPairing (void);
 Boolean ObjectIsUpBlower (objectType *);
 
@@ -71,7 +71,7 @@ short FindObjectSelected (Point where)
 
 //--------------------------------------------------------------  DoSelectionClick
 
-void DoSelectionClick (Point where, Boolean isDoubleClick)
+void DoSelectionClick (DrawSurface *surface, Point where, Boolean isDoubleClick)
 {
 #ifndef COMPILEDEMO
 	short		direction, dist;
@@ -81,7 +81,7 @@ void DoSelectionClick (Point where, Boolean isDoubleClick)
 	if ((PtInMarqueeHandle(where)) && (objActive != kNoObjectSelected))
 	{
 		if (StillDown())
-			DragHandle(where);
+			DragHandle(surface, where);
 		if (ObjectHasHandle(&direction, &dist))
 		{
 			StartMarqueeHandled(&roomObjectRects[objActive], direction, dist);
@@ -114,7 +114,7 @@ void DoSelectionClick (Point where, Boolean isDoubleClick)
 			else
 			{
 				if (StillDown())
-					DragObject(where);
+					DragObject(surface, where);
 				if (ObjectHasHandle(&direction, &dist))
 				{
 					StartMarqueeHandled(&roomObjectRects[objActive], direction, dist);
@@ -141,7 +141,7 @@ void DoSelectionClick (Point where, Boolean isDoubleClick)
 //--------------------------------------------------------------  DragHandle
 
 #ifndef COMPILEDEMO
-void DragHandle (Point where)
+void DragHandle (DrawSurface *surface, Point where)
 {
 	short		hDelta, vDelta;
 	Boolean		whoCares;
@@ -161,7 +161,7 @@ void DragHandle (Point where)
 		case kGrecoVent:
 		case kSewerBlower:
 		vDelta = thisRoom->objects[objActive].data.a.distance;
-		DragMarqueeHandle(where, &vDelta);
+		DragMarqueeHandle(surface, where, &vDelta);
 		thisRoom->objects[objActive].data.a.distance = vDelta;
 		whoCares = KeepObjectLegal();
 		break;
@@ -169,7 +169,7 @@ void DragHandle (Point where)
 		case kLiftArea:
 		hDelta = thisRoom->objects[objActive].data.a.distance;
 		vDelta = thisRoom->objects[objActive].data.a.tall * 2;
-		DragMarqueeCorner(where, &hDelta, &vDelta, false);
+		DragMarqueeCorner(surface, where, &hDelta, &vDelta, false);
 		thisRoom->objects[objActive].data.a.distance = hDelta;
 		thisRoom->objects[objActive].data.a.tall = vDelta / 2;
 		whoCares = KeepObjectLegal();
@@ -182,7 +182,7 @@ void DragHandle (Point where)
 		case kLeftFan:
 		case kRightFan:
 		hDelta = thisRoom->objects[objActive].data.a.distance;
-		DragMarqueeHandle(where, &hDelta);
+		DragMarqueeHandle(surface, where, &hDelta);
 		thisRoom->objects[objActive].data.a.distance = hDelta;
 		whoCares = KeepObjectLegal();
 		break;
@@ -192,13 +192,13 @@ void DragHandle (Point where)
 				((thisRoom->objects[objActive].data.a.vector & 0x0F) == 4))
 		{
 			vDelta = thisRoom->objects[objActive].data.a.distance;
-			DragMarqueeHandle(where, &vDelta);
+			DragMarqueeHandle(surface, where, &vDelta);
 			thisRoom->objects[objActive].data.a.distance = vDelta;
 		}
 		else
 		{
 			hDelta = thisRoom->objects[objActive].data.a.distance;
-			DragMarqueeHandle(where, &hDelta);
+			DragMarqueeHandle(surface, where, &hDelta);
 			thisRoom->objects[objActive].data.a.distance = hDelta;
 		}
 		whoCares = KeepObjectLegal();
@@ -208,7 +208,7 @@ void DragHandle (Point where)
 		case kShelf:
 		case kDeckTable:
 		hDelta = RectWide(&thisRoom->objects[objActive].data.b.bounds);
-		DragMarqueeHandle(where, &hDelta);
+		DragMarqueeHandle(surface, where, &hDelta);
 		thisRoom->objects[objActive].data.b.bounds.right = 
 			thisRoom->objects[objActive].data.b.bounds.left + hDelta;
 		whoCares = KeepObjectLegal();
@@ -223,7 +223,7 @@ void DragHandle (Point where)
 		case kInvisBounce:
 		hDelta = RectWide(&thisRoom->objects[objActive].data.b.bounds);
 		vDelta = RectTall(&thisRoom->objects[objActive].data.b.bounds);
-		DragMarqueeCorner(where, &hDelta, &vDelta, false);
+		DragMarqueeCorner(surface, where, &hDelta, &vDelta, false);
 		thisRoom->objects[objActive].data.b.bounds.right = 
 			thisRoom->objects[objActive].data.b.bounds.left + hDelta;
 		thisRoom->objects[objActive].data.b.bounds.bottom = 
@@ -239,7 +239,7 @@ void DragHandle (Point where)
 		case kDresser:
 		hDelta = RectWide(&thisRoom->objects[objActive].data.b.bounds);
 		vDelta = RectTall(&thisRoom->objects[objActive].data.b.bounds);
-		DragMarqueeCorner(where, &hDelta, &vDelta, true);
+		DragMarqueeCorner(surface, where, &hDelta, &vDelta, true);
 		thisRoom->objects[objActive].data.b.bounds.right = 
 			thisRoom->objects[objActive].data.b.bounds.left + hDelta;
 		thisRoom->objects[objActive].data.b.bounds.top = 
@@ -255,7 +255,7 @@ void DragHandle (Point where)
 		case kGreaseLf:
 		case kSlider:
 		hDelta = thisRoom->objects[objActive].data.c.length;
-		DragMarqueeHandle(where, &hDelta);
+		DragMarqueeHandle(surface, where, &hDelta);
 		thisRoom->objects[objActive].data.c.length = hDelta;
 		whoCares = KeepObjectLegal();
 		InvalWindowRect(mainWindow, &mainWindowRect);
@@ -267,7 +267,7 @@ void DragHandle (Point where)
 		case kInvisTrans:
 		hDelta = thisRoom->objects[objActive].data.d.wide;
 		vDelta = thisRoom->objects[objActive].data.d.tall;
-		DragMarqueeCorner(where, &hDelta, &vDelta, false);
+		DragMarqueeCorner(surface, where, &hDelta, &vDelta, false);
 		if (hDelta > 127)
 			hDelta = 127;
 		thisRoom->objects[objActive].data.d.wide = (Byte)hDelta;
@@ -282,7 +282,7 @@ void DragHandle (Point where)
 		case kDeluxeTrans:
 		hDelta = ((thisRoom->objects[objActive].data.d.tall & 0xFF00) >> 8) * 4;
 		vDelta = (thisRoom->objects[objActive].data.d.tall & 0x00FF) * 4;
-		DragMarqueeCorner(where, &hDelta, &vDelta, false);
+		DragMarqueeCorner(surface, where, &hDelta, &vDelta, false);
 		if (hDelta < 64)
 			hDelta = 64;
 		if (vDelta < 32)
@@ -298,7 +298,7 @@ void DragHandle (Point where)
 		case kFlourescent:
 		case kTrackLight:
 		hDelta = thisRoom->objects[objActive].data.f.length;
-		DragMarqueeHandle(where, &hDelta);
+		DragMarqueeHandle(surface, where, &hDelta);
 		thisRoom->objects[objActive].data.f.length = hDelta;
 		whoCares = KeepObjectLegal();
 		InvalWindowRect(mainWindow, &mainWindowRect);
@@ -309,7 +309,7 @@ void DragHandle (Point where)
 		
 		case kToaster:
 		vDelta = thisRoom->objects[objActive].data.g.height;
-		DragMarqueeHandle(where, &vDelta);
+		DragMarqueeHandle(surface, where, &vDelta);
 		thisRoom->objects[objActive].data.g.height = vDelta;
 		whoCares = KeepObjectLegal();
 		break;
@@ -318,7 +318,7 @@ void DragHandle (Point where)
 		case kDrip:
 		case kFish:
 		vDelta = thisRoom->objects[objActive].data.h.length;
-		DragMarqueeHandle(where, &vDelta);
+		DragMarqueeHandle(surface, where, &vDelta);
 		thisRoom->objects[objActive].data.h.length = vDelta;
 		whoCares = KeepObjectLegal();
 		break;
@@ -327,7 +327,7 @@ void DragHandle (Point where)
 		case kWallWindow:
 		hDelta = RectWide(&thisRoom->objects[objActive].data.i.bounds);
 		vDelta = RectTall(&thisRoom->objects[objActive].data.i.bounds);
-		DragMarqueeCorner(where, &hDelta, &vDelta, false);
+		DragMarqueeCorner(surface, where, &hDelta, &vDelta, false);
 		thisRoom->objects[objActive].data.i.bounds.right = 
 			thisRoom->objects[objActive].data.i.bounds.left + hDelta;
 		thisRoom->objects[objActive].data.i.bounds.bottom = 
@@ -349,7 +349,7 @@ void DragHandle (Point where)
 //--------------------------------------------------------------  DragObject
 
 #ifndef COMPILEDEMO
-void DragObject (Point where)
+void DragObject (DrawSurface *surface, Point where)
 {
 	Rect		newRect, wasRect;
 	short		deltaH, deltaV, increment;
@@ -360,19 +360,19 @@ void DragObject (Point where)
 	{
 		wasRect = initialGliderRect;
 		newRect = initialGliderRect;
-		DragMarqueeRect(where, &newRect, false, false);
+		DragMarqueeRect(surface, where, &newRect, false, false);
 	}
 	else if (objActive == kLeftGliderSelected)
 	{
 		wasRect = leftStartGliderDest;
 		newRect = leftStartGliderDest;
-		DragMarqueeRect(where, &newRect, false, true);
+		DragMarqueeRect(surface, where, &newRect, false, true);
 	}
 	else if (objActive == kRightGliderSelected)
 	{
 		wasRect = rightStartGliderDest;
 		newRect = rightStartGliderDest;
-		DragMarqueeRect(where, &newRect, false, true);
+		DragMarqueeRect(surface, where, &newRect, false, true);
 	}
 	else
 	{
@@ -409,13 +409,13 @@ void DragObject (Point where)
 			case kCopterRt:
 			case kMousehole:
 			case kFireplace:
-			DragMarqueeRect(where, &newRect, true, false);
+			DragMarqueeRect(surface, where, &newRect, true, false);
 			invalAll = false;
 			break;
 			
 			case kDartLf:
 			case kDartRt:
-			DragMarqueeRect(where, &newRect, false, true);
+			DragMarqueeRect(surface, where, &newRect, false, true);
 			invalAll = false;
 			break;
 			
@@ -436,14 +436,14 @@ void DragObject (Point where)
 			case kDeluxeTrans:
 			case kMirror:
 			case kWallWindow:
-			DragMarqueeRect(where, &newRect, false, false);
+			DragMarqueeRect(surface, where, &newRect, false, false);
 			invalAll = true;
 			break;
 			
 			case kCounter:
 			case kDresser:
 			case kTrackLight:
-			DragMarqueeRect(where, &newRect, true, false);
+			DragMarqueeRect(surface, where, &newRect, true, false);
 			invalAll = true;
 			break;
 			
@@ -513,7 +513,7 @@ void DragObject (Point where)
 			case kFaucet:
 			case kRug:
 			case kChimes:
-			DragMarqueeRect(where, &newRect, false, false);
+			DragMarqueeRect(surface, where, &newRect, false, false);
 			invalAll = false;
 			break;
 		}
@@ -2302,11 +2302,9 @@ void DrawThisRoomsObjects (void)
 {
 	Rect		tempRect;
 	short		i;
-	CGrafPtr	wasCPort;
 	Pattern		dummyPattern;
 	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
+	DrawSurface *surface = backSrcMap;
 	
 	if ((noRoomAtAll) || (!houseUnlocked))
 		return;
@@ -2314,10 +2312,10 @@ void DrawThisRoomsObjects (void)
 	{
 		if (GetNumberOfLights(thisRoomNumber) <= 0)
 		{
-			PenMask(true);
-			PenPat(GetQDGlobalsGray(&dummyPattern));
-			PaintRect(&backSrcRect);
-			PenNormal();
+			surface->SetMaskMode(true);
+			surface->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
+			surface->FillRect(backSrcRect);
+			surface->SetMaskMode(false);
 		}
 		
 		for (i = 0; i < kMaxRoomObs; i++)
@@ -2693,12 +2691,13 @@ void HiliteAllObjects (void)
 		return;
 	
 	PauseMarquee();
-	SetPort((GrafPtr)mainWindow);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenInvertMode(true);
+
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+
+	GetQDGlobalsGray(&dummyPattern);
 	
 	for (i = 0; i < kMaxRoomObs; i++)
-		FrameRect(&roomObjectRects[i]);
+		surface->InvertFrameRect(roomObjectRects[i], dummyPattern);
 	
 	do
 	{
@@ -2708,9 +2707,8 @@ void HiliteAllObjects (void)
 			(BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kAlt))));
 	
 	for (i = 0; i < kMaxRoomObs; i++)
-		FrameRect(&roomObjectRects[i]);
-	
-	PenNormal();
+		surface->InvertFrameRect(roomObjectRects[i], dummyPattern);
+
 	ResumeMarquee();
 #endif
 }

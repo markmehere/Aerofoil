@@ -4,7 +4,7 @@
 #include "IGpDisplayDriver.h"
 #include "IGpDisplayDriverSurface.h"
 
-void CGraf::PushToDDSurface(IGpDisplayDriver *displayDriver)
+void DrawSurface::PushToDDSurface(IGpDisplayDriver *displayDriver)
 {
 	const PixMap *pixMap = *m_port.GetPixMap();
 	const size_t width = pixMap->m_rect.right - pixMap->m_rect.left;

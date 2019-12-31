@@ -5,13 +5,15 @@
 
 namespace PortabilityLayer
 {
+	class FontFamily;
+
 	struct QDState
 	{
 		QDState();
 
-		int m_fontID;
-		int m_textFace;
-		int m_textSize;
+		FontFamily *m_fontFamily;
+		int m_fontVariationFlags;
+		int m_fontSize;
 		Rect m_clipRect;
 		Point m_penPos;
 		bool m_penInvert;

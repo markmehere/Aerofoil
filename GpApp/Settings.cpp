@@ -7,7 +7,9 @@
 
 #include "PLKeyEncoding.h"
 #include "PLSound.h"
+#include "PLStandardColors.h"
 #include "PLTextUtils.h"
+#include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "Environ.h"
@@ -203,9 +205,8 @@ Boolean BrainsFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateSettingsBrains(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -354,17 +355,30 @@ void UpdateControlKeyName (DialogPtr theDialog)
 void UpdateSettingsControl (DialogPtr theDialog)
 {
 	short		i;
+	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	DrawDialog(theDialog);
 	
-	PenSize(2, 2);
-	ForeColor(whiteColor);
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
 	for (i = 0; i < 4; i++)
-		FrameRect(&controlRects[i]);
-	ForeColor(redColor);
-	FrameRect(&controlRects[whichCtrl]);
-	ForeColor(blackColor);
-	PenNormal();
+	{
+		Rect rect = controlRects[i];
+		surface->FrameRect(rect);
+		InsetRect(&rect, 1, 1);
+		surface->FrameRect(rect);
+	}
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 0, 0, 255));
+
+	{
+		Rect rect = controlRects[whichCtrl];
+		surface->FrameRect(rect);
+		InsetRect(&rect, 1, 1);
+		surface->FrameRect(rect);
+	}
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+
 	UpdateControlKeyName(theDialog);
 	FrameDialogItemC(theDialog, 3, kRedOrangeColor8);
 }
@@ -478,9 +492,8 @@ Boolean ControlFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateSettingsControl(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -503,7 +516,7 @@ void DoControlPrefs (void)
 	controlFilterUPP = NewModalFilterUPP(ControlFilter);
 	
 //	CenterDialog(kControlPrefsDialID);
-	prefDlg = GetNewDialog(kControlPrefsDialID, nil, kPutInFront);
+	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront);
 	if (prefDlg == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)prefDlg);
@@ -526,13 +539,15 @@ void DoControlPrefs (void)
 	
 	leaving = false;
 	
-	ShowWindow(GetDialogWindow(prefDlg));
+	ShowWindow(prefDlg->GetWindow());
 	if (isEscPauseKey)
 		SelectFromRadioGroup(prefDlg, kESCPausesRadio, 
 				kESCPausesRadio, kTABPausesRadio);
 	else
 		SelectFromRadioGroup(prefDlg, kTABPausesRadio, 
 				kESCPausesRadio, kTABPausesRadio);
+
+	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
 	
 	while (!leaving)
 	{
@@ -560,14 +575,23 @@ void DoControlPrefs (void)
 			case kLeftControl:
 			case kBattControl:
 			case kBandControl:
-			PenSize(2, 2);
-			ForeColor(whiteColor);
-			FrameRect(&controlRects[whichCtrl]);
-			whichCtrl = itemHit - kRightControl;
-			ForeColor(redColor);
-			FrameRect(&controlRects[whichCtrl]);
-			ForeColor(blackColor);
-			PenNormal();
+			{
+				Rect ctrlRect = controlRects[whichCtrl];
+
+				surface->SetForeColor(StdColors::White());
+				surface->FrameRect(ctrlRect);
+				InsetRect(&ctrlRect, 1, 1);
+				surface->FrameRect(ctrlRect);
+
+				whichCtrl = itemHit - kRightControl;
+
+				ctrlRect = controlRects[whichCtrl];
+				surface->SetForeColor(StdColors::Red());
+				surface->FrameRect(ctrlRect);
+				InsetRect(&ctrlRect, 1, 1);
+				surface->FrameRect(ctrlRect);
+			}
+
 			UpdateControlKeyName(prefDlg);
 			break;
 			
@@ -731,9 +755,8 @@ Boolean SoundFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateSettingsSound(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -814,7 +837,7 @@ void DoSoundPrefs (void)
 				SetDialogNumToStr(prefDlg, kVolNumberItem, (long)tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
 				HandleSoundMusicChange(tempVolume, true);
-				InvalWindowRect(GetDialogWindow(prefDlg), &tempRect);
+				InvalWindowRect(prefDlg->GetWindow(), &tempRect);
 				DelayTicks(8);
 			}
 			break;
@@ -832,7 +855,7 @@ void DoSoundPrefs (void)
 					SetDialogNumToStr(prefDlg, kVolNumberItem, tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
 				HandleSoundMusicChange(tempVolume, true);
-				InvalWindowRect(GetDialogWindow(prefDlg), &tempRect);
+				InvalWindowRect(prefDlg->GetWindow(), &tempRect);
 				DelayTicks(8);
 			}
 			break;
@@ -902,14 +925,18 @@ void FrameDisplayIcon (DialogPtr theDialog)
 		GetDialogItemRect(theDialog, kDisplay9Item, &theRect);
 		break;
 	}
+
+	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
+
+	surface->SetForeColor(StdColors::Black());
 	
 	theRect.left -= 3;
 	theRect.top += 0;
 	theRect.right += 3;
 	theRect.bottom -= 1;
-	FrameRect(&theRect);
+	surface->FrameRect(theRect);
 	InsetRect(&theRect, 1, 1);
-	FrameRect(&theRect);
+	surface->FrameRect(theRect);
 }
 
 //--------------------------------------------------------------  DisplayUpdate
@@ -1075,9 +1102,8 @@ Boolean DisplayFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		DisplayUpdate(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -1274,6 +1300,7 @@ void FlashSettingsButton (short who)
 void UpdateSettingsMain (DialogPtr theDialog)
 {
 	Str255		theStr;
+	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	DrawDialog(theDialog);
 	
@@ -1288,10 +1315,10 @@ void UpdateSettingsMain (DialogPtr theDialog)
 	GetIndString(theStr, 129, 4);
 	DrawDialogUserText(theDialog, 10, theStr, false);
 	
-	ColorFrameRect(&prefButton[0], kRedOrangeColor8);
-	ColorFrameRect(&prefButton[1], kRedOrangeColor8);
-	ColorFrameRect(&prefButton[2], kRedOrangeColor8);
-	ColorFrameRect(&prefButton[3], kRedOrangeColor8);
+	ColorFrameRect(surface, prefButton[0], kRedOrangeColor8);
+	ColorFrameRect(surface, prefButton[1], kRedOrangeColor8);
+	ColorFrameRect(surface, prefButton[2], kRedOrangeColor8);
+	ColorFrameRect(surface, prefButton[3], kRedOrangeColor8);
 }
 
 //--------------------------------------------------------------  PrefsFilter
@@ -1358,17 +1385,15 @@ Boolean PrefsFilter (DialogPtr dial, EventRecord *event, short *item)
 		if ((WindowPtr)event->message == (WindowPtr)mainWindow)
 		{
 			SetPortWindowPort(mainWindow);
-			BeginUpdate(mainWindow);
 			UpdateMainWindow();
 			EndUpdate(mainWindow);
 			SetPort((GrafPtr)dial);
 		}
-		else if ((WindowPtr)event->message == GetDialogWindow(dial))
+		else if ((WindowPtr)event->message == dial->GetWindow())
 		{
 			SetPortDialogPort(dial);
-			BeginUpdate(GetDialogWindow(dial));
 			UpdateSettingsMain(dial);
-			EndUpdate(GetDialogWindow(dial));
+			EndUpdate(dial->GetWindow());
 		}
 		event->what = nullEvent;
 		return(false);

@@ -103,16 +103,10 @@ void HandleGrease (void)
 			}
 			
 			{
-				CGrafPtr	wasCPort = GetGraphicsPort();
+				backSrcMap->FillRect(src);
 				
-				SetGraphicsPort(backSrcMap);
-				PaintRect(&src);
-				
-				SetGraphicsPort(workSrcMap);
-				PaintRect(&src);
+				workSrcMap->FillRect(src);
 				AddRectToWorkRects(&src);
-				
-				SetGraphicsPort(wasCPort);
 			}
 			
 			if (grease[i].isRight)
@@ -266,7 +260,7 @@ void SpillGrease (short who, short index)
 
 void RedrawAllGrease (void)
 {
-	CGrafPtr	wasCPort;
+	DrawSurface	*wasCPort;
 	Rect		src;
 	short		i;
 	
@@ -284,11 +278,9 @@ void RedrawAllGrease (void)
 			
 			wasCPort = GetGraphicsPort();
 			
-			SetGraphicsPort(backSrcMap);
-			PaintRect(&src);
+			backSrcMap->FillRect(src);
 			
-			SetGraphicsPort(workSrcMap);
-			PaintRect(&src);
+			workSrcMap->FillRect(src);
 			AddRectToWorkRects(&src);
 			
 			SetGraphicsPort(wasCPort);

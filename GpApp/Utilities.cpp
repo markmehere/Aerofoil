@@ -229,7 +229,7 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 //--------------------------------------------------------------------  CreateOffScreenGWorld
 // Creates an offscreen GWorldÊusing the depth passed in.
 
-PLError_t CreateOffScreenGWorld (GWorldPtr *theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat)
+PLError_t CreateOffScreenGWorld (DrawSurface **theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat)
 {
 	PLError_t		theErr;
 	
@@ -275,7 +275,7 @@ void KillOffScreenBitMap (GrafPtr offScreen)
 // the current port (no scaling, clipping, etc, are done).  AlwaysÉ
 // draws in the upper left corner of current port.
 
-void LoadGraphic (short resID)
+void LoadGraphic (DrawSurface *surface, short resID)
 {
 	Rect		bounds;
 	PicHandle	thePicture;
@@ -286,7 +286,7 @@ void LoadGraphic (short resID)
 	
 	bounds = (*thePicture)->picFrame.ToRect();
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
-	DrawPicture(thePicture, &bounds);
+	surface->DrawPicture(thePicture, bounds);
 	
 	thePicture.Dispose();
 }
@@ -296,14 +296,14 @@ void LoadGraphic (short resID)
 // specified.  If this rect isn't the same size of the 'PICT', scalingÉ
 // will occur.
 
-void LoadScaledGraphic (short resID, Rect *theRect)
+void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 {
 	PicHandle	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
-	DrawPicture(thePicture, theRect);
+	surface->DrawPicture(thePicture, *theRect);
 	thePicture.Dispose();
 }
 

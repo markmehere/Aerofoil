@@ -21,8 +21,8 @@ void KillBand (short);
 bandPtr		bands;
 Rect		bandsSrcRect;
 Rect		bandRects[3];
-GWorldPtr	bandsSrcMap;
-GWorldPtr	bandsMaskMap;
+DrawSurface	*bandsSrcMap;
+DrawSurface	*bandsMaskMap;
 short		numBands, bandHitLast;
 
 extern	hotPtr		hotSpots;

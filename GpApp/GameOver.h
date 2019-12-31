@@ -8,5 +8,5 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr	angelSrcMap;
-extern GWorldPtr	angelMaskMap;
+extern DrawSurface *angelSrcMap;
+extern DrawSurface *angelMaskMap;

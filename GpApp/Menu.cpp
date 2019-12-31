@@ -11,6 +11,7 @@
 #include "PLKeyEncoding.h"
 #include "PLPasStr.h"
 #include "PLToolUtils.h"
+#include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "House.h"
@@ -687,12 +688,11 @@ Boolean ResumeFilter (DialogPtr dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		if ((WindowPtr)event->message == GetDialogWindow(dial))
+		if ((WindowPtr)event->message == dial->GetWindow())
 		{
 			SetPort((GrafPtr)dial);
-			BeginUpdate(GetDialogWindow(dial));
 			UpdateResumeDialog(dial);
-			EndUpdate(GetDialogWindow(dial));
+			EndUpdate(dial->GetWindow());
 			event->what = nullEvent;
 		}
 		return(false);
@@ -735,12 +735,12 @@ short QueryResumeGame (void)
 		ParamText(glidStr, PSTR("s"), scoreStr, PSTR(""));
 	
 //	CenterDialog(kResumeGameDial);
-	theDial = GetNewDialog(kResumeGameDial, nil, kPutInFront);
+	theDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kResumeGameDial, kPutInFront);
 	if (theDial == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)theDial);
 	
-	ShowWindow(GetDialogWindow(theDial));
+	ShowWindow(theDial->GetWindow());
 	DrawDefaultButton(theDial);
 	leaving = false;
 	

@@ -9,6 +9,11 @@ struct Point
 {
 	int16_t v;
 	int16_t h;
+
+	Point operator-(const Point &other) const;
+	Point operator+(const Point &other) const;
+
+	static Point Create(int16_t h, int16_t v);
 };
 
 struct Rect
@@ -21,7 +26,9 @@ struct Rect
 	bool IsValid() const;
 	Rect Intersect(const Rect &rect) const;
 	Rect MakeValid() const;
+
 	static Rect Create(int16_t top, int16_t left, int16_t bottom, int16_t right);
+	static Rect CreateFromPoints(const Point &topLeft, const Point &bottomRight);
 };
 
 struct BERect
@@ -93,6 +100,25 @@ struct GDevice
 	bool paletteIsDirty;
 };
 
+inline Point Point::operator-(const Point &other) const
+{
+	return Point::Create(this->h - other.h, this->v - other.v);
+}
+
+inline Point Point::operator+(const Point &other) const
+{
+	return Point::Create(this->h + other.h, this->v + other.v);
+}
+
+inline Point Point::Create(int16_t h, int16_t v)
+{
+	Point p;
+	p.h = h;
+	p.v = v;
+
+	return p;
+}
+
 inline bool Rect::IsValid() const
 {
 	return this->top <= this->bottom && this->left <= this->right;
@@ -135,4 +161,9 @@ inline Rect Rect::Create(int16_t top, int16_t left, int16_t bottom, int16_t righ
 	result.right = right;
 
 	return result;
+}
+
+inline Rect Rect::CreateFromPoints(const Point &topLeft, const Point &bottomRight)
+{
+	return Rect::Create(topLeft.v, topLeft.h, bottomRight.v, bottomRight.h);
 }

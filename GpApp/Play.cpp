@@ -7,6 +7,7 @@
 
 
 #include "PLResources.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -46,8 +47,8 @@ short GetNumStarsRemaining (short, short);
 
 phoneType	thePhone, theChimes;
 Rect		glidSrcRect, justRoomsRect;
-GWorldPtr	glidSrcMap, glid2SrcMap;
-GWorldPtr	glidMaskMap;
+DrawSurface	*glidSrcMap, *glid2SrcMap;
+DrawSurface	*glidMaskMap;
 long		gameFrame;
 short		batteryTotal, bandsTotal, foilTotal, mortals;
 Boolean		playing, evenFrame, twoPlayerGame, showFoil, demoGoing;
@@ -120,38 +121,35 @@ void NewGame (short mode)
 	{
 		InitGlider(&theGlider, kNewGameMode);
 		InitGlider(&theGlider2, kNewGameMode);
-		SetPort((GrafPtr)glidSrcMap);
-		LoadGraphic(kGliderPictID);
-		SetPort((GrafPtr)glid2SrcMap);
-		LoadGraphic(kGlider2PictID);
+		LoadGraphic(glidSrcMap, kGliderPictID);
+		LoadGraphic(glid2SrcMap, kGlider2PictID);
 	}
 	else
 	{
 		InitGlider(&theGlider, mode);
-		SetPort((GrafPtr)glidSrcMap);
-		LoadGraphic(kGliderPictID);
-		SetPort((GrafPtr)glid2SrcMap);
-		LoadGraphic(kGliderFoilPictID);
+		LoadGraphic(glidSrcMap, kGliderPictID);
+		LoadGraphic(glid2SrcMap, kGliderFoilPictID);
 	}
 	
 #if !BUILD_ARCADE_VERSION
 //	HideMenuBarOld();		// TEMP
 #endif
-	
-	SetPort((GrafPtr)mainWindow);		// paint strip on screen black
+
+	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
+
 	tempRect = thisMac.screen;
 	tempRect.top = tempRect.bottom - 20;	// thisMac.menuHigh
-	PaintRect(&tempRect);
+	mainWindowSurface->FillRect(tempRect);
 	
 #ifdef COMPILEQT
 	if ((thisMac.hasQT) && (hasMovie))
 	{
-		SetMovieGWorld(theMovie, (CGrafPtr)mainWindow, nil);
+		SetMovieGWorld(theMovie, &mainWindow->m_graf, nil);
 	}
 #endif
 	
-	SetPort((GrafPtr)workSrcMap);
-	PaintRect(&workSrcRect);
+	workSrcMap->SetForeColor(StdColors::Black());
+	workSrcMap->FillRect(workSrcRect);
 //	if (quickerTransitions)
 //		DissBitsChunky(&workSrcRect);
 //	else
@@ -249,22 +247,12 @@ void NewGame (short mode)
 	}
 	NilSavedMaps();
 	SetPortWindowPort(mainWindow);
-	BlackenScoreboard();
+	BlackenScoreboard(mainWindow->GetDrawSurface());
 	UpdateMenus(false);
 	
 	if (!gameOver)
 	{
-		CGrafPtr	wasCPort = GetGraphicsPort();
-		
-		InvalWindowRect(mainWindow, &mainWindowRect);
-		
-		SetGraphicsPort(workSrcMap);
-		PaintRect(&workSrcRect);
-		QSetRect(&tempRect, 0, 0, 640, 460);
-		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
-		LoadScaledGraphic(kSplash8BitPICT, &tempRect);
-		
-		SetGraphicsPort(wasCPort);
+		RedrawSplashScreen();
 	}
 	WaitCommandQReleased();
 	demoGoing = false;
@@ -391,7 +379,6 @@ void HandlePlayEvent (void)
 		{
 			GetPort(&wasPort);
 			SetPortWindowPort(mainWindow);
-			BeginUpdate(mainWindow);
 			CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 					GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
 					&justRoomsRect, &justRoomsRect, srcCopy);
@@ -495,16 +482,14 @@ void PlayGame (void)
 			countDown--;
 			if (countDown <= 0)
 			{
-				CGrafPtr	wasCPort = GetGraphicsPort();
-				
 				HideGlider(&theGlider);
 				RefreshScoreboard(kNormalTitleMode);
 				
 #if BUILD_ARCADE_VERSION
 			// Need to paint over the scoreboard black.
 				
-				SetGraphicsPort(boardSrcMap);
-				PaintRect(&boardSrcRect);
+				boardSrcMap->SetForeColor(StdColors::Black());
+				boardSrcMap->FillRect(boardSrcRect);
 				
 				CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
 						GetPortBitMapForCopyBits(GetWindowPort(boardWindow)),
@@ -525,7 +510,7 @@ void PlayGame (void)
 					bounds = (*thePicture)->picFrame.ToRect();
 					QOffsetRect(&bounds, -bounds.left, -bounds.top);
 					QOffsetRect(&bounds, hOffset, 0);
-					DrawPicture(thePicture, &bounds);
+					boardSrcMap->DrawPicture(thePicture, bounds);
 					thePicture.Dispose();
 				}
 #else
@@ -536,18 +521,16 @@ void PlayGame (void)
 					DoDiedGameOver();
 				else
 					DoGameOver();
-				
-				SetGraphicsPort(wasCPort);
 			}
 		}
 	}
 	
 #if BUILD_ARCADE_VERSION
 	{
-		CGrafPtr	wasCPort = GetGraphicsPort();
+		DrawSurface	*wasCPort = GetGraphicsPort();
 		
-		SetGraphicsPort(boardSrcMap);
-		PaintRect(&boardSrcRect);
+		boardSrcMap->SetForeColor(StdColors::Black());
+		boardSrcMap->FillRect(boardSrcRect);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(boardSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(boardWindow)), 
@@ -561,10 +544,6 @@ void PlayGame (void)
 		PicHandle	thePicture;
 		SInt16		hOffset;
 
-		CGrafPtr	wasCPort = GetGraphicsPort();
-
-		SetGraphicsPort(boardSrcMap);
-		
 		if (boardSrcRect.right >= 640)
 			hOffset = (RectWide(&boardSrcRect) - kMaxViewWidth) / 2;
 		else
@@ -575,10 +554,8 @@ void PlayGame (void)
 		bounds = (*thePicture)->picFrame.ToRect();
 		QOffsetRect(&bounds, -bounds.left, -bounds.top);
 		QOffsetRect(&bounds, hOffset, 0);
-		DrawPicture(thePicture, &bounds);
+		boardSrcMap->DrawPicture(thePicture, bounds);
 		thePicture.Dispose();
-
-		SetGraphicsPort(wasCPort);
 	}
 	
 #else
@@ -794,9 +771,11 @@ void RestoreEntireGameScreen (void)
 //	HideMenuBarOld();		// TEMP
 #endif
 	
-	SetPort((GrafPtr)mainWindow);
+	DrawSurface *surface = mainWindow->GetDrawSurface();
 	tempRect = thisMac.screen;
-	PaintRect(&tempRect);
+
+	surface->SetForeColor(StdColors::Black());
+	surface->FillRect(tempRect);
 	
 	DrawLocale();
 	RefreshScoreboard(kNormalTitleMode);

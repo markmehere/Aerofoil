@@ -8,6 +8,7 @@
 #include "PLResources.h"
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "House.h"
 #include "MainWindow.h"
@@ -24,7 +25,7 @@ void SetToNearestNeighborRoom (short, short);
 
 roomPtr		thisRoom;
 Rect		backSrcRect;
-GWorldPtr	backSrcMap;
+DrawSurface	*backSrcMap;
 short		numberRooms, thisRoomNumber, previousRoom;
 short		leftThresh, rightThresh, lastBackground;
 Boolean		autoRoomEdit, newRoomNow, noRoomAtAll;
@@ -238,18 +239,17 @@ void ReadyBackground (short theID, short *theTiles)
 	PicHandle	thePicture;
 	short		i;
 	
-	SetPort((GrafPtr)workSrcMap);
-	
 	if ((noRoomAtAll) || (!houseUnlocked))
 	{
-		LtGrayForeColor();
-		PaintRect(&workSrcRect);
-		ForeColor(blackColor);
-		MoveTo(10, 20);
+		LtGrayForeColor(workSrcMap);
+		workSrcMap->FillRect(workSrcRect);
+		workSrcMap->SetForeColor(StdColors::Black());
+
+		const Point textPoint = Point::Create(10, 20);
 		if (houseUnlocked)
-			DrawString(PSTR("No rooms"));
+			workSrcMap->DrawString(textPoint, PSTR("No rooms"));
 		else
-			DrawString(PSTR("Nothing to show"));
+			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"));
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
@@ -270,7 +270,7 @@ void ReadyBackground (short theID, short *theTiles)
 	
 	dest = (*thePicture)->picFrame.ToRect();
 	QOffsetRect(&dest, -dest.left, -dest.top);
-	DrawPicture(thePicture, &dest);
+	workSrcMap->DrawPicture(thePicture, dest);
 	thePicture.Dispose();
 	
 	QSetRect(&src, 0, 0, kTileWide, kTileHigh);

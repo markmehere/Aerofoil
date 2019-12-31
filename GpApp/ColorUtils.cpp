@@ -9,6 +9,7 @@
 #include "Externs.h"
 #include "PLPalettes.h"
 #include "PLPasStr.h"
+#include "QDStandardPalette.h"
 
 
 //==============================================================  Functions
@@ -18,15 +19,14 @@
 // this function draws text in that color.  It assumes the current port,É
 // the current font, the current pen location, etc.
 
-void ColorText (StringPtr theStr, long color)
+void ColorText (DrawSurface *surface, const Point &point, StringPtr theStr, long color)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	DrawString(theStr);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->DrawString(point, theStr);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  ColorRect
@@ -34,15 +34,14 @@ void ColorText (StringPtr theStr, long color)
 // Given a rectangle and color index, this function draws a solidÉ
 // rectangle in that color.  Current port, pen mode, etc. assumed.
 
-void ColorRect (Rect *theRect, long color)
+void ColorRect (DrawSurface *surface, const Rect &theRect, long color)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	PaintRect(theRect);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->FillRect(theRect);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  ColorOval
@@ -50,15 +49,14 @@ void ColorRect (Rect *theRect, long color)
 // Given a rectangle and color index, this function draws a solidÉ
 // oval in that color.  Current port, pen mode, etc. assumed.
 
-void ColorOval (Rect *theRect, long color)
+void ColorOval (DrawSurface *surface, const Rect &theRect, long color)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	PaintOval(theRect);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->FillEllipse(theRect);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  ColorRegion
@@ -66,15 +64,14 @@ void ColorOval (Rect *theRect, long color)
 // Given a region and color index, this function draws a solidÉ
 // region in that color.  Current port, pen mode, etc. assumed.
 
-void ColorRegion (PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex)
+void ColorRegion (DrawSurface *surface, PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(colorIndex, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	FillScanlineMask(scanlineMask);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[colorIndex];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->FillScanlineMask(scanlineMask);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  ColorLine
@@ -82,16 +79,14 @@ void ColorRegion (PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex)
 // Given a the end points for a line and color index, this functionÉ
 // draws a line in that color.  Current port, pen mode, etc. assumed.
 
-void ColorLine (short h0, short v0, short h1, short v1, long color)
+void ColorLine (DrawSurface *surface, short h0, short v0, short h1, short v1, long color)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	MoveTo(h0, v0);
-	LineTo(h1, v1);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->DrawLine(Point::Create(h0, v0), Point::Create(h1, v1));
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  HiliteRect
@@ -101,16 +96,16 @@ void ColorLine (short h0, short v0, short h1, short v1, long color)
 // sides with color 2.  A rect can be made to appear "hi-lit" or "3D"É
 // in this way.
 
-void HiliteRect (Rect *theRect, short color1, short color2)
+void HiliteRect (DrawSurface *surface, const Rect &theRect, short color1, short color2)
 {
-	ColorLine(theRect->left, theRect->top, theRect->right - 2, 
-			theRect->top, color1);
-	ColorLine(theRect->left, theRect->top, theRect->left, 
-			theRect->bottom - 2, color1);
-	ColorLine(theRect->right - 1, theRect->top, theRect->right - 1, 
-			theRect->bottom - 2, color2);
-	ColorLine(theRect->left + 1, theRect->bottom - 1, theRect->right - 1, 
-			theRect->bottom - 1, color2);
+	ColorLine(surface, theRect.left, theRect.top, theRect.right - 2,
+			theRect.top, color1);
+	ColorLine(surface, theRect.left, theRect.top, theRect.left,
+			theRect.bottom - 2, color1);
+	ColorLine(surface, theRect.right - 1, theRect.top, theRect.right - 1,
+			theRect.bottom - 2, color2);
+	ColorLine(surface, theRect.left + 1, theRect.bottom - 1, theRect.right - 1,
+			theRect.bottom - 1, color2);
 }
 
 //--------------------------------------------------------------  ColorFrameRect
@@ -118,15 +113,14 @@ void HiliteRect (Rect *theRect, short color1, short color2)
 // Given a rectangle and color index, this function frames aÉ
 // rectangle in that color.  Current port, pen mode, etc. assumed.
 
-void ColorFrameRect (Rect *theRect, long color)
+void ColorFrameRect (DrawSurface *surface, const Rect &theRect, long color)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	FrameRect(theRect);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->FrameRect(theRect);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  ColorFrameWHRect
@@ -135,7 +129,7 @@ void ColorFrameRect (Rect *theRect, long color)
 // and a color index, this function frames a rectangle in that color.
 // Current port, pen mode, etc. assumed.
 
-void ColorFrameWHRect (short left, short top, short wide, short high, long color)
+void ColorFrameWHRect (DrawSurface *surface, short left, short top, short wide, short high, long color)
 {
 	Rect		theRect;
 	
@@ -143,7 +137,7 @@ void ColorFrameWHRect (short left, short top, short wide, short high, long color
 	theRect.top = top;
 	theRect.right = left + wide;
 	theRect.bottom = top + high;
-	ColorFrameRect(&theRect, color);
+	ColorFrameRect(surface, theRect, color);
 }
 
 //--------------------------------------------------------------  ColorFrameOval
@@ -151,15 +145,14 @@ void ColorFrameWHRect (short left, short top, short wide, short high, long color
 // Given a rectangle and color index, this function frames anÉ
 // oval in that color.  Current port, pen mode, etc. assumed.
 
-void ColorFrameOval (Rect *theRect, long color)
+void ColorFrameOval (DrawSurface *surface, const Rect &theRect, long color)
 {
-	RGBColor	theRGBColor, wasColor;
-	
-	GetForeColor(&wasColor);
-	Index2Color(color, &theRGBColor);
-	RGBForeColor(&theRGBColor);
-	FrameOval(theRect);
-	RGBForeColor(&wasColor);
+	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+
+	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
+	surface->SetForeColor(rgbaColor);
+	surface->FrameEllipse(theRect);
+	surface->SetForeColor(wasColor);
 }
 
 //--------------------------------------------------------------  LtGrayForeColor
@@ -167,15 +160,9 @@ void ColorFrameOval (Rect *theRect, long color)
 // This function finds the closest match to a "light gray" in theÉ
 // current palette and sets the pen color to that.
 
-void LtGrayForeColor (void)
+void LtGrayForeColor (DrawSurface *surface)
 {
-	RGBColor	color;
-	
-	color.red = (unsigned short) 0xBFFF;
-	color.green = (unsigned short) 0xBFFF;
-	color.blue = (unsigned short) 0xBFFF;
-	
-	RGBForeColor(&color);
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(191, 191, 191, 255));
 }
 
 //--------------------------------------------------------------  GrayForeColor
@@ -183,15 +170,9 @@ void LtGrayForeColor (void)
 // This function finds the closest match to a "medium gray" in theÉ
 // current palette and sets the pen color to that.
 
-void GrayForeColor (void)
+void GrayForeColor (DrawSurface *surface)
 {
-	RGBColor	color;
-	
-	color.red = (unsigned short) 0x7FFF;
-	color.green = (unsigned short) 0x7FFF;
-	color.blue = (unsigned short) 0x7FFF;
-	
-	RGBForeColor(&color);
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(127, 127, 127, 255));
 }
 
 //--------------------------------------------------------------  DkGrayForeColor
@@ -199,13 +180,7 @@ void GrayForeColor (void)
 // This function finds the closest match to a "dark gray" in theÉ
 // current palette and sets the pen color to that.
 
-void DkGrayForeColor (void)
+void DkGrayForeColor (DrawSurface *surface)
 {
-	RGBColor	color;
-	
-	color.red = (unsigned short) 0x3FFF;
-	color.green = (unsigned short) 0x3FFF;
-	color.blue = (unsigned short) 0x3FFF;
-	
-	RGBForeColor(&color);
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(63, 63, 63, 255));
 }

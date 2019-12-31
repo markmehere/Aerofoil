@@ -70,10 +70,6 @@ void HandleMouseEvent (EventRecord *theEvent)
 	
 	switch (thePart)
 	{
-		case inSysWindow:
-//		SystemClick(theEvent, whichWindow);
-		break;
-		
 		case inMenuBar:
 		menuChoice = MenuSelect(theEvent->where);
 		DoMenuChoice(menuChoice);
@@ -333,43 +329,36 @@ void HandleUpdateEvent (EventRecord *theEvent)
 	if ((WindowPtr)theEvent->message == mainWindow)
 	{
 		SetPort((GrafPtr)mainWindow);
-		BeginUpdate(mainWindow);
 		UpdateMainWindow();
 		EndUpdate(mainWindow);
 	}
 	else if ((WindowPtr)theEvent->message == mapWindow)
 	{
 		SetPort((GrafPtr)mapWindow);
-		BeginUpdate(mapWindow);
 		UpdateMapWindow();
 		EndUpdate(mapWindow);
 	}
 	else if ((WindowPtr)theEvent->message == toolsWindow)
 	{
 		SetPort((GrafPtr)toolsWindow);
-		BeginUpdate(toolsWindow);
 		UpdateToolsWindow();
 		EndUpdate(toolsWindow);
 	}
 	else if ((WindowPtr)theEvent->message == linkWindow)
 	{
 		SetPort((GrafPtr)linkWindow);
-		BeginUpdate(linkWindow);
 		UpdateLinkWindow();
 		EndUpdate(linkWindow);
 	}
 	else if ((WindowPtr)theEvent->message == coordWindow)
 	{
 		SetPort((GrafPtr)coordWindow);
-		BeginUpdate(coordWindow);
 		UpdateCoordWindow();
 		EndUpdate(coordWindow);
 	}
 	else if ((WindowPtr)theEvent->message == menuWindow)
 	{
-		SetPort((GrafPtr)menuWindow);
-		BeginUpdate(menuWindow);
-		UpdateMenuBarWindow();
+		UpdateMenuBarWindow(menuWindow->GetDrawSurface());
 		EndUpdate(menuWindow);
 	}
 }

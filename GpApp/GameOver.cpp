@@ -10,6 +10,8 @@
 #include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontManager.h"
+#include "FontFamily.h"
 #include "MainWindow.h"
 #include "Objects.h"
 #include "RectUtils.h"
@@ -41,8 +43,8 @@ void DrawPages (void);
 
 pageType	pages[8];
 Rect		pageSrcRect, pageSrc[kPageFrames], lettersSrc[8], angelSrcRect;
-GWorldPtr	pageSrcMap, gameOverSrcMap, angelSrcMap;
-GWorldPtr	pageMaskMap, angelMaskMap;
+DrawSurface *pageSrcMap, *gameOverSrcMap, *angelSrcMap;
+DrawSurface *pageMaskMap, *angelMaskMap;
 short		countDown, stopPages, pagesStuck;
 Boolean		gameOver;
 
@@ -59,11 +61,12 @@ extern	Boolean		playing, shadowVisible, demoGoing;
 // completed the house.
 
 void DoGameOver (void)
-{	
+{
+	DrawSurface *surface = mainWindow->GetDrawSurface();
 	playing = false;
 	SetUpFinalScreen();
 	SetPort((GrafPtr)mainWindow);
-	ColorRect(&mainWindowRect, 244);
+	ColorRect(surface, mainWindowRect, 244);
 	DoGameOverStarAnimation();
 	if (!TestHighScore())
 		RedrawSplashScreen();
@@ -80,12 +83,12 @@ void SetUpFinalScreen (void)
 	Str255		tempStr, subStr;
 	short		count, offset, i, textDown;
 	char		wasState;
+	DrawSurface	*surface = workSrcMap;
 	
-	SetPort((GrafPtr)workSrcMap);
-	ColorRect(&workSrcRect, 244);
+	ColorRect(surface, workSrcRect, 244);
 	QSetRect(&tempRect, 0, 0, 640, 460);
 	CenterRectInRect(&tempRect, &workSrcRect);
-	LoadScaledGraphic(kMilkywayPictID, &tempRect);
+	LoadScaledGraphic(surface, kMilkywayPictID, &tempRect);
 	textDown = tempRect.top;
 	if (textDown < 0)
 		textDown = 0;
@@ -98,16 +101,17 @@ void SetUpFinalScreen (void)
 		GetLineOfText(tempStr, count, subStr);
 		offset = ((thisMac.screen.right - thisMac.screen.left) - 
 				TextWidth(subStr, 1, subStr[0])) / 2;
-		TextFont(applFont);
-		TextFace(bold);
-		TextSize(12);
-		ForeColor(blackColor);
-		MoveTo(offset + 1, textDown + 33 + (count * 20));
-		DrawString(subStr);
-		ForeColor(whiteColor);
-		MoveTo(offset, textDown + 32 + (count * 20));
-		DrawString(subStr);
-		ForeColor(blackColor);
+
+		surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+
+		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+		const Point textShadowPos = Point::Create(offset + 1, textDown + 33 + (count * 20));
+
+		surface->DrawString(textShadowPos, subStr);
+		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+
+		const Point textPos = Point::Create(offset, textDown + 32 + (count * 20));
+		surface->DrawString(textPos, subStr);
 		count++;
 	}
 	while (subStr[0] > 0);
@@ -251,24 +255,18 @@ void InitDiedGameOver (void)
 	#define		kPageRightOffset	128
 	#define		kPageBackUp			128
 	short		i;
-	CGrafPtr	wasCPort;
 	PLError_t		theErr;
-	
-	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&pageSrcRect, 0, 0, 25, 32 * 8);
 	theErr = CreateOffScreenGWorld(&gameOverSrcMap, &pageSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(gameOverSrcMap);
-	LoadGraphic(kLettersPictID);
+	LoadGraphic(gameOverSrcMap, kLettersPictID);
 	
 	QSetRect(&pageSrcRect, 0, 0, 32, 32 * kPageFrames);
 	theErr = CreateOffScreenGWorld(&pageSrcMap, &pageSrcRect, kPreferredPixelFormat);
-	SetGraphicsPort(pageSrcMap);
-	LoadGraphic(kPagesPictID);
+	LoadGraphic(pageSrcMap, kPagesPictID);
 	
 	theErr = CreateOffScreenGWorld(&pageMaskMap, &pageSrcRect, GpPixelFormats::kBW1);	
-	SetGraphicsPort(pageMaskMap);
-	LoadGraphic(kPagesMaskID);
+	LoadGraphic(pageMaskMap, kPagesMaskID);
 	
 	for (i = 0; i < kPageFrames; i++)	// initialize src page rects
 	{

@@ -8,8 +8,10 @@
 #include "PLTextUtils.h"
 #include "PLControlDefinitions.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontFamily.h"
 #include "RectUtils.h"
 #include "Utilities.h"
 
@@ -50,8 +52,8 @@
 
 void CreateToolsOffscreen (void);
 void KillToolsOffscreen (void);
-void FrameSelectedTool (void);
-void DrawToolName (void);
+void FrameSelectedTool (DrawSurface *);
+void DrawToolName (DrawSurface *);
 void DrawToolTiles (void);
 void SwitchToolModes (short);
 
@@ -59,7 +61,7 @@ void SwitchToolModes (short);
 Rect			toolsWindowRect, toolSrcRect, toolTextRect;
 Rect			toolRects[kTotalTools];
 ControlHandle	classPopUp;
-GWorldPtr		toolSrcMap;
+DrawSurface		*toolSrcMap;
 WindowPtr		toolsWindow;
 short			isToolsH, isToolsV;
 short			toolSelected, toolMode;
@@ -73,19 +75,14 @@ Boolean			isToolsOpen;
 #ifndef COMPILEDEMO
 void CreateToolsOffscreen (void)
 {
-	CGrafPtr	wasCPort;
+	DrawSurface		*wasCPort;
 	PLError_t		theErr;
 	
 	if (toolSrcMap == nil)
 	{
-		wasCPort = GetGraphicsPort();
-		
 		QSetRect(&toolSrcRect, 0, 0, 360, 216);
 		theErr = CreateOffScreenGWorld(&toolSrcMap, &toolSrcRect, kPreferredPixelFormat);
-		SetGraphicsPort(toolSrcMap);
-		LoadGraphic(kToolsPictID);
-		
-		SetGraphicsPort(wasCPort);
+		LoadGraphic(toolSrcMap, kToolsPictID);
 	}
 }
 #endif
@@ -107,7 +104,7 @@ void KillToolsOffscreen (void)
 //--------------------------------------------------------------  FrameSelectedTool
 
 #ifndef COMPILEDEMO
-void FrameSelectedTool (void)
+void FrameSelectedTool (DrawSurface *surface)
 {
 	Rect		theRect;
 	short		toolIcon;
@@ -126,9 +123,12 @@ void FrameSelectedTool (void)
 	}
 	
 	theRect = toolRects[toolIcon];
-	PenSize(2, 2);
-	ForeColor(redColor);
-	FrameRect(&theRect);
+	surface->SetForeColor(StdColors::Red());
+
+	surface->FrameRect(theRect);
+	InsetRect(&theRect, 1, 1);
+	surface->FrameRect(theRect);
+
 	PenNormal();
 	ForeColor(blackColor);
 }
@@ -137,7 +137,7 @@ void FrameSelectedTool (void)
 //--------------------------------------------------------------  DrawToolName
 
 #ifndef COMPILEDEMO
-void DrawToolName (void)
+void DrawToolName (DrawSurface *surface)
 {
 	Str255		theString;
 	
@@ -146,13 +146,15 @@ void DrawToolName (void)
 	else
 		GetIndString(theString, kObjectNameStrings, 
 				toolSelected + ((toolMode - 1) * 0x0010));
-	
-	EraseRect(&toolTextRect);
-	MoveTo(toolTextRect.left + 3, toolTextRect.bottom - 6);
-	TextFont(applFont);
-	TextSize(9);
-	TextFace(bold);
-	ColorText(theString, 171L);
+
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(toolTextRect);
+	surface->SetForeColor(StdColors::Black());
+
+	const Point textPoint = Point::Create(toolTextRect.left + 3, toolTextRect.bottom - 6);
+
+	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold);
+	ColorText(surface, textPoint, theString, 171L);
 }
 #endif
 
@@ -186,6 +188,7 @@ void DrawToolTiles (void)
 void EraseSelectedTool (void)
 {
 #ifndef COMPILEDEMO
+	DrawSurface *surface = mainWindow->GetDrawSurface();
 	Rect		theRect;
 	short		toolIcon;
 	
@@ -208,9 +211,10 @@ void EraseSelectedTool (void)
 	}
 	
 	theRect = toolRects[toolIcon];
-	PenSize(2, 2);
-	ForeColor(whiteColor);
-	FrameRect(&theRect);
+	surface->SetForeColor(StdColors::White());
+	surface->FrameRect(theRect);
+	InsetRect(&theRect, 1, 1);
+	surface->FrameRect(theRect);
 #endif
 }
 
@@ -224,8 +228,8 @@ void SelectTool (short which)
 	
 	if (toolsWindow == nil)
 		return;
-	
-	SetPort((GrafPtr)toolsWindow);
+
+	DrawSurface *surface = toolsWindow->GetDrawSurface();
 	
 	toolIcon = which;
 	if ((toolMode == kBlowerMode) && (toolIcon >= 7))
@@ -241,13 +245,14 @@ void SelectTool (short which)
 	}
 	
 	theRect = toolRects[toolIcon];
-	ForeColor(redColor);
-	FrameRect(&theRect);
-	PenNormal();
-	ForeColor(blackColor);
-	
+	surface->SetForeColor(StdColors::Red());
+
+	surface->FrameRect(theRect);
+	InsetRect(&theRect, 1, 1);
+	surface->FrameRect(theRect);
+
 	toolSelected = which;
-	DrawToolName();
+	DrawToolName(surface);
 #endif
 }
 
@@ -258,18 +263,17 @@ void UpdateToolsWindow (void)
 #ifndef COMPILEDEMO
 	if (toolsWindow == nil)
 		return;
-	
-	SetPortWindowPort(toolsWindow);
+
+	DrawSurface *surface = toolsWindow->GetDrawSurface();
 	DrawControls(toolsWindow);
 	
-	DkGrayForeColor();
-	MoveTo(4, 25);
-	Line(108, 0);
-	ForeColor(blackColor);
+	DkGrayForeColor(surface);
+	surface->DrawLine(Point::Create(4, 25), Point::Create(112, 25));
+	surface->SetForeColor(StdColors::Black());
 	
 	DrawToolTiles();
-	FrameSelectedTool();
-	DrawToolName();
+	FrameSelectedTool(surface);
+	DrawToolName(surface);
 #endif
 }
 

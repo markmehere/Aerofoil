@@ -10,6 +10,7 @@
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLStringCompare.h"
+#include "PLStandardColors.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "Environ.h"
@@ -70,7 +71,7 @@ void UpdateLoadDialog (DialogPtr theDialog)
 	WindowRef	theWindow;
 //	RgnHandle	theRegion;
 	
-	theWindow = GetDialogWindow(theDialog);
+	theWindow = theDialog->GetWindow();
 	GetWindowBounds(theWindow, kWindowContentRgn, &dialogRect);
 	/*
 	wasState = HGetState((Handle)(((DialogPeek)theDialog)->window).port.visRgn);
@@ -80,7 +81,7 @@ void UpdateLoadDialog (DialogPtr theDialog)
 	*/
 	
 	DrawDialog(theDialog);
-	ColorFrameWHRect(8, 39, 413, 184, kRedOrangeColor8);	// box around files
+	ColorFrameWHRect(theDialog->GetWindow()->GetDrawSurface(), 8, 39, 413, 184, kRedOrangeColor8);	// box around files
 	
 	houseStart = housePage;
 	houseStop = housesFound;
@@ -140,6 +141,7 @@ void UpdateLoadDialog (DialogPtr theDialog)
 void PageUpHouses (DialogPtr theDial)
 {
 	Rect		tempRect;
+	DrawSurface	*surface = theDial->GetWindow()->GetDrawSurface();
 	
 	if (housePage < kDispFiles)
 	{
@@ -159,8 +161,11 @@ void PageUpHouses (DialogPtr theDial)
 	}
 	
 	QSetRect(&tempRect, 8, 39, 421, 223);
-	EraseRect(&tempRect);
-	InvalWindowRect(GetDialogWindow(theDial), &tempRect);
+
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(tempRect);
+	surface->SetForeColor(StdColors::Black());
+	InvalWindowRect(theDial->GetWindow(), &tempRect);
 }
 #endif
 
@@ -170,6 +175,7 @@ void PageUpHouses (DialogPtr theDial)
 void PageDownHouses (DialogPtr theDial)
 {
 	Rect		tempRect;
+	DrawSurface	*surface = theDial->GetWindow()->GetDrawSurface();
 	
 	if (housePage >= (housesFound - kDispFiles))
 	{
@@ -189,8 +195,10 @@ void PageDownHouses (DialogPtr theDial)
 	}
 	
 	QSetRect(&tempRect, 8, 39, 421, 223);
-	EraseRect(&tempRect);
-	InvalWindowRect(GetDialogWindow(theDial), &tempRect);
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(tempRect);
+	surface->SetForeColor(StdColors::Black());
+	InvalWindowRect(theDial->GetWindow(), &tempRect);
 }
 #endif
 
@@ -230,7 +238,7 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 			break;
 
 			case PL_KEY_SPECIAL(kUpArrow):
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex -= 4;
 			if (thisHouseIndex < 0)
 			{
@@ -244,24 +252,24 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 				if (thisHouseIndex >= screenCount)
 					thisHouseIndex -= 4;
 			}
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
 
 			case PL_KEY_SPECIAL(kDownArrow):
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex += 4;
 			screenCount = housesFound - housePage;
 			if (screenCount > kDispFiles)
 				screenCount = kDispFiles;
 			if (thisHouseIndex >= screenCount)
 				thisHouseIndex %= 4;
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
 
 			case PL_KEY_SPECIAL(kLeftArrow):
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex--;
 			if (thisHouseIndex < 0)
 			{
@@ -270,20 +278,20 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 					screenCount = kDispFiles;
 				thisHouseIndex = screenCount - 1;
 			}
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
 
 			case PL_KEY_SPECIAL(kTab):
 			case PL_KEY_SPECIAL(kRightArrow):
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex++;
 			screenCount = housesFound - housePage;
 			if (screenCount > kDispFiles)
 				screenCount = kDispFiles;
 			if (thisHouseIndex >= screenCount)
 				thisHouseIndex = 0;
-			InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			return(true);
 			break;
 			
@@ -313,8 +321,8 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 					}
 					if (wasIndex != thisHouseIndex)
 					{
-						InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[wasIndex]);
-						InvalWindowRect(GetDialogWindow(dial), &loadHouseRects[thisHouseIndex]);
+						InvalWindowRect(dial->GetWindow(), &loadHouseRects[wasIndex]);
+						InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 					}
 				}
 				return(true);
@@ -337,9 +345,8 @@ Boolean LoadFilter (DialogPtr dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateLoadDialog(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -437,9 +444,9 @@ void DoLoadHouse (void)
 			if ((item - kLoadNameFirstItem != thisHouseIndex) && 
 					(item - kLoadNameFirstItem < screenCount))
 			{
-				InvalWindowRect(GetDialogWindow(theDial), &loadHouseRects[thisHouseIndex]);
+				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 				thisHouseIndex = item - kLoadNameFirstItem;
-				InvalWindowRect(GetDialogWindow(theDial), &loadHouseRects[thisHouseIndex]);
+				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			}
 						
 			if (lastWhereClick.h < 0)
@@ -472,9 +479,9 @@ void DoLoadHouse (void)
 			if ((item - kLoadIconFirstItem != thisHouseIndex) && 
 					(item - kLoadIconFirstItem < screenCount))
 			{
-				InvalWindowRect(GetDialogWindow(theDial), &loadHouseRects[thisHouseIndex]);
+				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 				thisHouseIndex = item - kLoadIconFirstItem;
-				InvalWindowRect(GetDialogWindow(theDial), &loadHouseRects[thisHouseIndex]);
+				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			}
 			
 			if (lastWhereClick.h < 0)
@@ -559,7 +566,7 @@ void DoDirSearch (void)
 {
 	#define		kMaxDirectories		32
 	PortabilityLayer::VirtualDirectory_t		theDirs[kMaxDirectories];
-	PLError_t		theErr, notherErr;
+	PLError_t		theErr;
 	short		count, i, numDirs;
 	int currentDir;
 	

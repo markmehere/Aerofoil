@@ -146,7 +146,7 @@ namespace PortabilityLayer
 			void Dismiss();
 
 			Menu **GetSelectedMenu() const;
-			CGraf *GetRenderedMenu() const;
+			DrawSurface *GetRenderedMenu() const;
 			const unsigned int *GetSelectedItem() const;
 
 			void SelectItem(size_t item);
@@ -156,7 +156,7 @@ namespace PortabilityLayer
 			void RenderMenu(Menu *menu);
 
 			Menu **m_currentMenu;
-			CGraf *m_menuGraf;
+			DrawSurface *m_menuGraf;
 			unsigned int m_itemIndex;
 			bool m_haveItem;
 		};
@@ -184,7 +184,7 @@ namespace PortabilityLayer
 
 		static const int kMenuFontFlags = PortabilityLayer::FontFamilyFlag_Bold;
 
-		CGraf *m_menuBarGraf;
+		DrawSurface *m_menuBarGraf;
 
 		Menu **m_firstMenu;
 		Menu **m_lastMenu;
@@ -555,7 +555,7 @@ namespace PortabilityLayer
 				return;
 		}
 
-		CGraf *graf = m_menuBarGraf;
+		DrawSurface *graf = m_menuBarGraf;
 
 		assert(graf);
 
@@ -567,27 +567,26 @@ namespace PortabilityLayer
 
 		RefreshMenuBarLayout();
 
-		CGraf *oldGraf = GetGraphicsPort();
+		DrawSurface *oldGraf = GetGraphicsPort();
 
 		SetGraphicsPort(m_menuBarGraf);
 
 		PortabilityLayer::QDState *qdState = qdManager->GetState();
 
-		qdState->SetForeColor(gs_barMidColor);
-		PaintRect(&menuRect);
-
-		qdState->SetForeColor(gs_barBrightColor);
+		graf->SetForeColor(gs_barMidColor);
+		graf->FillRect(menuRect);
+		graf->SetForeColor(gs_barBrightColor);
 
 		// Top stripe
 		{
 			const Rect rect = Rect::Create(0, 0, 1, static_cast<int16_t>(width) - 1);
-			PaintRect(&rect);
+			m_menuBarGraf->FillRect(rect);
 		}
 
 		// Left stripe
 		{
 			const Rect rect = Rect::Create(0, 0, kMenuBarHeight - 1, 1);
-			PaintRect(&rect);
+			m_menuBarGraf->FillRect(rect);
 		}
 
 		qdState->SetForeColor(gs_barDarkColor);
@@ -595,13 +594,13 @@ namespace PortabilityLayer
 		// Bottom stripe
 		{
 			const Rect rect = Rect::Create(kMenuBarHeight - 2, 1, kMenuBarHeight - 1, width);
-			PaintRect(&rect);
+			m_menuBarGraf->FillRect(rect);
 		}
 
 		// Right stripe
 		{
 			const Rect rect = Rect::Create(0, width - 1, kMenuBarHeight - 1, width);
-			PaintRect(&rect);
+			m_menuBarGraf->FillRect(rect);
 		}
 
 		qdState->SetForeColor(gs_barBottomEdgeColor);
@@ -609,7 +608,7 @@ namespace PortabilityLayer
 		// Bottom edge
 		{
 			const Rect rect = Rect::Create(kMenuBarHeight - 1, 0, kMenuBarHeight, width);
-			PaintRect(&rect);
+			m_menuBarGraf->FillRect(rect);
 		}
 
 		PixMapHandle pixMap = m_menuBarGraf->m_port.GetPixMap();
@@ -634,27 +633,26 @@ namespace PortabilityLayer
 			qdState->SetForeColor(gs_barHighlightBrightColor);
 			{
 				const Rect rect = Rect::Create(0, left, 1, right);
-				PaintRect(&rect);
+				m_menuBarGraf->FillRect(rect);
 			}
 
 			// Middle
 			qdState->SetForeColor(gs_barHighlightMidColor);
 			{
 				const Rect rect = Rect::Create(1, left, kMenuBarHeight - 2, right);
-				PaintRect(&rect);
+				m_menuBarGraf->FillRect(rect);
 			}
 
 			qdState->SetForeColor(gs_barHighlightDarkColor);
 			{
 				const Rect rect = Rect::Create(kMenuBarHeight - 2, left, kMenuBarHeight - 1, right);
-				PaintRect(&rect);
+				m_menuBarGraf->FillRect(rect);
 			}
 		}
 
 		// Text items
 		qdState->SetForeColor(gs_barNormalTextColor);
-		TextFont(systemFont);
-		TextSize(kMenuFontSize);
+		m_menuBarGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
 
 		{
 			Menu **menuHdl = m_firstMenu;
@@ -675,9 +673,8 @@ namespace PortabilityLayer
 					{
 						if (menuHdl != selectedMenuHdl)
 						{
-							qdState->m_penPos.h = static_cast<int16_t>(xCoordinate);
-							qdState->m_penPos.v = kMenuBarTextYOffset;
-							DrawString(PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
+							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
+							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
 						}
 					}
 				}
@@ -695,9 +692,8 @@ namespace PortabilityLayer
 				qdState->SetForeColor(gs_barHighlightTextColor);
 				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
 
-				qdState->m_penPos.h = static_cast<int16_t>(xCoordinate);
-				qdState->m_penPos.v = kMenuBarTextYOffset;
-				DrawString(PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
+				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
+				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
 			}
 		}
 
@@ -729,7 +725,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		if (CGraf *renderedMenu = m_menuSelectionState.GetRenderedMenu())
+		if (DrawSurface *renderedMenu = m_menuSelectionState.GetRenderedMenu())
 		{
 			renderedMenu->PushToDDSurface(displayDriver);
 
@@ -968,7 +964,7 @@ namespace PortabilityLayer
 		return m_currentMenu;
 	}
 
-	CGraf *MenuManagerImpl::MenuSelectionState::GetRenderedMenu() const
+	DrawSurface *MenuManagerImpl::MenuSelectionState::GetRenderedMenu() const
 	{
 		return m_menuGraf;
 	}
@@ -1019,7 +1015,9 @@ namespace PortabilityLayer
 				return;
 		}
 
-		CGrafPtr oldGraf = GetGraphicsPort();
+		DrawSurface *surface = m_menuGraf;
+
+		DrawSurface *oldGraf = GetGraphicsPort();
 
 		SetGraphicsPort(m_menuGraf);
 
@@ -1029,15 +1027,14 @@ namespace PortabilityLayer
 
 		{
 			const Rect rect = Rect::Create(0, 0, menu->layoutHeight, menu->layoutWidth);
-			PaintRect(&rect);
+			surface->FillRect(rect);
 		}
 
-		TextFont(systemFont);
-		TextSize(kMenuFontSize);
+		m_menuGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
 
 		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
 
-		qdState->m_penPos.h = kMenuItemLeftPadding;
+		Point itemPos = Point::Create(kMenuItemLeftPadding, 0);
 
 		qdState->SetForeColor(gs_barNormalTextColor);
 
@@ -1048,9 +1045,9 @@ namespace PortabilityLayer
 
 			const MenuItem &item = menu->menuItems[i];
 
-			qdState->m_penPos.v = item.layoutYOffset + kMenuItemTextYOffset;
+			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			DrawString(PLPasStr(strBlob + item.nameOffsetInStringBlob));
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob));
 		}
 
 		if (m_haveItem)
@@ -1058,15 +1055,15 @@ namespace PortabilityLayer
 			const MenuItem &selectedItem = menu->menuItems[m_itemIndex];
 			qdState->SetForeColor(gs_barHighlightMidColor);
 			const Rect itemRect = Rect::Create(selectedItem.layoutYOffset, 0, selectedItem.layoutYOffset + selectedItem.layoutHeight, menu->layoutWidth);
-			PaintRect(&itemRect);
+			surface->FillRect(itemRect);
 
 			qdState->SetForeColor(gs_barHighlightTextColor);
 
 			const MenuItem &item = menu->menuItems[m_itemIndex];
 
-			qdState->m_penPos.v = item.layoutYOffset + kMenuItemTextYOffset;
+			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			DrawString(PLPasStr(strBlob + item.nameOffsetInStringBlob));
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob));
 		}
 
 		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);

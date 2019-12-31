@@ -109,7 +109,7 @@ void DisposeMovie(Movie movie)
 	PL_NotYetImplemented();
 }
 
-void SetMovieGWorld(Movie movie, CGrafPtr graf, void *unknown)
+void SetMovieGWorld(Movie movie, DrawSurface *graf, void *unknown)
 {
 	PL_NotYetImplemented();
 }

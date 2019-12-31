@@ -7,6 +7,7 @@
 #include "LinePlotter.h"
 #include "MMHandleBlock.h"
 #include "MemoryManager.h"
+#include "MemReaderStream.h"
 #include "HostFontHandler.h"
 #include "PLPasStr.h"
 #include "RenderedFont.h"
@@ -18,9 +19,13 @@
 #include "ScanlineMask.h"
 #include "ScanlineMaskConverter.h"
 #include "ScanlineMaskIterator.h"
+#include "QDGraf.h"
 #include "QDStandardPalette.h"
+#include "QDPictEmitContext.h"
+#include "QDPictEmitScanlineParameters.h"
 #include "WindowManager.h"
 #include "QDGraf.h"
+#include "QDPictDecoder.h"
 #include "QDPixMap.h"
 #include "Vec2i.h"
 
@@ -28,14 +33,219 @@
 #include <assert.h>
 
 
-enum PaintColorResolution
+namespace PortabilityLayer
 {
-	PaintColorResolution_Fore,
-	PaintColorResolution_Back,
-	PaintColorResolution_Pen,
-};
+	class PixMapBlitEmitter final : public QDPictEmitContext
+	{
+	public:
+		PixMapBlitEmitter(const Vec2i &drawOrigin, PixMapImpl *pixMap);
+		~PixMapBlitEmitter();
 
-static void PaintRectWithPCR(const Rect &rect, PaintColorResolution pcr);
+		bool SpecifyFrame(const Rect &rect) override;
+		Rect ConstrainRegion(const Rect &rect) const override;
+		void Start(QDPictBlitSourceType sourceType, const QDPictEmitScanlineParameters &params) override;
+		void BlitScanlineAndAdvance(const void *) override;
+		bool AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size) override;
+
+	private:
+		PixMapImpl *m_pixMap;
+		Vec2i m_drawOrigin;
+		uint8_t *m_tempBuffer;
+		Rect m_specFrame;
+
+		QDPictBlitSourceType m_blitType;
+		QDPictEmitScanlineParameters m_params;
+
+		size_t m_constraintRegionWidth;
+		size_t m_constraintRegionStartIndex;
+		size_t m_constraintRegionEndIndex;
+		size_t m_outputIndexStart;
+
+		uint8_t m_paletteMap[256];
+		bool m_sourceAndDestPalettesAreSame;
+	};
+
+	PixMapBlitEmitter::PixMapBlitEmitter(const Vec2i &drawOrigin, PixMapImpl *pixMap)
+		: m_pixMap(pixMap)
+		, m_drawOrigin(drawOrigin)
+		, m_tempBuffer(nullptr)
+		, m_sourceAndDestPalettesAreSame(false)
+	{
+	}
+
+	PixMapBlitEmitter::~PixMapBlitEmitter()
+	{
+		if (m_tempBuffer)
+			PortabilityLayer::MemoryManager::GetInstance()->Release(m_tempBuffer);
+	}
+
+	bool PixMapBlitEmitter::SpecifyFrame(const Rect &rect)
+	{
+		m_specFrame = rect;
+		return true;
+	}
+
+	Rect PixMapBlitEmitter::ConstrainRegion(const Rect &rect) const
+	{
+		const Rect pixMapRect = m_pixMap->m_rect;
+
+		const Rect2i rectInDrawSpace = Rect2i(rect) + m_drawOrigin;
+
+		const Rect2i constrainedRectInDrawSpace = rectInDrawSpace.Intersect(Rect2i(pixMapRect));
+
+		// If this got completely culled away, return an empty rect, but avoid int truncation
+		if (!constrainedRectInDrawSpace.IsValid())
+			return Rect::Create(rect.top, rect.left, rect.top, rect.left);
+
+		// Otherwise, it should still be valid in the picture space
+		const Rect2i constrainedRectInPictSpace = constrainedRectInDrawSpace - m_drawOrigin;
+		return constrainedRectInPictSpace.ToShortRect();
+	}
+
+	void PixMapBlitEmitter::Start(QDPictBlitSourceType sourceType, const QDPictEmitScanlineParameters &params)
+	{
+		// FIXME: Detect different system palette (if we ever do that)
+		if (QDPictBlitSourceType_IsIndexed(sourceType))
+		{
+			if (params.m_numColors == 256 && !memcmp(params.m_colors, StandardPalette::GetInstance()->GetColors(), sizeof(RGBAColor) * 256))
+				m_sourceAndDestPalettesAreSame = true;
+			else
+			{
+				assert(false);
+			}
+		}
+
+		m_blitType = sourceType;
+		m_params = params;
+
+		m_constraintRegionWidth = params.m_constrainedRegionRight - params.m_constrainedRegionLeft;
+		m_constraintRegionStartIndex = params.m_constrainedRegionLeft - params.m_scanlineOriginX;
+		m_constraintRegionEndIndex = params.m_constrainedRegionRight - params.m_scanlineOriginX;
+
+		const size_t firstCol = params.m_constrainedRegionLeft + m_drawOrigin.m_x - m_pixMap->m_rect.left;
+		const size_t firstRow = params.m_firstY + m_drawOrigin.m_y - m_pixMap->m_rect.top;
+
+		m_outputIndexStart = firstRow * m_pixMap->GetPitch() + firstCol;
+	}
+
+	void PixMapBlitEmitter::BlitScanlineAndAdvance(const void *data)
+	{
+		const int32_t crRight = m_params.m_constrainedRegionRight;
+		const int32_t crLeft = m_params.m_constrainedRegionLeft;
+		const size_t constraintRegionStartIndex = m_constraintRegionStartIndex;
+		const uint8_t *dataBytes = static_cast<const uint8_t*>(data);
+		const size_t outputIndexStart = m_outputIndexStart;
+		const size_t planarSeparation = m_params.m_planarSeparation;
+		const size_t constraintRegionWidth = m_constraintRegionWidth;
+
+		const uint8_t *paletteMapping = nullptr;
+
+		const uint8_t staticMapping1Bit[] = { 0, 255 };
+
+		void *imageData = m_pixMap->GetPixelData();
+
+		if (m_pixMap->GetPixelFormat() == GpPixelFormats::k8BitStandard || m_pixMap->GetPixelFormat() == GpPixelFormats::kBW1)
+		{
+			switch (m_blitType)
+			{
+			case QDPictBlitSourceType_Indexed1Bit:
+				for (size_t i = 0; i < constraintRegionWidth; i++)
+				{
+					const size_t itemIndex = i + constraintRegionStartIndex;
+
+					const int bitShift = 7 - (itemIndex & 7);
+					const int colorIndex = (dataBytes[itemIndex / 8] >> bitShift) & 0x1;
+					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
+				}
+				break;
+			case QDPictBlitSourceType_Indexed2Bit:
+				for (size_t i = 0; i < constraintRegionWidth; i++)
+				{
+					const size_t itemIndex = i + constraintRegionStartIndex;
+
+					const int bitShift = 6 - (2 * (itemIndex & 1));
+					const int colorIndex = (dataBytes[itemIndex / 4] >> bitShift) & 0x3;
+					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
+				}
+				break;
+			case QDPictBlitSourceType_Indexed4Bit:
+				for (size_t i = 0; i < constraintRegionWidth; i++)
+				{
+					const size_t itemIndex = i + constraintRegionStartIndex;
+
+					const int bitShift = 4 - (4 * (itemIndex & 1));
+					const int colorIndex = (dataBytes[itemIndex / 2] >> bitShift) & 0xf;
+					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
+				}
+				break;
+			case QDPictBlitSourceType_Indexed8Bit:
+				if (m_sourceAndDestPalettesAreSame)
+					memcpy(static_cast<uint8_t*>(imageData) + outputIndexStart, dataBytes + constraintRegionStartIndex, m_constraintRegionWidth);
+				else
+				{
+					for (size_t i = 0; i < constraintRegionWidth; i++)
+					{
+						const size_t itemIndex = i + constraintRegionStartIndex;
+						const uint8_t colorIndex = dataBytes[itemIndex];
+						static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
+					}
+				}
+				break;
+			case QDPictBlitSourceType_1Bit:
+				for (size_t i = 0; i < constraintRegionWidth; i++)
+				{
+					const size_t itemIndex = i + constraintRegionStartIndex;
+
+					const int bitShift = 7 - (itemIndex & 7);
+					const int colorIndex = (dataBytes[itemIndex / 8] >> bitShift) & 0x1;
+					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = staticMapping1Bit[colorIndex];
+				}
+				break;
+			case QDPictBlitSourceType_RGB15:
+				for (size_t i = 0; i < constraintRegionWidth; i++)
+				{
+					const size_t itemIndex = i + constraintRegionStartIndex;
+
+					const uint16_t item = *reinterpret_cast<const uint16_t*>(dataBytes + itemIndex * 2);
+					uint8_t &outputItem = static_cast<uint8_t*>(imageData)[i + outputIndexStart];
+
+					outputItem = StandardPalette::GetInstance()->MapColorLUT((item >> 1) & 0xf, (item >> 6) & 0xf, (item >> 11) & 0x1f);
+				}
+				break;
+			case QDPictBlitSourceType_RGB24_Multiplane:
+				for (size_t i = 0; i < m_constraintRegionWidth; i++)
+				{
+					const size_t itemIndex = i + constraintRegionStartIndex;
+
+					uint8_t &outputItem = static_cast<uint8_t*>(imageData)[i + outputIndexStart];
+
+					const uint8_t r = dataBytes[itemIndex];
+					const uint8_t g = dataBytes[itemIndex + planarSeparation];
+					const uint8_t b = dataBytes[itemIndex + planarSeparation * 2];
+
+					outputItem = StandardPalette::GetInstance()->MapColorLUT(r, g, b);
+				}
+				break;
+			default:
+				assert(false);
+			}
+		}
+
+		m_outputIndexStart += m_pixMap->GetPitch();
+	}
+
+	bool PixMapBlitEmitter::AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size)
+	{
+		m_tempBuffer = static_cast<uint8_t*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(buffer1Size + buffer2Size));
+		if (!m_tempBuffer)
+			return false;
+
+		buffer1 = m_tempBuffer;
+		buffer2 = m_tempBuffer + buffer1Size;
+
+		return true;
+	}
+}
 
 void GetPort(GrafPtr *graf)
 {
@@ -45,11 +255,6 @@ void GetPort(GrafPtr *graf)
 void SetPort(GrafPtr graf)
 {
 	PortabilityLayer::QDManager::GetInstance()->SetPort(graf);
-}
-
-void BeginUpdate(WindowPtr graf)
-{
-	(void)graf;
 }
 
 void EndUpdate(WindowPtr graf)
@@ -105,21 +310,6 @@ void SetPortDialogPort(Dialog *dialog)
 	PL_NotYetImplemented();
 }
 
-void TextSize(int sz)
-{
-	PortabilityLayer::QDManager::GetInstance()->GetState()->m_textSize = sz;
-}
-
-void TextFace(int face)
-{
-	PortabilityLayer::QDManager::GetInstance()->GetState()->m_textFace = face;
-}
-
-void TextFont(int fontID)
-{
-	PortabilityLayer::QDManager::GetInstance()->GetState()->m_fontID = fontID;
-}
-
 int TextWidth(const PLPasStr &str, int firstChar1Based, int length)
 {
 	PL_NotYetImplemented();
@@ -134,7 +324,7 @@ void MoveTo(int x, int y)
 	penPos.v = y;
 }
 
-static void PlotLine(PortabilityLayer::QDState *qdState, PortabilityLayer::QDPort *qdPort, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB)
+static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB)
 {
 	const Rect lineRect = Rect::Create(
 		std::min(pointA.m_y, pointB.m_y),
@@ -145,13 +335,15 @@ static void PlotLine(PortabilityLayer::QDState *qdState, PortabilityLayer::QDPor
 	// If the points are a straight line, paint as a rect
 	if (pointA.m_y == pointB.m_y || pointA.m_x == pointB.m_x)
 	{
-		PaintRectWithPCR(lineRect, PaintColorResolution_Fore);
+		surface->FillRect(lineRect);
 		return;
 	}
 
-	GpPixelFormat_t pixelFormat = qdPort->GetPixelFormat();
+	PortabilityLayer::QDPort *port = &surface->m_port;
 
-	Rect constrainedRect = qdPort->GetRect();
+	GpPixelFormat_t pixelFormat = surface->m_port.GetPixelFormat();
+
+	Rect constrainedRect = port->GetRect();
 
 	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(lineRect);
@@ -165,7 +357,7 @@ static void PlotLine(PortabilityLayer::QDState *qdState, PortabilityLayer::QDPor
 	if (pointA.m_y > pointB.m_y)
 		std::swap(upperPoint, lowerPoint);
 
-	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
+	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*port->GetPixMap());
 	const size_t pitch = pixMap->GetPitch();
 	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
 
@@ -249,14 +441,6 @@ static void PlotLine(PortabilityLayer::QDState *qdState, PortabilityLayer::QDPor
 	}
 }
 
-void LineTo(int x, int y)
-{
-	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
-	PortabilityLayer::QDState *qdState = qdManager->GetState();
-
-	PlotLine(qdState, qdManager->GetPort(), PortabilityLayer::Vec2i(qdState->m_penPos.h, qdState->m_penPos.v), PortabilityLayer::Vec2i(x, y));
-}
-
 void SetOrigin(int x, int y)
 {
 	PL_NotYetImplemented();
@@ -330,38 +514,7 @@ void BackColor(SystemColorID color)
 void GetForeColor(RGBColor *color)
 {
 	const PortabilityLayer::RGBAColor foreColor = PortabilityLayer::QDManager::GetInstance()->GetState()->GetForeColor();
-	color->red = foreColor.r * 0x0101;
-	color->green = foreColor.g * 0x0101;
-	color->blue = foreColor.b * 0x0101;
-}
-
-void Index2Color(int index, RGBColor *color)
-{
-	PortabilityLayer::QDPort *port = PortabilityLayer::QDManager::GetInstance()->GetPort();
-
-	GpPixelFormat_t pf = port->GetPixelFormat();
-	if (pf == GpPixelFormats::k8BitCustom)
-	{
-		PL_NotYetImplemented();
-	}
-	else
-	{
-		const PortabilityLayer::RGBAColor color8 = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[index];
-		color->red = color8.r * 0x0101;
-		color->green = color8.g * 0x0101;
-		color->blue = color8.b * 0x0101;
-	}
-}
-
-void RGBForeColor(const RGBColor *color)
-{
-	PortabilityLayer::RGBAColor truncatedColor;
-	truncatedColor.r = (color->red >> 8);
-	truncatedColor.g = (color->green >> 8);
-	truncatedColor.b = (color->blue >> 8);
-	truncatedColor.a = 255;
-
-	PortabilityLayer::QDManager::GetInstance()->GetState()->SetForeColor(truncatedColor);
+	*color = RGBColor(foreColor.r, foreColor.g, foreColor.b);
 }
 
 static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character)
@@ -430,48 +583,21 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	}
 }
 
-void DrawString(const PLPasStr &str)
+void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
 {
-	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
+	PortabilityLayer::QDPort *port = &m_port;
 
-	PortabilityLayer::QDPort *port = qdManager->GetPort();
-
-	PortabilityLayer::QDState *qdState = qdManager->GetState();
+	PortabilityLayer::QDState *qdState = m_port.GetState();
 
 	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-	const int textSize = qdState->m_textSize;
-	const int textFace = qdState->m_textFace;
-	const int fontID = qdState->m_fontID;
+	const int fontSize = qdState->m_fontSize;
+	const int fontVariationFlags = qdState->m_fontVariationFlags;
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
 
-	int variationFlags = 0;
-	if (textFace & bold)
-		variationFlags |= PortabilityLayer::FontFamilyFlag_Bold;
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, fontVariationFlags);
 
-	const PortabilityLayer::FontFamily *fontFamily = nullptr;
-
-	switch (fontID)
-	{
-	case applFont:
-		fontFamily = fontManager->GetApplicationFont(textSize, variationFlags);
-		break;
-	case systemFont:
-		fontFamily = fontManager->GetSystemFont(textSize, variationFlags);
-		break;
-	default:
-		PL_NotYetImplemented();
-		return;
-	}
-
-	const int realVariation = fontFamily->GetVariationForFlags(variationFlags);
-	PortabilityLayer::HostFont *font = fontFamily->GetFontForVariation(realVariation);
-
-	if (!font)
-		return;
-
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFont(font, textSize, fontFamily->GetHacksForVariation(realVariation));
-
-	Point penPos = qdState->m_penPos;
+	Point penPos = point;
 	const size_t len = str.Length();
 	const uint8_t *chars = str.UChars();
 
@@ -486,12 +612,88 @@ void DrawString(const PLPasStr &str)
 		DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i]);
 }
 
-void PaintRectWithPCR(const Rect &rect, PaintColorResolution pcr)
+
+void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
+{
+	if (!pictHdl)
+		return;
+
+	Picture *picPtr = *pictHdl;
+	if (!picPtr)
+		return;
+
+	const Rect picRect = picPtr->picFrame.ToRect();
+
+	if (bounds.right - bounds.left != picRect.right - picRect.left || bounds.bottom - bounds.top != picRect.bottom - picRect.top)
+	{
+		// Scaled pict draw (not supported)
+		assert(false);
+		return;
+	}
+
+	PortabilityLayer::QDPort *port = &m_port;
+
+	if (!port)
+		return;
+
+	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*port->GetPixMap());
+
+	long handleSize = pictHdl.MMBlock()->m_size;
+	PortabilityLayer::MemReaderStream stream(picPtr, handleSize);
+
+	// Adjust draw origin
+	const PortabilityLayer::Vec2i drawOrigin = PortabilityLayer::Vec2i(bounds.left - picPtr->picFrame.left, bounds.top - picPtr->picFrame.top);
+
+	switch (pixMap->GetPixelFormat())
+	{
+	case GpPixelFormats::kBW1:
+	case GpPixelFormats::k8BitStandard:
+	{
+		PortabilityLayer::PixMapBlitEmitter blitEmitter(drawOrigin, pixMap);
+		PortabilityLayer::QDPictDecoder decoder;
+
+		decoder.DecodePict(&stream, &blitEmitter);
+	}
+	break;
+	default:
+		// TODO: Implement higher-resolution pixel blitters
+		assert(false);
+		return;
+	};
+}
+
+
+void DrawSurface::SetPattern8x8(const uint8_t *pattern)
+{
+	m_port.GetState()->SetPenPattern8x8(pattern);
+}
+
+void DrawSurface::ClearPattern()
+{
+	m_port.GetState()->SetPenPattern8x8(nullptr);
+}
+
+void DrawSurface::SetMaskMode(bool maskMode)
+{
+	m_port.GetState()->m_penMask = maskMode;
+}
+
+Rect DrawSurface::GetClipRect() const
+{
+	return m_port.GetState()->m_clipRect;
+}
+
+void DrawSurface::SetClipRect(const Rect &rect)
+{
+	m_port.GetState()->m_clipRect = rect;;
+}
+
+void DrawSurface::FillRect(const Rect &rect)
 {
 	if (!rect.IsValid())
 		return;
 
-	PortabilityLayer::QDPort *qdPort = PortabilityLayer::QDManager::GetInstance()->GetPort();
+	PortabilityLayer::QDPort *qdPort = &m_port;
 
 	GpPixelFormat_t pixelFormat = qdPort->GetPixelFormat();
 
@@ -515,19 +717,7 @@ void PaintRectWithPCR(const Rect &rect, PaintColorResolution pcr)
 	{
 	case GpPixelFormats::k8BitStandard:
 		{
-			uint8_t color = 0;
-			switch (pcr)
-			{
-			case PaintColorResolution_Fore:
-				color = qdState->ResolveForeColor8(nullptr, 0);
-				break;
-			case PaintColorResolution_Back:
-				color = qdState->ResolveBackColor8(nullptr, 0);
-				break;
-			default:
-				assert(false);
-				break;
-			}
+			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
 
 			size_t scanlineIndex = 0;
 			for (size_t ln = 0; ln < numLines; ln++)
@@ -544,23 +734,53 @@ void PaintRectWithPCR(const Rect &rect, PaintColorResolution pcr)
 	}
 }
 
-void PaintRect(const Rect *rect)
+void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern)
 {
-	PaintRectWithPCR(*rect, PaintColorResolution_Fore);
+	PL_NotYetImplemented();
 }
 
-
-void PaintOval(const Rect *rect)
+void DrawSurface::SetApplicationFont(int size, int variationFlags)
 {
-	if (!rect->IsValid())
+	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetApplicationFont(size, variationFlags);
+	if (!fontFamily)
 		return;
 
-	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect->top, rect->left, rect->bottom, rect->right));
+	PortabilityLayer::QDState *qdState = m_port.GetState();
+
+	qdState->m_fontFamily = fontFamily;
+	qdState->m_fontSize = size;
+	qdState->m_fontVariationFlags = variationFlags;
+}
+
+void DrawSurface::SetSystemFont(int size, int variationFlags)
+{
+	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(size, variationFlags);
+	if (!fontFamily)
+		return;
+
+	PortabilityLayer::QDState *qdState = m_port.GetState();
+
+	qdState->m_fontFamily = fontFamily;
+	qdState->m_fontSize = size;
+	qdState->m_fontVariationFlags = variationFlags;
+}
+
+void DrawSurface::FillEllipse(const Rect &rect)
+{
+	if (!rect.IsValid())
+		return;
+
+	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
 	if (mask)
 	{
 		FillScanlineMask(mask);
 		mask->Destroy();
 	}
+}
+
+void DrawSurface::FrameEllipse(const Rect &rect)
+{
+	PL_NotYetImplemented();
 }
 
 static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor, uint8_t bgColor, bool mask)
@@ -593,15 +813,14 @@ static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, 
 	}
 }
 
-void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
+void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 {
 	if (!scanlineMask)
 		return;
 
-	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
-	PortabilityLayer::QDState *qdState = qdManager->GetState();
+	PortabilityLayer::QDPort *port = &m_port;
+	PortabilityLayer::QDState *qdState = port->GetState();
 
-	const PortabilityLayer::QDPort *port = qdManager->GetPort();
 	PixMap *pixMap = *port->GetPixMap();
 	const Rect portRect = port->GetRect();
 	const Rect maskRect = scanlineMask->GetRect();
@@ -742,6 +961,17 @@ void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 	}
 }
 
+
+void DrawSurface::DrawLine(const Point &a, const Point &b)
+{
+	PlotLine(m_port.GetState(), this, PortabilityLayer::Vec2i(a.h, a.v), PortabilityLayer::Vec2i(b.h, b.v));
+}
+
+void DrawSurface::InvertDrawLine(const Point &a, const Point &b, const uint8_t *pattern)
+{
+	PL_NotYetImplemented();
+}
+
 void GetClip(Rect *rect)
 {
 	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
@@ -757,42 +987,67 @@ void ClipRect(const Rect *rect)
 	qdState->m_clipRect = *rect;
 }
 
-void FrameRect(const Rect *rect)
+void DrawSurface::FrameRect(const Rect &rect)
 {
-	if (!rect->IsValid())
+	if (!rect.IsValid())
 		return;
 
-	uint16_t width = rect->right - rect->left;
-	uint16_t height = rect->bottom - rect->top;
+	uint16_t width = rect.right - rect.left;
+	uint16_t height = rect.bottom - rect.top;
 
 	if (width <= 2 || height <= 2)
-		PaintRect(rect);
+		FillRect(rect);
 	else
 	{
 		// This is stupid, especially in the vertical case, but oh well
 		Rect edgeRect;
 
-		edgeRect = *rect;
+		edgeRect = rect;
 		edgeRect.right = edgeRect.left + 1;
-		PaintRect(&edgeRect);
+		FillRect(edgeRect);
 
-		edgeRect = *rect;
+		edgeRect = rect;
 		edgeRect.left = edgeRect.right - 1;
-		PaintRect(&edgeRect);
+		FillRect(edgeRect);
 
-		edgeRect = *rect;
+		edgeRect = rect;
 		edgeRect.bottom = edgeRect.top + 1;
-		PaintRect(&edgeRect);
+		FillRect(edgeRect);
 
-		edgeRect = *rect;
+		edgeRect = rect;
 		edgeRect.top = edgeRect.bottom - 1;
-		PaintRect(&edgeRect);
+		FillRect(edgeRect);
 	}
 }
 
-void FrameOval(const Rect *rect)
+void DrawSurface::InvertFrameRect(const Rect &rect, const uint8_t *pattern)
 {
-	PL_NotYetImplemented_TODO("Editor");
+	PL_NotYetImplemented();
+}
+
+void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
+{
+	PL_NotYetImplemented();
+}
+
+void DrawSurface::SetForeColor(const PortabilityLayer::RGBAColor &color)
+{
+	m_port.GetState()->SetForeColor(color);
+}
+
+const PortabilityLayer::RGBAColor &DrawSurface::GetForeColor() const
+{
+	return m_port.GetState()->GetForeColor();
+}
+
+void DrawSurface::SetBackColor(const PortabilityLayer::RGBAColor &color)
+{
+	m_port.GetState()->SetBackColor(color);
+}
+
+const PortabilityLayer::RGBAColor &DrawSurface::GetBackColor() const
+{
+	return m_port.GetState()->GetBackColor();
 }
 
 void FrameRoundRect(const Rect *rect, int w, int h)
@@ -830,11 +1085,6 @@ void PenNormal()
 	qdState->m_penMask = false;
 }
 
-void EraseRect(const Rect *rect)
-{
-	PL_NotYetImplemented();
-}
-
 void InvertRect(const Rect *rect)
 {
 	PL_NotYetImplemented();
@@ -846,21 +1096,6 @@ void InsetRect(Rect *rect, int x, int y)
 	rect->right -= x;
 	rect->top += y;
 	rect->bottom -= y;
-}
-
-void Line(int x, int y)
-{
-	PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
-	PortabilityLayer::QDState *qdState = qdManager->GetState();
-
-	const PortabilityLayer::Vec2i oldPos = PortabilityLayer::Vec2i(qdState->m_penPos.h, qdState->m_penPos.v);
-
-	qdState->m_penPos.h += x;
-	qdState->m_penPos.v += y;
-
-	const PortabilityLayer::Vec2i newPos = PortabilityLayer::Vec2i(qdState->m_penPos.h, qdState->m_penPos.v);
-
-	PlotLine(qdState, qdManager->GetPort(), oldPos, newPos);
 }
 
 Pattern *GetQDGlobalsGray(Pattern *pattern)
@@ -1120,12 +1355,12 @@ void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBit
 	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
 }
 
-BitMap *GetPortBitMapForCopyBits(CGrafPtr grafPtr)
+BitMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr)
 {
 	return *grafPtr->m_port.GetPixMap();
 }
 
-CGrafPtr GetWindowPort(WindowPtr window)
+DrawSurface *GetWindowPort(WindowPtr window)
 {
 	return &window->m_graf;
 }

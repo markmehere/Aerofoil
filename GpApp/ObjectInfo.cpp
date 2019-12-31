@@ -10,9 +10,11 @@
 #include "PLSound.h"
 #include "PLTextUtils.h"
 #include "PLPasStr.h"
+#include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "ObjectEdit.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
 
 
@@ -126,6 +128,8 @@ void UpdateBlowerInfo (DialogPtr theDialog)
 	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
+
+	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	if ((thisRoom->objects[objActive].what != kLeftFan) && 
 			(thisRoom->objects[objActive].what != kRightFan))
@@ -133,54 +137,61 @@ void UpdateBlowerInfo (DialogPtr theDialog)
 		GetDialogItemRect(theDialog, 8, &bounds);
 		bounds.right += 2;
 		bounds.bottom += 2;
-		EraseRect(&bounds);
+
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(bounds);
 		bounds.right -= 2;
 		bounds.bottom -= 2;
-		PenSize(2, 2);
-		
-		switch (newDirection)
+
+		for (int16_t offsetChunk = 0; offsetChunk < 4; offsetChunk++)
 		{
-			case 1:		// up
-			MoveTo(bounds.left + HalfRectWide(&bounds), bounds.top);
-			Line(0, RectTall(&bounds));
-			MoveTo(bounds.left + HalfRectWide(&bounds), bounds.top);
-			Line(kArrowheadLength, kArrowheadLength);
-			MoveTo(bounds.left + HalfRectWide(&bounds), bounds.top);
-			Line(-kArrowheadLength, kArrowheadLength);
-			break;
+			const int16_t xOffset = offsetChunk & 1;
+			const int16_t yOffset = (offsetChunk >> 1) & 1;
+
+			const Point offset = Point::Create(xOffset, yOffset);
+
+			switch (newDirection)
+			{
+				case 1:		// up
+					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
+						offset + Point::Create(0, RectTall(&bounds)));
+					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
+						offset + Point::Create(kArrowheadLength, kArrowheadLength));
+					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
+						offset + Point::Create(-kArrowheadLength, kArrowheadLength));
+				break;
 			
-			case 2:		// right
-			MoveTo(bounds.right, bounds.top + HalfRectTall(&bounds));
-			Line(-RectWide(&bounds), 0);
-			MoveTo(bounds.right, bounds.top + HalfRectTall(&bounds));
-			Line(-kArrowheadLength, kArrowheadLength);
-			MoveTo(bounds.right, bounds.top + HalfRectTall(&bounds));
-			Line(-kArrowheadLength, -kArrowheadLength);
-			break;
+				case 2:		// right
+					surface->DrawLine(offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds)),
+						offset + Point::Create(-RectWide(&bounds), 0));
+					surface->DrawLine(offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds)),
+						offset + Point::Create(-kArrowheadLength, kArrowheadLength));
+					surface->DrawLine(offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds)),
+						offset + Point::Create(-kArrowheadLength, -kArrowheadLength));
+				break;
 			
-			case 4:		// down
-			MoveTo(bounds.left + HalfRectWide(&bounds), bounds.top);
-			Line(0, RectTall(&bounds));
-			MoveTo(bounds.left + HalfRectWide(&bounds), bounds.bottom);
-			Line(kArrowheadLength, -kArrowheadLength);
-			MoveTo(bounds.left + HalfRectWide(&bounds), bounds.bottom);
-			Line(-kArrowheadLength, -kArrowheadLength);
-			break;
+				case 4:		// down
+					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
+						offset + Point::Create(0, RectTall(&bounds)));
+					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.bottom),
+						offset + Point::Create(kArrowheadLength, -kArrowheadLength));
+					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.bottom),
+						offset + Point::Create(-kArrowheadLength, -kArrowheadLength));
+				break;
 			
-			case 8:		// left
-			MoveTo(bounds.left, bounds.top + HalfRectTall(&bounds));
-			Line(RectWide(&bounds), 0);
-			MoveTo(bounds.left, bounds.top + HalfRectTall(&bounds));
-			Line(kArrowheadLength, -kArrowheadLength);
-			MoveTo(bounds.left, bounds.top + HalfRectTall(&bounds));
-			Line(kArrowheadLength, kArrowheadLength);
-			break;
+				case 8:		// left
+					surface->DrawLine(offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds)),
+						offset + Point::Create(RectWide(&bounds), 0));
+					surface->DrawLine(offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds)),
+						offset + Point::Create(kArrowheadLength, -kArrowheadLength));
+					surface->DrawLine(offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds)),
+						offset + Point::Create(kArrowheadLength, kArrowheadLength));
+				break;
 			
-			default:
-			break;
+				default:
+				break;
+			}
 		}
-		
-		PenNormal();
 		
 		if ((thisRoom->objects[objActive].what == kInvisBlower) || 
 				(thisRoom->objects[objActive].what == kLiftArea))
@@ -376,9 +387,8 @@ Boolean BlowerFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateBlowerInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -412,9 +422,8 @@ Boolean FurnitureFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateFurnitureInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -448,9 +457,8 @@ Boolean CustPictFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateCustPictInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -490,9 +498,8 @@ Boolean SwitchFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateSwitchInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -537,9 +544,8 @@ Boolean TriggerFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateTriggerInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -587,9 +593,8 @@ Boolean LightFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateLightInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -642,9 +647,8 @@ Boolean ApplianceFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateApplianceInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -692,9 +696,8 @@ Boolean MicrowaveFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateMicrowaveInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -734,9 +737,8 @@ Boolean GreaseFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateGreaseInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -770,9 +772,8 @@ Boolean InvisBonusFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateInvisBonusInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -812,9 +813,8 @@ Boolean TransFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateTransInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -867,9 +867,8 @@ Boolean EnemyFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateEnemyInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -917,9 +916,8 @@ Boolean FlowerFilter (DialogPtr dial, EventRecord *event, short *item)
 		
 		case updateEvt:
 		SetPort((GrafPtr)dial);
-		BeginUpdate(GetDialogWindow(dial));
 		UpdateFlowerInfo(dial);
-		EndUpdate(GetDialogWindow(dial));
+		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
 		return(false);
 		break;
@@ -948,7 +946,7 @@ void DoBlowerObjectInfo (short what)
 	ParamText(numberStr, kindStr, distStr, PSTR(""));
 	
 //	CenterDialog(kBlowerInfoDialogID);
-	infoDial = GetNewDialog(kBlowerInfoDialogID, nil, kPutInFront);
+	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kBlowerInfoDialogID, kPutInFront);
 	if (infoDial == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)infoDial);
@@ -990,7 +988,7 @@ void DoBlowerObjectInfo (short what)
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 15);
 	
-	ShowWindow(GetDialogWindow(infoDial));
+	ShowWindow(infoDial->GetWindow());
 	
 	leaving = false;
 	doReturn = false;
@@ -1560,7 +1558,7 @@ void DoLightObjectInfo (void)
 	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
 	
 //	CenterDialog(kLightInfoDialogID);
-	infoDial = GetNewDialog(kLightInfoDialogID, nil, kPutInFront);
+	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kLightInfoDialogID, kPutInFront);
 	if (infoDial == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)infoDial);
@@ -1573,7 +1571,7 @@ void DoLightObjectInfo (void)
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 8);
 	
-	ShowWindow(GetDialogWindow(infoDial));
+	ShowWindow(infoDial->GetWindow());
 	
 	leaving = false;
 	doReturn = false;

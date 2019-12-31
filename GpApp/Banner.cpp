@@ -7,8 +7,11 @@
 
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontFamily.h"
+#include "FontManager.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
 #include "Room.h"
@@ -41,13 +44,10 @@ extern	Boolean		quickerTransitions, demoGoing, isUseSecondScreen;
 
 void DrawBanner (Point *topLeft)
 {
-	CGrafPtr	wasCPort;
 	Rect		wholePage, partPage, mapBounds;
-	GWorldPtr	tempMap;
-	GWorldPtr	tempMask;
-	PLError_t		theErr;
-	
-	wasCPort = GetGraphicsPort();
+	DrawSurface *tempMap;
+	DrawSurface *tempMask;
+	PLError_t	theErr;
 	
 	QSetRect(&wholePage, 0, 0, 330, 220);
 	mapBounds = thisMac.screen;
@@ -57,27 +57,23 @@ void DrawBanner (Point *topLeft)
 	topLeft->v = wholePage.top;
 	partPage = wholePage;
 	partPage.bottom = partPage.top + 190;	
-	SetGraphicsPort(workSrcMap);
-	LoadScaledGraphic(kBannerPageTopPICT, &partPage);
+	LoadScaledGraphic(workSrcMap, kBannerPageTopPICT, &partPage);
 	
 	partPage = wholePage;
 	partPage.top = partPage.bottom - 30;
 	mapBounds = partPage;
 	ZeroRectCorner(&mapBounds);
 	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds, kPreferredPixelFormat);
-	SetGraphicsPort(tempMap);
-	LoadGraphic(kBannerPageBottomPICT);
+	LoadGraphic(tempMap, kBannerPageBottomPICT);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, GpPixelFormats::kBW1);	
-	SetGraphicsPort(tempMask);
-	LoadGraphic(kBannerPageBottomMask);
+	LoadGraphic(tempMask, kBannerPageBottomMask);
 
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(tempMask), 
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
 			&mapBounds, &mapBounds, &partPage);
 
-	SetGraphicsPort(wasCPort);
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
 }
@@ -114,22 +110,19 @@ void DrawBannerMessage (Point topLeft)
 	Str255		bannerStr, subStr;
 	short		count;
 
-	CGrafPtr wasGWorld = GetGraphicsPort();
+	DrawSurface *wasGWorld = GetGraphicsPort();
 
 	SetGraphicsPort(workSrcMap);
 
 	PasStringCopy((*thisHouse)->banner, bannerStr);
-	
-	TextFont(applFont);
-	TextFace(bold);
-	TextSize(12);
-	ForeColor(blackColor);
+
+	workSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	workSrcMap->SetForeColor(StdColors::Black());
 	count = 0;
 	do
 	{
 		GetLineOfText(bannerStr, count, subStr);
-		MoveTo(topLeft.h + 16, topLeft.v + 32 + (count * 20));
-		DrawString(subStr);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr);
 		count++;
 	}
 	while (subStr[0] > 0);
@@ -149,15 +142,14 @@ void DrawBannerMessage (Point topLeft)
 		else
 			GetLocalizedString(4, subStr);
 		PasStringConcat(bannerStr, subStr);
-		
-		ForeColor(redColor);
-		MoveTo(topLeft.h + 16, topLeft.v + 164);
-		DrawString(bannerStr);
-		MoveTo(topLeft.h + 16, topLeft.v + 180);
+
+		workSrcMap->SetForeColor(StdColors::Red());
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr);
+
 		GetLocalizedString(5, subStr);
-		DrawString(subStr);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr);
 	}
-	ForeColor(blackColor);
+	workSrcMap->SetForeColor(StdColors::Black());
 
 	SetGraphicsPort(wasGWorld);
 }
@@ -207,27 +199,26 @@ void DisplayStarsRemaining (void)
 {
 	Rect		src, bounds;
 	Str255		theStr;
-	
-	SetPortWindowPort(mainWindow);
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+
 	QSetRect(&bounds, 0, 0, 256, 64);
 	CenterRectInRect(&bounds, &thisMac.screen);
 	QOffsetRect(&bounds, -thisMac.screen.left, -thisMac.screen.top);
 	src = bounds;
 	InsetRect(&src, 64, 32);
-	
-	TextFont(applFont);
-	TextFace(bold);
-	TextSize(12);
+
+	surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+
 	NumToString((long)numStarsRemaining, theStr);
 	
 	QOffsetRect(&bounds, 0, -20);
 	if (numStarsRemaining < 2)
-		LoadScaledGraphic(kStarRemainingPICT, &bounds);
+		LoadScaledGraphic(surface, kStarRemainingPICT, &bounds);
 	else
 	{
-		LoadScaledGraphic(kStarsRemainingPICT, &bounds);
-		MoveTo(bounds.left + 102 - (StringWidth(theStr) / 2), bounds.top + 23);
-		ColorText(theStr, 4L);
+		LoadScaledGraphic(surface, kStarsRemainingPICT, &bounds);
+		const Point textPoint = Point::Create(bounds.left + 102 - (StringWidth(theStr) / 2), bounds.top + 23);
+		ColorText(surface, textPoint, theStr, 4L);
 	}
 	
 	DelayTicks(60);

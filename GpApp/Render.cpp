@@ -613,7 +613,7 @@ void CopyRectsQD (void)
 {
 	short		i;
 
-	CGrafPtr mainWindowGraf = GetWindowPort(mainWindow);
+	DrawSurface *mainWindowGraf = GetWindowPort(mainWindow);
 	
 	for (i = 0; i < numWork2Main; i++)
 	{

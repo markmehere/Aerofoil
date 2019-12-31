@@ -237,10 +237,10 @@ typedef struct
 
 typedef struct
 {
-	Rect		dest;
-	GWorldPtr	map;
-	short		where;
-	short		who;
+	Rect			dest;
+	DrawSurface		*map;
+	short			where;
+	short			who;
 } savedType, *savedPtr;
 
 typedef struct

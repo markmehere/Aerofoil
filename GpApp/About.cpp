@@ -11,6 +11,7 @@
 #include "PLSound.h"
 #include "PLPasStr.h"
 #include "About.h"
+#include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Environ.h"
 #include "Externs.h"
@@ -18,8 +19,8 @@
 #include "ScanlineMask.h"
 
 
-static void HiLiteOkayButton (void);
-static void UnHiLiteOkayButton (void);
+static void HiLiteOkayButton (DrawSurface *surface);
+static void UnHiLiteOkayButton (DrawSurface *surface);
 static void UpdateMainPict (DialogPtr);
 static Boolean AboutFilter (DialogPtr, EventRecord *theEvent, short *hit);
 
@@ -52,7 +53,7 @@ void DoAbout (void)
 	wasResFile = CurResFile();
 	UseResFile(thisMac.thisResFile);
 	
-	aboutDialog = GetNewDialog(kAboutDialogID, nil, (WindowRef)-1L);
+	aboutDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kAboutDialogID, PL_GetPutInFrontWindowPtr());
 //	if (aboutDialog == nil)
 //		RedAlert(kErrDialogDidntLoad);
 	
@@ -99,7 +100,7 @@ void DoAbout (void)
 //--------------------------------------------------------------  HiLiteOkayButton
 // Draws my pseudo-button to appear as though it is clicked on.
 
-static void HiLiteOkayButton (void)
+static void HiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTHiLit		151		// res ID of unhilit button PICT
 	PicHandle	thePict;
@@ -109,7 +110,7 @@ static void HiLiteOkayButton (void)
 		thePict = GetPicture(kOkayButtPICTHiLit);
 		if (thePict != nil)
 		{
-			DrawPicture(thePict, &okayButtonBounds);
+			surface->DrawPicture(thePict, okayButtonBounds);
 			thePict.Dispose();
 			
 			okayButtIsHiLit = true;
@@ -121,7 +122,7 @@ static void HiLiteOkayButton (void)
 
 // Draws my pseudo-button normal (not clicked on).
 
-static void UnHiLiteOkayButton (void)
+static void UnHiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTNotHiLit	150		// res ID of hilit button PICT
 	PicHandle	thePict;
@@ -131,7 +132,7 @@ static void UnHiLiteOkayButton (void)
 		thePict = GetPicture(kOkayButtPICTNotHiLit);
 		if (thePict != nil)
 		{
-			DrawPicture(thePict, &okayButtonBounds);
+			surface->DrawPicture(thePict, okayButtonBounds);
 			thePict.Dispose();
 			
 			okayButtIsHiLit = false;
@@ -179,14 +180,16 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 	Point		mousePt;
 	UInt32		dummyLong;
 	Boolean		handledIt;
+
+	DrawSurface *surface = theDial->GetWindow()->GetDrawSurface();
 	
 	if (Button() && clickedDownInOkay)
 	{
 		GetMouse(&mousePt);
 		if(PointInScanlineMask(mousePt, okayButtScanlineMask))
-			HiLiteOkayButton();
+			HiLiteOkayButton(surface);
 		else
-			UnHiLiteOkayButton();
+			UnHiLiteOkayButton(surface);
 	}
 	
 	switch (theEvent->what)
@@ -196,9 +199,9 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 		{
 			case PL_KEY_SPECIAL(kEnter):
 			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			HiLiteOkayButton();
+			HiLiteOkayButton(surface);
 			Delay(8, &dummyLong);
-			UnHiLiteOkayButton();
+			UnHiLiteOkayButton(surface);
 			*hit = kOkayButton;
 			handledIt = true;
 			break;
@@ -225,7 +228,7 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 		GlobalToLocal(&mousePt);
 		if(PointInScanlineMask(mousePt, okayButtScanlineMask) && clickedDownInOkay)
 		{
-			UnHiLiteOkayButton();
+			UnHiLiteOkayButton(surface);
 			*hit = kOkayButton;
 			handledIt = true;
 		}
@@ -240,7 +243,6 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 		if ((WindowPtr)theEvent->message == mainWindow)
 		{
 			SetPort((GrafPtr)mainWindow);
-			BeginUpdate((WindowPtr)theEvent->message);
 			UpdateMainWindow();
 			EndUpdate((WindowPtr)theEvent->message);
 			SetPortDialogPort(theDial);
@@ -249,7 +251,6 @@ static Boolean AboutFilter (DialogPtr theDial, EventRecord *theEvent, short *hit
 		else if ((WindowPtr)theEvent->message == (WindowPtr)theDial)
 		{
 			SetPortDialogPort(theDial);
-			BeginUpdate((WindowPtr)theEvent->message);
 			UpdateMainPict(theDial);
 			EndUpdate((WindowPtr)theEvent->message);
 			handledIt = false;

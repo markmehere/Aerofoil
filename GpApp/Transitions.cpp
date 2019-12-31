@@ -134,7 +134,7 @@ void WipeScreenOn (short direction, Rect *theRect)
 
 void DumpScreenOn (Rect *theRect)
 {
-	CGrafPtr graf = GetWindowPort(mainWindow);
+	DrawSurface *graf = GetWindowPort(mainWindow);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			GetPortBitMapForCopyBits(graf),

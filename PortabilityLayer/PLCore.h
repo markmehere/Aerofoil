@@ -39,7 +39,7 @@ typedef unsigned char Str255[256];
 typedef unsigned char *StringPtr;
 
 class PLPasStr;
-struct CGraf;
+struct DrawSurface;
 struct Menu;
 
 typedef void *Ptr;
@@ -100,7 +100,9 @@ struct Window
 {
 	Window();
 
-	CGraf m_graf;	// Must be the first item
+	DrawSurface *GetDrawSurface() const;
+
+	DrawSurface m_graf;	// Must be the first item
 
 	// The port is always at 0,0
 	// These are the WM coordinates
@@ -161,8 +163,6 @@ struct EventRecord
 	int modifiers;
 };
 
-typedef CGraf *CGrafPtr;
-typedef CGrafPtr GWorldPtr;
 typedef Window *WindowPtr;
 typedef Cursor *CursPtr;
 typedef CCursor *CCrsrPtr;
@@ -182,7 +182,6 @@ struct KeyMap;
 enum RegionID
 {
 	inMenuBar = 1,
-	inSysWindow,
 	inContent,
 	inDrag,
 	inGrow,

@@ -8,5 +8,5 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr		toolSrcMap;
+extern DrawSurface		*toolSrcMap;
 extern WindowPtr		toolsWindow;

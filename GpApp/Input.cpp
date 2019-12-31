@@ -80,14 +80,15 @@ void DoCommandKey (void)
 void DoPause (void)
 {
 	Rect		bounds;
-	
-	SetPort((GrafPtr)mainWindow);
+
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+
 	QSetRect(&bounds, 0, 0, 214, 54);
 	CenterRectInRect(&bounds, &houseRect);
 	if (isEscPauseKey)
-		LoadScaledGraphic(kEscPausePictID, &bounds);
+		LoadScaledGraphic(surface, kEscPausePictID, &bounds);
 	else
-		LoadScaledGraphic(kTabPausePictID, &bounds);
+		LoadScaledGraphic(surface, kTabPausePictID, &bounds);
 	
 	do
 	{

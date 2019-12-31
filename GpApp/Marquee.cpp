@@ -17,7 +17,7 @@
 
 
 void DrawGliderMarquee (void);
-void DrawMarquee (void);
+void DrawMarquee (DrawSurface *surface, const uint8_t *pattern);
 
 
 marquee		theMarquee;
@@ -37,16 +37,15 @@ void DoMarquee (void)
 	if ((!theMarquee.active) || (theMarquee.paused))
 		return;
 	
-	SetPortWindowPort(mainWindow);
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	DrawMarquee();
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	DrawMarquee(surface, pattern);
 	theMarquee.index++;
 	if (theMarquee.index >= kNumMarqueePats)
 		theMarquee.index = 0;
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	DrawMarquee();
-	PenNormal();
+
+	pattern = theMarquee.pats[theMarquee.index];
+	DrawMarquee(surface, pattern);
 }
 
 //--------------------------------------------------------------  StartMarquee
@@ -58,16 +57,16 @@ void StartMarquee (Rect *theRect)
 	
 	if (objActive == kNoObjectSelected)
 		return;
-	
-	SetPortWindowPort(mainWindow);
+
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+
 	theMarquee.bounds = *theRect;
 	theMarquee.active = true;
 	theMarquee.paused = false;
 	theMarquee.handled = false;
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	DrawMarquee();
-	PenNormal();
+
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	DrawMarquee(surface, pattern);
 	SetCoordinateHVD(theMarquee.bounds.left, theMarquee.bounds.top, -1);
 }
 
@@ -81,7 +80,8 @@ void StartMarqueeHandled (Rect *theRect, short direction, short dist)
 	if (objActive == kNoObjectSelected)
 		return;
 	
-	SetPortWindowPort(mainWindow);
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+
 	theMarquee.bounds = *theRect;
 	theMarquee.active = true;
 	theMarquee.paused = false;
@@ -127,10 +127,8 @@ void StartMarqueeHandled (Rect *theRect, short direction, short dist)
 	theMarquee.direction = direction;
 	theMarquee.dist = dist;
 	
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	DrawMarquee();
-	PenNormal();
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	DrawMarquee(surface, pattern);
 	SetCoordinateHVD(theMarquee.bounds.left, theMarquee.bounds.top, dist);
 }
 
@@ -147,11 +145,10 @@ void StopMarquee (void)
 	if (!theMarquee.active)
 		return;
 	
-	SetPortWindowPort(mainWindow);
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	DrawMarquee();
-	PenNormal();
+	DrawSurface *surface = mainWindow->GetDrawSurface();
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	DrawMarquee(surface, pattern);
+
 	theMarquee.active = false;
 	SetCoordinateHVD(-1, -1, -1);
 }
@@ -188,13 +185,13 @@ void ResumeMarquee (void)
 void DragOutMarqueeRect (Point start, Rect *theRect)
 {
 	Point		wasPt, newPt;
+	DrawSurface	*surface = mainWindow->GetDrawSurface();
 	
-	SetPortWindowPort(mainWindow);
 	InitCursor();
 	QSetRect(theRect, start.h, start.v, start.h, start.v);
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	FrameRect(theRect);
+
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	surface->InvertFrameRect(*theRect, pattern);
 	wasPt = start;
 	
 	while (WaitMouseUp())
@@ -202,30 +199,29 @@ void DragOutMarqueeRect (Point start, Rect *theRect)
 		GetMouse(&newPt);
 		if (DeltaPoint(wasPt, newPt))
 		{
-			FrameRect(theRect);
+			surface->InvertFrameRect(*theRect, pattern);
 			QSetRect(theRect, start.h, start.v, newPt.h, newPt.v);
 			NormalizeRect(theRect);
-			FrameRect(theRect);
+			surface->InvertFrameRect(*theRect, pattern);
 			wasPt = newPt;
 		}
 	}
-	FrameRect(theRect);
-	PenNormal();
+	surface->InvertFrameRect(*theRect, pattern);
 }
 
 //--------------------------------------------------------------  DragMarqueeRect
 
-void DragMarqueeRect (Point start, Rect *theRect, Boolean lockH, Boolean lockV)
+void DragMarqueeRect (DrawSurface *surface, Point start, Rect *theRect, Boolean lockH, Boolean lockV)
 {
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
 	
 	SetCursor(&handCursor);
 	StopMarquee();
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
+
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
 	theMarquee.bounds = *theRect;
-	FrameRect(&theMarquee.bounds);
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
 	
 	wasPt = start;
 	while (WaitMouseUp())
@@ -241,22 +237,23 @@ void DragMarqueeRect (Point start, Rect *theRect, Boolean lockH, Boolean lockV)
 				deltaV = 0;
 			else
 				deltaV = newPt.v - wasPt.v;
-			FrameRect(&theMarquee.bounds);
+			surface->InvertFrameRect(theMarquee.bounds, pattern);
 			QOffsetRect(&theMarquee.bounds, deltaH, deltaV);
-			FrameRect(&theMarquee.bounds);
+			surface->InvertFrameRect(theMarquee.bounds, pattern);
 			wasPt = newPt;
 			SetCoordinateHVD(theMarquee.bounds.left, theMarquee.bounds.top, -2);
 		}
 	}
-	FrameRect(&theMarquee.bounds);
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
+
 	*theRect = theMarquee.bounds;
-	PenNormal();
+
 	InitCursor();
 }
 
 //--------------------------------------------------------------  DragMarqueeHandle
 
-void DragMarqueeHandle (Point start, short *dragged)
+void DragMarqueeHandle (DrawSurface *surface, Point start, short *dragged)
 {
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
@@ -266,10 +263,10 @@ void DragMarqueeHandle (Point start, short *dragged)
 	else
 		SetCursor(&horiCursor);
 	StopMarquee();
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	FrameRect(&theMarquee.bounds);
-	PaintRect(&theMarquee.handle);
+
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
+	surface->InvertFillRect(theMarquee.handle, pattern);
 	
 	wasPt = start;
 	while (WaitMouseUp())
@@ -327,32 +324,32 @@ void DragMarqueeHandle (Point start, short *dragged)
 				DeltaCoordinateD(*dragged);
 				break;
 			}
-			
-			PaintRect(&theMarquee.handle);
+
+			surface->InvertFillRect(theMarquee.handle, pattern);
 			QOffsetRect(&theMarquee.handle, deltaH, deltaV);
-			PaintRect(&theMarquee.handle);
+			surface->InvertFillRect(theMarquee.handle, pattern);
 			wasPt = newPt;
 		}
 	}
-	FrameRect(&theMarquee.bounds);
-	PaintRect(&theMarquee.handle);
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
+	surface->InvertFillRect(theMarquee.handle, pattern);
 	PenNormal();
 	InitCursor();
 }
 
 //--------------------------------------------------------------  DragMarqueeCorner
 
-void DragMarqueeCorner (Point start, short *hDragged, short *vDragged, Boolean isTop)
+void DragMarqueeCorner (DrawSurface *surface, Point start, short *hDragged, short *vDragged, Boolean isTop)
 {
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
 	
 	SetCursor(&diagCursor);
 	StopMarquee();
-	PenInvertMode(true);
-	PenPat(&theMarquee.pats[theMarquee.index]);
-	FrameRect(&theMarquee.bounds);
-	PaintRect(&theMarquee.handle);
+
+	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
+	surface->InvertFillRect(theMarquee.handle, pattern);
 	
 	wasPt = start;
 	while (WaitMouseUp())
@@ -377,8 +374,8 @@ void DragMarqueeCorner (Point start, short *hDragged, short *vDragged, Boolean i
 				deltaV -= *vDragged;
 				*vDragged = 0;
 			}
-			FrameRect(&theMarquee.bounds);
-			PaintRect(&theMarquee.handle);
+			surface->InvertFrameRect(theMarquee.bounds, pattern);
+			surface->InvertFillRect(theMarquee.handle, pattern);
 			if (isTop)
 			{
 				QOffsetRect(&theMarquee.handle, deltaH, -deltaV);
@@ -391,13 +388,13 @@ void DragMarqueeCorner (Point start, short *hDragged, short *vDragged, Boolean i
 				theMarquee.bounds.right += deltaH;
 				theMarquee.bounds.bottom += deltaV;
 			}
-			FrameRect(&theMarquee.bounds);
-			PaintRect(&theMarquee.handle);
+			surface->InvertFrameRect(theMarquee.bounds, pattern);
+			surface->InvertFillRect(theMarquee.handle, pattern);
 			wasPt = newPt;
 		}
 	}
-	FrameRect(&theMarquee.bounds);
-	PaintRect(&theMarquee.handle);
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
+	surface->InvertFillRect(theMarquee.handle, pattern);
 	PenNormal();
 	InitCursor();
 }
@@ -452,42 +449,46 @@ void SetMarqueeGliderRect (short h, short v)
 
 //--------------------------------------------------------------  DrawMarquee
 
-void DrawMarquee (void)
+void DrawMarquee (DrawSurface *surface, const uint8_t *pattern)
 {
-	FrameRect(&theMarquee.bounds);
+	surface->InvertFrameRect(theMarquee.bounds, pattern);
 	if (theMarquee.handled)
 	{
-		PaintRect(&theMarquee.handle);
+		surface->InvertFillRect(theMarquee.handle, pattern);
+		Point points[2] = { Point::Create(0, 0), Point::Create(0, 0) };
+
 		switch (theMarquee.direction)
 		{
 			case kAbove:
-			MoveTo(theMarquee.handle.left + (kHandleSideLong / 2), 
+			points[0] = Point::Create(theMarquee.handle.left + (kHandleSideLong / 2), 
 					theMarquee.handle.bottom);
-			LineTo(theMarquee.handle.left + (kHandleSideLong / 2), 
+			points[1] = Point::Create(theMarquee.handle.left + (kHandleSideLong / 2),
 					theMarquee.bounds.top - 1);
 			break;
 			
 			case kToRight:
-			MoveTo(theMarquee.handle.left, 
+			points[0] = Point::Create(theMarquee.handle.left, 
 					theMarquee.handle.top + (kHandleSideLong / 2));
-			LineTo(theMarquee.bounds.right, 
+			points[1] = Point::Create(theMarquee.bounds.right,
 					theMarquee.handle.top + (kHandleSideLong / 2));
 			break;
 			
 			case kBelow:
-			MoveTo(theMarquee.handle.left + (kHandleSideLong / 2), 
+			points[0] = Point::Create(theMarquee.handle.left + (kHandleSideLong / 2),
 					theMarquee.handle.top - 1);
-			LineTo(theMarquee.handle.left + (kHandleSideLong / 2), 
+			points[1] = Point::Create(theMarquee.handle.left + (kHandleSideLong / 2),
 					theMarquee.bounds.bottom);
 			break;
 			
 			case kToLeft:
-			MoveTo(theMarquee.handle.right, 
+			points[1] = Point::Create(theMarquee.handle.right,
 					theMarquee.handle.top + (kHandleSideLong / 2));
-			LineTo(theMarquee.bounds.left, 
+			points[0] = Point::Create(theMarquee.bounds.left,
 					theMarquee.handle.top + (kHandleSideLong / 2));
 			break;
 		}
+
+		surface->InvertDrawLine(points[0], points[1], pattern);
 	}
 	
 	if (gliderMarqueeUp)

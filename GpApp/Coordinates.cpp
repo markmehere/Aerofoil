@@ -7,6 +7,7 @@
 
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "Marquee.h"
@@ -67,11 +68,14 @@ void UpdateCoordWindow (void)
 	
 	if (coordWindow == nil)
 		return;
+
+	DrawSurface *surface = coordWindow->GetDrawSurface();
+
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(coordWindowRect);
 	
-	GetPort(&wasPort);
-	SetPort((GrafPtr)coordWindow);
-	EraseRect(&coordWindowRect);
-	
+	surface->SetForeColor(StdColors::Black());
+
 	PasStringCopy(PSTR("h: "), tempStr);
 	if (coordH != -1)
 	{
@@ -80,8 +84,8 @@ void UpdateCoordWindow (void)
 	}
 	else
 		PasStringConcat(tempStr, PSTR("-"));
-	MoveTo(5, 12);
-	DrawString(tempStr);
+
+	surface->DrawString(Point::Create(5, 12), tempStr);
 	
 	PasStringCopy(PSTR("v: "), tempStr);
 	if (coordV != -1)
@@ -91,10 +95,10 @@ void UpdateCoordWindow (void)
 	}
 	else
 		PasStringConcat(tempStr, PSTR("-"));
-	MoveTo(4, 22);
-	DrawString(tempStr);
+
+	surface->DrawString(Point::Create(4, 22), tempStr);
 	
-	ForeColor(blueColor);
+	surface->SetForeColor(StdColors::Blue());
 	PasStringCopy(PSTR("d: "), tempStr);
 	if (coordD != -1)
 	{
@@ -103,11 +107,9 @@ void UpdateCoordWindow (void)
 	}
 	else
 		PasStringConcat(tempStr, PSTR("-"));
-	MoveTo(5, 32);
-	DrawString(tempStr);
-	ForeColor(blackColor);
-	
-	SetPort((GrafPtr)wasPort);
+
+	surface->DrawString(Point::Create(5, 32), tempStr);
+	surface->SetForeColor(StdColors::Black());
 #endif
 }
 
@@ -152,8 +154,8 @@ void OpenCoordWindow (void)
 		coordH = -1;
 		coordV = -1;
 		coordD = -1;
-		TextFace(applFont);
-		TextSize(9);
+
+		coordWindow->GetDrawSurface()->SetApplicationFont(9, 0);
 		
 		if (objActive != kNoObjectSelected)
 		{

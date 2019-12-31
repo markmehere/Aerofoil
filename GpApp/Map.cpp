@@ -8,6 +8,7 @@
 #include "PLControlDefinitions.h"
 #include "PLResources.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -26,7 +27,7 @@
 #define kThumbnailPictID		1010
 
 
-void LoadGraphicPlus (short, Rect *);
+void LoadGraphicPlus (DrawSurface *, short, const Rect &);
 void RedrawMapContents (void);
 void LiveHScrollAction (ControlHandle, short);
 void LiveVScrollAction (ControlHandle, short);
@@ -37,7 +38,7 @@ void KillNailOffscreen (void);
 Rect			nailSrcRect, activeRoomRect, wasActiveRoomRect;
 Rect			mapHScrollRect, mapVScrollRect, mapCenterRect;
 Rect			mapWindowRect;
-GWorldPtr		nailSrcMap;
+DrawSurface		*nailSrcMap;
 WindowPtr		mapWindow;
 ControlHandle	mapHScroll, mapVScroll;
 short			isMapH, isMapV, mapRoomsHigh, mapRoomsWide;
@@ -158,7 +159,7 @@ void FindNewActiveRoomRect (void)
 
 //--------------------------------------------------------------  LoadGraphicPlus
 
-void LoadGraphicPlus (short resID, Rect *theRect)
+void LoadGraphicPlus (DrawSurface *surface, short resID, const Rect &theRect)
 {
 	PicHandle	thePicture;
 	
@@ -171,7 +172,7 @@ void LoadGraphicPlus (short resID, Rect *theRect)
 			return;
 		}
 	}
-	DrawPicture(thePicture, theRect);
+	surface->DrawPicture(thePicture, theRect);
 	thePicture.Dispose();
 }
 
@@ -181,7 +182,6 @@ void LoadGraphicPlus (short resID, Rect *theRect)
 void RedrawMapContents (void)
 {
 	Rect		newClip, aRoom, src;
-	Rect		wasClip;
 	short		h, i, groundLevel;
 	short		floor, suite, whoCares, type;
 	char		wasState;
@@ -197,11 +197,11 @@ void RedrawMapContents (void)
 	newClip.top = mapWindowRect.top;
 	newClip.right = mapWindowRect.right + 2 - kMapScrollBarWidth;
 	newClip.bottom = mapWindowRect.bottom + 2 - kMapScrollBarWidth;
-	
-	SetPort((GrafPtr)mapWindow);
 
-	GetClip(&wasClip);
-	ClipRect(&newClip);
+	DrawSurface *surface = mapWindow->GetDrawSurface();
+
+	const Rect wasClip = surface->GetClipRect();
+	surface->SetClipRect(newClip);
 	
 	for (i = 0; i < mapRoomsHigh; i++)
 	{
@@ -214,17 +214,17 @@ void RedrawMapContents (void)
 			floor = kMapGroundValue - (i + mapTopRoom);
 			if ((RoomExists(suite, floor, &whoCares)) && (houseUnlocked))
 			{
-				PenNormal();
 				type = (*thisHouse)->rooms[whoCares].background - kBaseBackgroundID;
 				if (type > kNumBackgrounds)
 				{
 					if (!doPrettyMap)
 						type = kNumBackgrounds;	// Draw "?" thumbnail.
 				}
-				ForeColor(blackColor);
+
+				surface->SetForeColor(StdColors::Black());
 				if (type > kNumBackgrounds)		// Do a "pretty" thumbnail.
 				{
-					LoadGraphicPlus(type + kBaseBackgroundID, &aRoom);
+					LoadGraphicPlus(surface, type + kBaseBackgroundID, aRoom);
 				}
 				else
 				{
@@ -243,46 +243,46 @@ void RedrawMapContents (void)
 			}
 			else
 			{
-				Pattern		dummyPat;
-				
-				PenPat(GetQDGlobalsGray(&dummyPat));
 				if (i >= groundLevel)
-					ForeColor(greenColor);
+					surface->SetForeColor(StdColors::Green());
 				else
-					ForeColor(blueColor);
-				PaintRect(&aRoom);
+					surface->SetForeColor(StdColors::Blue());
+
+				Pattern dummyPat;
+				surface->FillRectWithPattern8x8(aRoom, *GetQDGlobalsGray(&dummyPat));
 			}
 		}
 	}
-	
-	ForeColor(blackColor);
-	PenNormal();
+
+	surface->SetForeColor(StdColors::Black());
 	
 	for (i = 1; i < mapRoomsWide; i++)
 	{
-		MoveTo(i * kMapRoomWidth, 0);
-		Line(0, mapRoomsHigh * kMapRoomHeight);
+		const Point upperPoint = Point::Create(i * kMapRoomWidth, 0);
+		const Point lowerPoint = Point::Create(upperPoint.h, upperPoint.v + mapRoomsHigh * kMapRoomHeight);
+		surface->DrawLine(upperPoint, lowerPoint);
 	}
 	
 	for (i = 1; i < mapRoomsHigh; i++)
 	{
-		MoveTo(0, i * kMapRoomHeight);
-		Line(mapRoomsWide * kMapRoomWidth, 0);
+		const Point leftPoint = Point::Create(0, i * kMapRoomHeight);
+		const Point rightPoint = leftPoint + Point::Create(mapRoomsWide * kMapRoomWidth, 0);
+		surface->DrawLine(leftPoint, rightPoint);
 	}
 	
 	if (activeRoomVisible)
 	{
-		ForeColor(redColor);
+		surface->SetForeColor(StdColors::Red());
 		activeRoomRect.right++;
 		activeRoomRect.bottom++;
-		FrameRect(&activeRoomRect);
+		surface->FrameRect(activeRoomRect);
 		InsetRect(&activeRoomRect, 1, 1);
-		FrameRect(&activeRoomRect);
-		ForeColor(blackColor);
+		surface->FrameRect(activeRoomRect);
+		surface->SetForeColor(StdColors::Black());
 		InsetRect(&activeRoomRect, -1, -1);
 	}
 	
-	ClipRect(&wasClip);
+	surface->SetClipRect(wasClip);
 }
 #endif
 
@@ -311,8 +311,9 @@ void ResizeMapWindow (short newH, short newV)
 #ifndef COMPILEDEMO
 	if ((newH == 0) && (newV == 0))
 		return;
-	
-	SetPortWindowPort(mapWindow);
+
+	DrawSurface *surface = mapWindow->GetDrawSurface();
+
 	mapRoomsWide = newH / kMapRoomWidth;
 	if (mapRoomsWide < 3)
 		mapRoomsWide = 3;
@@ -322,7 +323,9 @@ void ResizeMapWindow (short newH, short newV)
 	QSetRect(&mapWindowRect, 0, 0, 
 			mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 2, 
 			mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 2);
-	EraseRect(&mapWindowRect);
+
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect(mapWindowRect);
 	SizeWindow(mapWindow, mapWindowRect.right, mapWindowRect.bottom, true);
 	
 	SetControlMaximum(mapHScroll, kMaxNumRoomsH - mapRoomsWide);
@@ -716,19 +719,15 @@ Boolean QueryNewRoom (void)
 #ifndef COMPILEDEMO
 void CreateNailOffscreen (void)
 {
-	CGrafPtr	wasCPort;
+	DrawSurface		*wasCPort;
 	PLError_t		theErr;
 	
 	if (nailSrcMap == nil)
 	{
-		wasCPort = GetGraphicsPort();
-		
 		QSetRect(&nailSrcRect, 0, 0, kMapRoomWidth, kMapRoomHeight * (kNumBackgrounds + 1));
 		theErr = CreateOffScreenGWorld(&nailSrcMap, &nailSrcRect, kPreferredPixelFormat);
-		SetGraphicsPort(nailSrcMap);
-		LoadGraphic(kThumbnailPictID);
-		
-		SetGraphicsPort(wasCPort);
+
+		LoadGraphic(nailSrcMap, kThumbnailPictID);
 	}
 }
 #endif

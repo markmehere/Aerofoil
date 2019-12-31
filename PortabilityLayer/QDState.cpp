@@ -6,9 +6,9 @@
 namespace PortabilityLayer
 {
 	QDState::QDState()
-		: m_fontID(applFont)
-		, m_textSize(12)
-		, m_textFace(0)
+		: m_fontFamily(nullptr)
+		, m_fontSize(12)
+		, m_fontVariationFlags(0)
 		, m_foreResolvedColor16(0)
 		, m_backResolvedColor16(0)
 		, m_foreResolvedColor8(0)

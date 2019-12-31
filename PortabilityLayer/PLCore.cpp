@@ -779,33 +779,15 @@ short StringWidth(const PLPasStr &str)
 	const PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
 	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-	const int textSize = qdState->m_textSize;
-	const int textFace = qdState->m_textFace;
-	const int fontID = qdState->m_fontID;
-
-	int variationFlags = 0;
-	if (textFace & bold)
-		variationFlags |= PortabilityLayer::FontFamilyFlag_Bold;
-
-	PortabilityLayer::FontFamily *fontFamily = nullptr;
-
-	switch (fontID)
-	{
-	case applFont:
-		fontFamily = fontManager->GetApplicationFont(textSize, variationFlags);
-		break;
-	case systemFont:
-		fontFamily = fontManager->GetSystemFont(textSize, variationFlags);
-		break;
-	default:
-		PL_NotYetImplemented();
-		return 0;
-	}
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
 
 	if (!fontFamily)
 		return 0;
 
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, textSize, variationFlags);
+	const int variationFlags = qdState->m_fontVariationFlags;
+	const int fontSize = qdState->m_fontSize;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
 	if (!rfont)
 		return 0;
 
@@ -1034,4 +1016,9 @@ Window::Window()
 	, m_wmX(0)
 	, m_wmY(0)
 {
+}
+
+DrawSurface *Window::GetDrawSurface() const
+{
+	return const_cast<DrawSurface*>(&m_graf);
 }

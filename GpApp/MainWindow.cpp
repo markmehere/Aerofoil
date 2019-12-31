@@ -10,10 +10,12 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontFamily.h"
 #include "House.h"
 #include "MenuManager.h"
 #include "RectUtils.h"
 #include "PLKeyEncoding.h"
+#include "PLStandardColors.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
 
@@ -23,7 +25,7 @@
 #define kMenuWindowID			130
 
 
-void DrawOnSplash (void);
+void DrawOnSplash (DrawSurface *surface);
 void SetPaletteToGrays (void);
 void HardDrawMainWindow (void);
 
@@ -37,7 +39,7 @@ CursHandle		diagCursorH;
 Cursor			handCursor, vertCursor, horiCursor;
 Cursor			diagCursor;
 Rect			workSrcRect;
-GWorldPtr		workSrcMap;
+DrawSurface		*workSrcMap;
 Rect			mainWindowRect;
 WindowPtr		mainWindow, menuWindow, boardWindow;
 short			isEditH, isEditV;
@@ -56,7 +58,7 @@ extern	Boolean		quickerTransitions, houseIsReadOnly;
 
 // Draws additional text on top of splash screen.
 
-void DrawOnSplash (void)
+void DrawOnSplash(DrawSurface *surface)
 {
 	Str255		houseLoadedStr;
 	
@@ -64,22 +66,21 @@ void DrawOnSplash (void)
 	PasStringConcat(houseLoadedStr, thisHouseName);
 	if ((thisMac.hasQT) && (hasMovie))
 		PasStringConcat(houseLoadedStr, PSTR(" (QT)"));
-	TextSize(9);
-	TextFace(1);
-	TextFont(applFont);
-	MoveTo(splashOriginH + 436, splashOriginV + 314);
+
+	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold);
+
+	const Point textPoint = Point::Create(splashOriginH + 436, splashOriginV + 314);
 	if (thisMac.isDepth == 4)
 	{
-		ForeColor(whiteColor);
-		DrawString(houseLoadedStr);
-		ForeColor(blackColor);
+		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+		surface->DrawString(textPoint, houseLoadedStr);
 	}
 	else
 	{
 		if (houseIsReadOnly)
-			ColorText(houseLoadedStr, 5L);
+			ColorText(surface, textPoint, houseLoadedStr, 5L);
 		else
-			ColorText(houseLoadedStr, 28L);
+			ColorText(surface, textPoint, houseLoadedStr, 28L);
 	}
 	
 	#if defined(powerc) || defined(__powerc)
@@ -101,13 +102,16 @@ void DrawOnSplash (void)
 void RedrawSplashScreen (void)
 {
 	Rect		tempRect;
-	
-	SetPort((GrafPtr)workSrcMap);
-	PaintRect(&workSrcRect);
+	DrawSurface	*surface = workSrcMap;
+
+	surface->SetForeColor(StdColors::Black());
+	surface->FillRect(workSrcRect);
+
 	QSetRect(&tempRect, 0, 0, 640, 460);
 	QOffsetRect(&tempRect, splashOriginH, splashOriginV);
-	LoadScaledGraphic(kSplash8BitPICT, &tempRect);
-	DrawOnSplash();
+	LoadScaledGraphic(surface, kSplash8BitPICT, &tempRect);
+	DrawOnSplash(surface);
+
 	SetPortWindowPort(mainWindow);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
@@ -144,17 +148,16 @@ void UpdateMainWindow (void)
 	}
 	else if ((theMode == kSplashMode) || (theMode == kPlayMode))
 	{
-		SetPort((GrafPtr)workSrcMap);
-		PaintRect(&workSrcRect);
+		workSrcMap->FillRect(workSrcRect);
 		QSetRect(&tempRect, 0, 0, 640, 460);
 		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
-		LoadScaledGraphic(kSplash8BitPICT, &tempRect);
+		LoadScaledGraphic(workSrcMap, kSplash8BitPICT, &tempRect);
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
 				&workSrcRect, &mainWindowRect, srcCopy);
 		SetPortWindowPort(mainWindow);
 		
-		DrawOnSplash();
+		DrawOnSplash(mainWindow->GetDrawSurface());
 	}
 	
 	splashDrawn = true;
@@ -163,7 +166,7 @@ void UpdateMainWindow (void)
 //--------------------------------------------------------------  UpdateMenuBarWindow
 // Ugly kludge to cover over the menu bar when playing game on 2nd monitor.
 
-void UpdateMenuBarWindow (void)
+void UpdateMenuBarWindow (DrawSurface *surface)
 {
 	Rect		bounds;
 	
@@ -171,7 +174,9 @@ void UpdateMenuBarWindow (void)
 		return;
 	
 	GetLocalWindowRect(menuWindow, &bounds);
-	PaintRect(&bounds);
+
+	surface->SetForeColor(StdColors::Black());
+	surface->FillRect(bounds);
 }
 
 //--------------------------------------------------------------  OpenMainWindow
@@ -206,10 +211,12 @@ void OpenMainWindow (void)
 		}
 		MoveWindow(mainWindow, isEditH, isEditV, true);
 		ShowWindow(mainWindow);
-		SetPortWindowPort(mainWindow);
-		ClipRect(&mainWindowRect);
-		ForeColor(blackColor);
-		BackColor(whiteColor);
+
+		DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
+
+		mainWindowSurface->SetClipRect(mainWindowRect);
+		mainWindowSurface->SetForeColor(StdColors::Black());
+		mainWindowSurface->SetBackColor(StdColors::White());
 		
 		whichRoom = GetFirstRoomNumber();
 		CopyRoomToThisRoom(whichRoom);
@@ -249,11 +256,14 @@ void OpenMainWindow (void)
 				thisMac.screen.top + 20, true);	// thisMac.menuHigh
 		ShowWindow(mainWindow);
 		SetPortWindowPort(mainWindow);
-		ClipRect(&mainWindowRect);
+
+		DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
+
+		mainWindowSurface->SetClipRect(mainWindowRect);
 //		CopyRgn(mainWindow->clipRgn, mainWindow->visRgn);
-		ForeColor(blackColor);
-		BackColor(whiteColor);
-		PaintRect(&mainWindowRect);
+		mainWindowSurface->SetForeColor(StdColors::Black());
+		mainWindowSurface->SetBackColor(StdColors::White());
+		mainWindowSurface->FillRect(mainWindowRect);
 		
 		splashOriginH = ((thisMac.screen.right - thisMac.screen.left) - 640) / 2;
 		if (splashOriginH < 0)
@@ -262,9 +272,8 @@ void OpenMainWindow (void)
 		if (splashOriginV < 0)
 			splashOriginV = 0;
 		
-		SetPort((GrafPtr)workSrcMap);
-		PaintRect(&workSrcRect);
-		LoadGraphic(kSplash8BitPICT);
+		workSrcMap->FillRect(workSrcRect);
+		LoadGraphic(workSrcMap, kSplash8BitPICT);
 		
 //		if ((fadeGraysOut) && (isDoColorFade))
 //		{
@@ -369,9 +378,11 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 	
 	SetPortWindowPort(mainWindow);
 	GlobalToLocal(&wherePt);
+
+	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 	
 	if (toolSelected == kSelectTool)
-		DoSelectionClick(wherePt, isDoubleClick);
+		DoSelectionClick(mainWindowSurface, wherePt, isDoubleClick);
 	else
 		DoNewObjectClick(wherePt);
 	

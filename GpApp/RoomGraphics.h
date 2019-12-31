@@ -8,4 +8,4 @@
 #include "PLQDOffscreen.h"
 
 
-extern GWorldPtr	suppSrcMap;
+extern DrawSurface	*suppSrcMap;

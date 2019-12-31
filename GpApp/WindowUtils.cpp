@@ -8,6 +8,7 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
 
 
@@ -119,11 +120,14 @@ void OpenMessageWindow (const PLPasStr &title)
 	if (mssgWindow != nil)
 	{
 		ShowWindow(mssgWindow);
-		SetPort((GrafPtr)mssgWindow);
-		ClipRect(&mssgWindowRect);
-		ForeColor(blackColor);
-		BackColor(whiteColor);
-		TextFont(systemFont);
+
+		DrawSurface *surface = mssgWindow->GetDrawSurface();
+
+		surface->SetClipRect(mssgWindowRect);
+		surface->SetForeColor(StdColors::Black());
+		surface->SetBackColor(StdColors::White());
+		
+		surface->SetSystemFont(12, 0);
 	}
 }
 
@@ -138,12 +142,16 @@ void SetMessageWindowMessage (StringPtr message)
 	
 	if (mssgWindow != nil)
 	{
-		SetPort((GrafPtr)mssgWindow);
+		DrawSurface *surface = mssgWindow->GetDrawSurface();
+
 		SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 		InsetRect(&mssgWindowRect, 16, 16);
-		EraseRect(&mssgWindowRect);
-		MoveTo(mssgWindowRect.left, mssgWindowRect.bottom - 6);
-		DrawString(message);
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(mssgWindowRect);
+
+		const Point textPoint = Point::Create(mssgWindowRect.left, mssgWindowRect.bottom - 6);
+		surface->SetForeColor(StdColors::Black());
+		surface->DrawString(textPoint, message);
 	}
 }
 

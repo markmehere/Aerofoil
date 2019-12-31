@@ -146,7 +146,7 @@ void HandleLinkClick (Point);
 
 void RedrawSplashScreen (void);							// --- MainWindow.c
 void UpdateMainWindow (void);
-void UpdateMenuBarWindow (void);
+void UpdateMenuBarWindow (DrawSurface *surface);
 void OpenMainWindow (void);
 void CloseMainWindow (void);
 void ZoomBetweenWindows (void);
@@ -173,9 +173,9 @@ void StopMarquee (void);
 void PauseMarquee (void);
 void ResumeMarquee (void);
 void DragOutMarqueeRect (Point, Rect *);
-void DragMarqueeRect (Point, Rect *, Boolean, Boolean);
-void DragMarqueeHandle (Point, SInt16 *);
-void DragMarqueeCorner (Point, SInt16 *, SInt16 *, Boolean);
+void DragMarqueeRect (DrawSurface *, Point, Rect *, Boolean, Boolean);
+void DragMarqueeHandle (DrawSurface *, Point, SInt16 *);
+void DragMarqueeCorner (DrawSurface *, Point, SInt16 *, SInt16 *, Boolean);
 Boolean MarqueeHasHandles (SInt16 *, SInt16 *);
 Boolean PtInMarqueeHandle (Point);
 void SetMarqueeGliderRect (SInt16, SInt16);
@@ -305,7 +305,7 @@ void DrawCustPictSansWhite (SInt16, Rect *);
 
 void DrawARoomsObjects (SInt16, Boolean);				// --- ObjectDrawAll.c
 
-void DoSelectionClick (Point, Boolean);					// --- ObjectEdit.c
+void DoSelectionClick (DrawSurface *, Point, Boolean);	// --- ObjectEdit.c
 void DoNewObjectClick (Point);
 void DeleteObject (void);
 void DuplicateObject (void);
@@ -428,7 +428,7 @@ void QuickBandsRefresh (Boolean);
 void QuickFoilRefresh (Boolean);
 void HandleScore (void);
 void AdjustScoreboardHeight (void);
-void BlackenScoreboard (void);
+void BlackenScoreboard (DrawSurface *);
 
 //void PutRoomScrap (void);								// --- Scrap.c
 //void PutObjectScrap (void);

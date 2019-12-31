@@ -5,19 +5,13 @@ void DrawDialog(DialogPtr dialog)
 	PL_NotYetImplemented();
 }
 
-WindowPtr GetDialogWindow(DialogPtr dialog)
-{
-	PL_NotYetImplemented();
-	return nullptr;
-}
-
 DialogPtr GetNewDialog(int resID, void *unknown, WindowPtr behind)
 {
 	PL_NotYetImplemented();
 	return nullptr;
 }
 
-CGrafPtr GetDialogPort(DialogPtr dialog)
+DrawSurface *GetDialogPort(DialogPtr dialog)
 {
 	PL_NotYetImplemented();
 	return nullptr;

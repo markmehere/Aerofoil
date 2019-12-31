@@ -17,37 +17,37 @@ void ListOneRoomsObjects (short);
 
 
 Rect		blowerSrcRect;									// Blowers
-GWorldPtr	blowerSrcMap;
-GWorldPtr	blowerMaskMap;
+DrawSurface	*blowerSrcMap;
+DrawSurface	*blowerMaskMap;
 Rect		flame[kNumCandleFlames], tikiFlame[kNumTikiFlames];
 Rect		coals[kNumBBQCoals];
 Rect		furnitureSrcRect;								// Furniture
-GWorldPtr	furnitureSrcMap;
-GWorldPtr	furnitureMaskMap;
+DrawSurface	*furnitureSrcMap;
+DrawSurface	*furnitureMaskMap;
 Rect		tableSrc, shelfSrc, hingeSrc, handleSrc, knobSrc;
 Rect		leftFootSrc, rightFootSrc, deckSrc;
 Rect		bonusSrcRect;									// Bonuses
-GWorldPtr	bonusSrcMap;
-GWorldPtr	bonusMaskMap;
+DrawSurface	*bonusSrcMap;
+DrawSurface	*bonusMaskMap;
 Rect		pointsSrcRect;
-GWorldPtr	pointsSrcMap;
-GWorldPtr	pointsMaskMap;
+DrawSurface	*pointsSrcMap;
+DrawSurface	*pointsMaskMap;
 Rect		starSrc[6], sparkleSrc[kNumSparkleModes];
 Rect		digits[11], pendulumSrc[3], greaseSrcRt[4], greaseSrcLf[4];
 Rect		transSrcRect;									// Transport
-GWorldPtr	transSrcMap;
-GWorldPtr	transMaskMap;
+DrawSurface	*transSrcMap;
+DrawSurface	*transMaskMap;
 Rect		switchSrcRect;									// Switches
-GWorldPtr	switchSrcMap;
+DrawSurface	*switchSrcMap;
 Rect		lightSwitchSrc[2], machineSwitchSrc[2], thermostatSrc[2];
 Rect		powerSrc[2], knifeSwitchSrc[2];
 Rect		lightSrcRect;									// Lights
-GWorldPtr	lightSrcMap;
-GWorldPtr	lightMaskMap;
+DrawSurface	*lightSrcMap;
+DrawSurface	*lightMaskMap;
 Rect		flourescentSrc1, flourescentSrc2, trackLightSrc[kNumTrackLights];
 Rect		applianceSrcRect, toastSrcRect, shredSrcRect;	// Appliances
-GWorldPtr	applianceSrcMap, toastSrcMap, shredSrcMap;
-GWorldPtr	applianceMaskMap, toastMaskMap, shredMaskMap;
+DrawSurface	*applianceSrcMap, *toastSrcMap, *shredSrcMap;
+DrawSurface	*applianceMaskMap, *toastMaskMap, *shredMaskMap;
 Rect		plusScreen1, plusScreen2, tvScreen1, tvScreen2;
 Rect		coffeeLight1, coffeeLight2, vcrTime1, vcrTime2;
 Rect		stereoLight1, stereoLight2, microOn, microOff;
@@ -55,17 +55,17 @@ Rect		outletSrc[kNumOutletPicts];
 Rect		balloonSrcRect, copterSrcRect, dartSrcRect;		// Enemies
 Rect		ballSrcRect, dripSrcRect, enemySrcRect;
 Rect		fishSrcRect;
-GWorldPtr	balloonSrcMap, copterSrcMap, dartSrcMap;
-GWorldPtr	ballSrcMap, dripSrcMap, enemySrcMap;
-GWorldPtr	fishSrcMap;
-GWorldPtr	balloonMaskMap, copterMaskMap, dartMaskMap;
-GWorldPtr	ballMaskMap, dripMaskMap, enemyMaskMap;
-GWorldPtr	fishMaskMap;
+DrawSurface	*balloonSrcMap, *copterSrcMap, *dartSrcMap;
+DrawSurface	*ballSrcMap, *dripSrcMap, *enemySrcMap;
+DrawSurface	*fishSrcMap;
+DrawSurface	*balloonMaskMap, *copterMaskMap, *dartMaskMap;
+DrawSurface	*ballMaskMap, *dripMaskMap, *enemyMaskMap;
+DrawSurface	*fishMaskMap;
 Rect		balloonSrc[kNumBalloonFrames], copterSrc[kNumCopterFrames];
 Rect		dartSrc[kNumDartFrames], ballSrc[kNumBallFrames];
 Rect		dripSrc[kNumDripFrames], fishSrc[kNumFishFrames];
-GWorldPtr	clutterSrcMap;									// Clutter
-GWorldPtr	clutterMaskMap;
+DrawSurface	*clutterSrcMap;									// Clutter
+DrawSurface	*clutterMaskMap;
 Rect		clutterSrcRect;
 Rect		flowerSrc[kNumFlowers];
 Rect		*srcRects;
