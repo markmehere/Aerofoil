@@ -93,6 +93,12 @@ namespace PortabilityLayer
 	{
 		if (g <= 1 && g <= 1)
 		{
+			if (b <= 1)
+			{
+				// Special case low gray scale
+				return 255 - b;
+			}
+
 			// Red scale
 			unsigned int scale6Step;
 			unsigned int scale6StepRemainder;
