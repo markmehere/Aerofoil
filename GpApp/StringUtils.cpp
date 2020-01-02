@@ -275,17 +275,17 @@ void GetFirstWordOfString (StringPtr stringIn, StringPtr stringOut)
 // font.  If the text would exceed our width limit, charactersÉ
 // are dropped off the end of the string and "É" appended.
 
-void CollapseStringToWidth (StringPtr theStr, short wide)
+void CollapseStringToWidth (DrawSurface *surface, StringPtr theStr, short wide)
 {
 	short		dotsWide;
 	Boolean 	tooWide;
 	
-	dotsWide = StringWidth(PSTR("É"));
-	tooWide = StringWidth(theStr) > wide;
+	dotsWide = surface->MeasureString(PSTR("É"));
+	tooWide = surface->MeasureString(theStr) > wide;
 	while (tooWide)
 	{
 		theStr[0]--;
-		tooWide = ((StringWidth(theStr) + dotsWide) > wide);
+		tooWide = ((surface->MeasureString(theStr) + dotsWide) > wide);
 		if (!tooWide)
 			PasStringConcat(theStr, PSTR("É"));
 	}

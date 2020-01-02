@@ -166,7 +166,7 @@ Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateHouseInfoDialog(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -208,9 +208,7 @@ void DoHouseInfo (void)
 	short			item, numRooms, version;
 	char			wasState;
 	Boolean			leaving;
-	ModalFilterUPP	houseFilterUPP;
-	
-	houseFilterUPP = NewModalFilterUPP(HouseFilter);
+
 	tempPhoneBit = phoneBitSet;
 	
 	numRooms = RealRoomNumberCount();
@@ -246,7 +244,7 @@ void DoHouseInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(houseFilterUPP, &item);
+		ModalDialog(HouseFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -290,7 +288,6 @@ void DoHouseInfo (void)
 	}
 	InitCursor();
 	DisposeDialog(houseInfoDialog);
-	DisposeModalFilterUPP(houseFilterUPP);
 }
 
 //--------------------------------------------------------------  WarnLockingHouse

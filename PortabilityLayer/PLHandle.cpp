@@ -6,4 +6,6 @@ void THandleBase::Dispose()
 {
 	if (m_hdl)
 		PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(m_hdl);
+
+	m_hdl = nullptr;
 }

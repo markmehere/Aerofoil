@@ -54,7 +54,7 @@ void CreateToolsOffscreen (void);
 void KillToolsOffscreen (void);
 void FrameSelectedTool (DrawSurface *);
 void DrawToolName (DrawSurface *);
-void DrawToolTiles (void);
+void DrawToolTiles (DrawSurface *);
 void SwitchToolModes (short);
 
 
@@ -161,12 +161,12 @@ void DrawToolName (DrawSurface *surface)
 //--------------------------------------------------------------  DrawToolTiles
 
 #ifndef COMPILEDEMO
-void DrawToolTiles (void)
+void DrawToolTiles (DrawSurface *surface)
 {
 	Rect		srcRect, destRect;
 	short		i;
 	
-	DrawCIcon(2000, toolRects[0].left, toolRects[0].top);	// Selection Tool
+	DrawCIcon(surface, 2000, toolRects[0].left, toolRects[0].top);	// Selection Tool
 	
 	for (i = 0; i < 15; i++)								// Other tools
 	{
@@ -271,7 +271,7 @@ void UpdateToolsWindow (void)
 	surface->DrawLine(Point::Create(4, 25), Point::Create(112, 25));
 	surface->SetForeColor(StdColors::Black());
 	
-	DrawToolTiles();
+	DrawToolTiles(surface);
 	FrameSelectedTool(surface);
 	DrawToolName(surface);
 #endif

@@ -208,7 +208,7 @@ namespace PortabilityLayer
 
 		BufferHeader bufferHeader;
 
-		PL_STATIC_ASSERT(sizeof(BufferHeader) >= 22);
+		GP_STATIC_ASSERT(sizeof(BufferHeader) >= 22);
 
 		memcpy(&bufferHeader, dataPointer, 22);
 

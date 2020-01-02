@@ -612,7 +612,7 @@ Boolean ReadHouse (void)
 	short		whichRoom;
 
 	// There should be no padding remaining the house type
-	PL_STATIC_ASSERT(sizeof(houseType) - sizeof(roomType) == houseType::kBinaryDataSize + 2);
+	GP_STATIC_ASSERT(sizeof(houseType) - sizeof(roomType) == houseType::kBinaryDataSize + 2);
 	
 	if (!houseOpen)
 	{

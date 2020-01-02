@@ -1,10 +1,21 @@
 #include "QDPixMap.h"
 #include "CoreDefs.h"
+#include "MemoryManager.h"
 
 #include <assert.h>
 
 namespace PortabilityLayer
 {
+	void PixMapImpl::Destroy(THandle<PixMapImpl> &hdl)
+	{
+		if (hdl)
+		{
+			(*hdl)->~PixMapImpl();
+		}
+
+		hdl.Dispose();
+	}
+
 	PixMapImpl::PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat)
 		: m_left(left)
 		, m_top(top)
@@ -22,6 +33,10 @@ namespace PortabilityLayer
 		static_cast<PixMap*>(this)->Init(rect, pixelFormat, PitchForWidth(width, pixelFormat), dataPtr);
 	}
 
+	PixMapImpl::~PixMapImpl()
+	{
+	}
+
 	size_t PixMapImpl::SizeForDimensions(uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat)
 	{
 		return AlignedSize() + PitchForWidth(width, pixelFormat) * height;
@@ -29,8 +44,8 @@ namespace PortabilityLayer
 
 	size_t PixMapImpl::AlignedSize()
 	{
-		const size_t szBase = sizeof(PixMapImpl) + PL_SYSTEM_MEMORY_ALIGNMENT - 1;
-		const size_t szAdjusted = szBase - szBase % PL_SYSTEM_MEMORY_ALIGNMENT;
+		const size_t szBase = sizeof(PixMapImpl) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
+		const size_t szAdjusted = szBase - szBase % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 		return szAdjusted;
 	}
@@ -59,10 +74,33 @@ namespace PortabilityLayer
 			assert(false);
 			return 0;
 		}
-		const size_t szBase = rowByteCount + PL_SYSTEM_MEMORY_ALIGNMENT - 1;
-		const size_t szAdjusted = szBase - szBase % PL_SYSTEM_MEMORY_ALIGNMENT;
+		const size_t szBase = rowByteCount + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
+		const size_t szAdjusted = szBase - szBase % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 		return szAdjusted;
+	}
+
+	THandle<PixMapImpl> PixMapImpl::Create(const Rect &rect, GpPixelFormat_t pixelFormat)
+	{
+		if (!rect.IsValid())
+			return THandle<PixMapImpl>();
+
+		const uint16_t width = static_cast<uint16_t>(rect.right - rect.left);
+		const uint16_t height = static_cast<uint16_t>(rect.bottom - rect.top);
+
+		const size_t pixMapSize = PixMapImpl::SizeForDimensions(width, height, pixelFormat);
+		if (pixMapSize == 0)
+			return THandle<PixMapImpl>();
+
+		MMHandleBlock *pmBlock = PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(pixMapSize);
+		if (!pmBlock)
+			return THandle<PixMapImpl>();
+
+		memset(pmBlock->m_contents, 0, pixMapSize);
+
+		new (pmBlock->m_contents) PixMapImpl(rect.left, rect.top, width, height, pixelFormat);
+
+		return THandle<PixMapImpl>(pmBlock);
 	}
 }
 

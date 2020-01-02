@@ -1,9 +1,19 @@
 #include "DialogManager.h"
+#include "HostDisplayDriver.h"
+#include "IconLoader.h"
 #include "ResourceManager.h"
 #include "PLArrayView.h"
-#include "PLDialogs.h"
 #include "PLBigEndian.h"
+#include "PLButtonWidget.h"
+#include "PLDialogs.h"
+#include "PLIconWidget.h"
+#include "PLInvisibleWidget.h"
+#include "PLLabelWidget.h"
 #include "PLPasStr.h"
+#include "PLSysCalls.h"
+#include "PLTimeTaggedVOSEvent.h"
+#include "PLWidgets.h"
+#include "QDPixMap.h"
 #include "ResTypeID.h"
 #include "SharedTypes.h"
 #include "WindowDef.h"
@@ -14,6 +24,9 @@
 
 namespace PortabilityLayer
 {
+	class DialogImpl;
+	class Widget;
+
 	namespace SerializedDialogItemTypeCodes
 	{
 		enum SerializedDialogItemTypeCode
@@ -32,6 +45,7 @@ namespace PortabilityLayer
 
 	typedef SerializedDialogItemTypeCodes::SerializedDialogItemTypeCode SerializedDialogItemTypeCode_t;
 
+
 	struct DialogTemplateItem
 	{
 		Rect m_rect;
@@ -39,79 +53,6 @@ namespace PortabilityLayer
 		uint8_t m_serializedType;
 		bool m_enabled;
 		Str255 m_name;
-	};
-
-	class DialogItemImpl : public DialogItem
-	{
-	public:
-		DialogItemImpl(const DialogTemplateItem &templateItem);
-		virtual ~DialogItemImpl();
-
-		Rect GetRect() const override;
-
-		virtual bool Init() = 0;
-		virtual void Destroy() = 0;
-
-	protected:
-		Rect m_rect;
-		int16_t m_id;
-		bool m_enabled;
-		PascalStr<255> m_name;
-	};
-
-	template<class T>
-	class DialogItemSpec : public DialogItemImpl
-	{
-	public:
-		DialogItemSpec(const DialogTemplateItem &tmpl)
-			: DialogItemImpl(tmpl)
-		{
-		}
-
-		void Destroy() override
-		{
-			static_cast<T*>(this)->~T();
-			free(static_cast<T*>(this));
-		}
-
-		static DialogItemSpec *Create(const DialogTemplateItem &tmpl)
-		{
-			void *storage = malloc(sizeof(T));
-			if (!storage)
-				return nullptr;
-
-			T *item = new (storage) T(tmpl);
-
-			DialogItemImpl *dItem = static_cast<DialogItemImpl*>(item);
-			if (!dItem->Init())
-			{
-				dItem->Destroy();
-				return nullptr;
-			}
-
-			return item;
-		}
-	};
-
-	class DialogItem_EditBox final : public DialogItemSpec<DialogItem_EditBox>
-	{
-	public:
-		explicit DialogItem_EditBox(const DialogTemplateItem &tmpl);
-		bool Init() override;
-	};
-
-	class DialogItem_Label final : public DialogItemSpec<DialogItem_Label>
-	{
-	public:
-		explicit DialogItem_Label(const DialogTemplateItem &tmpl);
-		bool Init() override;
-	};
-
-	class DialogItem_Unknown final : public DialogItemSpec<DialogItem_Unknown>
-	{
-	public:
-		explicit DialogItem_Unknown(const DialogTemplateItem &tmpl);
-		bool Init() override;
 	};
 
 	class DialogTemplate final
@@ -132,68 +73,45 @@ namespace PortabilityLayer
 	{
 	public:
 		void Destroy() override;
+
 		Window *GetWindow() const override;
-		ArrayView<DialogItem*const> GetItems() const override;
+		ArrayView<const DialogItem> GetItems() const override;
+
+		int16_t ExecuteModal(DialogFilterFunc_t filterFunc) override;
 
 		bool Populate(DialogTemplate *tmpl);
+
+		void DrawControls();
+
+		Point MouseToDialog(const GpMouseInputEvent &evt);
 
 		static DialogImpl *Create(Window *window, size_t numItems);
 
 	private:
-		explicit DialogImpl(Window *window, DialogItem **items, size_t numItems);
+		explicit DialogImpl(Window *window, DialogItem *items, size_t numItems);
 		~DialogImpl();
 
 		Window *m_window;
-		DialogItem **m_items;
+		DialogItem *m_items;
 		size_t m_numItems;
+		size_t m_maxItems;
 	};
 
 
-	DialogItemImpl::DialogItemImpl(const DialogTemplateItem &templateItem)
-		: m_enabled(templateItem.m_enabled)
-		, m_id(templateItem.m_id)
-		, m_name(PLPasStr(templateItem.m_name))
-		, m_rect(templateItem.m_rect)
+	DialogItem::DialogItem(Widget *widget)
+		: m_widget(widget)
 	{
 	}
 
-	DialogItemImpl::~DialogItemImpl()
+	DialogItem::~DialogItem()
 	{
+		if (m_widget)
+			m_widget->Destroy();
 	}
 
-	Rect DialogItemImpl::GetRect() const
+	Widget *DialogItem::GetWidget() const
 	{
-		return m_rect;
-	}
-
-	DialogItem_EditBox::DialogItem_EditBox(const DialogTemplateItem &tmpl)
-		: DialogItemSpec<DialogItem_EditBox>(tmpl)
-	{
-	}
-
-	bool DialogItem_EditBox::Init()
-	{
-		return true;
-	}
-
-	DialogItem_Label::DialogItem_Label(const DialogTemplateItem &tmpl)
-		: DialogItemSpec<DialogItem_Label>(tmpl)
-	{
-	}
-
-	bool DialogItem_Label::Init()
-	{
-		return true;
-	}
-
-	DialogItem_Unknown::DialogItem_Unknown(const DialogTemplateItem &tmpl)
-		: DialogItemSpec<DialogItem_Unknown>(tmpl)
-	{
-	}
-
-	bool DialogItem_Unknown::Init()
-	{
-		return true;
+		return m_widget;
 	}
 
 	DialogTemplate::DialogTemplate(DialogTemplateItem *itemStorage, size_t numItems)
@@ -268,14 +186,68 @@ namespace PortabilityLayer
 		return m_window;
 	}
 
-	ArrayView<DialogItem*const> DialogImpl::GetItems() const
+	ArrayView<const DialogItem> DialogImpl::GetItems() const
 	{
-		ArrayView<DialogItem*const> iter(m_items, m_numItems);
-		return ArrayView<DialogItem*const>(m_items, m_numItems);
+		return ArrayView<const DialogItem>(m_items, m_numItems);
+	}
+
+	int16_t DialogImpl::ExecuteModal(DialogFilterFunc_t filterFunc)
+	{
+		Window *window = this->GetWindow();
+		Widget *capturingWidget = nullptr;
+		size_t capturingWidgetIndex = 0;
+
+		for (;;)
+		{
+			TimeTaggedVOSEvent evt;
+			if (WaitForEvent(&evt, 1))
+			{
+				const int16_t selection = filterFunc(this, evt);
+
+				if (selection >= 0)
+					return selection;
+
+				if (capturingWidget != nullptr)
+				{
+					const WidgetHandleState_t state = capturingWidget->ProcessEvent(evt);
+
+					if (state != WidgetHandleStates::kDigested)
+						capturingWidget = nullptr;
+
+					if (state == WidgetHandleStates::kActivated)
+						return static_cast<int16_t>(capturingWidgetIndex + 1);
+				}
+				else
+				{
+					const size_t numItems = this->m_numItems;
+					for (size_t i = 0; i < numItems; i++)
+					{
+						Widget *widget = this->m_items[i].GetWidget();
+
+						const WidgetHandleState_t state = widget->ProcessEvent(evt);
+
+						if (state == WidgetHandleStates::kActivated)
+							return static_cast<int16_t>(i + 1);
+
+						if (state == WidgetHandleStates::kCaptured)
+						{
+							capturingWidget = widget;
+							capturingWidgetIndex = i;
+							break;
+						}
+
+						if (state == WidgetHandleStates::kDigested)
+							break;
+					}
+				}
+			}
+		}
 	}
 
 	bool DialogImpl::Populate(DialogTemplate *tmpl)
 	{
+		Window *window = this->GetWindow();
+
 		ArrayView<const DialogTemplateItem> templateItems = tmpl->GetItems();
 
 		const size_t numItems = templateItems.Count();
@@ -284,61 +256,94 @@ namespace PortabilityLayer
 		{
 			const DialogTemplateItem &templateItem = templateItems[i];
 
-			DialogItem *ditem = nullptr;
+			Widget *widget = nullptr;
+
+			WidgetBasicState basicState;
+			basicState.m_enabled = templateItem.m_enabled;
+			basicState.m_resID = templateItem.m_id;
+			basicState.m_text = PascalStr<255>(PLPasStr(templateItem.m_name));
+			basicState.m_rect = templateItem.m_rect;
+			basicState.m_window = window;
 
 			switch (templateItem.m_serializedType)
 			{
+			case SerializedDialogItemTypeCodes::kButton:
+				widget = ButtonWidget::Create(basicState);
+				break;
 			case SerializedDialogItemTypeCodes::kLabel:
-				ditem = DialogItem_Label::Create(templateItem);
+				widget = LabelWidget::Create(basicState);
 				break;
+			case SerializedDialogItemTypeCodes::kIcon:
+				widget = IconWidget::Create(basicState);
+				break;
+			case SerializedDialogItemTypeCodes::kCheckBox:
+			case SerializedDialogItemTypeCodes::kRadioButton:
 			case SerializedDialogItemTypeCodes::kEditBox:
-				ditem = DialogItem_EditBox::Create(templateItem);
-				break;
+			case SerializedDialogItemTypeCodes::kImage:
 			default:
-				ditem = DialogItem_Unknown::Create(templateItem);
+				widget = InvisibleWidget::Create(basicState);
 				break;
 			}
 
-			if (!ditem)
+			if (!widget)
 				return false;
 
-			m_items[i] = ditem;
+			new (&m_items[m_numItems++]) DialogItem(widget);
 		}
 
 		return true;
 	}
 
+	void DialogImpl::DrawControls()
+	{
+		DrawSurface *surface = m_window->GetDrawSurface();
+
+		for (ArrayViewIterator<const DialogItem> it = GetItems().begin(), itEnd = GetItems().end(); it != itEnd; ++it)
+		{
+			const DialogItem &item = *it;
+			item.GetWidget()->DrawControl(surface);
+		}
+	}
+
+	Point DialogImpl::MouseToDialog(const GpMouseInputEvent &evt)
+	{
+		const Window *window = m_window;
+		const int32_t x = evt.m_x - window->m_wmX;
+		const int32_t y = evt.m_y - window->m_wmY;
+
+		return Point::Create(x, y);
+	}
+
 	DialogImpl *DialogImpl::Create(Window *window, size_t numItems)
 	{
-		size_t alignedSize = sizeof(DialogImpl) + PL_SYSTEM_MEMORY_ALIGNMENT + 1;
-		alignedSize -= alignedSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+		size_t alignedSize = sizeof(DialogImpl) + GP_SYSTEM_MEMORY_ALIGNMENT + 1;
+		alignedSize -= alignedSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
-		const size_t itemsSize = sizeof(DialogItemImpl) * numItems;
+		const size_t itemsSize = sizeof(DialogItem) * numItems;
 
 		void *storage = malloc(alignedSize + itemsSize);
 		if (!storage)
 			return nullptr;
 
-		DialogItem **itemsList = reinterpret_cast<DialogItem **>(static_cast<uint8_t*>(storage) + alignedSize);
-		for (size_t i = 0; i < numItems; i++)
-			itemsList[i] = nullptr;
+		DialogItem *itemsList = reinterpret_cast<DialogItem *>(static_cast<uint8_t*>(storage) + alignedSize);
 
 		return new (storage) DialogImpl(window, itemsList, numItems);
 	}
 
-	DialogImpl::DialogImpl(Window *window, DialogItem **itemsList, size_t numItems)
+	DialogImpl::DialogImpl(Window *window, DialogItem *itemsList, size_t numItems)
 		: m_window(window)
 		, m_items(itemsList)
-		, m_numItems(numItems)
+		, m_numItems(0)
+		, m_maxItems(numItems)
 	{
 	}
 
 	DialogImpl::~DialogImpl()
 	{
-		for (size_t i = 0; i < m_numItems; i++)
+		while (m_numItems > 0)
 		{
-			if (DialogItem *item = m_items[i])
-				static_cast<DialogItemImpl*>(item)->Destroy();
+			m_numItems--;
+			m_items[m_numItems].~DialogItem();
 		}
 	}
 
@@ -415,6 +420,34 @@ namespace PortabilityLayer
 
 		wm->PutWindowBehind(window, behindWindow);
 
+		unsigned int displayWidth, displayHeight;
+		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight, nullptr);
+
+		const unsigned int halfDisplayHeight = displayHeight / 2;
+		const unsigned int quarterDisplayWidth = displayHeight / 4;
+		const unsigned int halfDisplayWidth = displayWidth;
+
+		const uint16_t dialogWidth = rect.Width();
+		const uint16_t dialogHeight = rect.Height();
+
+		window->m_wmX = (static_cast<int32_t>(displayWidth) - static_cast<int32_t>(dialogWidth)) / 2;
+
+		// We center dialogs vertically in one of 3 ways in this priority:
+		// - Centered at 1/3 until the top edge is at the 1/4 mark
+		// - Top edge aligned to 1/4 mark until bottom edge is at 3/4 mark
+		// - Centered on screen
+
+		//if (displayHeight / 3 - dialogHeight / 2 >= displayHeight / 4)
+		if (displayHeight * 4 - dialogHeight * 6 >= displayHeight * 3)
+		{
+			//window->m_wmY = displayHeight / 3 - dialogHeight / 2;
+			window->m_wmY = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
+		}
+		else if (dialogHeight * 2 <= displayHeight)
+			window->m_wmY = displayHeight / 4;
+		else
+			window->m_wmY = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;
+
 		DialogImpl *dialog = DialogImpl::Create(window, numItems);
 
 		if (!dialog)
@@ -433,6 +466,8 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
+		dialog->DrawControls();
+
 		return dialog;
 	}
 
@@ -445,12 +480,17 @@ namespace PortabilityLayer
 		if (!dtemplateH)
 			return nullptr;
 
-		uint16_t numItems;
-		memcpy(&numItems, *dtemplateH, 2);
-		ByteSwap::BigUInt16(numItems);
+		int16_t numItemsMinusOne;
+		memcpy(&numItemsMinusOne, *dtemplateH, 2);
+		ByteSwap::BigInt16(numItemsMinusOne);
 
-		size_t dtlAlignedSize = sizeof(DialogTemplate) + PL_SYSTEM_MEMORY_ALIGNMENT - 1;
-		dtlAlignedSize -= dtlAlignedSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+		if (numItemsMinusOne < -1)
+			return nullptr;
+
+		uint16_t numItems = static_cast<uint16_t>(numItemsMinusOne + 1);
+
+		size_t dtlAlignedSize = sizeof(DialogTemplate) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
+		dtlAlignedSize -= dtlAlignedSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 		const size_t dtlItemSize = sizeof(DialogTemplateItem) * numItems;
 

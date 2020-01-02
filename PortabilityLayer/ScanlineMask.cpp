@@ -26,8 +26,8 @@ namespace PortabilityLayer
 
 	ScanlineMask *ScanlineMask::Create(const Rect &rect, const ScanlineMaskBuilder &builder)
 	{
-		size_t alignedPrefixSize = sizeof(ScanlineMask) + PL_SYSTEM_MEMORY_ALIGNMENT - 1;
-		alignedPrefixSize -= alignedPrefixSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+		size_t alignedPrefixSize = sizeof(ScanlineMask) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
+		alignedPrefixSize -= alignedPrefixSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 		const size_t longestSpan = builder.GetLongestSpan();
 		const size_t numSpans = builder.GetNumSpans();

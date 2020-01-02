@@ -1067,7 +1067,7 @@ void DrawCalendar (Rect *theRect)
 	GetTime(&timeRec);
 	GetIndString(monthStr, kMonthStringID, timeRec.month);
 
-	const Point textPos = Point::Create(theRect->left + ((64 - StringWidth(monthStr)) / 2), theRect->top + 55);
+	const Point textPos = Point::Create(theRect->left + ((64 - backSrcMap->MeasureString(monthStr)) / 2), theRect->top + 55);
 	ColorText(backSrcMap, textPos, monthStr, kDarkFleshColor);
 }
 

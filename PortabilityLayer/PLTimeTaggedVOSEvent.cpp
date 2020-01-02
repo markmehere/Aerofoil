@@ -20,3 +20,13 @@ bool TimeTaggedVOSEvent::IsLMouseDownEvent() const
 
 	return mouseEvent.m_eventType == GpMouseEventTypes::kDown && mouseEvent.m_button == GpMouseButtons::kLeft;
 }
+
+bool TimeTaggedVOSEvent::IsLMouseUpEvent() const
+{
+	if (m_vosEvent.m_eventType != GpVOSEventTypes::kMouseInput)
+		return false;
+
+	const GpMouseInputEvent &mouseEvent = m_vosEvent.m_event.m_mouseInputEvent;
+
+	return mouseEvent.m_eventType == GpMouseEventTypes::kUp && mouseEvent.m_button == GpMouseButtons::kLeft;
+}

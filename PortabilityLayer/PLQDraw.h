@@ -102,10 +102,6 @@ void EndUpdate(WindowPtr graf);
 PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags);
 PLError_t PlotIconSuite(Rect *rect, Handle iconSuite);
 
-CIconHandle GetCIcon(short resID);
-PLError_t PlotCIcon(Rect *rect, CIconHandle icon);
-void DisposeCIcon(CIconHandle icon);
-
 void SetRect(Rect *rect, short left, short top, short right, short bottom);
 
 int TextWidth(const PLPasStr &str, int firstChar1Based, int length);
@@ -113,13 +109,10 @@ void SetOrigin(int x, int y);
 void ForeColor(SystemColorID color);
 void BackColor(SystemColorID color);
 void GetForeColor(RGBColor *color);
-void PaintOval(const Rect *rect);
 
 void ClipRect(const Rect *rect);
 void GetClip(Rect *rect);
 
-void FrameOval(const Rect *rect);
-void FrameRoundRect(const Rect *rect, int w, int h);
 void PenInvertMode(bool invertMode);
 void PenMask(bool maskMode);
 void PenPat(const Pattern *pattern);

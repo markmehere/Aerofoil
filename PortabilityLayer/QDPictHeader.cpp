@@ -15,7 +15,7 @@ namespace PortabilityLayer
 
 	bool QDPictHeader::Load(IOStream *stream)
 	{
-		PL_STATIC_ASSERT(sizeof(Picture) == 10);
+		GP_STATIC_ASSERT(sizeof(Picture) == 10);
 
 		Picture pictHeader;
 		if (stream->Read(&pictHeader, sizeof(Picture)) != sizeof(Picture))

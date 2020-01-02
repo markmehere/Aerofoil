@@ -29,6 +29,11 @@ struct Rect
 	Rect operator-(const Point &point) const;
 	Rect operator+(const Point &point) const;
 
+	uint16_t Height() const;
+	uint16_t Width() const;
+
+	bool Contains(const Point &point) const;
+
 	static Rect Create(int16_t top, int16_t left, int16_t bottom, int16_t right);
 	static Rect CreateFromPoints(const Point &topLeft, const Point &bottomRight);
 };
@@ -97,7 +102,7 @@ struct GDevice
 {
 	GpPixelFormat_t pixelFormat;
 
-	uint8_t paletteStorage[256 * 4 + PL_SYSTEM_MEMORY_ALIGNMENT];
+	uint8_t paletteStorage[256 * 4 + GP_SYSTEM_MEMORY_ALIGNMENT];
 	uint8_t paletteDataOffset;
 	bool paletteIsDirty;
 };
@@ -162,6 +167,21 @@ inline Rect Rect::operator-(const Point &point) const
 inline Rect Rect::operator+(const Point &point) const
 {
 	return Rect::Create(this->top + point.v, this->left + point.h, this->bottom + point.v, this->right + point.h);
+}
+
+inline uint16_t Rect::Height() const
+{
+	return static_cast<uint16_t>(static_cast<int32_t>(this->bottom) - static_cast<int32_t>(this->top));
+}
+
+inline uint16_t Rect::Width() const
+{
+	return static_cast<uint16_t>(static_cast<int32_t>(this->right) - static_cast<int32_t>(this->left));
+}
+
+inline bool Rect::Contains(const Point &point) const
+{
+	return point.h >= this->left && point.h < this->right && point.v >= this->top && point.v < this->bottom;
 }
 
 inline Rect Rect::Create(int16_t top, int16_t left, int16_t bottom, int16_t right)

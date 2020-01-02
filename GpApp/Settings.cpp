@@ -9,6 +9,7 @@
 #include "PLSound.h"
 #include "PLStandardColors.h"
 #include "PLTextUtils.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
@@ -79,7 +80,7 @@ void DisplayUpdate (Dialog *);
 Boolean DisplayFilter (Dialog *, EventRecord *, short *);
 void DoDisplayPrefs (void);
 void SetAllDefaults (void);
-void FlashSettingsButton (short);
+void FlashSettingsButton (DrawSurface *, short);
 void UpdateSettingsMain (Dialog *);
 Boolean PrefsFilter (Dialog *, EventRecord *, short *);
 void BitchAboutChanges (void);
@@ -204,7 +205,7 @@ Boolean BrainsFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateSettingsBrains(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -225,9 +226,6 @@ void DoBrainsPrefs (void)
 	long			tempLong;
 	short			itemHit, wasMaxFiles;
 	Boolean			leaving;
-	ModalFilterUPP	brainsFilterUPP;
-	
-	brainsFilterUPP = NewModalFilterUPP(BrainsFilter);
 	
 	BringUpDialog(&prefDlg, kBrainsPrefsDialID);
 	leaving = false;
@@ -251,7 +249,7 @@ void DoBrainsPrefs (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(brainsFilterUPP, &itemHit);
+		ModalDialog(BrainsFilter, &itemHit);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -320,7 +318,6 @@ void DoBrainsPrefs (void)
 	}
 	
 	DisposeDialog(prefDlg);
-	DisposeModalFilterUPP(brainsFilterUPP);
 }
 
 //--------------------------------------------------------------  SetControlsToDefaults
@@ -491,7 +488,7 @@ Boolean ControlFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateSettingsControl(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -511,9 +508,6 @@ void DoControlPrefs (void)
 	Dialog			*prefDlg;
 	short			i, itemHit;
 	Boolean			leaving;
-	ModalFilterUPP	controlFilterUPP;
-	
-	controlFilterUPP = NewModalFilterUPP(ControlFilter);
 	
 //	CenterDialog(kControlPrefsDialID);
 	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront);
@@ -551,7 +545,7 @@ void DoControlPrefs (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(controlFilterUPP, &itemHit);
+		ModalDialog(ControlFilter, &itemHit);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -609,7 +603,6 @@ void DoControlPrefs (void)
 	}
 	
 	DisposeDialog(prefDlg);
-	DisposeModalFilterUPP(controlFilterUPP);
 }
 
 //--------------------------------------------------------------  SoundDefaults
@@ -754,7 +747,7 @@ Boolean SoundFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateSettingsSound(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -777,11 +770,10 @@ void DoSoundPrefs (void)
 	PLError_t			theErr;
 	short			itemHit;
 	Boolean			leaving;
-	ModalFilterUPP	soundFilterUPP;
-	
-	soundFilterUPP = NewModalFilterUPP(SoundFilter);
 	
 	BringUpDialog(&prefDlg, kSoundPrefsDialID);
+
+	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
 	
 	UnivGetSoundVolume(&wasLoudness, thisMac.hasSM3);
 	
@@ -793,7 +785,7 @@ void DoSoundPrefs (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(soundFilterUPP, &itemHit);
+		ModalDialog(SoundFilter, &itemHit);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -832,7 +824,7 @@ void DoSoundPrefs (void)
 			if (tempVolume > 0)
 			{
 				GetDialogItemRect(prefDlg, kSofterItem, &tempRect);
-				DrawCIcon(1034, tempRect.left, tempRect.top);
+				DrawCIcon(surface, 1034, tempRect.left, tempRect.top);
 				tempVolume--;
 				SetDialogNumToStr(prefDlg, kVolNumberItem, (long)tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
@@ -847,7 +839,7 @@ void DoSoundPrefs (void)
 			if (tempVolume < 7)
 			{
 				GetDialogItemRect(prefDlg, kLouderItem, &tempRect);
-				DrawCIcon(1033, tempRect.left, tempRect.top);
+				DrawCIcon(surface, 1033, tempRect.left, tempRect.top);
 				tempVolume++;
 				if (tempVolume == 7)
 					SetDialogNumToStr(prefDlg, kVolNumberItem, 11L);
@@ -892,7 +884,6 @@ void DoSoundPrefs (void)
 	}
 	
 	DisposeDialog(prefDlg);
-	DisposeModalFilterUPP(soundFilterUPP);
 }
 
 //--------------------------------------------------------------  DisplayDefaults
@@ -943,7 +934,6 @@ void FrameDisplayIcon (Dialog *theDialog)
 
 void DisplayUpdate (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	
 	SetDialogItemValue(theDialog, kDoColorFadeItem, (short)wasFade);
@@ -962,155 +952,114 @@ void DisplayUpdate (Dialog *theDialog)
 
 //--------------------------------------------------------------  DisplayFilter
 
-Boolean DisplayFilter (Dialog *dial, EventRecord *event, short *item)
-{	
-	switch (event->what)
+int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
+{
+	if (evt.IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kEscape):
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kLeftArrow):
+			return kCancelButton;
+
+		case PL_KEY_SPECIAL(kLeftArrow):
 			switch (numNeighbors)
 			{
-				case 1:
-				*item = kDisplay9Item;
-				break;
-				
-				case 3:
-				*item = kDisplay1Item;
-				break;
-				
-				case 9:
-				*item = kDisplay3Item;
-				break;
-			}
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kRightArrow):
-			switch (numNeighbors)
-			{
-				case 1:
-				*item = kDisplay3Item;
-				break;
-				
-				case 3:
-				*item = kDisplay9Item;
-				break;
-				
-				case 9:
-				*item = kDisplay1Item;
-				break;
-			}
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kUpArrow):
-			switch (wasDepthPref)
-			{
-				case kSwitchIfNeeded:
-				*item = k16Depth;
-				break;
-				
-				case kSwitchTo256Colors:
-				*item = kCurrentDepth;
-				break;
-				
-				case kSwitchTo16Grays:
-				*item = k256Depth;
-				break;
-			}
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kDownArrow):
-			switch (wasDepthPref)
-			{
-				case kSwitchIfNeeded:
-				*item = k256Depth;
-				break;
-				
-				case kSwitchTo256Colors:
-				*item = k16Depth;
-				break;
-				
-				case kSwitchTo16Grays:
-				*item = kCurrentDepth;
-				break;
-			}
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('1'):
-			*item = kDisplay1Item;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('3'):
-			*item = kDisplay3Item;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('9'):
-			*item = kDisplay9Item;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('B'):
-			*item = kDoColorFadeItem;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('D'):
-			*item = kDispDefault;
-			FlashDialogButton(dial, kDispDefault);
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('R'):
-			*item = kUseScreen2Item;
-			FlashDialogButton(dial, kUseQDItem);
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('U'):
-			*item = kUseQDItem;
-			return(true);
-			break;
-			
+			case 1:
+				return kDisplay9Item;
+
+			case 3:
+				return kDisplay1Item;
+
+			case 9:
+				return kDisplay3Item;
+
 			default:
+				return -1;
+			}
+			break;
+
+		case PL_KEY_SPECIAL(kRightArrow):
+			switch (numNeighbors)
+			{
+			case 1:
+				return kDisplay3Item;
+
+			case 3:
+				return kDisplay9Item;
+
+			case 9:
+				return kDisplay1Item;
+
+			default:
+				return -1;
+			}
+			break;
+
+		case PL_KEY_SPECIAL(kUpArrow):
+			switch (wasDepthPref)
+			{
+			case kSwitchIfNeeded:
+				return k16Depth;
+
+			case kSwitchTo256Colors:
+				return kCurrentDepth;
+
+			case kSwitchTo16Grays:
+				return k256Depth;
+
+			default:
+				return -1;
+			}
+			break;
+
+		case PL_KEY_SPECIAL(kDownArrow):
+			switch (wasDepthPref)
+			{
+			case kSwitchIfNeeded:
+				return k256Depth;
+
+			case kSwitchTo256Colors:
+				return k16Depth;
+
+			case kSwitchTo16Grays:
+				return kCurrentDepth;
+			}
+			break;
+
+		case PL_KEY_ASCII('1'):
+			return kDisplay1Item;
+
+		case PL_KEY_ASCII('3'):
+			return kDisplay3Item;
+
+		case PL_KEY_ASCII('9'):
+			return kDisplay9Item;
+
+		case PL_KEY_ASCII('B'):
+			return kDoColorFadeItem;
+
+		case PL_KEY_ASCII('D'):
+			FlashDialogButton(dial, kDispDefault);
+			return kDispDefault;
+
+		case PL_KEY_ASCII('R'):
+			PL_NotYetImplemented_TODO("FixMe");	// GP: This looks like a bug
+
+			FlashDialogButton(dial, kUseQDItem);
+			return kUseScreen2Item;
+
+		case PL_KEY_ASCII('U'):
+			return kUseQDItem;
+
+		default:
 			return(false);
 		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPort((GrafPtr)dial);
-		DisplayUpdate(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
 	}
 }
 
@@ -1119,13 +1068,13 @@ Boolean DisplayFilter (Dialog *dial, EventRecord *event, short *item)
 void DoDisplayPrefs (void)
 {
 	Dialog			*prefDlg;
-	short			itemHit, wasNeighbors;
+	short			wasNeighbors;
 	Boolean			leaving;
-	ModalFilterUPP	displayFilterUPP;
-	
-	displayFilterUPP = NewModalFilterUPP(DisplayFilter);
 	
 	BringUpDialog(&prefDlg, kDisplayPrefsDialID);
+
+	DisplayUpdate(prefDlg);
+
 	if (!thisMac.can8Bit)
 	{
 		MyDisableControl(prefDlg, kDoColorFadeItem);
@@ -1143,7 +1092,7 @@ void DoDisplayPrefs (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(displayFilterUPP, &itemHit);
+		int16_t itemHit = prefDlg->ExecuteModal(DisplayFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -1225,8 +1174,7 @@ void DoDisplayPrefs (void)
 		}
 	}
 	
-	DisposeDialog(prefDlg);
-	DisposeModalFilterUPP(displayFilterUPP);
+	prefDlg->Destroy();
 }
 
 //--------------------------------------------------------------  SetAllDefaults
@@ -1282,17 +1230,17 @@ void SetAllDefaults (void)
 
 //--------------------------------------------------------------  FlashSettingsButton
 
-void FlashSettingsButton (short who)
+void FlashSettingsButton (DrawSurface *surface, short who)
 {
 	#define		kNormalSettingsIcon		1010
 	#define		kInvertedSettingsIcon	1014
 	short		theID;
 	
 	theID = kInvertedSettingsIcon + who;
-	DrawCIcon (theID, prefButton[who].left + 4, prefButton[who].top + 4);
+	DrawCIcon (surface, theID, prefButton[who].left + 4, prefButton[who].top + 4);
 	DelayTicks(8);
 	theID = kNormalSettingsIcon + who;
-	DrawCIcon (theID, prefButton[who].left + 4, prefButton[who].top + 4);
+	DrawCIcon (surface, theID, prefButton[who].left + 4, prefButton[who].top + 4);
 }
 
 //--------------------------------------------------------------  UpdateSettingsMain
@@ -1301,8 +1249,6 @@ void UpdateSettingsMain (Dialog *theDialog)
 {
 	Str255		theStr;
 	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
-	
-	DrawDialog(theDialog);
 	
 	DrawDefaultButton(theDialog);
 	
@@ -1323,86 +1269,56 @@ void UpdateSettingsMain (Dialog *theDialog)
 
 //--------------------------------------------------------------  PrefsFilter
 
-Boolean PrefsFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t PrefsFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
-	Point		testPt;
 	short		i;
 	Boolean		foundHit;
-	
-	switch (event->what)
+
+	if (evt.IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		intptr_t packedKey = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+
+		switch (packedKey)
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('B'):
-			*item = kBrainsButton;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('C'):
-			*item = kControlsButton;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('d'):
-			*item = kDisplayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('S'):
-			*item = kSoundButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
+			return kOkayButton;
+
+		case PL_KEY_ASCII('B'):
+			return kBrainsButton;
+
+		case PL_KEY_ASCII('C'):
+			return kControlsButton;
+
+		case PL_KEY_ASCII('d'):
+			return kDisplayButton;
+
+		case PL_KEY_ASCII('S'):
+			return kSoundButton;
+
+		default:
+			return -1;
 		}
-		break;
-		
-		case mouseDown:
-		testPt = event->where;
-		GlobalToLocal(&testPt);
-		foundHit = false;
+	}
+	else if (evt.IsLMouseDownEvent())
+	{
+		const Window *window = dial->GetWindow();
+		const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+		const Point testPt = Point::Create(mouseEvent.m_x - window->m_wmX, mouseEvent.m_y - window->m_wmY);
+
+		int16_t hitCode = -1;
+
 		for (i = 0; i < 4; i++)
 		{
-			if (PtInRect(testPt, &prefButton[i]))
-			{
-				*item = kDisplayButton + i;
-				foundHit = true;
-			}
+			if (prefButton[i].Contains(testPt))
+				hitCode = kDisplayButton + i;
 		}
-		return(foundHit);
-		break;
-		
-		case updateEvt:
-		if ((WindowPtr)event->message == (WindowPtr)mainWindow)
-		{
-			SetPortWindowPort(mainWindow);
-			UpdateMainWindow();
-			EndUpdate(mainWindow);
-			SetPort((GrafPtr)dial);
-		}
-		else if ((WindowPtr)event->message == dial->GetWindow())
-		{
-			SetPortDialogPort(dial);
-			UpdateSettingsMain(dial);
-			EndUpdate(dial->GetWindow());
-		}
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
+		return hitCode;
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoSettingsMain
@@ -1411,13 +1327,12 @@ void DoSettingsMain (void)
 {
 	#define			kAllDefaultsButton		11
 	Dialog			*prefDlg;
-	short			itemHit;
+	int16_t			itemHit;
 	Boolean			leaving;
-	ModalFilterUPP	prefsFilterUPP;
-	
-	prefsFilterUPP = NewModalFilterUPP(PrefsFilter);
 	
 	BringUpDialog(&prefDlg, kMainPrefsDialID);
+
+	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
 	
 	GetDialogItemRect(prefDlg, kDisplayButton, &prefButton[0]);
 	InsetRect(&prefButton[0], -4, -4);
@@ -1427,36 +1342,39 @@ void DoSettingsMain (void)
 	InsetRect(&prefButton[2], -4, -4);
 	GetDialogItemRect(prefDlg, 6, &prefButton[3]);
 	InsetRect(&prefButton[3], -4, -4);
+
+	UpdateSettingsMain(prefDlg);
 	
 	leaving = false;
 	nextRestartChange = false;
 	
 	while (!leaving)
 	{
-		ModalDialog(prefsFilterUPP, &itemHit);
-		switch (itemHit)
+		int16_t selectedItem = prefDlg->ExecuteModal(PrefsFilter);
+
+		switch (selectedItem)
 		{
 			case kOkayButton:
 			leaving = true;
 			break;
 			
 			case kDisplayButton:
-			FlashSettingsButton(0);
+			FlashSettingsButton(surface, 0);
 			DoDisplayPrefs();
-			SetPort((GrafPtr)prefDlg);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
 			break;
 			
 			case kSoundButton:
-			FlashSettingsButton(1);
+			FlashSettingsButton(surface, 1);
 			DoSoundPrefs();
-			SetPort((GrafPtr)prefDlg);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
 			FlushEvents(everyEvent, 0);
 			break;
 			
 			case kControlsButton:
-			FlashSettingsButton(2);
+			FlashSettingsButton(surface, 2);
 			DoControlPrefs();
-			SetPort((GrafPtr)prefDlg);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
 			break;
 			
 			case kBrainsButton:
@@ -1466,9 +1384,9 @@ void DoSettingsMain (void)
 				changeLockStateOfHouse = true;
 				saveHouseLocked = false;
 			}
-			FlashSettingsButton(3);
+			FlashSettingsButton(surface, 3);
 			DoBrainsPrefs();
-			SetPort((GrafPtr)prefDlg);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
 			break;
 			
 			case kAllDefaultsButton:
@@ -1478,7 +1396,6 @@ void DoSettingsMain (void)
 	}
 	
 	DisposeDialog(prefDlg);
-	DisposeModalFilterUPP(prefsFilterUPP);
 	
 	if (nextRestartChange)
 		BitchAboutChanges();

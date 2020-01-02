@@ -15,6 +15,7 @@
 
 struct IGpColorCursor;
 struct GpVOSEvent;
+struct GpMouseInputEvent;
 struct TimeTaggedVOSEvent;
 
 namespace PortabilityLayer
@@ -103,6 +104,9 @@ struct Window
 	Window();
 
 	DrawSurface *GetDrawSurface() const;
+
+	// Convenience method to convert a mouse event to local point
+	Point MouseToLocal(const GpMouseInputEvent &evt) const;
 
 	DrawSurface m_graf;	// Must be the first item
 
@@ -307,8 +311,6 @@ PLError_t PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async);
 
 DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID);
 void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL);
-
-short StringWidth(const PLPasStr &str);
 
 void GetMouse(Point *point);
 Boolean Button();	// Returns true if there's a mouse down event in the queue

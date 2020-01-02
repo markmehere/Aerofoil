@@ -71,8 +71,3 @@ void HideDialogItem(Dialog *dialog, int item)
 {
 	PL_NotYetImplemented();
 }
-
-void TETextBox(const PLPasStr &str, short len, const Rect *rect, TEMode teMode)
-{
-	PL_NotYetImplemented();
-}

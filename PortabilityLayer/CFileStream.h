@@ -30,7 +30,7 @@ namespace PortabilityLayer
 		void Close() override;
 
 	private:
-		CFileStream(const CFileStream &other) PL_DELETED;
+		CFileStream(const CFileStream &other) GP_DELETED;
 
 		FILE *m_file;
 		bool m_readOnly;

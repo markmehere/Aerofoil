@@ -313,7 +313,7 @@ void AuditPackBitsRectOld(MemReaderStream &stream, int pictVersion, bool isPacke
 		// If pack type == 3, 16-bit RLE
 		// If pack type == 4, 8-bit planar component RLE
 
-		PL_STATIC_ASSERT(sizeof(BEPixMap) == 44);
+		GP_STATIC_ASSERT(sizeof(BEPixMap) == 44);
 
 		BEPixMap pixMap;
 		stream.Read(&pixMap, sizeof(BEPixMap));
@@ -663,7 +663,7 @@ void AuditPackBitsRect(MemReaderStream &stream, int pictVersion, bool isPackedFl
 		// If pack type == 3, 16-bit RLE
 		// If pack type == 4, 8-bit planar component RLE
 
-		PL_STATIC_ASSERT(sizeof(BEPixMap) == 44);
+		GP_STATIC_ASSERT(sizeof(BEPixMap) == 44);
 
 		stream.Read(&pixMapBE, sizeof(BEPixMap));
 

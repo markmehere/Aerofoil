@@ -217,7 +217,7 @@ void DisplayStarsRemaining (void)
 	else
 	{
 		LoadScaledGraphic(surface, kStarsRemainingPICT, &bounds);
-		const Point textPoint = Point::Create(bounds.left + 102 - (StringWidth(theStr) / 2), bounds.top + 23);
+		const Point textPoint = Point::Create(bounds.left + 102 - (surface->MeasureString(theStr) / 2), bounds.top + 23);
 		ColorText(surface, textPoint, theStr, 4L);
 	}
 	

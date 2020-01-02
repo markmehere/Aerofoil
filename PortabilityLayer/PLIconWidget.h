@@ -1,0 +1,24 @@
+#pragma once
+
+#include "PLWidgets.h"
+#include "PLHandle.h"
+
+namespace PortabilityLayer
+{
+	class PixMapImpl;
+
+	class IconWidget final : public WidgetSpec<IconWidget>
+	{
+	public:
+		IconWidget(const WidgetBasicState &state);
+		~IconWidget() override;
+
+		bool Init(const WidgetBasicState &state) override;
+
+		void DrawControl(DrawSurface *surface) override;
+
+	private:
+		THandle<PixMapImpl> m_iconImage;
+		THandle<PixMapImpl> m_iconMask;
+	};
+}

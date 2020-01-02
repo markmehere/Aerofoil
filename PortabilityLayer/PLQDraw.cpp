@@ -11,6 +11,7 @@
 #include "HostFontHandler.h"
 #include "PLPasStr.h"
 #include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "RenderedGlyphMetrics.h"
 #include "Rect2i.h"
 #include "ResourceManager.h"
@@ -274,23 +275,6 @@ PLError_t PlotIconSuite(Rect *rect, Handle iconSuite)
 	return PLErrors::kNone;
 }
 
-CIconHandle GetCIcon(short resID)
-{
-	PL_NotYetImplemented();
-	return nullptr;
-}
-
-PLError_t PlotCIcon(Rect *rect, CIconHandle icon)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
-void DisposeCIcon(CIconHandle icon)
-{
-	PL_NotYetImplemented();
-}
-
 void SetRect(Rect *rect, short left, short top, short right, short bottom)
 {
 	rect->left = left;
@@ -523,7 +507,7 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 
 	const PortabilityLayer::RenderedGlyphMetrics *metrics;
 	const void *data;
-	if (!rfont->GetGlyph(character, &metrics, &data))
+	if (!rfont->GetGlyph(character, metrics, data))
 		return;
 
 	const Point originalPoint = penPos;
@@ -608,10 +592,59 @@ void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
 	if (!rect.IsValid())
 		return;	// ???
 
+	Point paraStartPos = penPos;
+
 	for (size_t i = 0; i < len; i++)
-		DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i]);
+	{
+		if (chars[i] == static_cast<uint8_t>('\r'))
+		{
+			paraStartPos.v += rfont->GetMetrics().m_linegap;
+			penPos = paraStartPos;
+		}
+		else
+			DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i]);
+	}
 }
 
+size_t DrawSurface::MeasureString(const PLPasStr &str)
+{
+	const PortabilityLayer::QDState *qdState = m_port.GetState();
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
+
+	if (!fontFamily)
+		return 0;
+
+	const int variationFlags = qdState->m_fontVariationFlags;
+	const int fontSize = qdState->m_fontSize;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
+	if (!rfont)
+		return 0;
+
+	return rfont->MeasureString(str.UChars(), str.Length());
+}
+
+int32_t DrawSurface::MeasureFontAscender()
+{
+	const PortabilityLayer::QDState *qdState = m_port.GetState();
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
+
+	if (!fontFamily)
+		return 0;
+
+	const int variationFlags = qdState->m_fontVariationFlags;
+	const int fontSize = qdState->m_fontSize;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
+	if (!rfont)
+		return 0;
+
+	return rfont->GetMetrics().m_ascent;
+}
 
 void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
 {
@@ -1054,11 +1087,6 @@ void DrawSurface::SetBackColor(const PortabilityLayer::RGBAColor &color)
 const PortabilityLayer::RGBAColor &DrawSurface::GetBackColor() const
 {
 	return m_port.GetState()->GetBackColor();
-}
-
-void FrameRoundRect(const Rect *rect, int w, int h)
-{
-	PL_NotYetImplemented_TODO("Ovals");
 }
 
 void PenInvertMode(bool invertMode)

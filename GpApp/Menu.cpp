@@ -690,7 +690,7 @@ Boolean ResumeFilter (Dialog *dial, EventRecord *event, short *item)
 		case updateEvt:
 		if ((WindowPtr)event->message == dial->GetWindow())
 		{
-			SetPort((GrafPtr)dial);
+			SetPortDialogPort(dial);
 			UpdateResumeDialog(dial);
 			EndUpdate(dial->GetWindow());
 			event->what = nullEvent;
@@ -719,9 +719,6 @@ short QueryResumeGame (void)
 	short			hitWhat, hadGliders;
 	char			wasState;
 	Boolean			leaving;
-	ModalFilterUPP	resumeFilterUPP;
-	
-	resumeFilterUPP = NewModalFilterUPP(ResumeFilter);
 
 	// get score & num. gliders
 	thisHousePtr = *thisHouse;
@@ -746,14 +743,13 @@ short QueryResumeGame (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(resumeFilterUPP, &hitWhat);
+		ModalDialog(ResumeFilter, &hitWhat);
 		if ((hitWhat == kSheWantsNewGame) || (hitWhat == kSheWantsResumeGame))
 		{
 			leaving = true;
 		}
 	}
 	DisposeDialog(theDial);
-	DisposeModalFilterUPP(resumeFilterUPP);
 	
 	return (hitWhat);
 }

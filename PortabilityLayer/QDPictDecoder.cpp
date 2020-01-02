@@ -1,4 +1,5 @@
 #include "CoreDefs.h"
+#include "PLCTabReducer.h"
 #include "QDPictDecoder.h"
 #include "QDPictEmitContext.h"
 #include "QDPictHeader.h"
@@ -11,29 +12,6 @@
 #include <vector>
 #include <assert.h>
 
-namespace
-{
-	static void DecodeClutItemChannel(uint8_t &outChannel, const uint8_t *color16)
-	{
-		const int colorHigh = color16[0];
-		const int colorLow = color16[1];
-
-		const int lowDelta = colorLow - colorHigh;
-		if (lowDelta < -128)
-			outChannel = static_cast<uint8_t>(colorHigh - 1);
-		else if (lowDelta > 128)
-			outChannel = static_cast<uint8_t>(colorHigh + 1);
-		outChannel = static_cast<uint8_t>(colorHigh);
-	}
-
-	static void DecodeClutItem(PortabilityLayer::RGBAColor &decoded, const BEColorTableItem &clutItem)
-	{
-		DecodeClutItemChannel(decoded.r, clutItem.m_red);
-		DecodeClutItemChannel(decoded.g, clutItem.m_green);
-		DecodeClutItemChannel(decoded.b, clutItem.m_blue);
-		decoded.a = 255;
-	}
-}
 
 namespace PortabilityLayer
 {
@@ -88,7 +66,7 @@ namespace PortabilityLayer
 				if (stream->Read(scratchBytes, 10) != 10 || scratchBytes[0] != 0 || scratchBytes[1] != 10)
 					return false;	// Unknown format region
 
-				PL_STATIC_ASSERT(sizeof(scratchBERect) == 8);
+				GP_STATIC_ASSERT(sizeof(scratchBERect) == 8);
 
 				memcpy(&scratchBERect, scratchBytes + 2, 8);
 				scratchRect = scratchBERect.ToRect();
@@ -280,7 +258,7 @@ namespace PortabilityLayer
 			// If pack type == 3, 16-bit RLE
 			// If pack type == 4, 8-bit planar component RLE
 
-			PL_STATIC_ASSERT(sizeof(BEPixMap) == 44);
+			GP_STATIC_ASSERT(sizeof(BEPixMap) == 44);
 
 			if (stream->Read(&pixMapBE, sizeof(BEPixMap)) != sizeof(BEPixMap))
 				return 13;
@@ -303,7 +281,7 @@ namespace PortabilityLayer
 					return 16;
 
 				for (size_t i = 0; i < numColors; i++)
-					DecodeClutItem(colors[i], clutItems[i]);
+					colors[i] = CTabReducer::DecodeClutItem(clutItems[i]);
 			}
 
 			BERect srcRectBE;

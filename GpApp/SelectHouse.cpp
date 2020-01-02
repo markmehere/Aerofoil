@@ -157,7 +157,7 @@ void PageUpHouses (Dialog *theDial)
 	{
 		GetDialogItemRect(theDial, kScrollUpItem, &tempRect);
 		HideDialogItem(theDial, kScrollUpItem);
-		DrawCIcon(kGrayedOutUpArrow, tempRect.left, tempRect.top);
+		DrawCIcon(surface, kGrayedOutUpArrow, tempRect.left, tempRect.top);
 	}
 	
 	QSetRect(&tempRect, 8, 39, 421, 223);
@@ -191,7 +191,7 @@ void PageDownHouses (Dialog *theDial)
 	{
 		GetDialogItemRect(theDial, kScrollDownItem, &tempRect);
 		HideDialogItem(theDial, kScrollDownItem);
-		DrawCIcon(kGrayedOutDownArrow, tempRect.left, tempRect.top);
+		DrawCIcon(surface, kGrayedOutDownArrow, tempRect.left, tempRect.top);
 	}
 	
 	QSetRect(&tempRect, 8, 39, 421, 223);
@@ -367,20 +367,20 @@ void DoLoadHouse (void)
 	Dialog			*theDial;
 	short			i, item, wasIndex, screenCount;
 	Boolean			leaving, whoCares;
-	ModalFilterUPP	loadFilterUPP;
-	
-	loadFilterUPP = NewModalFilterUPP(LoadFilter);
 	
 	BringUpDialog(&theDial, kLoadHouseDialogID);
+
+	DrawSurface *surface = theDial->GetWindow()->GetDrawSurface();
+
 	if (housesFound <= kDispFiles)
 	{
 		GetDialogItemRect(theDial, kScrollUpItem, &tempRect);
 		HideDialogItem(theDial, kScrollUpItem);
-		DrawCIcon(kGrayedOutUpArrow, tempRect.left, tempRect.top);
+		DrawCIcon(surface, kGrayedOutUpArrow, tempRect.left, tempRect.top);
 		
 		GetDialogItemRect(theDial, kScrollDownItem, &tempRect);
 		HideDialogItem(theDial, kScrollDownItem);
-		DrawCIcon(kGrayedOutDownArrow, tempRect.left, tempRect.top);
+		DrawCIcon(surface, kGrayedOutDownArrow, tempRect.left, tempRect.top);
 	}
 	else
 	{
@@ -388,13 +388,13 @@ void DoLoadHouse (void)
 		{
 			GetDialogItemRect(theDial, kScrollUpItem, &tempRect);
 			HideDialogItem(theDial, kScrollUpItem);
-			DrawCIcon(kGrayedOutUpArrow, tempRect.left, tempRect.top);
+			DrawCIcon(surface, kGrayedOutUpArrow, tempRect.left, tempRect.top);
 		}
 		else if (thisHouseIndex > (housesFound - kDispFiles))
 		{				
 			GetDialogItemRect(theDial, kScrollDownItem, &tempRect);
 			HideDialogItem(theDial, kScrollDownItem);
-			DrawCIcon(kGrayedOutDownArrow, tempRect.left, tempRect.top);
+			DrawCIcon(surface, kGrayedOutDownArrow, tempRect.left, tempRect.top);
 		}
 	}
 	wasIndex = thisHouseIndex;
@@ -415,7 +415,7 @@ void DoLoadHouse (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(loadFilterUPP, &item);
+		ModalDialog(LoadFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -516,7 +516,6 @@ void DoLoadHouse (void)
 	}
 	
 	DisposeDialog(theDial);
-	DisposeModalFilterUPP(loadFilterUPP);
 }
 #endif
 

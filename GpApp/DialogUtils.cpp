@@ -7,10 +7,10 @@
 #include "DialogManager.h"
 #include "PLArrayView.h"
 #include "PLControlDefinitions.h"
-#include "PLLowMem.h"
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
+#include "PLWidgets.h"
 #include "QDStandardPalette.h"
 #include "DialogUtils.h"
 #include "Externs.h"
@@ -33,7 +33,7 @@ void BringUpDialog (Dialog **theDialog, short dialogID)
 //	CenterDialog(dialogID);
 	if (*theDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort((GrafPtr)*theDialog);
+	SetGraphicsPort(&(*theDialog)->GetWindow()->m_graf);
 	ShowWindow((*theDialog)->GetWindow());
 	DrawDefaultButton(*theDialog);
 }
@@ -342,11 +342,12 @@ void FlashDialogButton (Dialog *theDialog, short itemNumber)
 	ControlHandle	itemHandle;
 	UInt32			dummyLong;
 	short			itemType;
-	
-	GetDialogItem(theDialog, itemNumber, &itemType, &itemHandle, &itemRect);
-	HiliteControl(itemHandle, kControlButtonPart);
+
+	PortabilityLayer::Widget *widget = theDialog->GetItems()[itemNumber - 1].GetWidget();
+
+	widget->SetHighlightStyle(kControlButtonPart);
 	Delay(8, &dummyLong);
-	HiliteControl(itemHandle, 0);
+	widget->SetHighlightStyle(0);
 }
 
 //--------------------------------------------------------------  DrawDefaultButton
@@ -355,10 +356,9 @@ void FlashDialogButton (Dialog *theDialog, short itemNumber)
 
 void DrawDefaultButton (Dialog *theDialog)
 {
-	DialogItem *firstItem = *theDialog->GetItems().begin();
-	Rect		itemRect = firstItem->GetRect();
-
-	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
+	const PortabilityLayer::DialogItem	&firstItem = *theDialog->GetItems().begin();
+	Rect								itemRect = firstItem.GetWidget()->GetRect();
+	DrawSurface							*surface = theDialog->GetWindow()->GetDrawSurface();
 
 	InsetRect(&itemRect, -4, -4);
 
@@ -369,7 +369,7 @@ void DrawDefaultButton (Dialog *theDialog)
 		for (int yOffset = 0; yOffset < 3; yOffset++)
 		{
 			const Rect offsetRect = itemRect + Point::Create(xOffset, yOffset);
-			surface->FrameRoundRect(itemRect, 8, 8);
+			surface->FrameRoundRect(offsetRect, 8, 8);
 		}
 	}
 
@@ -437,12 +437,7 @@ void GetDialogItemValue (Dialog *theDialog, short item, short *theState)
 
 void SetDialogItemValue (Dialog *theDialog, short item, short theState)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	SetControlValue(itemHandle, theState);
+	theDialog->GetItems()[item - 1].GetWidget()->SetState(theState);
 }
 
 //--------------------------------------------------------------  ToggleDialogItemValue
@@ -500,7 +495,7 @@ void GetDialogNumFromStr (Dialog *theDialog, short item, long *theNumber)
 
 void GetDialogItemRect (Dialog *theDialog, short item, Rect *theRect)
 {
-	*theRect = theDialog->GetItems()[item - 1]->GetRect();
+	*theRect = theDialog->GetItems()[item - 1].GetWidget()->GetRect();
 }
 
 //--------------------------------------------------------------  SetDialogItemRect
@@ -539,18 +534,10 @@ void OffsetDialogItemRect (Dialog *theDialog, short item, short h, short v)
 
 void SelectFromRadioGroup (Dialog *dial, short which, short first, short last)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
-	short			iType, i;
+	for (int i = first; i <= last; i++)
+		dial->GetItems()[i - 1].GetWidget()->SetState(0);
 	
-	for (i = first; i <= last; i++)
-	{
-		GetDialogItem(dial, i, &iType, &iHandle, &iRect);
-		SetControlValue(iHandle, (short)false);
-	}
-	
-	GetDialogItem(dial, which, &iType, &iHandle, &iRect);
-	SetControlValue(iHandle, (short)true);
+	dial->GetItems()[which - 1].GetWidget()->SetState(1);
 }
 
 //--------------------------------------------------------------  AddMenuToPopUp
@@ -614,9 +601,8 @@ void MyDisableControl (Dialog *theDialog, short whichItem)
 	Rect			iRect;
 	ControlHandle	iHandle;
 	short			iType;
-	
-	GetDialogItem(theDialog, whichItem, &iType, &iHandle, &iRect);
-	HiliteControl(iHandle, kInactive);
+
+	theDialog->GetItems()[whichItem - 1].GetWidget()->SetEnabled(false);
 }
 
 //--------------------------------------------------------------  DrawDialogUserText
@@ -626,22 +612,20 @@ void MyDisableControl (Dialog *theDialog, short whichItem)
 
 void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean invert)
 {
-	Rect			iRect;
 	ControlHandle	iHandle;
-	Str255			newString, stringCopy;
-	short			iType, textLong, i, inset;
+	Str255			stringCopy;
+	short			iType, i, inset;
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 
 	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
 	
 	PasStringCopy(text, stringCopy);
-	GetDialogItem(dial, item, &iType, &iHandle, &iRect);
-	if ((StringWidth(stringCopy) + 2) > (iRect.right - iRect.left))
-		CollapseStringToWidth(stringCopy, iRect.right - iRect.left - 2);
-	textLong = stringCopy[0];
-	for (i = 0; i < textLong; i++)
-		newString[i] = stringCopy[i + 1];
+
+	Rect iRect = dial->GetItems()[item - 1].GetWidget()->GetRect();
+
+	if ((surface->MeasureString(stringCopy) + 2) > (iRect.right - iRect.left))
+		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
 	
 	OffsetRect(&iRect, 0, 1);
 
@@ -650,12 +634,20 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 	surface->SetForeColor(StdColors::Black());
 
 	OffsetRect(&iRect, 0, -1);
-	
-	inset = ((iRect.right - iRect.left) - (StringWidth(stringCopy) + 2)) / 2;
+
+	short strWidth = surface->MeasureString(stringCopy);
+	inset = ((iRect.right - iRect.left) - (strWidth + 2)) / 2;
 	iRect.left += inset;
 	iRect.right -= inset;
-	
-	TETextBox(newString, textLong, &iRect, teCenter);
+
+	// Draw centered
+	PL_NotYetImplemented_TODO("Clip to iRect");
+
+	const int32_t ascender = surface->MeasureFontAscender();
+
+	const Point centeredDrawPoint = Point::Create((iRect.left + iRect.right - strWidth) / 2, (iRect.top + iRect.bottom + ascender) / 2);
+	surface->DrawString(centeredDrawPoint, stringCopy);
+
 	if (invert)
 	{
 		OffsetRect(&iRect, 0, 1);
@@ -680,8 +672,8 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 	
 	PasStringCopy(text, stringCopy);
 	GetDialogItem(dial, item, &iType, &iHandle, &iRect);
-	if ((StringWidth(stringCopy) + 2) > (iRect.right - iRect.left))
-		CollapseStringToWidth(stringCopy, iRect.right - iRect.left - 2);
+	if ((surface->MeasureString(stringCopy) + 2) > (iRect.right - iRect.left))
+		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
 
 	surface->SetForeColor(StdColors::Black());
 	surface->DrawString(Point::Create(iRect.left, iRect.bottom), stringCopy);
@@ -723,12 +715,8 @@ void FrameDialogItem (Dialog *theDialog, short item)
 
 void FrameDialogItemC (Dialog *theDialog, short item, long color)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
 	DrawSurface		*surface = theDialog->GetWindow()->GetDrawSurface();
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
+	const Rect		itemRect = theDialog->GetItems()[item - 1].GetWidget()->GetRect();
 
 	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
 	surface->SetForeColor(PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color]);

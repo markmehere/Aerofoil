@@ -623,7 +623,7 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateGoToDialog(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -651,9 +651,7 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
  	long			tempLong;
 	short			item, roomToGoTo;
 	Boolean			leaving, canceled;
-	ModalFilterUPP	goToFilterUPP;
-	
-	goToFilterUPP = NewModalFilterUPP(GoToFilter);
+
 	BringUpDialog(&theDialog, kGoToDialogID);
 	
 	if (GetFirstRoomNumber() == thisRoomNumber)
@@ -670,7 +668,7 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 	
 	while (!leaving)
 	{
-		ModalDialog(goToFilterUPP, &item);
+		ModalDialog(GoToFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -700,7 +698,6 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 	}
 	
 	DisposeDialog(theDialog);
-	DisposeModalFilterUPP(goToFilterUPP);
 	
 	if (!canceled)
 	{

@@ -40,6 +40,7 @@ class GpFont_FreeType2 final : public PortabilityLayer::HostFont
 public:
 	void Destroy() override;
 	GpFontRenderedGlyph_FreeType2 *Render(uint32_t unicodeCodePoint, unsigned int size) override;
+	bool GetLineSpacing(unsigned int size, int32_t &outSpacing) override;
 
 	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream);
 
@@ -73,8 +74,8 @@ void GpFontRenderedGlyph_FreeType2::Destroy()
 
 GpFontRenderedGlyph_FreeType2 *GpFontRenderedGlyph_FreeType2::Create(size_t dataSize, const PortabilityLayer::RenderedGlyphMetrics &metrics)
 {
-	size_t alignedPrefixSize = (sizeof(GpFontRenderedGlyph_FreeType2) + PL_SYSTEM_MEMORY_ALIGNMENT - 1);
-	alignedPrefixSize -= alignedPrefixSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+	size_t alignedPrefixSize = (sizeof(GpFontRenderedGlyph_FreeType2) + GP_SYSTEM_MEMORY_ALIGNMENT - 1);
+	alignedPrefixSize -= alignedPrefixSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 	void *storage = malloc(alignedPrefixSize + dataSize);
 	if (!storage)
@@ -141,8 +142,8 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 
 	const size_t numRowsRequired = glyph->bitmap.rows;
 	size_t pitchRequired = (glyph->bitmap.width + 7) / 8;
-	pitchRequired = pitchRequired + (PL_SYSTEM_MEMORY_ALIGNMENT - 1);
-	pitchRequired -= pitchRequired % PL_SYSTEM_MEMORY_ALIGNMENT;
+	pitchRequired = pitchRequired + (GP_SYSTEM_MEMORY_ALIGNMENT - 1);
+	pitchRequired -= pitchRequired % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 	const size_t glyphDataSize = numRowsRequired * pitchRequired;
 
@@ -180,6 +181,21 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 
 	return renderedGlyph;
 }
+
+bool GpFont_FreeType2::GetLineSpacing(unsigned int size, int32_t &outSpacing)
+{
+	if (m_currentSize != size)
+	{
+		if (FT_Set_Pixel_Sizes(m_face, 0, size) != 0)
+			return false;
+
+		m_currentSize = size;
+	}
+
+	outSpacing = m_face->size->metrics.height / 64;
+	return true;
+}
+
 
 GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream)
 {

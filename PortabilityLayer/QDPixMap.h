@@ -16,17 +16,22 @@ namespace PortabilityLayer
 	class PixMapImpl final : public PixMap
 	{
 	public:
-		PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat);
-		
+		static void Destroy(THandle<PixMapImpl> &hdl);
+
 		GpPixelFormat_t GetPixelFormat() const;
 		size_t GetPitch() const;
 		void *GetPixelData();
 		const void *GetPixelData() const;
 		size_t GetDataCapacity() const;
 
+		static THandle<PixMapImpl> Create(const Rect &rect, GpPixelFormat_t pixelFormat);
+
 		static size_t SizeForDimensions(uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat);
 
 	private:
+		PixMapImpl(int16_t left, int16_t top, uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat);
+		~PixMapImpl();
+
 		static size_t AlignedSize();
 		static size_t PitchForWidth(uint16_t width, GpPixelFormat_t pixelFormat);
 

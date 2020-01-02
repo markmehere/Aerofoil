@@ -132,9 +132,6 @@
     <ClInclude Include="PLPalettes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLLowMem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MemReaderStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -408,6 +405,36 @@
     <ClInclude Include="PLTimeTaggedVOSEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PLSysCalls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderedFontMetrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IconLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLCTabReducer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLWidgets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLButtonWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLIconWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLInvisibleWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLLabelWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -618,6 +645,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLTimeTaggedVOSEvent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLSysCalls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IconLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLCTabReducer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLButtonWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLIconWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLWidgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLInvisibleWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLLabelWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

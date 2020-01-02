@@ -386,7 +386,7 @@ Boolean BlowerFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateBlowerInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -421,7 +421,7 @@ Boolean FurnitureFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateFurnitureInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -456,7 +456,7 @@ Boolean CustPictFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateCustPictInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -497,7 +497,7 @@ Boolean SwitchFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateSwitchInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -543,7 +543,7 @@ Boolean TriggerFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateTriggerInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -592,7 +592,7 @@ Boolean LightFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateLightInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -646,7 +646,7 @@ Boolean ApplianceFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateApplianceInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -695,7 +695,7 @@ Boolean MicrowaveFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateMicrowaveInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -736,7 +736,7 @@ Boolean GreaseFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateGreaseInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -771,7 +771,7 @@ Boolean InvisBonusFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateInvisBonusInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -812,7 +812,7 @@ Boolean TransFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateTransInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -866,7 +866,7 @@ Boolean EnemyFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateEnemyInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -915,7 +915,7 @@ Boolean FlowerFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateFlowerInfo(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -936,9 +936,6 @@ void DoBlowerObjectInfo (short what)
 	Str255			numberStr, kindStr, distStr;
 	short			item, initial;
 	Boolean			leaving, doReturn, leftFacing;
-	ModalFilterUPP	blowerFilterUPP;
-	
-	blowerFilterUPP = NewModalFilterUPP(BlowerFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -995,7 +992,7 @@ void DoBlowerObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		ModalDialog(blowerFilterUPP, &item);
+		ModalDialog(BlowerFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1092,7 +1089,6 @@ void DoBlowerObjectInfo (short what)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(blowerFilterUPP);
 	
 	if (doReturn)
 	{
@@ -1109,9 +1105,6 @@ void DoFurnitureObjectInfo (void)
 	Str255			numberStr, kindStr;
 	short			item;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	furnitureFilterUPP;
-	
-	furnitureFilterUPP = NewModalFilterUPP(FurnitureFilter);
 	
 	if (objActive == kInitialGliderSelected)
 	{
@@ -1145,7 +1138,7 @@ void DoFurnitureObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(furnitureFilterUPP, &item);
+		ModalDialog(FurnitureFilter, &item);
 		
 		if (item == kOkayButton)
 			leaving = true;
@@ -1157,7 +1150,6 @@ void DoFurnitureObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(furnitureFilterUPP);
 	
 	if (doReturn)
 	{
@@ -1175,9 +1167,6 @@ void DoCustPictObjectInfo (void)
 	long			wasPict;
 	short			item;
 	Boolean			leaving;
-	ModalFilterUPP	custPictFilterUPP;
-	
-	custPictFilterUPP = NewModalFilterUPP(CustPictFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1202,7 +1191,7 @@ void DoCustPictObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(custPictFilterUPP, &item);
+		ModalDialog(CustPictFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1260,7 +1249,6 @@ void DoCustPictObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(custPictFilterUPP);
 }
 
 //--------------------------------------------------------------  DoSwitchObjectInfo
@@ -1271,9 +1259,6 @@ void DoSwitchObjectInfo (void)
 	Str255			numberStr, kindStr, roomStr, tempStr, objStr;
 	short			item, floor, suite;
 	Boolean			leaving, doLink, doGoTo, doReturn;
-	ModalFilterUPP	switchFilterUPP;
-	
-	switchFilterUPP = NewModalFilterUPP(SwitchFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1310,7 +1295,7 @@ void DoSwitchObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(switchFilterUPP, &item);
+		ModalDialog(SwitchFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1363,7 +1348,6 @@ void DoSwitchObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(switchFilterUPP);
 	
 	if (doLink)
 	{
@@ -1394,9 +1378,6 @@ void DoTriggerObjectInfo (void)
 	long			delayIs;
 	short			item, floor, suite;
 	Boolean			leaving, doLink, doGoTo, doReturn;
-	ModalFilterUPP	triggerFilterUPP;
-	
-	triggerFilterUPP = NewModalFilterUPP(TriggerFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1437,7 +1418,7 @@ void DoTriggerObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(triggerFilterUPP, &item);
+		ModalDialog(TriggerFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1519,7 +1500,6 @@ void DoTriggerObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(triggerFilterUPP);
 	
 	if (doLink)
 	{
@@ -1549,9 +1529,6 @@ void DoLightObjectInfo (void)
 	Str255			numberStr, kindStr;
 	short			item, initial;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	lightFilterUPP;
-	
-	lightFilterUPP = NewModalFilterUPP(LightFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1578,7 +1555,7 @@ void DoLightObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(lightFilterUPP, &item);
+		ModalDialog(LightFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1618,7 +1595,6 @@ void DoLightObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(lightFilterUPP);
 	
 	if (doReturn)
 	{
@@ -1636,9 +1612,6 @@ void DoApplianceObjectInfo (short what)
 	long			delay;
 	short			item, initial;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	applianceFilterUPP;
-	
-	applianceFilterUPP = NewModalFilterUPP(ApplianceFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1670,7 +1643,7 @@ void DoApplianceObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		ModalDialog(applianceFilterUPP, &item);
+		ModalDialog(ApplianceFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1734,7 +1707,6 @@ void DoApplianceObjectInfo (short what)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(applianceFilterUPP);
 	
 	if (doReturn)
 	{
@@ -1751,9 +1723,6 @@ void DoMicrowaveObjectInfo (void)
 	Str255			numberStr, kindStr;
 	short			item, initial, kills;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	microwaveFilterUPP;
-	
-	microwaveFilterUPP = NewModalFilterUPP(MicrowaveFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1788,7 +1757,7 @@ void DoMicrowaveObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(microwaveFilterUPP, &item);
+		ModalDialog(MicrowaveFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1858,7 +1827,6 @@ void DoMicrowaveObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(microwaveFilterUPP);
 	
 	if (doReturn)
 	{
@@ -1875,9 +1843,6 @@ void DoGreaseObjectInfo (void)
 	Str255			numberStr, kindStr;
 	short			item;
 	Boolean			leaving, wasSpilled, doReturn;
-	ModalFilterUPP	greaseFilterUPP;
-	
-	greaseFilterUPP = NewModalFilterUPP(GreaseFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1895,7 +1860,7 @@ void DoGreaseObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(greaseFilterUPP, &item);
+		ModalDialog(GreaseFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -1932,7 +1897,6 @@ void DoGreaseObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(greaseFilterUPP);
 	
 	if (doReturn)
 	{
@@ -1949,9 +1913,6 @@ void DoInvisBonusObjectInfo (void)
 	Str255			numberStr, kindStr;
 	short			item;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	invisBonusFilterUPP;
-	
-	invisBonusFilterUPP = NewModalFilterUPP(InvisBonusFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -1982,7 +1943,7 @@ void DoInvisBonusObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(invisBonusFilterUPP, &item);
+		ModalDialog(InvisBonusFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -2045,7 +2006,6 @@ void DoInvisBonusObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(invisBonusFilterUPP);
 	
 	if (doReturn)
 	{
@@ -2062,9 +2022,6 @@ void DoTransObjectInfo (short what)
 	Str255			numberStr, kindStr, roomStr, tempStr, objStr;
 	short			item, floor, suite;
 	Boolean			leaving, doLink, doGoTo, doReturn, wasState;
-	ModalFilterUPP	transFilterUPP;
-	
-	transFilterUPP = NewModalFilterUPP(TransFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -2108,7 +2065,7 @@ void DoTransObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		ModalDialog(transFilterUPP, &item);
+		ModalDialog(TransFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -2155,7 +2112,6 @@ void DoTransObjectInfo (short what)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(transFilterUPP);
 	
 	if (doLink)
 	{
@@ -2186,9 +2142,6 @@ void DoEnemyObjectInfo (short what)
 	long			delay;
 	short			item, initial;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	enemyFilterUPP;
-	
-	enemyFilterUPP = NewModalFilterUPP(EnemyFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -2220,7 +2173,7 @@ void DoEnemyObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		ModalDialog(enemyFilterUPP, &item);
+		ModalDialog(EnemyFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -2278,7 +2231,6 @@ void DoEnemyObjectInfo (short what)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(enemyFilterUPP);
 	
 	if (doReturn)
 	{
@@ -2295,9 +2247,6 @@ void DoFlowerObjectInfo (void)
 	Str255			numberStr, kindStr;
 	short			item, flower;
 	Boolean			leaving, doReturn;
-	ModalFilterUPP	flowerFilterUPP;
-	
-	flowerFilterUPP = NewModalFilterUPP(FlowerFilter);
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
@@ -2316,7 +2265,7 @@ void DoFlowerObjectInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(flowerFilterUPP, &item);
+		ModalDialog(FlowerFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -2377,7 +2326,6 @@ void DoFlowerObjectInfo (void)
 	}
 	
 	DisposeDialog(infoDial);
-	DisposeModalFilterUPP(flowerFilterUPP);
 	
 	if (doReturn)
 	{

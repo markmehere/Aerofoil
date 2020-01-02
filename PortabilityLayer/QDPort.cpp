@@ -1,8 +1,15 @@
 #include "QDPort.h"
 #include "PLErrorCodes.h"
+#include "PLHandle.h"
 #include "MemoryManager.h"
 #include "MMHandleBlock.h"
 #include "QDPixMap.h"
+
+#if GP_DEBUG_CONFIG
+#include <assert.h>
+
+static const int32_t kQDPortSentinelValue = 0x222a1877;	// Completely arbitrary number
+#endif
 
 namespace PortabilityLayer
 {
@@ -14,10 +21,12 @@ namespace PortabilityLayer
 		, m_top(0)
 		, m_width(0)
 		, m_height(0)
-		, m_pixMap(nullptr)
 		, m_pixelFormat(GpPixelFormats::kInvalid)
 		, m_dirtyFlags(0)
 		, m_debugID(gs_nextQDPortDebugID++)
+#if GP_DEBUG_CONFIG
+		, m_portSentinel(kQDPortSentinelValue)
+#endif
 	{
 	}
 
@@ -29,11 +38,7 @@ namespace PortabilityLayer
 	void QDPort::DisposePixMap()
 	{
 		if (m_pixMap)
-		{
-			if (*m_pixMap)
-				static_cast<PixMapImpl*>(*m_pixMap)->~PixMapImpl();
-			MemoryManager::GetInstance()->ReleaseHandle(reinterpret_cast<MMHandleBlock*>(m_pixMap));
-		}
+			PixMapImpl::Destroy(m_pixMap);
 	}
 
 	PLError_t QDPort::Init(const Rect &rect, GpPixelFormat_t pixelFormat)
@@ -49,31 +54,24 @@ namespace PortabilityLayer
 
 	bool QDPort::Resize(const Rect &rect)
 	{
-		const uint16_t width = static_cast<uint16_t>(rect.right - rect.left);
-		const uint16_t height = static_cast<uint16_t>(rect.bottom - rect.top);
-
-		size_t pixMapSize = PixMapImpl::SizeForDimensions(width, height, m_pixelFormat);
-		if (pixMapSize == 0)
+		if (!rect.IsValid())
 			return false;
 
-		MMHandleBlock *pmBlock = MemoryManager::GetInstance()->AllocHandle(pixMapSize);
-		if (!pmBlock)
-			return false;
+		THandle<PixMapImpl> newPixMap = PixMapImpl::Create(rect, m_pixelFormat);
 
-		memset(pmBlock->m_contents, 0, pixMapSize);
+		if (!newPixMap)
+			return false;
 
 		SetDirty(QDPortDirtyFlag_Size | QDPortDirtyFlag_Contents);
 
 		m_left = rect.left;
 		m_top = rect.top;
-		m_width = width;
-		m_height = height;
-
-		new (pmBlock->m_contents) PixMapImpl(m_left, m_top, width, height, m_pixelFormat);
+		m_width = rect.Width();
+		m_height = rect.Height();
 
 		DisposePixMap();
 
-		m_pixMap = reinterpret_cast<PixMap**>(&pmBlock->m_contents);
+		m_pixMap = newPixMap;
 
 		return true;
 	}
@@ -93,9 +91,9 @@ namespace PortabilityLayer
 		m_dirtyFlags &= ~flag;
 	}
 
-	PixMap **QDPort::GetPixMap() const
+	THandle<PixMap> QDPort::GetPixMap() const
 	{
-		return m_pixMap;
+		return m_pixMap.ImplicitCast<PixMap>();
 	}
 
 	const QDState *QDPort::GetState() const
@@ -117,4 +115,11 @@ namespace PortabilityLayer
 	{
 		return Rect::Create(m_top, m_left, m_top + m_height, m_left + m_width);
 	}
+
+#if GP_DEBUG_CONFIG
+	void QDPort::CheckPortSentinel() const
+	{
+		assert(m_portSentinel == kQDPortSentinelValue);
+	}
+#endif
 }

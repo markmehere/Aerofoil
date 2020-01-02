@@ -7,6 +7,7 @@
 #include "MacRoman.h"
 #include "PLPasStr.h"
 #include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "RenderedGlyphMetrics.h"
 
 #include <assert.h>
@@ -19,12 +20,14 @@ namespace PortabilityLayer
 	class RenderedFontImpl final : public RenderedFont
 	{
 	public:
-		bool GetGlyph(unsigned int character, const RenderedGlyphMetrics **outMetricsPtr, const void **outData) const override;
+		bool GetGlyph(unsigned int character, const RenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const override;
+		const RenderedFontMetrics &GetMetrics() const override;
 		size_t MeasureString(const uint8_t *chars, size_t len) const override;
 
 		void Destroy() override;
 
 		void SetCharData(unsigned int charID, const void *data, size_t dataOffset, const RenderedGlyphMetrics &metrics);
+		void SetFontMetrics(const RenderedFontMetrics &metrics);
 
 		static RenderedFontImpl *Create(size_t glyphDataSize);
 
@@ -33,7 +36,9 @@ namespace PortabilityLayer
 		~RenderedFontImpl();
 
 		size_t m_dataOffsets[256];
-		RenderedGlyphMetrics m_metrics[256];
+		RenderedGlyphMetrics m_glyphMetrics[256];
+
+		RenderedFontMetrics m_fontMetrics;
 
 		void *m_data;
 	};
@@ -49,17 +54,23 @@ namespace PortabilityLayer
 		static FontRendererImpl ms_instance;
 	};
 
-	bool RenderedFontImpl::GetGlyph(unsigned int character, const RenderedGlyphMetrics **outMetricsPtr, const void **outData) const
+	bool RenderedFontImpl::GetGlyph(unsigned int character, const RenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const
 	{
 		const size_t dataOffset = m_dataOffsets[character];
 		if (!dataOffset)
 			return false;
 
-		*outMetricsPtr = m_metrics + character;
-		*outData = static_cast<const uint8_t*>(m_data) + dataOffset;
+		outMetricsPtr = m_glyphMetrics + character;
+		outData = static_cast<const uint8_t*>(m_data) + dataOffset;
 
 		return true;
 	}
+
+	const RenderedFontMetrics &RenderedFontImpl::GetMetrics() const
+	{
+		return m_fontMetrics;
+	}
+
 
 	size_t RenderedFontImpl::MeasureString(const uint8_t *chars, size_t len) const
 	{
@@ -67,7 +78,7 @@ namespace PortabilityLayer
 
 		for (size_t i = 0; i < len; i++)
 		{
-			const RenderedGlyphMetrics &metrics = m_metrics[chars[i]];
+			const RenderedGlyphMetrics &metrics = m_glyphMetrics[chars[i]];
 			measure += metrics.m_advanceX;
 		}
 
@@ -83,14 +94,19 @@ namespace PortabilityLayer
 	void RenderedFontImpl::SetCharData(unsigned int charID, const void *data, size_t dataOffset, const RenderedGlyphMetrics &metrics)
 	{
 		m_dataOffsets[charID] = dataOffset;
-		m_metrics[charID] = metrics;
+		m_glyphMetrics[charID] = metrics;
 		memcpy(static_cast<uint8_t*>(m_data) + dataOffset, data, metrics.m_glyphDataPitch * metrics.m_glyphHeight);
+	}
+
+	void RenderedFontImpl::SetFontMetrics(const RenderedFontMetrics &metrics)
+	{
+		m_fontMetrics = metrics;
 	}
 
 	RenderedFontImpl *RenderedFontImpl::Create(size_t glyphDataSize)
 	{
-		size_t alignedPrefixSize = sizeof(RenderedFontImpl) + PL_SYSTEM_MEMORY_ALIGNMENT - 1;
-		alignedPrefixSize -= alignedPrefixSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+		size_t alignedPrefixSize = sizeof(RenderedFontImpl) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
+		alignedPrefixSize -= alignedPrefixSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 		if (SIZE_MAX - alignedPrefixSize < glyphDataSize)
 			return nullptr;
@@ -109,7 +125,8 @@ namespace PortabilityLayer
 	RenderedFontImpl::RenderedFontImpl(void *data)
 		: m_data(data)
 	{
-		memset(m_metrics, 0, sizeof(m_metrics));
+		memset(m_glyphMetrics, 0, sizeof(m_glyphMetrics));
+		memset(&m_fontMetrics, 0, sizeof(m_fontMetrics));
 		memset(m_dataOffsets, 0, sizeof(m_dataOffsets));
 	}
 
@@ -122,6 +139,10 @@ namespace PortabilityLayer
 		const unsigned int numCharacters = 256;
 
 		if (size < 1)
+			return nullptr;
+
+		int32_t lineSpacing;
+		if (!font->GetLineSpacing(size, lineSpacing))
 			return nullptr;
 
 		HostFontRenderedGlyph *glyphs[numCharacters];
@@ -138,7 +159,7 @@ namespace PortabilityLayer
 			glyphs[i] = font->Render(unicodeCodePoint, size);
 		}
 
-		size_t glyphDataSize = PL_SYSTEM_MEMORY_ALIGNMENT;	// So we can use 0 to mean no data
+		size_t glyphDataSize = GP_SYSTEM_MEMORY_ALIGNMENT;	// So we can use 0 to mean no data
 		size_t numUsedGlyphs = 0;
 		for (unsigned int i = 0; i < numCharacters; i++)
 		{
@@ -152,7 +173,7 @@ namespace PortabilityLayer
 		RenderedFontImpl *rfont = RenderedFontImpl::Create(glyphDataSize);
 		if (rfont)
 		{
-			size_t fillOffset = PL_SYSTEM_MEMORY_ALIGNMENT;
+			size_t fillOffset = GP_SYSTEM_MEMORY_ALIGNMENT;
 
 			size_t numUsedGlyphs = 0;
 			for (unsigned int i = 0; i < numCharacters; i++)
@@ -189,6 +210,41 @@ namespace PortabilityLayer
 				}
 			}
 		}
+
+		// Compute metrics
+		RenderedFontMetrics fontMetrics;
+		fontMetrics.m_linegap = lineSpacing;
+		fontMetrics.m_ascent = 0;
+		fontMetrics.m_descent = 0;
+
+		bool measuredAnyGlyphs = false;
+		for (char capChar = 'A'; capChar <= 'Z'; capChar++)
+		{
+			const RenderedGlyphMetrics *glyphMetrics;
+			const void *glyphData;
+			if (rfont->GetGlyph(static_cast<unsigned int>(capChar), glyphMetrics, glyphData) && glyphMetrics != nullptr)
+			{
+				const int32_t ascent = glyphMetrics->m_bearingY;
+				const int32_t descent = static_cast<int32_t>(glyphMetrics->m_glyphHeight) - ascent;
+
+				if (!measuredAnyGlyphs)
+				{
+					fontMetrics.m_ascent = ascent;
+					fontMetrics.m_descent = descent;
+					measuredAnyGlyphs = true;
+				}
+				else
+				{
+					if (ascent > fontMetrics.m_ascent)
+						fontMetrics.m_ascent = ascent;
+
+					if (descent > fontMetrics.m_descent)
+						fontMetrics.m_descent = descent;
+				}
+			}
+		}
+
+		rfont->SetFontMetrics(fontMetrics);
 
 		for (unsigned int i = 0; i < numCharacters; i++)
 		{

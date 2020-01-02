@@ -26,7 +26,7 @@ namespace PortabilityLayer
 		void Close() override;
 
 	private:
-		MemReaderStream() PL_DELETED;
+		MemReaderStream() GP_DELETED;
 
 		const uint8_t *m_bytes;
 		size_t m_size;

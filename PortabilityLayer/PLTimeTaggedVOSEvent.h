@@ -12,6 +12,7 @@ struct TimeTaggedVOSEvent
 	// Helpers for common cases
 	bool IsKeyDownEvent() const;
 	bool IsLMouseDownEvent() const;
+	bool IsLMouseUpEvent() const;
 };
 
 inline TimeTaggedVOSEvent TimeTaggedVOSEvent::Create(const GpVOSEvent &vosEvent, uint32_t timestamp)

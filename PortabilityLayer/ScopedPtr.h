@@ -25,8 +25,8 @@ namespace PortabilityLayer
 		void Set(T *ref);
 
 	private:
-		ScopedPtr(const ScopedPtr<T> &other) PL_DELETED;
-		void operator=(const ScopedPtr<T> &other) PL_DELETED;
+		ScopedPtr(const ScopedPtr<T> &other) GP_DELETED;
+		void operator=(const ScopedPtr<T> &other) GP_DELETED;
 		T *m_ref;
 	};
 }

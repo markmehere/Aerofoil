@@ -406,7 +406,7 @@ Boolean RoomFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateRoomInfoDialog(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -434,10 +434,7 @@ void DoRoomInfo (void)
 	short			item, i, newBack;
 	char			wasState;
 	Boolean			leaving, wasFirstRoom, forceDraw;
-	ModalFilterUPP	roomFilterUPP;
 	PLError_t		theErr;
-	
-	roomFilterUPP = NewModalFilterUPP(RoomFilter);
 	
 	tileOver = -1;
 	cursorIs = kArrowCursor;
@@ -503,7 +500,7 @@ void DoRoomInfo (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(roomFilterUPP, &item);
+		ModalDialog(RoomFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -598,7 +595,6 @@ void DoRoomInfo (void)
 	
 	InitCursor();
 	DisposeDialog(roomInfoDialog);
-	DisposeModalFilterUPP(roomFilterUPP);
 	
 //	KillOffScreenPixMap(tileSrcMap);
 	DisposeGWorld(tileSrcMap);
@@ -727,7 +723,7 @@ Boolean OriginalArtFilter (Dialog *dial, EventRecord *event, short *item)
 		break;
 		
 		case updateEvt:
-		SetPort((GrafPtr)dial);
+		SetPortDialogPort(dial);
 		UpdateOriginalArt(dial);
 		EndUpdate(dial->GetWindow());
 		event->what = nullEvent;
@@ -750,9 +746,6 @@ short ChooseOriginalArt (short was)
 	long			longID;
 	short			item, newPictID, tempShort, wasPictID;
 	Boolean			leaving;
-	ModalFilterUPP	originalArtFilterUPP;
-	
-	originalArtFilterUPP = NewModalFilterUPP(OriginalArtFilter);
 	
 	if (was < kUserBackground)
 		was = kUserBackground;
@@ -790,7 +783,7 @@ short ChooseOriginalArt (short was)
 	
 	while (!leaving)
 	{
-		ModalDialog(originalArtFilterUPP, &item);
+		ModalDialog(OriginalArtFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -855,7 +848,6 @@ short ChooseOriginalArt (short was)
 	}
 	
 	DisposeDialog(theDialog);
-	DisposeModalFilterUPP(originalArtFilterUPP);
 	
 	return (newPictID);
 }

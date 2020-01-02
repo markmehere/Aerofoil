@@ -46,6 +46,11 @@ namespace PortabilityLayer
 
 	void QDManagerImpl::SetPort(QDPort *gw)
 	{
+#if GP_DEBUG_CONFIG
+		if (gw)
+			gw->CheckPortSentinel();
+#endif
+
 		m_port = gw;
 	}
 

@@ -19,7 +19,7 @@ namespace PortabilityLayer
 			uint8_t m_titleLength;
 		};
 
-		PL_STATIC_ASSERT(sizeof(WindowDefPart1) == 19);
+		GP_STATIC_ASSERT(sizeof(WindowDefPart1) == 19);
 
 		WindowDefPart1 wdefPart1;
 

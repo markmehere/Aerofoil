@@ -1,30 +1,29 @@
 #pragma once
-#ifndef __PL_DIALOGS_H__
-#define __PL_DIALOGS_H__
 
 #include "PLCore.h"
+
+namespace PortabilityLayer
+{
+	class DialogItem;
+}
 
 template<class T>
 class ArrayView;
 
 class PLPasStr;
 struct Control;
+struct Dialog;
 
-struct DialogItem
-{
-	virtual Rect GetRect() const = 0;
-};
+typedef int16_t(*DialogFilterFunc_t)(Dialog *dialog, const TimeTaggedVOSEvent &evt);
 
 struct Dialog
 {
 	virtual void Destroy() = 0;
-	virtual Window *GetWindow() const = 0;
-	virtual ArrayView<DialogItem*const> GetItems() const = 0;
-};
 
-enum TEMode
-{
-	teCenter
+	virtual Window *GetWindow() const = 0;
+	virtual ArrayView<const PortabilityLayer::DialogItem> GetItems() const = 0;
+
+	virtual int16_t ExecuteModal(DialogFilterFunc_t filterFunc) = 0;
 };
 
 typedef Boolean(*ModalFilterUPP)(Dialog *dial, EventRecord *event, short *item);
@@ -40,16 +39,9 @@ void SetDialogItemText(THandle<Control> handle, const PLPasStr &str);
 
 void SelectDialogItemText(Dialog *dialog, int item, int firstSelChar, int lastSelCharExclusive);
 
-ModalFilterUPP NewModalFilterUPP(ModalFilterUPP func);
-
 void ModalDialog(ModalFilterUPP filter, short *item);
 
 void DisposeDialog(Dialog *dialog);
-void DisposeModalFilterUPP(ModalFilterUPP upp);
 
 void ShowDialogItem(Dialog *dialog, int item);
 void HideDialogItem(Dialog *dialog, int item);
-
-void TETextBox(const PLPasStr &str, short len, const Rect *rect, TEMode teMode);
-
-#endif

@@ -22,7 +22,7 @@ namespace PortabilityLayer
 		size_t m_size;
 
 	private:
-		MMHandleBlock() PL_DELETED;
+		MMHandleBlock() GP_DELETED;
 	};
 }
 

@@ -265,7 +265,7 @@ void CreatePointers (void)
 		RedAlert(kErrNoMemory);
 	else
 	{
-		PL_STATIC_ASSERT(sizeof(demoType) == 6);
+		GP_STATIC_ASSERT(sizeof(demoType) == 6);
 
 		BlockMove(*tempHandle, demoData, kDemoLength);
 		tempHandle.Dispose();

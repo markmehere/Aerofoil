@@ -30,7 +30,7 @@ namespace PortabilityLayer
 		bool m_paletteIsDirty;
 
 		PortabilityLayer::RGBAColor *m_palette;
-		uint8_t m_paletteStorage[256 * sizeof(PortabilityLayer::RGBAColor) + PL_SYSTEM_MEMORY_ALIGNMENT];
+		uint8_t m_paletteStorage[256 * sizeof(PortabilityLayer::RGBAColor) + GP_SYSTEM_MEMORY_ALIGNMENT];
 
 		static DisplayDeviceManagerImpl ms_instance;
 	};
@@ -41,7 +41,7 @@ namespace PortabilityLayer
 		, m_pixelFormat(GpPixelFormats::k8BitStandard)
 	{
 		uint8_t *paletteStorage = m_paletteStorage;
-		while (reinterpret_cast<intptr_t>(paletteStorage) % PL_SYSTEM_MEMORY_ALIGNMENT != 0)
+		while (reinterpret_cast<intptr_t>(paletteStorage) % GP_SYSTEM_MEMORY_ALIGNMENT != 0)
 			paletteStorage++;
 
 		m_palette = reinterpret_cast<PortabilityLayer::RGBAColor*>(paletteStorage);

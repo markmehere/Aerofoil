@@ -76,6 +76,9 @@ struct DrawSurface final
 	void SetSystemFont(int size, int variationFlags);
 	void DrawString(const Point &point, const PLPasStr &str);
 
+	size_t MeasureString(const PLPasStr &str);
+	int32_t MeasureFontAscender();
+
 	void DrawPicture(THandle<Picture> pictHandle, const Rect &rect);
 
 	void SetPattern8x8(const uint8_t *pattern);

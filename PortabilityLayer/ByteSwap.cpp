@@ -8,7 +8,7 @@ namespace PortabilityLayer
 		template<class TNumberType, class TUnsignedType>
 		void SwapArbitrary(TNumberType &v)
 		{
-			PL_STATIC_ASSERT(sizeof(TNumberType) == sizeof(TUnsignedType));
+			GP_STATIC_ASSERT(sizeof(TNumberType) == sizeof(TUnsignedType));
 
 			uint8_t bytes[sizeof(TNumberType)];
 			for (size_t i = 0; i < sizeof(TNumberType); i++)

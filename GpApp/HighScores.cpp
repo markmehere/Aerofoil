@@ -141,11 +141,11 @@ void DrawHighScores (DrawSurface *surface)
 	PasStringConcat(tempStr, thisHouseName);
 	PasStringConcat(tempStr, PSTR(" ¥"));
 
-	const Point scoreShadowPoint = Point::Create(scoreLeft + ((kScoreWide - StringWidth(tempStr)) / 2) - 1, dropIt - 66);
+	const Point scoreShadowPoint = Point::Create(scoreLeft + ((kScoreWide - surface->MeasureString(tempStr)) / 2) - 1, dropIt - 66);
 	surface->SetForeColor(blackColor);
 	surface->DrawString(scoreShadowPoint, tempStr);
 
-	const Point scoreTextPoint = Point::Create(scoreLeft + ((kScoreWide - StringWidth(tempStr)) / 2), dropIt - 65);
+	const Point scoreTextPoint = Point::Create(scoreLeft + ((kScoreWide - surface->MeasureString(tempStr)) / 2), dropIt - 65);
 	surface->SetForeColor(cyanColor);
 	surface->DrawString(scoreTextPoint, tempStr);
 
@@ -154,7 +154,7 @@ void DrawHighScores (DrawSurface *surface)
 	thisHousePtr = *thisHouse;
 													// message for score #1
 	PasStringCopy(thisHousePtr->highScores.banner, tempStr);
-	bannerWidth = StringWidth(tempStr);
+	bannerWidth = surface->MeasureString(tempStr);
 	surface->SetForeColor(blackColor);
 	const Point topScoreShadowPoint = Point::Create(scoreLeft + (kScoreWide - bannerWidth) / 2, dropIt - kKimsLifted);
 	surface->DrawString(topScoreShadowPoint, tempStr);
@@ -490,9 +490,6 @@ void GetHighScoreName (short place)
 	Str255			scoreStr, placeStr, tempStr;
 	short			item;
 	Boolean			leaving;
-	ModalFilterUPP	nameFilterUPP;
-	
-	nameFilterUPP = NewModalFilterUPP(NameFilter);
 	
 	InitCursor();
 	NumToString(theScore, scoreStr);
@@ -507,7 +504,7 @@ void GetHighScoreName (short place)
 	
 	while (!leaving)
 	{
-		ModalDialog(nameFilterUPP, &item);
+		ModalDialog(NameFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -518,7 +515,6 @@ void GetHighScoreName (short place)
 	}
 	
 	DisposeDialog(theDial);
-	DisposeModalFilterUPP(nameFilterUPP);
 }
 
 //--------------------------------------------------------------  UpdateBannerDialog
@@ -599,9 +595,6 @@ void GetHighScoreBanner (void)
 	Str255			tempStr;
 	short			item;
 	Boolean			leaving;
-	ModalFilterUPP	bannerFilterUPP;
-	
-	bannerFilterUPP = NewModalFilterUPP(BannerFilter);
 	
 	PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 	BringUpDialog(&theDial, kHighBannerDialogID);
@@ -611,7 +604,7 @@ void GetHighScoreBanner (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(bannerFilterUPP, &item);
+		ModalDialog(BannerFilter, &item);
 		
 		if (item == kOkayButton)
 		{
@@ -620,9 +613,6 @@ void GetHighScoreBanner (void)
 			leaving = true;
 		}
 	}
-	
-	DisposeDialog(theDial);
-	DisposeModalFilterUPP(bannerFilterUPP);
 }
 
 //--------------------------------------------------------------  OpenHighScoresFile

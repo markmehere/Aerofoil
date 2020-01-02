@@ -183,7 +183,7 @@ void PasStringConcat (StringPtr, const PLPasStr &);
 void GetLineOfText (StringPtr, short, StringPtr);
 void WrapText (StringPtr, short);
 void GetFirstWordOfString (StringPtr, StringPtr);
-void CollapseStringToWidth (StringPtr, short);
+void CollapseStringToWidth (DrawSurface *, StringPtr, short);
 void GetChooserName (StringPtr);
 StringPtr GetLocalizedString (short, StringPtr);
 
@@ -198,7 +198,7 @@ void RedAlert (short);
 void LoadGraphic (DrawSurface *, short);
 void LoadScaledGraphic (DrawSurface *, short, Rect *);
 void LargeIconPlot (Rect *, short);
-void DrawCIcon (short, short, short);
+void DrawCIcon (DrawSurface *surface, short, short, short);
 char KeyMapOffsetFromRawKey (char);
 long LongSquareRoot (long);
 Boolean WaitForInputEvent (short);

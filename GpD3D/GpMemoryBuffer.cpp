@@ -42,8 +42,8 @@ GpMemoryBuffer::~GpMemoryBuffer()
 
 size_t GpMemoryBuffer::AlignedSize()
 {
-	const size_t paddedSize = (sizeof(GpMemoryBuffer) + PL_SYSTEM_MEMORY_ALIGNMENT - 1);
-	const size_t sz = paddedSize - paddedSize % PL_SYSTEM_MEMORY_ALIGNMENT;
+	const size_t paddedSize = (sizeof(GpMemoryBuffer) + GP_SYSTEM_MEMORY_ALIGNMENT - 1);
+	const size_t sz = paddedSize - paddedSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
 	return sz;
 }

@@ -46,9 +46,6 @@ void DoAbout (void)
 	VersRecHndl		version;
 	ControlHandle	itemHandle;
 	short			itemType, hit, wasResFile;
-	ModalFilterUPP	aboutFilterUPP;
-	
-	aboutFilterUPP = NewModalFilterUPP(AboutFilter);
 	
 	wasResFile = CurResFile();
 	UseResFile(thisMac.thisResFile);
@@ -84,14 +81,13 @@ void DoAbout (void)
 	
 	do										// Loop until user wants to exit
 	{
-		ModalDialog(aboutFilterUPP, &hit);
+		ModalDialog(AboutFilter, &hit);
 	}
 	while ((hit != kOkayButton) && (okayButtScanlineMask != nil));
 	
 	if (okayButtScanlineMask != nil)
 		okayButtScanlineMask->Destroy();			// Clean up!
 	DisposeDialog(aboutDialog);
-	DisposeModalFilterUPP(aboutFilterUPP);
 	
 	UseResFile(wasResFile);
 }

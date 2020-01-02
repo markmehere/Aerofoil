@@ -1,17 +1,14 @@
 #pragma once
 
-#ifndef __PL_COREDEFS_H__
-#define __PL_COREDEFS_H__
-
 #if __cplusplus >= 199711L
-#define PL_IS_CPP11 1
+#define GP_IS_CPP11 1
 #else
-#define PL_IS_CPP11 0
+#define GP_IS_CPP11 0
 #endif
 
-#if PL_IS_CPP11
-#define PL_DELETED = delete
-#define PL_STATIC_ASSERT(n) static_assert((n), "Static assert failed: " #n)
+#if GP_IS_CPP11
+#define GP_DELETED = delete
+#define GP_STATIC_ASSERT(n) static_assert((n), "Static assert failed: " #n)
 #else
 #ifndef nullptr
 #define nullptr 0
@@ -25,23 +22,23 @@
 #define final
 #endif
 
-#define PL_DELETED
+#define GP_DELETED
 
 template<bool TCondition>
-struct __PL_StaticAssertHelper
+struct __GpStaticAssertHelper
 {
 };
 
 template<>
-struct __PL_StaticAssertHelper<true>
+struct __GpStaticAssertHelper<true>
 {
 	int staticAssertFailed;
 };
 
-#define PL_STATIC_ASSERT(n) ((void)(&static_cast<const __PL_StaticAssertHelper<(n)>*>(nullptr)->staticAssertFailed))
+#define GP_STATIC_ASSERT(n) ((void)(&static_cast<const __GpStaticAssertHelper<(n)>*>(nullptr)->staticAssertFailed))
 
 #endif
 
-static const size_t PL_SYSTEM_MEMORY_ALIGNMENT = 16;
+static const size_t GP_SYSTEM_MEMORY_ALIGNMENT = 16;
 
-#endif
+#define GP_DEBUG_CONFIG	1

@@ -11,7 +11,9 @@
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "QDPixMap.h"
 #include "Externs.h"
+#include "IconLoader.h"
 #include "Utilities.h"
 
 
@@ -326,18 +328,25 @@ void LargeIconPlot (Rect *theRect, short theID)
 
 // Draws a standard color icon (32 x 32) - resource is a 'CICN'.
 
-void DrawCIcon (short theID, short h, short v)
+void DrawCIcon (DrawSurface *surface, short theID, short h, short v)
 {
-	CIconHandle	theIcon;
-	Rect		theRect;
-	
-	theIcon = GetCIcon(theID);
-	if (theIcon != nil)
+	THandle<PortabilityLayer::PixMapImpl> colorImage;
+	THandle<PortabilityLayer::PixMapImpl> bwImage;
+	THandle<PortabilityLayer::PixMapImpl> maskImage;
+
+	if (PortabilityLayer::IconLoader::GetInstance()->LoadColorIcon(theID, colorImage, bwImage, maskImage))
 	{
+		Rect		theRect;
+	
 		SetRect(&theRect, 0, 0, 32, 32);
 		OffsetRect(&theRect, h, v);
-		PlotCIcon(&theRect, theIcon);
-		DisposeCIcon(theIcon);
+
+		CopyMask(*colorImage, *maskImage, *surface->m_port.GetPixMap(), &(*colorImage)->m_rect, &(*maskImage)->m_rect, &theRect);
+		surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
+		bwImage.Dispose();
+		colorImage.Dispose();
+		maskImage.Dispose();
 	}
 }
 

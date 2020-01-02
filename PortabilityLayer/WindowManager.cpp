@@ -86,7 +86,7 @@ namespace PortabilityLayer
 
 	WindowImpl::~WindowImpl()
 	{
-		PL_NotYetImplemented();
+		assert(m_windowAbove == nullptr && m_windowBelow == nullptr);
 	}
 
 	bool WindowImpl::Init(const WindowDef &windowDef)

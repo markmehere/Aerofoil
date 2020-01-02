@@ -11,7 +11,7 @@ namespace PortabilityLayer
 {
 	struct MMBlock
 	{
-		SmallestUInt<PL_SYSTEM_MEMORY_ALIGNMENT>::ValueType_t m_offsetFromAllocLocation;
+		SmallestUInt<GP_SYSTEM_MEMORY_ALIGNMENT>::ValueType_t m_offsetFromAllocLocation;
 
 		static size_t AlignedSize();
 	};
