@@ -44,6 +44,7 @@ namespace PortabilityLayer
 
 		void SetEnabled(bool enabled);
 		void SetState(int16_t state);
+		virtual void SetString(const PLPasStr &str);
 		virtual void SetHighlightStyle(int16_t style);
 
 		const Rect &GetRect() const;

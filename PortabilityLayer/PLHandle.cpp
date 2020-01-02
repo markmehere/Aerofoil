@@ -2,10 +2,8 @@
 
 #include "MemoryManager.h"
 
-void THandleBase::Dispose()
+void THandleBase::Dispose() const
 {
 	if (m_hdl)
 		PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(m_hdl);
-
-	m_hdl = nullptr;
 }

@@ -10,6 +10,7 @@
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
 #include "Externs.h"
+#include "FontFamily.h"
 #include "House.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
@@ -236,7 +237,7 @@ Boolean CreateNewRoom (short h, short v)
 void ReadyBackground (short theID, short *theTiles)
 {
 	Rect		src, dest;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	short		i;
 	
 	if ((noRoomAtAll) || (!houseUnlocked))
@@ -244,6 +245,7 @@ void ReadyBackground (short theID, short *theTiles)
 		LtGrayForeColor(workSrcMap);
 		workSrcMap->FillRect(workSrcRect);
 		workSrcMap->SetForeColor(StdColors::Black());
+		workSrcMap->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
 
 		const Point textPoint = Point::Create(10, 20);
 		if (houseUnlocked)
@@ -319,11 +321,19 @@ void ReflectCurrentRoom (Boolean forceMapRedraw)
 		}
 	}
 	GenerateRetroLinks();
+	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash1");
 	UpdateEditWindowTitle();
+	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash2");
 	ReadyBackground(thisRoom->background, thisRoom->tiles);
+	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash3");
 	GetThisRoomsObjRects();
+	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash4");
 	DrawThisRoomsObjects();
-	InvalWindowRect(mainWindow, &mainWindowRect);
+	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash5");
+
+	PL_NotYetImplemented_TODO("FixMe");
+	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash6");
+	//InvalWindowRect(mainWindow, &mainWindowRect);
 #endif
 }
 

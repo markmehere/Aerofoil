@@ -857,7 +857,7 @@ short ChooseOriginalArt (short was)
 
 Boolean PictIDExists (short theID)
 {
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 //	Handle		resHandle;
 //	Str255		resName;
 //	ResType		resType;

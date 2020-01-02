@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __PL_HOST_FILESYSTEM_H__
-#define __PL_HOST_FILESYSTEM_H__
 
 #include "VirtualDirectory.h"
 
@@ -13,6 +11,7 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual bool FileExists(VirtualDirectory_t virtualDirectory, const char *path) = 0;
+		virtual bool FileLocked(VirtualDirectory_t virtualDirectory, const char *path, bool *exists) = 0;
 		virtual IOStream *OpenFile(VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, bool create) = 0;
 		virtual HostDirectoryCursor *ScanDirectory(VirtualDirectory_t virtualDirectory) = 0;
 
@@ -23,5 +22,3 @@ namespace PortabilityLayer
 		static HostFileSystem *ms_instance;
 	};
 }
-
-#endif

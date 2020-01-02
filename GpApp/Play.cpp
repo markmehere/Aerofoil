@@ -451,7 +451,7 @@ void PlayGame (void)
 				
 				{
 					Rect		bounds;
-					PicHandle	thePicture;
+					THandle<Picture>	thePicture;
 					SInt16		hOffset;
 					
 					if (boardSrcRect.right >= 640)
@@ -495,7 +495,7 @@ void PlayGame (void)
 	
 	{
 		Rect		bounds;
-		PicHandle	thePicture;
+		THandle<Picture>	thePicture;
 		SInt16		hOffset;
 
 		if (boardSrcRect.right >= 640)

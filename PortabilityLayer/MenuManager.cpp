@@ -91,8 +91,8 @@ struct Menu
 
 	PortabilityLayer::MMHandleBlock *stringBlobHandle;
 
-	Menu **prevMenu;
-	Menu **nextMenu;
+	THandle<Menu> prevMenu;
+	THandle<Menu> nextMenu;
 
 	// Refreshed on layout
 	size_t cumulativeOffset;
@@ -116,15 +116,19 @@ namespace PortabilityLayer
 		virtual void Init() override;
 		virtual void Shutdown() override;
 
-		Menu **DeserializeMenu(const void *resData) const override;
-		Menu **GetMenuByID(int id) const override;
-		void InsertMenuBefore(Menu **insertingMenu, Menu **existingMenu) override;
-		void InsertMenuAfter(Menu **insertingMenu, Menu **existingMenu) override;
-		void InsertMenuAtEnd(Menu **insertingMenu) override;
-		void InsertMenuAtBeginning(Menu **insertingMenu) override;
-		void SetMenuEnabled(Menu **menuHandle, bool enabled) override;
-		void SetItemEnabled(Menu **menu, unsigned int index, bool enabled) override;
-		void SetItemChecked(Menu **menu, unsigned int index, bool checked) override;
+		THandle<Menu> DeserializeMenu(const void *resData) const override;
+		THandle<Menu> GetMenuByID(int id) const override;
+
+		void InsertMenuBefore(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu) override;
+		void InsertMenuAfter(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu) override;
+		void InsertMenuAtEnd(const THandle<Menu> &insertingMenu) override;
+		void InsertMenuAtBeginning(const THandle<Menu> &insertingMenu) override;
+
+		void RemoveMenu(const THandle<Menu> &menu) override;
+
+		void SetMenuEnabled(const THandle<Menu> &menuHandle, bool enabled) override;
+		void SetItemEnabled(const THandle<Menu> &menu, unsigned int index, bool enabled) override;
+		void SetItemChecked(const THandle<Menu> &menu, unsigned int index, bool checked) override;
 
 		bool IsPointInMenuBar(const Vec2i &point) const override;
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
@@ -146,7 +150,7 @@ namespace PortabilityLayer
 			void HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool &outNeedRedraw);
 			void Dismiss();
 
-			Menu **GetSelectedMenu() const;
+			THandle<Menu> GetSelectedMenu() const;
 			DrawSurface *GetRenderedMenu() const;
 			const unsigned int *GetSelectedItem() const;
 
@@ -156,7 +160,7 @@ namespace PortabilityLayer
 		private:
 			void RenderMenu(Menu *menu);
 
-			Menu **m_currentMenu;
+			THandle<Menu> m_currentMenu;
 			DrawSurface *m_menuGraf;
 			unsigned int m_itemIndex;
 			bool m_haveItem;
@@ -187,8 +191,8 @@ namespace PortabilityLayer
 
 		DrawSurface *m_menuBarGraf;
 
-		Menu **m_firstMenu;
-		Menu **m_lastMenu;
+		THandle<Menu> m_firstMenu;
+		THandle<Menu> m_lastMenu;
 		bool m_haveMenuBarLayout;
 		bool m_haveIcon;
 		bool m_menuBarVisible;
@@ -205,12 +209,10 @@ namespace PortabilityLayer
 
 	MenuManagerImpl::MenuManagerImpl()
 		: m_menuBarGraf(nullptr)
-		, m_firstMenu(nullptr)
-		, m_lastMenu(nullptr)
 		, m_haveMenuBarLayout(false)
 		, m_haveIcon(false)
 		, m_iconGraphic(nullptr)
-		, m_menuBarVisible(true)
+		, m_menuBarVisible(false)
 	{
 	}
 
@@ -238,7 +240,7 @@ namespace PortabilityLayer
 		// GP TODO: Dispose of menus properly
 	}
 
-	Menu **MenuManagerImpl::DeserializeMenu(const void *resData) const
+	THandle<Menu> MenuManagerImpl::DeserializeMenu(const void *resData) const
 	{
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 
@@ -334,21 +336,21 @@ namespace PortabilityLayer
 		menu->layoutWidth = 0;
 		menu->layoutHeight = 0;
 
-		return reinterpret_cast<Menu**>(&menuData->m_contents);
+		return THandle<Menu>(menuData);
 	}
 
-	Menu **MenuManagerImpl::GetMenuByID(int id) const
+	THandle<Menu> MenuManagerImpl::GetMenuByID(int id) const
 	{
-		for (Menu **menuHandle = m_firstMenu; menuHandle; menuHandle = (*menuHandle)->nextMenu)
+		for (THandle<Menu> menuHandle = m_firstMenu; menuHandle; menuHandle = (*menuHandle)->nextMenu)
 		{
 			if ((*menuHandle)->menuID == id)
 				return menuHandle;
 		}
 
-		return nullptr;
+		return THandle<Menu>();
 	}
 
-	void MenuManagerImpl::InsertMenuBefore(Menu **insertingMenu, Menu **existingMenu)
+	void MenuManagerImpl::InsertMenuBefore(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu)
 	{
 		m_haveMenuBarLayout = false;
 
@@ -366,7 +368,7 @@ namespace PortabilityLayer
 		existingMenuPtr->prevMenu = insertingMenu;
 	}
 
-	void MenuManagerImpl::InsertMenuAfter(Menu **insertingMenu, Menu **existingMenu)
+	void MenuManagerImpl::InsertMenuAfter(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu)
 	{
 		m_haveMenuBarLayout = false;
 
@@ -384,7 +386,7 @@ namespace PortabilityLayer
 		existingMenuPtr->nextMenu = insertingMenu;
 	}
 
-	void MenuManagerImpl::InsertMenuAtEnd(Menu **insertingMenu)
+	void MenuManagerImpl::InsertMenuAtEnd(const THandle<Menu> &insertingMenu)
 	{
 		m_haveMenuBarLayout = false;
 
@@ -399,7 +401,7 @@ namespace PortabilityLayer
 		m_lastMenu = insertingMenu;
 	}
 
-	void MenuManagerImpl::InsertMenuAtBeginning(Menu **insertingMenu)
+	void MenuManagerImpl::InsertMenuAtBeginning(const THandle<Menu> &insertingMenu)
 	{
 		m_haveMenuBarLayout = false;
 
@@ -414,14 +416,39 @@ namespace PortabilityLayer
 		m_firstMenu = insertingMenu;
 	}
 
-	void MenuManagerImpl::SetMenuEnabled(Menu **menuHandle, bool enabled)
+	void MenuManagerImpl::RemoveMenu(const THandle<Menu> &menu)
+	{
+		DrawMenuBar();
+
+		Menu *menuPtr = *menu;
+		if (menuPtr->stringBlobHandle)
+			PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(menuPtr->stringBlobHandle);
+
+		if (menuPtr->prevMenu)
+			(*menuPtr->prevMenu)->nextMenu = menuPtr->nextMenu;
+
+		if (menuPtr->nextMenu)
+			(*menuPtr->nextMenu)->prevMenu = menuPtr->prevMenu;
+
+		if (m_firstMenu == menu)
+			m_firstMenu = menuPtr->nextMenu;
+
+		if (m_lastMenu == menu)
+			m_lastMenu = menuPtr->prevMenu;
+
+		menu.Dispose();
+
+		DrawMenuBar();
+	}
+
+	void MenuManagerImpl::SetMenuEnabled(const THandle<Menu> &menuHandle, bool enabled)
 	{
 		Menu *menu = *menuHandle;
 
 		menu->enabled = enabled;
 	}
 
-	void MenuManagerImpl::SetItemEnabled(Menu **menuHandle, unsigned int index, bool enabled)
+	void MenuManagerImpl::SetItemEnabled(const THandle<Menu> &menuHandle, unsigned int index, bool enabled)
 	{
 		Menu *menu = *menuHandle;
 
@@ -431,7 +458,7 @@ namespace PortabilityLayer
 		menu->menuItems[index].enabled = enabled;
 	}
 
-	void MenuManagerImpl::SetItemChecked(Menu **menuHandle, unsigned int index, bool checked)
+	void MenuManagerImpl::SetItemChecked(const THandle<Menu> &menuHandle, unsigned int index, bool checked)
 	{
 		Menu *menu = *menuHandle;
 
@@ -710,6 +737,9 @@ namespace PortabilityLayer
 
 	void MenuManagerImpl::SetMenuVisible(bool isVisible)
 	{
+		if (isVisible && !m_menuBarVisible)
+			DrawMenuBar();
+
 		m_menuBarVisible = isVisible;
 	}
 
@@ -919,8 +949,7 @@ namespace PortabilityLayer
 	MenuManagerImpl MenuManagerImpl::ms_instance;
 
 	MenuManagerImpl::MenuSelectionState::MenuSelectionState()
-		: m_currentMenu(nullptr)
-		, m_menuGraf(nullptr)
+		: m_menuGraf(nullptr)
 		, m_haveItem(false)
 		, m_itemIndex(0)
 	{
@@ -965,7 +994,7 @@ namespace PortabilityLayer
 		m_haveItem = false;
 	}
 
-	Menu **MenuManagerImpl::MenuSelectionState::GetSelectedMenu() const
+	THandle<Menu> MenuManagerImpl::MenuSelectionState::GetSelectedMenu() const
 	{
 		return m_currentMenu;
 	}

@@ -61,7 +61,7 @@ extern	short		wasScoreboardMode;
 void InitScoreboardMap (void)
 {
 	Rect		bounds;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	DrawSurface	*wasCPort;
 	PLError_t		theErr;
 	short		hOffset;

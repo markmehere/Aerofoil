@@ -64,6 +64,10 @@ PortabilityLayer::HostThreadEvent *GpSystemServices_Win32::CreateThreadEvent(boo
 uint64_t GpSystemServices_Win32::GetFreeMemoryCosmetic() const
 {
 	MEMORYSTATUSEX memStatus;
+	memset(&memStatus, 0, sizeof(memStatus));
+
+	memStatus.dwLength = sizeof(memStatus);
+
 	if (!GlobalMemoryStatusEx(&memStatus))
 		return 0;
 

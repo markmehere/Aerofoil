@@ -172,6 +172,26 @@ bool GpFileSystem_Win32::FileExists(PortabilityLayer::VirtualDirectory_t virtual
 	return PathFileExistsW(winPath) != 0;
 }
 
+bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists)
+{
+	wchar_t winPath[MAX_PATH + 1];
+
+	if (!ResolvePath(virtualDirectory, path, winPath))
+	{
+		*exists = false;
+		return false;
+	}
+
+	DWORD attribs = GetFileAttributesW(winPath);
+	if (attribs == INVALID_FILE_ATTRIBUTES)
+	{
+		*exists = false;
+		return false;
+	}
+
+	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
+}
+
 PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, bool create)
 {
 	wchar_t winPath[MAX_PATH + 1];

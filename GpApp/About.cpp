@@ -4,12 +4,15 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+#include "PLArrayView.h"
 #include "PLKeyEncoding.h"
 #include "PLControlDefinitions.h"
 #include "PLNumberFormatting.h"
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLPasStr.h"
+#include "PLSysCalls.h"
+#include "PLWidgets.h"
 #include "About.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
@@ -17,15 +20,16 @@
 #include "Externs.h"
 #include "HostSystemServices.h"
 #include "ScanlineMask.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 
 static void HiLiteOkayButton (DrawSurface *surface);
 static void UnHiLiteOkayButton (DrawSurface *surface);
 static void UpdateMainPict (Dialog *);
-static Boolean AboutFilter (Dialog *, EventRecord *theEvent, short *hit);
+static int16_t AboutFilter(Dialog *, const TimeTaggedVOSEvent &evt);
 
 
-static PortabilityLayer::ScanlineMask	*okayButtScanlineMask;
+static Point			okayButtLowerV, okayButtUpperV;
 static Rect				okayButtonBounds, mainPICTBounds;
 static Boolean			okayButtIsHiLit, clickedDownInOkay;
 
@@ -45,7 +49,7 @@ void DoAbout (void)
 	StringPtr		messagePtr;
 	VersRecHndl		version;
 	ControlHandle	itemHandle;
-	short			itemType, hit, wasResFile;
+	short			hit, wasResFile;
 	
 	wasResFile = CurResFile();
 	UseResFile(thisMac.thisResFile);
@@ -62,31 +66,25 @@ void DoAbout (void)
 		BlockMove((Ptr)messagePtr, &longVersion, ((UInt8)*messagePtr) + 1);
 		SetDialogString(aboutDialog, kTextItemVers, longVersion);
 	}
-	
-	GetDialogItem(aboutDialog, kOkayButton, &itemType, &itemHandle, &okayButtonBounds);
-#if 0
-	PL_NotYetImplemented_TODO("Misc");
-	okayButtRgn = NewRgn();					// Create diagonal button region
-	OpenRgn();
-	MoveTo(okayButtonBounds.left + 1, okayButtonBounds.top + 45);
-	Line(44, -44);							// These lines define the region
-	Line(16, 16);
-	Line(-44, 44);
-	Line(-16, -16);
-	CloseRgn(okayButtRgn);
-#endif
+
+	okayButtonBounds = aboutDialog->GetItems()[kOkayButton - 1].GetWidget()->GetRect();
+
+	okayButtUpperV = Point::Create(okayButtonBounds.left + 45, okayButtonBounds.top + 1);
+	okayButtLowerV = Point::Create(okayButtUpperV.h - 28, okayButtUpperV.v + 60);
+
 	okayButtIsHiLit = false;				// Initially, button is not hilit
 	clickedDownInOkay = false;				// Initially, didn't click in okay button
-	GetDialogItem(aboutDialog, kPictItemMain, &itemType, &itemHandle, &mainPICTBounds);
+
+	mainPICTBounds = aboutDialog->GetItems()[kPictItemMain - 1].GetWidget()->GetRect();
+
+	UpdateMainPict(aboutDialog);
 	
 	do										// Loop until user wants to exit
 	{
-		ModalDialog(AboutFilter, &hit);
+		hit = aboutDialog->ExecuteModal(AboutFilter);
 	}
-	while ((hit != kOkayButton) && (okayButtScanlineMask != nil));
-	
-	if (okayButtScanlineMask != nil)
-		okayButtScanlineMask->Destroy();			// Clean up!
+	while (hit != kOkayButton);
+
 	aboutDialog->Destroy();
 	
 	UseResFile(wasResFile);
@@ -99,7 +97,7 @@ void DoAbout (void)
 static void HiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTHiLit		151		// res ID of unhilit button PICT
-	PicHandle	thePict;
+	THandle<Picture>	thePict;
 	
 	if (!okayButtIsHiLit)
 	{
@@ -121,7 +119,7 @@ static void HiLiteOkayButton (DrawSurface *surface)
 static void UnHiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTNotHiLit	150		// res ID of hilit button PICT
-	PicHandle	thePict;
+	THandle<Picture>	thePict;
 	
 	if (okayButtIsHiLit)
 	{
@@ -143,8 +141,6 @@ static void UpdateMainPict (Dialog *theDial)
 {
 	Str255		theStr, theStr2;
 	uint64_t	freeMemory;
-	
-	DrawDialog(theDial);
 
 	freeMemory = PortabilityLayer::HostSystemServices::GetInstance()->GetFreeMemoryCosmetic();
 	
@@ -168,96 +164,93 @@ static void UpdateMainPict (Dialog *theDial)
 	DrawDialogUserText2(theDial, 8, theStr);
 }
 
+static bool PointIsInDiagonalOkayButton(const Point &pt)
+{
+	const Point upperVPt = pt - okayButtUpperV;
+	const Point lowerVPt = pt - okayButtLowerV;
+
+	const bool edge1 = (upperVPt.h + upperVPt.v) >= 0;
+	const bool edge2 = (-upperVPt.h + upperVPt.v) >= 0;
+	const bool edge3 = (lowerVPt.h - lowerVPt.v) >= 0;
+	const bool edge4 = (-lowerVPt.h - lowerVPt.v) >= 0;
+
+	return edge1 && edge2 && edge3 && edge4;
+}
+
 //--------------------------------------------------------------  AboutFilter
 // Dialog filter for the About dialog.
 
-static Boolean AboutFilter (Dialog *theDial, EventRecord *theEvent, short *hit)
+static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt)
 {
-	Point		mousePt;
-	UInt32		dummyLong;
-	Boolean		handledIt;
+	bool		handledIt = false;
+	int16_t		hit = -1;
 
-	DrawSurface *surface = theDial->GetWindow()->GetDrawSurface();
-	
-	if (Button() && clickedDownInOkay)
+	Window *window = dialog->GetWindow();
+	DrawSurface *surface = window->GetDrawSurface();
+
+	if (evt.IsKeyDownEvent())
 	{
-		GetMouse(&mousePt);
-		if(PointInScanlineMask(mousePt, okayButtScanlineMask))
-			HiLiteOkayButton(surface);
-		else
-			UnHiLiteOkayButton(surface);
-	}
-	
-	switch (theEvent->what)
-	{
-		case keyDown:
-		switch (theEvent->message)
+		switch (PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			HiLiteOkayButton(surface);
-			Delay(8, &dummyLong);
+			PLSysCalls::Sleep(8);
 			UnHiLiteOkayButton(surface);
-			*hit = kOkayButton;
+			hit = kOkayButton;
 			handledIt = true;
 			break;
-			
-			default:
-			handledIt = false;
-		}
-		break;
-		
-		case mouseDown:
-		mousePt = theEvent->where;
-		GlobalToLocal(&mousePt);
-		if(PointInScanlineMask(mousePt, okayButtScanlineMask))
-		{
-			clickedDownInOkay = true;
-			handledIt = false;
-		}
-		else
-			handledIt = false;
-		break;
-		
-		case mouseUp:
-		mousePt = theEvent->where;
-		GlobalToLocal(&mousePt);
-		if(PointInScanlineMask(mousePt, okayButtScanlineMask) && clickedDownInOkay)
-		{
-			UnHiLiteOkayButton(surface);
-			*hit = kOkayButton;
-			handledIt = true;
-		}
-		else
-		{
-			clickedDownInOkay = false;
-			handledIt = false;
-		}
-		break;
-		
-		case updateEvt:
-		if ((WindowPtr)theEvent->message == mainWindow)
-		{
-			SetPort((GrafPtr)mainWindow);
-			UpdateMainWindow();
-			EndUpdate((WindowPtr)theEvent->message);
-			SetPortDialogPort(theDial);
-			handledIt = true;
-		}
-		else if ((WindowPtr)theEvent->message == (WindowPtr)theDial)
-		{
-			SetPortDialogPort(theDial);
-			UpdateMainPict(theDial);
-			EndUpdate((WindowPtr)theEvent->message);
-			handledIt = false;
-		}
-		break;
-		
+
 		default:
-		handledIt = false;
-		break;
+			handledIt = false;
+			break;
+		}
 	}
-	
-	return (handledIt);
+	else if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+	{
+		const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+		const Point mousePt = window->MouseToLocal(mouseEvt);
+
+		if (mouseEvt.m_eventType == GpMouseEventTypes::kDown)
+		{
+			if (PointIsInDiagonalOkayButton(mousePt))
+			{
+				HiLiteOkayButton(surface);
+				clickedDownInOkay = true;
+				handledIt = false;
+			}
+			else
+				handledIt = false;
+		}
+		else if (mouseEvt.m_eventType == GpMouseEventTypes::kUp)
+		{
+			if (PointIsInDiagonalOkayButton(mousePt) && clickedDownInOkay)
+			{
+				UnHiLiteOkayButton(surface);
+				hit = kOkayButton;
+				handledIt = true;
+			}
+			else
+			{
+				clickedDownInOkay = false;
+				handledIt = false;
+			}
+		}
+		else if (mouseEvt.m_eventType == GpMouseEventTypes::kMove)
+		{
+			if (clickedDownInOkay)
+			{
+				if (PointIsInDiagonalOkayButton(mousePt))
+					HiLiteOkayButton(surface);
+				else
+					UnHiLiteOkayButton(surface);
+			}
+		}
+	}
+
+	if (!handledIt)
+		return -1;
+
+	return hit;
 }
 

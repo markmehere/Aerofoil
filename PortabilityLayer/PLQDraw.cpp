@@ -655,6 +655,9 @@ void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
 	if (!pictHdl)
 		return;
 
+	if (!bounds.IsValid() || bounds.Width() == 0 || bounds.Height() == 0)
+		return;
+
 	Picture *picPtr = *pictHdl;
 	if (!picPtr)
 		return;
@@ -663,8 +666,27 @@ void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
 
 	if (bounds.right - bounds.left != picRect.right - picRect.left || bounds.bottom - bounds.top != picRect.bottom - picRect.top)
 	{
-		// Scaled pict draw (not supported)
-		assert(false);
+		PL_NotYetImplemented_TODO("Palette");
+
+		DrawSurface *scaleSurface = nullptr;
+		if (PortabilityLayer::QDManager::GetInstance()->NewGWorld(&scaleSurface, this->m_port.GetPixelFormat(), picRect, nullptr) != PLErrors::kNone)
+			return;
+
+		scaleSurface->DrawPicture(pictHdl, picRect);
+
+		const uint16_t newWidth = bounds.Width();
+		const uint16_t newHeight = bounds.Height();
+
+		THandle<PortabilityLayer::PixMapImpl> scaled = static_cast<PortabilityLayer::PixMapImpl*>(*scaleSurface->m_port.GetPixMap())->ScaleTo(newWidth, newHeight);
+		PortabilityLayer::QDManager::GetInstance()->DisposeGWorld(scaleSurface);
+
+		if (scaled)
+			CopyBits(*scaled, *this->m_port.GetPixMap(), &(*scaled)->m_rect, &bounds, srcCopy);
+
+		PortabilityLayer::PixMapImpl::Destroy(scaled);
+
+		m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
 		return;
 	}
 
@@ -697,6 +719,8 @@ void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
 		assert(false);
 		return;
 	};
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 

@@ -24,6 +24,8 @@ namespace PortabilityLayer
 		const void *GetPixelData() const;
 		size_t GetDataCapacity() const;
 
+		THandle<PixMapImpl> ScaleTo(uint16_t width, uint16_t height);
+
 		static THandle<PixMapImpl> Create(const Rect &rect, GpPixelFormat_t pixelFormat);
 
 		static size_t SizeForDimensions(uint16_t width, uint16_t height, GpPixelFormat_t pixelFormat);

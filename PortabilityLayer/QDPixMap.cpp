@@ -4,6 +4,175 @@
 
 #include <assert.h>
 
+class PixMapSampler_8BitStandard
+{
+public:
+	inline static uint8_t ReadAs8BitStandard(const void *rowData, size_t index)
+	{
+		return static_cast<const uint8_t*>(rowData)[index];
+	}
+};
+
+template<class TSampler>
+class PixMapCopier_8BitStandard
+{
+public:
+	inline static void Copy(const void *inData, size_t inIndex, void *outData, size_t outIndex)
+	{
+		static_cast<uint8_t*>(outData)[outIndex] = TSampler::ReadAs8BitStandard(inData, inIndex);
+	}
+};
+
+template<class TCopier>
+class PixMapColBlitter
+{
+public:
+	static void BlitRow(const void *inData, size_t inSize, void *outData, size_t outSize)
+	{
+		if (inSize == outSize)
+		{
+			for (size_t i = 0; i < inSize; i++)
+				TCopier::Copy(inData, i, outData, i);
+		}
+		else if (inSize < outSize)
+		{
+			size_t remainder = 0;
+			size_t inIndex = 0;
+			for (size_t i = 0; i < outSize; i++)
+			{
+				TCopier::Copy(inData, inIndex, outData, i);
+
+				remainder += inSize;
+				if (remainder >= outSize)
+				{
+					remainder -= outSize;
+					inIndex++;
+				}
+			}
+		}
+		else //if (outSize < inSize)
+		{
+			size_t remainder = 0;
+			size_t outIndex = 0;
+			for (size_t i = 0; i < inSize; i++)
+			{
+				remainder += outSize;
+				if (remainder >= inSize)
+				{
+					TCopier::Copy(inData, i, outData, outIndex);
+
+					remainder -= inSize;
+					outIndex++;
+				}
+			}
+		}
+	}
+};
+
+template<class TCopier>
+class PixMapRowBlitter
+{
+public:
+	static void Blit(const void *inData, size_t inPitch, size_t inColCount, size_t inRowCount, void *outData, size_t outPitch, size_t outColCount, size_t outRowCount)
+	{
+		if (inRowCount == outRowCount)
+		{
+			for (size_t i = 0; i < inRowCount; i++)
+			{
+				PixMapColBlitter<TCopier>::BlitRow(inData, inColCount, outData, outColCount);
+
+				inData = static_cast<const uint8_t*>(inData) + inPitch;
+				outData = static_cast<uint8_t*>(outData) + outPitch;
+			}
+		}
+		else if (inRowCount < outRowCount)
+		{
+			size_t remainder = 0;
+			size_t inIndex = 0;
+			for (size_t i = 0; i < outRowCount; i++)
+			{
+				PixMapColBlitter<TCopier>::BlitRow(inData, inColCount, outData, outColCount);
+
+				remainder += inRowCount;
+				if (remainder >= outRowCount)
+				{
+					remainder -= outRowCount;
+					inData = static_cast<const uint8_t*>(inData) + inPitch;
+				}
+
+				outData = static_cast<uint8_t*>(outData) + outPitch;
+			}
+		}
+		else //if(outRowCount < inRowCount)
+		{
+			size_t remainder = 0;
+			size_t outIndex = 0;
+			for (size_t i = 0; i < inRowCount; i++)
+			{
+				remainder += outRowCount;
+				if (remainder >= inRowCount)
+				{
+					PixMapColBlitter<TCopier>::BlitRow(inData, inColCount, outData, outColCount);
+
+					remainder -= inRowCount;
+					outData = static_cast<uint8_t*>(outData) + outPitch;
+				}
+
+				inData = static_cast<const uint8_t*>(inData) + inPitch;
+			}
+		}
+	}
+};
+
+template<class TSampler>
+class PixMapBlitTargetDisambiguator
+{
+public:
+	static void Blit(const void *inData, size_t inPitch, size_t inColCount, size_t inRowCount, void *outData, size_t outPitch, size_t outColCount, size_t outRowCount, GpPixelFormat_t destFormat)
+	{
+		void(*blitFunc)(const void *inData, size_t inPitch, size_t inColCount, size_t inRowCount, void *outData, size_t outPitch, size_t outColCount, size_t outRowCount);
+
+		blitFunc = nullptr;
+
+		switch (destFormat)
+		{
+		case GpPixelFormats::k8BitStandard:
+			blitFunc = PixMapRowBlitter<PixMapCopier_8BitStandard<TSampler> >::Blit;
+			break;
+		default:
+			PL_NotYetImplemented();
+			break;
+		}
+
+		if (blitFunc != nullptr)
+			blitFunc(inData, inPitch, inColCount, inRowCount, outData, outPitch, outColCount, outRowCount);
+	}
+};
+
+class PixMapBlitSourceDisambiguator
+{
+public:
+	static void Blit(const void *inData, size_t inPitch, size_t inColCount, size_t inRowCount, GpPixelFormat_t srcFormat, void *outData, size_t outPitch, size_t outColCount, size_t outRowCount, GpPixelFormat_t destFormat)
+	{
+		void(*blitFunc)(const void *inData, size_t inPitch, size_t inColCount, size_t inRowCount, void *outData, size_t outPitch, size_t outColCount, size_t outRowCount, GpPixelFormat_t srcFormat);
+
+		blitFunc = nullptr;
+
+		switch (srcFormat)
+		{
+		case GpPixelFormats::k8BitStandard:
+			blitFunc = PixMapBlitTargetDisambiguator<PixMapSampler_8BitStandard>::Blit;
+			break;
+		default:
+			PL_NotYetImplemented();
+			break;
+		}
+
+		if (blitFunc != nullptr)
+			blitFunc(inData, inPitch, inColCount, inRowCount, outData, outPitch, outColCount, outRowCount, srcFormat);
+	}
+};
+
 namespace PortabilityLayer
 {
 	void PixMapImpl::Destroy(THandle<PixMapImpl> &hdl)
@@ -101,6 +270,30 @@ namespace PortabilityLayer
 		new (pmBlock->m_contents) PixMapImpl(rect.left, rect.top, width, height, pixelFormat);
 
 		return THandle<PixMapImpl>(pmBlock);
+	}
+
+
+	THandle<PixMapImpl> PixMapImpl::ScaleTo(uint16_t width, uint16_t height)
+	{
+		// Stupid stuff to cover the entire numeric range
+		Rect scaledRect;
+		scaledRect.right = static_cast<int16_t>(width / 2);
+		scaledRect.bottom = static_cast<int16_t>(height / 2);
+		scaledRect.top = static_cast<int16_t>(scaledRect.bottom - height);
+		scaledRect.left = static_cast<int16_t>(scaledRect.right - width);
+
+		THandle<PixMapImpl> scaled = PixMapImpl::Create(scaledRect, m_pixelFormat);
+		if (!scaled)
+			return THandle<PixMapImpl>();
+
+		PixMapImpl *destPixMap = *scaled;
+
+		const uint16_t oldWidth = m_rect.Width();
+		const uint16_t oldHeight = m_rect.Height();
+
+		PixMapBlitSourceDisambiguator::Blit(GetPixelData(), m_pitch, m_rect.Width(), m_rect.Height(), m_pixelFormat, destPixMap->GetPixelData(), destPixMap->GetPitch(), width, height, m_pixelFormat);
+
+		return scaled;
 	}
 }
 

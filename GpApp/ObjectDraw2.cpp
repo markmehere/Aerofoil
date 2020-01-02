@@ -1045,7 +1045,7 @@ void DrawCalendar (Rect *theRect)
 {
 	DateTimeRec	timeRec;
 	Rect		bounds;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	Str255		monthStr;
 	DrawSurface	*wasCPort;
 	
@@ -1076,7 +1076,7 @@ void DrawCalendar (Rect *theRect)
 void DrawBulletin (Rect *theRect)
 {
 	Rect		bounds;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	
 	thePicture = GetPicture(kBulletinPictID);
 	if (thePicture == nil)
@@ -1094,7 +1094,7 @@ void DrawBulletin (Rect *theRect)
 void DrawPictObject (short what, Rect *theRect)
 {
 	Rect		bounds;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	short		pictID;
 		
 	switch (what)

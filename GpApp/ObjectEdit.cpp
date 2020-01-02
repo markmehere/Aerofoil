@@ -2004,7 +2004,7 @@ void SelectPrevObject (void)
 #ifndef COMPILEDEMO
 void GetThisRoomsObjRects (void)
 {
-	PicHandle	thePict;
+	THandle<Picture>	thePict;
 	short		i, wide, tall;
 	
 	isFirstRoom = (GetFirstRoomNumber() == thisRoomNumber);

@@ -131,7 +131,7 @@ void DrawLocale (void)
 void LoadGraphicSpecial (DrawSurface *surface, short resID)
 {
 	Rect		bounds;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)

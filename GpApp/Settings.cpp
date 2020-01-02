@@ -513,7 +513,7 @@ void DoControlPrefs (void)
 	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront);
 	if (prefDlg == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort((GrafPtr)prefDlg);
+	SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
 	for (i = 0; i < 4; i++)
 	{
 		GetDialogItemRect(prefDlg, i + kRightControl, &controlRects[i]);

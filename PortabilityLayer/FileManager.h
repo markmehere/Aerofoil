@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __PL_FILE_MANAGER_H__
-#define __PL_FILE_MANAGER_H__
 
 #include "FilePermission.h"
 #include "CoreDefs.h"
@@ -22,6 +20,7 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual bool FileExists(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;
+		virtual bool FileLocked(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;
 		virtual bool DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;
 
 		virtual PLError_t CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp) = 0;
@@ -37,5 +36,3 @@ namespace PortabilityLayer
 		static FileManager *GetInstance();
 	};
 }
-
-#endif

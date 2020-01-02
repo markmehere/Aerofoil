@@ -9,6 +9,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "Map.h"
+#include "MenuManager.h"
 #include "PLKeyEncoding.h"
 #include "RectUtils.h"
 #include "Tools.h"
@@ -64,7 +65,7 @@ void InitializeMenus (void)
 	InsertMenu(optionsMenu, 0);
 	
 	menusUp = true;
-	DrawMenuBar();
+	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
 	
 	houseMenu = GetMenu(kHouseMenuID);
 	if (houseMenu == nil)

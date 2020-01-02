@@ -19,6 +19,7 @@ namespace PortabilityLayer
 	{
 	public:
 		bool FileExists(VirtualDirectory_t dirID, const PLPasStr &filename) override;
+		bool FileLocked(VirtualDirectory_t dirID, const PLPasStr &filename) override;
 		bool DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename) override;
 
 		PLError_t CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp) override;
@@ -51,6 +52,24 @@ namespace PortabilityLayer
 			return false;
 
 		return HostFileSystem::GetInstance()->FileExists(dirID, extFN);
+	}
+
+	bool FileManagerImpl::FileLocked(VirtualDirectory_t dirID, const PLPasStr &filename)
+	{
+		const char *exts[3] = { ".gpf", ".gpr", ".gpd" };
+
+		for (int extIndex = 0; extIndex < sizeof(exts) / sizeof(exts[0]); extIndex++)
+		{
+			ExtendedFileName_t extFN;
+			if (!ConstructFilename(extFN, filename, exts[extIndex]))
+				return true;
+
+			bool exists = false;
+			if (HostFileSystem::GetInstance()->FileLocked(dirID, extFN, &exists) && exists)
+				return true;
+		}
+
+		return false;
 	}
 
 	bool FileManagerImpl::DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename)

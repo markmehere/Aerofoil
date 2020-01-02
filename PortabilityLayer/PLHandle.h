@@ -13,7 +13,7 @@ public:
 
 	PortabilityLayer::MMHandleBlock *MMBlock() const;
 
-	void Dispose();
+	void Dispose() const;
 
 protected:
 	PortabilityLayer::MMHandleBlock *m_hdl;

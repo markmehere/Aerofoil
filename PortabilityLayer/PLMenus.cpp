@@ -48,21 +48,6 @@ void InsertMenu(MenuHandle menu, int beforeID)
 	mm->InsertMenuAtEnd(menu);
 }
 
-void DeleteMenu(int menuID)
-{
-	PL_NotYetImplemented();
-}
-
-void DrawMenuBar()
-{
-	PortabilityLayer::MenuManager::GetInstance()->DrawMenuBar();
-}
-
-void HiliteMenu(int menu)
-{
-	// Don't know what this does
-}
-
 void EnableMenuItem(MenuHandle menu, int index)
 {
 	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();

@@ -15,6 +15,7 @@
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "House.h"
+#include "MenuManager.h"
 #include "ObjectEdit.h"
 
 
@@ -250,10 +251,15 @@ void UpdateMenus (Boolean newMode)
 	
 	if (newMode)
 	{
+		PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
 		if (theMode == kEditMode)
 			InsertMenu(houseMenu, 0);
 		else
-			DeleteMenu(kHouseMenuID);
+		{
+			THandle<Menu> houseMenu = mm->GetMenuByID(kHouseMenuID);
+			if (houseMenu)
+				mm->RemoveMenu(houseMenu);
+		}
 	}
 	
 	if (theMode == kEditMode)
@@ -270,8 +276,6 @@ void UpdateMenus (Boolean newMode)
 	}
 	else
 		UpdateMenusNonEditMode();
-	
-	DrawMenuBar();
 }
 
 //--------------------------------------------------------------  DoAppleMenu
@@ -619,8 +623,6 @@ void DoMenuChoice (long menuChoice)
 		DoHouseMenu(theItem);
 		break;
 	}
-	
-	HiliteMenu(0);
 }
 
 //--------------------------------------------------------------  UpdateMapCheckmark

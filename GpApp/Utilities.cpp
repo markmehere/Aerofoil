@@ -282,7 +282,7 @@ void KillOffScreenBitMap (GrafPtr offScreen)
 void LoadGraphic (DrawSurface *surface, short resID)
 {
 	Rect		bounds;
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)
@@ -302,7 +302,7 @@ void LoadGraphic (DrawSurface *surface, short resID)
 
 void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 {
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)

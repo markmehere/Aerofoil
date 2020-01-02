@@ -161,7 +161,7 @@ void FindNewActiveRoomRect (void)
 
 void LoadGraphicPlus (DrawSurface *surface, short resID, const Rect &theRect)
 {
-	PicHandle	thePicture;
+	THandle<Picture>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)

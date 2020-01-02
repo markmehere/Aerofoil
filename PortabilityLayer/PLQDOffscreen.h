@@ -17,20 +17,12 @@ typedef CTabPtr *CTabHandle;
 typedef PixMap *PixMapPtr;
 typedef PixMapPtr *PixMapHandle;
 
-typedef Picture *PicPtr;
-typedef THandle<Picture> PicHandle;
-
-enum QDFlags
-{
-	useTempMem = 1,
-};
-
 PLError_t NewGWorld(DrawSurface **gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable);
 void DisposeGWorld(DrawSurface *gworld);
 
 PixMapHandle GetGWorldPixMap(DrawSurface *gworld);
 
-PicHandle GetPicture(short resID);
+THandle<Picture> GetPicture(short resID);
 
 void OffsetRect(Rect *rect, int right, int down);
 

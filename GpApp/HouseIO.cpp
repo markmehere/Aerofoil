@@ -14,6 +14,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "FileManager.h"
+#include "HostFileSystem.h"
 #include "House.h"
 #include "IOStream.h"
 #include "ObjectEdit.h"
@@ -960,52 +961,7 @@ void YellowAlert (short whichAlert, short identifier)
 
 //--------------------------------------------------------------  IsFileReadOnly
 
-Boolean IsFileReadOnly (const VFileSpec &)
+Boolean IsFileReadOnly (const VFileSpec &spec)
 {
-	PL_NotYetImplemented_TODO("FileSystem");
-	return true;
-	/*
-	Str255			tempStr;
-	ParamBlockRec	theBlock;
-	HParamBlockRec	hBlock;
-	VolumeParam		*volPtr;
-	PLError_t			theErr;
-	
-	volPtr = (VolumeParam *)&theBlock;
-	volPtr->ioCompletion = nil;
-	volPtr->ioVolIndex = 0;
-	volPtr->ioNamePtr = tempStr;
-	volPtr->ioVRefNum = theSpec->vRefNum;
-	
-	theErr = PBGetVInfo(&theBlock, false);
-	if (CheckFileError(theErr, "\pRead/Write"))
-	{
-		if (((volPtr->ioVAtrb & 0x0080) == 0x0080) || 
-				((volPtr->ioVAtrb & 0x8000) == 0x8000))
-			return (true);		// soft/hard locked bits
-		else
-		{
-			hBlock.fileParam.ioCompletion = nil;
-			hBlock.fileParam.ioVRefNum = theSpec->vRefNum;
-			hBlock.fileParam.ioFVersNum = 0;
-			hBlock.fileParam.ioFDirIndex = 0;
-			hBlock.fileParam.ioNamePtr = theSpec->name;
-			hBlock.fileParam.ioDirID = theSpec->parID;
-			
-			theErr = PBHGetFInfo(&hBlock, false);
-			if (CheckFileError(theErr, "\pRead/Write"))
-			{
-				if ((hBlock.fileParam.ioFlAttrib & 0x0001) == 0x0001)
-					return (true);
-				else
-					return (false);
-			}
-			else
-				return (false);
-		}
-	}
-	else
-		return (false);
-	*/
+	return PortabilityLayer::FileManager::GetInstance()->FileLocked(spec.m_dir, spec.m_name);
 }
-

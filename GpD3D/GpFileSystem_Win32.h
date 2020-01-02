@@ -13,6 +13,7 @@ public:
 	GpFileSystem_Win32();
 
 	bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) override;
+	bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists) override;
 	PortabilityLayer::IOStream *OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, bool create) override;
 	PortabilityLayer::HostDirectoryCursor *ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory) override;
 

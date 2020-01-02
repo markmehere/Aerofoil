@@ -31,7 +31,7 @@ extern	short		nHotSpots, numChimes;
 
 void GetObjectRect (objectPtr who, Rect *itsRect)
 {
-	PicHandle	thePict;
+	THandle<Picture>	thePict;
 	short		wide, tall;
 	
 	switch (who->what)

@@ -8,9 +8,6 @@ class PLPasStr;
 
 MenuHandle GetMenu(int resID);
 void InsertMenu(MenuHandle menu, int beforeID);
-void DeleteMenu(int menuID);	// ???
-void DrawMenuBar();
-void HiliteMenu(int menu);
 
 void EnableMenuItem(MenuHandle menu, int index);
 void DisableMenuItem(MenuHandle menu, int index);

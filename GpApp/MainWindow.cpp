@@ -198,7 +198,7 @@ void OpenMainWindow (void)
 	if (theMode == kEditMode)
 	{
 		if (menuWindow != nil)
-			DisposeWindow(menuWindow);
+			PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(menuWindow);
 		menuWindow = nil;
 		
 		QSetRect(&mainWindowRect, 0, 0, 512, 322);
@@ -289,6 +289,12 @@ void OpenMainWindow (void)
 		
 		SetPortWindowPort(mainWindow);
 	}
+
+	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
+		GetPortBitMapForCopyBits(GetWindowPort(mainWindow)),
+		&mainWindowRect, &mainWindowRect, srcCopy);
+
+	mainWindow->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 //--------------------------------------------------------------  CloseMainWindow
@@ -298,11 +304,11 @@ void OpenMainWindow (void)
 void CloseMainWindow (void)
 {
 	if (mainWindow != nil)
-		DisposeWindow(mainWindow);
+		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(mainWindow);
 	mainWindow = nil;
 
 	if (boardWindow != nil)
-		DisposeWindow(boardWindow);
+		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(boardWindow);
 	boardWindow = nil;
 }
 

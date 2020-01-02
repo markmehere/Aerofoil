@@ -40,6 +40,11 @@ namespace PortabilityLayer
 		(void)style;
 	}
 
+	void Widget::SetString(const PLPasStr &str)
+	{
+		(void)str;
+	}
+
 	const Rect &Widget::GetRect() const
 	{
 		return m_rect;

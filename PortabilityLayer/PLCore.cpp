@@ -287,7 +287,7 @@ void ShowWindow(WindowPtr window)
 
 void SetWTitle(WindowPtr window, const PLPasStr &title)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("Editor");
 }
 
 long MenuSelect(Point point)

@@ -200,6 +200,7 @@
     <ClInclude Include="PLHacks.h" />
     <ClInclude Include="PLHandle.h" />
     <ClInclude Include="PLIconWidget.h" />
+    <ClInclude Include="PLImageWidget.h" />
     <ClInclude Include="PLInvisibleWidget.h" />
     <ClInclude Include="PLLabelWidget.h" />
     <ClInclude Include="PLWidgets.h" />
@@ -310,6 +311,7 @@
     <ClCompile Include="PLEventQueue.cpp" />
     <ClCompile Include="PLHacks.cpp" />
     <ClCompile Include="PLIconWidget.cpp" />
+    <ClCompile Include="PLImageWidget.cpp" />
     <ClCompile Include="PLInvisibleWidget.cpp" />
     <ClCompile Include="PLLabelWidget.cpp" />
     <ClCompile Include="PLMenus.cpp" />

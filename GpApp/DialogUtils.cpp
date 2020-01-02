@@ -394,12 +394,7 @@ void GetDialogString (Dialog *theDialog, short item, StringPtr theString)
 
 void SetDialogString (Dialog *theDialog, short item, const PLPasStr &theString)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	SetDialogItemText(itemHandle, theString);
+	theDialog->GetItems()[item - 1].GetWidget()->SetString(theString);
 }
 
 //--------------------------------------------------------------  GetDialogStringLen
@@ -662,8 +657,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 
 void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
+	;
 	Str255			stringCopy;
 	short			iType;
 
@@ -671,7 +665,8 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
 	
 	PasStringCopy(text, stringCopy);
-	GetDialogItem(dial, item, &iType, &iHandle, &iRect);
+	const Rect iRect = dial->GetItems()[item - 1].GetWidget()->GetRect();
+
 	if ((surface->MeasureString(stringCopy) + 2) > (iRect.right - iRect.left))
 		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
 
@@ -687,7 +682,7 @@ void LoadDialogPICT (Dialog *theDialog, short item, short theID)
 {
 	Rect			iRect;
 	ControlHandle	iHandle;
-	PicHandle		thePict;
+	THandle<Picture>		thePict;
 	short			iType;
 	
 	GetDialogItem(theDialog, item, &iType, &iHandle, &iRect);

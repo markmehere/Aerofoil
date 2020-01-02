@@ -7,6 +7,7 @@
 #include "PLButtonWidget.h"
 #include "PLDialogs.h"
 #include "PLIconWidget.h"
+#include "PLImageWidget.h"
 #include "PLInvisibleWidget.h"
 #include "PLLabelWidget.h"
 #include "PLPasStr.h"
@@ -276,10 +277,12 @@ namespace PortabilityLayer
 			case SerializedDialogItemTypeCodes::kIcon:
 				widget = IconWidget::Create(basicState);
 				break;
+			case SerializedDialogItemTypeCodes::kImage:
+				widget = ImageWidget::Create(basicState);
+				break;
 			case SerializedDialogItemTypeCodes::kCheckBox:
 			case SerializedDialogItemTypeCodes::kRadioButton:
 			case SerializedDialogItemTypeCodes::kEditBox:
-			case SerializedDialogItemTypeCodes::kImage:
 			default:
 				widget = InvisibleWidget::Create(basicState);
 				break;
@@ -443,7 +446,7 @@ namespace PortabilityLayer
 			//window->m_wmY = displayHeight / 3 - dialogHeight / 2;
 			window->m_wmY = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
 		}
-		else if (dialogHeight * 2 <= displayHeight)
+		else if (dialogHeight * 2U <= displayHeight)
 			window->m_wmY = displayHeight / 4;
 		else
 			window->m_wmY = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;

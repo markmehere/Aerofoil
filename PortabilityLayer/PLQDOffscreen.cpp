@@ -36,7 +36,7 @@ PixMapHandle GetGWorldPixMap(DrawSurface *gworld)
 	return gworld->m_port.GetPixMap();
 }
 
-PicHandle GetPicture(short resID)
+THandle<Picture> GetPicture(short resID)
 {
 	return PortabilityLayer::ResourceManager::GetInstance()->GetResource('PICT', resID).StaticCast<Picture>();
 }
