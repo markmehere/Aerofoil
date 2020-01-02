@@ -4,6 +4,10 @@
 #include "IGpDisplayDriver.h"
 #include "IGpDisplayDriverSurface.h"
 
+DrawSurface::~DrawSurface()
+{
+}
+
 void DrawSurface::PushToDDSurface(IGpDisplayDriver *displayDriver)
 {
 	const PixMap *pixMap = *m_port.GetPixMap();

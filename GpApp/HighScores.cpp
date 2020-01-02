@@ -514,7 +514,7 @@ void GetHighScoreName (short place)
 		}
 	}
 	
-	DisposeDialog(theDial);
+	theDial->Destroy();
 }
 
 //--------------------------------------------------------------  UpdateBannerDialog

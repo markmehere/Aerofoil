@@ -2,6 +2,7 @@
 
 #include "IconLoader.h"
 #include "QDPixMap.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 #include <assert.h>
 
@@ -45,5 +46,13 @@ namespace PortabilityLayer
 	{
 		CopyMask(*m_iconImage, *m_iconMask, *surface->m_port.GetPixMap(), &(*m_iconImage)->m_rect, &(*m_iconMask)->m_rect, &m_rect);
 		surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	}
+
+	WidgetHandleState_t IconWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	{
+		if (evt.IsLMouseDownEvent() && m_rect.Contains(m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent)))
+			return WidgetHandleStates::kActivated;
+		else
+			return WidgetHandleStates::kIgnored;
 	}
 }

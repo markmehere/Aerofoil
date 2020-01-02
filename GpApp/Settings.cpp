@@ -75,7 +75,7 @@ void HandleSoundMusicChange (short, Boolean);
 Boolean SoundFilter (Dialog *, EventRecord *, short *);
 void DoSoundPrefs (void);
 void DisplayDefaults (void);
-void FrameDisplayIcon (Dialog *);
+void FrameDisplayIcon (Dialog *, const PortabilityLayer::RGBAColor &color);
 void DisplayUpdate (Dialog *);
 Boolean DisplayFilter (Dialog *, EventRecord *, short *);
 void DoDisplayPrefs (void);
@@ -317,7 +317,7 @@ void DoBrainsPrefs (void)
 		}
 	}
 	
-	DisposeDialog(prefDlg);
+	prefDlg->Destroy();
 }
 
 //--------------------------------------------------------------  SetControlsToDefaults
@@ -601,8 +601,8 @@ void DoControlPrefs (void)
 			break;
 		}
 	}
-	
-	DisposeDialog(prefDlg);
+
+	prefDlg->Destroy();
 }
 
 //--------------------------------------------------------------  SoundDefaults
@@ -882,8 +882,8 @@ void DoSoundPrefs (void)
 			break;
 		}
 	}
-	
-	DisposeDialog(prefDlg);
+
+	prefDlg->Destroy();
 }
 
 //--------------------------------------------------------------  DisplayDefaults
@@ -898,7 +898,7 @@ void DisplayDefaults (void)
 
 //--------------------------------------------------------------  FrameDisplayIcon
 
-void FrameDisplayIcon (Dialog *theDialog)
+void FrameDisplayIcon (Dialog *theDialog, const PortabilityLayer::RGBAColor &color)
 {
 	Rect		theRect;
 	
@@ -919,7 +919,7 @@ void FrameDisplayIcon (Dialog *theDialog)
 
 	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 
-	surface->SetForeColor(StdColors::Black());
+	surface->SetForeColor(color);
 	
 	theRect.left -= 3;
 	theRect.top += 0;
@@ -943,7 +943,7 @@ void DisplayUpdate (Dialog *theDialog)
 	SetDialogItemValue(theDialog, kUseScreen2Item, (short)wasScreen2);
 	
 	ForeColor(redColor);
-	FrameDisplayIcon(theDialog);
+	FrameDisplayIcon(theDialog, StdColors::Red());
 	ForeColor(blackColor);
 	FrameDialogItemC(theDialog, 8, kRedOrangeColor8);
 	FrameDialogItemC(theDialog, 13, kRedOrangeColor8);
@@ -1058,9 +1058,11 @@ int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
 			return kUseQDItem;
 
 		default:
-			return(false);
+			return -1;
 		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoDisplayPrefs
@@ -1110,35 +1112,26 @@ void DoDisplayPrefs (void)
 			break;
 			
 			case kDisplay1Item:
-			ForeColor(whiteColor);
-			FrameDisplayIcon(prefDlg);
+			FrameDisplayIcon(prefDlg, StdColors::White());
 			numNeighbors = 1;
-			ForeColor(redColor);
-			FrameDisplayIcon(prefDlg);
-			ForeColor(blackColor);
+			FrameDisplayIcon(prefDlg, StdColors::Red());
 			break;
 			
 			case kDisplay3Item:
 			if (thisMac.screen.right > 512)
 			{
-				ForeColor(whiteColor);
-				FrameDisplayIcon(prefDlg);
+				FrameDisplayIcon(prefDlg, StdColors::White());
 				numNeighbors = 3;
-				ForeColor(redColor);
-				FrameDisplayIcon(prefDlg);
-				ForeColor(blackColor);
+				FrameDisplayIcon(prefDlg, StdColors::Red());
 			}
 			break;
 			
 			case kDisplay9Item:
 			if (thisMac.screen.right > 512)
 			{
-				ForeColor(whiteColor);
-				FrameDisplayIcon(prefDlg);
+				FrameDisplayIcon(prefDlg, StdColors::White());
 				numNeighbors = 9;
-				ForeColor(redColor);
-				FrameDisplayIcon(prefDlg);
-				ForeColor(blackColor);
+				FrameDisplayIcon(prefDlg, StdColors::Red());
 			}
 			break;
 			
@@ -1155,8 +1148,7 @@ void DoDisplayPrefs (void)
 			break;
 			
 			case kDispDefault:
-			ForeColor(whiteColor);
-			FrameDisplayIcon(prefDlg);
+			FrameDisplayIcon(prefDlg, StdColors::White());
 			ForeColor(blackColor);
 			DisplayDefaults();
 			DisplayUpdate(prefDlg);
@@ -1361,20 +1353,20 @@ void DoSettingsMain (void)
 			case kDisplayButton:
 			FlashSettingsButton(surface, 0);
 			DoDisplayPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
 			break;
 			
 			case kSoundButton:
 			FlashSettingsButton(surface, 1);
 			DoSoundPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
 			FlushEvents(everyEvent, 0);
 			break;
 			
 			case kControlsButton:
 			FlashSettingsButton(surface, 2);
 			DoControlPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
 			break;
 			
 			case kBrainsButton:
@@ -1386,7 +1378,7 @@ void DoSettingsMain (void)
 			}
 			FlashSettingsButton(surface, 3);
 			DoBrainsPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_graf);
+			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
 			break;
 			
 			case kAllDefaultsButton:
@@ -1395,7 +1387,7 @@ void DoSettingsMain (void)
 		}
 	}
 	
-	DisposeDialog(prefDlg);
+	prefDlg->Destroy();
 	
 	if (nextRestartChange)
 		BitchAboutChanges();

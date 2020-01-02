@@ -10,7 +10,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	WidgetHandleState_t ButtonWidget::ProcessEvent(Window *window, const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t ButtonWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
 	{
 		if (m_haveMouseDown)
 		{
@@ -18,7 +18,7 @@ namespace PortabilityLayer
 			{
 				m_haveMouseDown = false;
 
-				const Point pt = window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+				const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
 				if (m_rect.Contains(pt))
 					return WidgetHandleStates::kActivated;
 				else
@@ -31,7 +31,7 @@ namespace PortabilityLayer
 		{
 			if (evt.IsLMouseDownEvent())
 			{
-				const Point pt = window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+				const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
 
 				if (m_rect.Contains(pt))
 				{

@@ -260,7 +260,7 @@ void SetPort(GrafPtr graf)
 
 void EndUpdate(WindowPtr graf)
 {
-	graf->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	graf->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags)
@@ -286,7 +286,7 @@ void SetRect(Rect *rect, short left, short top, short right, short bottom)
 void SetPortWindowPort(WindowPtr window)
 {
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
-	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->m_graf.m_port);
+	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->m_surface.m_port);
 }
 
 void SetPortDialogPort(Dialog *dialog)
@@ -423,6 +423,8 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 		PL_NotYetImplemented();
 		return;
 	}
+
+	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 void SetOrigin(int x, int y)
@@ -604,6 +606,8 @@ void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
 		else
 			DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i]);
 	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 size_t DrawSurface::MeasureString(const PLPasStr &str)
@@ -765,11 +769,14 @@ void DrawSurface::FillRect(const Rect &rect)
 		PL_NotYetImplemented();
 		return;
 	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern)
 {
 	PL_NotYetImplemented();
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 void DrawSurface::SetApplicationFont(int size, int variationFlags)
@@ -992,6 +999,8 @@ void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlin
 			}
 		}
 	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 
@@ -1051,6 +1060,8 @@ void DrawSurface::FrameRect(const Rect &rect)
 		edgeRect.top = edgeRect.bottom - 1;
 		FillRect(edgeRect);
 	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 void DrawSurface::FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight)
@@ -1396,7 +1407,7 @@ BitMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr)
 
 DrawSurface *GetWindowPort(WindowPtr window)
 {
-	return &window->m_graf;
+	return &window->m_surface;
 }
 
 

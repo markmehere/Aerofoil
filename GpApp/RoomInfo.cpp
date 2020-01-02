@@ -594,7 +594,7 @@ void DoRoomInfo (void)
 	}
 	
 	InitCursor();
-	DisposeDialog(roomInfoDialog);
+	roomInfoDialog->Destroy();
 	
 //	KillOffScreenPixMap(tileSrcMap);
 	DisposeGWorld(tileSrcMap);
@@ -847,7 +847,7 @@ short ChooseOriginalArt (short was)
 		}
 	}
 	
-	DisposeDialog(theDialog);
+	theDialog->Destroy();
 	
 	return (newPictID);
 }

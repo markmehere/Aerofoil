@@ -108,12 +108,15 @@ struct Window
 	// Convenience method to convert a mouse event to local point
 	Point MouseToLocal(const GpMouseInputEvent &evt) const;
 
-	DrawSurface m_graf;	// Must be the first item
+	DrawSurface m_surface;	// Must be the first item until the immediate mode draw API is completely removed
 
 	// The port is always at 0,0
 	// These are the WM coordinates
 	int32_t m_wmX;
 	int32_t m_wmY;
+
+protected:
+	~Window();
 };
 
 struct DateTimeRec

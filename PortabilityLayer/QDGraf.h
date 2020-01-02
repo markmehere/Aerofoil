@@ -36,6 +36,8 @@ struct DrawSurface final
 	{
 	}
 
+	~DrawSurface();
+
 	PLError_t Init(const Rect &rect, GpPixelFormat_t pixelFormat)
 	{
 		if (PLError_t errorCode = m_port.Init(rect, pixelFormat))

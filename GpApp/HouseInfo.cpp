@@ -287,7 +287,7 @@ void DoHouseInfo (void)
 		}
 	}
 	InitCursor();
-	DisposeDialog(houseInfoDialog);
+	houseInfoDialog->Destroy();
 }
 
 //--------------------------------------------------------------  WarnLockingHouse

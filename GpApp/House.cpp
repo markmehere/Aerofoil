@@ -697,7 +697,7 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 		}
 	}
 	
-	DisposeDialog(theDialog);
+	theDialog->Destroy();
 	
 	if (!canceled)
 	{

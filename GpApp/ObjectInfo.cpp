@@ -1088,7 +1088,7 @@ void DoBlowerObjectInfo (short what)
 		}
 	}
 	
-	DisposeDialog(infoDial);
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -1149,7 +1149,7 @@ void DoFurnitureObjectInfo (void)
 		}
 	}
 	
-	DisposeDialog(infoDial);
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -1247,8 +1247,8 @@ void DoCustPictObjectInfo (void)
 			leaving = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 }
 
 //--------------------------------------------------------------  DoSwitchObjectInfo
@@ -1346,8 +1346,8 @@ void DoSwitchObjectInfo (void)
 			doReturn = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doLink)
 	{
@@ -1498,8 +1498,8 @@ void DoTriggerObjectInfo (void)
 			}
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doLink)
 	{
@@ -1593,8 +1593,8 @@ void DoLightObjectInfo (void)
 			doReturn = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -1705,8 +1705,8 @@ void DoApplianceObjectInfo (short what)
 			}
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -1825,8 +1825,8 @@ void DoMicrowaveObjectInfo (void)
 			doReturn = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -1895,8 +1895,8 @@ void DoGreaseObjectInfo (void)
 			doReturn = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -2004,8 +2004,8 @@ void DoInvisBonusObjectInfo (void)
 			doReturn = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -2110,8 +2110,8 @@ void DoTransObjectInfo (short what)
 			SetDialogItemValue(infoDial, kInitialStateCheckbox3, (short)wasState);
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doLink)
 	{
@@ -2229,8 +2229,8 @@ void DoEnemyObjectInfo (short what)
 			}
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{
@@ -2324,8 +2324,8 @@ void DoFlowerObjectInfo (void)
 			doReturn = true;
 		}
 	}
-	
-	DisposeDialog(infoDial);
+
+	infoDial->Destroy();
 	
 	if (doReturn)
 	{

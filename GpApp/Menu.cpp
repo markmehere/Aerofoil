@@ -749,7 +749,7 @@ short QueryResumeGame (void)
 			leaving = true;
 		}
 	}
-	DisposeDialog(theDial);
+	theDial->Destroy();
 	
 	return (hitWhat);
 }

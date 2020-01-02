@@ -124,7 +124,7 @@ void RedrawSplashScreen (void)
 //		DissBits(&workSrcRect);
 	CopyRectMainToWork(&workSrcRect);
 
-	mainWindow->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	mainWindow->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
 }
 
@@ -160,7 +160,7 @@ void UpdateMainWindow (void)
 		DrawOnSplash(mainWindow->GetDrawSurface());
 	}
 
-	mainWindow->m_graf.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	mainWindow->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	
 	splashDrawn = true;
 }

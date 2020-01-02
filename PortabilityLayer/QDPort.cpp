@@ -3,6 +3,7 @@
 #include "PLHandle.h"
 #include "MemoryManager.h"
 #include "MMHandleBlock.h"
+#include "QDManager.h"
 #include "QDPixMap.h"
 
 #if GP_DEBUG_CONFIG
@@ -32,6 +33,11 @@ namespace PortabilityLayer
 
 	QDPort::~QDPort()
 	{
+#if GP_DEBUG_CONFIG
+		// Detach the port BEFORE destroying it!!
+		assert(PortabilityLayer::QDManager::GetInstance()->GetPort() != this);
+#endif
+
 		DisposePixMap();
 	}
 

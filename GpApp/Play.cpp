@@ -143,7 +143,7 @@ void NewGame (short mode)
 #ifdef COMPILEQT
 	if ((thisMac.hasQT) && (hasMovie))
 	{
-		SetMovieGWorld(theMovie, &mainWindow->m_graf, nil);
+		SetMovieGWorld(theMovie, &mainWindow->m_surface, nil);
 	}
 #endif
 	

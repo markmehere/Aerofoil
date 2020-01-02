@@ -52,10 +52,6 @@ void ModalDialog(ModalFilterUPP filter, short *item)
 	PL_NotYetImplemented();
 }
 
-void DisposeDialog(Dialog *dialog)
-{
-	PL_NotYetImplemented();
-}
 
 void DisposeModalFilterUPP(ModalFilterUPP upp)
 {

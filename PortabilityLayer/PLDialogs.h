@@ -41,7 +41,5 @@ void SelectDialogItemText(Dialog *dialog, int item, int firstSelChar, int lastSe
 
 void ModalDialog(ModalFilterUPP filter, short *item);
 
-void DisposeDialog(Dialog *dialog);
-
 void ShowDialogItem(Dialog *dialog, int item);
 void HideDialogItem(Dialog *dialog, int item);

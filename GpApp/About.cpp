@@ -87,7 +87,7 @@ void DoAbout (void)
 	
 	if (okayButtScanlineMask != nil)
 		okayButtScanlineMask->Destroy();			// Clean up!
-	DisposeDialog(aboutDialog);
+	aboutDialog->Destroy();
 	
 	UseResFile(wasResFile);
 }

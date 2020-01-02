@@ -225,7 +225,7 @@ void DisposeWindow(WindowPtr window)
 void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect)
 {
 	if (windowRegion == kWindowContentRgn)
-		*rect = window->m_graf.m_port.GetRect();
+		*rect = window->m_surface.m_port.GetRect();
 	else
 	{
 		PL_NotYetImplemented();
@@ -817,15 +817,19 @@ WindowPtr PL_GetPutInFrontWindowPtr()
 }
 
 Window::Window()
-	: m_graf(PortabilityLayer::QDPortType_Window)
+	: m_surface(PortabilityLayer::QDPortType_Window)
 	, m_wmX(0)
 	, m_wmY(0)
 {
 }
 
+Window::~Window()
+{
+}
+
 DrawSurface *Window::GetDrawSurface() const
 {
-	return const_cast<DrawSurface*>(&m_graf);
+	return const_cast<DrawSurface*>(&m_surface);
 }
 
 Point Window::MouseToLocal(const GpMouseInputEvent &evt) const

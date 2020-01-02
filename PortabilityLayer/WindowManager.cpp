@@ -100,7 +100,7 @@ namespace PortabilityLayer
 
 		GpPixelFormat_t pixelFormat = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
-		if (int errorCode = m_graf.Init(adjustedBounds, pixelFormat))
+		if (int errorCode = m_surface.Init(adjustedBounds, pixelFormat))
 			return false;
 
 		return true;
@@ -108,11 +108,11 @@ namespace PortabilityLayer
 
 	bool WindowImpl::Resize(int width, int height)
 	{
-		Rect rect = m_graf.m_port.GetRect();
+		Rect rect = m_surface.m_port.GetRect();
 		rect.right = rect.left + width;
 		rect.bottom = rect.top + height;
 
-		return m_graf.Resize(rect);
+		return m_surface.Resize(rect);
 	}
 
 	WindowImpl *WindowImpl::GetWindowAbove() const
@@ -254,7 +254,7 @@ namespace PortabilityLayer
 		WindowImpl *window = m_windowStackTop;
 		while (window)
 		{
-			const Rect windowRect = window->m_graf.m_port.GetRect();
+			const Rect windowRect = window->m_surface.m_port.GetRect();
 
 			const int32_t localX = point.h - window->m_wmX;
 			const int32_t localY = point.v - window->m_wmY;
@@ -285,6 +285,9 @@ namespace PortabilityLayer
 		WindowImpl *windowImpl = static_cast<WindowImpl*>(window);
 
 		DetachWindow(window);
+
+		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == &windowImpl->m_surface.m_port)
+			PortabilityLayer::QDManager::GetInstance()->SetPort(nullptr);
 
 		windowImpl->~WindowImpl();
 		PortabilityLayer::MemoryManager::GetInstance()->Release(windowImpl);
@@ -341,7 +344,7 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver)
 	{
-		DrawSurface &graf = window->m_graf;
+		DrawSurface &graf = window->m_surface;
 
 		graf.PushToDDSurface(displayDriver);
 

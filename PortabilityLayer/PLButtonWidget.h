@@ -12,7 +12,7 @@ namespace PortabilityLayer
 
 		bool Init(const WidgetBasicState &state) override;
 
-		WidgetHandleState_t ProcessEvent(Window *window, const TimeTaggedVOSEvent &evt);
+		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
 
 	private:
 		bool m_haveMouseDown;

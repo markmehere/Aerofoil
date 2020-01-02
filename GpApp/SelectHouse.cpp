@@ -514,8 +514,8 @@ void DoLoadHouse (void)
 			PageDownHouses(theDial);
 		}
 	}
-	
-	DisposeDialog(theDial);
+
+	theDial->Destroy();
 }
 #endif
 
