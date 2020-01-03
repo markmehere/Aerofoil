@@ -1,4 +1,6 @@
 #include "GpFileSystem_Win32.h"
+
+#include "GpApplicationName.h"
 #include "GpFileStream_Win32.h"
 #include "GpWindows.h"
 #include "GpMemoryBuffer.h"
@@ -295,7 +297,7 @@ bool GpFileSystem_Win32::PromptSaveFile(PortabilityLayer::VirtualDirectory_t vir
 	memset(&ofn, 0, sizeof(ofn));
 
 	ofn.lStructSize = sizeof(ofn);
-	ofn.lpstrFilter = L"GlidePort File (*.gpf)\0*.gpf\0";
+	ofn.lpstrFilter = GP_APPLICATION_NAME_W L" File (*.gpf)\0*.gpf\0";
 	ofn.lpstrFile = baseFN;
 	ofn.lpstrDefExt = L"gpf";
 	ofn.nMaxFile = MAX_PATH;

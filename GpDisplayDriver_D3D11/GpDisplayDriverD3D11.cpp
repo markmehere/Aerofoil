@@ -1,4 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
+#include "GpApplicationName.h"
 #include "GpDisplayDriverD3D11.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
 #include "GpWindows.h"
@@ -546,7 +547,7 @@ void GpDisplayDriverD3D11::Run()
 	RECT wr = { 0, 0, m_windowWidth, m_windowHeight };
 	AdjustWindowRect(&wr, windowStyle, menus != NULL);
 
-	m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", L"GlidePort (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
+	m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", GP_APPLICATION_NAME_W L" (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
 
 	ShowWindow(m_hwnd, m_osGlobals->m_nCmdShow);
 
