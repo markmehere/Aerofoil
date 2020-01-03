@@ -1,8 +1,8 @@
-GlidePort is a collection of porting infrastructure to run Glider PRO.
+Aerofoil is a collection of porting infrastructure to run Glider PRO.
 
 It's divided into a few parts:
 - PortabilityLayer: A static library that supports interaction with various vintage Mac-specific formats and API calls.  Some parts are capable of running by themselves, others require the support of drivers.
-- GpD3D: To be renamed.  This is the base application.  It loads drivers and loads the application.
+- Aerofoil:  This is the base application.  It loads drivers and loads the application.
 - GpDisplayDriver_D3D11: Direct3D 11 display driver.
 - GpAudioDriver_XAudio2: XAudio2 audio driver.
 - GpApp: Glider PRO application DLL.
