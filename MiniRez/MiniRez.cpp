@@ -416,6 +416,8 @@ int main(int argc, const char **argv)
 		}
 	}
 
+	printf("Re-emit OK\n");
+
 	const size_t resDataSize = resourceForkData.size() - resForkDataStart;
 	const size_t resMapPos = resourceForkData.size();
 
@@ -441,16 +443,22 @@ int main(int argc, const char **argv)
 	std::vector<size_t> refListStartForType;
 	refListStartForType.resize(resTypeCounts.size());
 
-	refListStartForType[0] = 0;
-	for (size_t i = 1; i < refListStartForType.size(); i++)
-		refListStartForType[i] = refListStartForType[i - 1] + resTypeCounts[i - 1];
+	if (resTypeCounts.size() > 0)
+	{
+		refListStartForType[0] = 0;
+		for (size_t i = 1; i < refListStartForType.size(); i++)
+			refListStartForType[i] = refListStartForType[i - 1] + resTypeCounts[i - 1];
+	}
 
 	std::vector<size_t> nameListStarts;
 	nameListStarts.resize(uniqueResNames.size());
 
-	nameListStarts[0] = 0;
-	for (size_t i = 1; i < nameListStarts.size(); i++)
-		nameListStarts[i] = nameListStarts[i - 1] + uniqueResNames[i - 1].size() + 1;
+	if (nameListStarts.size() > 0)
+	{
+		nameListStarts[0] = 0;
+		for (size_t i = 1; i < nameListStarts.size(); i++)
+			nameListStarts[i] = nameListStarts[i - 1] + uniqueResNames[i - 1].size() + 1;
+	}
 
 	// Write resource type list
 	for (size_t i = 0; i < uniqueResTypes.size(); i++)
@@ -513,6 +521,8 @@ int main(int argc, const char **argv)
 	BytePack::BigUInt32(&resourceForkData[4], static_cast<uint32_t>(resMapPos));
 	BytePack::BigUInt32(&resourceForkData[8], static_cast<uint32_t>(resDataSize));
 	BytePack::BigUInt32(&resourceForkData[12], static_cast<uint32_t>(resMapSize));
+
+	printf("Writing to %s...", argv[2]);
 
 	FILE *outF = nullptr;
 	if (fopen_s(&outF, argv[2], "wb"))
