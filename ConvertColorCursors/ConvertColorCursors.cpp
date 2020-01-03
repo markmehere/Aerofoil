@@ -273,7 +273,7 @@ void ConvertIconFamily(PortabilityLayer::ResourceFile *resFile, int32_t iconBitm
 		}
 
 		char outPath[256];
-		sprintf_s(outPath, "GpD3D\\ConvertedResources\\%s%i.ico", prefix, resID);
+		sprintf_s(outPath, "Aerofoil\\ConvertedResources\\%s%i.ico", prefix, resID);
 
 		FILE *outF = nullptr;
 		errno_t outErr = fopen_s(&outF, outPath, "wb");

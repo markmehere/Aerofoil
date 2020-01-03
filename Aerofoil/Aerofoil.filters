@@ -202,7 +202,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="GpD3D.rc">
+    <ResourceCompile Include="Aerofoil.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
