@@ -19,7 +19,7 @@ Other parts:
 - PictChecker: Experimental app that extracts all of the PICT resources from all of the houses and dumps them to PNG.  Used to verify that the PICT loader works.
 
 
-GlidePort is intended to be primarily a straight port, retaining most of the look and feel of the original.
+Aerofoil is intended to be primarily a straight port, retaining most of the look and feel of the original.
 
 Planned additions:
 - 32-bit color support (mainly matters for houses that have higher-resolution PICT resources)
