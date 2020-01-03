@@ -7,6 +7,8 @@
 #include <string>
 #include <Shlwapi.h>
 #include <ShlObj.h>
+#include <commdlg.h>
+
 #include <assert.h>
 
 class GpDirectoryCursor_Win32 final : public PortabilityLayer::HostDirectoryCursor
@@ -112,12 +114,17 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 		}
 
 		m_prefsDir.append(L"\\GlidePort");
+
+		m_userHousesDir = m_prefsDir + L"\\Houses";
 		m_scoresDir = m_prefsDir + L"\\Scores";
 
 		CreateDirectoryW(m_prefsDir.c_str(), nullptr);
 		CreateDirectoryW(m_scoresDir.c_str(), nullptr);
+		CreateDirectoryW(m_userHousesDir.c_str(), nullptr);
+
 		m_prefsDir.append(L"\\");
 		m_scoresDir.append(L"\\");
+		m_userHousesDir.append(L"\\");
 	}
 
 	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
@@ -192,7 +199,7 @@ bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtual
 	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
-PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, bool create)
+PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
 	wchar_t winPath[MAX_PATH + 1];
 
@@ -200,13 +207,56 @@ PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::Virtu
 		return false;
 
 	const DWORD desiredAccess = writeAccess ? (GENERIC_WRITE | GENERIC_READ) : GENERIC_READ;
-	const DWORD creationDisposition = create ? OPEN_ALWAYS : OPEN_EXISTING;
+	DWORD winCreationDisposition = 0;
 
-	HANDLE h = CreateFileW(winPath, desiredAccess, FILE_SHARE_READ, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+	switch (createDisposition)
+	{
+	case GpFileCreationDispositions::kCreateOrOverwrite:
+		winCreationDisposition = CREATE_ALWAYS;
+		break;
+	case GpFileCreationDispositions::kCreateNew:
+		winCreationDisposition = CREATE_NEW;
+		break;
+	case GpFileCreationDispositions::kCreateOrOpen:
+		winCreationDisposition = OPEN_ALWAYS;
+		break;
+	case GpFileCreationDispositions::kOpenExisting:
+		winCreationDisposition = OPEN_EXISTING;
+		break;
+	case GpFileCreationDispositions::kOverwriteExisting:
+		winCreationDisposition = TRUNCATE_EXISTING;
+		break;
+	default:
+		return false;
+	}
+
+	HANDLE h = CreateFileW(winPath, desiredAccess, FILE_SHARE_READ, nullptr, winCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h == INVALID_HANDLE_VALUE)
 		return false;
 
 	return new GpFileStream_Win32(h, true, writeAccess, true);
+}
+
+bool GpFileSystem_Win32::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
+{
+	wchar_t winPath[MAX_PATH + 1];
+
+	if (!ResolvePath(virtualDirectory, path, winPath))
+		return false;
+
+	if (DeleteFileW(winPath))
+	{
+		existed = true;
+		return true;
+	}
+
+	DWORD err = GetLastError();
+	if (err == ERROR_FILE_NOT_FOUND)
+		existed = false;
+	else
+		existed = true;
+
+	return false;
 }
 
 PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory)
@@ -223,6 +273,118 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(Portabi
 		return nullptr;
 
 	return GpDirectoryCursor_Win32::Create(ff, findData);
+}
+
+bool GpFileSystem_Win32::PromptSaveFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName)
+{
+	wchar_t baseFN[MAX_PATH + 5];
+	wchar_t baseDir[MAX_PATH + 5];
+
+	const size_t existingPathLen = strlen(initialFileName);
+	if (existingPathLen >= MAX_PATH)
+		return false;
+
+	for (size_t i = 0; i < existingPathLen; i++)
+		baseFN[i] = static_cast<wchar_t>(initialFileName[i]);
+	baseFN[existingPathLen] = 0;
+
+	if (!ResolvePath(virtualDirectory, "", baseDir))
+		return false;
+
+	OPENFILENAMEW ofn;
+	memset(&ofn, 0, sizeof(ofn));
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.lpstrFilter = L"GlidePort File (*.gpf)\0*.gpf\0";
+	ofn.lpstrFile = baseFN;
+	ofn.lpstrDefExt = L"gpf";
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrInitialDir = baseDir;
+	ofn.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
+
+	if (!GetSaveFileNameW(&ofn))
+		return false;
+
+	if (ofn.Flags & OFN_EXTENSIONDIFFERENT)
+	{
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, L"Save file failed: Saved files must have the '.gpf' extension", L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	const wchar_t *fn = ofn.lpstrFile + ofn.nFileOffset;
+	size_t fnLengthWithoutExt = wcslen(fn);
+	if (ofn.nFileExtension - 1 > ofn.nFileOffset)	// Off by 1 because extension doesn't include .
+		fnLengthWithoutExt = ofn.nFileExtension - ofn.nFileOffset - 1;
+
+	if (fnLengthWithoutExt >= pathCapacity)
+	{
+		wchar_t msg[256];
+		wsprintfW(msg, L"Save file failed: File name is too long.  Limit is %i characters.", static_cast<int>(pathCapacity));
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	if (ofn.nFileOffset != wcslen(baseDir) || memcmp(ofn.lpstrFile, baseDir, ofn.nFileOffset * sizeof(wchar_t)))
+	{
+		wchar_t msg[256 + MAX_PATH];
+		wsprintfW(msg, L"Save file failed: File can't be saved here, it must be saved in %s", baseDir);
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	const wchar_t *unsupportedCharMsg = L"File name contains unsupported characters.";
+
+	for (size_t i = 0; i < fnLengthWithoutExt; i++)
+	{
+		if (fn[i] < static_cast<wchar_t>(0) || fn[i] >= static_cast<wchar_t>(128))
+		{
+			MessageBeep(MB_ICONERROR);
+			MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
+			return false;
+		}
+
+		path[i] = static_cast<char>(fn[i]);
+	}
+
+	if (!ValidateFilePath(path, fnLengthWithoutExt))
+	{
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	outPathLength = fnLengthWithoutExt;
+
+	return true;
+}
+
+bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
+{
+	for (size_t i = 0; i < length; i++)
+	{
+		const char c = str[i];
+		if (c >= '0' && c <= '9')
+			continue;
+
+		if (c == '_' || c == '.' || c == '\'')
+			continue;
+
+		if (c == ' ' && i != 0 && i != length - 1)
+			continue;
+
+		if (c >= 'a' && c <= 'z')
+			continue;
+
+		if (c >= 'A' && c <= 'Z')
+			continue;
+
+		return false;
+	}
+
+	return true;
 }
 
 const wchar_t *GpFileSystem_Win32::GetBasePath() const
@@ -246,6 +408,9 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 		break;
 	case PortabilityLayer::VirtualDirectories::kGameData:
 		baseDir = m_housesDir.c_str();
+		break;
+	case PortabilityLayer::VirtualDirectories::kUserData:
+		baseDir = m_userHousesDir.c_str();
 		break;
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		baseDir = m_prefsDir.c_str();

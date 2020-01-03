@@ -11,11 +11,14 @@
 #include "PLPasStr.h"
 #include "PLResources.h"
 #include "PLSound.h"
+#include "PLSysCalls.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "FileManager.h"
+#include "HostFileSystem.h"
 #include "House.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 
 
 #define kGoToDialogID			1043
@@ -51,32 +54,23 @@ Boolean CreateNewHouse (void)
 	AEKeyword			theKeyword;
 	DescType			actualType;
 	Size				actualSize;
-	NavReplyRecord		theReply;
-	NavDialogOptions	dialogOptions;
 	VFileSpec			tempSpec;
 	VFileSpec			theSpec;
 	PLError_t			theErr;
-	
-	theErr = NavGetDefaultDialogOptions(&dialogOptions);
-	theErr = NavPutFile(nil, &theReply, &dialogOptions, nil, 'gliH', 'ozm5', nil);
-	if (theErr == PLErrors::kUserCancelled_TEMP)
-		return false;
-	if (!theReply.validRecord)
-		return (false);
-	
-	theErr = AEGetNthPtr(&(theReply.selection), 1, typeFSS, &theKeyword, 
-			&actualType, &theSpec, sizeof(VFileSpec), &actualSize);
 
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 
-	if (theReply.replacing)
-	{
-		if (fm->FileExists(theSpec.m_dir, theSpec.m_name))
-		{
-			CheckFileError(PLErrors::kFileNotFound, theSpec.m_name);
-			return (false);
-		}
+	theSpec.m_dir = PortabilityLayer::VirtualDirectories::kUserData;
+	PasStringCopy(PSTR("My House"), theSpec.m_name);
 
+	char savePath[sizeof(theSpec.m_name) + 1];
+	size_t savePathLength = 0;
+
+	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House")))
+		return false;
+
+	if (fm->FileExists(theSpec.m_dir, theSpec.m_name))
+	{
 		if (!fm->DeleteFile(theSpec.m_dir, theSpec.m_name))
 		{
 			CheckFileError(PLErrors::kAccessDenied, theSpec.m_name);
@@ -94,7 +88,7 @@ Boolean CreateNewHouse (void)
 	if (!CheckFileError(theErr, PSTR("New House")))
 		return (false);
 
-	theErr = HCreateResFile(theSpec.m_dir, theSpec.m_name);
+	theErr = PortabilityLayer::ResourceManager::GetInstance()->CreateBlankResFile(theSpec.m_dir, theSpec.m_name);
 	if (theErr != PLErrors::kNone)
 		YellowAlert(kYellowFailedResCreate, theErr);
 	

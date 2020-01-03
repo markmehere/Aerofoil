@@ -7,6 +7,8 @@
 #include <Windows.h>
 
 #undef CreateMutex
+#undef DeleteFile
+
 
 struct IGpFiber;
 struct IGpColorCursor_Win32;

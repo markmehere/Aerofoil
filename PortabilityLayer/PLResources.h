@@ -13,8 +13,6 @@ Handle Get1Resource(UInt32 resID, int index);
 Handle Get1IndResource(UInt32 resID, int index);
 int Count1Resources(UInt32 resType);
 
-PLError_t HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name);
-
 void SetResLoad(Boolean load);	// Sets whether resources should be loaded when requested
 
 long GetMaxResourceSize(Handle res);

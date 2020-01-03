@@ -14,8 +14,13 @@ public:
 
 	bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) override;
 	bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists) override;
-	PortabilityLayer::IOStream *OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, bool create) override;
+	PortabilityLayer::IOStream *OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition) override;
+	bool DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed) override;
 	PortabilityLayer::HostDirectoryCursor *ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory) override;
+
+	bool PromptSaveFile(PortabilityLayer::VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName) override;
+
+	bool ValidateFilePath(const char *path, size_t sz) const override;
 
 	const wchar_t *GetBasePath() const;
 
@@ -28,6 +33,7 @@ private:
 	std::wstring m_scoresDir;
 	std::wstring m_packagedDir;
 	std::wstring m_housesDir;
+	std::wstring m_userHousesDir;
 	std::wstring m_resourcesDir;
 	wchar_t m_executablePath[MAX_PATH];
 

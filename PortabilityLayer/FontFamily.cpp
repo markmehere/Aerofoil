@@ -11,7 +11,7 @@ namespace PortabilityLayer
 {
 	void FontFamily::AddFont(int flags, const char *path, FontHacks fontHacks)
 	{
-		PortabilityLayer::IOStream *sysFontStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, false);
+		PortabilityLayer::IOStream *sysFontStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, GpFileCreationDispositions::kOpenExisting);
 		if (!sysFontStream)
 			return;
 

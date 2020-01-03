@@ -366,6 +366,8 @@ namespace PortabilityLayer
 			m_firstMenu = insertingMenu;
 
 		existingMenuPtr->prevMenu = insertingMenu;
+
+		DrawMenuBar();
 	}
 
 	void MenuManagerImpl::InsertMenuAfter(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu)
@@ -384,6 +386,8 @@ namespace PortabilityLayer
 			m_lastMenu = insertingMenu;
 
 		existingMenuPtr->nextMenu = insertingMenu;
+
+		DrawMenuBar();
 	}
 
 	void MenuManagerImpl::InsertMenuAtEnd(const THandle<Menu> &insertingMenu)
@@ -399,6 +403,8 @@ namespace PortabilityLayer
 		(*m_lastMenu)->nextMenu = insertingMenu;
 		(*insertingMenu)->prevMenu = m_lastMenu;
 		m_lastMenu = insertingMenu;
+
+		DrawMenuBar();
 	}
 
 	void MenuManagerImpl::InsertMenuAtBeginning(const THandle<Menu> &insertingMenu)
@@ -414,12 +420,12 @@ namespace PortabilityLayer
 		(*m_firstMenu)->prevMenu = insertingMenu;
 		(*insertingMenu)->nextMenu = m_firstMenu;
 		m_firstMenu = insertingMenu;
+
+		DrawMenuBar();
 	}
 
 	void MenuManagerImpl::RemoveMenu(const THandle<Menu> &menu)
 	{
-		DrawMenuBar();
-
 		Menu *menuPtr = *menu;
 		if (menuPtr->stringBlobHandle)
 			PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(menuPtr->stringBlobHandle);
@@ -446,6 +452,8 @@ namespace PortabilityLayer
 		Menu *menu = *menuHandle;
 
 		menu->enabled = enabled;
+
+		DrawMenuBar();
 	}
 
 	void MenuManagerImpl::SetItemEnabled(const THandle<Menu> &menuHandle, unsigned int index, bool enabled)
@@ -456,6 +464,8 @@ namespace PortabilityLayer
 			return;
 
 		menu->menuItems[index].enabled = enabled;
+
+		DrawMenuBar();
 	}
 
 	void MenuManagerImpl::SetItemChecked(const THandle<Menu> &menuHandle, unsigned int index, bool checked)
@@ -472,7 +482,6 @@ namespace PortabilityLayer
 	{
 		return point.m_y >= 0 && static_cast<uint32_t>(point.m_y) < kMenuBarHeight;
 	}
-
 
 	void MenuManagerImpl::MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem)
 	{

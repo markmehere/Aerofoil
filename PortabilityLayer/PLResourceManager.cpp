@@ -32,6 +32,7 @@ namespace PortabilityLayer
 
 		short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
 		void CloseResFile(short ref) override;
+		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
 
 		THandle<void> GetResource(const ResTypeID &resType, int id) override;
 
@@ -161,7 +162,7 @@ namespace PortabilityLayer
 			return -1;
 
 		IOStream *fStream = nullptr;
-		if (FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Read, true, fStream) != PLErrors::kNone)
+		if (FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Read, true, GpFileCreationDispositions::kOpenExisting, fStream) != PLErrors::kNone)
 			return -1;
 
 		ResourceFile *resFile = new ResourceFile();
@@ -222,6 +223,29 @@ namespace PortabilityLayer
 		slot.m_nextFile = slot.m_prevFile = -1;
 
 		m_currentResFile = m_lastResFile;
+	}
+
+	PLError_t ResourceManagerImpl::CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename)
+	{
+		const uint8_t blankResFileData[] = {
+			0, 0, 0, 16, 0, 0,  0, 16, 0, 0,  0, 0,  0,   0,  0, 30,
+			0, 0, 0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0,   0,  0, 0,
+			0, 0, 0, 0,  0, 0,  0, 0,  0, 28, 0, 30, 255, 255 };
+
+		PortabilityLayer::IOStream *stream = nullptr;
+		PLError_t error = FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Write, true, GpFileCreationDispositions::kCreateOrOverwrite, stream);
+		if (error)
+			return error;
+
+		if (stream->Write(blankResFileData, sizeof(blankResFileData)) != sizeof(blankResFileData))
+		{
+			stream->Close();
+			return PLErrors::kIOError;
+		}
+
+		stream->Close();
+
+		return PLErrors::kNone;
 	}
 
 	THandle<void> ResourceManagerImpl::GetResource(const ResTypeID &resType, int id)

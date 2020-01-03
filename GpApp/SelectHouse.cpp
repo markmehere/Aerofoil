@@ -572,8 +572,9 @@ void DoDirSearch (void)
 	for (i = 0; i < kMaxDirectories; i++)
 		theDirs[i] = PortabilityLayer::VirtualDirectories::kUnspecified;
 	currentDir = 0;
-	theDirs[currentDir] = PortabilityLayer::VirtualDirectories::kGameData;
-	numDirs = 1;
+	theDirs[0] = PortabilityLayer::VirtualDirectories::kGameData;
+	theDirs[1] = PortabilityLayer::VirtualDirectories::kUserData;
+	numDirs = 2;
 
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 	

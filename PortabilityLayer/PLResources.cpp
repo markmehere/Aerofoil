@@ -45,12 +45,6 @@ int Count1Resources(UInt32 resType)
 	return 0;
 }
 
-PLError_t HCreateResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
 void SetResLoad(Boolean load)
 {
 	PortabilityLayer::ResourceManager::GetInstance()->SetResLoad(load != 0);

@@ -540,7 +540,7 @@ DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t d
 		if (!strcmp(&filename[fnLen - 4], ".gpf"))
 		{
 			const size_t dotPos = fnLen - 4;
-			PortabilityLayer::IOStream *stream = fs->OpenFile(dirID, filename, false, false);
+			PortabilityLayer::IOStream *stream = fs->OpenFile(dirID, filename, false, GpFileCreationDispositions::kOpenExisting);
 			if (!stream)
 				continue;
 

@@ -29,8 +29,10 @@ namespace PortabilityLayer
 		PLError_t OpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, IOStream *&outRefNum) override;
 		bool ReadFileProperties(VirtualDirectory_t dirID, const PLPasStr &filename, MacFileProperties &properties) override;
 
-		PLError_t RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
-		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, IOStream *&outStream) override;
+		PLError_t RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, IOStream *&outStream) override;
+		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, IOStream *&outStream) override;
+
+		bool PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName) override;
 
 		static FileManagerImpl *GetInstance();
 
@@ -38,7 +40,7 @@ namespace PortabilityLayer
 		typedef char ExtendedFileName_t[64 + 4];
 
 		PLError_t OpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, IOStream *&outRefNum);
-		PLError_t RawOpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, bool create, IOStream *&outStream);
+		PLError_t RawOpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, GpFileCreationDisposition_t createDisposition, IOStream *&outStream);
 
 		static bool ConstructFilename(ExtendedFileName_t& extFN, const PLPasStr &fn, const char *extension);
 
@@ -74,12 +76,28 @@ namespace PortabilityLayer
 
 	bool FileManagerImpl::DeleteFile(VirtualDirectory_t dirID, const PLPasStr &filename)
 	{
-		ExtendedFileName_t extFN;
-		if (!ConstructFilename(extFN, filename, ".gpf"))
-			return false;
+		const size_t numExts = 3;
 
-		// PL_NotYetImplemented_TODO("FileSystem")
-		return false;
+		const char *exts[numExts] = { ".gpr", ".gpd", ".gpf" };
+		const bool extMayNotExist[numExts] = { true, true, false };
+
+		for (int extIndex = 0; extIndex < numExts; extIndex++)
+		{
+			ExtendedFileName_t extFN;
+			if (!ConstructFilename(extFN, filename, exts[extIndex]))
+				return true;
+
+			bool existed = false;
+			if (!PortabilityLayer::HostFileSystem::GetInstance()->DeleteFile(dirID, extFN, existed))
+			{
+				if (extMayNotExist[extIndex] && !existed)
+					continue;
+				else
+					return false;
+			}
+		}
+
+		return true;
 	}
 
 	PLError_t FileManagerImpl::CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp)
@@ -92,7 +110,7 @@ namespace PortabilityLayer
 			return PLErrors::kBadFileName;
 
 		IOStream *stream = nullptr;
-		PLError_t err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Write, true, true, stream);
+		PLError_t err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Write, true, GpFileCreationDispositions::kCreateOrOverwrite, stream);
 		if (err)
 			return err;
 
@@ -130,7 +148,7 @@ namespace PortabilityLayer
 	bool FileManagerImpl::ReadFileProperties(VirtualDirectory_t dirID, const PLPasStr &filename, MacFileProperties &properties)
 	{
 		IOStream *stream = nullptr;
-		PLError_t err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Read, true, false, stream);
+		PLError_t err = RawOpenFileFork(dirID, filename, ".gpf", EFilePermission_Read, true, GpFileCreationDispositions::kOpenExisting, stream);
 		if (err)
 			return false;
 
@@ -144,14 +162,23 @@ namespace PortabilityLayer
 		return readOk;
 	}
 
-	PLError_t FileManagerImpl::RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
+	PLError_t FileManagerImpl::RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, GpFileCreationDisposition_t createDisposition, IOStream *&outStream)
 	{
-		return RawOpenFileFork(dirID, filename, ".gpd", permission, ignoreMeta, false, outStream);
+		return RawOpenFileFork(dirID, filename, ".gpd", permission, ignoreMeta, createDisposition, outStream);
 	}
 
-	PLError_t FileManagerImpl::RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, IOStream *&outStream)
+	PLError_t FileManagerImpl::RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, GpFileCreationDisposition_t createDisposition, IOStream *&outStream)
 	{
-		return RawOpenFileFork(dirID, filename, ".gpr", permission, ignoreMeta, false, outStream);
+		return RawOpenFileFork(dirID, filename, ".gpr", permission, ignoreMeta, createDisposition, outStream);
+	}
+
+	bool FileManagerImpl::PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName)
+	{
+		ExtendedFileName_t extFN;
+		if (!ConstructFilename(extFN, initialFileName, ""))
+			return false;
+
+		return PortabilityLayer::HostFileSystem::GetInstance()->PromptSaveFile(dirID, path, outPathLength, pathCapacity, extFN);
 	}
 
 	FileManagerImpl *FileManagerImpl::GetInstance()
@@ -162,8 +189,9 @@ namespace PortabilityLayer
 	PLError_t FileManagerImpl::OpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension, EFilePermission permission, IOStream *&outStream)
 	{
 		bool isWriteAccess = (permission == EFilePermission_Any || permission == EFilePermission_ReadWrite || permission == EFilePermission_Write);
+		GpFileCreationDisposition_t createDisposition = isWriteAccess ? GpFileCreationDispositions::kCreateOrOpen : GpFileCreationDispositions::kOpenExisting;
 		IOStream *stream = nullptr;
-		PLError_t openError = RawOpenFileFork(dirID, filename, extension, permission, false, isWriteAccess, stream);
+		PLError_t openError = RawOpenFileFork(dirID, filename, extension, permission, false, createDisposition, stream);
 		if (openError != PLErrors::kNone)
 			return openError;
 
@@ -172,7 +200,7 @@ namespace PortabilityLayer
 		return PLErrors::kNone;
 	}
 
-	PLError_t FileManagerImpl::RawOpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, bool create, IOStream *&outStream)
+	PLError_t FileManagerImpl::RawOpenFileFork(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext, EFilePermission permission, bool ignoreMeta, GpFileCreationDisposition_t createDisposition, IOStream *&outStream)
 	{
 		ExtendedFileName_t gpfExtFN;
 		ExtendedFileName_t extFN;
@@ -192,27 +220,25 @@ namespace PortabilityLayer
 		if (!ConstructFilename(extFN, filename, ext))
 			return PLErrors::kBadFileName;
 
-		const bool needToCreate = create && !HostFileSystem::GetInstance()->FileExists(dirID, extFN);
-
 		IOStream *fstream = nullptr;
 		switch (permission)
 		{
 		case EFilePermission_Any:
-			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, needToCreate);
+			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, createDisposition);
 			if (fstream)
 				permission = EFilePermission_ReadWrite;
 			else
 			{
 				permission = EFilePermission_Read;
-				fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, needToCreate);
+				fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, createDisposition);
 			}
 			break;
 		case EFilePermission_Read:
-			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, needToCreate);
+			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, createDisposition);
 			break;
 		case EFilePermission_ReadWrite:
 		case EFilePermission_Write:
-			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, needToCreate);
+			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, createDisposition);
 			break;
 		}
 
@@ -233,26 +259,8 @@ namespace PortabilityLayer
 		memcpy(extFN, fn.Chars(), fnameSize);
 		memcpy(extFN + fnameSize, extension, strlen(extension) + 1);
 
-		for (size_t i = 0; i < fnameSize; i++)
-		{
-			const char c = extFN[i];
-			if (c >= '0' && c <= '9')
-				continue;
-
-			if (c == '_' || c == '.' || c == '\'')
-				continue;
-
-			if (c == ' ' && i != 0 && i != fnameSize - 1)
-				continue;
-
-			if (c >= 'a' && c <= 'z')
-				continue;
-
-			if (c >= 'A' && c <= 'Z')
-				continue;
-
+		if (!PortabilityLayer::HostFileSystem::GetInstance()->ValidateFilePath(extFN, fnameSize))
 			return false;
-		}
 
 		return true;
 	}
