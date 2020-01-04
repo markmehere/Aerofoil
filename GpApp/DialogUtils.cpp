@@ -364,9 +364,9 @@ void DrawDefaultButton (Dialog *theDialog)
 
 	surface->SetForeColor(StdColors::Black());
 
-	for (int xOffset = 0; xOffset < 3; xOffset++)
+	for (int xOffset = -1; xOffset <= 1; xOffset++)
 	{
-		for (int yOffset = 0; yOffset < 3; yOffset++)
+		for (int yOffset = -1; yOffset <= 1; yOffset++)
 		{
 			const Rect offsetRect = itemRect + Point::Create(xOffset, yOffset);
 			surface->FrameRoundRect(offsetRect, 8, 8);
@@ -646,7 +646,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 	if (invert)
 	{
 		OffsetRect(&iRect, 0, 1);
-		InvertRect(&iRect);
+		surface->InvertFillRect(iRect, nullptr);
 	}
 }
 
@@ -680,12 +680,10 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 
 void LoadDialogPICT (Dialog *theDialog, short item, short theID)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
 	THandle<Picture>		thePict;
-	short			iType;
-	
-	GetDialogItem(theDialog, item, &iType, &iHandle, &iRect);
+
+	Rect			iRect = theDialog->GetItems()[item - 1].GetWidget()->GetRect();;
+
 	thePict = GetPicture(theID);
 	if (thePict)
 		theDialog->GetWindow()->GetDrawSurface()->DrawPicture(thePict, iRect);

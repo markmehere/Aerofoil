@@ -13,6 +13,7 @@
 
 namespace PortabilityLayer
 {
+	class ResourceFile;
 	class ScanlineMask;
 }
 
@@ -197,7 +198,7 @@ UInt32 RandomLongQUS (void);
 void RedAlert (short);
 void LoadGraphic (DrawSurface *, short);
 void LoadScaledGraphic (DrawSurface *, short, Rect *);
-void LargeIconPlot (Rect *, short);
+bool LargeIconPlot (DrawSurface *, PortabilityLayer::ResourceFile *, short, const Rect &);
 void DrawCIcon (DrawSurface *surface, short, short, short);
 char KeyMapOffsetFromRawKey (char);
 long LongSquareRoot (long);

@@ -1,5 +1,6 @@
 #include "PLApplication.h"
 #include "PLCore.h"
+#include "HostSystemServices.h"
 
 #include <string.h>
 #include <assert.h>
@@ -19,5 +20,5 @@ namespace PortabilityLayer
 
 void SysBeep(int duration)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::HostSystemServices::GetInstance()->Beep();
 }

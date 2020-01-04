@@ -41,7 +41,8 @@ namespace PortabilityLayer
 	{
 	public:
 		bool LoadColorIcon(const int16_t id, THandle<PixMapImpl> &outColorImage, THandle<PixMapImpl> &outBWImage, THandle<PixMapImpl> &outMaskImage) override;
-		THandle<PixMapImpl> LoadBWIcon(const int16_t id) override;
+		THandle<PixMapImpl> LoadSimpleColorIcon(const THandle<void> &hdl) override;
+		THandle<PixMapImpl> LoadBWIcon(const THandle<void> &hdl) override;
 
 		static IconLoaderImpl *GetInstance();
 
@@ -238,10 +239,61 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	THandle<PixMapImpl> IconLoaderImpl::LoadBWIcon(const int16_t id)
+	THandle<PixMapImpl> IconLoaderImpl::LoadSimpleColorIcon(const THandle<void> &hdl)
 	{
-		PL_NotYetImplemented();
-		return THandle<PixMapImpl>();
+		if (hdl == nullptr || hdl.MMBlock()->m_size != 1024)
+			return THandle<PixMapImpl>();
+
+		const Rect rect = Rect::Create(0, 0, 32, 32);
+		THandle<PixMapImpl> pixMap = PixMapImpl::Create(rect, GpPixelFormats::k8BitStandard);
+		if (!pixMap)
+			return THandle<PixMapImpl>();
+
+		const uint8_t *inData = static_cast<const uint8_t*>(*hdl);
+		uint8_t *outData = static_cast<uint8_t*>((*pixMap)->GetPixelData());
+		const size_t outPitch = (*pixMap)->GetPitch();
+
+		for (size_t row = 0; row < 32; row++)
+		{
+			for (size_t col = 0; col < 32; col++)
+				outData[col] = inData[col];
+
+			inData += 32;
+			outData += outPitch;
+		}
+
+		return pixMap;
+	}
+
+	THandle<PixMapImpl> IconLoaderImpl::LoadBWIcon(const THandle<void> &hdl)
+	{
+		if (hdl == nullptr || hdl.MMBlock()->m_size != 128)
+			return THandle<PixMapImpl>();
+
+		const Rect rect = Rect::Create(0, 0, 32, 32);
+		THandle<PixMapImpl> pixMap = PixMapImpl::Create(rect, GpPixelFormats::kBW1);
+		if (!pixMap)
+			return THandle<PixMapImpl>();
+
+		const uint8_t *inData = static_cast<const uint8_t*>(*hdl);
+		uint8_t *outData = static_cast<uint8_t*>((*pixMap)->GetPixelData());
+		const size_t outPitch = (*pixMap)->GetPitch();
+
+		for (size_t row = 0; row < 32; row++)
+		{
+			for (size_t col = 0; col < 32; col++)
+			{
+				if (inData[col / 8] & (0x80 >> (col & 7)))
+					outData[col] = 0xff;
+				else
+					outData[col] = 0x00;
+			}
+
+			inData += 4;
+			outData += outPitch;
+		}
+
+		return pixMap;
 	}
 
 	IconLoaderImpl *IconLoaderImpl::GetInstance()

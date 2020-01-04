@@ -355,7 +355,7 @@ void AddTempManholeRect (Rect *manHole)
 Boolean SetObjectState (short room, short object, short action, short local)
 {
 	char		wasState;
-	Boolean		changed;
+	Boolean		changed = false;
 	
 	switch ((*thisHouse)->rooms[room].objects[object].what)
 	{

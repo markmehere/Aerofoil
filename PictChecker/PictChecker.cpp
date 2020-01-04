@@ -1278,7 +1278,7 @@ int main(int argc, const char **argv)
 		FILE *f = fopen(filePath.c_str(), "rb");
 		CFileStream stream(f);
 
-		ResourceFile *resFile = new ResourceFile();
+		ResourceFile *resFile = ResourceFile::Create();
 		if (!resFile->Load(&stream))
 		{
 			assert(false);
@@ -1292,8 +1292,8 @@ int main(int argc, const char **argv)
 		const size_t numRefs = typeList->m_numRefs;
 		for (size_t i = 0; i < numRefs; i++)
 		{
-			const MMHandleBlock *hBlock = resFile->GetResource('PICT', typeList->m_firstRef[i].m_resID, true);
-			const void *pictData = hBlock->m_contents;
+			const THandle<void> hBlock = resFile->GetResource('PICT', typeList->m_firstRef[i].m_resID, true);
+			const void *pictData = *hBlock;
 
 			std::string dumpPath = "D:\\Source Code\\GlidePort\\DebugData\\PictDump\\";
 
@@ -1311,7 +1311,7 @@ int main(int argc, const char **argv)
 				int n = 0;
 			}
 
-			AuditPictOps2(static_cast<const uint8_t*>(pictData), hBlock->m_size, dumpPath.c_str());
+			AuditPictOps2(static_cast<const uint8_t*>(pictData), hBlock.MMBlock()->m_size, dumpPath.c_str());
 		}
 	}
 	

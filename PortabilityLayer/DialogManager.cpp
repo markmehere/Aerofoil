@@ -11,6 +11,7 @@
 #include "PLInvisibleWidget.h"
 #include "PLLabelWidget.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
@@ -77,12 +78,13 @@ namespace PortabilityLayer
 
 		Window *GetWindow() const override;
 		ArrayView<const DialogItem> GetItems() const override;
+		void SetItemVisibility(unsigned int itemIndex, bool isVisible) override;
 
 		int16_t ExecuteModal(DialogFilterFunc_t filterFunc) override;
 
 		bool Populate(DialogTemplate *tmpl);
 
-		void DrawControls();
+		void DrawControls(bool redraw);
 
 		Point MouseToDialog(const GpMouseInputEvent &evt);
 
@@ -192,6 +194,26 @@ namespace PortabilityLayer
 		return ArrayView<const DialogItem>(m_items, m_numItems);
 	}
 
+	void DialogImpl::SetItemVisibility(unsigned int itemIndex, bool isVisible)
+	{
+		Widget *widget = m_items[itemIndex].GetWidget();
+
+		if (widget->IsVisible() != isVisible)
+		{
+			widget->SetVisible(isVisible);
+
+			DrawSurface *surface = m_window->GetDrawSurface();
+
+			if (isVisible)
+				widget->DrawControl(surface);
+			else
+			{
+				surface->SetForeColor(StdColors::Red());
+				surface->FrameRect(surface->m_port.GetRect());
+			}
+		}
+	}
+
 	int16_t DialogImpl::ExecuteModal(DialogFilterFunc_t filterFunc)
 	{
 		Window *window = this->GetWindow();
@@ -297,14 +319,22 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	void DialogImpl::DrawControls()
+	void DialogImpl::DrawControls(bool redraw)
 	{
 		DrawSurface *surface = m_window->GetDrawSurface();
+
+		if (redraw)
+		{
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(surface->m_port.GetRect());
+		}
 
 		for (ArrayViewIterator<const DialogItem> it = GetItems().begin(), itEnd = GetItems().end(); it != itEnd; ++it)
 		{
 			const DialogItem &item = *it;
-			item.GetWidget()->DrawControl(surface);
+			Widget *widget = item.GetWidget();
+			if (widget->IsVisible())
+				widget->DrawControl(surface);
 		}
 	}
 
@@ -469,7 +499,7 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		dialog->DrawControls();
+		dialog->DrawControls(true);
 
 		return dialog;
 	}

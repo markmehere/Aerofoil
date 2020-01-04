@@ -74,6 +74,12 @@ uint64_t GpSystemServices_Win32::GetFreeMemoryCosmetic() const
 	return memStatus.ullAvailPhys;
 }
 
+void GpSystemServices_Win32::Beep() const
+{
+	MessageBeep(MB_OK);
+}
+
+
 GpSystemServices_Win32 *GpSystemServices_Win32::GetInstance()
 {
 	return &ms_instance;

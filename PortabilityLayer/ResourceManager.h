@@ -10,6 +10,7 @@ namespace PortabilityLayer
 {
 	struct MMHandleBlock;
 	struct ResourceCompiledRef;
+	class ResourceFile;
 	class ResTypeID;
 
 	class ResourceManager
@@ -20,6 +21,7 @@ namespace PortabilityLayer
 
 		virtual void SetResLoad(bool load) = 0;
 
+		virtual ResourceFile *LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const = 0;
 		virtual short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
 		virtual void CloseResFile(short ref) = 0;
 		virtual PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;

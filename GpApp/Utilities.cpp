@@ -14,6 +14,7 @@
 #include "QDPixMap.h"
 #include "Externs.h"
 #include "IconLoader.h"
+#include "ResourceFile.h"
 #include "Utilities.h"
 
 
@@ -314,14 +315,39 @@ void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 //--------------------------------------------------------------  LargeIconPlot
 // Draws a standard b&w icon (32 x 32) - resource is an 'ICON'.
 
-void LargeIconPlot (Rect *theRect, short theID)
+bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::ResourceFile *resFile, short resID, const Rect &theRect)
 {
-	PLError_t		theErr;
-	Handle		theSuite;
-	
-	theErr = GetIconSuite(&theSuite, theID, svAllLargeData);
-	if (theErr == PLErrors::kNone)
-		theErr = PlotIconSuite(theRect, theSuite);
+	Handle hdl = resFile->GetResource('icl8', resID, true);
+	if (hdl)
+	{
+		THandle<PortabilityLayer::PixMapImpl> img = PortabilityLayer::IconLoader::GetInstance()->LoadSimpleColorIcon(hdl);
+
+		if (img)
+		{
+			CopyBits(*img, *surface->m_port.GetPixMap(), &(*img)->m_rect, &theRect, srcCopy);
+			img.Dispose();
+		}
+
+		hdl.Dispose();
+		return true;
+	}
+
+	hdl = resFile->GetResource('ICN#', resID, true);
+	if (hdl)
+	{
+		THandle<PortabilityLayer::PixMapImpl> img = PortabilityLayer::IconLoader::GetInstance()->LoadBWIcon(hdl);
+
+		if (img)
+		{
+			CopyBits(*img, *surface->m_port.GetPixMap(), &(*img)->m_rect, &theRect, srcCopy);
+			img.Dispose();
+		}
+
+		hdl.Dispose();
+		return true;
+	}
+
+	return false;
 }
 
 //--------------------------------------------------------------  DrawCIcon

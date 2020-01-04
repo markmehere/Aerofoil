@@ -356,18 +356,18 @@ namespace PortabilityLayer
 		return tl;
 	}
 
-	MMHandleBlock *ResourceFile::GetResource(const ResTypeID &resType, int id, bool load)
+	THandle<void> ResourceFile::GetResource(const ResTypeID &resType, int id, bool load)
 	{
 		const ResourceCompiledTypeList *tl = GetResourceTypeList(resType);
 		if (tl == nullptr)
-			return nullptr;
+			return THandle<void>();
 
 		ResourceCompiledRef *refStart = tl->m_firstRef;
 		ResourceCompiledRef *refEnd = refStart + tl->m_numRefs;
 		ResourceCompiledRef *ref = BinarySearch(refStart, refEnd, id, CompiledRefSearchPredicate);
 
 		if (ref == refEnd)
-			return nullptr;
+			return THandle<void>();
 
 		MMHandleBlock *handle = nullptr;
 		if (ref->m_handle != nullptr)
@@ -391,6 +391,21 @@ namespace PortabilityLayer
 			}
 		}
 
-		return handle;
+		return THandle<void>(handle);
+	}
+
+	ResourceFile *ResourceFile::Create()
+	{
+		void *storage = PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(ResourceFile));
+		if (!storage)
+			return nullptr;
+
+		return new (storage) ResourceFile();
+	}
+
+	void ResourceFile::Destroy()
+	{
+		this->~ResourceFile();
+		PortabilityLayer::MemoryManager::GetInstance()->Release(this);
 	}
 }

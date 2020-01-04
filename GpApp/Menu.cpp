@@ -346,7 +346,7 @@ void DoGameMenu (short theItem)
 				Rect		updateRect;
 				
 				SetRect(&updateRect, splashOriginH + 474, splashOriginV + 304, splashOriginH + 474 + 166, splashOriginV + 304 + 12);
-				InvalWindowRect(mainWindow, &updateRect);
+				UpdateMainWindow();
 			}
 		}
 #endif

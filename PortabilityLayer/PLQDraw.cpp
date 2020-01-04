@@ -1101,7 +1101,7 @@ void DrawSurface::InvertFrameRect(const Rect &rect, const uint8_t *pattern)
 
 void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("InvertFillRect");
 }
 
 void DrawSurface::SetForeColor(const PortabilityLayer::RGBAColor &color)

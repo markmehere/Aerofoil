@@ -23,6 +23,8 @@ struct Dialog
 	virtual Window *GetWindow() const = 0;
 	virtual ArrayView<const PortabilityLayer::DialogItem> GetItems() const = 0;
 
+	virtual void SetItemVisibility(unsigned int itemIndex, bool isVisible) = 0;
+
 	virtual int16_t ExecuteModal(DialogFilterFunc_t filterFunc) = 0;
 };
 

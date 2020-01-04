@@ -1,7 +1,6 @@
 #pragma once
-#ifndef __PL_RESOURCE_FILE_H__
-#define __PL_RESOURCE_FILE_H__
 
+#include "PLHandle.h"
 #include "ResTypeID.h"
 #include <stdint.h>
 
@@ -17,17 +16,19 @@ namespace PortabilityLayer
 	class ResourceFile
 	{
 	public:
-		ResourceFile();
-		~ResourceFile();
-
 		bool Load(IOStream *stream);
 
 		void GetAllResourceTypeLists(ResourceCompiledTypeList *&outTypeLists, size_t &outCount) const;
 
 		const ResourceCompiledTypeList *GetResourceTypeList(const ResTypeID &resType);
-		MMHandleBlock *GetResource(const ResTypeID &resType, int id, bool load);
+		THandle<void> GetResource(const ResTypeID &resType, int id, bool load);
+
+		static ResourceFile *Create();
+		void Destroy();
 
 	private:
+		ResourceFile();
+		~ResourceFile();
 
 		uint8_t *m_resDataBlob;
 		size_t m_resDataBlobSize;
@@ -48,5 +49,3 @@ namespace PortabilityLayer
 		static int CompiledTypeListSearchPredicate(const ResTypeID &resTypeID, const ResourceCompiledTypeList &typeList);
 	};
 }
-
-#endif

@@ -30,6 +30,7 @@ namespace PortabilityLayer
 		
 		void SetResLoad(bool load) override;
 
+		ResourceFile *LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const override;
 		short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
 		void CloseResFile(short ref) override;
 		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
@@ -131,7 +132,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		delete rf;
+		rf->Destroy();
 	}
 
 	ResourceManagerImpl *ResourceManagerImpl::GetInstance()
@@ -142,6 +143,28 @@ namespace PortabilityLayer
 	void ResourceManagerImpl::SetResLoad(bool load)
 	{
 		m_load = load;
+	}
+
+	ResourceFile *ResourceManagerImpl::LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const
+	{
+		IOStream *fStream = nullptr;
+		if (FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Read, true, GpFileCreationDispositions::kOpenExisting, fStream) != PLErrors::kNone)
+			return nullptr;
+
+		ResourceFile *resFile = ResourceFile::Create();
+		if (!resFile)
+			return nullptr;
+
+		bool loaded = resFile->Load(fStream);
+		fStream->Close();
+
+		if (!loaded)
+		{
+			resFile->Destroy();
+			return nullptr;
+		}
+
+		return resFile;
 	}
 
 	short ResourceManagerImpl::OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename)
@@ -161,19 +184,11 @@ namespace PortabilityLayer
 		if (resFileIndex == 0x7fff)
 			return -1;
 
-		IOStream *fStream = nullptr;
-		if (FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Read, true, GpFileCreationDispositions::kOpenExisting, fStream) != PLErrors::kNone)
-			return -1;
 
-		ResourceFile *resFile = new ResourceFile();
-		bool loaded = resFile->Load(fStream);
-		fStream->Close();
+		ResourceFile *resFile = LoadResFile(virtualDir, filename);
 
-		if (!loaded)
-		{
-			delete resFile;
+		if (!resFile)
 			return -1;
-		}
 
 		ResFileSlot slot;
 		slot.m_resourceFile = resFile;
@@ -202,7 +217,10 @@ namespace PortabilityLayer
 	void ResourceManagerImpl::CloseResFile(short ref)
 	{
 		ResFileSlot &slot = m_resFiles[ref];
-		delete slot.m_resourceFile;
+
+		assert(slot.m_resourceFile != nullptr);
+
+		slot.m_resourceFile->Destroy();
 		slot.m_resourceFile = nullptr;
 
 		if (m_lastResFile == ref)
@@ -256,8 +274,9 @@ namespace PortabilityLayer
 			const ResFileSlot& slot = m_resFiles[searchIndex];
 			assert(slot.m_resourceFile);
 
-			if (MMHandleBlock *block = slot.m_resourceFile->GetResource(resType, id, m_load))
-				return THandle<void>(block);
+			THandle<void> resHdl = slot.m_resourceFile->GetResource(resType, id, m_load);
+			if (resHdl != nullptr)
+				return resHdl;
 
 			searchIndex = slot.m_prevFile;
 		}

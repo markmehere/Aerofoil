@@ -94,8 +94,8 @@ void ConvertCursors(PortabilityLayer::ResourceFile *resFile)
 	for (size_t i = 0; i < numRefs; i++)
 	{
 		const int resID = typeList->m_firstRef[i].m_resID;
-		const PortabilityLayer::MMHandleBlock *hBlock = resFile->GetResource('crsr', resID, true);
-		const void *cursorDataBase = hBlock->m_contents;
+		const THandle<void> resHdl = resFile->GetResource('crsr', resID, true);
+		const void *cursorDataBase = *resHdl;
 		const void *cursorData = cursorDataBase;
 
 		const CursorHeader *cursorHeader = static_cast<const CursorHeader *>(cursorData);
@@ -247,16 +247,16 @@ void ConvertIconFamily(PortabilityLayer::ResourceFile *resFile, int32_t iconBitm
 	for (size_t i = 0; i < numRefs; i++)
 	{
 		const int resID = typeList->m_firstRef[i].m_resID;
-		const PortabilityLayer::MMHandleBlock *bwBlock = resFile->GetResource(iconBitmapType, resID, true);
-		const PortabilityLayer::MMHandleBlock *colorBlock = resFile->GetResource(iconColorType, resID, true);
+		const THandle<void> bwBlock = resFile->GetResource(iconBitmapType, resID, true);
+		const THandle<void> colorBlock = resFile->GetResource(iconColorType, resID, true);
 
 		if (!bwBlock || !colorBlock)
 			continue;
 
-		const uint8_t *bwIconData = static_cast<const uint8_t*>(bwBlock->m_contents);
+		const uint8_t *bwIconData = static_cast<const uint8_t*>(*bwBlock);
 		const uint8_t *bwMaskData = bwIconData + (dimension * dimension / 8);
 
-		const uint8_t *indexedData = static_cast<const uint8_t*>(colorBlock->m_contents);
+		const uint8_t *indexedData = static_cast<const uint8_t*>(*colorBlock);
 
 		PortabilityLayer::RGBAColor *pixelData = new PortabilityLayer::RGBAColor[dimension * dimension * 4];
 
@@ -321,7 +321,7 @@ int main(int argc, const char **argv)
 
 	PortabilityLayer::CFileStream stream(f);
 
-	PortabilityLayer::ResourceFile *resFile = new PortabilityLayer::ResourceFile();
+	PortabilityLayer::ResourceFile *resFile = PortabilityLayer::ResourceFile::Create();
 	if (!resFile->Load(&stream))
 		return -1;
 

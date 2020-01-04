@@ -44,6 +44,10 @@ namespace PortabilityLayer
 
 		void SetEnabled(bool enabled);
 		void SetState(int16_t state);
+
+		void SetVisible(bool visible);
+		bool IsVisible() const;
+
 		virtual void SetString(const PLPasStr &str);
 		virtual void SetHighlightStyle(int16_t style);
 
@@ -63,6 +67,7 @@ namespace PortabilityLayer
 		Rect m_rect;
 		int16_t m_state;
 		bool m_enabled;
+		bool m_visible;
 	};
 }
 

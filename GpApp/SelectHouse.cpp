@@ -17,7 +17,9 @@
 #include "FileManager.h"
 #include "House.h"
 #include "RectUtils.h"
+#include "ResourceFile.h"
 #include "ResourceManager.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "VirtualDirectory.h"
 
 
@@ -42,7 +44,7 @@
 void UpdateLoadDialog (Dialog *);
 void PageUpHouses (Dialog *);
 void PageDownHouses (Dialog *);
-Boolean LoadFilter (Dialog *, EventRecord *, short *);
+int16_t LoadFilter (Dialog *, const TimeTaggedVOSEvent &);
 void SortHouseList (void);
 void DoDirSearch (void);
 
@@ -66,12 +68,14 @@ extern	UInt32			doubleTime;
 void UpdateLoadDialog (Dialog *theDialog)
 {
 	Rect		tempRect, dialogRect, dummyRect;
-	short		houseStart, houseStop, i, wasResFile, isResFile, count;
+	short		houseStart, houseStop, i, wasResFile, count;
 //	char		wasState;
 	WindowRef	theWindow;
 //	RgnHandle	theRegion;
-	
+
 	theWindow = theDialog->GetWindow();
+	DrawSurface *surface = theWindow->GetDrawSurface();
+
 	GetWindowBounds(theWindow, kWindowContentRgn, &dialogRect);
 	/*
 	wasState = HGetState((Handle)(((DialogPeek)theDialog)->window).port.visRgn);
@@ -79,8 +83,7 @@ void UpdateLoadDialog (Dialog *theDialog)
 	dialogRect = (**((((DialogPeek)theDialog)->window).port.visRgn)).rgnBBox;
 	HSetState((Handle)(((DialogPeek)theDialog)->window).port.visRgn, wasState);
 	*/
-	
-	DrawDialog(theDialog);
+
 	ColorFrameWHRect(theDialog->GetWindow()->GetDrawSurface(), 8, 39, 413, 184, kRedOrangeColor8);	// box around files
 	
 	houseStart = housePage;
@@ -88,7 +91,6 @@ void UpdateLoadDialog (Dialog *theDialog)
 	if ((houseStop - houseStart) > kDispFiles)
 		houseStop = houseStart + kDispFiles;
 	
-	wasResFile = CurResFile();
 	count = 0;
 	
 	for (i = 0; i < 12; i++)
@@ -103,17 +105,16 @@ void UpdateLoadDialog (Dialog *theDialog)
 		
 		if (SectRect(&dialogRect, &tempRect, &dummyRect))
 		{
-			isResFile = HOpenResFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name, fsRdPerm);
-			if (isResFile != -1)
+			PortabilityLayer::ResourceFile *resFile = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name);
+			if (resFile != nullptr)
 			{
-				if (Get1Resource('icl8', -16455) != nil)
+				if (!LargeIconPlot(surface, resFile, -16455, tempRect))
 				{
-					LargeIconPlot(&tempRect, -16455);
+					LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage,
+						kDefaultHousePict8);
 				}
-				else
-					LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage, 
-							kDefaultHousePict8);
-				PortabilityLayer::ResourceManager::GetInstance()->CloseResFile(isResFile);
+
+				resFile->Destroy();
 			}
 			else
 				LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage, 
@@ -131,7 +132,6 @@ void UpdateLoadDialog (Dialog *theDialog)
 	}
 	
 	InitCursor();
-	UseResFile(wasResFile);
 }
 #endif
 
@@ -152,11 +152,11 @@ void PageUpHouses (Dialog *theDial)
 	housePage -= kDispFiles;
 	thisHouseIndex = kDispFiles - 1;
 	
-	ShowDialogItem(theDial, kScrollDownItem);
+	theDial->SetItemVisibility(kScrollDownItem - 1, true);
 	if (housePage < kDispFiles)
 	{
 		GetDialogItemRect(theDial, kScrollUpItem, &tempRect);
-		HideDialogItem(theDial, kScrollUpItem);
+		theDial->SetItemVisibility(kScrollUpItem - 1, false);
 		DrawCIcon(surface, kGrayedOutUpArrow, tempRect.left, tempRect.top);
 	}
 	
@@ -165,7 +165,8 @@ void PageUpHouses (Dialog *theDial)
 	surface->SetForeColor(StdColors::White());
 	surface->FillRect(tempRect);
 	surface->SetForeColor(StdColors::Black());
-	InvalWindowRect(theDial->GetWindow(), &tempRect);
+
+	UpdateLoadDialog(theDial);
 }
 #endif
 
@@ -186,11 +187,11 @@ void PageDownHouses (Dialog *theDial)
 	housePage += kDispFiles;
 	thisHouseIndex = 0;
 	
-	ShowDialogItem(theDial, kScrollUpItem);
+	theDial->SetItemVisibility(kScrollUpItem - 1, true);
 	if (housePage >= (housesFound - kDispFiles))
 	{
 		GetDialogItemRect(theDial, kScrollDownItem, &tempRect);
-		HideDialogItem(theDial, kScrollDownItem);
+		theDial->SetItemVisibility(kScrollDownItem - 1, false);
 		DrawCIcon(surface, kGrayedOutDownArrow, tempRect.left, tempRect.top);
 	}
 	
@@ -198,46 +199,39 @@ void PageDownHouses (Dialog *theDial)
 	surface->SetForeColor(StdColors::White());
 	surface->FillRect(tempRect);
 	surface->SetForeColor(StdColors::Black());
-	InvalWindowRect(theDial->GetWindow(), &tempRect);
+
+	UpdateLoadDialog(theDial);
 }
 #endif
 
 //--------------------------------------------------------------  LoadFilter
 #ifndef COMPILEDEMO
 
-Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
 	short		screenCount, i, wasIndex;
-	
-	switch (event->what)
+
+	if (evt.IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		const intptr_t keyCode = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+		switch (keyCode)
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+			return kOkayButton;
 
-			case PL_KEY_SPECIAL(kEscape):
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
+			return kCancelButton;
 
-			case PL_KEY_SPECIAL(kPageUp):
-			*item = kScrollUpItem;
-			return (true);
-			break;
+		case PL_KEY_SPECIAL(kPageUp):
+			return kScrollUpItem;
 
-			case PL_KEY_SPECIAL(kPageDown):
-			*item = kScrollDownItem;
-			return (true);
-			break;
+		case PL_KEY_SPECIAL(kPageDown):
+			return kScrollDownItem;
 
-			case PL_KEY_SPECIAL(kUpArrow):
+		case PL_KEY_SPECIAL(kUpArrow):
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex -= 4;
 			if (thisHouseIndex < 0)
@@ -245,18 +239,17 @@ Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
 				screenCount = housesFound - housePage;
 				if (screenCount > kDispFiles)
 					screenCount = kDispFiles;
-				
+
 				thisHouseIndex += 4;
-				thisHouseIndex = (((screenCount - 1) / 4) * 4) + 
-						(thisHouseIndex % 4);
+				thisHouseIndex = (((screenCount - 1) / 4) * 4) +
+					(thisHouseIndex % 4);
 				if (thisHouseIndex >= screenCount)
 					thisHouseIndex -= 4;
 			}
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
-			return(true);
-			break;
+			return 0;
 
-			case PL_KEY_SPECIAL(kDownArrow):
+		case PL_KEY_SPECIAL(kDownArrow):
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex += 4;
 			screenCount = housesFound - housePage;
@@ -265,10 +258,10 @@ Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
 			if (thisHouseIndex >= screenCount)
 				thisHouseIndex %= 4;
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
-			return(true);
-			break;
 
-			case PL_KEY_SPECIAL(kLeftArrow):
+			return 0;
+
+		case PL_KEY_SPECIAL(kLeftArrow):
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex--;
 			if (thisHouseIndex < 0)
@@ -279,11 +272,10 @@ Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
 				thisHouseIndex = screenCount - 1;
 			}
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
-			return(true);
-			break;
+			return 0;
 
-			case PL_KEY_SPECIAL(kTab):
-			case PL_KEY_SPECIAL(kRightArrow):
+		case PL_KEY_SPECIAL(kTab):
+		case PL_KEY_SPECIAL(kRightArrow):
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex++;
 			screenCount = housesFound - housePage;
@@ -292,13 +284,12 @@ Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
 			if (thisHouseIndex >= screenCount)
 				thisHouseIndex = 0;
 			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
-			return(true);
-			break;
-			
-			default:
-			if (PL_KEY_GET_EVENT_TYPE(event->message) == KeyEventType_ASCII)
+			return 0;
+
+		default:
+			if (PL_KEY_GET_EVENT_TYPE(keyCode) == KeyEventType_ASCII)
 			{
-				char theChar = static_cast<char>(PL_KEY_GET_VALUE(event->message));
+				char theChar = static_cast<char>(PL_KEY_GET_VALUE(keyCode));
 
 				if (theChar >= 'A' && theChar <= 'Z')
 				{
@@ -325,35 +316,29 @@ Boolean LoadFilter (Dialog *dial, EventRecord *event, short *item)
 						InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 					}
 				}
-				return(true);
+				return 0;
 			}
 			else
-				return(false);
+				return -1;
 		}
-		break;
-		
-		case mouseDown:
-		lastWhenClick = event->when - lastWhenClick;
-		SubPt(event->where, &lastWhereClick);
-		return(false);
-		break;
-		
-		case mouseUp:
-		lastWhenClick = event->when;
-		lastWhereClick = event->where;
-		return(false);
-		break;
-		
-		case updateEvt:
-		UpdateLoadDialog(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
+	}
+	else if (evt.IsLMouseDownEvent())
+	{
+		const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+		lastWhenClick = evt.m_timestamp - lastWhenClick;
+		lastWhereClick -= Point::Create(mouseEvt.m_x, mouseEvt.m_y);
+
+		return -1;
+	}
+	else if (evt.IsLMouseUpEvent())
+	{
+		const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+		lastWhenClick = evt.m_timestamp;
+		lastWhereClick = Point::Create(mouseEvt.m_x, mouseEvt.m_y);
+
+		return -1;
 	}
 }
 #endif
@@ -365,7 +350,7 @@ void DoLoadHouse (void)
 {
 	Rect			tempRect;
 	Dialog			*theDial;
-	short			i, item, wasIndex, screenCount;
+	short			i, wasIndex, screenCount;
 	Boolean			leaving, whoCares;
 	
 	BringUpDialog(&theDial, kLoadHouseDialogID);
@@ -375,11 +360,11 @@ void DoLoadHouse (void)
 	if (housesFound <= kDispFiles)
 	{
 		GetDialogItemRect(theDial, kScrollUpItem, &tempRect);
-		HideDialogItem(theDial, kScrollUpItem);
+		theDial->SetItemVisibility(kScrollUpItem - 1, false);
 		DrawCIcon(surface, kGrayedOutUpArrow, tempRect.left, tempRect.top);
 		
 		GetDialogItemRect(theDial, kScrollDownItem, &tempRect);
-		HideDialogItem(theDial, kScrollDownItem);
+		theDial->SetItemVisibility(kScrollDownItem - 1, false);
 		DrawCIcon(surface, kGrayedOutDownArrow, tempRect.left, tempRect.top);
 	}
 	else
@@ -387,13 +372,13 @@ void DoLoadHouse (void)
 		if (thisHouseIndex < kDispFiles)
 		{
 			GetDialogItemRect(theDial, kScrollUpItem, &tempRect);
-			HideDialogItem(theDial, kScrollUpItem);
+			theDial->SetItemVisibility(kScrollUpItem - 1, false);
 			DrawCIcon(surface, kGrayedOutUpArrow, tempRect.left, tempRect.top);
 		}
 		else if (thisHouseIndex > (housesFound - kDispFiles))
 		{				
 			GetDialogItemRect(theDial, kScrollDownItem, &tempRect);
-			HideDialogItem(theDial, kScrollDownItem);
+			theDial->SetItemVisibility(kScrollDownItem - 1, false);
 			DrawCIcon(surface, kGrayedOutDownArrow, tempRect.left, tempRect.top);
 		}
 	}
@@ -412,10 +397,12 @@ void DoLoadHouse (void)
 	}
 	
 	leaving = false;
+
+	UpdateLoadDialog(theDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(LoadFilter, &item);
+		int16_t item = theDial->ExecuteModal(LoadFilter);
 		
 		if (item == kOkayButton)
 		{

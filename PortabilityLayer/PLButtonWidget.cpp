@@ -1,12 +1,15 @@
 #include "PLButtonWidget.h"
 #include "PLCore.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "PLStandardColors.h"
+#include "FontFamily.h"
 
 namespace PortabilityLayer
 {
 	ButtonWidget::ButtonWidget(const WidgetBasicState &state)
 		: WidgetSpec<ButtonWidget>(state)
 		, m_haveMouseDown(false)
+		, m_text(state.m_text)
 	{
 	}
 
@@ -50,5 +53,15 @@ namespace PortabilityLayer
 	{
 		(void)state;
 		return true;
+	}
+
+	void ButtonWidget::DrawControl(DrawSurface *surface)
+	{
+		surface->SetForeColor(StdColors::Black());
+		surface->FrameRect(this->m_rect);
+		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;
+		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(surface->MeasureFontAscender())) / 2;
+		surface->DrawString(Point::Create(x, y), m_text.ToShortStr());
 	}
 }

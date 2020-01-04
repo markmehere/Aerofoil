@@ -20,6 +20,7 @@ public:
 	PortabilityLayer::HostMutex *CreateMutex() override;
 	PortabilityLayer::HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
 	uint64_t GetFreeMemoryCosmetic() const override;
+	void Beep() const override;
 
 	static GpSystemServices_Win32 *GetInstance();
 

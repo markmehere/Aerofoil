@@ -35,6 +35,16 @@ namespace PortabilityLayer
 		OnStateChanged();
 	}
 
+	void Widget::SetVisible(bool visible)
+	{
+		m_visible = visible;
+	}
+
+	bool Widget::IsVisible() const
+	{
+		return m_visible;
+	}
+
 	void Widget::SetHighlightStyle(int16_t style)
 	{
 		(void)style;
@@ -54,6 +64,7 @@ namespace PortabilityLayer
 		: m_rect(state.m_rect)
 		, m_window(state.m_window)
 		, m_enabled(state.m_enabled)
+		, m_visible(true)
 		, m_state(0)
 	{
 	}

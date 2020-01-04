@@ -13,6 +13,9 @@ struct Point
 	Point operator-(const Point &other) const;
 	Point operator+(const Point &other) const;
 
+	Point &operator-=(const Point &other);
+	Point &operator+=(const Point &other);
+
 	static Point Create(int16_t h, int16_t v);
 };
 
@@ -115,6 +118,20 @@ inline Point Point::operator-(const Point &other) const
 inline Point Point::operator+(const Point &other) const
 {
 	return Point::Create(this->h + other.h, this->v + other.v);
+}
+
+inline Point &Point::operator-=(const Point &other)
+{
+	this->h -= other.h;
+	this->v -= other.v;
+	return *this;
+}
+
+inline Point &Point::operator+=(const Point &other)
+{
+	this->h += other.h;
+	this->v += other.v;
+	return *this;
 }
 
 inline Point Point::Create(int16_t h, int16_t v)

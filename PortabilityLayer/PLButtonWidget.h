@@ -12,6 +12,8 @@ namespace PortabilityLayer
 
 		bool Init(const WidgetBasicState &state) override;
 
+		void DrawControl(DrawSurface *surface) override;
+
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
 
 	private:

@@ -994,6 +994,10 @@ void HandleSwitches (hotPtr who)
 	roomLinked = masterObjects[whoLinked].roomLink;
 	objectLinked = masterObjects[whoLinked].objectLink;
 	linkIndex = masterObjects[whoLinked].localLink;
+
+	if (roomLinked < 0)
+		return;	// GP: Some objects (like Leviathan) have corrupted switch data
+
 											// change state of linked obj.
 	if (SetObjectState(roomLinked, objectLinked, 
 			masterObjects[whoLinked].theObject.data.e.type, linkIndex))

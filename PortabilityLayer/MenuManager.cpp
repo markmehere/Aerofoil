@@ -442,8 +442,6 @@ namespace PortabilityLayer
 		if (m_lastMenu == menu)
 			m_lastMenu = menuPtr->prevMenu;
 
-		menu.Dispose();
-
 		DrawMenuBar();
 	}
 

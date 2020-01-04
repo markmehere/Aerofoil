@@ -21,6 +21,7 @@ namespace PortabilityLayer
 		virtual HostMutex *CreateMutex() = 0;
 		virtual HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) = 0;
 		virtual size_t GetFreeMemoryCosmetic() const = 0;	// Returns free memory in bytes, does not have to be accurate
+		virtual void Beep() const = 0;
 
 		static void SetInstance(HostSystemServices *instance);
 		static HostSystemServices *GetInstance();
