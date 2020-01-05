@@ -12,6 +12,7 @@
 #include "Externs.h"
 #include "FontFamily.h"
 #include "House.h"
+#include "InputManager.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
 
@@ -161,7 +162,6 @@ void SetInitialTiles (short background, Boolean doRoom)
 #ifndef COMPILEDEMO
 Boolean CreateNewRoom (short h, short v)
 {
-	KeyDownStates		theKeys;
 	long		howMuch;
 	PLError_t		theErr;
 	short		i, availableRoom;
@@ -221,9 +221,10 @@ Boolean CreateNewRoom (short h, short v)
 	noRoomAtAll = false;
 	fileDirty = true;
 	UpdateMenus(false);
-	
-	GetKeys(theKeys);
-	if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift)))
+
+	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+	if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift)))
 		newRoomNow = false;
 	else
 		newRoomNow = autoRoomEdit;			// Flag to bring up RoomInfo

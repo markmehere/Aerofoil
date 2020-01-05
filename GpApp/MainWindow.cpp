@@ -12,6 +12,7 @@
 #include "Environ.h"
 #include "FontFamily.h"
 #include "House.h"
+#include "InputManager.h"
 #include "MenuManager.h"
 #include "RectUtils.h"
 #include "PLKeyEncoding.h"
@@ -378,7 +379,6 @@ void UpdateEditWindowTitle (void)
 
 void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 {
-	KeyDownStates		theseKeys;
 	
 	if ((theMode != kEditMode) || (mainWindow == nil) || 
 			(!houseUnlocked))
@@ -393,9 +393,10 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 		DoSelectionClick(mainWindowSurface, wherePt, isDoubleClick);
 	else
 		DoNewObjectClick(wherePt);
-	
-	GetKeys(theseKeys);
-	if (!BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kShift)))
+
+	const KeyDownStates *theseKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+	if (!theseKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift)))
 	{
 		EraseSelectedTool();
 		SelectTool(kSelectTool);

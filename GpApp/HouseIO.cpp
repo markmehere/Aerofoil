@@ -89,7 +89,7 @@ void OpenHouseMovie (void)
 		if (theErr != PLErrors::kNone)
 			return;
 		
-		theErr = OpenMovieFile(theSpec, &movieRefNum, fsCurPerm);
+		theErr = OpenMovieFile(theSpec, &movieRefNum, 0);
 		if (theErr != PLErrors::kNone)
 		{
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);

@@ -11,7 +11,7 @@ namespace PortabilityLayer
 	class InputManager
 	{
 	public:
-		virtual void GetKeys(KeyDownStates &keys16) const = 0;
+		virtual const KeyDownStates *GetKeys() const = 0;
 		virtual void ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent) = 0;
 		virtual void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) = 0;
 		virtual int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) = 0;

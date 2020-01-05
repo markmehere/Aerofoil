@@ -9,6 +9,7 @@
 #include "PLToolUtils.h"
 #include "PLKeyEncoding.h"
 #include "Externs.h"
+#include "InputManager.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
 
@@ -48,7 +49,6 @@ short		wasFlower;
 
 Boolean AddNewObject (Point where, short what, Boolean showItNow)
 {
-	KeyDownStates		theseKeys;
 	Rect		srcRect, newRect;
 	short		direction, dist;
 	Boolean		handled, drawWholeRoom;
@@ -738,13 +738,16 @@ Boolean AddNewObject (Point where, short what, Boolean showItNow)
 		break;
 		
 		case kFlower:
-		GetKeys(theseKeys);
-		if (!BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kShift)))
-			wasFlower = RandomInt(kNumFlowers);
-		newRect = flowerSrc[wasFlower];
-		CenterRectOnPoint(&newRect, where);
-		thisRoom->objects[objActive].data.i.bounds = newRect;
-		thisRoom->objects[objActive].data.i.pict = wasFlower;
+		{
+			const KeyDownStates *theseKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+			if (!theseKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift)))
+				wasFlower = RandomInt(kNumFlowers);
+			newRect = flowerSrc[wasFlower];
+			CenterRectOnPoint(&newRect, where);
+			thisRoom->objects[objActive].data.i.bounds = newRect;
+			thisRoom->objects[objActive].data.i.pict = wasFlower;
+		}
 		break;
 		
 		case kOzma:

@@ -11,6 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "HostDisplayDriver.h"
+#include "HostSystemServices.h"
 
 
 #define	kSwitchDepthAlert		130
@@ -393,7 +394,7 @@ void CheckMemorySize (void)
 {
 	#define		kBaseBytesNeeded	614400L					// 600K Base memory
 	#define		kPaddingBytes		204800L					// 200K Padding
-	long		bytesNeeded, bytesAvail;
+	long		bytesNeeded;
 	long		soundBytes, musicBytes;
 	
 	dontLoadMusic = false;
@@ -484,7 +485,7 @@ void CheckMemorySize (void)
 	bytesNeeded += sizeof(objDataType) * kMaxMasterObjects;
 	bytesNeeded += kDemoLength;		SpinCursor(1);
 	
-	bytesAvail = FreeMem();			SpinCursor(1);
+	SpinCursor(1);
 }
 
 void GetDeviceRect(Rect *rect)

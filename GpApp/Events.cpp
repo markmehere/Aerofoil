@@ -14,6 +14,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "InputManager.h"
 #include "ObjectEdit.h"
 
 
@@ -162,9 +163,9 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent &theEvent)
 {
 	const intptr_t theChar = PackVOSKeyCode(theEvent);
-	const bool shiftDown = BitTst(keyStates, PL_KEY_EITHER_SPECIAL(kShift));
-	const bool commandDown = BitTst(keyStates, PL_KEY_EITHER_SPECIAL(kControl));
-	const bool optionDown = BitTst(keyStates, PL_KEY_EITHER_SPECIAL(kAlt));
+	const bool shiftDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kShift));
+	const bool commandDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kControl));
+	const bool optionDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kAlt));
 	
 	if ((commandDown) && (!optionDown))
 		DoMenuChoice(MenuKey(static_cast<int>(theChar)));
@@ -458,18 +459,17 @@ void HandleIdleTask (void)
 
 void HandleEvent (void)
 {
-	KeyDownStates		eventKeys;
 	TimeTaggedVOSEvent	theEvent;
 	uint32_t			sleep = 2;
 	bool				itHappened = true;
-	
-	GetKeys(eventKeys);
-	if ((BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kControl))) && 
-			(BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kAlt))))
+
+	const KeyDownStates *eventKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+	if ((eventKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) &&
+			(eventKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))))
 	{
 		HiliteAllObjects();
 	}
-	else if ((BitTst(eventKeys, PL_KEY_EITHER_SPECIAL(kAlt))) && (theMode == kEditMode) &&
+	else if ((eventKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) && (theMode == kEditMode) &&
 			(houseUnlocked))
 	{
 		EraseSelectedTool();
@@ -497,7 +497,7 @@ void HandleEvent (void)
 			{
 			case GpKeyboardInputEventTypes::kDown:
 			case GpKeyboardInputEventTypes::kAuto:
-				HandleKeyEvent(eventKeys, theEvent.m_vosEvent.m_event.m_keyboardInputEvent);
+				HandleKeyEvent(*eventKeys, theEvent.m_vosEvent.m_event.m_keyboardInputEvent);
 				break;
 			default:
 				break;

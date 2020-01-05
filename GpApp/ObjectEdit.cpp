@@ -10,6 +10,7 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "House.h"
+#include "InputManager.h"
 #include "MainWindow.h"
 #include "Marquee.h"
 #include "ObjectEdit.h"
@@ -2683,7 +2684,7 @@ void DrawThisRoomsObjects (void)
 void HiliteAllObjects (void)
 {
 #ifndef COMPILEDEMO
-	KeyDownStates		theseKeys;
+	const KeyDownStates *theseKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 	short		i;
 	Pattern		dummyPattern;
 	
@@ -2701,10 +2702,10 @@ void HiliteAllObjects (void)
 	
 	do
 	{
-		GetKeys(theseKeys);
+		Delay(1, nullptr);
 	}
-	while ((BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kControl))) && 
-			(BitTst(theseKeys, PL_KEY_EITHER_SPECIAL(kAlt))));
+	while ((theseKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) &&
+			(theseKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))));
 	
 	for (i = 0; i < kMaxRoomObs; i++)
 		surface->InvertFrameRect(roomObjectRects[i], dummyPattern);

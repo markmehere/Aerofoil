@@ -12,7 +12,7 @@ namespace PortabilityLayer
 	public:
 		InputManagerImpl();
 
-		void GetKeys(KeyDownStates &keyMap) const override;
+		const KeyDownStates *GetKeys() const override;
 		void ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent) override;
 		void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) override;
 		int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) override;
@@ -30,9 +30,9 @@ namespace PortabilityLayer
 		static InputManagerImpl ms_instance;
 	};
 
-	void InputManagerImpl::GetKeys(KeyDownStates &keyMap) const
+	const KeyDownStates *InputManagerImpl::GetKeys() const
 	{
-		keyMap = m_keyMap;
+		return &m_keyMap;
 	}
 
 	void InputManagerImpl::ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent)

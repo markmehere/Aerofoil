@@ -319,6 +319,7 @@
     <ClCompile Include="PLIconWidget.cpp" />
     <ClCompile Include="PLImageWidget.cpp" />
     <ClCompile Include="PLInvisibleWidget.cpp" />
+    <ClCompile Include="PLKeyEncoding.cpp" />
     <ClCompile Include="PLLabelWidget.cpp" />
     <ClCompile Include="PLMenus.cpp" />
     <ClCompile Include="PLMovies.cpp" />

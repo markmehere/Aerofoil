@@ -232,18 +232,6 @@ static const int everyEvent = -1;
 static const int iBeamCursor = 1;
 static const int watchCursor = 4;
 
-static const int shiftKey = 0x1;
-static const int cmdKey = 0x2;		// Ctrl
-static const int optionKey = 0x4;	// Alt
-
-static const bool kCreateFolder = true;
-static const bool kDontCreateFolder = false;
-
-static const int fsRdPerm = 1;
-static const int fsWrPerm = 2;
-static const int fsRdWrPerm = (fsRdPerm | fsWrPerm);
-static const int fsCurPerm = 4;	// Any allowed permission
-
 static const Boolean TRUE = 1;
 static const Boolean FALSE = 0;
 
@@ -290,27 +278,20 @@ long MenuSelect(Point point);	// Breaks into menu select routine (in practice we
 
 long MenuKey(int charCode);
 long TickCount();
-void GetKeys(KeyDownStates &keyMap);
 
 short LoWord(Int32 v);
 short HiWord(Int32 v);
-bool BitTst(const KeyDownStates &keyMap, int bit);
 
 void NumToString(long number, unsigned char *str);
 void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c);
 
-UInt32 FreeMem();
-
 PLError_t AEProcessAppleEvent(EventRecord *evt);
 
 void GetIndString(unsigned char *str, int stringsID, int fnameIndex);	// Fetches a string resource of some sort
-PLError_t PBDirCreate(HFileParam *fileParam, bool asynchronous);
 
 VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr &fileName);
 
 PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfoOut);
-
-PLError_t PBGetCatInfo(CInfoPBPtr paramBlock, Boolean async);
 
 DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID);
 void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL);

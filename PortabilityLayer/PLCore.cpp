@@ -274,11 +274,6 @@ long TickCount()
 	return PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount();
 }
 
-void GetKeys(KeyDownStates &keyMap)
-{
-	PortabilityLayer::InputManager::GetInstance()->GetKeys(keyMap);
-}
-
 short LoWord(Int32 v)
 {
 	return ((v ^ 0x8000) & 0xffff) - 0x8000;
@@ -287,60 +282,6 @@ short LoWord(Int32 v)
 short HiWord(Int32 v)
 {
 	return (((v >> 16) ^ 0x8000) & 0xffff) - 0x8000;
-}
-
-static bool BitTestEitherSpecial(const KeyDownStates &keyMap, int eitherSpecial)
-{
-	switch (eitherSpecial)
-	{
-	case KeyEventEitherSpecialCategories::kAlt:
-		return keyMap.m_special.Get(GpKeySpecials::kLeftAlt) || keyMap.m_special.Get(GpKeySpecials::kRightAlt);
-	case KeyEventEitherSpecialCategories::kShift:
-		return keyMap.m_special.Get(GpKeySpecials::kLeftShift) || keyMap.m_special.Get(GpKeySpecials::kRightShift);
-	case KeyEventEitherSpecialCategories::kControl:
-		return keyMap.m_special.Get(GpKeySpecials::kLeftCtrl) || keyMap.m_special.Get(GpKeySpecials::kRightCtrl);
-	default:
-		assert(false);
-		return false;
-	}
-}
-
-bool BitTst(const KeyDownStates &keyMap, int encodedKey)
-{
-	const KeyEventType evtType = PL_KEY_GET_EVENT_TYPE(encodedKey);
-	const int evtValue = PL_KEY_GET_VALUE(encodedKey);
-
-	switch (evtType)
-	{
-	case KeyEventType_Special:
-		return keyMap.m_special.Get(evtValue);
-	case KeyEventType_ASCII:
-		return keyMap.m_ascii.Get(evtValue);
-	case KeyEventType_MacRoman:
-		assert(evtValue >= 128 && evtValue < 256);
-		return keyMap.m_macRoman.Get(evtValue - 128);
-	case KeyEventType_NumPadNumber:
-		return keyMap.m_numPadNumber.Get(evtValue);
-	case KeyEventType_NumPadSpecial:
-		return keyMap.m_numPadSpecial.Get(evtValue);
-	case KeyEventType_FKey:
-		assert(evtValue >= 1 && evtValue <= GpFKeyMaximumInclusive);
-		return keyMap.m_fKey.Get(evtValue - 1);
-	case KeyEventType_EitherSpecial:
-		return BitTestEitherSpecial(keyMap, evtValue);
-	case KeyEventType_GamepadButton:
-		{
-			unsigned int playerNum = evtValue & ((1 << PL_INPUT_PLAYER_INDEX_BITS) - 1);
-			assert(playerNum < PL_INPUT_MAX_PLAYERS);
-			unsigned int button = evtValue >> PL_INPUT_PLAYER_INDEX_BITS;
-
-			return keyMap.m_gamepadButtons[playerNum].Get(button);
-		}
-		break;
-	default:
-		assert(false);
-		return false;
-	}
 }
 
 void NumToString(long number, unsigned char *str)
@@ -408,13 +349,6 @@ void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, cons
 	PL_NotYetImplemented();
 }
 
-
-UInt32 FreeMem()
-{
-	PL_NotYetImplemented_Minor();
-	return 256 * 1024 * 1024;
-}
-
 PLError_t AEProcessAppleEvent(EventRecord *evt)
 {
 	PL_NotYetImplemented();
@@ -445,13 +379,6 @@ void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
 		memcpy(str + 1, strStart + 1, *strStart);
 	}
 }
-
-PLError_t PBDirCreate(HFileParam *fileParam, bool asynchronous)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
 
 VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr &fileName)
 {

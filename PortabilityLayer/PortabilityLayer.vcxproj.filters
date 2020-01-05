@@ -692,5 +692,8 @@
     <ClCompile Include="PLRadioButtonWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PLKeyEncoding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

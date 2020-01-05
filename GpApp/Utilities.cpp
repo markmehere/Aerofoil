@@ -379,7 +379,6 @@ long LongSquareRoot (long theNumber)
 Boolean WaitForInputEvent (short seconds)
 {
 	TimeTaggedVOSEvent	theEvent;
-	KeyDownStates		theKeys;
 	long				timeToBail;
 	Boolean				waiting, didResume;
 	
@@ -387,11 +386,13 @@ Boolean WaitForInputEvent (short seconds)
 	FlushEvents(everyEvent, 0);
 	waiting = true;
 	didResume = false;
+
 	
 	while (waiting)
 	{
-		GetKeys(theKeys);
-		if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)) || BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt)) || BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift)))
+		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)) || theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt)) || theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift)))
 			waiting = false;
 
 		if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
@@ -414,15 +415,15 @@ Boolean WaitForInputEvent (short seconds)
 
 void WaitCommandQReleased (void)
 {
-	KeyDownStates		theKeys;
 	Boolean		waiting;
 	
 	waiting = true;
 	
 	while (waiting)
 	{
-		GetKeys(theKeys);
-		if (!BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)) || !BitTst(theKeys, PL_KEY_ASCII('Q')))
+		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+		if (!theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)) || !theKeys->IsSet(PL_KEY_ASCII('Q')))
 			waiting = false;
 
 		Delay(1, nullptr);
@@ -464,10 +465,9 @@ void GetKeyName (intptr_t message, StringPtr theName)
 
 Boolean OptionKeyDown (void)
 {
-	KeyDownStates		theKeys;
+	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 	
-	GetKeys(theKeys);
-	if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt)))
+	if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt)))
 		return (true);
 	else
 		return (false);

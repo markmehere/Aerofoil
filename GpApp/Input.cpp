@@ -31,7 +31,6 @@ Boolean QuerySaveGame (void);
 
 
 demoPtr		demoData;
-KeyDownStates		theKeys;
 Dialog		*saveDial;
 short		demoIndex, batteryFrame;
 Boolean		isEscPauseKey, paused, batteryWasEngaged;
@@ -54,8 +53,10 @@ void LogDemoKey (char keyIs)
 //--------------------------------------------------------------  DoCommandKey
 
 void DoCommandKey (void)
-{	
-	if (BitTst(theKeys, PL_KEY_ASCII('Q')))
+{
+	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+	if (theKeys->IsSet(PL_KEY_ASCII('Q')))
 	{
 		playing = false;
 		paused = false;
@@ -65,7 +66,7 @@ void DoCommandKey (void)
 				SaveGame2();		// New save game.
 		}
 	}
-	else if ((BitTst(theKeys, PL_KEY_ASCII('S'))) && (!twoPlayerGame))
+	else if ((theKeys->IsSet(PL_KEY_ASCII('S'))) && (!twoPlayerGame))
 	{
 		RefreshScoreboard(kSavingTitleMode);
 		SaveGame2();				// New save game.
@@ -89,23 +90,27 @@ void DoPause (void)
 		LoadScaledGraphic(surface, kEscPausePictID, &bounds);
 	else
 		LoadScaledGraphic(surface, kTabPausePictID, &bounds);
-	
+
+	const KeyDownStates *theKeys = nullptr;
+
 	do
 	{
-		GetKeys(theKeys);
+		theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
 		Delay(1, nullptr);
 	}
-	while ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) || 
-			(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))));
+	while ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) || 
+			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))));
 	
 	paused = true;
 	while (paused)
 	{
-		GetKeys(theKeys);
-		if ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
-				(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))))
+		theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
 			paused = false;
-		else if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)))
+		else if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 
 		Delay(1, nullptr);
@@ -117,11 +122,11 @@ void DoPause (void)
 	
 	do
 	{
-		GetKeys(theKeys);
+		theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 		Delay(1, nullptr);
 	}
-	while ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
-			(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))));
+	while ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
+			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))));
 }
 
 //--------------------------------------------------------------  DoBatteryEngaged
@@ -193,20 +198,21 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 
  void GetDemoInput (gliderPtr thisGlider)
  {
+	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
  	if (thisGlider->which == kPlayer1)
 	{
-		GetKeys(theKeys);
 		
 #if BUILD_ARCADE_VERSION
 		
-		if ((BitTst(theKeys, thisGlider->leftKey)) ||
-			(BitTst(theKeys, thisGlider->gamepadLeftKey)) ||
-				(BitTst(theKeys, thisGlider->rightKey)) ||
-				(BitTst(theKeys, thisGlider->gamepadRightKey)) ||
-				(BitTst(theKeys, thisGlider->battKey)) ||
-				(BitTst(theKeys, thisGlider->gamepadBattKey)) ||
-				(BitTst(theKeys, thisGlider->bandKey)) ||
-				(BitTst(theKeys, thisGlider->gamepadBandKey)))
+		if ((theKeys->IsSet(thisGlider->leftKey)) ||
+			(theKeys->IsSet(thisGlider->gamepadLeftKey)) ||
+				(theKeys->IsSet(thisGlider->rightKey)) ||
+				(theKeys->IsSet(thisGlider->gamepadRightKey)) ||
+				(theKeys->IsSet(thisGlider->battKey)) ||
+				(theKeys->IsSet(thisGlider->gamepadBattKey)) ||
+				(theKeys->IsSet(thisGlider->bandKey)) ||
+				(theKeys->IsSet(thisGlider->gamepadBandKey)))
 		{
 			playing = false;
 			paused = false;
@@ -214,7 +220,7 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		
 #else
 		
-		if (BitTst(&theKeys, kCommandKeyMap))
+		if (theKeys->IsSet(kCommandKeyMap))
 			DoCommandKey();
 		
 #endif
@@ -280,8 +286,8 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 	 	else
 	 		thisGlider->fireHeld = false;
 	 	
-		if ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
-				(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))))
+		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
 		{
 			DoPause();
 		}
@@ -294,8 +300,9 @@ void GetInput (gliderPtr thisGlider)
 {
 	if (thisGlider->which == kPlayer1)
 	{
-		GetKeys(theKeys);
-		if (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl)))
+		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 	}
 	
@@ -313,33 +320,35 @@ void GetInput (gliderPtr thisGlider)
 		bool leftState = false;
 		bool rightState = false;
 
-		if (BitTst(theKeys, thisGlider->rightKey) || BitTst(theKeys, thisGlider->gamepadRightKey))			// right key
+		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+		if (theKeys->IsSet(thisGlider->rightKey) || theKeys->IsSet(thisGlider->gamepadRightKey))			// right key
 		{
 			PL_NotYetImplemented_TODO("FixDemo");	// Flips aren't recorded in the demo properly
 
-			if (BitTst(theKeys, thisGlider->leftKey) || BitTst(theKeys, thisGlider->gamepadLeftKey))
+			if (theKeys->IsSet(thisGlider->leftKey) || theKeys->IsSet(thisGlider->gamepadLeftKey))
 				continuousFlipState = true;
 			else
 				rightState = true;
 		}
-		else if (BitTst(theKeys, thisGlider->leftKey) || BitTst(theKeys, thisGlider->gamepadLeftKey))		// left key
+		else if (theKeys->IsSet(thisGlider->leftKey) || theKeys->IsSet(thisGlider->gamepadLeftKey))		// left key
 			leftState = true;
 		else
 			thisGlider->tipped = false;
 
-		if (BitTst(theKeys, thisGlider->gamepadRightKey))
+		if (theKeys->IsSet(thisGlider->gamepadRightKey))
 			rightState = true;
 
-		if (BitTst(theKeys, thisGlider->gamepadLeftKey))
+		if (theKeys->IsSet(thisGlider->gamepadLeftKey))
 			leftState = true;
 
-		if (BitTst(theKeys, thisGlider->gamepadFaceLeftKey) && thisGlider->facing == kFaceRight)
+		if (theKeys->IsSet(thisGlider->gamepadFaceLeftKey) && thisGlider->facing == kFaceRight)
 			continuousFlipState = true;
 
-		if (BitTst(theKeys, thisGlider->gamepadFaceRightKey) && thisGlider->facing == kFaceLeft)
+		if (theKeys->IsSet(thisGlider->gamepadFaceRightKey) && thisGlider->facing == kFaceLeft)
 			continuousFlipState = true;
 
-		if (BitTst(theKeys, thisGlider->gamepadFlipKey))
+		if (theKeys->IsSet(thisGlider->gamepadFlipKey))
 			holdFlipState = true;
 
 		if (thisGlider->which == kPlayer1 || thisGlider->which == kPlayer2)
@@ -397,7 +406,7 @@ void GetInput (gliderPtr thisGlider)
 		if (!leftState && !rightState)
 			thisGlider->tipped = false;
 
-		if ((BitTst(theKeys, thisGlider->battKey) || BitTst(theKeys, thisGlider->gamepadBattKey)) && (batteryTotal != 0) && 
+		if ((theKeys->IsSet(thisGlider->battKey) || theKeys->IsSet(thisGlider->gamepadBattKey)) && (batteryTotal != 0) &&
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
@@ -411,7 +420,7 @@ void GetInput (gliderPtr thisGlider)
 		else
 			batteryWasEngaged = false;
 		
-		if ((BitTst(theKeys, thisGlider->bandKey) || BitTst(theKeys, thisGlider->gamepadBandKey)) && (bandsTotal > 0) &&
+		if ((theKeys->IsSet(thisGlider->bandKey) || theKeys->IsSet(thisGlider->gamepadBandKey)) && (bandsTotal > 0) &&
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
@@ -434,14 +443,14 @@ void GetInput (gliderPtr thisGlider)
 			thisGlider->fireHeld = false;
 		
 		if ((otherPlayerEscaped != kNoOneEscaped) && 
-				(BitTst(theKeys, PL_KEY_SPECIAL(kDelete))) &&
+				(theKeys->IsSet(PL_KEY_SPECIAL(kDelete))) &&
 				(thisGlider->which) && (!onePlayerLeft))
 		{
 			ForceKillGlider();
 		}
 		
-		if ((isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kEscape))) ||
-				(!isEscPauseKey && BitTst(theKeys, PL_KEY_SPECIAL(kTab))))
+		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
 		{
 			DoPause();
 		}

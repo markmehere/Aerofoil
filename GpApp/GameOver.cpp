@@ -14,6 +14,7 @@
 #include "Environ.h"
 #include "FontManager.h"
 #include "FontFamily.h"
+#include "InputManager.h"
 #include "MainWindow.h"
 #include "Objects.h"
 #include "RectUtils.h"
@@ -141,7 +142,6 @@ void DoGameOverStarAnimation (void)
 {
 	#define		kStarFalls	8
 	TimeTaggedVOSEvent	theEvent;
-	KeyDownStates		theKeys;
 	Rect		angelDest;
 	long		nextLoop;
 	short		which, i, count, pass;
@@ -212,8 +212,9 @@ void DoGameOverStarAnimation (void)
 		
 		do
 		{
-			GetKeys(theKeys);
-			if ((BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift))))
+			const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+			if ((theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift))))
 				noInteruption = false;
 
 			if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
@@ -442,7 +443,6 @@ void DrawPages (void)
 void DoDiedGameOver (void)
 {
 	TimeTaggedVOSEvent	theEvent;
-	KeyDownStates		theKeys;
 	long				nextLoop;
 	Boolean				userAborted;
 	
@@ -459,8 +459,9 @@ void DoDiedGameOver (void)
 		DrawPages();
 		do
 		{
-			GetKeys(theKeys);
-			if ((BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kAlt))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kControl))) || (BitTst(theKeys, PL_KEY_EITHER_SPECIAL(kShift))))
+			const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+
+			if ((theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift))))
 			{
 				pagesStuck = 8;
 				userAborted = true;
