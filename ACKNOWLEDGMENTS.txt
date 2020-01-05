@@ -13,3 +13,9 @@ Distributed under the Apache License (see Resources/Fonts/Roboto/LICENSE)
 
 stb_image_write:
 Created by Sean Barrett
+
+
+MacRomanConversion uses a table from LIBICONV:
+Copyright (C) 1999-2001, 2016 Free Software Foundation, Inc.
+
+Distributed under the LGPLv2 license (See MacRomanConversion/LICENSE.txt)
