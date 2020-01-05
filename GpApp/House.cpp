@@ -20,6 +20,7 @@
 #include "RectUtils.h"
 #include "ResourceManager.h"
 
+#include <assert.h>
 
 #define kGoToDialogID			1043
 
@@ -68,6 +69,11 @@ Boolean CreateNewHouse (void)
 
 	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House")))
 		return false;
+
+	assert(savePathLength < sizeof(theSpec.m_name) - 1);
+
+	theSpec.m_name[0] = static_cast<uint8_t>(savePathLength);
+	memcpy(theSpec.m_name + 1, savePath, savePathLength);
 
 	if (fm->FileExists(theSpec.m_dir, theSpec.m_name))
 	{

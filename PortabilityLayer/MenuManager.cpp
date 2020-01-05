@@ -129,6 +129,7 @@ namespace PortabilityLayer
 		void SetMenuEnabled(const THandle<Menu> &menuHandle, bool enabled) override;
 		void SetItemEnabled(const THandle<Menu> &menu, unsigned int index, bool enabled) override;
 		void SetItemChecked(const THandle<Menu> &menu, unsigned int index, bool checked) override;
+		bool SetItemText(const THandle<Menu> &menu, unsigned int index, const PLPasStr &str) override;
 
 		bool IsPointInMenuBar(const Vec2i &point) const override;
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
@@ -442,6 +443,8 @@ namespace PortabilityLayer
 		if (m_lastMenu == menu)
 			m_lastMenu = menuPtr->prevMenu;
 
+		menu.Dispose();
+
 		DrawMenuBar();
 	}
 
@@ -474,6 +477,44 @@ namespace PortabilityLayer
 			return;
 
 		menu->menuItems[index].checked = checked;
+	}
+
+	bool MenuManagerImpl::SetItemText(const THandle<Menu> &menu, unsigned int index, const PLPasStr &str)
+	{
+		Menu *menuPtr = *menu;
+
+		PortabilityLayer::MMHandleBlock *oldHandle = menuPtr->stringBlobHandle;
+		size_t oldSize = oldHandle->m_size;
+
+		const uint8_t *oldStrBlob = static_cast<const uint8_t*>(oldHandle->m_contents);
+
+		const size_t newSize = oldSize - oldStrBlob[menuPtr->menuItems[index].nameOffsetInStringBlob] + str.Length() + 1;
+
+		THandle<uint8_t> newHandle = THandle<uint8_t>(PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(newSize));
+		if (!newHandle)
+			return false;
+
+		uint8_t *strWritePtr = *newHandle;
+
+		uint32_t writeOffset = 0;
+		for (size_t i = 0; i < menuPtr->numMenuItems; i++)
+		{
+			MenuItem &menuItem = menuPtr->menuItems[i];
+
+			const PLPasStr copyStr = (i == index) ? str : PLPasStr(oldStrBlob + menuItem.nameOffsetInStringBlob);
+
+			menuItem.nameOffsetInStringBlob = writeOffset;
+
+			strWritePtr[writeOffset] = copyStr.Length();
+			writeOffset++;
+
+			memcpy(strWritePtr + writeOffset, copyStr.UChars(), copyStr.Length());
+			writeOffset += copyStr.Length();
+		}
+
+		PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(menuPtr->stringBlobHandle);
+
+		menuPtr->stringBlobHandle = newHandle.MMBlock();
 	}
 
 	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const

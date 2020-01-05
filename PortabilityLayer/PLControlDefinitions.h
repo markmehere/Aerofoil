@@ -4,6 +4,11 @@
 
 #include "PLCore.h"
 
+namespace PortabilityLayer
+{
+	class Widget;
+}
+
 struct Control
 {
 };
@@ -12,11 +17,6 @@ typedef THandle<Control> ControlHandle;
 
 typedef void(*ControlActionProc)(ControlHandle control, short part);
 typedef ControlActionProc ControlActionUPP;
-
-enum BuiltinCDEFs
-{
-	scrollBarProc = 16,
-};
 
 enum ControlParts
 {
@@ -29,7 +29,8 @@ enum ControlParts
 };
 
 
-int FindControl(Point point, WindowPtr window, ControlHandle *outControl);	// Returns part
+int FindControl(Point point, WindowPtr window, PortabilityLayer::Widget **outControl);	// Returns part
+int FindControl(Point point, WindowPtr window, ControlHandle *outControl);
 
 
 void SetControlValue(ControlHandle control, int value);
@@ -41,8 +42,10 @@ ControlHandle NewControl(WindowPtr window, const Rect *rect, const PLPasStr &lab
 ControlActionUPP NewControlActionUPP(ControlActionProc proc);
 void DisposeControlActionUPP(ControlActionUPP upp);
 Boolean TrackControl(ControlHandle control, Point point, ControlActionUPP proc);
+Boolean TrackControl(PortabilityLayer::Widget *control, Point point, ControlActionUPP proc);
 long GetControlReference(ControlHandle control);	// Returns userdata
 ControlHandle GetNewControl(int resID, WindowPtr window);
 void HiliteControl(ControlHandle control, int unknown);
+void HiliteControl(PortabilityLayer::Widget *widget, int unknown);
 
 #endif

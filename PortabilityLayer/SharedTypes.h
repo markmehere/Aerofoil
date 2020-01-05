@@ -27,10 +27,16 @@ struct Rect
 	int16_t right;
 
 	bool IsValid() const;
-	Rect Intersect(const Rect &rect) const;
 	Rect MakeValid() const;
+
+	Rect Intersect(const Rect &rect) const;
+	Rect Inset(int16_t h, int16_t v) const;
+
 	Rect operator-(const Point &point) const;
 	Rect operator+(const Point &point) const;
+
+	Rect &operator-=(const Point &point);
+	Rect &operator+=(const Point &point);
 
 	uint16_t Height() const;
 	uint16_t Width() const;
@@ -164,6 +170,11 @@ inline Rect Rect::Intersect(const Rect &other) const
 	return result;
 }
 
+inline Rect Rect::Inset(int16_t h, int16_t v) const
+{
+	return Rect::Create(top + v, left + h, bottom - v, right - h);
+}
+
 inline Rect Rect::MakeValid() const
 {
 	Rect result = *this;
@@ -185,6 +196,28 @@ inline Rect Rect::operator+(const Point &point) const
 {
 	return Rect::Create(this->top + point.v, this->left + point.h, this->bottom + point.v, this->right + point.h);
 }
+
+inline Rect &Rect::operator-=(const Point &point)
+{
+	this->top -= point.v;
+	this->bottom -= point.v;
+	this->left -= point.h;
+	this->right -= point.h;
+
+	return *this;
+}
+
+inline Rect &Rect::operator+=(const Point &point)
+{
+	this->top += point.v;
+	this->bottom += point.v;
+	this->left += point.h;
+	this->right += point.h;
+
+	return *this;
+}
+
+
 
 inline uint16_t Rect::Height() const
 {

@@ -27,6 +27,6 @@ namespace PortabilityLayer
 		const Point topLeftCorner = Point::Create(m_rect.left, m_rect.top);
 		const Point textStartPoint = topLeftCorner + Point::Create(0, surface->MeasureFontAscender());
 
-		surface->DrawString(textStartPoint, m_text.ToShortStr());
+		surface->DrawStringWrap(textStartPoint, m_rect, m_text.ToShortStr());
 	}
 }

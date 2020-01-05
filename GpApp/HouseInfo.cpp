@@ -175,7 +175,7 @@ Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
 		
 		default:
 		mouseIs = event->where;
-		GlobalToLocal(&mouseIs);
+		mouseIs -= dial->GetWindow()->TopLeftCoord();
 		if ((PtInRect(mouseIs, &houseEditText1)) || 
 				(PtInRect(mouseIs, &houseEditText2)))
 		{

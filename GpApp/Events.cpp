@@ -521,6 +521,8 @@ void HandleEvent (void)
 
 void HiliteAllWindows (void)
 {
+	PL_NotYetImplemented_TODO("DeleteMe");
+#if 0
 	if (mainWindow != nil)
 		HiliteWindow(mainWindow, true);
 	if (mapWindow != nil)
@@ -531,6 +533,7 @@ void HiliteAllWindows (void)
 		HiliteWindow(coordWindow, true);
 	if (linkWindow != nil)
 		HiliteWindow(linkWindow, true);
+#endif
 }
 
 //--------------------------------------------------------------  IgnoreThisClick

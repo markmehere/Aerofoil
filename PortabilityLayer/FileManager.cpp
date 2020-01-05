@@ -33,6 +33,7 @@ namespace PortabilityLayer
 		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, IOStream *&outStream) override;
 
 		bool PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName) override;
+		bool PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity) override;
 
 		static FileManagerImpl *GetInstance();
 
@@ -179,6 +180,11 @@ namespace PortabilityLayer
 			return false;
 
 		return PortabilityLayer::HostFileSystem::GetInstance()->PromptSaveFile(dirID, path, outPathLength, pathCapacity, extFN);
+	}
+
+	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity)
+	{
+		return PortabilityLayer::HostFileSystem::GetInstance()->PromptOpenFile(dirID, path, outPathLength, pathCapacity);
 	}
 
 	FileManagerImpl *FileManagerImpl::GetInstance()

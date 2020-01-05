@@ -22,6 +22,7 @@ namespace PortabilityLayer
 {
 	struct MMHandleBlock;
 	class IOStream;
+	class Widget;
 }
 
 typedef uint8_t Boolean;
@@ -43,6 +44,7 @@ typedef unsigned char *StringPtr;
 
 class PLPasStr;
 struct DrawSurface;
+
 struct Menu;
 
 typedef void *Ptr;
@@ -108,6 +110,13 @@ struct Window
 	// Convenience method to convert a mouse event to local point
 	Point MouseToLocal(const GpMouseInputEvent &evt) const;
 
+	// Convenience method that returns a 16-bit precision X/Y
+	Point TopLeftCoord() const;
+
+	bool AddWidget(PortabilityLayer::Widget *widget);
+
+	void DrawControls();
+
 	DrawSurface m_surface;	// Must be the first item until the immediate mode draw API is completely removed
 
 	// The port is always at 0,0
@@ -117,6 +126,9 @@ struct Window
 
 protected:
 	~Window();
+
+	PortabilityLayer::Widget **m_widgets;
+	size_t m_numWidgets;
 };
 
 struct DateTimeRec
@@ -269,7 +281,6 @@ short FindWindow(Point point, WindowPtr *window);	// Translates global coordinat
 void DragWindow(WindowPtr window, Point start, Rect *bounds);	// Drags the window (probably not implemented)
 void SendBehind(WindowPtr window, WindowPtr behind);
 void BringToFront(WindowPtr window);
-void ShowHide(WindowPtr window, Boolean hide);
 bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close box was actually clicked (?)
 Int32 GrowWindow(WindowPtr window, Point start, Rect *size);
 bool TrackBox(WindowPtr window, Point point, int part);	// Returns true if grow/shrink box was clicked (part corresponds to type)
@@ -320,8 +331,6 @@ Boolean Button();	// Returns true if there's a mouse down event in the queue
 Boolean StillDown();
 Boolean WaitMouseUp();
 
-void LocalToGlobal(Point *point);
-void GlobalToLocal(Point *point);
 short Random();
 void GetDateTime(UInt32 *dateTime);
 void GetTime(DateTimeRec *dateTime);

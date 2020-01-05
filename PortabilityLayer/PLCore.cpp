@@ -30,11 +30,13 @@
 #include "RenderedFont.h"
 #include "ResTypeID.h"
 #include "RandomNumberGenerator.h"
+#include "PLArrayViewIterator.h"
 #include "PLBigEndian.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "PLWidgets.h"
 #include "QDManager.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
@@ -180,11 +182,6 @@ void SendBehind(WindowPtr window, WindowPtr behind)
 }
 
 void BringToFront(WindowPtr window)
-{
-	PL_NotYetImplemented();
-}
-
-void ShowHide(WindowPtr window, Boolean hide)
 {
 	PL_NotYetImplemented();
 }
@@ -627,16 +624,6 @@ Boolean WaitMouseUp()
 	return false;
 }
 
-void LocalToGlobal(Point *point)
-{
-	PL_NotYetImplemented();
-}
-
-void GlobalToLocal(Point *point)
-{
-	PL_NotYetImplemented();
-}
-
 short Random()
 {
 	// Should return with range -32767..32767
@@ -820,11 +807,20 @@ Window::Window()
 	: m_surface(PortabilityLayer::QDPortType_Window)
 	, m_wmX(0)
 	, m_wmY(0)
+	, m_widgets(nullptr)
+	, m_numWidgets(0)
 {
 }
 
 Window::~Window()
 {
+	if (m_widgets)
+	{
+		for (size_t i = 0; i < m_numWidgets; i++)
+			m_widgets[i]->Destroy();
+
+		PortabilityLayer::MemoryManager::GetInstance()->Release(m_widgets);
+	}
 }
 
 DrawSurface *Window::GetDrawSurface() const
@@ -835,4 +831,42 @@ DrawSurface *Window::GetDrawSurface() const
 Point Window::MouseToLocal(const GpMouseInputEvent &evt) const
 {
 	return Point::Create(evt.m_x - m_wmX, evt.m_y - m_wmY);
+}
+
+Point Window::TopLeftCoord() const
+{
+	return Point::Create(m_wmX, m_wmY);
+}
+
+bool Window::AddWidget(PortabilityLayer::Widget *widget)
+{
+	if (m_widgets == nullptr)
+	{
+		m_widgets = static_cast<PortabilityLayer::Widget**>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::Widget *)));
+		if (m_widgets == nullptr)
+			return false;
+	}
+	else
+	{
+		void *newBuffer = PortabilityLayer::MemoryManager::GetInstance()->Realloc(m_widgets, (m_numWidgets + 1) * sizeof(PortabilityLayer::Widget*));
+		if (newBuffer == nullptr)
+			return false;
+		m_widgets = static_cast<PortabilityLayer::Widget**>(newBuffer);
+	}
+
+	m_widgets[m_numWidgets++] = widget;
+
+	return true;
+}
+
+void Window::DrawControls()
+{
+	DrawSurface *surface = GetDrawSurface();
+
+	for (size_t i = 0; i < m_numWidgets; i++)
+	{
+		PortabilityLayer::Widget *widget = m_widgets[i];
+		if (widget->IsVisible())
+			widget->DrawControl(surface);
+	}
 }

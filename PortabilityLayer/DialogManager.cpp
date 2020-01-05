@@ -5,11 +5,13 @@
 #include "PLArrayView.h"
 #include "PLBigEndian.h"
 #include "PLButtonWidget.h"
+#include "PLCheckboxWidget.h"
 #include "PLDialogs.h"
 #include "PLIconWidget.h"
 #include "PLImageWidget.h"
 #include "PLInvisibleWidget.h"
 #include "PLLabelWidget.h"
+#include "PLRadioButtonWidget.h"
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
 #include "PLSysCalls.h"
@@ -108,8 +110,6 @@ namespace PortabilityLayer
 
 	DialogItem::~DialogItem()
 	{
-		if (m_widget)
-			m_widget->Destroy();
 	}
 
 	Widget *DialogItem::GetWidget() const
@@ -303,7 +303,11 @@ namespace PortabilityLayer
 				widget = ImageWidget::Create(basicState);
 				break;
 			case SerializedDialogItemTypeCodes::kCheckBox:
+				//widget = CheckboxWidget::Create(basicState);
+				//break;
 			case SerializedDialogItemTypeCodes::kRadioButton:
+				widget = RadioButtonWidget::Create(basicState);
+				break;
 			case SerializedDialogItemTypeCodes::kEditBox:
 			default:
 				widget = InvisibleWidget::Create(basicState);
@@ -321,21 +325,7 @@ namespace PortabilityLayer
 
 	void DialogImpl::DrawControls(bool redraw)
 	{
-		DrawSurface *surface = m_window->GetDrawSurface();
-
-		if (redraw)
-		{
-			surface->SetForeColor(StdColors::White());
-			surface->FillRect(surface->m_port.GetRect());
-		}
-
-		for (ArrayViewIterator<const DialogItem> it = GetItems().begin(), itEnd = GetItems().end(); it != itEnd; ++it)
-		{
-			const DialogItem &item = *it;
-			Widget *widget = item.GetWidget();
-			if (widget->IsVisible())
-				widget->DrawControl(surface);
-		}
+		m_window->DrawControls();
 	}
 
 	Point DialogImpl::MouseToDialog(const GpMouseInputEvent &evt)

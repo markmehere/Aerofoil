@@ -115,18 +115,21 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 			throw;
 		}
 
-		m_prefsDir.append(L"\\GlidePort");
+		m_prefsDir.append(L"\\" GP_APPLICATION_NAME_W);
 
 		m_userHousesDir = m_prefsDir + L"\\Houses";
+		m_userSavesDir = m_prefsDir + L"\\SavedGames";
 		m_scoresDir = m_prefsDir + L"\\Scores";
 
 		CreateDirectoryW(m_prefsDir.c_str(), nullptr);
 		CreateDirectoryW(m_scoresDir.c_str(), nullptr);
 		CreateDirectoryW(m_userHousesDir.c_str(), nullptr);
+		CreateDirectoryW(m_userSavesDir.c_str(), nullptr);
 
 		m_prefsDir.append(L"\\");
 		m_scoresDir.append(L"\\");
 		m_userHousesDir.append(L"\\");
+		m_userSavesDir.append(L"\\");
 	}
 
 	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
@@ -363,6 +366,86 @@ bool GpFileSystem_Win32::PromptSaveFile(PortabilityLayer::VirtualDirectory_t vir
 	return true;
 }
 
+bool GpFileSystem_Win32::PromptOpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity)
+{
+	wchar_t baseFN[MAX_PATH + 5];
+	wchar_t baseDir[MAX_PATH + 5];
+
+	baseFN[0] = 0;
+
+	if (!ResolvePath(virtualDirectory, "", baseDir))
+		return false;
+
+	OPENFILENAMEW ofn;
+	memset(&ofn, 0, sizeof(ofn));
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.lpstrFilter = GP_APPLICATION_NAME_W L" File (*.gpf)\0*.gpf\0";
+	ofn.lpstrFile = baseFN;
+	ofn.lpstrDefExt = L"gpf";
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrInitialDir = baseDir;
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
+
+	if (!GetOpenFileNameW(&ofn))
+		return false;
+
+	if (ofn.Flags & OFN_EXTENSIONDIFFERENT)
+	{
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, L"Open file failed: Files must have the '.gpf' extension", L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	const wchar_t *fn = ofn.lpstrFile + ofn.nFileOffset;
+	size_t fnLengthWithoutExt = wcslen(fn);
+	if (ofn.nFileExtension - 1 > ofn.nFileOffset)	// Off by 1 because extension doesn't include .
+		fnLengthWithoutExt = ofn.nFileExtension - ofn.nFileOffset - 1;
+
+	if (fnLengthWithoutExt >= pathCapacity)
+	{
+		wchar_t msg[256];
+		wsprintfW(msg, L"Open file failed: File name is too long.  Limit is %i characters.", static_cast<int>(pathCapacity));
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	if (ofn.nFileOffset != wcslen(baseDir) || memcmp(ofn.lpstrFile, baseDir, ofn.nFileOffset * sizeof(wchar_t)))
+	{
+		wchar_t msg[256 + MAX_PATH];
+		wsprintfW(msg, L"Open file failed: File can't be opened from here, it must be in %s", baseDir);
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	const wchar_t *unsupportedCharMsg = L"File name contains unsupported characters.";
+
+	for (size_t i = 0; i < fnLengthWithoutExt; i++)
+	{
+		if (fn[i] < static_cast<wchar_t>(0) || fn[i] >= static_cast<wchar_t>(128))
+		{
+			MessageBeep(MB_ICONERROR);
+			MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
+			return false;
+		}
+
+		path[i] = static_cast<char>(fn[i]);
+	}
+
+	if (!ValidateFilePath(path, fnLengthWithoutExt))
+	{
+		MessageBeep(MB_ICONERROR);
+		MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
+		return false;
+	}
+
+	outPathLength = fnLengthWithoutExt;
+
+	return true;
+}
+
 bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
 {
 	for (size_t i = 0; i < length; i++)
@@ -413,6 +496,9 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserData:
 		baseDir = m_userHousesDir.c_str();
+		break;
+	case PortabilityLayer::VirtualDirectories::kUserSaves:
+		baseDir = m_userSavesDir.c_str();
 		break;
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		baseDir = m_prefsDir.c_str();

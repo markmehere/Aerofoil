@@ -72,17 +72,17 @@ void DoControlPrefs (void);
 void SoundDefaults (Dialog *);
 void UpdateSettingsSound (Dialog *);
 void HandleSoundMusicChange (short, Boolean);
-Boolean SoundFilter (Dialog *, EventRecord *, short *);
+int16_t SoundFilter(Dialog *, const TimeTaggedVOSEvent &);
 void DoSoundPrefs (void);
 void DisplayDefaults (void);
 void FrameDisplayIcon (Dialog *, const PortabilityLayer::RGBAColor &color);
 void DisplayUpdate (Dialog *);
-Boolean DisplayFilter (Dialog *, EventRecord *, short *);
+int16_t DisplayFilter(Dialog *dialog, const TimeTaggedVOSEvent &);
 void DoDisplayPrefs (void);
 void SetAllDefaults (void);
 void FlashSettingsButton (DrawSurface *, short);
 void UpdateSettingsMain (Dialog *);
-Boolean PrefsFilter (Dialog *, EventRecord *, short *);
+int16_t PrefsFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt);
 void BitchAboutChanges (void);
 
 
@@ -623,8 +623,7 @@ void SoundDefaults (Dialog *theDialog)
 void UpdateSettingsSound (Dialog *theDialog)
 {
 	short		howLoudNow;
-	
-	DrawDialog(theDialog);
+
 	DrawDefaultButton(theDialog);
 	
 	UnivGetSoundVolume(&howLoudNow, thisMac.hasSM3);
@@ -669,95 +668,66 @@ void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 
 //--------------------------------------------------------------  SoundFilter
 
-Boolean SoundFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t SoundFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
 	short		newVolume;
-	
-	switch (event->what)
+
+	if (evt.IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		intptr_t keyCode = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+
+		switch (keyCode)
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kEscape):
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kUpArrow):
-			*item = kLouderItem;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kDownArrow):
-			*item = kSofterItem;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('0'):
-			case PL_KEY_ASCII('1'):
-			case PL_KEY_ASCII('2'):
-			case PL_KEY_ASCII('3'):
-			case PL_KEY_ASCII('4'):
-			case PL_KEY_ASCII('5'):
-			case PL_KEY_ASCII('6'):
-			case PL_KEY_ASCII('7'):
-			newVolume = PL_KEY_GET_VALUE(event->message) - '0';
+			return kCancelButton;
+
+		case PL_KEY_SPECIAL(kUpArrow):
+			return kLouderItem;
+
+		case PL_KEY_SPECIAL(kDownArrow):
+			return kSofterItem;
+
+		case PL_KEY_ASCII('0'):
+		case PL_KEY_ASCII('1'):
+		case PL_KEY_ASCII('2'):
+		case PL_KEY_ASCII('3'):
+		case PL_KEY_ASCII('4'):
+		case PL_KEY_ASCII('5'):
+		case PL_KEY_ASCII('6'):
+		case PL_KEY_ASCII('7'):
+			newVolume = PL_KEY_GET_VALUE(keyCode) - '0';
 			if (newVolume == 7L)
 				SetDialogNumToStr(dial, kVolNumberItem, 11L);
 			else
 				SetDialogNumToStr(dial, kVolNumberItem, (long)newVolume);
-			
+
 			UnivSetSoundVolume(newVolume, thisMac.hasSM3);
-			
+
 			HandleSoundMusicChange(newVolume, true);
-			return(false);
-			break;
-			
-			case PL_KEY_ASCII('D'):
-			*item = kSoundDefault;
+			return -1;
+
+		case PL_KEY_ASCII('D'):
 			FlashDialogButton(dial, kSoundDefault);
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('G'):
-			*item = kPlayMusicItem;
-			return(true);
-			break;
-			
-			case PL_KEY_ASCII('I'):
-			*item = kIdleMusicItem;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateSettingsSound(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kSoundDefault;
+
+		case PL_KEY_ASCII('G'):
+			return kPlayMusicItem;
+
+		case PL_KEY_ASCII('I'):
+			return kIdleMusicItem;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoSettingsMain
@@ -767,13 +737,15 @@ void DoSoundPrefs (void)
 	Rect			tempRect;
 	Dialog			*prefDlg;
 	short			wasLoudness, tempVolume;
-	PLError_t			theErr;
+	PLError_t		theErr;
 	short			itemHit;
 	Boolean			leaving;
 	
 	BringUpDialog(&prefDlg, kSoundPrefsDialID);
 
 	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
+
+	UpdateSettingsSound(prefDlg);
 	
 	UnivGetSoundVolume(&wasLoudness, thisMac.hasSM3);
 	
@@ -785,7 +757,7 @@ void DoSoundPrefs (void)
 	
 	while (!leaving)
 	{
-		ModalDialog(SoundFilter, &itemHit);
+		itemHit = prefDlg->ExecuteModal(SoundFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -829,7 +801,7 @@ void DoSoundPrefs (void)
 				SetDialogNumToStr(prefDlg, kVolNumberItem, (long)tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
 				HandleSoundMusicChange(tempVolume, true);
-				InvalWindowRect(prefDlg->GetWindow(), &tempRect);
+				//InvalWindowRect(prefDlg->GetWindow(), &tempRect);
 				DelayTicks(8);
 			}
 			break;
@@ -847,7 +819,7 @@ void DoSoundPrefs (void)
 					SetDialogNumToStr(prefDlg, kVolNumberItem, tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
 				HandleSoundMusicChange(tempVolume, true);
-				InvalWindowRect(prefDlg->GetWindow(), &tempRect);
+				//InvalWindowRect(prefDlg->GetWindow(), &tempRect);
 				DelayTicks(8);
 			}
 			break;

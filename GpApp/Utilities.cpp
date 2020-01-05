@@ -14,6 +14,7 @@
 #include "QDPixMap.h"
 #include "Externs.h"
 #include "IconLoader.h"
+#include "InputManager.h"
 #include "ResourceFile.h"
 #include "Utilities.h"
 
@@ -23,19 +24,6 @@ UInt32		theSeed;
 
 extern	Boolean		switchedOut;
 
-
-//==============================================================  Functions
-//--------------------------------------------------------------  MyGetGlobalMouse
-// Returns the position of the mouse in global coordinates.
-
-Point MyGetGlobalMouse (void)
-{
-	Point	localWhere;
-	
-	GetMouse(&localWhere);
-	LocalToGlobal(&localWhere);
-	return (localWhere);
-}
 
 //--------------------------------------------------------------  ToolBoxInit
 
@@ -574,8 +562,8 @@ void  UnivSetSoundVolume (short volume, Boolean hasSM3)
 //	if (hasSM3)
 //	{
 		longVol = (long)volume * 0x0025;
-		if (longVol > 0x00000100)
-			longVol = 0x00000100;
+		if (longVol > 0xff)
+			longVol = 0xff;
 
 		PortabilityLayer::SoundSystem::GetInstance()->SetVolume(longVol);
 //	}

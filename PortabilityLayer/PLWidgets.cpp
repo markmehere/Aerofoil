@@ -6,8 +6,12 @@ namespace PortabilityLayer
 	WidgetBasicState::WidgetBasicState()
 		: m_resID(0)
 		, m_rect(Rect::Create(0, 0, 0, 0))
-		, m_enabled(true)
 		, m_window(nullptr)
+		, m_refConstant(0)
+		, m_min(0)
+		, m_max(0)
+		, m_state(0)
+		, m_enabled(true)
 	{
 	}
 
@@ -23,6 +27,31 @@ namespace PortabilityLayer
 		(void)surface;
 	}
 
+	void Widget::SetMin(int32_t v)
+	{
+	}
+
+	void Widget::SetMax(int32_t v)
+	{
+	}
+
+	void Widget::SetPosition(const Point &pos)
+	{
+		uint16_t width = m_rect.Width();
+		uint16_t height = m_rect.Height();
+
+		m_rect.left = pos.h;
+		m_rect.top = pos.v;
+
+		Resize(width, height);
+	}
+
+	void Widget::Resize(uint16_t width, uint16_t height)
+	{
+		m_rect.right = m_rect.left + width;
+		m_rect.bottom = m_rect.top + height;
+	}
+
 	void Widget::SetEnabled(bool enabled)
 	{
 		m_enabled = enabled;
@@ -33,6 +62,11 @@ namespace PortabilityLayer
 	{
 		m_state = state;
 		OnStateChanged();
+	}
+
+	int16_t Widget::GetState() const
+	{
+		return m_state;
 	}
 
 	void Widget::SetVisible(bool visible)
@@ -64,8 +98,8 @@ namespace PortabilityLayer
 		: m_rect(state.m_rect)
 		, m_window(state.m_window)
 		, m_enabled(state.m_enabled)
+		, m_state(state.m_state)
 		, m_visible(true)
-		, m_state(0)
 	{
 	}
 

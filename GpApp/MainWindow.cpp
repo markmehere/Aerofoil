@@ -385,7 +385,7 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 		return;
 	
 	SetPortWindowPort(mainWindow);
-	GlobalToLocal(&wherePt);
+	wherePt -= mainWindow->TopLeftCoord();
 
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 	

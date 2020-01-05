@@ -19,6 +19,7 @@ public:
 	PortabilityLayer::HostDirectoryCursor *ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory) override;
 
 	bool PromptSaveFile(PortabilityLayer::VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName) override;
+	bool PromptOpenFile(PortabilityLayer::VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity) override;
 
 	bool ValidateFilePath(const char *path, size_t sz) const override;
 
@@ -34,6 +35,7 @@ private:
 	std::wstring m_packagedDir;
 	std::wstring m_housesDir;
 	std::wstring m_userHousesDir;
+	std::wstring m_userSavesDir;
 	std::wstring m_resourcesDir;
 	wchar_t m_executablePath[MAX_PATH];
 

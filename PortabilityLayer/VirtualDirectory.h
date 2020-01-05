@@ -11,6 +11,7 @@ namespace PortabilityLayer
 			kApplicationData = 1,
 			kGameData,
 			kUserData,
+			kUserSaves,
 			kPrefs,
 			kFonts,
 			kCursors,

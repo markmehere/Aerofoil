@@ -438,6 +438,18 @@
     <ClInclude Include="PLImageWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PLScrollBarWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLPopupMenuWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLCheckboxWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLRadioButtonWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -675,6 +687,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLImageWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLScrollBarWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLPopupMenuWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLCheckboxWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLRadioButtonWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

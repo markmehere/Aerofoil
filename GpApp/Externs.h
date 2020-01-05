@@ -188,7 +188,6 @@ void CollapseStringToWidth (DrawSurface *, StringPtr, short);
 void GetChooserName (StringPtr);
 StringPtr GetLocalizedString (short, StringPtr);
 
-Point MyGetGlobalMouse (void);							// --- Utilities.c
 void ToolBoxInit (void);
 void FindOurDevice (void);
 short RandomInt (short);

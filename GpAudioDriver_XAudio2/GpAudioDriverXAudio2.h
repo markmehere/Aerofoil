@@ -11,6 +11,7 @@ class GpAudioDriverXAudio2 : public IGpAudioDriver
 {
 public:
 	IGpAudioChannel *CreateChannel() override;
+	void SetMasterVolume(uint32_t vol, uint32_t maxVolume) override;
 	void Shutdown() override;
 
 	const GpAudioDriverProperties &GetProperties() const;

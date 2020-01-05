@@ -67,6 +67,11 @@ IGpAudioChannel *GpAudioDriverXAudio2::CreateChannel()
 	return GpAudioChannelXAudio2::Create(this);
 }
 
+void GpAudioDriverXAudio2::SetMasterVolume(uint32_t vol, uint32_t maxVolume)
+{
+	m_mv->SetVolume(static_cast<float>(vol) / static_cast<float>(maxVolume));
+}
+
 GpAudioDriverXAudio2::GpAudioDriverXAudio2(const GpAudioDriverProperties &properties, unsigned int realSampleRate, IXAudio2* xa2, IXAudio2MasteringVoice *mv)
 	: m_properties(properties)
 	, m_realSampleRate(realSampleRate)

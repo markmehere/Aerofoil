@@ -12,6 +12,10 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "PLScrollBarWidget.h"
+#include "PLWidgets.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 #include "RectUtils.h"
 #include "Utilities.h"
 
@@ -40,7 +44,7 @@ Rect			mapHScrollRect, mapVScrollRect, mapCenterRect;
 Rect			mapWindowRect;
 DrawSurface		*nailSrcMap;
 WindowPtr		mapWindow;
-ControlHandle	mapHScroll, mapVScroll;
+PortabilityLayer::Widget	*mapHScroll, *mapVScroll;
 short			isMapH, isMapV, mapRoomsHigh, mapRoomsWide;
 short			mapLeftRoom, mapTopRoom;
 Boolean			isMapOpen, doPrettyMap;
@@ -91,8 +95,8 @@ void CenterMapOnRoom (short h, short v)
 	
 	if (mapWindow != nil)
 	{
-		SetControlValue(mapHScroll, mapLeftRoom);
-		SetControlValue(mapVScroll, mapTopRoom);
+		mapHScroll->SetState(mapLeftRoom);
+		mapVScroll->SetState(mapTopRoom);
 	}
 }
 #endif
@@ -294,12 +298,13 @@ void UpdateMapWindow (void)
 	if (mapWindow == nil)
 		return;
 	
-	SetControlValue(mapHScroll, mapLeftRoom);
-	SetControlValue(mapVScroll, mapTopRoom);
+	mapHScroll->SetState(mapLeftRoom);
+	mapVScroll->SetState(mapTopRoom);
+
+	mapWindow->DrawControls();
 	
 	SetPortWindowPort(mapWindow);
-	DrawControls(mapWindow);
-	DrawGrowIcon(mapWindow);
+	// PL_NotYetImplemented_TODO("Resize")
 	RedrawMapContents();
 	#endif
 }
@@ -328,17 +333,15 @@ void ResizeMapWindow (short newH, short newV)
 	surface->FillRect(mapWindowRect);
 	SizeWindow(mapWindow, mapWindowRect.right, mapWindowRect.bottom, true);
 	
-	SetControlMaximum(mapHScroll, kMaxNumRoomsH - mapRoomsWide);
-	MoveControl(mapHScroll, 0, mapWindowRect.bottom - kMapScrollBarWidth + 2);
-	SizeControl(mapHScroll, mapWindowRect.right - kMapScrollBarWidth + 3, 
-			kMapScrollBarWidth);
-	mapLeftRoom = GetControlValue(mapHScroll);
+	mapHScroll->SetMax(kMaxNumRoomsH - mapRoomsWide);
+	mapHScroll->SetPosition(Point::Create(0, mapWindowRect.bottom - kMapScrollBarWidth + 2));
+	mapHScroll->Resize(mapWindowRect.right - kMapScrollBarWidth + 3, kMapScrollBarWidth);
+	mapLeftRoom = mapHScroll->GetState();
 	
-	SetControlMaximum(mapVScroll, kMaxNumRoomsV - mapRoomsHigh);
-	MoveControl(mapVScroll, mapWindowRect.right - kMapScrollBarWidth + 2, 0);
-	SizeControl(mapVScroll, kMapScrollBarWidth, 
-			mapWindowRect.bottom - kMapScrollBarWidth + 3);
-	mapTopRoom = GetControlValue(mapVScroll);
+	mapVScroll->SetMax(kMaxNumRoomsV - mapRoomsHigh);
+	mapVScroll->SetPosition(Point::Create(mapWindowRect.right - kMapScrollBarWidth + 2, 0));
+	mapVScroll->Resize(kMapScrollBarWidth, mapWindowRect.bottom - kMapScrollBarWidth + 3);
+	mapTopRoom = mapVScroll->GetState();
 	
 	InvalWindowRect(mapWindow, &mapWindowRect);
 #endif
@@ -350,7 +353,6 @@ void OpenMapWindow (void)
 {
 #ifndef COMPILEDEMO
 	Rect		src, dest;
-	Point		globalMouse;
 	
 	if (mapWindow == nil)
 	{
@@ -358,9 +360,11 @@ void OpenMapWindow (void)
 		QSetRect(&mapWindowRect, 0, 0, 
 				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 2, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 2);
-		mapWindow = NewCWindow(nil, &mapWindowRect, 
-					PSTR("Map"), false, kWindoidGrowWDEF, kPutInFront, true, 0L);
+
+		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mapWindowRect, kWindoidGrowWDEF, false, true, 0, 0, PSTR("Map"));
 		
+		mapWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(wdef);
+
 		if (mapWindow == nil)
 			RedAlert(kErrNoMemory);
 		
@@ -370,32 +374,46 @@ void OpenMapWindow (void)
 //			isMapV = qd.screenBits.bounds.bottom - 100;
 //		}
 		MoveWindow(mapWindow, isMapH, isMapV, true);
-		globalMouse = MyGetGlobalMouse();
+
 		QSetRect(&wasActiveRoomRect, 0, 0, 1, 1);
 		QSetRect(&activeRoomRect, 0, 0, 1, 1);
-		QSetRect(&src, 0, 0, 1, 1);
-		QOffsetRect(&src, globalMouse.h, globalMouse.v);
+
 		GetWindowRect(mapWindow, &dest);
-		BringToFront(mapWindow);
-		ShowHide(mapWindow, true);
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(mapWindow, kPutInFront);
+		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(mapWindow);
 //		FlagWindowFloating(mapWindow);	TEMP - use flaoting windows
-		HiliteAllWindows();
 		
 		SetPort((GrafPtr)mapWindow);
-		SetOrigin(1, 1);
 		QSetRect(&mapHScrollRect, -1, mapRoomsHigh * kMapRoomHeight, 
 				mapRoomsWide * kMapRoomWidth + 1, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth);
 		QSetRect(&mapVScrollRect, mapRoomsWide * kMapRoomWidth, -1, 
 				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth, 
 				mapRoomsHigh * kMapRoomHeight + 1);
-		mapHScroll = NewControl(mapWindow, &mapHScrollRect, PSTR(""), true, mapLeftRoom, 
-				0, kMaxNumRoomsH - mapRoomsWide, scrollBarProc, kHScrollRef);
+
+		{
+			PortabilityLayer::WidgetBasicState state;
+			state.m_rect = mapHScrollRect;
+			state.m_refConstant = kHScrollRef;
+			state.m_window = mapWindow;
+			state.m_max = kMaxNumRoomsH - mapRoomsWide;
+			state.m_state = mapLeftRoom;
+			mapHScroll = PortabilityLayer::ScrollBarWidget::Create(state);
+		}
+
 		if (mapHScroll == nil)
 			RedAlert(kErrNoMemory);
-		
-		mapVScroll = NewControl(mapWindow, &mapVScrollRect, PSTR(""), true, mapTopRoom,
-				0, kMaxNumRoomsV - mapRoomsHigh, scrollBarProc, kVScrollRef);
+
+		{
+			PortabilityLayer::WidgetBasicState state;
+			state.m_rect = mapVScrollRect;
+			state.m_refConstant = kVScrollRef;
+			state.m_window = mapWindow;
+			state.m_max = kMaxNumRoomsV - mapRoomsHigh;
+			state.m_state = mapTopRoom;
+			mapVScroll = PortabilityLayer::ScrollBarWidget::Create(state);
+		}
+
 		if (mapVScroll == nil)
 			RedAlert(kErrNoMemory);
 		
@@ -575,7 +593,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 	
 	SetPortWindowPort(mapWindow);
 	globalWhere = wherePt;
-	GlobalToLocal(&wherePt);
+	wherePt -= mapWindow->TopLeftCoord();
 	wherePt.h -= 1;
 	wherePt.v -= 1;
 	

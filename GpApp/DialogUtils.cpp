@@ -465,8 +465,7 @@ void SetDialogNumToStr (Dialog *theDialog, short item, long theNumber)
 	short			itemType;
 	
 	NumToString(theNumber, theString);
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	SetDialogItemText(itemHandle, theString);
+	theDialog->GetItems()[item - 1].GetWidget()->SetString(theString);
 }
 
 //--------------------------------------------------------------  GetDialogNumFromStr

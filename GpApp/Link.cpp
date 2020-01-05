@@ -11,7 +11,9 @@
 #include "Environ.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
-
+#include "PLButtonWidget.h"
+#include "PLWidgets.h"
+#include "WindowManager.h"
 
 #define kLinkControlID			130
 #define kUnlinkControlID		131
@@ -22,7 +24,7 @@ void DoUnlink (void);
 
 
 Rect			linkWindowRect;
-ControlHandle	linkControl, unlinkControl;
+PortabilityLayer::Widget	*linkControl, *unlinkControl;
 WindowPtr		linkWindow;
 short			isLinkH, isLinkV, linkRoom, linkType;
 Byte			linkObject;
@@ -227,22 +229,24 @@ void OpenLinkWindow (void)
 					PSTR("Link"), false, kWindoidWDEF, kPutInFront, true, 0L);
 		
 		MoveWindow(linkWindow, isLinkH, isLinkV, true);
-		globalMouse = MyGetGlobalMouse();
-		QSetRect(&src, 0, 0, 1, 1);
-		QOffsetRect(&src, globalMouse.h, globalMouse.v);
+
 		GetWindowRect(linkWindow, &dest);
 		BringToFront(linkWindow);
-		ShowHide(linkWindow, true);
+		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(linkWindow);
 //		FlagWindowFloating(linkWindow);	TEMP - use flaoting windows
 		HiliteAllWindows();
-		
-		linkControl = GetNewControl(kLinkControlID, linkWindow);
-		if (linkControl == nil)
-			RedAlert(kErrFailedResourceLoad);
-		
-		unlinkControl = GetNewControl(kUnlinkControlID, linkWindow);
-		if (unlinkControl == nil)
-			RedAlert(kErrFailedResourceLoad);
+
+		PortabilityLayer::WidgetBasicState basicState;
+		basicState.m_rect = Rect::Create(5, 70, 25, 124);
+		basicState.m_text.Set(4, "Link");
+		basicState.m_window = linkWindow;
+
+		linkControl = PortabilityLayer::ButtonWidget::Create(basicState);
+
+		basicState.m_rect = Rect::Create(5, 5, 25, 59);
+		basicState.m_text.Set(6, "Unlink");
+		basicState.m_window = linkWindow;
+		unlinkControl = PortabilityLayer::ButtonWidget::Create(basicState);
 		
 		linkRoom = -1;
 		linkObject = 255;
@@ -361,14 +365,14 @@ void DoUnlink (void)
 void HandleLinkClick (Point wherePt)
 {
 #ifndef COMPILEDEMO
-	ControlHandle	theControl;
+	PortabilityLayer::Widget	*theControl;
 	short			part;
 	
 	if (linkWindow == nil)
 		return;
 	
 	SetPortWindowPort(linkWindow);
-	GlobalToLocal(&wherePt);
+	wherePt -= linkWindow->TopLeftCoord();
 	
 	part = FindControl(wherePt, linkWindow, &theControl);
 	if ((theControl != nil) && (part != 0))

@@ -383,7 +383,7 @@ Boolean RoomFilter (Dialog *dial, EventRecord *event, short *item)
 		
 		case mouseDown:
 		mouseIs = event->where;
-		GlobalToLocal(&mouseIs);		
+		mouseIs -= dial->GetWindow()->TopLeftCoord();
 		if (PtInRect(mouseIs, &tileSrc))
 		{
 			if (StillDown())
@@ -693,7 +693,7 @@ Boolean OriginalArtFilter (Dialog *dial, EventRecord *event, short *item)
 		
 		case mouseDown:
 		mouseIs = event->where;
-		GlobalToLocal(&mouseIs);		
+		mouseIs -= dial->GetWindow()->TopLeftCoord();
 		if (PtInRect(mouseIs, &leftBound))
 		{
 			*item = 7;

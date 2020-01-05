@@ -16,6 +16,7 @@ namespace PortabilityLayer
 		void ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent) override;
 		void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) override;
 		int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) override;
+		void ClearState() override;
 
 		static InputManagerImpl *GetInstance();
 
@@ -53,6 +54,12 @@ namespace PortabilityLayer
 		assert(playerNum < PL_INPUT_MAX_PLAYERS);
 
 		return m_axisStates[playerNum][gamepadAxis];
+	}
+
+	void InputManagerImpl::ClearState()
+	{
+		memset(&m_axisStates, 0, sizeof(m_axisStates));
+		memset(&m_keyMap, 0, sizeof(m_keyMap));
 	}
 
 	void InputManagerImpl::ApplyEventAsKey(const GpKeyboardInputEvent &vosEvent, bool bit)

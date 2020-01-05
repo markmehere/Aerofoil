@@ -329,7 +329,11 @@ namespace PortabilityLayer
 		static SoundSystemImpl *GetInstance();
 
 	private:
+		SoundSystemImpl();
+
 		static SoundSystemImpl ms_instance;
+
+		uint8_t m_volume;
 	};
 
 	AudioChannel *SoundSystemImpl::CreateChannel()
@@ -367,21 +371,26 @@ namespace PortabilityLayer
 		return new (storage) PortabilityLayer::AudioChannelImpl(audioChannel, threadEvent, mutex);
 	}
 
-
 	void SoundSystemImpl::SetVolume(uint8_t vol)
 	{
-		PL_NotYetImplemented_TODO("Volume");
+		PortabilityLayer::HostAudioDriver::GetInstance()->SetMasterVolume(vol, 255);
+		m_volume = vol;
 	}
 
 	uint8_t SoundSystemImpl::GetVolume() const
 	{
 		PL_NotYetImplemented_TODO("Volume");
-		return 255;
+		return m_volume;
 	}
 
 	SoundSystemImpl *SoundSystemImpl::GetInstance()
 	{
 		return &ms_instance;
+	}
+
+	SoundSystemImpl::SoundSystemImpl()
+		: m_volume(255)
+	{
 	}
 
 	SoundSystemImpl SoundSystemImpl::ms_instance;

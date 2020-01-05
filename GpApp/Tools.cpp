@@ -12,8 +12,12 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
+#include "PLWidgets.h"
+#include "PLPopupMenuWidget.h"
 #include "RectUtils.h"
 #include "Utilities.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 
 #define kToolsHigh			4
@@ -60,7 +64,7 @@ void SwitchToolModes (short);
 
 Rect			toolsWindowRect, toolSrcRect, toolTextRect;
 Rect			toolRects[kTotalTools];
-ControlHandle	classPopUp;
+PortabilityLayer::Widget	*classPopUp;
 DrawSurface		*toolSrcMap;
 WindowPtr		toolsWindow;
 short			isToolsH, isToolsV;
@@ -285,6 +289,8 @@ void OpenToolsWindow (void)
 	Rect		src, dest;
 	Point		globalMouse;
 	short		h, v;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	if (toolsWindow == nil)
 	{
@@ -292,12 +298,11 @@ void OpenToolsWindow (void)
 		QSetRect(&toolTextRect, 0, 0, 116, 12);
 		InsetRect(&toolTextRect, -1, -1);
 		QOffsetRect(&toolTextRect, 0, 157 - 15);
-		if (thisMac.hasColor)
-			toolsWindow = NewCWindow(nil, &toolsWindowRect, 
-					PSTR("Tools"), false, kWindoidWDEF, kPutInFront, true, 0L);
-		else
-			toolsWindow = NewWindow(nil, &toolsWindowRect, 
-					PSTR("Tools"), false, kWindoidWDEF, kPutInFront, true, 0L);
+
+		{
+			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(toolsWindowRect, kWindoidWDEF, false, true, 0, 0, PSTR("Tools"));
+			toolsWindow = wm->CreateWindow(wdef);
+		}
 		
 		if (toolsWindow == nil)
 			RedAlert(kErrNoMemory);
@@ -308,20 +313,29 @@ void OpenToolsWindow (void)
 //			isToolsV = 35;
 //		}
 		MoveWindow(toolsWindow, isToolsH, isToolsV, true);
-		globalMouse = MyGetGlobalMouse();
-		QSetRect(&src, 0, 0, 1, 1);
-		QOffsetRect(&src, globalMouse.h, globalMouse.v);
+
 		GetWindowRect(toolsWindow, &dest);
-		BringToFront(toolsWindow);
-		ShowHide(toolsWindow, true);
+		wm->PutWindowBehind(toolsWindow, wm->GetPutInFrontSentinel());
+		wm->ShowWindow(toolsWindow);
 //		FlagWindowFloating(toolsWindow);	TEMP - use flaoting windows
 		HiliteAllWindows();
-		
-		classPopUp = GetNewControl(kPopUpControl, toolsWindow);
+
+		{
+			PortabilityLayer::WidgetBasicState state;
+			state.m_min = 1;
+			state.m_max = 3;
+			state.m_rect = Rect::Create(2, 4, 22, 112);
+			state.m_state = 1;
+			state.m_resID = 141;
+			state.m_window = toolsWindow;
+
+			classPopUp = PortabilityLayer::PopupMenuWidget::Create(state);
+		}
+
 		if (classPopUp == nil)
 			RedAlert(kErrFailedResourceLoad);
 		
-		SetControlValue(classPopUp, toolMode);
+		classPopUp->SetState(toolMode);
 		
 		for (v = 0; v < kToolsHigh; v++)
 			for (h = 0; h < kToolsWide; h++)
@@ -436,7 +450,6 @@ void SwitchToolModes (short newMode)
 	}
 	
 	toolMode = newMode;
-	InvalWindowRect(toolsWindow, &toolsWindowRect);
 }
 #endif
 
@@ -452,7 +465,7 @@ void HandleToolsClick (Point wherePt)
 		return;
 	
 	SetPortWindowPort(toolsWindow);
-	GlobalToLocal(&wherePt);
+	wherePt -= toolsWindow->TopLeftCoord();
 	
 	part = FindControl(wherePt, toolsWindow, &theControl);
 	if ((theControl != nil) && (part != 0))
@@ -505,7 +518,7 @@ void NextToolMode (void)
 	{
 		EraseSelectedTool();
 		toolMode++;
-		SetControlValue(classPopUp, toolMode);
+		classPopUp->SetState(toolMode);
 		SwitchToolModes(toolMode);
 		toolSelected = kSelectTool;
 	}
@@ -524,7 +537,7 @@ void PrevToolMode (void)
 	{
 		EraseSelectedTool();
 		toolMode--;
-		SetControlValue(classPopUp, toolMode);
+		classPopUp->SetState(toolMode);
 		SwitchToolModes(toolMode);
 		toolSelected = kSelectTool;
 	}
@@ -541,7 +554,7 @@ void SetSpecificToolMode (short modeToSet)
 	
 	EraseSelectedTool();
 	toolMode = modeToSet;
-	SetControlValue(classPopUp, toolMode);
+	classPopUp->SetState(toolMode);
 	SwitchToolModes(toolMode);
 	toolSelected = kSelectTool;
 #endif

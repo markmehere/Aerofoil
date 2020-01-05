@@ -1,10 +1,11 @@
 #pragma once
 
+#include <stdint.h>
+
 template<class T>
 class THandle;
 
-#include <stdint.h>
-
+class PLPasStr;
 struct IGpDisplayDriver;
 struct Menu;
 
@@ -31,6 +32,7 @@ namespace PortabilityLayer
 		virtual void SetMenuEnabled(const THandle<Menu> &menuHandle, bool enabled) = 0;
 		virtual void SetItemEnabled(const THandle<Menu> &menu, unsigned int index, bool enabled) = 0;
 		virtual void SetItemChecked(const THandle<Menu> &menu, unsigned int index, bool checked) = 0;
+		virtual bool SetItemText(const THandle<Menu> &menu, unsigned int index, const PLPasStr &str) = 0;
 
 		virtual bool IsPointInMenuBar(const Vec2i &point) const = 0;
 

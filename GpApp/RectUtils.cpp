@@ -105,35 +105,6 @@ short RectTall (Rect *theRect)
 	return (theRect->bottom - theRect->top);
 }
 
-//--------------------------------------------------------------  GlobalToLocalRect
-
-// This function offsets a rectangle from global to local coordinates.
-// The "local" coordinate system is assumed to be the current port (window).
-
-void GlobalToLocalRect (Rect *theRect)
-{
-	Point			upperLeftPt;
-	
-	upperLeftPt.h = 0;
-	upperLeftPt.v = 0;
-	GlobalToLocal(&upperLeftPt);
-	QOffsetRect(theRect, upperLeftPt.h, upperLeftPt.v);
-}
-
-//--------------------------------------------------------------  LocalToGlobalRect
-
-// This function offsets a rectangle from local to global coordinates.
-// The "local" coordinate system is assumed to be the current port (window).
-
-void LocalToGlobalRect (Rect *theRect)
-{
-	Point			upperLeftPt;
-	
-	upperLeftPt.h = 0;
-	upperLeftPt.v = 0;
-	LocalToGlobal(&upperLeftPt);
-	QOffsetRect(theRect, upperLeftPt.h, upperLeftPt.v);
-}
 
 //--------------------------------------------------------------  CenterRectInRect
 // Given two rectangles, this function centers the first rectangle…

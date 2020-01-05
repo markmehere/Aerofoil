@@ -28,10 +28,14 @@ namespace PortabilityLayer
 		WidgetBasicState();
 
 		Rect m_rect;
-		int16_t m_resID;
 		PascalStr<255> m_text;
-		bool m_enabled;
 		Window *m_window;
+		uint32_t m_refConstant;
+		int32_t m_min;
+		int32_t m_max;
+		int16_t m_state;
+		int16_t m_resID;
+		bool m_enabled;
 	};
 
 	class Widget
@@ -42,8 +46,15 @@ namespace PortabilityLayer
 		virtual WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
 		virtual void DrawControl(DrawSurface *surface);
 
+		virtual void SetMin(int32_t v);
+		virtual void SetMax(int32_t v);
+
+		void SetPosition(const Point &pos);
+		void Resize(uint16_t width, uint16_t height);
+
 		void SetEnabled(bool enabled);
 		void SetState(int16_t state);
+		int16_t GetState() const;
 
 		void SetVisible(bool visible);
 		bool IsVisible() const;
@@ -71,6 +82,7 @@ namespace PortabilityLayer
 	};
 }
 
+#include "PLCore.h"
 #include <new>
 #include <stdint.h>
 
@@ -91,7 +103,7 @@ namespace PortabilityLayer
 			Widget::BaseRelease(static_cast<T*>(this));
 		}
 
-		static WidgetSpec<T> *Create(const WidgetBasicState &state)
+		static T *Create(const WidgetBasicState &state)
 		{
 			void *storage = Widget::BaseAlloc(sizeof(T));
 			if (!storage)
@@ -99,8 +111,18 @@ namespace PortabilityLayer
 
 			T *widgetT = new (storage) T(state);
 
-			Widget *widget = static_cast<Widget*>(widgetT);
+			// Conversion check
+			WidgetSpec<T> *downcastWidget = widgetT;
+			(void)downcastWidget;
+
+			Widget *widget = widgetT;
 			if (!widget->Init(state))
+			{
+				widget->Destroy();
+				return nullptr;
+			}
+
+			if (!static_cast<Window*>(state.m_window)->AddWidget(widget))
 			{
 				widget->Destroy();
 				return nullptr;

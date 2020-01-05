@@ -77,9 +77,11 @@ struct DrawSurface final
 	void SetApplicationFont(int size, int variationFlags);
 	void SetSystemFont(int size, int variationFlags);
 	void DrawString(const Point &point, const PLPasStr &str);
+	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str);
 
 	size_t MeasureString(const PLPasStr &str);
 	int32_t MeasureFontAscender();
+	int32_t MeasureFontLineGap();
 
 	void DrawPicture(THandle<Picture> pictHandle, const Rect &rect);
 

@@ -105,7 +105,6 @@ PLError_t PlotIconSuite(Rect *rect, Handle iconSuite);
 void SetRect(Rect *rect, short left, short top, short right, short bottom);
 
 int TextWidth(const PLPasStr &str, int firstChar1Based, int length);
-void SetOrigin(int x, int y);
 void ForeColor(SystemColorID color);
 void BackColor(SystemColorID color);
 void GetForeColor(RGBColor *color);

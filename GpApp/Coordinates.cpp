@@ -13,6 +13,7 @@
 #include "Marquee.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
+#include "WindowManager.h"
 
 
 Rect			coordWindowRect;
@@ -142,12 +143,10 @@ void OpenCoordWindow (void)
 //			isCoordV = 204;
 //		}
 		MoveWindow(coordWindow, isCoordH, isCoordV, true);
-		globalMouse = MyGetGlobalMouse();
-		QSetRect(&src, 0, 0, 1, 1);
-		QOffsetRect(&src, globalMouse.h, globalMouse.v);
+
 		GetWindowRect(coordWindow, &dest);
 		BringToFront(coordWindow);
-		ShowHide(coordWindow, true);
+		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(coordWindow);
 //		FlagWindowFloating(coordWindow);	TEMP - use flaoting windows
 		HiliteAllWindows();
 		

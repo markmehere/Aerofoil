@@ -10,6 +10,7 @@ public:
 	GpPLGlueAudioDriver();
 
 	PortabilityLayer::HostAudioChannel *CreateChannel() override;
+	void SetMasterVolume(uint32_t vol, uint32_t maxVolume) override;
 
 	void SetGpAudioDriver(IGpAudioDriver *audioDriver);
 

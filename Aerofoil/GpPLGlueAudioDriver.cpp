@@ -25,6 +25,11 @@ PortabilityLayer::HostAudioChannel *GpPLGlueAudioDriver::CreateChannel()
 	return glueChannel;
 }
 
+void GpPLGlueAudioDriver::SetMasterVolume(uint32_t vol, uint32_t maxVolume)
+{
+	m_audioDriver->SetMasterVolume(vol, maxVolume);
+}
+
 GpPLGlueAudioDriver *GpPLGlueAudioDriver::GetInstance()
 {
 	return &ms_instance;

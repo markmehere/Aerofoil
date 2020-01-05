@@ -8,7 +8,14 @@
 
 #include "PLStringCompare.h"
 #include "Externs.h"
+#include "FileManager.h"
 #include "House.h"
+#include "IOStream.h"
+#include "InputManager.h"
+#include "MacFileInfo.h"
+#include "MemoryManager.h"
+
+#include <assert.h>
 
 
 #define kSavedGameVersion		0x0200
@@ -29,62 +36,71 @@ extern	Boolean		twoPlayerGame;
 
 void SaveGame2 (void)
 {
-	PL_NotYetImplemented_TODO("SaveGame");
-	// Add NavServices later.
-/*
-	StandardFileReply	theReply;
-	FSSpec				tempSpec;
+	// Bringing up the save file UI can cause key/mouse events to be missed, resulting in state being stuck when this comes back.
+	// To avoid that, clear all state here.
+	PortabilityLayer::InputManager::GetInstance()->ClearState();
+
 	Str255				gameNameStr;
 	Size				byteCount;
-	PLError_t				theErr;
 	houseType			*thisHousePtr;
 	roomType			*srcRoom;
 	savedRoom			*destRoom;
 	gamePtr				savedGame;
-	short				r, i, numRooms, gameRefNum;
+	short				r, i, numRooms;
 	char				wasState;
+	PortabilityLayer::IOStream	*gameStream = nullptr;
+
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 	
 	FlushEvents(everyEvent, 0);
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	numRooms = thisHousePtr->nRooms;
 	
-	HSetState((Handle)thisHouse, wasState);
-	
 	byteCount = sizeof(game2Type) + sizeof(savedRoom) * numRooms;
-	savedGame = (gamePtr)NewPtr(byteCount);
+	savedGame = (gamePtr)mm->Alloc(byteCount);
 	if (savedGame == nil)
 	{
 		YellowAlert(kYellowFailedSaveGame, PLErrors::kOutOfMemory);
 		return;
 	}
+
+	memset(savedGame, 0, byteCount);
 	
 	GetFirstWordOfString(thisHouseName, gameNameStr);
 	if (gameNameStr[0] > 23)
 		gameNameStr[0] = 23;
-	PasStringConcat(gameNameStr, "\p Game");
-	
-	StandardPutFile("\pSave Game As:", gameNameStr, &theReply);
-	if (!theReply.sfGood)
-		return;
-	
-	if (theReply.sfReplacing)
+	PasStringConcat(gameNameStr, PSTR(" Game"));
+
+	VFileSpec spec;
+	spec.m_dir = PortabilityLayer::VirtualDirectories::kUserSaves;
+	spec.m_name[0] = 0;
+
+	char savePath[sizeof(spec.m_name) + 1];
+	size_t savePathLength = 0;
+
+	if (!fm->PromptSaveFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr)))
 	{
-		theErr = FSMakeFSSpec(theReply.sfFile.vRefNum, theReply.sfFile.parID, 
-				theReply.sfFile.name, &tempSpec);
-		if (!CheckFileError(theErr, "\pSaved Game"))
+		mm->Release(savedGame);
+		return;
+	}
+
+	assert(savePathLength < sizeof(spec.m_name) - 1);
+
+	spec.m_name[0] = static_cast<uint8_t>(savePathLength);
+	memcpy(spec.m_name + 1, savePath, savePathLength);
+
+	if (fm->FileExists(spec.m_dir, PLPasStr(spec.m_name)))
+	{
+		if (!fm->DeleteFile(spec.m_dir, spec.m_name))
+		{
+			CheckFileError(PLErrors::kAccessDenied, PSTR("Saved Game"));
 			return;
-		
-		theErr = FSpDelete(&tempSpec);
-		if (!CheckFileError(theErr, "\pSaved Game"))
-			return;
+		}
 	}
 	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
 	savedGame->house = theHousesSpecs[thisHouseIndex];
@@ -117,35 +133,24 @@ void SaveGame2 (void)
 		for (i = 0; i < kMaxRoomObs; i++)
 			destRoom->objects[i] = srcRoom->objects[i];
 	}
-	
-	HSetState((Handle)thisHouse, wasState);
-	
-	theErr = FSpCreate(&theReply.sfFile, 'ozm5', 'gliG', theReply.sfScript);
-	if (CheckFileError(theErr, "\pSaved Game"))
+
+	PLError_t theErr = fm->CreateFileAtCurrentTime(spec.m_dir, spec.m_name, 'ozm5', 'gliG');
+	if (CheckFileError(theErr, PSTR("Saved Game")))
 	{
-		theErr = FSpOpenDF(&theReply.sfFile, fsCurPerm, &gameRefNum);
-		if (CheckFileError(theErr, "\pSaved Game"))
+		theErr = fm->OpenFileData(spec.m_dir, spec.m_name, PortabilityLayer::EFilePermission_Write, gameStream);
+
+		if (CheckFileError(theErr, PSTR("Saved Game")))
 		{
-			theErr = SetFPos(gameRefNum, fsFromStart, 0L);
-			if (CheckFileError(theErr, "\pSaved Game"))
+			if (gameStream->Write(savedGame, byteCount) != byteCount)
 			{
-				theErr = FSWrite(gameRefNum, &byteCount, (Ptr)savedGame);
-				if (CheckFileError(theErr, "\pSaved Game"))
-				{
-					theErr = SetEOF(gameRefNum, byteCount);
-					if (CheckFileError(theErr, "\pSaved Game"))
-					{
-					}
-				}
+				CheckFileError(PLErrors::kIOError, PSTR("Saved Game"));
 			}
-			theErr = FSClose(gameRefNum);
-			if (CheckFileError(theErr, "\pSaved Game"))
-			{
-			}
+
+			gameStream->Close();
 		}
 	}
-	DisposePtr((Ptr)savedGame);
-	*/
+
+	mm->Release(savedGame);
 }
 
 //--------------------------------------------------------------  SavedGameMismatchError
@@ -167,95 +172,98 @@ void SavedGameMismatchError (StringPtr gameName)
 
 Boolean OpenSavedGame (void)
 {
-	PL_NotYetImplemented();
-return false;		// TEMP fix this iwth NavServices
-/*
-	StandardFileReply	theReply;
-	SFTypeList			theList;
 	houseType			*thisHousePtr;
 	roomType			*destRoom;
 	savedRoom			*srcRoom;
 	gamePtr				savedGame;
-	long				byteCount;
-	PLError_t				theErr;
 	short				r, i, gameRefNum;
 	char				wasState;
-	
-	theList[0] = 'gliG';
-	
-	StandardGetFile(nil, 1, theList, &theReply);
-	if (!theReply.sfGood)
+
+	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+
+	VFileSpec spec;
+	spec.m_dir = PortabilityLayer::VirtualDirectories::kUserSaves;
+	spec.m_name[0] = 0;
+
+	char savePath[sizeof(spec.m_name) + 1];
+	size_t savePathLength = 0;
+
+	if (!fm->PromptOpenFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name)))
+		return false;
+
+	assert(savePathLength < sizeof(spec.m_name) - 1);
+
+	spec.m_name[0] = static_cast<uint8_t>(savePathLength);
+	memcpy(spec.m_name + 1, savePath, savePathLength);
+
+	PortabilityLayer::MacFileProperties props;
+	if (!fm->ReadFileProperties(spec.m_dir, spec.m_name, props))
+		return false;
+
+	if (memcmp(props.m_fileType, "gliG", 4))
+		return false;
+
+	PortabilityLayer::IOStream *gameStream = nullptr;
+	PLError_t theErr = fm->OpenFileData(spec.m_dir, spec.m_name, PortabilityLayer::EFilePermission_Read, gameStream);
+
+	if (!CheckFileError(theErr, PSTR("Saved Game")))
 		return(false);
-	
-	theErr = FSpOpenDF(&theReply.sfFile, fsCurPerm, &gameRefNum);
-	if (!CheckFileError(theErr, "\pSaved Game"))
-		return(false);
-	
-	theErr = GetEOF(gameRefNum, &byteCount);
-	if (!CheckFileError(theErr, "\pSaved Game"))
+
+	const PortabilityLayer::UFilePos_t fileSizeFP = gameStream->Size();
+	if (fileSizeFP > SIZE_MAX)
 	{
-		theErr = FSClose(gameRefNum);
-		return(false);
+		gameStream->Close();
+		return false;
 	}
-	
-	savedGame = (gamePtr)NewPtr(byteCount);
+
+	const size_t byteCount = static_cast<size_t>(fileSizeFP);
+
+	savedGame = (gamePtr)mm->Alloc(byteCount);
 	if (savedGame == nil)
 	{
 		YellowAlert(kYellowFailedSaveGame, PLErrors::kOutOfMemory);
-		theErr = FSClose(gameRefNum);
+		gameStream->Close();
 		return(false);
 	}
 	
-	theErr = SetFPos(gameRefNum, fsFromStart, 0L);
-	if (!CheckFileError(theErr, "\pSaved Game"))
+	if (gameStream->Read(savedGame, byteCount) != byteCount)
 	{
-		DisposePtr((Ptr)savedGame);
-		theErr = FSClose(gameRefNum);
+		CheckFileError(PLErrors::kIOError, PSTR("Saved Game"));
+		mm->Release(savedGame);
+		gameStream->Close();
 		return(false);
 	}
 	
-	theErr = FSRead(gameRefNum, &byteCount, savedGame);
-	if (!CheckFileError(theErr, "\pSaved Game"))
-	{
-		DisposePtr((Ptr)savedGame);
-		theErr = FSClose(gameRefNum);
-		return(false);
-	}
-	
-	wasState = HGetState((Handle)thisHouse);
-	HLock((Handle)thisHouse);
 	thisHousePtr = *thisHouse;
 	
-	if (!StrCmp::Equal(savedGame->house.name, thisHouseName))
+	if (!StrCmp::Equal(savedGame->house.m_name, thisHouseName))
 	{
-		SavedGameMismatchError(savedGame->house.name);
-		HSetState((Handle)thisHouse, wasState);
-		DisposePtr((Ptr)savedGame);
-		theErr = FSClose(gameRefNum);
+		SavedGameMismatchError(savedGame->house.m_name);
+		mm->Release(savedGame);
+		gameStream->Close();
 		return(false);
 	}
 	else if (thisHousePtr->timeStamp != savedGame->timeStamp)
 	{
 		YellowAlert(kYellowSavedTimeWrong, 0);
-		HSetState((Handle)thisHouse, wasState);
-		DisposePtr((Ptr)savedGame);
-		theErr = FSClose(gameRefNum);
+		mm->Release(savedGame);
+		gameStream->Close();
 		return(false);
 	}
 	else if (savedGame->version != kSavedGameVersion)
 	{
 		YellowAlert(kYellowSavedVersWrong, kSavedGameVersion);
-		HSetState((Handle)thisHouse, wasState);
-		DisposePtr((Ptr)savedGame);
-		theErr = FSClose(gameRefNum);
+		mm->Release(savedGame);
+		gameStream->Close();
 		return(false);
 	}
 	else if (savedGame->nRooms != thisHousePtr->nRooms)
 	{
 		YellowAlert(kYellowSavedRoomsWrong, savedGame->nRooms - thisHousePtr->nRooms);
-		HSetState((Handle)thisHouse, wasState);
-		DisposePtr((Ptr)savedGame);
-		theErr = FSClose(gameRefNum);
+		mm->Release(savedGame);
+		gameStream->Close();
 		return(false);
 	}
 	else
@@ -285,16 +293,11 @@ return false;		// TEMP fix this iwth NavServices
 				destRoom->objects[i] = srcRoom->objects[i];
 		}
 	}
-	HSetState((Handle)thisHouse, wasState);
-	
-	DisposePtr((Ptr)savedGame);
-	
-	theErr = FSClose(gameRefNum);
-	if (!CheckFileError(theErr, "\pSaved Game"))
-		return (false);
-	
+
+	mm->Release(savedGame);
+	gameStream->Close();
+
 	return (true);
-	*/
 }
 
 //--------------------------------------------------------------  SaveGame

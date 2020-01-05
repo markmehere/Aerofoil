@@ -191,6 +191,7 @@
     <ClInclude Include="PLArrayViewIterator.h" />
     <ClInclude Include="PLBigEndian.h" />
     <ClInclude Include="PLButtonWidget.h" />
+    <ClInclude Include="PLCheckboxWidget.h" />
     <ClInclude Include="PLControlDefinitions.h" />
     <ClInclude Include="PLCore.h" />
     <ClInclude Include="PLCTabReducer.h" />
@@ -203,6 +204,9 @@
     <ClInclude Include="PLImageWidget.h" />
     <ClInclude Include="PLInvisibleWidget.h" />
     <ClInclude Include="PLLabelWidget.h" />
+    <ClInclude Include="PLPopupMenuWidget.h" />
+    <ClInclude Include="PLRadioButtonWidget.h" />
+    <ClInclude Include="PLScrollBarWidget.h" />
     <ClInclude Include="PLWidgets.h" />
     <ClInclude Include="SimpleImage.h" />
     <ClInclude Include="PLKeyEncoding.h" />
@@ -304,6 +308,7 @@
     <ClCompile Include="PLAppleEvents.cpp" />
     <ClCompile Include="PLApplication.cpp" />
     <ClCompile Include="PLButtonWidget.cpp" />
+    <ClCompile Include="PLCheckboxWidget.cpp" />
     <ClCompile Include="PLControlDefinitions.cpp" />
     <ClCompile Include="PLCore.cpp" />
     <ClCompile Include="PLCTabReducer.cpp" />
@@ -318,10 +323,13 @@
     <ClCompile Include="PLMovies.cpp" />
     <ClCompile Include="PLNavigation.cpp" />
     <ClCompile Include="PLNumberFormatting.cpp" />
+    <ClCompile Include="PLPopupMenuWidget.cpp" />
     <ClCompile Include="PLQDOffscreen.cpp" />
     <ClCompile Include="PLQDraw.cpp" />
+    <ClCompile Include="PLRadioButtonWidget.cpp" />
     <ClCompile Include="PLResourceManager.cpp" />
     <ClCompile Include="PLResources.cpp" />
+    <ClCompile Include="PLScrollBarWidget.cpp" />
     <ClCompile Include="PLSound.cpp" />
     <ClCompile Include="PLStandardColors.cpp" />
     <ClCompile Include="PLStringCompare.cpp" />

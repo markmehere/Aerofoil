@@ -19,8 +19,6 @@ short HalfRectWide (Rect *);
 short HalfRectTall (Rect *);
 short RectWide (Rect *);
 short RectTall (Rect *);
-void GlobalToLocalRect (Rect *);
-void LocalToGlobalRect (Rect *);
 void CenterRectInRect (Rect *, Rect *);
 void HOffsetRect (Rect *, short);
 void VOffsetRect (Rect *, short);

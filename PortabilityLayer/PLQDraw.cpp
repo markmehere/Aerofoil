@@ -427,11 +427,6 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void SetOrigin(int x, int y)
-{
-	PL_NotYetImplemented();
-}
-
 namespace
 {
 	static bool SystemColorToRGBAColor(SystemColorID color, PortabilityLayer::RGBAColor &rgbaColor)
@@ -610,6 +605,116 @@ void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
+void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str)
+{
+	PortabilityLayer::QDPort *port = &m_port;
+
+	PortabilityLayer::QDState *qdState = m_port.GetState();
+
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	const int fontSize = qdState->m_fontSize;
+	const int fontVariationFlags = qdState->m_fontVariationFlags;
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, fontVariationFlags);
+
+	Point penPos = point;
+	const size_t len = str.Length();
+	const uint8_t *chars = str.UChars();
+
+	PixMap *pixMap = *port->GetPixMap();
+
+	const Rect limitRect = pixMap->m_rect.Intersect(constrainRect);;
+	const Rect areaRect = constrainRect;
+
+	if (!limitRect.IsValid() || !areaRect.IsValid())
+		return;	// ???
+
+	Point paraStartPos = penPos;
+
+	size_t currentStartChar = 0;
+	size_t currentSpanLength = 0;
+
+	for (;;)
+	{
+		if (currentStartChar == len)
+			break;
+
+		size_t lastWhitespace = currentStartChar;
+		bool shouldSkipSpaces = false;
+
+		size_t committedLength = 0;
+
+		size_t i = currentStartChar;
+
+		// Find a span to print
+		int32_t spanWidth = 0;
+		for (;;)
+		{
+			if (i == len)
+			{
+				committedLength = i - currentStartChar;
+				break;
+			}
+
+			uint8_t character = chars[i];
+
+			if (character <= ' ')
+			{
+				committedLength = i - currentStartChar + 1;
+				if (character == '\r')
+					break;
+
+				i++;
+			}
+			else
+			{
+				const PortabilityLayer::RenderedGlyphMetrics *metrics = nullptr;
+				const void *glyphData = nullptr;
+				if (!rfont->GetGlyph(chars[i], metrics, glyphData))
+				{
+					i++;
+					continue;
+				}
+
+				spanWidth += metrics->m_advanceX;
+
+				int32_t glyphEnd = penPos.h + spanWidth;
+
+				if (glyphEnd >= constrainRect.right)
+				{
+					if (committedLength == 0)
+					{
+						// Word didn't fit
+						committedLength = i - currentStartChar;
+						if (committedLength == 0)
+							committedLength = 1;	// Nothing fit, consume one char
+					}
+
+					break;
+				}
+
+				i++;
+			}
+		}
+
+		for (size_t ci = 0; ci < committedLength; ci++)
+		{
+			const uint8_t character = chars[currentStartChar + ci];
+
+			DrawGlyph(qdState, pixMap, pixMap->m_rect, penPos, rfont, character);
+		}
+
+		currentStartChar += committedLength;
+
+		paraStartPos.v += rfont->GetMetrics().m_linegap;
+		penPos = paraStartPos;
+	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+}
+
 size_t DrawSurface::MeasureString(const PLPasStr &str)
 {
 	const PortabilityLayer::QDState *qdState = m_port.GetState();
@@ -648,6 +753,26 @@ int32_t DrawSurface::MeasureFontAscender()
 		return 0;
 
 	return rfont->GetMetrics().m_ascent;
+}
+
+int32_t DrawSurface::MeasureFontLineGap()
+{
+	const PortabilityLayer::QDState *qdState = m_port.GetState();
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
+
+	if (!fontFamily)
+		return 0;
+
+	const int variationFlags = qdState->m_fontVariationFlags;
+	const int fontSize = qdState->m_fontSize;
+
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
+	if (!rfont)
+		return 0;
+
+	return rfont->GetMetrics().m_linegap;
 }
 
 void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
@@ -799,7 +924,7 @@ void DrawSurface::FillRect(const Rect &rect)
 
 void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("FillWithPattern");
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 

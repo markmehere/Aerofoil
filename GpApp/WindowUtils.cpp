@@ -27,21 +27,15 @@ WindowPtr	mssgWindow;
 
 void GetWindowLeftTop (WindowPtr theWindow, short *left, short *top)
 {
-	Point		thePoint;
-	Rect		bounds;
-	
-	*left = 0;
-	*top = 0;
-	
-	if (theWindow != nil)
+	if (theWindow == nullptr)
 	{
-		SetPortWindowPort(theWindow);
-		GetWindowBounds(theWindow, kWindowContentRgn, &bounds);
-		thePoint.h = bounds.left;
-		thePoint.v = bounds.top;
-		LocalToGlobal(&thePoint);
-		*left = thePoint.h;
-		*top = thePoint.v;
+		*left = 0;
+		*top = 0;
+	}
+	else
+	{
+		*left = static_cast<short>(theWindow->m_wmX);
+		*top = static_cast<short>(theWindow->m_wmY);
 	}
 }
 
@@ -53,9 +47,9 @@ void GetWindowRect (WindowPtr theWindow, Rect *bounds)
 {
 	if (theWindow != nil)
 	{
-		SetPortWindowPort(theWindow);
-		GetWindowBounds(theWindow, kWindowContentRgn, bounds);
-		LocalToGlobalRect(bounds);
+		Point upperLeft;
+		GetWindowLeftTop(theWindow, &upperLeft.h, &upperLeft.v);
+		*bounds = theWindow->m_surface.m_port.GetRect() + upperLeft;
 	}
 }
 

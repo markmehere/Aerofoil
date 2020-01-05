@@ -20,6 +20,7 @@ namespace PortabilityLayer
 		virtual HostDirectoryCursor *ScanDirectory(VirtualDirectory_t virtualDirectory) = 0;
 
 		virtual bool PromptSaveFile(VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName) = 0;
+		virtual bool PromptOpenFile(VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity) = 0;
 		virtual bool ValidateFilePath(const char *path, size_t pathLen) const = 0;
 
 		static HostFileSystem *GetInstance();

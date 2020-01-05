@@ -9,6 +9,8 @@
 //#include <Balloons.h>
 #include "PLNumberFormatting.h"
 #include "PLKeyEncoding.h"
+#include "PLHacks.h"
+#include "PLMenus.h"
 #include "PLPasStr.h"
 #include "PLToolUtils.h"
 #include "DialogManager.h"
@@ -172,32 +174,34 @@ void UpdateClipboardMenus (void)
 	
 	if (!houseOpen)
 		return;
+
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
 	
 	if (houseUnlocked)
 	{
 		if (objActive > kNoObjectSelected)
 		{
 			GetLocalizedString(36, title);
-			SetMenuItemText(houseMenu, iCut, title);
+			mm->SetItemText(houseMenu, iCut - 1, title);
 			GetLocalizedString(37, title);
-			SetMenuItemText(houseMenu, iCopy, title);
+			mm->SetItemText(houseMenu, iCopy - 1, title);
 			GetLocalizedString(38, title);
-			SetMenuItemText(houseMenu, iClear, title);
-			EnableMenuItem(houseMenu, iDuplicate);
+			mm->SetItemText(houseMenu, iClear - 1, title);
+			mm->SetItemEnabled(houseMenu, iDuplicate - 1, false);
 		}
 		else
 		{
 			GetLocalizedString(39, title);
-			SetMenuItemText(houseMenu, iCut, title);
+			mm->SetItemText(houseMenu, iCut - 1, title);
 			GetLocalizedString(40, title);
-			SetMenuItemText(houseMenu, iCopy, title);
+			mm->SetItemText(houseMenu, iCopy - 1, title);
 			GetLocalizedString(41, title);
-			SetMenuItemText(houseMenu, iClear, title);
-			DisableMenuItem(houseMenu, iDuplicate);
+			mm->SetItemText(houseMenu, iClear - 1, title);
+			mm->SetItemEnabled(houseMenu, iDuplicate - 1, false);
 		}
 		
-		EnableMenuItem(houseMenu, iCut);
-		EnableMenuItem(houseMenu, iCopy);
+		mm->SetItemEnabled(houseMenu, iCut - 1, true);
+		mm->SetItemEnabled(houseMenu, iCopy - 1, true);
 //		if (hasScrap)
 //		{
 //			EnableMenuItem(houseMenu, iPaste);
@@ -214,27 +218,27 @@ void UpdateClipboardMenus (void)
 //		}
 //		else
 		{
-			DisableMenuItem(houseMenu, iPaste);
+			mm->SetItemEnabled(houseMenu, iPaste - 1, false);
 			GetLocalizedString(44, title);
-			SetMenuItemText(houseMenu, iPaste, title);
+			mm->SetItemText(houseMenu, iPaste - 1, title);
 		}
-		EnableMenuItem(houseMenu, iClear);
-		EnableMenuItem(houseMenu, iGoToRoom);
-		EnableMenuItem(houseMenu, iMapWindow);
-		EnableMenuItem(houseMenu, iObjectWindow);
-		EnableMenuItem(houseMenu, iCoordinateWindow);
+		mm->SetItemEnabled(houseMenu, iClear - 1, true);
+		mm->SetItemEnabled(houseMenu, iGoToRoom - 1, true);
+		mm->SetItemEnabled(houseMenu, iMapWindow - 1, true);
+		mm->SetItemEnabled(houseMenu, iObjectWindow - 1, true);
+		mm->SetItemEnabled(houseMenu, iCoordinateWindow - 1, true);
 	}
 	else
 	{
-		DisableMenuItem(houseMenu, iCut);
-		DisableMenuItem(houseMenu, iCopy);
-		DisableMenuItem(houseMenu, iPaste);
-		DisableMenuItem(houseMenu, iClear);
-		DisableMenuItem(houseMenu, iDuplicate);
-		DisableMenuItem(houseMenu, iGoToRoom);
-		DisableMenuItem(houseMenu, iMapWindow);
-		DisableMenuItem(houseMenu, iObjectWindow);
-		DisableMenuItem(houseMenu, iCoordinateWindow);
+		mm->SetItemEnabled(houseMenu, iCut - 1, false);
+		mm->SetItemEnabled(houseMenu, iCopy - 1, false);
+		mm->SetItemEnabled(houseMenu, iPaste - 1, false);
+		mm->SetItemEnabled(houseMenu, iClear - 1, false);
+		mm->SetItemEnabled(houseMenu, iDuplicate - 1, false);
+		mm->SetItemEnabled(houseMenu, iGoToRoom - 1, false);
+		mm->SetItemEnabled(houseMenu, iMapWindow - 1, false);
+		mm->SetItemEnabled(houseMenu, iObjectWindow - 1, false);
+		mm->SetItemEnabled(houseMenu, iCoordinateWindow - 1, false);
 	}
 }
 
@@ -323,7 +327,8 @@ void DoGameMenu (short theItem)
 		
 		case iOpenSavedGame:
 		resumedSavedGame = true;
-		HeyYourPissingAHighScore();
+		if (!IsHighScoreDisabled())
+			HeyYourPissingAHighScore();
 		if (OpenSavedGame())
 		{
 			twoPlayerGame = false;
@@ -780,6 +785,7 @@ void HeyYourPissingAHighScore (void)
 	short		whoCares;
 	
 //	CenterAlert(kNoHighScoreAlert);
+	
 	whoCares = Alert(kNoHighScoreAlert, nil);
 }
 

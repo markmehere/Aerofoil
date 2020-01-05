@@ -7,6 +7,12 @@ int FindControl(Point point, WindowPtr window, ControlHandle *outControl)
 	return 0;
 }
 
+int FindControl(Point point, WindowPtr window, PortabilityLayer::Widget **outControl)
+{
+	PL_NotYetImplemented();
+	return 0;
+}
+
 void SetControlValue(ControlHandle control, int value)
 {
 	PL_NotYetImplemented();
@@ -54,6 +60,12 @@ Boolean TrackControl(ControlHandle control, Point point, ControlActionUPP proc)
 	return false;
 }
 
+Boolean TrackControl(PortabilityLayer::Widget *widget, Point point, ControlActionUPP proc)
+{
+	PL_NotYetImplemented();
+	return false;
+}
+
 long GetControlReference(ControlHandle control)
 {
 	PL_NotYetImplemented();
@@ -67,6 +79,11 @@ ControlHandle GetNewControl(int resID, WindowPtr window)
 }
 
 void HiliteControl(ControlHandle control, int unknown)
+{
+	PL_NotYetImplemented();
+}
+
+void HiliteControl(PortabilityLayer::Widget *widget, int unknown)
 {
 	PL_NotYetImplemented();
 }

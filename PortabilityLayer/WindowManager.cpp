@@ -344,6 +344,9 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver)
 	{
+		if (!window->IsVisible())
+			return;
+
 		DrawSurface &graf = window->m_surface;
 
 		graf.PushToDDSurface(displayDriver);
