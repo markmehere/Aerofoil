@@ -1,10 +1,10 @@
-GlidePort is (c)2019 Eric Lasota
+Aerofoil is (c)2019-2020 Eric Lasota
 
 Based on Glider PRO by John Calhoun
 
-GlidePort is made available under the following dual-license terms:
+Aerofoil is made available under the following dual-license terms:
 
-- You may use any portion of the GlidePort project's source code under the
+- You may use any portion of the Aerofoil project's source code under the
   conditions of the GNU General Public License version 2, as published in the
   included LICENSE-GPL2.txt file.
 
@@ -13,5 +13,5 @@ GlidePort is made available under the following dual-license terms:
   require a license (i.e. because you hold the copyright), or if you are are
   permitted to use Glider PRO's source code under different terms for any
   other reason, you may use any new source code and modifications in the
-  GlidePort source code under the conditions of the MIT license, as published
+  Aerofoil source code under the conditions of the MIT license, as published
   in the included LICENSE-MIT.txt file.
