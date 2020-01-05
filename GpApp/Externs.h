@@ -192,8 +192,6 @@ void ToolBoxInit (void);
 void FindOurDevice (void);
 short RandomInt (short);
 long RandomLong (long);
-void InitRandomLongQUS (void);
-UInt32 RandomLongQUS (void);
 void RedAlert (short);
 void LoadGraphic (DrawSurface *, short);
 void LoadScaledGraphic (DrawSurface *, short, Rect *);

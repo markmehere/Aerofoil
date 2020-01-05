@@ -78,25 +78,6 @@ long RandomLong (long range)
 	return (rawResultHi);
 }
 
-//--------------------------------------------------------------  InitRandomLongQUS
-
-// Initializes random seed for quick & dirty long random number function (below).
-
-void InitRandomLongQUS (void)
-{
-	GetDateTime(&theSeed);
-}
-
-//--------------------------------------------------------------  RandomLongQUS
-
-// Very simple (but fast) pseudo-random number generator.
-
-UInt32 RandomLongQUS (void)
-{
-	theSeed = theSeed * 1103515245 + 12345;
-	return (theSeed);
-}
-
 //--------------------------------------------------------------  RedAlert
 
 // Called when we must quit app.  Brings up a dialog informing user…
