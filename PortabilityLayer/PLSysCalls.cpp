@@ -9,7 +9,7 @@
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
 #include "HostVOSEventQueue.h"
-#include "MacRoman.h"
+#include "MacRomanConversion.h"
 
 static void TranslateMouseInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
@@ -77,7 +77,7 @@ intptr_t PackVOSKeyCode(const GpKeyboardInputEvent &vosEvent)
 	case GpKeyIDSubsets::kUnicode:
 		for (int i = 128; i < 256; i++)
 		{
-			if (PortabilityLayer::MacRoman::g_toUnicode[i] == vosEvent.m_key.m_unicodeChar)
+			if (MacRoman::ToUnicode(i) == vosEvent.m_key.m_unicodeChar)
 				return PL_KEY_MACROMAN(i);
 		}
 		break;

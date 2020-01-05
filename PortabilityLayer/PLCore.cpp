@@ -22,7 +22,7 @@
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
-#include "MacRoman.h"
+#include "MacRomanConversion.h"
 #include "MemoryManager.h"
 #include "MenuManager.h"
 #include "MemReaderStream.h"

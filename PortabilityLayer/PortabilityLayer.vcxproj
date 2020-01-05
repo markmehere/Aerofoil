@@ -61,24 +61,28 @@
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
     <Import Project="..\stb.props" />
+    <Import Project="..\MacRomanConversion.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
     <Import Project="..\stb.props" />
+    <Import Project="..\MacRomanConversion.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
     <Import Project="..\stb.props" />
+    <Import Project="..\MacRomanConversion.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
     <Import Project="..\stb.props" />
+    <Import Project="..\MacRomanConversion.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -172,7 +176,6 @@
     <ClInclude Include="MacFileMem.h" />
     <ClInclude Include="MacFileInfo.h" />
     <ClInclude Include="MacFileWriteableMem.h" />
-    <ClInclude Include="MacRoman.h" />
     <ClInclude Include="MacRsrcHeader.h" />
     <ClInclude Include="MacRsrcMap.h" />
     <ClInclude Include="MemoryManager.h" />
@@ -181,7 +184,6 @@
     <ClInclude Include="MMHandleBlock.h" />
     <ClInclude Include="PascalStr.h" />
     <ClInclude Include="PascalStrLiteral.h" />
-    <ClInclude Include="PixelFormat.h" />
     <ClInclude Include="HostMemoryBuffer.h" />
     <ClInclude Include="HostFileSystem.h" />
     <ClInclude Include="PLAppleEvents.h" />
@@ -299,7 +301,6 @@
     <ClCompile Include="MacBinary2.cpp" />
     <ClCompile Include="MacFileInfo.cpp" />
     <ClCompile Include="MacFileMem.cpp" />
-    <ClCompile Include="MacRoman.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MemReaderStream.cpp" />
     <ClCompile Include="MenuManager.cpp" />
@@ -357,6 +358,11 @@
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />
     <ClCompile Include="XModemCRC.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MacRomanConversion\MacRomanConversion.vcxproj">
+      <Project>{07351a8e-1f79-42c9-bbab-31f071eaa99e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

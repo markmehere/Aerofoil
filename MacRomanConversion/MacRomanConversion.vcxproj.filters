@@ -15,7 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ImportCharSet.cpp">
+    <ClInclude Include="MacRomanConversion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MacRomanConversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,7 +4,7 @@
 #include "HostFont.h"
 #include "HostFontHandler.h"
 #include "HostFontRenderedGlyph.h"
-#include "MacRoman.h"
+#include "MacRomanConversion.h"
 #include "PLPasStr.h"
 #include "RenderedFont.h"
 #include "RenderedFontMetrics.h"
@@ -152,7 +152,7 @@ namespace PortabilityLayer
 
 		for (unsigned int i = 0; i < numCharacters; i++)
 		{
-			uint16_t unicodeCodePoint = MacRoman::g_toUnicode[i];
+			uint16_t unicodeCodePoint = MacRoman::ToUnicode(i);
 			if (unicodeCodePoint == 0xffff)
 				continue;
 

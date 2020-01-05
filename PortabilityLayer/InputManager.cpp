@@ -1,5 +1,5 @@
 #include "InputManager.h"
-#include "MacRoman.h"
+#include "MacRomanConversion.h"
 #include "PLKeyEncoding.h"
 
 #include <string.h>
@@ -73,7 +73,7 @@ namespace PortabilityLayer
 		case GpKeyIDSubsets::kUnicode:
 			for (int i = 0; i < 256; i++)
 			{
-				if (MacRoman::g_toUnicode[i] == vosEvent.m_key.m_unicodeChar)
+				if (MacRoman::ToUnicode(i) == vosEvent.m_key.m_unicodeChar)
 				{
 					if (i < 128)
 						m_keyMap.m_ascii.Set(i, bit);

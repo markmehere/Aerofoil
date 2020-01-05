@@ -1,8 +1,20 @@
 #include "PLStringCompare.h"
-#include "MacRoman.h"
+#include "MacRomanConversion.h"
 
 #include <string.h>
 #include <algorithm>
+
+namespace
+{
+	static uint8_t ToLowerInvariant(uint8_t v)
+	{
+		// This isn't very comprehensive, but we're only ever using this for two cases that don't contain any diacritics or anything
+		if (v >= 65 && v <= 90)
+			return v + 32;
+		else
+			return v;
+	}
+}
 
 namespace StrCmp
 {
@@ -41,8 +53,8 @@ namespace StrCmp
 
 		for (size_t i = 0; i < shorterLen; i++)
 		{
-			const uint8_t c1 = PortabilityLayer::MacRoman::g_toLower[chars1[i]];
-			const uint8_t c2 = PortabilityLayer::MacRoman::g_toLower[chars2[i]];
+			const uint8_t c1 = ToLowerInvariant(chars1[i]);
+			const uint8_t c2 = ToLowerInvariant(chars2[i]);
 
 			if (c1 < c2)
 				return -1;
