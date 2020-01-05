@@ -1,6 +1,0 @@
-QuickDraw oval/rect drawing:
-
-https://www.folklore.org/StoryView.py?story=Round_Rects_Are_Everywhere.txt
-
-Bill's technique used the fact the sum of a sequence of odd numbers is always the next perfect square (For example, 1 + 3 = 4, 1 + 3 + 5 = 9, 1 + 3 + 5 + 7 = 16, etc).
-So he could figure out when to bump the dependent coordinate value by iterating in a loop until a threshold was exceeded. This allowed QuickDraw to draw ovals very quickly.
