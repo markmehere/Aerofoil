@@ -10,6 +10,8 @@
 #include "PLBigEndian.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "HostDisplayDriver.h"
+#include "IGpColorCursor.h"
 
 
 #define	rAcurID					128
@@ -33,7 +35,7 @@ typedef struct
 {
 	struct
 	{
-		THandle<CCursor> cursorHdl;
+		IGpColorCursor *hwCursor;
 	} frame[1];
 } compiledAcurRec;
 
@@ -46,7 +48,6 @@ void InitAnimatedCursor (acurHandle);
 
 acurHandle			animCursorH = nil;
 compiledAcurHandle	compiledAnimCursorH = nil;
-Boolean				useColorCursor = false;
 
 
 //==============================================================  Functions
@@ -58,7 +59,7 @@ Boolean				useColorCursor = false;
 Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCursH)
 {
 	short			i, j;
-	CCrsrHandle		cursHdl;
+	IGpColorCursor *hwCursor;
 	Boolean			result = true;
 	
 	if (ballCursH)
@@ -67,18 +68,18 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 		HideCursor();						// Hide the cursor
 		for (i = 0; i < j; i++)				// Walk through the acur resource
 		{
-			cursHdl = GetCCursor((*ballCursH)->frame[i].resID);	// Get the cursor
-			if (cursHdl == nil)		// Make sure a real cursor was returned
+			hwCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadColorCursor((*ballCursH)->frame[i].resID);	// Get the cursor
+			if (hwCursor == nil)		// Make sure a real cursor was returned
 			{								// If not, trash all cursors loaded
-				for (j = 0; j < i; j++)				
-					DisposeCCursor((CCrsrHandle)(*compiledBallCursH)->frame[j].cursorHdl);
+				for (j = 0; j < i; j++)
+					(*compiledBallCursH)->frame[j].hwCursor->Destroy();
 				result = false;				// Tell calling proc we failed
 				break;						// And break out of the loop
 			}
 			else							// But, if the cursor loaded ok
 			{								// add it to our list or cursor handles
-				(*compiledBallCursH)->frame[i].cursorHdl = cursHdl;
-				SetCCursor((CCrsrHandle)(*compiledBallCursH)->frame[i].cursorHdl);
+				(*compiledBallCursH)->frame[i].hwCursor = hwCursor;
+				PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor(hwCursor);
 			}
 		}
 		InitCursor();						// Show the cursor again (as arrow)
@@ -92,10 +93,8 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 
 void InitAnimatedCursor (acurHandle ballCursH)
 {
-	Boolean				useColor;
 	compiledAcurHandle	compiledBallCursorH;
 	
-	useColor = thisMac.hasColor;
 	if (ballCursH == nil) 
 		ballCursH = GetResource('acur', 128).StaticCast<acurRec>();
 	if (ballCursH && ballCursH != animCursorH)
@@ -104,13 +103,11 @@ void InitAnimatedCursor (acurHandle ballCursH)
 		if (!compiledBallCursorH)
 			RedAlert(kErrFailedResourceLoad);
 
-		if (useColor)
-			useColor = GetColorCursors(ballCursH, compiledBallCursorH);
+		GetColorCursors(ballCursH, compiledBallCursorH);
 		DisposCursors();
 
 		animCursorH = ballCursH;
 		compiledAnimCursorH = compiledBallCursorH;
-		useColorCursor = useColor;
 		(*ballCursH)->index = 0;
 	}
 	else
@@ -138,22 +135,13 @@ void DisposCursors (void)
 	if (compiledAnimCursorH != nil)
 	{
 		j = (*animCursorH)->n;
-		if (useColorCursor)
+
+		for (i = 0; i < j; i++)
 		{
-			for (i = 0; i < j; i++)
-			{
-				if ((*compiledAnimCursorH)->frame[i].cursorHdl != nil)
-					DisposeCCursor((CCrsrHandle)(*compiledAnimCursorH)->frame[i].cursorHdl);
-			}
+			if ((*compiledAnimCursorH)->frame[i].hwCursor != nil)
+				(*compiledAnimCursorH)->frame[i].hwCursor->Destroy();
 		}
-		else
-		{
-			for (i = 0; i < j; i++)
-			{
-				if ((*compiledAnimCursorH)->frame[i].cursorHdl != nil)
-					(*compiledAnimCursorH)->frame[i].cursorHdl.Dispose();
-			}
-		}
+
 		compiledAnimCursorH.Dispose();
 		compiledAnimCursorH = nil;
 	}
@@ -177,16 +165,8 @@ void IncrementCursor (void)
 	{
 		(*animCursorH)->index++;
 		(*animCursorH)->index %= (*animCursorH)->n;
-		if (useColorCursor)
-		{
-			SetCCursor((CCrsrHandle)(*compiledAnimCursorH)->
-					frame[(*animCursorH)->index].cursorHdl);
-		}
-		else
-		{
-			SetCursor((CursPtr)*(*compiledAnimCursorH)->
-					frame[(*animCursorH)->index].cursorHdl);
-		}
+
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}
 	else
 		SetBuiltinCursor(watchCursor);
@@ -205,16 +185,8 @@ void DecrementCursor (void)
 		(*animCursorH)->index--;
 		if (((*animCursorH)->index) < 0)
 			(*animCursorH)->index = ((*animCursorH)->n) - 1;
-		if (useColorCursor)
-		{
-			SetCCursor((CCrsrHandle)(*compiledAnimCursorH)->
-					frame[(*animCursorH)->index].cursorHdl);
-		}
-		else
-		{
-			SetCursor((CursPtr)*(*compiledAnimCursorH)->
-					frame[(*animCursorH)->index].cursorHdl);
-		}
+
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}
 	else
 		SetBuiltinCursor(watchCursor);

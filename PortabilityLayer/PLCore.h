@@ -96,11 +96,6 @@ struct Cursor
 {
 };
 
-struct CCursor
-{
-	IGpColorCursor *hwCursor;
-};
-
 struct Window
 {
 	Window();
@@ -186,13 +181,11 @@ struct EventRecord
 
 typedef Window *WindowPtr;
 typedef Cursor *CursPtr;
-typedef CCursor *CCrsrPtr;
 typedef Menu *MenuPtr;
 typedef CInfoPBRec *CInfoPBPtr;
 typedef VersionRecord *VersRecPtr;
 
 typedef THandle<Cursor> CursHandle;
-typedef THandle<CCursor> CCrsrHandle;
 typedef THandle<Menu> MenuHandle;
 typedef THandle<VersionRecord> VersRecHndl;
 
@@ -262,14 +255,10 @@ static const int nullEvent = 0;
 
 void InitCursor();
 CursHandle GetCursor(int cursorID);
-CCrsrHandle GetCCursor(int cursorID);
-void SetCCursor(CCrsrHandle handle);
 void HideCursor();
 
 void SetCursor(CursPtr cursor);
 void SetBuiltinCursor(int builtinCursor);
-
-void DisposeCCursor(CCrsrHandle handle);
 
 void Delay(int ticks, UInt32 *endTickCount);
 short Alert(int dialogID, void *unknown);

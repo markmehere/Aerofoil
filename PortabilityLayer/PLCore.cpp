@@ -89,33 +89,6 @@ CursHandle GetCursor(int cursorID)
 	return GetResource('CURS', cursorID).ReinterpretCast<Cursor>();
 }
 
-CCrsrHandle GetCCursor(int cursorID)
-{
-	PortabilityLayer::HostDisplayDriver *driver = PortabilityLayer::HostDisplayDriver::GetInstance();
-	IGpColorCursor *hwCursor = driver->LoadColorCursor(cursorID);
-
-	if (!hwCursor)
-		return nullptr;
-
-	CCrsrHandle hdl = PortabilityLayer::MemoryManager::GetInstance()->NewHandle<CCursor>();
-	if (!hdl)
-	{
-		hwCursor->Destroy();
-		return nullptr;
-	}
-
-	CCursor *ccursor = *hdl;
-	ccursor->hwCursor = hwCursor;
-
-	return hdl;
-}
-
-void SetCCursor(CCrsrHandle handle)
-{
-	assert(handle);
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor((*handle)->hwCursor);
-}
-
 void HideCursor()
 {
 	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kHidden);
@@ -129,13 +102,6 @@ void SetCursor(CursPtr cursor)
 void SetBuiltinCursor(int builtinCursor)
 {
 	PL_NotYetImplemented();
-}
-
-void DisposeCCursor(CCrsrHandle handle)
-{
-	(*handle)->hwCursor->Destroy();
-
-	PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(handle.MMBlock());
 }
 
 void Delay(int ticks, UInt32 *endTickCount)
