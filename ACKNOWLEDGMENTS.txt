@@ -1,7 +1,7 @@
 Virtue font:
 (c)1997-1999 Marty P. Pfeiffer at Scooter Graphics 
 
-Virtue is used with permission and is authorized only for NON-COMMERCIAL redistribution as part of the GlidePort package.
+Virtue is used with permission and is authorized only for NON-COMMERCIAL redistribution as part of the Aerofoil package.
 
 Please visit the author's website (http://www.scootergraphics.com/) for more information.
 
