@@ -1,9 +1,11 @@
 mkdir Packaged
 mkdir Packaged\Houses
 mkdir Packaged\WinCursors
-mkdir Packaged\WinIcons
+mkdir ResourceTemp
 
 x64\Release\MiniRez.exe "GliderProData\Glider PRO.r" Packaged\ApplicationResources.gpr
+
+x64\Release\gpr2gpa.exe Packaged\ApplicationResources.gpr Packaged\ApplicationResources.gpa
 
 x64\Release\ConvertColorCursors.exe
 
@@ -30,6 +32,29 @@ x64\Release\hqx2gp.exe "GliderProData\Houses\Teddy World.binhex" "Packaged\House
 x64\Release\hqx2gp.exe "GliderProData\Houses\The Asylum Pro.binhex" "Packaged\Houses\The Asylum Pro"
 x64\Release\hqx2gp.exe "GliderProData\Houses\Titanic.binhex" "Packaged\Houses\Titanic"
 
+x64\Release\gpr2gpa.exe "Packaged\Houses\Art Museum.gpr" "Packaged\Houses\Art Museum.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\California or Bust!.gpr" "Packaged\Houses\California or Bust!.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Castle o' the Air.gpr" "Packaged\Houses\Castle o' the Air.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\CD Demo House.gpr" "Packaged\Houses\CD Demo House.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Davis Station.gpr" "Packaged\Houses\Davis Station.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Demo House.gpr" "Packaged\Houses\Demo House.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Empty House.gpr" "Packaged\Houses\Empty House.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Fun House.gpr" "Packaged\Houses\Fun House.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Grand Prix.gpr" "Packaged\Houses\Grand Prix.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\ImagineHouse PRO II.gpr" "Packaged\Houses\ImagineHouse PRO II.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\In The Mirror.gpr" "Packaged\Houses\In The Mirror.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Land of Illusion.gpr" "Packaged\Houses\Land of Illusion.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Leviathan.gpr" "Packaged\Houses\Leviathan.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Metropolis.gpr" "Packaged\Houses\Metropolis.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Nemo's Market.gpr" "Packaged\Houses\Nemo's Market.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Rainbow's End.gpr" "Packaged\Houses\Rainbow's End.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Sampler.gpr" "Packaged\Houses\Sampler.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Slumberland.gpr" "Packaged\Houses\Slumberland.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\SpacePods.gpr" "Packaged\Houses\SpacePods.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Teddy World.gpr" "Packaged\Houses\Teddy World.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\The Asylum Pro.gpr" "Packaged\Houses\The Asylum Pro.gpa"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Titanic.gpr" "Packaged\Houses\Titanic.gpa"
+
 x64\Release\FTagData.exe "GliderProData\Houses\Art Museum.mov", "Packaged\Houses\Art Museum.mov" MooV ozm5 0 0 locked
 x64\Release\FTagData.exe "GliderProData\Houses\Castle o' the Air.mov", "Packaged\Houses\Castle o' the Air.mov" MooV ozm5 0 0 locked
 x64\Release\FTagData.exe "GliderProData\Houses\CD Demo House.mov", "Packaged\Houses\CD Demo House.mov" MooV ozm5 0 0 locked
@@ -45,5 +70,8 @@ x64\Release\FTagData.exe "GliderProData\Houses\Slumberland.mov", "Packaged\House
 x64\Release\FTagData.exe "GliderProData\Houses\SpacePods.mov", "Packaged\Houses\SpacePods.mov" MooV ozm5 0 0 locked
 x64\Release\FTagData.exe "GliderProData\Houses\Teddy World.mov", "Packaged\Houses\Teddy World.mov" MooV ozm5 0 0 locked
 x64\Release\FTagData.exe "GliderProData\Houses\Titanic.mov", "Packaged\Houses\Titanic.mov" MooV ozm5 0 0 locked
+
+del /Q Packaged\Houses\*.gpr
+del /Q Packaged\ApplicationResources.gpr
 
 pause

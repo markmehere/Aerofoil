@@ -59,7 +59,7 @@ namespace PortabilityLayer
 
 	bool FileManagerImpl::FileLocked(VirtualDirectory_t dirID, const PLPasStr &filename)
 	{
-		const char *exts[3] = { ".gpf", ".gpr", ".gpd" };
+		const char *exts[3] = { ".gpf", ".gpa", ".gpd" };
 
 		for (int extIndex = 0; extIndex < sizeof(exts) / sizeof(exts[0]); extIndex++)
 		{
@@ -79,7 +79,7 @@ namespace PortabilityLayer
 	{
 		const size_t numExts = 3;
 
-		const char *exts[numExts] = { ".gpr", ".gpd", ".gpf" };
+		const char *exts[numExts] = { ".gpa", ".gpd", ".gpf" };
 		const bool extMayNotExist[numExts] = { true, true, false };
 
 		for (int extIndex = 0; extIndex < numExts; extIndex++)
@@ -143,7 +143,7 @@ namespace PortabilityLayer
 
 	PLError_t FileManagerImpl::OpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, IOStream *&outStream)
 	{
-		return OpenFileFork(dirID, filename, ".gpr", permission, outStream);
+		return OpenFileFork(dirID, filename, ".gpa", permission, outStream);
 	}
 
 	bool FileManagerImpl::ReadFileProperties(VirtualDirectory_t dirID, const PLPasStr &filename, MacFileProperties &properties)
@@ -170,7 +170,7 @@ namespace PortabilityLayer
 
 	PLError_t FileManagerImpl::RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission permission, bool ignoreMeta, GpFileCreationDisposition_t createDisposition, IOStream *&outStream)
 	{
-		return RawOpenFileFork(dirID, filename, ".gpr", permission, ignoreMeta, createDisposition, outStream);
+		return RawOpenFileFork(dirID, filename, ".gpa", permission, ignoreMeta, createDisposition, outStream);
 	}
 
 	bool FileManagerImpl::PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName)

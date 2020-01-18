@@ -105,7 +105,7 @@ void UpdateLoadDialog (Dialog *theDialog)
 		
 		if (SectRect(&dialogRect, &tempRect, &dummyRect))
 		{
-			PortabilityLayer::ResourceFile *resFile = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name);
+			PortabilityLayer::ResourceArchive *resFile = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name);
 			if (resFile != nullptr)
 			{
 				if (!LargeIconPlot(surface, resFile, -16455, tempRect))

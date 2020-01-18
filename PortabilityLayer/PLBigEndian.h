@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __PL_BIG_ENDIAN_H__
-#define __PL_BIG_ENDIAN_H__
 
 #include <stdint.h>
 
@@ -251,5 +249,3 @@ struct BEFixed32_t
 	BEInt16_t m_intPart;
 	BEUInt16_t m_fracPart;
 };
-
-#endif

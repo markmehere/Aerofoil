@@ -94,7 +94,7 @@ void ConvertCursors(PortabilityLayer::ResourceFile *resFile)
 	for (size_t i = 0; i < numRefs; i++)
 	{
 		const int resID = typeList->m_firstRef[i].m_resID;
-		const THandle<void> resHdl = resFile->GetResource('crsr', resID, true);
+		const THandle<void> resHdl = resFile->LoadResource('crsr', resID);
 		const void *cursorDataBase = *resHdl;
 		const void *cursorData = cursorDataBase;
 
@@ -234,6 +234,7 @@ void ConvertCursors(PortabilityLayer::ResourceFile *resFile)
 
 		delete[] colorValues;
 		delete[] pixelDataRGBA;
+		resHdl.Dispose();
 	}
 }
 
@@ -247,11 +248,15 @@ void ConvertIconFamily(PortabilityLayer::ResourceFile *resFile, int32_t iconBitm
 	for (size_t i = 0; i < numRefs; i++)
 	{
 		const int resID = typeList->m_firstRef[i].m_resID;
-		const THandle<void> bwBlock = resFile->GetResource(iconBitmapType, resID, true);
-		const THandle<void> colorBlock = resFile->GetResource(iconColorType, resID, true);
+		const THandle<void> bwBlock = resFile->LoadResource(iconBitmapType, resID);
+		const THandle<void> colorBlock = resFile->LoadResource(iconColorType, resID);
 
 		if (!bwBlock || !colorBlock)
+		{
+			bwBlock.Dispose();
+			colorBlock.Dispose();
 			continue;
+		}
 
 		const uint8_t *bwIconData = static_cast<const uint8_t*>(*bwBlock);
 		const uint8_t *bwMaskData = bwIconData + (dimension * dimension / 8);
@@ -309,6 +314,8 @@ void ConvertIconFamily(PortabilityLayer::ResourceFile *resFile, int32_t iconBitm
 		}
 
 		delete[] pixelData;
+		bwBlock.Dispose();
+		colorBlock.Dispose();
 	}
 }
 

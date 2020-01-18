@@ -233,7 +233,6 @@ namespace PortabilityLayer
 				refToCompile->m_resData = m_resDataBlob + dataOffset;
 				refToCompile->m_resID = refListEntry.m_resID;
 				refToCompile->m_resNameOffset = refListEntry.m_resourceNameOffset;
-				refToCompile->m_handle = nullptr;
 
 				uint32_t resSize;
 				memcpy(&resSize, m_resDataBlob + dataSizeOffset, 4);
@@ -356,7 +355,7 @@ namespace PortabilityLayer
 		return tl;
 	}
 
-	THandle<void> ResourceFile::GetResource(const ResTypeID &resType, int id, bool load)
+	THandle<void> ResourceFile::LoadResource(const ResTypeID &resType, int id)
 	{
 		const ResourceCompiledTypeList *tl = GetResourceTypeList(resType);
 		if (tl == nullptr)
@@ -369,26 +368,15 @@ namespace PortabilityLayer
 		if (ref == refEnd)
 			return THandle<void>();
 
-		MMHandleBlock *handle = nullptr;
-		if (ref->m_handle != nullptr)
-			handle = ref->m_handle;
-		else
-		{
-			handle = MemoryManager::GetInstance()->AllocHandle(0);
-			handle->m_rmSelfRef = ref;
-			ref->m_handle = handle;
-		}
+		MMHandleBlock *handle = MemoryManager::GetInstance()->AllocHandle(0);
 
-		if (handle->m_contents == nullptr && load)
+		const uint32_t resSize = ref->GetSize();
+		if (resSize > 0)
 		{
-			const uint32_t resSize = ref->GetSize();
-			if (resSize > 0)
-			{
-				void *contents = MemoryManager::GetInstance()->Alloc(resSize);
-				handle->m_contents = contents;
-				handle->m_size = resSize;
-				memcpy(handle->m_contents, ref->m_resData, resSize);
-			}
+			void *contents = MemoryManager::GetInstance()->Alloc(resSize);
+			handle->m_contents = contents;
+			handle->m_size = resSize;
+			memcpy(handle->m_contents, ref->m_resData, resSize);
 		}
 
 		return THandle<void>(handle);

@@ -13,7 +13,7 @@ namespace PortabilityLayer
 	struct ResourceCompiledTypeList;
 	class ResTypeID;
 
-	class ResourceFile
+	class ResourceFile final
 	{
 	public:
 		bool Load(IOStream *stream);
@@ -21,7 +21,7 @@ namespace PortabilityLayer
 		void GetAllResourceTypeLists(ResourceCompiledTypeList *&outTypeLists, size_t &outCount) const;
 
 		const ResourceCompiledTypeList *GetResourceTypeList(const ResTypeID &resType);
-		THandle<void> GetResource(const ResTypeID &resType, int id, bool load);
+		THandle<void> LoadResource(const ResTypeID &resType, int id);
 
 		static ResourceFile *Create();
 		void Destroy();

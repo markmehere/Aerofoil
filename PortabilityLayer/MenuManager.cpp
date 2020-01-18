@@ -515,6 +515,8 @@ namespace PortabilityLayer
 		PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(menuPtr->stringBlobHandle);
 
 		menuPtr->stringBlobHandle = newHandle.MMBlock();
+
+		return true;
 	}
 
 	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const

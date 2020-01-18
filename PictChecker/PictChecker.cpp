@@ -1292,7 +1292,7 @@ int main(int argc, const char **argv)
 		const size_t numRefs = typeList->m_numRefs;
 		for (size_t i = 0; i < numRefs; i++)
 		{
-			const THandle<void> hBlock = resFile->GetResource('PICT', typeList->m_firstRef[i].m_resID, true);
+			const THandle<void> hBlock = resFile->LoadResource('PICT', typeList->m_firstRef[i].m_resID);
 			const void *pictData = *hBlock;
 
 			std::string dumpPath = "D:\\Source Code\\GlidePort\\DebugData\\PictDump\\";
@@ -1306,12 +1306,9 @@ int main(int argc, const char **argv)
 			dumpPath += tempPath;
 			dumpPath += ".png";
 
-			if (typeList->m_firstRef[i].m_resID == 10024)
-			{
-				int n = 0;
-			}
-
 			AuditPictOps2(static_cast<const uint8_t*>(pictData), hBlock.MMBlock()->m_size, dumpPath.c_str());
+
+			hBlock.Dispose();
 		}
 	}
 	

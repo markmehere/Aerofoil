@@ -53,8 +53,8 @@ void SetResLoad(Boolean load)
 long GetMaxResourceSize(Handle res)
 {
 	const PortabilityLayer::MMHandleBlock *hBlock = res.MMBlock();
-	const PortabilityLayer::ResourceCompiledRef *resRef = hBlock->m_rmSelfRef;
-	return resRef->GetSize();
+	const PortabilityLayer::ResourceArchiveRef *resRef = hBlock->m_rmSelfRef;
+	return resRef->m_size;
 }
 
 short HOpenResFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name, int permissions)

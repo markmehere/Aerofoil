@@ -911,7 +911,7 @@ short GetFirstPICT (void)
 	resHandle = Get1IndResource('PICT', 1);
 	if (resHandle != nil)
 	{
-		const PortabilityLayer::ResourceCompiledRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(resHandle.MMBlock());
+		const PortabilityLayer::ResourceArchiveRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(resHandle.MMBlock());
 		resHandle.Dispose();
 		return resRef->m_resID;
 	}

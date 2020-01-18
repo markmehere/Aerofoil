@@ -15,7 +15,7 @@
 #include "Externs.h"
 #include "IconLoader.h"
 #include "InputManager.h"
-#include "ResourceFile.h"
+#include "ResourceManager.h"
 #include "Utilities.h"
 
 
@@ -284,7 +284,7 @@ void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 //--------------------------------------------------------------  LargeIconPlot
 // Draws a standard b&w icon (32 x 32) - resource is an 'ICON'.
 
-bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::ResourceFile *resFile, short resID, const Rect &theRect)
+bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::ResourceArchive *resFile, short resID, const Rect &theRect)
 {
 	Handle hdl = resFile->GetResource('icl8', resID, true);
 	if (hdl)

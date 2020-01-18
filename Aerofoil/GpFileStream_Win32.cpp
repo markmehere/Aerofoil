@@ -92,7 +92,7 @@ bool GpFileStream_Win32::SeekCurrent(PortabilityLayer::FilePos_t loc)
 bool GpFileStream_Win32::SeekEnd(PortabilityLayer::UFilePos_t loc)
 {
 	LARGE_INTEGER li;
-	li.QuadPart = static_cast<LONGLONG>(loc);
+	li.QuadPart = -static_cast<LONGLONG>(loc);
 	return SetFilePointerEx(m_handle, li, nullptr, FILE_END) != 0;
 }
 

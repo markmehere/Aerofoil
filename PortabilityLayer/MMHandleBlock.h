@@ -8,6 +8,7 @@
 
 namespace PortabilityLayer
 {
+	struct ResourceArchiveRef;
 	struct ResourceCompiledRef;
 
 	struct MMHandleBlock
@@ -17,7 +18,7 @@ namespace PortabilityLayer
 		void **AsHandle();
 
 		void *m_contents;	// This must be the first field
-		ResourceCompiledRef *m_rmSelfRef;
+		ResourceArchiveRef *m_rmSelfRef;
 
 		size_t m_size;
 

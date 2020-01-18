@@ -13,7 +13,7 @@
 
 namespace PortabilityLayer
 {
-	class ResourceFile;
+	class ResourceArchive;
 	class ScanlineMask;
 }
 
@@ -195,7 +195,7 @@ long RandomLong (long);
 void RedAlert (short);
 void LoadGraphic (DrawSurface *, short);
 void LoadScaledGraphic (DrawSurface *, short, Rect *);
-bool LargeIconPlot (DrawSurface *, PortabilityLayer::ResourceFile *, short, const Rect &);
+bool LargeIconPlot (DrawSurface *, PortabilityLayer::ResourceArchive *, short, const Rect &);
 void DrawCIcon (DrawSurface *surface, short, short, short);
 char KeyMapOffsetFromRawKey (char);
 long LongSquareRoot (long);

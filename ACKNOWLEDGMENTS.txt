@@ -19,3 +19,8 @@ MacRomanConversion uses a table from LIBICONV:
 Copyright (C) 1999-2001, 2016 Free Software Foundation, Inc.
 
 Distributed under the LGPLv2 license (See MacRomanConversion/LICENSE.txt)
+
+
+zlib:
+(C) 1995-2017 Jean-loup Gailly and Mark Adler
+Distributed under zlib license (See zlib/README)
