@@ -9,6 +9,7 @@
 
 namespace PortabilityLayer
 {
+	struct AntiAliasTable;
 	class FontFamily;
 	struct RGBAColor;
 	class ScanlineMask;
@@ -27,12 +28,16 @@ struct DrawSurface final
 	DrawSurface()
 		: m_port(PortabilityLayer::QDPortType_DrawSurface)
 		, m_ddSurface(nullptr)
+		, m_cachedAAColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
+		, m_cachedAATable(nullptr)
 	{
 	}
 
 	explicit DrawSurface(PortabilityLayer::QDPortType overridePortType)
 		: m_port(overridePortType)
 		, m_ddSurface(nullptr)
+		, m_cachedAAColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
+		, m_cachedAATable(nullptr)
 	{
 	}
 
@@ -76,8 +81,8 @@ struct DrawSurface final
 
 	void SetApplicationFont(int size, int variationFlags);
 	void SetSystemFont(int size, int variationFlags);
-	void DrawString(const Point &point, const PLPasStr &str);
-	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str);
+	void DrawString(const Point &point, const PLPasStr &str, bool aa);
+	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa);
 
 	size_t MeasureString(const PLPasStr &str);
 	int32_t MeasureFontAscender();
@@ -93,8 +98,13 @@ struct DrawSurface final
 	Rect GetClipRect() const;
 	void SetClipRect(const Rect &rect);
 
+	void RegenerateAATable(const PortabilityLayer::RGBAColor &color, const PortabilityLayer::RGBAColor *paletteColors, size_t numColors);
+
 	// Must be the first item
 	PortabilityLayer::QDPort m_port;
 
 	IGpDisplayDriverSurface *m_ddSurface;
+
+	PortabilityLayer::AntiAliasTable *m_cachedAATable;
+	PortabilityLayer::RGBAColor m_cachedAAColor;
 };

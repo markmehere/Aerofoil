@@ -39,7 +39,7 @@ class GpFont_FreeType2 final : public PortabilityLayer::HostFont
 {
 public:
 	void Destroy() override;
-	GpFontRenderedGlyph_FreeType2 *Render(uint32_t unicodeCodePoint, unsigned int size) override;
+	GpFontRenderedGlyph_FreeType2 *Render(uint32_t unicodeCodePoint, unsigned int size, bool aa) override;
 	bool GetLineSpacing(unsigned int size, int32_t &outSpacing) override;
 
 	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream);
@@ -106,7 +106,7 @@ void GpFont_FreeType2::Destroy()
 	free(this);
 }
 
-GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size)
+GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, bool aa)
 {
 	if (m_currentSize != size)
 	{
@@ -120,16 +120,39 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 	if (!glyphIndex)
 		return nullptr;
 
-	if (FT_Load_Glyph(m_face, glyphIndex, FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO) != 0)
+	FT_Int32 loadFlags = 0;
+	FT_Render_Mode renderMode = FT_RENDER_MODE_NORMAL;
+
+	if (aa)
+	{
+		renderMode = FT_RENDER_MODE_NORMAL;
+		loadFlags = FT_LOAD_TARGET_NORMAL;
+	}
+	else
+	{
+		loadFlags = FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO;
+		renderMode = FT_RENDER_MODE_MONO;
+	}
+
+	if (FT_Load_Glyph(m_face, glyphIndex, loadFlags) != 0)
 		return nullptr;
 
-	if (FT_Render_Glyph(m_face->glyph, FT_RENDER_MODE_MONO) != 0)
+	if (FT_Render_Glyph(m_face->glyph, renderMode) != 0)
 		return nullptr;
 
 	const FT_GlyphSlot glyph = m_face->glyph;
 
-	if (glyph->bitmap.pixel_mode != FT_PIXEL_MODE_MONO)
-		return nullptr;	// ????
+	if (aa == false && glyph->bitmap.pixel_mode != FT_PIXEL_MODE_MONO)
+		return nullptr;
+
+	if (aa == true)
+	{
+		if (glyph->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY)
+			return nullptr;
+
+		if (glyph->bitmap.num_grays < 2)
+			return nullptr;	// This should never happen
+	}
 
 	PortabilityLayer::RenderedGlyphMetrics metrics;
 	memset(&metrics, 0, sizeof(metrics));
@@ -141,7 +164,13 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 	metrics.m_advanceX = glyph->metrics.horiAdvance / 64;
 
 	const size_t numRowsRequired = glyph->bitmap.rows;
-	size_t pitchRequired = (glyph->bitmap.width + 7) / 8;
+	size_t pitchRequired = 0;
+
+	if (aa)
+		pitchRequired = (glyph->bitmap.width + 1) / 2;
+	else
+		pitchRequired = (glyph->bitmap.width + 7) / 8;
+
 	pitchRequired = pitchRequired + (GP_SYSTEM_MEMORY_ALIGNMENT - 1);
 	pitchRequired -= pitchRequired % GP_SYSTEM_MEMORY_ALIGNMENT;
 
@@ -158,8 +187,8 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 	unsigned int bmWidth = glyph->bitmap.width;
 	unsigned int bmHeight = glyph->bitmap.rows;
 	unsigned int bmPitch = glyph->bitmap.pitch;
-	unsigned int copyableBytesPerRow = (bmWidth + 7) / 8;
 	const uint8_t *bmBytes = glyph->bitmap.buffer;
+	const uint16_t numGrays = glyph->bitmap.num_grays;
 
 	size_t fillOffset = 0;
 	for (unsigned int row = 0; row < bmHeight; row++)
@@ -167,15 +196,36 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 		const uint8_t *bmReadStart = bmBytes + bmPitch * row;
 		uint8_t *bmWriteStart = fillData + pitchRequired * row;
 
-		for (unsigned int i = 0; i < copyableBytesPerRow; i++)
+		if (aa)
 		{
-			const uint8_t b = bmReadStart[i];
+			for (size_t i = 0; i < pitchRequired; i++)
+				bmWriteStart[i] = 0;
 
-			uint8_t fillByte = 0;
-			for (int bit = 0; bit < 8; bit++)
-				fillByte |= ((b >> (7 - bit)) & 1) << bit;
+			for (size_t i = 0; i < bmWidth; i++)
+			{
+				const uint8_t b = bmReadStart[i];
+				const uint8_t normalizedGray = (b * 30 + (numGrays - 1)) / ((numGrays - 1) * 2);
 
-			bmWriteStart[i] = fillByte;
+				if (i & 1)
+					bmWriteStart[i / 2] |= (normalizedGray << 4);
+				else
+					bmWriteStart[i / 2] = normalizedGray;
+			}
+		}
+		else
+		{
+			const size_t copyableBytesPerRow = (glyph->bitmap.width + 7) / 8;
+
+			for (size_t i = 0; i < copyableBytesPerRow; i++)
+			{
+				const uint8_t b = bmReadStart[i];
+
+				uint8_t fillByte = 0;
+				for (int bit = 0; bit < 8; bit++)
+					fillByte |= ((b >> (7 - bit)) & 1) << bit;
+
+				bmWriteStart[i] = fillByte;
+			}
 		}
 	}
 

@@ -220,7 +220,7 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		
 #else
 		
-		if (theKeys->IsSet(kCommandKeyMap))
+		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 		
 #endif

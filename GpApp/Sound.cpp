@@ -12,6 +12,7 @@
 #include "MemoryManager.h"
 #include "SoundSync.h"
 #include "VirtualDirectory.h"
+#include "WaveFormat.h"
 
 
 #define kBaseBufferSoundID			1000
@@ -25,7 +26,7 @@ PLError_t LoadBufferSounds (void);
 void DumpBufferSounds (void);
 PLError_t OpenSoundChannels (void);
 void CloseSoundChannels (void);
-
+THandle<void> ParseAndConvertSound(const THandle<void> &handle);
 
 PortabilityLayer::AudioChannel *channel0, *channel1, *channel2;
 Ptr					theSoundData[kMaxSounds];
@@ -167,6 +168,9 @@ void PlayExclusiveSoundChannel(short channelIndex, short soundID, short oldPrior
 	}
 }
 
+//--------------------------------------------------------------  ParseAndConvertSound
+
+
 //--------------------------------------------------------------  LoadTriggerSound
 
 PLError_t LoadTriggerSound (short soundID)
@@ -183,14 +187,14 @@ PLError_t LoadTriggerSound (short soundID)
 		
 		theErr = PLErrors::kNone;
 		
-		theSound = GetResource('snd ', soundID);
+		theSound = ParseAndConvertSound(GetResource('snd ', soundID));
 		if (theSound == nil)
 		{
 			theErr = PLErrors::kFileNotFound;
 		}
 		else
 		{
-			soundDataSize = GetHandleSize(theSound) - 20L;
+			soundDataSize = GetHandleSize(theSound);
 			theSoundData[kMaxSounds - 1] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
 			if (theSoundData[kMaxSounds - 1] == nil)
 			{
@@ -199,7 +203,7 @@ PLError_t LoadTriggerSound (short soundID)
 			}
 			else
 			{
-				BlockMove((Ptr)((Byte*)(*theSound) + 20L), theSoundData[kMaxSounds - 1], soundDataSize);
+				BlockMove((Byte*)(*theSound), theSoundData[kMaxSounds - 1], soundDataSize);
 				theSound.Dispose();
 			}
 		}
@@ -230,17 +234,17 @@ PLError_t LoadBufferSounds (void)
 	
 	for (i = 0; i < kMaxSounds - 1; i++)
 	{
-		theSound = GetResource('snd ', i + kBaseBufferSoundID);
+		theSound = ParseAndConvertSound(GetResource('snd ', i + kBaseBufferSoundID));
 		if (theSound == nil)
 			return (PLErrors::kOutOfMemory);
 		
-		soundDataSize = GetHandleSize(theSound) - 20L;
+		soundDataSize = GetHandleSize(theSound);
 		
 		theSoundData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
 		if (theSoundData[i] == nil)
 			return (PLErrors::kOutOfMemory);
 		
-		BlockMove((Ptr)((Byte*)(*theSound) + 20L), theSoundData[i], soundDataSize);
+		BlockMove(*theSound, theSoundData[i], soundDataSize);
 		theSound.Dispose();
 	}
 	
@@ -408,3 +412,143 @@ void BitchAboutSM3 (void)
 	hitWhat = Alert(kNoSoundManager3Alert, nil);
 }
 
+
+
+//--------------------------------------------------------------  ParseAndConvertSound
+
+THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
+{
+	const uint8_t *dataStart = static_cast<const uint8_t*>(*handle);
+	const size_t size = handle.MMBlock()->m_size;
+
+	if (size < sizeof(PortabilityLayer::RIFFTag))
+		return THandle<void>();
+
+	PortabilityLayer::RIFFTag mainRiffTag;
+	memcpy(&mainRiffTag, dataStart, sizeof(PortabilityLayer::RIFFTag));
+
+	if (mainRiffTag.m_tag != PortabilityLayer::WaveConstants::kRiffChunkID)
+		return THandle<void>();
+
+	const uint32_t riffSize = mainRiffTag.m_chunkSize;
+	if (riffSize < 4 || riffSize - 4 > size - sizeof(PortabilityLayer::RIFFTag))
+		return THandle<void>();
+
+	const uint8_t *riffStart = dataStart + sizeof(PortabilityLayer::RIFFTag);
+	const uint8_t *riffEnd = riffStart + riffSize;
+
+	const uint8_t *formatTagLoc = nullptr;
+	const uint8_t *dataTagLoc = nullptr;
+
+	LEUInt32_t waveMarker;
+	memcpy(&waveMarker, riffStart, 4);
+
+	if (waveMarker != PortabilityLayer::WaveConstants::kWaveChunkID)
+		return THandle<void>();
+
+	const uint8_t *tagSearchLoc = riffStart + 4;
+
+	// Find tags
+	while (tagSearchLoc != riffEnd)
+	{
+		if (riffEnd - tagSearchLoc < sizeof(PortabilityLayer::RIFFTag))
+			return THandle<void>();
+
+		PortabilityLayer::RIFFTag riffTag;
+		memcpy(&riffTag, tagSearchLoc, sizeof(PortabilityLayer::RIFFTag));
+
+		if (riffTag.m_tag == PortabilityLayer::WaveConstants::kFormatChunkID)
+			formatTagLoc = tagSearchLoc;
+		else if (riffTag.m_tag == PortabilityLayer::WaveConstants::kDataChunkID)
+			dataTagLoc = tagSearchLoc;
+
+		const uint32_t riffTagSizeUnpadded = riffTag.m_chunkSize;
+
+		if (riffTagSizeUnpadded == 0xffffffffU)
+			return THandle<void>();
+
+		const uint32_t riffTagSizePadded = riffTagSizeUnpadded + (riffTagSizeUnpadded & 1);
+
+		tagSearchLoc += sizeof(PortabilityLayer::RIFFTag);
+
+		if (riffEnd - tagSearchLoc < riffTagSizePadded)
+			return THandle<void>();
+
+		tagSearchLoc += riffTagSizePadded;
+	}
+
+	if (formatTagLoc == nullptr || dataTagLoc == nullptr)
+		return THandle<void>();
+
+	PortabilityLayer::RIFFTag fmtTag;
+	memcpy(&fmtTag, formatTagLoc, sizeof(PortabilityLayer::RIFFTag));
+
+	const uint8_t *formatContents = formatTagLoc + sizeof(PortabilityLayer::RIFFTag);
+
+	PortabilityLayer::RIFFTag dataTag;
+	memcpy(&dataTag, dataTagLoc, sizeof(PortabilityLayer::RIFFTag));
+
+	const uint8_t *dataContents = dataTagLoc + sizeof(PortabilityLayer::RIFFTag);
+
+	PortabilityLayer::WaveFormatChunkV3 formatChunkV3;
+
+	memset(&formatChunkV3, 0, sizeof(formatChunkV3));
+
+	int formatChunkVersion = 0;
+	size_t copyableSize = 0;
+	if (fmtTag.m_chunkSize >= sizeof(PortabilityLayer::WaveFormatChunkV3))
+	{
+		formatChunkVersion = 3;
+		copyableSize = sizeof(PortabilityLayer::WaveFormatChunkV3);
+	}
+	else if (fmtTag.m_chunkSize >= sizeof(PortabilityLayer::WaveFormatChunkV2))
+	{
+		formatChunkVersion = 2;
+		copyableSize = sizeof(PortabilityLayer::WaveFormatChunkV2);
+	}
+	else if (fmtTag.m_chunkSize >= sizeof(PortabilityLayer::WaveFormatChunkV1))
+	{
+		formatChunkVersion = 1;
+		copyableSize = sizeof(PortabilityLayer::WaveFormatChunkV1);
+	}
+	else
+		return THandle<void>();
+
+	memcpy(&formatChunkV3, formatContents, copyableSize);
+
+	const PortabilityLayer::WaveFormatChunkV2 formatChunkV2 = formatChunkV3.m_v2;
+	const PortabilityLayer::WaveFormatChunkV1 formatChunkV1 = formatChunkV2.m_v1;
+
+	if (formatChunkV1.m_bitsPerSample != 8)
+		return THandle<void>();
+
+	if (formatChunkV1.m_formatCode != PortabilityLayer::WaveConstants::kFormatPCM ||
+		formatChunkV1.m_numChannels != 1 ||
+		formatChunkV1.m_blockAlignmentBytes != 1 ||
+		formatChunkV1.m_bitsPerSample != 8)
+		return THandle<void>();
+
+	THandle<void> convertedHandle = THandle<void>(PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(4 + dataTag.m_chunkSize));
+	if (!convertedHandle)
+		return THandle<void>();
+
+	uint8_t *handleData = static_cast<uint8_t*>(*convertedHandle);
+
+	uint32_t dataSize = dataTag.m_chunkSize;
+	memcpy(handleData, &dataSize, 4);
+
+	memcpy(handleData + 4, dataContents, dataSize);
+
+	return convertedHandle;
+}
+
+THandle<void> ParseAndConvertSound(const THandle<void> &handle)
+{
+	if (!handle)
+		return THandle<void>();
+
+	THandle<void> converted = ParseAndConvertSoundChecked(handle);
+	handle.Dispose();
+
+	return converted;
+}

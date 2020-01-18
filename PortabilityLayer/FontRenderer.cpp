@@ -23,22 +23,24 @@ namespace PortabilityLayer
 		bool GetGlyph(unsigned int character, const RenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const override;
 		const RenderedFontMetrics &GetMetrics() const override;
 		size_t MeasureString(const uint8_t *chars, size_t len) const override;
+		bool IsAntiAliased() const override;
 
 		void Destroy() override;
 
 		void SetCharData(unsigned int charID, const void *data, size_t dataOffset, const RenderedGlyphMetrics &metrics);
 		void SetFontMetrics(const RenderedFontMetrics &metrics);
 
-		static RenderedFontImpl *Create(size_t glyphDataSize);
+		static RenderedFontImpl *Create(size_t glyphDataSize, bool aa);
 
 	private:
-		explicit RenderedFontImpl(void *data);
+		RenderedFontImpl(void *data, bool aa);
 		~RenderedFontImpl();
 
 		size_t m_dataOffsets[256];
 		RenderedGlyphMetrics m_glyphMetrics[256];
 
 		RenderedFontMetrics m_fontMetrics;
+		bool m_isAntiAliased;
 
 		void *m_data;
 	};
@@ -46,7 +48,7 @@ namespace PortabilityLayer
 	class FontRendererImpl final : public FontRenderer
 	{
 	public:
-		RenderedFont *RenderFont(HostFont *font, int size, FontHacks fontHacks) override;
+		RenderedFont *RenderFont(HostFont *font, int size, bool aa, FontHacks fontHacks) override;
 
 		static FontRendererImpl *GetInstance();
 
@@ -71,7 +73,6 @@ namespace PortabilityLayer
 		return m_fontMetrics;
 	}
 
-
 	size_t RenderedFontImpl::MeasureString(const uint8_t *chars, size_t len) const
 	{
 		size_t measure = 0;
@@ -83,6 +84,11 @@ namespace PortabilityLayer
 		}
 
 		return measure;
+	}
+
+	bool RenderedFontImpl::IsAntiAliased() const
+	{
+		return m_isAntiAliased;
 	}
 
 	void RenderedFontImpl::Destroy()
@@ -103,7 +109,7 @@ namespace PortabilityLayer
 		m_fontMetrics = metrics;
 	}
 
-	RenderedFontImpl *RenderedFontImpl::Create(size_t glyphDataSize)
+	RenderedFontImpl *RenderedFontImpl::Create(size_t glyphDataSize, bool aa)
 	{
 		size_t alignedPrefixSize = sizeof(RenderedFontImpl) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
 		alignedPrefixSize -= alignedPrefixSize % GP_SYSTEM_MEMORY_ALIGNMENT;
@@ -119,11 +125,12 @@ namespace PortabilityLayer
 
 		memset(storage, 0, allocSize);
 
-		return new (storage) RenderedFontImpl(static_cast<uint8_t*>(storage) + alignedPrefixSize);
+		return new (storage) RenderedFontImpl(static_cast<uint8_t*>(storage) + alignedPrefixSize, aa);
 	}
 
-	RenderedFontImpl::RenderedFontImpl(void *data)
+	RenderedFontImpl::RenderedFontImpl(void *data, bool aa)
 		: m_data(data)
+		, m_isAntiAliased(aa)
 	{
 		memset(m_glyphMetrics, 0, sizeof(m_glyphMetrics));
 		memset(&m_fontMetrics, 0, sizeof(m_fontMetrics));
@@ -134,7 +141,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	RenderedFont *FontRendererImpl::RenderFont(HostFont *font, int size, FontHacks fontHacks)
+	RenderedFont *FontRendererImpl::RenderFont(HostFont *font, int size, bool aa, FontHacks fontHacks)
 	{
 		const unsigned int numCharacters = 256;
 
@@ -156,7 +163,7 @@ namespace PortabilityLayer
 			if (unicodeCodePoint == 0xffff)
 				continue;
 
-			glyphs[i] = font->Render(unicodeCodePoint, size);
+			glyphs[i] = font->Render(unicodeCodePoint, size, aa);
 		}
 
 		size_t glyphDataSize = GP_SYSTEM_MEMORY_ALIGNMENT;	// So we can use 0 to mean no data
@@ -170,7 +177,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		RenderedFontImpl *rfont = RenderedFontImpl::Create(glyphDataSize);
+		RenderedFontImpl *rfont = RenderedFontImpl::Create(glyphDataSize, aa);
 		if (rfont)
 		{
 			size_t fillOffset = GP_SYSTEM_MEMORY_ALIGNMENT;
@@ -185,7 +192,7 @@ namespace PortabilityLayer
 					RenderedGlyphMetrics metrics = glyph->GetMetrics();
 					const void *data = glyph->GetData();
 
-					if (fontHacks == FontHacks_Roboto)
+					if (fontHacks == FontHacks_Roboto && !aa)
 					{
 						if (size < 32)
 						{

@@ -640,7 +640,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 	const int32_t ascender = surface->MeasureFontAscender();
 
 	const Point centeredDrawPoint = Point::Create((iRect.left + iRect.right - strWidth) / 2, (iRect.top + iRect.bottom + ascender) / 2);
-	surface->DrawString(centeredDrawPoint, stringCopy);
+	surface->DrawString(centeredDrawPoint, stringCopy, true);
 
 	if (invert)
 	{
@@ -670,7 +670,7 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
 
 	surface->SetForeColor(StdColors::Black());
-	surface->DrawString(Point::Create(iRect.left, iRect.bottom), stringCopy);
+	surface->DrawString(Point::Create(iRect.left, iRect.bottom), stringCopy, true);
 }
 
 //--------------------------------------------------------------  LoadDialogPICT

@@ -7,6 +7,7 @@
 #include "HostMutex.h"
 #include "HostSystemServices.h"
 #include "HostThreadEvent.h"
+#include "WaveFormat.h"
 
 #include <assert.h>
 
@@ -42,7 +43,7 @@ namespace PortabilityLayer
 		~AudioChannelImpl();
 
 		void Destroy(bool wait) override;
-		bool AddBuffer(const void *smBuffer, bool blocking) override;
+		bool AddBuffer(const void *lengthTaggedBuffer, bool blocking) override;
 		bool AddCallback(AudioChannelCallback_t callback, bool blocking) override;
 		void ClearAllCommands() override;
 		void Stop() override;
@@ -67,7 +68,6 @@ namespace PortabilityLayer
 		void DigestBufferCommand(const void *dataPointer);
 
 		PortabilityLayer::HostAudioChannel *m_audioChannel;
-		;
 
 		HostMutex *m_mutex;
 		HostThreadEvent *m_threadEvent;
@@ -145,11 +145,11 @@ namespace PortabilityLayer
 		PortabilityLayer::MemoryManager::GetInstance()->Release(this);
 	}
 
-	bool AudioChannelImpl::AddBuffer(const void *smBuffer, bool blocking)
+	bool AudioChannelImpl::AddBuffer(const void *lengthTaggedBuffer, bool blocking)
 	{
 		AudioCommand cmd;
 		cmd.m_commandType = AudioCommandTypes::kBuffer;
-		cmd.m_param.m_ptr = smBuffer;
+		cmd.m_param.m_ptr = lengthTaggedBuffer;
 
 		return this->PushCommand(cmd, blocking);
 	}
@@ -195,26 +195,11 @@ namespace PortabilityLayer
 
 	void AudioChannelImpl::DigestBufferCommand(const void *dataPointer)
 	{
-		struct BufferHeader
-		{
-			BEUInt32_t m_samplePtr;
-			BEUInt32_t m_length;
-			BEFixed32_t m_sampleRate;
-			BEUInt32_t m_loopStart;
-			BEUInt32_t m_loopEnd;
-			uint8_t m_encoding;
-			uint8_t m_baseFrequency;
-		};
+		// At this point, the buffer should already be validated and converted, and the data pointer should point at the data tag
+		uint32_t length;
+		memcpy(&length, dataPointer, 4);
 
-		BufferHeader bufferHeader;
-
-		GP_STATIC_ASSERT(sizeof(BufferHeader) >= 22);
-
-		memcpy(&bufferHeader, dataPointer, 22);
-
-		const uint32_t length = bufferHeader.m_length;
-
-		m_audioChannel->PostBuffer(static_cast<const uint8_t*>(dataPointer) + 22, length);
+		m_audioChannel->PostBuffer(static_cast<const uint8_t*>(dataPointer) + 4, length);
 		m_state = State_PlayingAsync;
 	}
 

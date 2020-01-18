@@ -1,4 +1,6 @@
 #include "QDGraf.h"
+
+#include "MemoryManager.h"
 #include "QDPixMap.h"
 #include "QDPort.h"
 #include "IGpDisplayDriver.h"
@@ -6,6 +8,8 @@
 
 DrawSurface::~DrawSurface()
 {
+	if (m_cachedAATable)
+		PortabilityLayer::MemoryManager::GetInstance()->Release(m_cachedAATable);
 }
 
 void DrawSurface::PushToDDSurface(IGpDisplayDriver *displayDriver)

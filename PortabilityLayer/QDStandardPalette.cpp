@@ -82,6 +82,34 @@ namespace PortabilityLayer
 			for (unsigned int gs = 0; gs < 16; gs++)
 				for (unsigned int bs = 0; bs < 16; bs++)
 					m_lut[rs + (gs << 4) + (bs << 8)] = MapColorAnalyticTruncated(rs, gs, bs);
+
+		for (unsigned int i = 0; i < 256; i++)
+		{
+			unsigned int shortChannels[3] =
+			{
+				m_colors[i].r / 17,
+				m_colors[i].g / 17,
+				m_colors[i].b / 17
+			};
+
+			for (unsigned int b = 0; b < 16; b++)
+			{
+				unsigned int whiteScale[3];
+				unsigned int blackScale[3];
+
+				for (unsigned int ch = 0; ch < 3; ch++)
+				{
+					unsigned int scaledBackground = (15 - b) * shortChannels[ch];
+					unsigned int scaledWhiteForeground = 15 * b;
+
+					blackScale[ch] = scaledBackground / 15;
+					whiteScale[ch] = (scaledBackground + scaledWhiteForeground) / 15;
+				}
+
+				m_blackAATable.m_aaTranslate[i][b] = MapColorAnalyticTruncated(blackScale[0], blackScale[1], blackScale[2]);
+				m_whiteAATable.m_aaTranslate[i][b] = MapColorAnalyticTruncated(whiteScale[0], whiteScale[1], whiteScale[2]);
+			}
+		}
 	}
 
 	const RGBAColor *StandardPalette::GetColors() const
@@ -228,6 +256,16 @@ namespace PortabilityLayer
 	const StandardPalette *StandardPalette::GetInstance()
 	{
 		return &ms_instance;
+	}
+
+	const AntiAliasTable &StandardPalette::GetWhiteAATable() const
+	{
+		return m_whiteAATable;
+	}
+
+	const AntiAliasTable &StandardPalette::GetBlackAATable() const
+	{
+		return m_blackAATable;
 	}
 
 	StandardPalette StandardPalette::ms_instance;

@@ -1,9 +1,12 @@
 #pragma once
 
+#include "AntiAliasTable.h"
 #include "RGBAColor.h"
 
 namespace PortabilityLayer
 {
+	struct AntiAliasTable;
+
 	class StandardPalette
 	{
 	public:
@@ -17,6 +20,8 @@ namespace PortabilityLayer
 		static uint8_t MapColorAnalytic(const RGBAColor &color);
 		uint8_t MapColorLUT(uint8_t r, uint8_t g, uint8_t b) const;
 		uint8_t MapColorLUT(const RGBAColor &color) const;
+		const AntiAliasTable &GetWhiteAATable() const;
+		const AntiAliasTable &GetBlackAATable() const;
 
 		static const StandardPalette *GetInstance();
 
@@ -24,6 +29,8 @@ namespace PortabilityLayer
 		static StandardPalette ms_instance;
 
 		RGBAColor m_colors[kSize];
+		AntiAliasTable m_whiteAATable;
+		AntiAliasTable m_blackAATable;
 		uint8_t m_lut[16 * 16 * 16];
 	};
 }

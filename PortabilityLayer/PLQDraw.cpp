@@ -498,7 +498,8 @@ void GetForeColor(RGBColor *color)
 	*color = RGBColor(foreColor.r, foreColor.g, foreColor.b);
 }
 
-static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character)
+static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
+	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor)
 {
 	assert(rect.IsValid());
 
@@ -537,11 +538,40 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	const size_t outputPitch = pixMap->m_pitch;
 	const uint8_t *firstInputRowData = static_cast<const uint8_t*>(data) + firstInputRow * inputPitch;
 
+	const bool isAA = rfont->IsAntiAliased();
+
 	switch (pixMap->m_pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
 		{
 			uint8_t *firstOutputRowData = static_cast<uint8_t*>(pixMap->m_data) + firstOutputRow * outputPitch;
+
+			const PortabilityLayer::AntiAliasTable *aaTable = nullptr;
+
+			if (isAA)
+			{
+				const PortabilityLayer::RGBAColor foreColor = qdState->GetForeColor();
+				if (foreColor == PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
+					aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetBlackAATable();
+				else if (foreColor == PortabilityLayer::RGBAColor::Create(255, 255, 255, 255))
+					aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetWhiteAATable();
+				else if (cachedAATable != nullptr && foreColor == cachedAATableColor)
+					aaTable = cachedAATable;
+				else
+				{
+					if (!cachedAATable)
+					{
+						cachedAATable = static_cast<PortabilityLayer::AntiAliasTable*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::AntiAliasTable)));
+						if (!cachedAATable)
+							return;
+					}
+
+					cachedAATableColor = foreColor;
+					cachedAATable->GenerateForPalette(foreColor, PortabilityLayer::StandardPalette::GetInstance()->GetColors(), 256);
+
+					aaTable = cachedAATable;
+				}
+			}
 
 			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
 			for (uint32_t row = 0; row < numRows; row++)
@@ -550,11 +580,26 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 				uint8_t *outputRowData = firstOutputRowData + row * outputPitch;
 
 				// It should be possible to speed this up, if needed.  The input is guaranteed to be well-aligned and not mutable within this loop.
-				for (uint32_t col = 0; col < numCols; col++)
+				if (isAA)
 				{
-					const size_t inputOffset = firstInputCol + col;
-					if (inputRowData[inputOffset / 8] & (1 << (inputOffset & 0x7)))
-						outputRowData[firstOutputCol + col] = color;
+					for (uint32_t col = 0; col < numCols; col++)
+					{
+						const size_t inputOffset = firstInputCol + col;
+
+						const unsigned int grayLevel = (inputRowData[inputOffset / 2] >> ((inputOffset & 1) * 4)) & 0xf;
+						uint8_t &targetPixel = outputRowData[firstOutputCol + col];
+
+						targetPixel = aaTable->m_aaTranslate[targetPixel][grayLevel];
+					}
+				}
+				else
+				{
+					for (uint32_t col = 0; col < numCols; col++)
+					{
+						const size_t inputOffset = firstInputCol + col;
+						if (inputRowData[inputOffset / 8] & (1 << (inputOffset & 0x7)))
+							outputRowData[firstOutputCol + col] = color;
+					}
 				}
 			}
 		}
@@ -564,7 +609,7 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	}
 }
 
-void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
+void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa)
 {
 	PortabilityLayer::QDPort *port = &m_port;
 
@@ -576,7 +621,7 @@ void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
 	const int fontVariationFlags = qdState->m_fontVariationFlags;
 	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
 
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, fontVariationFlags);
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
 
 	Point penPos = point;
 	const size_t len = str.Length();
@@ -599,13 +644,13 @@ void DrawSurface::DrawString(const Point &point, const PLPasStr &str)
 			penPos = paraStartPos;
 		}
 		else
-			DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i]);
+			DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i], m_cachedAATable, m_cachedAAColor);
 	}
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str)
+void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa)
 {
 	PortabilityLayer::QDPort *port = &m_port;
 
@@ -617,7 +662,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 	const int fontVariationFlags = qdState->m_fontVariationFlags;
 	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
 
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, fontVariationFlags);
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
 
 	Point penPos = point;
 	const size_t len = str.Length();
@@ -703,7 +748,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 		{
 			const uint8_t character = chars[currentStartChar + ci];
 
-			DrawGlyph(qdState, pixMap, pixMap->m_rect, penPos, rfont, character);
+			DrawGlyph(qdState, pixMap, pixMap->m_rect, penPos, rfont, character, m_cachedAATable, m_cachedAAColor);
 		}
 
 		currentStartChar += committedLength;
@@ -728,7 +773,7 @@ size_t DrawSurface::MeasureString(const PLPasStr &str)
 	const int variationFlags = qdState->m_fontVariationFlags;
 	const int fontSize = qdState->m_fontSize;
 
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, false, variationFlags);
 	if (!rfont)
 		return 0;
 
@@ -748,7 +793,7 @@ int32_t DrawSurface::MeasureFontAscender()
 	const int variationFlags = qdState->m_fontVariationFlags;
 	const int fontSize = qdState->m_fontSize;
 
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, false, variationFlags);
 	if (!rfont)
 		return 0;
 
@@ -768,7 +813,7 @@ int32_t DrawSurface::MeasureFontLineGap()
 	const int variationFlags = qdState->m_fontVariationFlags;
 	const int fontSize = qdState->m_fontSize;
 
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, variationFlags);
+	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, false, variationFlags);
 	if (!rfont)
 		return 0;
 

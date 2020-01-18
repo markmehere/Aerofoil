@@ -10,7 +10,7 @@ namespace PortabilityLayer
 	class FontRenderer
 	{
 	public:
-		virtual RenderedFont *RenderFont(HostFont *font, int size, FontHacks fontHacks) = 0;
+		virtual RenderedFont *RenderFont(HostFont *font, int size, bool aa, FontHacks fontHacks) = 0;
 
 		static FontRenderer *GetInstance();
 	};

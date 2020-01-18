@@ -43,7 +43,7 @@ namespace PortabilityLayer
 		surface->SetForeColor(StdColors::Black());
 		surface->SetSystemFont(12, FontFamilyFlag_Bold);
 		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
-		surface->DrawString(Point::Create(m_rect.left + radioFrameSize + 2, textV), m_text.ToShortStr());
+		surface->DrawString(Point::Create(m_rect.left + radioFrameSize + 2, textV), m_text.ToShortStr(), true);
 	}
 
 	void RadioButtonWidget::SetString(const PLPasStr &str)

@@ -250,9 +250,9 @@ void ReadyBackground (short theID, short *theTiles)
 
 		const Point textPoint = Point::Create(10, 20);
 		if (houseUnlocked)
-			workSrcMap->DrawString(textPoint, PSTR("No rooms"));
+			workSrcMap->DrawString(textPoint, PSTR("No rooms"), true);
 		else
-			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"));
+			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"), true);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 

@@ -122,7 +122,7 @@ void DrawBannerMessage (Point topLeft)
 	do
 	{
 		GetLineOfText(bannerStr, count, subStr);
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr, true);
 		count++;
 	}
 	while (subStr[0] > 0);
@@ -144,10 +144,10 @@ void DrawBannerMessage (Point topLeft)
 		PasStringConcat(bannerStr, subStr);
 
 		workSrcMap->SetForeColor(StdColors::Red());
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr, true);
 
 		GetLocalizedString(5, subStr);
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr, true);
 	}
 	workSrcMap->SetForeColor(StdColors::Black());
 

@@ -29,6 +29,8 @@ PLError_t DumpMusicSounds (void);
 PLError_t OpenMusicChannel (void);
 PLError_t CloseMusicChannel (void);
 
+THandle<void> ParseAndConvertSound(const THandle<void> &handle);
+
 
 PortabilityLayer::AudioChannel	*musicChannel;
 Ptr				theMusicData[kMaxMusic];
@@ -210,17 +212,17 @@ PLError_t LoadMusicSounds (void)
 	
 	for (i = 0; i < kMaxMusic; i++)
 	{
-		theSound = GetResource('snd ', i + kBaseBufferMusicID);
+		theSound = ParseAndConvertSound(GetResource('snd ', i + kBaseBufferMusicID));
 		if (theSound == nil)
 			return PLErrors::kOutOfMemory;
 		
-		soundDataSize = GetHandleSize(theSound) - 20L;
+		soundDataSize = GetHandleSize(theSound);
 
 		theMusicData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
 		if (theMusicData[i] == nil)
 			return PLErrors::kOutOfMemory;
 
-		BlockMove((Ptr)(static_cast<Byte*>(*theSound) + 20L), theMusicData[i], soundDataSize);
+		BlockMove(static_cast<Byte*>(*theSound), theMusicData[i], soundDataSize);
 		theSound.Dispose();
 	}
 	return (theErr);

@@ -24,8 +24,8 @@ namespace PortabilityLayer
 		FontFamily *GetSystemFont(int textSize, int variationFlags) const override;
 		FontFamily *GetApplicationFont(int textSize, int variationFlags) const override;
 
-		RenderedFont *GetRenderedFont(HostFont *font, int size, FontHacks fontHacks) override;
-		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, int flags) override;
+		RenderedFont *GetRenderedFont(HostFont *font, int size, bool aa, FontHacks fontHacks) override;
+		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
 
 		static FontManagerImpl *GetInstance();
 
@@ -38,6 +38,7 @@ namespace PortabilityLayer
 			const HostFont *m_font;
 			int m_size;
 			uint32_t m_lastUsage;
+			bool m_aa;
 		};
 
 		FontManagerImpl();
@@ -109,7 +110,7 @@ namespace PortabilityLayer
 		return m_applicationFont;
 	}
 
-	RenderedFont *FontManagerImpl::GetRenderedFont(HostFont *font, int size, FontHacks fontHacks)
+	RenderedFont *FontManagerImpl::GetRenderedFont(HostFont *font, int size, bool aa, FontHacks fontHacks)
 	{
 		CachedRenderedFont *newCacheSlot = &m_cachedRenderedFonts[0];
 
@@ -122,7 +123,7 @@ namespace PortabilityLayer
 				break;
 			}
 
-			if (crf.m_font == font && crf.m_size == size)
+			if (crf.m_font == font && crf.m_size == size && crf.m_aa == aa)
 			{
 				crf.m_lastUsage = m_usageCounter;
 				RenderedFont *rf = crf.m_rfont;
@@ -138,7 +139,7 @@ namespace PortabilityLayer
 				newCacheSlot = &crf;
 		}
 
-		RenderedFont *rfont = FontRenderer::GetInstance()->RenderFont(font, size, fontHacks);
+		RenderedFont *rfont = FontRenderer::GetInstance()->RenderFont(font, size, aa, fontHacks);
 		if (!rfont)
 			return nullptr;
 
@@ -149,6 +150,7 @@ namespace PortabilityLayer
 		newCacheSlot->m_lastUsage = m_usageCounter;
 		newCacheSlot->m_size = size;
 		newCacheSlot->m_rfont = rfont;
+		newCacheSlot->m_aa = aa;
 
 		if (m_usageCounter == UINT32_MAX)
 			ResetUsageCounter();
@@ -158,7 +160,7 @@ namespace PortabilityLayer
 		return rfont;
 	}
 
-	RenderedFont *FontManagerImpl::GetRenderedFontFromFamily(FontFamily *fontFamily, int size, int flags)
+	RenderedFont *FontManagerImpl::GetRenderedFontFromFamily(FontFamily *fontFamily, int size, bool aa, int flags)
 	{
 		const int variation = fontFamily->GetVariationForFlags(flags);
 
@@ -166,7 +168,7 @@ namespace PortabilityLayer
 		if (!hostFont)
 			return nullptr;
 
-		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFont(hostFont, size, fontFamily->GetHacksForVariation(variation));
+		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
 	}
 
 	FontManagerImpl *FontManagerImpl::GetInstance()

@@ -25,7 +25,7 @@ void ColorText (DrawSurface *surface, const Point &point, StringPtr theStr, long
 
 	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
 	surface->SetForeColor(rgbaColor);
-	surface->DrawString(point, theStr);
+	surface->DrawString(point, theStr, true);
 	surface->SetForeColor(wasColor);
 }
 

@@ -86,7 +86,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(5, 12), tempStr);
+	surface->DrawString(Point::Create(5, 12), tempStr, true);
 	
 	PasStringCopy(PSTR("v: "), tempStr);
 	if (coordV != -1)
@@ -97,7 +97,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(4, 22), tempStr);
+	surface->DrawString(Point::Create(4, 22), tempStr, true);
 	
 	surface->SetForeColor(StdColors::Blue());
 	PasStringCopy(PSTR("d: "), tempStr);
@@ -109,7 +109,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(5, 32), tempStr);
+	surface->DrawString(Point::Create(5, 32), tempStr, true);
 	surface->SetForeColor(StdColors::Black());
 #endif
 }

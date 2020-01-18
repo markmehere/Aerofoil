@@ -74,7 +74,7 @@ void DrawOnSplash(DrawSurface *surface)
 	if (thisMac.isDepth == 4)
 	{
 		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-		surface->DrawString(textPoint, houseLoadedStr);
+		surface->DrawString(textPoint, houseLoadedStr, true);
 	}
 	else
 	{

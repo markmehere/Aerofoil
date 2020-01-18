@@ -143,11 +143,11 @@ void DrawHighScores (DrawSurface *surface)
 
 	const Point scoreShadowPoint = Point::Create(scoreLeft + ((kScoreWide - surface->MeasureString(tempStr)) / 2) - 1, dropIt - 66);
 	surface->SetForeColor(blackColor);
-	surface->DrawString(scoreShadowPoint, tempStr);
+	surface->DrawString(scoreShadowPoint, tempStr, true);
 
 	const Point scoreTextPoint = Point::Create(scoreLeft + ((kScoreWide - surface->MeasureString(tempStr)) / 2), dropIt - 65);
 	surface->SetForeColor(cyanColor);
-	surface->DrawString(scoreTextPoint, tempStr);
+	surface->DrawString(scoreTextPoint, tempStr, true);
 
 	surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 
@@ -157,11 +157,11 @@ void DrawHighScores (DrawSurface *surface)
 	bannerWidth = surface->MeasureString(tempStr);
 	surface->SetForeColor(blackColor);
 	const Point topScoreShadowPoint = Point::Create(scoreLeft + (kScoreWide - bannerWidth) / 2, dropIt - kKimsLifted);
-	surface->DrawString(topScoreShadowPoint, tempStr);
+	surface->DrawString(topScoreShadowPoint, tempStr, true);
 
 	surface->SetForeColor(yellowColor);
 	const Point topScoreTextPoint = Point::Create(scoreLeft + (kScoreWide - bannerWidth) / 2, dropIt - kKimsLifted - 1);
-	surface->DrawString(topScoreTextPoint, tempStr);
+	surface->DrawString(topScoreTextPoint, tempStr, true);
 	
 	QSetRect(&tempRect, 0, 0, bannerWidth + 8, kScoreSpacing);
 	QOffsetRect(&tempRect, scoreLeft - 3 + (kScoreWide - bannerWidth) / 2, 
@@ -186,7 +186,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 1, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 1, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 			if (i == lastHighScore)
 				surface->SetForeColor(whiteColor);
 			else
@@ -195,7 +195,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 0, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 0, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 													// draw high score name
 			PasStringCopy(thisHousePtr->highScores.names[i], tempStr);
 			surface->SetForeColor(blackColor);
@@ -203,7 +203,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 31, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 31, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 			if (i == lastHighScore)
 				surface->SetForeColor(whiteColor);
 			else
@@ -212,7 +212,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 30, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 30, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 													// draw level number
 			NumToString(thisHousePtr->highScores.levels[i], tempStr);
 			surface->SetForeColor(blackColor);
@@ -220,7 +220,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 161, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 161, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 			if (i == lastHighScore)
 				surface->SetForeColor(whiteColor);
 			else
@@ -229,7 +229,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 160, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 160, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 													// draw word "rooms"
 			if (thisHousePtr->highScores.levels[i] == 1)
 				GetLocalizedString(6, tempStr);
@@ -240,13 +240,13 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 193, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 193, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 			surface->SetForeColor(cyanColor);
 			if (i == 0)
 				strPos = Point::Create(scoreLeft + 192, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 192, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 													// draw high score points
 			NumToString(thisHousePtr->highScores.scores[i], tempStr);
 			surface->SetForeColor(blackColor);
@@ -254,7 +254,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 291, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 291, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 			if (i == lastHighScore)
 				surface->SetForeColor(whiteColor);
 			else
@@ -263,7 +263,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 290, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 290, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr);
+			surface->DrawString(strPos, tempStr, true);
 		}
 	}
 
@@ -273,7 +273,7 @@ void DrawHighScores (DrawSurface *surface)
 
 	const Point textPos = Point::Create(scoreLeft + 80, dropIt - 1 + (10 * kScoreSpacing));
 	GetLocalizedString(8, tempStr);
-	surface->DrawString(textPos, tempStr);
+	surface->DrawString(textPos, tempStr, true);
 	
 	surface->SetForeColor(blackColor);
 }

@@ -138,6 +138,7 @@
     <ClInclude Include="..\GpCommon\GpBitfield.h" />
     <ClInclude Include="AEHandlerDesc.h" />
     <ClInclude Include="AEManager.h" />
+    <ClInclude Include="AntiAliasTable.h" />
     <ClInclude Include="BinarySearch.h" />
     <ClInclude Include="BinHex4.h" />
     <ClInclude Include="BMPFormat.h" />
@@ -289,6 +290,7 @@
   <ItemGroup>
     <ClCompile Include="..\stb\stb_image_write.c" />
     <ClCompile Include="AEManager.cpp" />
+    <ClCompile Include="AntiAliasTable.cpp" />
     <ClCompile Include="BinHex4.cpp" />
     <ClCompile Include="ByteSwap.cpp" />
     <ClCompile Include="CFileStream.cpp" />

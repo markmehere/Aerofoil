@@ -145,7 +145,7 @@ void SetMessageWindowMessage (StringPtr message)
 
 		const Point textPoint = Point::Create(mssgWindowRect.left, mssgWindowRect.bottom - 6);
 		surface->SetForeColor(StdColors::Black());
-		surface->DrawString(textPoint, message);
+		surface->DrawString(textPoint, message, true);
 	}
 }
 

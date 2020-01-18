@@ -1,5 +1,6 @@
 #include "ResourceManager.h"
-#include "VirtualDirectory.h"
+
+#include "BMPFormat.h"
 #include "FileManager.h"
 #include "GPArchive.h"
 #include "HostFileSystem.h"
@@ -14,9 +15,66 @@
 #include "ResourceFile.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
+#include "VirtualDirectory.h"
+#include "WaveFormat.h"
 #include "ZipFileProxy.h"
 
 #include <vector>
+
+namespace ResourceValidationRules
+{
+	enum ResourceValidationRule
+	{
+		kNone,
+		kWAV,
+		kBMP,
+	};
+}
+
+typedef ResourceValidationRules::ResourceValidationRule ResourceValidationRule_t;
+
+namespace
+{
+	// Validation is only intended to validate enough of the file structure that constrained validation can be performed
+	// without needing to pass the file size
+	static bool ValidateResource(const void *res, size_t size, ResourceValidationRule_t validationRule)
+	{
+		switch (validationRule)
+		{
+		case ResourceValidationRules::kWAV:
+			{
+				if (size < sizeof(PortabilityLayer::RIFFTag))
+					return false;
+
+				PortabilityLayer::RIFFTag mainTag;
+				memcpy(&mainTag, res, sizeof(mainTag));
+				if (mainTag.m_chunkSize > size - sizeof(sizeof(PortabilityLayer::RIFFTag)))
+					return false;
+
+				return true;
+			}
+			break;
+
+		case ResourceValidationRules::kBMP:
+			{
+				if (size < sizeof(PortabilityLayer::BitmapFileHeader))
+					return false;
+
+				PortabilityLayer::BitmapFileHeader mainHeader;
+				memcpy(&mainHeader, res, sizeof(mainHeader));
+				if (mainHeader.m_fileSize > size)
+					return false;
+
+				return true;
+			}
+			break;
+
+		default:
+			break;
+		};
+	}
+}
+
 
 namespace PortabilityLayer
 {
@@ -315,6 +373,14 @@ namespace PortabilityLayer
 	THandle<void> ResourceArchive::GetResource(const ResTypeID &resTypeID, int id, bool load)
 	{
 		const char *extension = ".bin";
+		ResourceValidationRule_t validationRule = ResourceValidationRules::kNone;
+
+		if (resTypeID == ResTypeID('snd '))
+		{
+			extension = ".wav";
+			validationRule = ResourceValidationRules::kWAV;
+		}
+
 		char resourceFile[64];
 
 		GpArcResourceTypeTag resTag = GpArcResourceTypeTag::Encode(resTypeID);
@@ -350,11 +416,13 @@ namespace PortabilityLayer
 				handle->m_contents = contents;
 				handle->m_size = ref->m_size;
 
-				if (!m_zipFileProxy->LoadFile(index, contents))
+				if (!m_zipFileProxy->LoadFile(index, contents) || (validationRule != ResourceValidationRules::kNone && !ValidateResource(contents, ref->m_size, validationRule)))
 				{
 					MemoryManager::GetInstance()->Release(contents);
 					handle->m_contents = nullptr;
 					handle->m_size = 0;
+
+					return THandle<void>();
 				}
 			}
 		}

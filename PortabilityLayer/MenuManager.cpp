@@ -757,7 +757,7 @@ namespace PortabilityLayer
 						if (menuHdl != selectedMenuHdl)
 						{
 							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
-							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
+							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true);
 						}
 					}
 				}
@@ -776,7 +776,7 @@ namespace PortabilityLayer
 				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
 
 				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
-				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)));
+				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true);
 			}
 		}
 
@@ -835,7 +835,7 @@ namespace PortabilityLayer
 		if (!fontFamily)
 			return;
 
-		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, kMenuFontFlags);
+		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, true, kMenuFontFlags);
 		if (!rfont)
 			return;
 
@@ -879,7 +879,7 @@ namespace PortabilityLayer
 		if (!fontFamily)
 			return;
 
-		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, kMenuFontFlags);
+		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, true, kMenuFontFlags);
 		if (!rfont)
 			return;
 
@@ -1132,7 +1132,7 @@ namespace PortabilityLayer
 
 			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob));
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
 		}
 
 		if (m_haveItem)
@@ -1148,7 +1148,7 @@ namespace PortabilityLayer
 
 			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob));
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
 		}
 
 		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);

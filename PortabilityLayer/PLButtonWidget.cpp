@@ -62,6 +62,6 @@ namespace PortabilityLayer
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;
 		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(surface->MeasureFontAscender())) / 2;
-		surface->DrawString(Point::Create(x, y), m_text.ToShortStr());
+		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), true);
 	}
 }

@@ -490,8 +490,8 @@ bool BMPDumperContext::Export(std::vector<uint8_t> &outData) const
 	PortabilityLayer::BitmapFileHeader fileHeader;
 	fileHeader.m_id[0] = 'B';
 	fileHeader.m_id[1] = 'M';
-	fileHeader.m_fileSize = imageFileSize;
-	fileHeader.m_imageDataStart = fileHeaderSize + infoHeaderSize + ctabSize + postCTabPaddingSize;
+	fileHeader.m_fileSize = static_cast<uint32_t>(imageFileSize);
+	fileHeader.m_imageDataStart = static_cast<uint32_t>(fileHeaderSize + infoHeaderSize + ctabSize + postCTabPaddingSize);
 	fileHeader.m_reserved1 = 0;
 	fileHeader.m_reserved2 = 0;
 
@@ -499,12 +499,12 @@ bool BMPDumperContext::Export(std::vector<uint8_t> &outData) const
 
 	PortabilityLayer::BitmapInfoHeader infoHeader;
 	infoHeader.m_thisStructureSize = sizeof(infoHeader);
-	infoHeader.m_width = width;
-	infoHeader.m_height = height;
+	infoHeader.m_width = static_cast<uint32_t>(width);
+	infoHeader.m_height = static_cast<uint32_t>(height);
 	infoHeader.m_planes = 1;
 	infoHeader.m_bitsPerPixel = bpp;
 	infoHeader.m_compression = PortabilityLayer::BitmapConstants::kCompressionRGB;
-	infoHeader.m_imageSize = imageDataSize;
+	infoHeader.m_imageSize = static_cast<uint32_t>(imageDataSize);
 	infoHeader.m_xPixelsPerMeter = 2835;
 	infoHeader.m_yPixelsPerMeter = 2835;
 	infoHeader.m_numColors = (bpp < 16) ? numColors : 0;
@@ -669,7 +669,7 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 
 	PortabilityLayer::RIFFTag riffTag;
 	riffTag.m_tag = PortabilityLayer::WaveConstants::kRiffChunkID;
-	riffTag.m_chunkSize = waveMarkerSize + fmtTagSize + fmtContentSize + dataTagSize + dataContentSize;
+	riffTag.m_chunkSize = static_cast<uint32_t>(waveMarkerSize + fmtTagSize + fmtContentSize + dataTagSize + dataContentSize);
 
 	VectorAppend(outWAV, reinterpret_cast<const uint8_t*>(&riffTag), sizeof(riffTag));
 
@@ -770,7 +770,9 @@ int main(int argc, const char **argv)
 				if (ImportPICT(entry.m_contents, resData, resSize))
 					contents.push_back(entry);
 			}
-			else if (typeList.m_resType == sndTypeID)
+			else
+#endif
+			if (typeList.m_resType == sndTypeID)
 			{
 				PlannedEntry entry;
 				char resName[256];
@@ -782,7 +784,6 @@ int main(int argc, const char **argv)
 					contents.push_back(entry);
 			}
 			else
-#endif
 			{
 				PlannedEntry entry;
 

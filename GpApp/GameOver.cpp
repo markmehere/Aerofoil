@@ -110,11 +110,11 @@ void SetUpFinalScreen (void)
 		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
 		const Point textShadowPos = Point::Create(offset + 1, textDown + 33 + (count * 20));
 
-		surface->DrawString(textShadowPos, subStr);
+		surface->DrawString(textShadowPos, subStr, true);
 		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
 
 		const Point textPos = Point::Create(offset, textDown + 32 + (count * 20));
-		surface->DrawString(textPos, subStr);
+		surface->DrawString(textPos, subStr, true);
 		count++;
 	}
 	while (subStr[0] > 0);
