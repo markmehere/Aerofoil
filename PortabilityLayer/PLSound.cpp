@@ -55,11 +55,14 @@ namespace PortabilityLayer
 
 		enum WorkingState
 		{
+			// NOTE: In all cases where the thread event is fired, the event may be fired under a mutex lock.
+			// Therefore, if the mutex is to be destroyed, it must be locked first even though the thread has transitioned to idle.
+
 			State_Idle,				// No thread is playing sound, the sound thread is out of work
 			State_PlayingAsync,		// Sound thread is playing sound.  When it finishes, it will digest queue events under a lock.
 			State_PlayingBlocked,	// Sound thread is playing sound.  When it finishes, it will transition to Idle and fire the thread event.
 			State_FlushStarting,	// Sound thread is aborting.  When it aborts, it will transition to Idle and fire the thread event.
-			State_ShuttingDown,		// Sound thread is shutting down.  When it finishes, it will transition to idle and fire the thread event.
+			State_ShuttingDown,		// Sound thread is shutting down.  When it finishes, it will transition to Idle and fire the thread event.
 		};
 
 		static const unsigned int kMaxQueuedCommands = 64;
@@ -97,6 +100,7 @@ namespace PortabilityLayer
 	{
 		m_mutex->Destroy();
 		m_threadEvent->Destroy();
+		m_audioChannel->Destroy();
 	}
 
 	void AudioChannelImpl::NotifyBufferFinished()
@@ -121,8 +125,13 @@ namespace PortabilityLayer
 	{
 		ClearAllCommands();
 
+		bool synchronizeMutex = false;
+
 		if (!wait)
+		{
 			Stop();
+			synchronizeMutex = true;
+		}
 		else
 		{
 			m_mutex->Lock();
@@ -133,12 +142,23 @@ namespace PortabilityLayer
 				m_mutex->Unlock();
 
 				m_threadEvent->Wait();
+
+				synchronizeMutex = true;
 			}
 			else
 			{
 				assert(m_state == State_Idle);
 				m_mutex->Unlock();
 			}
+		}
+
+		if (synchronizeMutex)
+		{
+			// If we had to stop the audio thread, then the event was fired under a lock.
+			// We have to wait for the unlock to complete before destroying the mutex.
+			m_mutex->Lock();
+			assert(m_state == State_Idle);
+			m_mutex->Unlock();
 		}
 
 		this->~AudioChannelImpl();

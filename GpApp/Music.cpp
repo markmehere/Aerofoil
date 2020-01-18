@@ -354,9 +354,9 @@ void KillMusic (void)
 	
 	if (dontLoadMusic)
 		return;
-	
-	theErr = DumpMusicSounds();
+
 	theErr = CloseMusicChannel();
+	theErr = DumpMusicSounds();
 	musicMutex->Destroy();
 }
 

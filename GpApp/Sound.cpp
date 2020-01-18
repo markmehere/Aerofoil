@@ -361,8 +361,8 @@ void KillSound (void)
 	if (dontLoadSounds)
 		return;
 	
-	DumpBufferSounds();
 	CloseSoundChannels();
+	DumpBufferSounds();
 }
 
 //--------------------------------------------------------------  SoundBytesNeeded
