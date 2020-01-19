@@ -61,12 +61,12 @@ namespace PortabilityLayer
 		m_applicationFont = FontFamily::Create();
 
 		if (m_systemFont)
-			m_systemFont->AddFont(FontFamilyFlag_None, "Fonts/Virtue/virtue.ttf", FontHacks_None);
+			m_systemFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", FontHacks_None);
 
 		if (m_applicationFont)
 		{
-			m_applicationFont->AddFont(FontFamilyFlag_None, "Fonts/Roboto/Roboto-Regular.ttf", FontHacks_Roboto);
-			m_applicationFont->AddFont(FontFamilyFlag_Bold, "Fonts/Roboto/Roboto-Bold.ttf", FontHacks_Roboto);
+			m_applicationFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-SemiBold.ttf", FontHacks_None);
+			m_applicationFont->AddFont(FontFamilyFlag_Bold, "Fonts/OpenSans/OpenSans-Bold.ttf", FontHacks_None);
 		}
 
 		memset(m_cachedRenderedFonts, 0, sizeof(m_cachedRenderedFonts));

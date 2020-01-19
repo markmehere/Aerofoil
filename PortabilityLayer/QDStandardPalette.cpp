@@ -83,6 +83,7 @@ namespace PortabilityLayer
 				for (unsigned int bs = 0; bs < 16; bs++)
 					m_lut[rs + (gs << 4) + (bs << 8)] = MapColorAnalyticTruncated(rs, gs, bs);
 
+#if 0
 		for (unsigned int i = 0; i < 256; i++)
 		{
 			unsigned int shortChannels[3] =
@@ -110,6 +111,10 @@ namespace PortabilityLayer
 				m_whiteAATable.m_aaTranslate[i][b] = MapColorAnalyticTruncated(whiteScale[0], whiteScale[1], whiteScale[2]);
 			}
 		}
+#else
+		m_blackAATable.GenerateForPalette(RGBAColor::Create(0, 0, 0, 255), m_colors, 256);
+		m_whiteAATable.GenerateForPalette(RGBAColor::Create(255, 255, 255, 255), m_colors, 256);
+#endif
 	}
 
 	const RGBAColor *StandardPalette::GetColors() const
