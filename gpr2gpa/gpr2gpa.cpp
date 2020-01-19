@@ -297,12 +297,15 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 	m_blitOrigin += m_pitchInElements;
 	const size_t planarSeparation = m_blitParams.m_planarSeparation;
 
+	const size_t firstSrcCol = static_cast<size_t>(m_blitParams.m_constrainedRegionLeft - m_blitParams.m_scanlineOriginX);
+
 	switch (m_blitSourceType)
 	{
 	case PortabilityLayer::QDPictBlitSourceType_1Bit:
 		for (size_t i = 0; i < rowSize; i++)
 		{
-			if (scanlineBytes[i / 8] & (0x80 >> (i & 7)))
+			const size_t originCol = i + firstSrcCol;
+			if (scanlineBytes[originCol / 8] & (0x80 >> (originCol & 7)))
 				outRowStart[i] = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
 			else
 				outRowStart[i] = PortabilityLayer::RGBAColor::Create(255, 255, 255, 255);
@@ -311,35 +314,40 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 	case PortabilityLayer::QDPictBlitSourceType_Indexed1Bit:
 		for (size_t i = 0; i < rowSize; i++)
 		{
-			const unsigned int colorIndex = (scanlineBytes[i / 8] >> (8 - ((i & 7) + 1) * 1)) & 1;
+			const size_t originCol = i + firstSrcCol;
+			const unsigned int colorIndex = (scanlineBytes[originCol / 8] >> (8 - ((originCol & 7) + 1) * 1)) & 1;
 			outRowStart[i] = m_blitParams.m_colors[colorIndex];
 		}
 		break;
 	case PortabilityLayer::QDPictBlitSourceType_Indexed2Bit:
 		for (size_t i = 0; i < rowSize; i++)
 		{
-			const unsigned int colorIndex = (scanlineBytes[i / 4] >> (8 - ((i & 3) + 1) * 2)) & 3;
+			const size_t originCol = i + firstSrcCol;
+			const unsigned int colorIndex = (scanlineBytes[originCol / 4] >> (8 - ((originCol & 3) + 1) * 2)) & 3;
 			outRowStart[i] = m_blitParams.m_colors[colorIndex];
 		}
 		break;
 	case PortabilityLayer::QDPictBlitSourceType_Indexed4Bit:
 		for (size_t i = 0; i < rowSize; i++)
 		{
-			const unsigned int colorIndex = (scanlineBytes[i / 2] >> (8 - ((i & 1) + 1) * 4)) & 15;
+			const size_t originCol = i + firstSrcCol;
+			const unsigned int colorIndex = (scanlineBytes[originCol / 2] >> (8 - ((originCol & 1) + 1) * 4)) & 15;
 			outRowStart[i] = m_blitParams.m_colors[colorIndex];
 		}
 		break;
 	case PortabilityLayer::QDPictBlitSourceType_Indexed8Bit:
 		for (size_t i = 0; i < rowSize; i++)
 		{
-			const unsigned int colorIndex = scanlineBytes[i];
+			const size_t originCol = i + firstSrcCol;
+			const unsigned int colorIndex = scanlineBytes[originCol];
 			outRowStart[i] = m_blitParams.m_colors[colorIndex];
 		}
 		break;
 	case PortabilityLayer::QDPictBlitSourceType_RGB15:
 		for (size_t i = 0; i < rowSize; i++)
 		{
-			const uint16_t item = *reinterpret_cast<const uint16_t*>(scanlineBytes + i * 2);
+			const size_t originCol = i + firstSrcCol;
+			const uint16_t item = *reinterpret_cast<const uint16_t*>(scanlineBytes + originCol * 2);
 			PortabilityLayer::RGBAColor &outputItem = outRowStart[i];
 
 			outputItem.b = FiveToEight(item & 0x1f);
@@ -351,22 +359,24 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 	case PortabilityLayer::QDPictBlitSourceType_RGB24_Interleaved:
 		for (size_t i = 0; i < rowSize; i++)
 		{
+			const size_t originCol = i + firstSrcCol;
 			PortabilityLayer::RGBAColor &outputItem = outRowStart[i];
 
-			outputItem.r = scanlineBytes[i * 3 + 0];
-			outputItem.g = scanlineBytes[i * 3 + 1];
-			outputItem.b = scanlineBytes[i * 3 + 2];
+			outputItem.r = scanlineBytes[originCol * 3 + 0];
+			outputItem.g = scanlineBytes[originCol * 3 + 1];
+			outputItem.b = scanlineBytes[originCol * 3 + 2];
 			outputItem.a = 255;
 		}
 		break;
 	case PortabilityLayer::QDPictBlitSourceType_RGB24_Multiplane:
 		for (size_t i = 0; i < rowSize; i++)
 		{
+			const size_t originCol = i + firstSrcCol;
 			PortabilityLayer::RGBAColor &outputItem = outRowStart[i];
 
-			outputItem.r = scanlineBytes[i];
-			outputItem.g = scanlineBytes[i + planarSeparation];
-			outputItem.b = scanlineBytes[i + planarSeparation * 2];
+			outputItem.r = scanlineBytes[originCol];
+			outputItem.g = scanlineBytes[originCol + planarSeparation];
+			outputItem.b = scanlineBytes[originCol + planarSeparation * 2];
 			outputItem.a = 255;
 		}
 		break;
@@ -731,6 +741,7 @@ int main(int argc, const char **argv)
 	std::vector<PlannedEntry> contents;
 
 	const PortabilityLayer::ResTypeID pictTypeID = PortabilityLayer::ResTypeID('PICT');
+	const PortabilityLayer::ResTypeID dateTypeID = PortabilityLayer::ResTypeID('Date');
 	const PortabilityLayer::ResTypeID sndTypeID = PortabilityLayer::ResTypeID('snd ');
 
 	for (size_t tlIndex = 0; tlIndex < typeListCount; tlIndex++)
@@ -758,8 +769,7 @@ int main(int argc, const char **argv)
 			const void *resData = res.m_resData;
 			const size_t resSize = res.GetSize();
 
-#if 0
-			if (typeList.m_resType == pictTypeID)
+			if (typeList.m_resType == pictTypeID || typeList.m_resType == dateTypeID)
 			{
 				PlannedEntry entry;
 				char resName[256];
@@ -770,9 +780,7 @@ int main(int argc, const char **argv)
 				if (ImportPICT(entry.m_contents, resData, resSize))
 					contents.push_back(entry);
 			}
-			else
-#endif
-			if (typeList.m_resType == sndTypeID)
+			else if (typeList.m_resType == sndTypeID)
 			{
 				PlannedEntry entry;
 				char resName[256];

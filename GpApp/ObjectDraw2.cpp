@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "BitmapImage.h"
 #include "PLResources.h"
 #include "PLTextUtils.h"
 #include "PLPasStr.h"
@@ -1043,11 +1043,11 @@ void DrawWallWindow (Rect *window)
 
 void DrawCalendar (Rect *theRect)
 {
-	DateTimeRec	timeRec;
-	Rect		bounds;
-	THandle<Picture>	thePicture;
-	Str255		monthStr;
-	DrawSurface	*wasCPort;
+	DateTimeRec				timeRec;
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
+	Str255					monthStr;
+	DrawSurface				*wasCPort;
 	
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
@@ -1056,7 +1056,7 @@ void DrawCalendar (Rect *theRect)
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
-	bounds = (*thePicture)->picFrame.ToRect();
+	bounds = (*thePicture)->GetRect();
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, theRect->left, theRect->top);
 	backSrcMap->DrawPicture(thePicture, bounds);
@@ -1075,14 +1075,14 @@ void DrawCalendar (Rect *theRect)
 
 void DrawBulletin (Rect *theRect)
 {
-	Rect		bounds;
-	THandle<Picture>	thePicture;
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
 	
 	thePicture = GetPicture(kBulletinPictID);
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
-	bounds = (*thePicture)->picFrame.ToRect();
+	bounds = (*thePicture)->GetRect();
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, theRect->left, theRect->top);
 	backSrcMap->DrawPicture(thePicture, bounds);
@@ -1093,9 +1093,9 @@ void DrawBulletin (Rect *theRect)
 
 void DrawPictObject (short what, Rect *theRect)
 {
-	Rect		bounds;
-	THandle<Picture>	thePicture;
-	short		pictID;
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
+	short					pictID;
 		
 	switch (what)
 	{

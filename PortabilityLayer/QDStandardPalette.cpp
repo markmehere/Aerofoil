@@ -119,9 +119,9 @@ namespace PortabilityLayer
 
 	uint8_t StandardPalette::MapColorAnalyticTruncated(unsigned int r, unsigned int g, unsigned int b)
 	{
-		if (g <= 1 && g <= 1)
+		if (g <= 1 && b <= 1)
 		{
-			if (b <= 1)
+			if (r <= 1)
 			{
 				// Special case low gray scale
 				return 255 - b;

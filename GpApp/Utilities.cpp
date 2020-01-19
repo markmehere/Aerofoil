@@ -12,6 +12,7 @@
 #include "PLSound.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
+#include "BitmapImage.h"
 #include "Externs.h"
 #include "IconLoader.h"
 #include "InputManager.h"
@@ -251,14 +252,14 @@ void KillOffScreenBitMap (GrafPtr offScreen)
 
 void LoadGraphic (DrawSurface *surface, short resID)
 {
-	Rect		bounds;
-	THandle<Picture>	thePicture;
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
-	bounds = (*thePicture)->picFrame.ToRect();
+	bounds = (*thePicture)->GetRect();
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	surface->DrawPicture(thePicture, bounds);
 	
@@ -272,7 +273,7 @@ void LoadGraphic (DrawSurface *surface, short resID)
 
 void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 {
-	THandle<Picture>	thePicture;
+	THandle<BitmapImage>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)

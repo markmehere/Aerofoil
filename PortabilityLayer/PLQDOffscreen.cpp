@@ -36,9 +36,9 @@ PixMapHandle GetGWorldPixMap(DrawSurface *gworld)
 	return gworld->m_port.GetPixMap();
 }
 
-THandle<Picture> GetPicture(short resID)
+THandle<BitmapImage> GetPicture(short resID)
 {
-	return PortabilityLayer::ResourceManager::GetInstance()->GetResource('PICT', resID).StaticCast<Picture>();
+	return PortabilityLayer::ResourceManager::GetInstance()->GetResource('PICT', resID).StaticCast<BitmapImage>();
 }
 
 void OffsetRect(Rect *rect, int right, int down)

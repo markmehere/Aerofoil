@@ -1,6 +1,7 @@
 #include "PLQDraw.h"
 #include "QDManager.h"
 #include "QDState.h"
+#include "BitmapImage.h"
 #include "DisplayDeviceManager.h"
 #include "FontFamily.h"
 #include "FontManager.h"
@@ -22,231 +23,14 @@
 #include "ScanlineMaskIterator.h"
 #include "QDGraf.h"
 #include "QDStandardPalette.h"
-#include "QDPictEmitContext.h"
-#include "QDPictEmitScanlineParameters.h"
 #include "WindowManager.h"
 #include "QDGraf.h"
-#include "QDPictDecoder.h"
 #include "QDPixMap.h"
 #include "Vec2i.h"
 
 #include <algorithm>
 #include <assert.h>
 
-
-namespace PortabilityLayer
-{
-	class PixMapBlitEmitter final : public QDPictEmitContext
-	{
-	public:
-		PixMapBlitEmitter(const Vec2i &drawOrigin, PixMapImpl *pixMap);
-		~PixMapBlitEmitter();
-
-		bool SpecifyFrame(const Rect &rect) override;
-		Rect ConstrainRegion(const Rect &rect) const override;
-		void Start(QDPictBlitSourceType sourceType, const QDPictEmitScanlineParameters &params) override;
-		void BlitScanlineAndAdvance(const void *) override;
-		bool AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size) override;
-
-	private:
-		PixMapImpl *m_pixMap;
-		Vec2i m_drawOrigin;
-		uint8_t *m_tempBuffer;
-		Rect m_specFrame;
-
-		QDPictBlitSourceType m_blitType;
-		QDPictEmitScanlineParameters m_params;
-
-		size_t m_constraintRegionWidth;
-		size_t m_constraintRegionStartIndex;
-		size_t m_constraintRegionEndIndex;
-		size_t m_outputIndexStart;
-
-		uint8_t m_paletteMap[256];
-		bool m_sourceAndDestPalettesAreSame;
-	};
-
-	PixMapBlitEmitter::PixMapBlitEmitter(const Vec2i &drawOrigin, PixMapImpl *pixMap)
-		: m_pixMap(pixMap)
-		, m_drawOrigin(drawOrigin)
-		, m_tempBuffer(nullptr)
-		, m_sourceAndDestPalettesAreSame(false)
-	{
-	}
-
-	PixMapBlitEmitter::~PixMapBlitEmitter()
-	{
-		if (m_tempBuffer)
-			PortabilityLayer::MemoryManager::GetInstance()->Release(m_tempBuffer);
-	}
-
-	bool PixMapBlitEmitter::SpecifyFrame(const Rect &rect)
-	{
-		m_specFrame = rect;
-		return true;
-	}
-
-	Rect PixMapBlitEmitter::ConstrainRegion(const Rect &rect) const
-	{
-		const Rect pixMapRect = m_pixMap->m_rect;
-
-		const Rect2i rectInDrawSpace = Rect2i(rect) + m_drawOrigin;
-
-		const Rect2i constrainedRectInDrawSpace = rectInDrawSpace.Intersect(Rect2i(pixMapRect));
-
-		// If this got completely culled away, return an empty rect, but avoid int truncation
-		if (!constrainedRectInDrawSpace.IsValid())
-			return Rect::Create(rect.top, rect.left, rect.top, rect.left);
-
-		// Otherwise, it should still be valid in the picture space
-		const Rect2i constrainedRectInPictSpace = constrainedRectInDrawSpace - m_drawOrigin;
-		return constrainedRectInPictSpace.ToShortRect();
-	}
-
-	void PixMapBlitEmitter::Start(QDPictBlitSourceType sourceType, const QDPictEmitScanlineParameters &params)
-	{
-		// FIXME: Detect different system palette (if we ever do that)
-		if (QDPictBlitSourceType_IsIndexed(sourceType))
-		{
-			if (params.m_numColors == 256 && !memcmp(params.m_colors, StandardPalette::GetInstance()->GetColors(), sizeof(RGBAColor) * 256))
-				m_sourceAndDestPalettesAreSame = true;
-			else
-			{
-				assert(false);
-			}
-		}
-
-		m_blitType = sourceType;
-		m_params = params;
-
-		m_constraintRegionWidth = params.m_constrainedRegionRight - params.m_constrainedRegionLeft;
-		m_constraintRegionStartIndex = params.m_constrainedRegionLeft - params.m_scanlineOriginX;
-		m_constraintRegionEndIndex = params.m_constrainedRegionRight - params.m_scanlineOriginX;
-
-		const size_t firstCol = params.m_constrainedRegionLeft + m_drawOrigin.m_x - m_pixMap->m_rect.left;
-		const size_t firstRow = params.m_firstY + m_drawOrigin.m_y - m_pixMap->m_rect.top;
-
-		m_outputIndexStart = firstRow * m_pixMap->GetPitch() + firstCol;
-	}
-
-	void PixMapBlitEmitter::BlitScanlineAndAdvance(const void *data)
-	{
-		const int32_t crRight = m_params.m_constrainedRegionRight;
-		const int32_t crLeft = m_params.m_constrainedRegionLeft;
-		const size_t constraintRegionStartIndex = m_constraintRegionStartIndex;
-		const uint8_t *dataBytes = static_cast<const uint8_t*>(data);
-		const size_t outputIndexStart = m_outputIndexStart;
-		const size_t planarSeparation = m_params.m_planarSeparation;
-		const size_t constraintRegionWidth = m_constraintRegionWidth;
-
-		const uint8_t *paletteMapping = nullptr;
-
-		const uint8_t staticMapping1Bit[] = { 0, 255 };
-
-		void *imageData = m_pixMap->GetPixelData();
-
-		if (m_pixMap->GetPixelFormat() == GpPixelFormats::k8BitStandard || m_pixMap->GetPixelFormat() == GpPixelFormats::kBW1)
-		{
-			switch (m_blitType)
-			{
-			case QDPictBlitSourceType_Indexed1Bit:
-				for (size_t i = 0; i < constraintRegionWidth; i++)
-				{
-					const size_t itemIndex = i + constraintRegionStartIndex;
-
-					const int bitShift = 7 - (itemIndex & 7);
-					const int colorIndex = (dataBytes[itemIndex / 8] >> bitShift) & 0x1;
-					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
-				}
-				break;
-			case QDPictBlitSourceType_Indexed2Bit:
-				for (size_t i = 0; i < constraintRegionWidth; i++)
-				{
-					const size_t itemIndex = i + constraintRegionStartIndex;
-
-					const int bitShift = 6 - (2 * (itemIndex & 1));
-					const int colorIndex = (dataBytes[itemIndex / 4] >> bitShift) & 0x3;
-					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
-				}
-				break;
-			case QDPictBlitSourceType_Indexed4Bit:
-				for (size_t i = 0; i < constraintRegionWidth; i++)
-				{
-					const size_t itemIndex = i + constraintRegionStartIndex;
-
-					const int bitShift = 4 - (4 * (itemIndex & 1));
-					const int colorIndex = (dataBytes[itemIndex / 2] >> bitShift) & 0xf;
-					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
-				}
-				break;
-			case QDPictBlitSourceType_Indexed8Bit:
-				if (m_sourceAndDestPalettesAreSame)
-					memcpy(static_cast<uint8_t*>(imageData) + outputIndexStart, dataBytes + constraintRegionStartIndex, m_constraintRegionWidth);
-				else
-				{
-					for (size_t i = 0; i < constraintRegionWidth; i++)
-					{
-						const size_t itemIndex = i + constraintRegionStartIndex;
-						const uint8_t colorIndex = dataBytes[itemIndex];
-						static_cast<uint8_t*>(imageData)[i + outputIndexStart] = paletteMapping[colorIndex];
-					}
-				}
-				break;
-			case QDPictBlitSourceType_1Bit:
-				for (size_t i = 0; i < constraintRegionWidth; i++)
-				{
-					const size_t itemIndex = i + constraintRegionStartIndex;
-
-					const int bitShift = 7 - (itemIndex & 7);
-					const int colorIndex = (dataBytes[itemIndex / 8] >> bitShift) & 0x1;
-					static_cast<uint8_t*>(imageData)[i + outputIndexStart] = staticMapping1Bit[colorIndex];
-				}
-				break;
-			case QDPictBlitSourceType_RGB15:
-				for (size_t i = 0; i < constraintRegionWidth; i++)
-				{
-					const size_t itemIndex = i + constraintRegionStartIndex;
-
-					const uint16_t item = *reinterpret_cast<const uint16_t*>(dataBytes + itemIndex * 2);
-					uint8_t &outputItem = static_cast<uint8_t*>(imageData)[i + outputIndexStart];
-
-					outputItem = StandardPalette::GetInstance()->MapColorLUT((item >> 1) & 0xf, (item >> 6) & 0xf, (item >> 11) & 0x1f);
-				}
-				break;
-			case QDPictBlitSourceType_RGB24_Multiplane:
-				for (size_t i = 0; i < m_constraintRegionWidth; i++)
-				{
-					const size_t itemIndex = i + constraintRegionStartIndex;
-
-					uint8_t &outputItem = static_cast<uint8_t*>(imageData)[i + outputIndexStart];
-
-					const uint8_t r = dataBytes[itemIndex];
-					const uint8_t g = dataBytes[itemIndex + planarSeparation];
-					const uint8_t b = dataBytes[itemIndex + planarSeparation * 2];
-
-					outputItem = StandardPalette::GetInstance()->MapColorLUT(r, g, b);
-				}
-				break;
-			default:
-				assert(false);
-			}
-		}
-
-		m_outputIndexStart += m_pixMap->GetPitch();
-	}
-
-	bool PixMapBlitEmitter::AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size)
-	{
-		m_tempBuffer = static_cast<uint8_t*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(buffer1Size + buffer2Size));
-		if (!m_tempBuffer)
-			return false;
-
-		buffer1 = m_tempBuffer;
-		buffer2 = m_tempBuffer + buffer1Size;
-
-		return true;
-	}
-}
 
 void GetPort(GrafPtr *graf)
 {
@@ -820,7 +604,7 @@ int32_t DrawSurface::MeasureFontLineGap()
 	return rfont->GetMetrics().m_linegap;
 }
 
-void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
+void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 {
 	if (!pictHdl)
 		return;
@@ -828,11 +612,15 @@ void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
 	if (!bounds.IsValid() || bounds.Width() == 0 || bounds.Height() == 0)
 		return;
 
-	Picture *picPtr = *pictHdl;
-	if (!picPtr)
+	BitmapImage *bmpPtr = *pictHdl;
+	if (!bmpPtr)
 		return;
 
-	const Rect picRect = picPtr->picFrame.ToRect();
+	const size_t bmpSize = bmpPtr->m_fileHeader.m_fileSize;
+	const Rect picRect = bmpPtr->GetRect();
+
+	if (picRect.Width() == 0 || picRect.Height() == 0)
+		return;
 
 	if (bounds.right - bounds.left != picRect.right - picRect.left || bounds.bottom - bounds.top != picRect.bottom - picRect.top)
 	{
@@ -868,20 +656,245 @@ void DrawSurface::DrawPicture(THandle<Picture> pictHdl, const Rect &bounds)
 	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*port->GetPixMap());
 
 	long handleSize = pictHdl.MMBlock()->m_size;
-	PortabilityLayer::MemReaderStream stream(picPtr, handleSize);
+	PortabilityLayer::MemReaderStream stream(bmpPtr, handleSize);
 
 	// Adjust draw origin
-	const PortabilityLayer::Vec2i drawOrigin = PortabilityLayer::Vec2i(bounds.left - picPtr->picFrame.left, bounds.top - picPtr->picFrame.top);
+	const PortabilityLayer::Vec2i drawOrigin = PortabilityLayer::Vec2i(bounds.left, bounds.top);
+	const Rect targetPixMapRect = pixMap->m_rect;
 
-	switch (pixMap->GetPixelFormat())
+	const int32_t truncatedTop = std::max<int32_t>(0, targetPixMapRect.top - bounds.top);
+	const int32_t truncatedBottom = std::max<int32_t>(0, bounds.bottom - targetPixMapRect.bottom);
+	const int32_t truncatedLeft = std::max<int32_t>(0, targetPixMapRect.left - bounds.left);
+	const int32_t truncatedRight = std::max<int32_t>(0, bounds.right - targetPixMapRect.right);
+
+	uint8_t paletteMapping[256];
+	for (int i = 0; i < 256; i++)
+		paletteMapping[i] = 0;
+
+	// Parse bitmap header
+	const uint8_t *bmpBytes = reinterpret_cast<const uint8_t*>(bmpPtr);
+
+	PortabilityLayer::BitmapFileHeader fileHeader;
+	PortabilityLayer::BitmapInfoHeader infoHeader;
+
+	memcpy(&fileHeader, bmpBytes, sizeof(fileHeader));
+	memcpy(&infoHeader, bmpBytes + sizeof(fileHeader), sizeof(infoHeader));
+
+	const uint16_t bpp = infoHeader.m_bitsPerPixel;
+
+	if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 16 && bpp != 24)
+		return;
+
+	const uint32_t numColors = infoHeader.m_numColors;
+	if (numColors > 256)
+		return;
+
+	const uint8_t *ctabLoc = bmpBytes + sizeof(fileHeader) + infoHeader.m_thisStructureSize;
+
+	const size_t ctabSize = infoHeader.m_numColors * sizeof(PortabilityLayer::BitmapColorTableEntry);
+	const size_t availCTabBytes = bmpSize - sizeof(fileHeader) - infoHeader.m_thisStructureSize;
+
+	if (ctabSize > availCTabBytes)
+		return;
+
+	if (bpp <= 8)
+	{
+		// Perform palette mapping
+		if (pixMap->GetPixelFormat() == GpPixelFormats::kBW1)
+		{
+			const PortabilityLayer::BitmapColorTableEntry *ctab = reinterpret_cast<const PortabilityLayer::BitmapColorTableEntry*>(ctabLoc);
+			for (size_t i = 0; i < numColors; i++)
+			{
+				const PortabilityLayer::BitmapColorTableEntry &ctabEntry = ctab[i];
+				if (ctabEntry.m_r + ctabEntry.m_g + ctabEntry.m_b < 383)
+					paletteMapping[i] = 255;
+				else
+					paletteMapping[i] = 0;
+			}
+		}
+		else if (pixMap->GetPixelFormat() == GpPixelFormats::k8BitStandard)
+		{
+			const PortabilityLayer::BitmapColorTableEntry *ctab = reinterpret_cast<const PortabilityLayer::BitmapColorTableEntry*>(ctabLoc);
+			for (size_t i = 0; i < numColors; i++)
+			{
+				const PortabilityLayer::BitmapColorTableEntry &ctabEntry = ctab[i];
+				paletteMapping[i] = PortabilityLayer::StandardPalette::GetInstance()->MapColorLUT(PortabilityLayer::RGBAColor::Create(ctabEntry.m_r, ctabEntry.m_g, ctabEntry.m_b, 255));
+				const PortabilityLayer::RGBAColor &resultColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[paletteMapping[i]];
+			}
+		}
+		else
+		{
+			PL_NotYetImplemented();
+		}
+	}
+
+	const uint32_t imageDataOffset = fileHeader.m_imageDataStart;
+
+	if (imageDataOffset > bmpSize)
+		return;
+
+	const size_t availImageDataSize = bmpSize - imageDataOffset;
+
+	const size_t sourcePitch = (bpp * infoHeader.m_width + 31) / 32 * 4;
+	const size_t inDataSize = sourcePitch * infoHeader.m_height;
+
+	if (inDataSize > availImageDataSize)
+		return;
+
+	const uint8_t *imageDataStart = reinterpret_cast<const uint8_t*>(bmpPtr) + imageDataOffset;
+	const uint8_t *sourceFirstImageRowStart = imageDataStart + (infoHeader.m_height - 1) * sourcePitch;
+
+	// Determine rect
+	const PortabilityLayer::Rect2i sourceRect = PortabilityLayer::Rect2i(truncatedTop, truncatedLeft, static_cast<int32_t>(infoHeader.m_height) - truncatedBottom, static_cast<int32_t>(infoHeader.m_width) - truncatedRight);
+
+	if (sourceRect.m_topLeft.m_x >= sourceRect.m_bottomRight.m_x || sourceRect.m_topLeft.m_y >= sourceRect.m_bottomRight.m_y)
+		return;	// Entire rect was culled away
+
+	const uint32_t numCopyRows = static_cast<uint32_t>(sourceRect.m_bottomRight.m_y - sourceRect.m_topLeft.m_y);
+	const uint32_t numCopyCols = static_cast<uint32_t>(sourceRect.m_bottomRight.m_x - sourceRect.m_topLeft.m_x);
+
+	const uint8_t *firstSourceRow = sourceFirstImageRowStart - static_cast<uint32_t>(sourceRect.m_topLeft.m_y) * sourcePitch;
+	int32_t firstSourceCol = sourceRect.m_topLeft.m_x;
+
+	const size_t destPitch = pixMap->GetPitch();
+	uint8_t *firstDestRow = static_cast<uint8_t*>(pixMap->GetPixelData()) + destPitch * static_cast<uint32_t>(drawOrigin.m_y + truncatedTop);
+	size_t firstDestCol = static_cast<uint32_t>(drawOrigin.m_x + truncatedLeft);
+
+	const PortabilityLayer::StandardPalette *stdPalette = PortabilityLayer::StandardPalette::GetInstance();
+
+	GpPixelFormat_t destFormat = pixMap->GetPixelFormat();
+	switch (destFormat)
 	{
 	case GpPixelFormats::kBW1:
 	case GpPixelFormats::k8BitStandard:
 	{
-		PortabilityLayer::PixMapBlitEmitter blitEmitter(drawOrigin, pixMap);
-		PortabilityLayer::QDPictDecoder decoder;
+		const uint8_t *currentSourceRow = firstSourceRow;
+		uint8_t *currentDestRow = firstDestRow;
+		for (uint32_t row = 0; row < numCopyRows; row++)
+		{
+			assert(currentSourceRow >= imageDataStart && currentSourceRow <= imageDataStart + inDataSize);
 
-		decoder.DecodePict(&stream, &blitEmitter);
+			if (bpp == 1)
+			{
+				for (size_t col = 0; col < numCopyCols; col++)
+				{
+					const size_t srcColIndex = col + firstSourceCol;
+					const size_t destColIndex = col + firstDestCol;
+
+					const unsigned int srcIndex = (currentSourceRow[srcColIndex / 8] >> (8 - ((srcColIndex & 7) + 1))) & 0x01;
+					currentDestRow[destColIndex] = paletteMapping[srcIndex];
+				}
+			}
+			else if (bpp == 4)
+			{
+				for (size_t col = 0; col < numCopyCols; col++)
+				{
+					const size_t srcColIndex = col + firstSourceCol;
+					const size_t destColIndex = col + firstDestCol;
+
+					const unsigned int srcIndex = (currentSourceRow[srcColIndex / 2] >> (8 - ((srcColIndex & 1) + 1) * 4)) & 0x0f;
+					currentDestRow[destColIndex] = paletteMapping[srcIndex];
+				}
+			}
+			else if (bpp == 8)
+			{
+				for (size_t col = 0; col < numCopyCols; col++)
+				{
+					const size_t srcColIndex = col + firstSourceCol;
+					const size_t destColIndex = col + firstDestCol;
+
+					const unsigned int srcIndex = currentSourceRow[srcColIndex];
+					currentDestRow[destColIndex] = paletteMapping[srcIndex];
+				}
+			}
+			else if (bpp == 16)
+			{
+				if (destFormat == GpPixelFormats::kBW1)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
+						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+
+						const unsigned int combinedValue = srcLow | (srcHigh << 8);
+						const unsigned int b = (srcLow & 0x1f);
+						const unsigned int g = ((srcLow >> 5) & 0x1f);
+						const unsigned int r = ((srcLow >> 10) & 0x1f);
+
+						if (r + g + b > 46)
+							currentDestRow[destColIndex] = 0;
+						else
+							currentDestRow[destColIndex] = 1;
+					}
+				}
+				else
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
+						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+
+						const unsigned int combinedValue = srcLow | (srcHigh << 8);
+						const unsigned int b = (srcLow & 0x1f);
+						const unsigned int g = ((srcLow >> 5) & 0x1f);
+						const unsigned int r = ((srcLow >> 10) & 0x1f);
+
+						const unsigned int xr = (r << 5) | (r >> 2);
+						const unsigned int xg = (g << 5) | (g >> 2);
+						const unsigned int xb = (b << 5) | (b >> 2);
+
+						currentDestRow[destColIndex] = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(xr, xg, xb, 255));
+					}
+				}
+			}
+			else if (bpp == 24)
+			{
+				if (destFormat == GpPixelFormats::kBW1)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
+						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+
+						const unsigned int combinedValue = srcLow | (srcHigh << 8);
+						const unsigned int b = (srcLow & 0x1f);
+						const unsigned int g = ((srcLow >> 5) & 0x1f);
+						const unsigned int r = ((srcLow >> 10) & 0x1f);
+
+						if (r + g + b > 46)
+							currentDestRow[destColIndex] = 0;
+						else
+							currentDestRow[destColIndex] = 1;
+					}
+				}
+				else
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const unsigned int b = currentSourceRow[srcColIndex * 3 + 0];
+						const unsigned int g = currentSourceRow[srcColIndex * 3 + 1];
+						const unsigned int r = currentSourceRow[srcColIndex * 3 + 2];
+
+						currentDestRow[destColIndex] = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(r, g, b, 255));
+					}
+				}
+			}
+
+			currentSourceRow -= sourcePitch;
+			currentDestRow += destPitch;
+		}
 	}
 	break;
 	default:

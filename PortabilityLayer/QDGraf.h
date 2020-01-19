@@ -16,7 +16,7 @@ namespace PortabilityLayer
 }
 
 struct PixMap;
-struct Picture;
+struct BitmapImage;
 struct Point;
 struct Rect;
 struct IGpDisplayDriver;
@@ -88,7 +88,7 @@ struct DrawSurface final
 	int32_t MeasureFontAscender();
 	int32_t MeasureFontLineGap();
 
-	void DrawPicture(THandle<Picture> pictHandle, const Rect &rect);
+	void DrawPicture(THandle<BitmapImage> pictHandle, const Rect &rect);
 
 	void SetPattern8x8(const uint8_t *pattern);
 	void ClearPattern();
@@ -97,8 +97,6 @@ struct DrawSurface final
 
 	Rect GetClipRect() const;
 	void SetClipRect(const Rect &rect);
-
-	void RegenerateAATable(const PortabilityLayer::RGBAColor &color, const PortabilityLayer::RGBAColor *paletteColors, size_t numColors);
 
 	// Must be the first item
 	PortabilityLayer::QDPort m_port;

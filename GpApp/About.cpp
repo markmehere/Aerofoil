@@ -97,7 +97,7 @@ void DoAbout (void)
 static void HiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTHiLit		151		// res ID of unhilit button PICT
-	THandle<Picture>	thePict;
+	THandle<BitmapImage>	thePict;
 	
 	if (!okayButtIsHiLit)
 	{
@@ -119,7 +119,7 @@ static void HiLiteOkayButton (DrawSurface *surface)
 static void UnHiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTNotHiLit	150		// res ID of hilit button PICT
-	THandle<Picture>	thePict;
+	THandle<BitmapImage>	thePict;
 	
 	if (okayButtIsHiLit)
 	{

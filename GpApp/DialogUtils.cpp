@@ -679,7 +679,7 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 
 void LoadDialogPICT (Dialog *theDialog, short item, short theID)
 {
-	THandle<Picture>		thePict;
+	THandle<BitmapImage>	thePict;
 
 	Rect			iRect = theDialog->GetItems()[item - 1].GetWidget()->GetRect();;
 

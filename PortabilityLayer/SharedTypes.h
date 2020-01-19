@@ -5,6 +5,8 @@
 #include "PLBigEndian.h"
 #include "RGBAColor.h"
 
+struct BitmapImage;
+
 struct Point
 {
 	int16_t v;
@@ -61,13 +63,6 @@ struct BERegion
 {
 	BEUInt16_t recordSize;
 	BERect rect;
-};
-
-struct Picture
-{
-	uint8_t sizeLowBytes[2];	// Low-order bytes of size, deprecated
-
-	BERect picFrame;
 };
 
 struct BEBitMap

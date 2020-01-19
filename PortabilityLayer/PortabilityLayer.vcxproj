@@ -141,6 +141,7 @@
     <ClInclude Include="AntiAliasTable.h" />
     <ClInclude Include="BinarySearch.h" />
     <ClInclude Include="BinHex4.h" />
+    <ClInclude Include="BitmapImage.h" />
     <ClInclude Include="BMPFormat.h" />
     <ClInclude Include="BytePack.h" />
     <ClInclude Include="ByteSwap.h" />
@@ -292,6 +293,7 @@
     <ClCompile Include="AEManager.cpp" />
     <ClCompile Include="AntiAliasTable.cpp" />
     <ClCompile Include="BinHex4.cpp" />
+    <ClCompile Include="BitmapImage.cpp" />
     <ClCompile Include="ByteSwap.cpp" />
     <ClCompile Include="CFileStream.cpp" />
     <ClCompile Include="DeflateCodec.cpp" />

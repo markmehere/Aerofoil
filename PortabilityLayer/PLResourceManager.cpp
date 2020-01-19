@@ -18,6 +18,7 @@
 #include "VirtualDirectory.h"
 #include "WaveFormat.h"
 #include "ZipFileProxy.h"
+#include "ZipFile.h"
 
 #include <vector>
 
@@ -35,8 +36,8 @@ typedef ResourceValidationRules::ResourceValidationRule ResourceValidationRule_t
 
 namespace
 {
-	// Validation is only intended to validate enough of the file structure that constrained validation can be performed
-	// without needing to pass the file size
+	// Validation here is only intended to be minimal, to ensure later checks can determine the format size and do certain operations
+	// that must be valid.
 	static bool ValidateResource(const void *res, size_t size, ResourceValidationRule_t validationRule)
 	{
 		switch (validationRule)
@@ -57,12 +58,25 @@ namespace
 
 		case ResourceValidationRules::kBMP:
 			{
-				if (size < sizeof(PortabilityLayer::BitmapFileHeader))
+				if (size < sizeof(PortabilityLayer::BitmapFileHeader) + sizeof(PortabilityLayer::BitmapInfoHeader))
 					return false;
 
 				PortabilityLayer::BitmapFileHeader mainHeader;
 				memcpy(&mainHeader, res, sizeof(mainHeader));
 				if (mainHeader.m_fileSize > size)
+					return false;
+
+				PortabilityLayer::BitmapInfoHeader infoHeader;
+				memcpy(&infoHeader, static_cast<const uint8_t*>(res) + sizeof(mainHeader), sizeof(infoHeader));
+				if (infoHeader.m_thisStructureSize < sizeof(PortabilityLayer::BitmapInfoHeader))
+					return false;
+
+				const size_t sizeForInfoHeader = size - sizeof(PortabilityLayer::BitmapFileHeader);
+				if (infoHeader.m_thisStructureSize > sizeForInfoHeader)
+					return false;
+
+				// Dimensions need to fit in 16-bit signed space
+				if (infoHeader.m_width >= 0x8000 || infoHeader.m_height >= 0x8000)
 					return false;
 
 				return true;
@@ -72,6 +86,8 @@ namespace
 		default:
 			break;
 		};
+
+		return false;
 	}
 }
 
@@ -289,17 +305,22 @@ namespace PortabilityLayer
 
 	PLError_t ResourceManagerImpl::CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename)
 	{
-		const uint8_t blankResFileData[] = {
-			0, 0, 0, 16, 0, 0,  0, 16, 0, 0,  0, 0,  0,   0,  0, 30,
-			0, 0, 0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0,   0,  0, 0,
-			0, 0, 0, 0,  0, 0,  0, 0,  0, 28, 0, 30, 255, 255 };
-
 		PortabilityLayer::IOStream *stream = nullptr;
 		PLError_t error = FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Write, true, GpFileCreationDispositions::kCreateOrOverwrite, stream);
 		if (error)
 			return error;
 
-		if (stream->Write(blankResFileData, sizeof(blankResFileData)) != sizeof(blankResFileData))
+		PortabilityLayer::ZipEndOfCentralDirectoryRecord eocd;
+		eocd.m_signature = PortabilityLayer::ZipEndOfCentralDirectoryRecord::kSignature;
+		eocd.m_thisDiskNumber = 0;
+		eocd.m_centralDirDisk = 0;
+		eocd.m_numCentralDirRecordsThisDisk = 0;
+		eocd.m_numCentralDirRecords = 0;
+		eocd.m_centralDirectorySizeBytes = 0;
+		eocd.m_centralDirStartOffset = 0;
+		eocd.m_commentLength = 0;
+
+		if (stream->Write(&eocd, sizeof(eocd)) != sizeof(eocd))
 		{
 			stream->Close();
 			return PLErrors::kIOError;
@@ -347,12 +368,16 @@ namespace PortabilityLayer
 
 		size_t numFiles = zipFileProxy->NumFiles();
 
-		ResourceArchiveRef *refs = static_cast<ResourceArchiveRef*>(mm->Alloc(sizeof(ResourceArchiveRef) * numFiles));
-		if (!refs)
-			return nullptr;
+		ResourceArchiveRef *refs = nullptr;
+		if (numFiles > 0)
+		{
+			refs = static_cast<ResourceArchiveRef*>(mm->Alloc(sizeof(ResourceArchiveRef) * numFiles));
+			if (!refs)
+				return nullptr;
 
-		for (size_t i = 0; i < numFiles; i++)
-			new (refs + i) ResourceArchiveRef();
+			for (size_t i = 0; i < numFiles; i++)
+				new (refs + i) ResourceArchiveRef();
+		}
 
 		void *storage = mm->Alloc(sizeof(ResourceArchive));
 		if (!storage)
@@ -379,6 +404,11 @@ namespace PortabilityLayer
 		{
 			extension = ".wav";
 			validationRule = ResourceValidationRules::kWAV;
+		}
+		else if (resTypeID == ResTypeID('Date') || resTypeID == ResTypeID('PICT'))
+		{
+			extension = ".bmp";
+			validationRule = ResourceValidationRules::kBMP;
 		}
 
 		char resourceFile[64];

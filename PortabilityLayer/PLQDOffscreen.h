@@ -22,7 +22,7 @@ void DisposeGWorld(DrawSurface *gworld);
 
 PixMapHandle GetGWorldPixMap(DrawSurface *gworld);
 
-THandle<Picture> GetPicture(short resID);
+THandle<BitmapImage> GetPicture(short resID);
 
 void OffsetRect(Rect *rect, int right, int down);
 

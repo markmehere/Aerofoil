@@ -12,6 +12,7 @@
 #include "MainWindow.h"
 #include "RectUtils.h"
 #include "Room.h"
+#include "BitmapImage.h"
 
 
 #define kManholeThruFloor		3957
@@ -131,12 +132,12 @@ void DrawLocale (void)
 void LoadGraphicSpecial (DrawSurface *surface, short resID)
 {
 	Rect		bounds;
-	THandle<Picture>	thePicture;
+	THandle<BitmapImage>	thePicture;
 	
 	thePicture = GetPicture(resID);
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', resID).StaticCast<Picture>();
+		thePicture = GetResource('Date', resID).StaticCast<BitmapImage>();
 		if (thePicture == nil)
 		{
 			thePicture = GetPicture(2000);
@@ -145,7 +146,7 @@ void LoadGraphicSpecial (DrawSurface *surface, short resID)
 		}
 	}
 	
-	bounds = (*thePicture)->picFrame.ToRect();
+	bounds = (*thePicture)->GetRect();
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	surface->DrawPicture(thePicture, bounds);
 

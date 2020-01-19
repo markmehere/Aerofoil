@@ -3,7 +3,7 @@
 #include "PLWidgets.h"
 #include "PLHandle.h"
 
-struct Picture;
+struct BitmapImage;
 
 namespace PortabilityLayer
 {
@@ -17,6 +17,6 @@ namespace PortabilityLayer
 		void DrawControl(DrawSurface *surface) override;
 
 	private:
-		THandle<Picture> m_pict;
+		THandle<BitmapImage> m_pict;
 	};
 }

@@ -9,6 +9,7 @@
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
+#include "BitmapImage.h"
 #include "Externs.h"
 #include "FontFamily.h"
 #include "House.h"
@@ -237,9 +238,9 @@ Boolean CreateNewRoom (short h, short v)
 
 void ReadyBackground (short theID, short *theTiles)
 {
-	Rect		src, dest;
-	THandle<Picture>	thePicture;
-	short		i;
+	Rect					src, dest;
+	THandle<BitmapImage>	thePicture;
+	short					i;
 	
 	if ((noRoomAtAll) || (!houseUnlocked))
 	{
@@ -263,7 +264,7 @@ void ReadyBackground (short theID, short *theTiles)
 	thePicture = GetPicture(theID);
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', theID).StaticCast<Picture>();
+		thePicture = GetResource('Date', theID).StaticCast<BitmapImage>();
 		if (thePicture == nil)
 		{
 			YellowAlert(kYellowNoBackground, 0);
@@ -271,7 +272,7 @@ void ReadyBackground (short theID, short *theTiles)
 		}
 	}
 	
-	dest = (*thePicture)->picFrame.ToRect();
+	dest = (*thePicture)->GetRect();
 	QOffsetRect(&dest, -dest.left, -dest.top);
 	workSrcMap->DrawPicture(thePicture, dest);
 	thePicture.Dispose();

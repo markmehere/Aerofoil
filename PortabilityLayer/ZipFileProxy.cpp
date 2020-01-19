@@ -163,24 +163,30 @@ namespace PortabilityLayer
 			return nullptr;
 
 		const size_t centralDirSize = eocd.m_centralDirectorySizeBytes;
-		void *centralDirImage = mm->Alloc(centralDirSize);
-		if (!centralDirImage)
-			return nullptr;
+		void *centralDirImage = nullptr;
+		ZipCentralDirectoryFileHeader **centralDirFiles = nullptr;
 
 		const size_t numFiles = eocd.m_numCentralDirRecords;
 
-		ZipCentralDirectoryFileHeader **centralDirFiles = static_cast<ZipCentralDirectoryFileHeader **>(mm->Alloc(sizeof(ZipCentralDirectoryFileHeader*) * numFiles));
-		if (!centralDirFiles)
+		if (centralDirSize > 0)
 		{
-			mm->Release(centralDirImage);
-			return nullptr;
-		}
+			centralDirImage = mm->Alloc(centralDirSize);
+			if (!centralDirImage)
+				return nullptr;
 
-		if (stream->Read(centralDirImage, centralDirSize) != centralDirSize)
-		{
-			mm->Release(centralDirFiles);
-			mm->Release(centralDirImage);
-			return nullptr;
+			centralDirFiles = static_cast<ZipCentralDirectoryFileHeader **>(mm->Alloc(sizeof(ZipCentralDirectoryFileHeader*) * numFiles));
+			if (!centralDirFiles)
+			{
+				mm->Release(centralDirImage);
+				return nullptr;
+			}
+
+			if (stream->Read(centralDirImage, centralDirSize) != centralDirSize)
+			{
+				mm->Release(centralDirFiles);
+				mm->Release(centralDirImage);
+				return nullptr;
+			}
 		}
 
 		bool failed = false;
@@ -246,7 +252,8 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		qsort(centralDirFiles, numFiles, sizeof(ZipCentralDirectoryFileHeader*), ZipDirectorySortPredicate);
+		if (numFiles)
+			qsort(centralDirFiles, numFiles, sizeof(ZipCentralDirectoryFileHeader*), ZipDirectorySortPredicate);
 
 		for (size_t i = 1; i < numFiles; i++)
 		{

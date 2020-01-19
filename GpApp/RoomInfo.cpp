@@ -857,7 +857,7 @@ short ChooseOriginalArt (short was)
 
 Boolean PictIDExists (short theID)
 {
-	THandle<Picture>	thePicture;
+	THandle<BitmapImage>	thePicture;
 //	Handle		resHandle;
 //	Str255		resName;
 //	ResType		resType;
@@ -870,7 +870,7 @@ Boolean PictIDExists (short theID)
 	thePicture = GetPicture(theID);
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', theID).StaticCast<Picture>();
+		thePicture = GetResource('Date', theID).StaticCast<BitmapImage>();
 		if (thePicture == nil)
 		{
 			foundIt = false;

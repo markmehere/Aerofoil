@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "BitmapImage.h"
 #include "Externs.h"
 #include "RectUtils.h"
 
@@ -31,7 +31,7 @@ extern	short		nHotSpots, numChimes;
 
 void GetObjectRect (objectPtr who, Rect *itsRect)
 {
-	THandle<Picture>	thePict;
+	THandle<BitmapImage>	thePict;
 	short		wide, tall;
 	
 	switch (who->what)
@@ -226,7 +226,7 @@ void GetObjectRect (objectPtr who, Rect *itsRect)
 		}
 		else
 		{
-			*itsRect = (*thePict)->picFrame.ToRect();
+			*itsRect = (*thePict)->GetRect();
 		}
 		ZeroRectCorner(itsRect);
 		QOffsetRect(itsRect, 

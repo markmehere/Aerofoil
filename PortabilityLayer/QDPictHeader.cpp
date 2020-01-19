@@ -15,13 +15,20 @@ namespace PortabilityLayer
 
 	bool QDPictHeader::Load(IOStream *stream)
 	{
-		GP_STATIC_ASSERT(sizeof(Picture) == 10);
+		struct PictHeader
+		{
+			uint8_t m_size[2];
 
-		Picture pictHeader;
-		if (stream->Read(&pictHeader, sizeof(Picture)) != sizeof(Picture))
+			BERect m_rect;
+		};
+
+		GP_STATIC_ASSERT(sizeof(PictHeader) == 10);
+
+		PictHeader pictHeader;
+		if (stream->Read(&pictHeader, sizeof(PictHeader)) != sizeof(PictHeader))
 			return false;
 
-		m_frame = pictHeader.picFrame.ToRect();
+		m_frame = pictHeader.m_rect.ToRect();
 		if (!m_frame.IsValid())
 			return false;
 

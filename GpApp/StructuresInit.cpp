@@ -6,6 +6,7 @@
 
 
 #include "PLResources.h"
+#include "BitmapImage.h"
 #include "Externs.h"
 #include "FontFamily.h"
 #include "FontManager.h"
@@ -60,11 +61,11 @@ extern	short		wasScoreboardMode;
 
 void InitScoreboardMap (void)
 {
-	Rect		bounds;
-	THandle<Picture>	thePicture;
-	DrawSurface	*wasCPort;
-	PLError_t		theErr;
-	short		hOffset;
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
+	DrawSurface				*wasCPort;
+	PLError_t				theErr;
+	short					hOffset;
 	
 	wasScoreboardMode = kScoreboardHigh;
 	boardSrcRect = houseRect;
@@ -79,7 +80,7 @@ void InitScoreboardMap (void)
 	thePicture = GetPicture(kScoreboardPictID);
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
-	bounds = (*thePicture)->picFrame.ToRect();
+	bounds = (*thePicture)->GetRect();
 	QOffsetRect(&bounds, -bounds.left, -bounds.top);
 	QOffsetRect(&bounds, hOffset, 0);
 	boardSrcMap->DrawPicture(thePicture, bounds);

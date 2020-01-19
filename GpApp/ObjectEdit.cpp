@@ -8,6 +8,7 @@
 #include "PLSound.h"
 #include "PLToolUtils.h"
 #include "PLPasStr.h"
+#include "BitmapImage.h"
 #include "Externs.h"
 #include "House.h"
 #include "InputManager.h"
@@ -2005,7 +2006,7 @@ void SelectPrevObject (void)
 #ifndef COMPILEDEMO
 void GetThisRoomsObjRects (void)
 {
-	THandle<Picture>	thePict;
+	THandle<BitmapImage>	thePict;
 	short		i, wide, tall;
 	
 	isFirstRoom = (GetFirstRoomNumber() == thisRoomNumber);
@@ -2244,7 +2245,7 @@ void GetThisRoomsObjRects (void)
 				}
 				else
 				{
-					roomObjectRects[i] = (*thePict)->picFrame.ToRect();
+					roomObjectRects[i] = (*thePict)->GetRect();
 				}
 				ZeroRectCorner(&roomObjectRects[i]);
 				QOffsetRect(&roomObjectRects[i], 
