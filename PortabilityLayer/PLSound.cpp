@@ -204,6 +204,13 @@ namespace PortabilityLayer
 				return;
 			case AudioCommandTypes::kCallback:
 				command.m_param.m_callback(this);
+
+				if (m_state != State_Idle)
+				{
+					// Child call changed state (i.e. callback called PushBuffer, which triggered a digest)
+					m_mutex->Unlock();
+					return;
+				}
 				break;
 			default:
 				assert(false);
@@ -215,6 +222,8 @@ namespace PortabilityLayer
 
 	void AudioChannelImpl::DigestBufferCommand(const void *dataPointer)
 	{
+		assert(m_state == State_Idle);
+
 		// At this point, the buffer should already be validated and converted, and the data pointer should point at the data tag
 		uint32_t length;
 		memcpy(&length, dataPointer, 4);
