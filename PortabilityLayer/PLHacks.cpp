@@ -1,15 +1,13 @@
 #include "PLHacks.h"
 
-// Trademark issue
 bool IsMacPlusGraphicBanned()
 {
-	return true;
+	return false;
 }
 
-// Trademark issue
 bool IsMacPlusSoundBanned()
 {
-	return true;
+	return false;
 }
 
 // High scores disabled until dialogs work
