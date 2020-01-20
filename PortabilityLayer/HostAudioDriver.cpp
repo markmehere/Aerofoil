@@ -2,15 +2,15 @@
 
 namespace PortabilityLayer
 {
-	HostAudioDriver *HostAudioDriver::GetInstance()
+	IGpAudioDriver *HostAudioDriver::GetInstance()
 	{
 		return ms_instance;
 	}
 
-	void HostAudioDriver::SetInstance(HostAudioDriver *instance)
+	void HostAudioDriver::SetInstance(IGpAudioDriver *instance)
 	{
 		ms_instance = instance;
 	}
 
-	HostAudioDriver *HostAudioDriver::ms_instance;
+	IGpAudioDriver *HostAudioDriver::ms_instance;
 }

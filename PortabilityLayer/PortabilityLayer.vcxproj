@@ -147,7 +147,6 @@
     <ClInclude Include="ByteSwap.h" />
     <ClInclude Include="ByteUnpack.h" />
     <ClInclude Include="CFileStream.h" />
-    <ClInclude Include="ClientAudioChannelContext.h" />
     <ClInclude Include="DataTypes.h" />
     <ClInclude Include="DeflateCodec.h" />
     <ClInclude Include="DialogManager.h" />
@@ -161,7 +160,6 @@
     <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="GpAppInterface.h" />
     <ClInclude Include="GPArchive.h" />
-    <ClInclude Include="HostAudioChannel.h" />
     <ClInclude Include="HostAudioDriver.h" />
     <ClInclude Include="HostDirectoryCursor.h" />
     <ClInclude Include="HostFont.h" />

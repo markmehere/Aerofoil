@@ -19,9 +19,9 @@ public:
 	void PL_IncrementTickCounter(uint32_t count) override;
 	void PL_Render(IGpDisplayDriver *displayDriver) override;
 	void PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance) override;
-	void PL_HostDisplayDriver_SetInstance(PortabilityLayer::HostDisplayDriver *instance) override;
+	void PL_HostDisplayDriver_SetInstance(IGpDisplayDriver *instance) override;
 	void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) override;
-	void PL_HostAudioDriver_SetInstance(PortabilityLayer::HostAudioDriver *instance) override;
+	void PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance) override;
 	void PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance) override;
 	void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) override;
 	void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) override;
@@ -49,7 +49,7 @@ void GpAppInterfaceImpl::PL_HostFileSystem_SetInstance(PortabilityLayer::HostFil
 	PortabilityLayer::HostFileSystem::SetInstance(instance);
 }
 
-void GpAppInterfaceImpl::PL_HostDisplayDriver_SetInstance(PortabilityLayer::HostDisplayDriver *instance)
+void GpAppInterfaceImpl::PL_HostDisplayDriver_SetInstance(IGpDisplayDriver *instance)
 {
 	PortabilityLayer::HostDisplayDriver::SetInstance(instance);
 }
@@ -59,7 +59,7 @@ void GpAppInterfaceImpl::PL_HostSystemServices_SetInstance(PortabilityLayer::Hos
 	PortabilityLayer::HostSystemServices::SetInstance(instance);
 }
 
-void GpAppInterfaceImpl::PL_HostAudioDriver_SetInstance(PortabilityLayer::HostAudioDriver *instance)
+void GpAppInterfaceImpl::PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance)
 {
 	PortabilityLayer::HostAudioDriver::SetInstance(instance);
 }

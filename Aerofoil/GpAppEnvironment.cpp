@@ -3,8 +3,6 @@
 #include "GpAppInterface.h"
 #include "GpDisplayDriverTickStatus.h"
 #include "GpFontHandlerFactory.h"
-#include "GpPLGlueAudioDriver.h"
-#include "GpPLGlueDisplayDriver.h"
 #include "HostSuspendCallArgument.h"
 #include "IGpDisplayDriver.h"
 #include "IGpFiber.h"
@@ -137,15 +135,12 @@ void GpAppEnvironment::AppThreadFunc()
 
 void GpAppEnvironment::InitializeApplicationState()
 {
-	GpAppInterface_Get()->PL_HostDisplayDriver_SetInstance(GpPLGlueDisplayDriver::GetInstance());
-	GpAppInterface_Get()->PL_HostAudioDriver_SetInstance(GpPLGlueAudioDriver::GetInstance());
+	GpAppInterface_Get()->PL_HostDisplayDriver_SetInstance(m_displayDriver);
+	GpAppInterface_Get()->PL_HostAudioDriver_SetInstance(m_audioDriver);
 	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
 
 	GpAppInterface_Get()->PL_HostFontHandler_SetInstance(m_fontHandler);
 	GpAppInterface_Get()->PL_HostVOSEventQueue_SetInstance(m_vosEventQueue);
-
-	GpPLGlueDisplayDriver::GetInstance()->SetGpDisplayDriver(m_displayDriver);
-	GpPLGlueAudioDriver::GetInstance()->SetGpAudioDriver(m_audioDriver);
 }
 
 void GpAppEnvironment::SynchronizeState()

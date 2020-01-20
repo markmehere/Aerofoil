@@ -1,6 +1,7 @@
 #include "DialogManager.h"
 #include "HostDisplayDriver.h"
 #include "IconLoader.h"
+#include "IGpDisplayDriver.h"
 #include "ResourceManager.h"
 #include "PLArrayView.h"
 #include "PLBigEndian.h"

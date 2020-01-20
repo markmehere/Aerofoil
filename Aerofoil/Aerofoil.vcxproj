@@ -158,9 +158,6 @@
     <ClCompile Include="GpMain_Win32.cpp" />
     <ClCompile Include="GpMemoryBuffer.cpp" />
     <ClCompile Include="GpMutex_Win32.cpp" />
-    <ClCompile Include="GpPLGlueAudioChannel.cpp" />
-    <ClCompile Include="GpPLGlueAudioDriver.cpp" />
-    <ClCompile Include="GpPLGlueDisplayDriver.cpp" />
     <ClCompile Include="GpSystemServices_Win32.cpp" />
     <ClCompile Include="GpFiberStarter_Win32.cpp" />
     <ClCompile Include="GpThreadEvent_Win32.cpp" />
@@ -193,9 +190,6 @@
     <ClInclude Include="GpMain.h" />
     <ClInclude Include="GpMemoryBuffer.h" />
     <ClInclude Include="GpMutex_Win32.h" />
-    <ClInclude Include="GpPLGlueAudioChannel.h" />
-    <ClInclude Include="GpPLGlueAudioDriver.h" />
-    <ClInclude Include="GpPLGlueDisplayDriver.h" />
     <ClInclude Include="GpRingBuffer.h" />
     <ClInclude Include="GpSystemServices_Win32.h" />
     <ClInclude Include="GpFiberStarter.h" />

@@ -1,12 +1,13 @@
 #include "PLSound.h"
 
-#include "ClientAudioChannelContext.h"
-#include "HostAudioChannel.h"
 #include "HostAudioDriver.h"
 #include "MemoryManager.h"
 #include "HostMutex.h"
 #include "HostSystemServices.h"
 #include "HostThreadEvent.h"
+#include "IGpAudioChannel.h"
+#include "IGpAudioChannelCallbacks.h"
+#include "IGpAudioDriver.h"
 #include "WaveFormat.h"
 
 #include <assert.h>
@@ -36,10 +37,10 @@ namespace PortabilityLayer
 		AudioCommandParam m_param;
 	};
 
-	class AudioChannelImpl final : public AudioChannel, public ClientAudioChannelContext
+	class AudioChannelImpl final : public AudioChannel, public IGpAudioChannelCallbacks
 	{
 	public:
-		explicit AudioChannelImpl(PortabilityLayer::HostAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex);
+		explicit AudioChannelImpl(IGpAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex);
 		~AudioChannelImpl();
 
 		void Destroy(bool wait) override;
@@ -70,7 +71,7 @@ namespace PortabilityLayer
 		void DigestQueueItems();
 		void DigestBufferCommand(const void *dataPointer);
 
-		PortabilityLayer::HostAudioChannel *m_audioChannel;
+		IGpAudioChannel *m_audioChannel;
 
 		HostMutex *m_mutex;
 		HostThreadEvent *m_threadEvent;
@@ -83,7 +84,7 @@ namespace PortabilityLayer
 		bool m_isIdle;
 	};
 
-	AudioChannelImpl::AudioChannelImpl(PortabilityLayer::HostAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex)
+	AudioChannelImpl::AudioChannelImpl(IGpAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex)
 		: m_audioChannel(channel)
 		, m_threadEvent(threadEvent)
 		, m_mutex(mutex)
@@ -93,7 +94,7 @@ namespace PortabilityLayer
 		, m_state(State_Idle)
 		, m_isIdle(false)
 	{
-		m_audioChannel->SetClientAudioChannelContext(this);
+		m_audioChannel->SetAudioChannelContext(this);
 	}
 
 	AudioChannelImpl::~AudioChannelImpl()
@@ -357,8 +358,8 @@ namespace PortabilityLayer
 		if (!storage)
 			return nullptr;
 
-		PortabilityLayer::HostAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
-		PortabilityLayer::HostAudioChannel *audioChannel = audioDriver->CreateChannel();
+		IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
+		IGpAudioChannel *audioChannel = audioDriver->CreateChannel();
 		if (!audioChannel)
 		{
 			mm->Release(storage);

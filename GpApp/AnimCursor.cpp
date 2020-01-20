@@ -12,6 +12,7 @@
 #include "Environ.h"
 #include "HostDisplayDriver.h"
 #include "IGpColorCursor.h"
+#include "IGpDisplayDriver.h"
 
 
 #define	rAcurID					128

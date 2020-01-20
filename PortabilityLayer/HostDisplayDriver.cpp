@@ -2,15 +2,15 @@
 
 namespace PortabilityLayer
 {
-	HostDisplayDriver *HostDisplayDriver::GetInstance()
+	IGpDisplayDriver *HostDisplayDriver::GetInstance()
 	{
 		return ms_instance;
 	}
 
-	void HostDisplayDriver::SetInstance(HostDisplayDriver *instance)
+	void HostDisplayDriver::SetInstance(IGpDisplayDriver *instance)
 	{
 		ms_instance = instance;
 	}
 
-	HostDisplayDriver *HostDisplayDriver::ms_instance;
+	IGpDisplayDriver *HostDisplayDriver::ms_instance;
 }

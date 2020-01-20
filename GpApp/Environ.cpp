@@ -12,6 +12,7 @@
 #include "Environ.h"
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
+#include "IGpDisplayDriver.h"
 
 
 #define	kSwitchDepthAlert		130

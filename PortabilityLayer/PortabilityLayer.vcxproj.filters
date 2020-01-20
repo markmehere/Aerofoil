@@ -285,13 +285,7 @@
     <ClInclude Include="HostAudioDriver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientAudioChannelContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HostMutex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HostAudioChannel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HostThreadEvent.h">

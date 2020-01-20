@@ -19,6 +19,7 @@
 #include "HostSystemServices.h"
 #include "HostVOSEventQueue.h"
 #include "IGpColorCursor.h"
+#include "IGpDisplayDriver.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
