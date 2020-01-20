@@ -1,14 +1,10 @@
-Virtue font:
-(c)1997-1999 Marty P. Pfeiffer at Scooter Graphics 
-
-Virtue is used with permission and is authorized only for NON-COMMERCIAL redistribution as part of the Aerofoil package.
-
-Please visit the author's website (http://www.scootergraphics.com/) for more information.
-
-
 Roboto font:
 (c)2011 Google
 Distributed under the Apache License (see Resources/Fonts/Roboto/LICENSE)
+
+Open Sans font:
+(c)2011 Google
+Distributed under the Apache License (see Resources/Fonts/OpenSans/LICENSE)
 
 
 stb_image_write:
