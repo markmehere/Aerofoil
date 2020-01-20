@@ -77,12 +77,6 @@ void UpdateLoadDialog (Dialog *theDialog)
 	DrawSurface *surface = theWindow->GetDrawSurface();
 
 	GetWindowBounds(theWindow, kWindowContentRgn, &dialogRect);
-	/*
-	wasState = HGetState((Handle)(((DialogPeek)theDialog)->window).port.visRgn);
-	HLock((Handle)(((DialogPeek)theDialog)->window).port.visRgn);
-	dialogRect = (**((((DialogPeek)theDialog)->window).port.visRgn)).rgnBBox;
-	HSetState((Handle)(((DialogPeek)theDialog)->window).port.visRgn, wasState);
-	*/
 
 	ColorFrameWHRect(theDialog->GetWindow()->GetDrawSurface(), 8, 39, 413, 184, kRedOrangeColor8);	// box around files
 	
@@ -403,6 +397,8 @@ void DoLoadHouse (void)
 	while (!leaving)
 	{
 		int16_t item = theDial->ExecuteModal(LoadFilter);
+
+		bool requiresRedraw = false;
 		
 		if (item == kOkayButton)
 		{
@@ -431,9 +427,8 @@ void DoLoadHouse (void)
 			if ((item - kLoadNameFirstItem != thisHouseIndex) && 
 					(item - kLoadNameFirstItem < screenCount))
 			{
-				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 				thisHouseIndex = item - kLoadNameFirstItem;
-				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
+				requiresRedraw = true;
 			}
 						
 			if (lastWhereClick.h < 0)
@@ -466,9 +461,8 @@ void DoLoadHouse (void)
 			if ((item - kLoadIconFirstItem != thisHouseIndex) && 
 					(item - kLoadIconFirstItem < screenCount))
 			{
-				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 				thisHouseIndex = item - kLoadIconFirstItem;
-				InvalWindowRect(theDial->GetWindow(), &loadHouseRects[thisHouseIndex]);
+				requiresRedraw = true;
 			}
 			
 			if (lastWhereClick.h < 0)
@@ -500,6 +494,9 @@ void DoLoadHouse (void)
 		{
 			PageDownHouses(theDial);
 		}
+
+		if (requiresRedraw)
+			UpdateLoadDialog(theDial);
 	}
 
 	theDial->Destroy();

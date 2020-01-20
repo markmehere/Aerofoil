@@ -639,14 +639,24 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 
 	const int32_t ascender = surface->MeasureFontAscender();
 
+	if (invert)
+	{
+		surface->SetForeColor(StdColors::Black());
+		surface->FillRect(iRect);
+		surface->SetForeColor(StdColors::White());
+	}
+	else
+	{
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(iRect);
+		surface->SetForeColor(StdColors::Black());
+	}
+
 	const Point centeredDrawPoint = Point::Create((iRect.left + iRect.right - strWidth) / 2, (iRect.top + iRect.bottom + ascender) / 2);
 	surface->DrawString(centeredDrawPoint, stringCopy, true);
 
 	if (invert)
-	{
-		OffsetRect(&iRect, 0, 1);
-		surface->InvertFillRect(iRect, nullptr);
-	}
+		surface->SetForeColor(StdColors::Black());
 }
 
 //--------------------------------------------------------------  DrawDialogUserText

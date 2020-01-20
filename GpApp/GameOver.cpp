@@ -103,7 +103,7 @@ void SetUpFinalScreen (void)
 	{
 		GetLineOfText(tempStr, count, subStr);
 		offset = ((thisMac.screen.right - thisMac.screen.left) - 
-				TextWidth(subStr, 1, subStr[0])) / 2;
+				surface->MeasureString(subStr)) / 2;
 
 		surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 
