@@ -10,6 +10,11 @@ namespace
 	{
 		return v * v;
 	}
+
+	static int64_t SquareInt64(int64_t v)
+	{
+		return v * v;
+	}
 }
 
 namespace PortabilityLayer
@@ -46,9 +51,9 @@ namespace PortabilityLayer
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		{
-			const int32_t diameterSq = SquareInt32(m_diameters.m_x*m_diameters.m_y);
-			const int32_t sqDistX = SquareInt32(m_2offsetFromCenter.m_x*m_diameters.m_y);
-			const int32_t sqDistY = SquareInt32(m_2offsetFromCenter.m_y*m_diameters.m_x);
+			const int64_t diameterSq = SquareInt64(m_diameters.m_x*m_diameters.m_y);
+			const int64_t sqDistX = SquareInt64(m_2offsetFromCenter.m_x*m_diameters.m_y);
+			const int64_t sqDistY = SquareInt64(m_2offsetFromCenter.m_y*m_diameters.m_x);
 
 			assert(m_sqDistFromEdge >= 0);
 			assert(sqDistX + sqDistY >= diameterSq);
@@ -407,5 +412,13 @@ namespace PortabilityLayer
 
 		m_xChangeCostDynamicFactor = offsetFromCenterTimes2.m_x * xCostMultiplier;
 		m_yChangeCostDynamicFactor = offsetFromCenterTimes2.m_y * yCostMultiplier;
+
+		// On very wide ellipses (like 36x4), the point in the last column below the center may not be the first point in the row
+		// that is outside of the ellipse.
+		// Since the algorithm here is based on cost minimization, it is allowed to intersect the ellipse if the start and end points
+		// are both on or outside of the ellipse, so this violates the invariants.
+		// Therefore, we need to decrement X until this is not the case.
+		while (m_xChangeCostDynamicFactor - m_xChangeCostStaticFactor < m_sqDistFromEdge)
+			DecrementX();
 	}
 }

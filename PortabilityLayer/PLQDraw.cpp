@@ -1014,8 +1014,14 @@ void DrawSurface::SetSystemFont(int size, int variationFlags)
 
 void DrawSurface::FillEllipse(const Rect &rect)
 {
-	if (!rect.IsValid())
+	if (!rect.IsValid() || rect.Width() < 1 || rect.Height() < 1)
 		return;
+
+	if (rect.Width() <= 2 || rect.Height() <= 2)
+	{
+		FillRect(rect);
+		return;
+	}
 
 	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
 	if (mask)
