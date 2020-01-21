@@ -418,7 +418,7 @@ namespace PortabilityLayer
 		// Since the algorithm here is based on cost minimization, it is allowed to intersect the ellipse if the start and end points
 		// are both on or outside of the ellipse, so this violates the invariants.
 		// Therefore, we need to decrement X until this is not the case.
-		while (m_xChangeCostDynamicFactor - m_xChangeCostStaticFactor < m_sqDistFromEdge)
+		while (m_xChangeCostDynamicFactor - m_xChangeCostStaticFactor <= m_sqDistFromEdge)
 			DecrementX();
 	}
 }
