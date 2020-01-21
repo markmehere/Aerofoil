@@ -73,9 +73,9 @@ namespace PortabilityLayer
 				const int32_t xStepCost = -m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
 				const int32_t yStepCost = m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
 
-				const int32_t tangentCalc = (-m_xChangeCostDynamicFactor) + m_yChangeCostDynamicFactor;
+				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
-				if (tangentCalc < 0)
+				if (diagonalCostDelta < 0)
 				{
 					// Diagonal movement will move closer to the edge (first octant)
 					IncrementY();
@@ -115,9 +115,9 @@ namespace PortabilityLayer
 				const int32_t xStepCost = -m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
 				const int32_t yStepCost = -m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
 
-				const int32_t tangentCalc = (-m_xChangeCostDynamicFactor) + (-m_yChangeCostDynamicFactor);
+				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
-				if (tangentCalc < 0)
+				if (diagonalCostDelta < 0)
 				{
 					// Diagonal movement will move closer to the edge (first octant)
 					DecrementX();
@@ -157,9 +157,9 @@ namespace PortabilityLayer
 				const int32_t xStepCost = m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
 				const int32_t yStepCost = -m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
 
-				const int32_t tangentCalc = (m_xChangeCostDynamicFactor) + (-m_yChangeCostDynamicFactor);
+				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
-				if (tangentCalc < 0)
+				if (diagonalCostDelta < 0)
 				{
 					// Diagonal movement will move closer to the edge (first octant)
 					DecrementY();
@@ -199,9 +199,9 @@ namespace PortabilityLayer
 				const int32_t xStepCost = m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
 				const int32_t yStepCost = m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
 
-				const int32_t tangentCalc = m_xChangeCostDynamicFactor + m_yChangeCostDynamicFactor;
+				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
-				if (tangentCalc < 0)
+				if (diagonalCostDelta < 0)
 				{
 					// Diagonal movement will move closer to the edge (first octant)
 					IncrementX();
