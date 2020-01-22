@@ -24,9 +24,10 @@ namespace PortabilityLayer
 		, m_point(0, 0)
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		, m_2offsetFromCenter(0, 0)
+		, m_sqDistFromEdge(0)
 #endif
 		, m_quadrant(Quadrant_PxPy)
-		, m_sqDistFromEdge(0)
+		, m_sqDistFromEdgeOver4RoundedUp(0)
 	{
 	}
 
@@ -54,12 +55,14 @@ namespace PortabilityLayer
 			const int64_t diameterSq = SquareInt64(m_diameters.m_x*m_diameters.m_y);
 			const int64_t sqDistX = SquareInt64(m_2offsetFromCenter.m_x*m_diameters.m_y);
 			const int64_t sqDistY = SquareInt64(m_2offsetFromCenter.m_y*m_diameters.m_x);
+			const int64_t xChangeCostDynamicFactor = static_cast<int64_t>(m_xChangeCostDynamicFactorOver4) * 4;
+			const int64_t yChangeCostDynamicFactor = static_cast<int64_t>(m_yChangeCostDynamicFactorOver4) * 4;
 
 			assert(m_sqDistFromEdge >= 0);
 			assert(sqDistX + sqDistY >= diameterSq);
 			assert(sqDistX + sqDistY - diameterSq == m_sqDistFromEdge);
-			assert(m_xChangeCostDynamicFactor == m_2offsetFromCenter.m_x * 4 * SquareInt32(m_diameters.m_y));
-			assert(m_yChangeCostDynamicFactor == m_2offsetFromCenter.m_y * 4 * SquareInt32(m_diameters.m_x));
+			assert(xChangeCostDynamicFactor == m_2offsetFromCenter.m_x * 4 * SquareInt32(m_diameters.m_y));
+			assert(yChangeCostDynamicFactor == m_2offsetFromCenter.m_y * 4 * SquareInt32(m_diameters.m_x));
 
 			Vec2i actualCoordinate = (m_2center + m_2offsetFromCenter);
 			actualCoordinate.m_x /= 2;
@@ -75,8 +78,8 @@ namespace PortabilityLayer
 		{
 		case Quadrant_PxPy:
 			{
-				const int32_t xStepCost = -m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
-				const int32_t yStepCost = m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+				const int32_t xStepCost = -m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
+				const int32_t yStepCost = m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
 				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
@@ -85,7 +88,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move closer to the edge (first octant)
 					IncrementY();
 
-					const int32_t distWithDiagonalMovement = m_sqDistFromEdge + xStepCost;
+					const int32_t distWithDiagonalMovement = m_sqDistFromEdgeOver4RoundedUp + xStepCost;
 					if (distWithDiagonalMovement >= 0)
 					{
 						DecrementX();
@@ -99,7 +102,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move farther from the center (second octant)
 					DecrementX();
 
-					if (m_sqDistFromEdge < 0)
+					if (m_sqDistFromEdgeOver4RoundedUp < 0)
 					{
 						IncrementY();
 						plotDir = PlotDirection_NegX_PosY;
@@ -108,7 +111,7 @@ namespace PortabilityLayer
 						plotDir = PlotDirection_NegX_0Y;
 				}
 
-				if (m_xChangeCostDynamicFactor <= 0)
+				if (m_xChangeCostDynamicFactorOver4 <= 0)
 					m_quadrant = Quadrant_NxPy;
 
 				return plotDir;
@@ -117,8 +120,8 @@ namespace PortabilityLayer
 
 		case Quadrant_NxPy:
 			{
-				const int32_t xStepCost = -m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
-				const int32_t yStepCost = -m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+				const int32_t xStepCost = -m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
+				const int32_t yStepCost = -m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
 				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
@@ -127,7 +130,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move closer to the edge (first octant)
 					DecrementX();
 
-					const int32_t distWithDiagonalMovement = m_sqDistFromEdge + yStepCost;
+					const int32_t distWithDiagonalMovement = m_sqDistFromEdgeOver4RoundedUp + yStepCost;
 					if (distWithDiagonalMovement >= 0)
 					{
 						DecrementY();
@@ -141,7 +144,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move farther from the center (second octant)
 					DecrementY();
 
-					if (m_sqDistFromEdge < 0)
+					if (m_sqDistFromEdgeOver4RoundedUp < 0)
 					{
 						DecrementX();
 						plotDir = PlotDirection_NegX_NegY;
@@ -150,7 +153,7 @@ namespace PortabilityLayer
 						plotDir = PlotDirection_0X_NegY;
 				}
 
-				if (m_yChangeCostDynamicFactor <= 0)
+				if (m_yChangeCostDynamicFactorOver4 <= 0)
 					m_quadrant = Quadrant_NxNy;
 
 				return plotDir;
@@ -159,8 +162,8 @@ namespace PortabilityLayer
 
 		case Quadrant_NxNy:
 			{
-				const int32_t xStepCost = m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
-				const int32_t yStepCost = -m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+				const int32_t xStepCost = m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
+				const int32_t yStepCost = -m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
 				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
@@ -169,7 +172,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move closer to the edge (first octant)
 					DecrementY();
 
-					const int32_t distWithDiagonalMovement = m_sqDistFromEdge + xStepCost;
+					const int32_t distWithDiagonalMovement = m_sqDistFromEdgeOver4RoundedUp + xStepCost;
 					if (distWithDiagonalMovement >= 0)
 					{
 						IncrementX();
@@ -183,7 +186,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move farther from the center (second octant)
 					IncrementX();
 
-					if (m_sqDistFromEdge < 0)
+					if (m_sqDistFromEdgeOver4RoundedUp < 0)
 					{
 						DecrementY();
 						plotDir = PlotDirection_PosX_NegY;
@@ -192,7 +195,7 @@ namespace PortabilityLayer
 						plotDir = PlotDirection_PosX_0Y;
 				}
 
-				if (m_xChangeCostDynamicFactor >= 0)
+				if (m_xChangeCostDynamicFactorOver4 >= 0)
 					m_quadrant = Quadrant_PxNy;
 
 				return plotDir;
@@ -201,8 +204,8 @@ namespace PortabilityLayer
 
 		case Quadrant_PxNy:
 			{
-				const int32_t xStepCost = m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
-				const int32_t yStepCost = m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+				const int32_t xStepCost = m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
+				const int32_t yStepCost = m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
 				const int32_t diagonalCostDelta = xStepCost + yStepCost;
 
@@ -211,7 +214,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move closer to the edge (first octant)
 					IncrementX();
 
-					const int32_t distWithDiagonalMovement = m_sqDistFromEdge + yStepCost;
+					const int32_t distWithDiagonalMovement = m_sqDistFromEdgeOver4RoundedUp + yStepCost;
 					if (distWithDiagonalMovement >= 0)
 					{
 						IncrementY();
@@ -225,7 +228,7 @@ namespace PortabilityLayer
 					// Diagonal movement will move farther from the center
 					IncrementY();
 
-					if (m_sqDistFromEdge < 0)
+					if (m_sqDistFromEdgeOver4RoundedUp < 0)
 					{
 						IncrementX();
 						plotDir = PlotDirection_PosX_PosY;
@@ -234,7 +237,7 @@ namespace PortabilityLayer
 						plotDir = PlotDirection_0X_PosY;
 				}
 
-				if (m_yChangeCostDynamicFactor >= 0)
+				if (m_yChangeCostDynamicFactorOver4 >= 0)
 					m_quadrant = Quadrant_Finished;
 
 				return plotDir;
@@ -252,29 +255,31 @@ namespace PortabilityLayer
 
 	void EllipsePlotter::IncrementX()
 	{
-		const int32_t xStepCost = m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
+		const int32_t xStepCost = m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
 
-		m_sqDistFromEdge += xStepCost;
-		m_xChangeCostDynamicFactor += m_xChangeCostDynamicFactorStep;
+		m_sqDistFromEdgeOver4RoundedUp += xStepCost;
+		m_xChangeCostDynamicFactorOver4 += m_xChangeCostDynamicFactorStepOver4;
 		m_point.m_x++;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		m_2offsetFromCenter.m_x += 2;
+		m_sqDistFromEdge += xStepCost * 4;
 #endif
 	}
 
 	bool EllipsePlotter::ConditionalIncrementX()
 	{
-		const int32_t xStepCost = m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
+		const int32_t xStepCost = m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
 
-		if (m_sqDistFromEdge + xStepCost >= 0)
+		if (m_sqDistFromEdgeOver4RoundedUp + xStepCost >= 0)
 		{
-			m_sqDistFromEdge += xStepCost;
-			m_xChangeCostDynamicFactor += m_xChangeCostDynamicFactorStep;
+			m_sqDistFromEdgeOver4RoundedUp += xStepCost;
+			m_xChangeCostDynamicFactorOver4 += m_xChangeCostDynamicFactorStepOver4;
 			m_point.m_x++;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 			m_2offsetFromCenter.m_x += 2;
+			m_sqDistFromEdge += xStepCost * 4;
 #endif
 			return true;
 		}
@@ -284,29 +289,31 @@ namespace PortabilityLayer
 
 	void EllipsePlotter::IncrementY()
 	{
-		const int32_t yStepCost = m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+		const int32_t yStepCost = m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
-		m_sqDistFromEdge += yStepCost;
-		m_yChangeCostDynamicFactor += m_yChangeCostDynamicFactorStep;
+		m_sqDistFromEdgeOver4RoundedUp += yStepCost;
+		m_yChangeCostDynamicFactorOver4 += m_yChangeCostDynamicFactorStepOver4;
 		m_point.m_y++;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		m_2offsetFromCenter.m_y += 2;
+		m_sqDistFromEdge += yStepCost * 4;
 #endif
 	}
 
 	bool EllipsePlotter::ConditionalIncrementY()
 	{
-		const int32_t yStepCost = m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+		const int32_t yStepCost = m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
-		if (m_sqDistFromEdge + yStepCost >= 0)
+		if (m_sqDistFromEdgeOver4RoundedUp + yStepCost >= 0)
 		{
-			m_sqDistFromEdge += yStepCost;
-			m_yChangeCostDynamicFactor += m_yChangeCostDynamicFactorStep;
+			m_sqDistFromEdgeOver4RoundedUp += yStepCost;
+			m_yChangeCostDynamicFactorOver4 += m_yChangeCostDynamicFactorStepOver4;
 			m_point.m_y++;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 			m_2offsetFromCenter.m_y += 2;
+			m_sqDistFromEdge += yStepCost * 4;
 #endif
 			return true;
 		}
@@ -316,29 +323,31 @@ namespace PortabilityLayer
 
 	void EllipsePlotter::DecrementX()
 	{
-		const int32_t xStepCost = -m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
+		const int32_t xStepCost = -m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
 
-		m_sqDistFromEdge += xStepCost;
-		m_xChangeCostDynamicFactor -= m_xChangeCostDynamicFactorStep;
+		m_sqDistFromEdgeOver4RoundedUp += xStepCost;
+		m_xChangeCostDynamicFactorOver4 -= m_xChangeCostDynamicFactorStepOver4;
 		m_point.m_x--;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		m_2offsetFromCenter.m_x -= 2;
+		m_sqDistFromEdge += xStepCost * 4;
 #endif
 	}
 
 	bool EllipsePlotter::ConditionalDecrementX()
 	{
-		const int32_t xStepCost = -m_xChangeCostDynamicFactor + m_xChangeCostStaticFactor;
+		const int32_t xStepCost = -m_xChangeCostDynamicFactorOver4 + m_xChangeCostStaticFactorOver4;
 
-		if (m_sqDistFromEdge + xStepCost >= 0)
+		if (m_sqDistFromEdgeOver4RoundedUp + xStepCost >= 0)
 		{
-			m_sqDistFromEdge += xStepCost;
-			m_xChangeCostDynamicFactor -= m_xChangeCostDynamicFactorStep;
+			m_sqDistFromEdgeOver4RoundedUp += xStepCost;
+			m_xChangeCostDynamicFactorOver4 -= m_xChangeCostDynamicFactorStepOver4;
 			m_point.m_x--;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 			m_2offsetFromCenter.m_x -= 2;
+			m_sqDistFromEdge += xStepCost * 4;
 #endif
 			return true;
 		}
@@ -348,29 +357,31 @@ namespace PortabilityLayer
 
 	void EllipsePlotter::DecrementY()
 	{
-		const int32_t yStepCost = -m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+		const int32_t yStepCost = -m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
-		m_sqDistFromEdge += yStepCost;
-		m_yChangeCostDynamicFactor -= m_yChangeCostDynamicFactorStep;
+		m_sqDistFromEdgeOver4RoundedUp += yStepCost;
+		m_yChangeCostDynamicFactorOver4 -= m_yChangeCostDynamicFactorStepOver4;
 		m_point.m_y--;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		m_2offsetFromCenter.m_y -= 2;
+		m_sqDistFromEdge += yStepCost * 4;
 #endif
 	}
 
 	bool EllipsePlotter::ConditionalDecrementY()
 	{
-		const int32_t yStepCost = -m_yChangeCostDynamicFactor + m_yChangeCostStaticFactor;
+		const int32_t yStepCost = -m_yChangeCostDynamicFactorOver4 + m_yChangeCostStaticFactorOver4;
 
-		if (m_sqDistFromEdge + yStepCost >= 0)
+		if (m_sqDistFromEdgeOver4RoundedUp + yStepCost >= 0)
 		{
-			m_sqDistFromEdge += yStepCost;
-			m_yChangeCostDynamicFactor -= m_yChangeCostDynamicFactorStep;
+			m_sqDistFromEdgeOver4RoundedUp += yStepCost;
+			m_yChangeCostDynamicFactorOver4 -= m_yChangeCostDynamicFactorStepOver4;
 			m_point.m_y--;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 			m_2offsetFromCenter.m_y -= 2;
+			m_sqDistFromEdge += yStepCost * 4;
 #endif
 			return true;
 		}
@@ -398,27 +409,28 @@ namespace PortabilityLayer
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		m_2offsetFromCenter = offsetFromCenterTimes2;
+		m_sqDistFromEdge = SquareInt32(offsetFromCenterTimes2.m_x * m_diameters.m_y) + SquareInt32(offsetFromCenterTimes2.m_y * m_diameters.m_x) - SquareInt32(m_diameters.m_x * m_diameters.m_y);
 #endif
 
-		m_sqDistFromEdge = SquareInt32(offsetFromCenterTimes2.m_x * m_diameters.m_y) + SquareInt32(offsetFromCenterTimes2.m_y * m_diameters.m_x) - SquareInt32(m_diameters.m_x * m_diameters.m_y);
+		m_sqDistFromEdgeOver4RoundedUp = (SquareInt32(offsetFromCenterTimes2.m_x * m_diameters.m_y) + SquareInt32(offsetFromCenterTimes2.m_y * m_diameters.m_x) - SquareInt32(m_diameters.m_x * m_diameters.m_y) + 3) >> 2;
 
-		const int32_t xCostMultiplier = 4 * SquareInt32(m_diameters.m_y);
-		const int32_t yCostMultiplier = 4 * SquareInt32(m_diameters.m_x);
+		const int32_t xCostMultiplierOver4 = SquareInt32(m_diameters.m_y);
+		const int32_t yCostMultiplierOver4 = SquareInt32(m_diameters.m_x);
 
-		m_xChangeCostDynamicFactorStep = 2 * xCostMultiplier;
-		m_yChangeCostDynamicFactorStep = 2 * yCostMultiplier;
-		m_xChangeCostStaticFactor = 4 * SquareInt32(m_diameters.m_y);
-		m_yChangeCostStaticFactor = 4 * SquareInt32(m_diameters.m_x);
+		m_xChangeCostDynamicFactorStepOver4 = 2 * xCostMultiplierOver4;
+		m_yChangeCostDynamicFactorStepOver4 = 2 * yCostMultiplierOver4;
+		m_xChangeCostStaticFactorOver4 = SquareInt32(m_diameters.m_y);
+		m_yChangeCostStaticFactorOver4 = SquareInt32(m_diameters.m_x);
 
-		m_xChangeCostDynamicFactor = offsetFromCenterTimes2.m_x * xCostMultiplier;
-		m_yChangeCostDynamicFactor = offsetFromCenterTimes2.m_y * yCostMultiplier;
+		m_xChangeCostDynamicFactorOver4 = offsetFromCenterTimes2.m_x * xCostMultiplierOver4;
+		m_yChangeCostDynamicFactorOver4 = offsetFromCenterTimes2.m_y * yCostMultiplierOver4;
 
 		// On very wide ellipses (like 36x4), the point in the last column below the center may not be the first point in the row
 		// that is outside of the ellipse.
 		// Since the algorithm here is based on cost minimization, it is allowed to intersect the ellipse if the start and end points
 		// are both on or outside of the ellipse, so this violates the invariants.
 		// Therefore, we need to decrement X until this is not the case.
-		while (m_xChangeCostDynamicFactor - m_xChangeCostStaticFactor <= m_sqDistFromEdge)
+		while (m_xChangeCostDynamicFactorOver4 - m_xChangeCostStaticFactorOver4 <= m_sqDistFromEdgeOver4RoundedUp)
 			DecrementX();
 	}
 }

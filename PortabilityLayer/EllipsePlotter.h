@@ -4,7 +4,7 @@
 #include "PlotDirection.h"
 #include "Vec2i.h"
 
-#define PL_DEBUG_ELLIPSE_PLOTTER 1
+#define PL_DEBUG_ELLIPSE_PLOTTER 0
 
 namespace PortabilityLayer
 {
@@ -45,18 +45,19 @@ namespace PortabilityLayer
 		Vec2i m_2center;
 		Vec2i m_point;
 		Vec2i m_diameters;
-		int32_t m_sqDistFromEdge;
+		int32_t m_sqDistFromEdgeOver4RoundedUp;
 		Quadrant m_quadrant;
 
-		int32_t m_xChangeCostDynamicFactor;
-		int32_t m_yChangeCostDynamicFactor;
-		int32_t m_xChangeCostDynamicFactorStep;
-		int32_t m_yChangeCostDynamicFactorStep;
-		int32_t m_xChangeCostStaticFactor;
-		int32_t m_yChangeCostStaticFactor;
+		int32_t m_xChangeCostDynamicFactorOver4;
+		int32_t m_yChangeCostDynamicFactorOver4;
+		int32_t m_xChangeCostDynamicFactorStepOver4;
+		int32_t m_yChangeCostDynamicFactorStepOver4;
+		int32_t m_xChangeCostStaticFactorOver4;
+		int32_t m_yChangeCostStaticFactorOver4;
 
 #if PL_DEBUG_ELLIPSE_PLOTTER
 		Vec2i m_2offsetFromCenter;
+		int32_t m_sqDistFromEdge;
 #endif
 	};
 }
