@@ -314,7 +314,7 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 {
 	SynchronizeCursors();
 
-	float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float clearColor[4] = { 0.2f, 0.2f, 0.4f, 1.0f };
 
 	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, clearColor);
 
