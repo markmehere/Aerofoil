@@ -27,8 +27,8 @@ namespace PortabilityLayer
 		memcpy(&props.m_yPos, m_data + kOffsetYPos, 2);
 		memcpy(&props.m_finderFlags, m_data + kOffsetFinderFlags, 2);
 		memcpy(&props.m_protected, m_data + kProtected, 1);
-		memcpy(&props.m_creationDate, m_data + kCreationDate, 4);
-		memcpy(&props.m_modifiedDate, m_data + kModifiedDate, 4);
+		memcpy(&props.m_creationDate, m_data + kCreationDate, 8);
+		memcpy(&props.m_modifiedDate, m_data + kModifiedDate, 8);
 
 		PortabilityLayer::ByteSwap::BigInt16(props.m_xPos);
 		PortabilityLayer::ByteSwap::BigInt16(props.m_yPos);
@@ -42,14 +42,14 @@ namespace PortabilityLayer
 		int16_t xPos = props.m_xPos;
 		int16_t yPos = props.m_yPos;
 		uint16_t finderFlags = props.m_finderFlags;
-		uint32_t creationDate = props.m_creationDate;
-		uint32_t modifiedDate = props.m_modifiedDate;
+		uint64_t creationDate = props.m_creationDate;
+		uint64_t modifiedDate = props.m_modifiedDate;
 
 		PortabilityLayer::ByteSwap::BigInt16(xPos);
 		PortabilityLayer::ByteSwap::BigInt16(yPos);
 		PortabilityLayer::ByteSwap::BigUInt16(finderFlags);
-		PortabilityLayer::ByteSwap::BigUInt32(creationDate);
-		PortabilityLayer::ByteSwap::BigUInt32(modifiedDate);
+		PortabilityLayer::ByteSwap::BigUInt64(creationDate);
+		PortabilityLayer::ByteSwap::BigUInt64(modifiedDate);
 
 		memcpy(m_data + kOffsetFileType, props.m_fileType, 4);
 		memcpy(m_data + kOffsetFileCreator, props.m_fileCreator, 4);
