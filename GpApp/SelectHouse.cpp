@@ -334,6 +334,8 @@ int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
 
 		return -1;
 	}
+
+	return -1;
 }
 #endif
 
