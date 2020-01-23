@@ -56,7 +56,7 @@ namespace PortabilityLayer
 
 	bool IconLoaderImpl::LoadColorIcon(const int16_t id, THandle<PixMapImpl> &outColorImage, THandle<PixMapImpl> &outBWImage, THandle<PixMapImpl> &outMaskImage)
 	{
-		THandle<const uint8_t> data = PortabilityLayer::ResourceManager::GetInstance()->GetResource('cicn', id).StaticCast<const uint8_t>();
+		THandle<const uint8_t> data = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('cicn', id).StaticCast<const uint8_t>();
 
 		if (!data)
 			return false;

@@ -59,7 +59,7 @@ Boolean		originalLeftOpen, originalTopOpen, originalRightOpen, originalBottomOpe
 Boolean		originalFloor;
 
 extern	Cursor		handCursor;
-extern	short		houseResFork, lastBackground;
+extern	short		lastBackground;
 
 
 //==============================================================  Functions
@@ -459,9 +459,9 @@ void DoRoomInfo (void)
 	}
 	if ((tempBack == 2002) || (tempBack == 2011) || 
 			(tempBack == 2016) || (tempBack == 2017))
-		LoadScaledGraphic(tileSrcMap, tempBack - 800, &tileSrcRect);
+		LoadScaledGraphicCustom(tileSrcMap, tempBack - 800, &tileSrcRect);
 	else
-		LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+		LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
 	
 	for (i = 0; i < kNumTiles; i++)
 		tempTiles[i] = thisRoom->tiles[i];
@@ -547,7 +547,7 @@ void DoRoomInfo (void)
 				if ((tempBack != newBack) || (forceDraw))
 				{
 					tempBack = newBack;
-					LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+					LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
 					InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
 					InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
 				}
@@ -573,9 +573,9 @@ void DoRoomInfo (void)
 				tempBack = newBack;
 				if ((tempBack == 2002) || (tempBack == 2011) || 
 						(tempBack == 2016) || (tempBack == 2017))
-					LoadScaledGraphic(tileSrcMap, tempBack - 800, &tileSrcRect);
+					LoadScaledGraphicCustom(tileSrcMap, tempBack - 800, &tileSrcRect);
 				else
-					LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+					LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
 				InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
 				InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
 			}
@@ -586,7 +586,7 @@ void DoRoomInfo (void)
 			if (tempBack != newBack)
 			{
 				tempBack = newBack;
-				LoadScaledGraphic(tileSrcMap, tempBack, &tileSrcRect);
+				LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
 				InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
 				InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
 			}
@@ -857,7 +857,7 @@ short ChooseOriginalArt (short was)
 
 Boolean PictIDExists (short theID)
 {
-	THandle<BitmapImage>	thePicture;
+	THandle<void>	thePicture;
 //	Handle		resHandle;
 //	Str255		resName;
 //	ResType		resType;
@@ -867,10 +867,10 @@ Boolean PictIDExists (short theID)
 	
 	foundIt = true;
 	
-	thePicture = GetPicture(theID);
+	thePicture = LoadHouseResource('PICT', theID);
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', theID).StaticCast<BitmapImage>();
+		thePicture = LoadHouseResource('Date', theID);
 		if (thePicture == nil)
 		{
 			foundIt = false;
@@ -907,8 +907,11 @@ short GetFirstPICT (void)
 {
 	Handle		resHandle;
 	Str255		resName;
-	
-	resHandle = Get1IndResource('PICT', 1);
+
+	PL_NotYetImplemented();
+
+	//resHandle = Get1IndResource('PICT', 1);
+	resHandle = Handle();
 	if (resHandle != nil)
 	{
 		const PortabilityLayer::ResourceArchiveRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(resHandle.MMBlock());

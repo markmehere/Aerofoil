@@ -14,6 +14,7 @@
 #include "Play.h"
 #include "Player.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 #include "RubberBands.h"
 #include "Scoreboard.h"
 #include "Utilities.h"
@@ -77,7 +78,7 @@ void InitScoreboardMap (void)
 		hOffset = (RectWide(&boardSrcRect) - kMaxViewWidth) / 2;
 	else
 		hOffset = -576;
-	thePicture = GetPicture(kScoreboardPictID);
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kScoreboardPictID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	bounds = (*thePicture)->GetRect();

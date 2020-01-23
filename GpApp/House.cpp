@@ -242,8 +242,9 @@ void WhereDoesGliderBegin (Rect *theRect, short mode)
 Boolean HouseHasOriginalPicts (void)
 {
 	short		nPicts;
-	
-	nPicts = Count1Resources('PICT');
+
+	PL_NotYetImplemented();	nPicts = 0;
+	//nPicts = Count1Resources('PICT');
 	return (nPicts > 0);
 }
 

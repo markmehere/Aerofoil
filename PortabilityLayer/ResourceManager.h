@@ -30,11 +30,14 @@ namespace PortabilityLayer
 		static ResourceArchive *Create(ZipFileProxy *zipFileProxy, IOStream *stream);
 		void Destroy();
 
-		THandle<void> GetResource(const ResTypeID &resTypeID, int id, bool load);
+		THandle<void> LoadResource(const ResTypeID &resTypeID, int id);
+		bool GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize);
 
 	private:
 		ResourceArchive(ZipFileProxy *zipFileProxy, IOStream *stream, ResourceArchiveRef *resourceHandles);
 		~ResourceArchive();
+
+		THandle<void> GetResource(const ResTypeID &resTypeID, int id, bool load);
 
 		ZipFileProxy *m_zipFileProxy;
 		IOStream *m_stream;
@@ -47,17 +50,11 @@ namespace PortabilityLayer
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
 
-		virtual void SetResLoad(bool load) = 0;
+		virtual THandle<void> GetAppResource(const ResTypeID &resTypeID, int16_t resID) const = 0;
+		virtual ResourceArchive *GetAppResourceArchive() const = 0;
 
 		virtual ResourceArchive *LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const = 0;
-		virtual short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
-		virtual void CloseResFile(short ref) = 0;
 		virtual PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
-
-		virtual THandle<void> GetResource(const ResTypeID &resType, int id) = 0;
-
-		virtual short GetCurrentResFile() const = 0;
-		virtual void SetCurrentResFile(short ref) = 0;
 
 		virtual void DissociateHandle(MMHandleBlock *hdl) const = 0;
 		virtual const ResourceArchiveRef *ResourceForHandle(MMHandleBlock *hdl) const = 0;

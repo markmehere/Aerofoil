@@ -279,7 +279,6 @@ short HowManyUsableScreens (Boolean use1Bit, Boolean use4Bit, Boolean use8Bit)
 
 void CheckOurEnvirons (void)
 {	
-	thisMac.thisResFile = CurResFile();
 	thisMac.vRefNum = 0;		// TEMP
 	thisMac.dirID = 0;			// TEMP
 	thisMac.hasGestalt = true;	// TEMP

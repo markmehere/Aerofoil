@@ -134,13 +134,13 @@ void LoadGraphicSpecial (DrawSurface *surface, short resID)
 	Rect		bounds;
 	THandle<BitmapImage>	thePicture;
 	
-	thePicture = GetPicture(resID);
+	thePicture = LoadHouseResource('PICT', resID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', resID).StaticCast<BitmapImage>();
+		thePicture = LoadHouseResource('Date', resID).StaticCast<BitmapImage>();
 		if (thePicture == nil)
 		{
-			thePicture = GetPicture(2000);
+			thePicture = LoadHouseResource('PICT', 2000).StaticCast<BitmapImage>();
 			if (thePicture == nil)
 				RedAlert(kErrFailedGraphicLoad);
 		}

@@ -13,6 +13,7 @@
 #include "Marquee.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
+#include "WindowDef.h"
 #include "WindowManager.h"
 
 
@@ -126,13 +127,15 @@ void OpenCoordWindow (void)
 	
 	if (coordWindow == nil)
 	{
+		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar;
+
 		QSetRect(&coordWindowRect, 0, 0, 50, 38);
 		if (thisMac.hasColor)
 			coordWindow = NewCWindow(nil, &coordWindowRect, 
-					PSTR("Tools"), false, kWindoidWDEF, kPutInFront, true, 0L);
+					PSTR("Tools"), false, windowStyle, kPutInFront, true, 0L);
 		else
 			coordWindow = NewWindow(nil, &coordWindowRect, 
-					PSTR("Tools"), false, kWindoidWDEF, kPutInFront, true, 0L);
+					PSTR("Tools"), false, windowStyle, kPutInFront, true, 0L);
 		
 		if (coordWindow == nil)
 			RedAlert(kErrNoMemory);

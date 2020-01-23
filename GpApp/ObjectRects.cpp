@@ -218,7 +218,7 @@ void GetObjectRect (objectPtr who, Rect *itsRect)
 		break;
 		
 		case kCustomPict:
-		thePict = GetPicture(who->data.g.height);
+		thePict = LoadHouseResource('PICT', who->data.g.height).StaticCast<BitmapImage>();
 		if (thePict == nil)
 		{
 			who->data.g.height = 10000;

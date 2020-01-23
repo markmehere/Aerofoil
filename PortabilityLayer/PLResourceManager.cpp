@@ -20,7 +20,7 @@
 #include "ZipFileProxy.h"
 #include "ZipFile.h"
 
-#include <vector>
+#include <stdio.h>
 
 namespace ResourceValidationRules
 {
@@ -104,18 +104,12 @@ namespace PortabilityLayer
 
 		void Init() override;
 		void Shutdown() override;
-		
-		void SetResLoad(bool load) override;
+
+		THandle<void> GetAppResource(const ResTypeID &resTypeID, int16_t resID) const override;
+		ResourceArchive *GetAppResourceArchive() const override;
 
 		ResourceArchive *LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const override;
-		short OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
-		void CloseResFile(short ref) override;
 		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
-
-		THandle<void> GetResource(const ResTypeID &resType, int id) override;
-
-		short GetCurrentResFile() const override;
-		void SetCurrentResFile(short ref) override;
 
 		void DissociateHandle(MMHandleBlock *hdl) const override;
 		const ResourceArchiveRef *ResourceForHandle(MMHandleBlock *hdl) const override;
@@ -123,56 +117,29 @@ namespace PortabilityLayer
 		static ResourceManagerImpl *GetInstance();
 
 	private:
-		struct ResFileSlot
-		{
-			short m_prevFile;
-			short m_nextFile;
-			ResourceArchive *m_resourceArchive;
-		};
-
 		void UnloadAndDestroyResourceFile(ResourceArchive *rf);
 
-		std::vector<ResFileSlot> m_resFiles;
-		short m_firstResFile;
-		short m_lastResFile;
-		short m_currentResFile;
-		bool m_load;
+		ResourceArchive *m_appResArchive;
 
 		static ResourceManagerImpl ms_instance;
 	};
 
 	ResourceManagerImpl::ResourceManagerImpl()
-		: m_currentResFile(-1)
-		, m_firstResFile(-1)
-		, m_lastResFile(-1)
-		, m_load(true)
+		: m_appResArchive(nullptr)
 	{
 	}
 
 	void ResourceManagerImpl::Init()
 	{
-		m_currentResFile = OpenResFork(VirtualDirectories::kApplicationData, PSTR("ApplicationResources"));
+		m_appResArchive = LoadResFile(VirtualDirectories::kApplicationData, PSTR("ApplicationResources"));
 	}
 
 	void ResourceManagerImpl::Shutdown()
 	{
-		for (std::vector<ResFileSlot>::iterator it = m_resFiles.begin(), itEnd = m_resFiles.end(); it != itEnd; ++it)
-		{
-			if (it->m_resourceArchive)
-				UnloadAndDestroyResourceFile(it->m_resourceArchive);
-		}
+		if (m_appResArchive)
+			m_appResArchive->Destroy();
 
-		m_resFiles.clear();
-	}
-	
-	short ResourceManagerImpl::GetCurrentResFile() const
-	{
-		return m_currentResFile;
-	}
-
-	void ResourceManagerImpl::SetCurrentResFile(short ref)
-	{
-		m_currentResFile = ref;
+		m_appResArchive = nullptr;
 	}
 
 	void ResourceManagerImpl::DissociateHandle(MMHandleBlock *hdl) const
@@ -198,11 +165,6 @@ namespace PortabilityLayer
 		return &ms_instance;
 	}
 
-	void ResourceManagerImpl::SetResLoad(bool load)
-	{
-		m_load = load;
-	}
-
 	ResourceArchive *ResourceManagerImpl::LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const
 	{
 		IOStream *fStream = nullptr;
@@ -225,82 +187,6 @@ namespace PortabilityLayer
 		}
 
 		return archive;
-	}
-
-	short ResourceManagerImpl::OpenResFork(VirtualDirectory_t virtualDir, const PLPasStr &filename)
-	{
-		const size_t numSlots = m_resFiles.size();
-		size_t resFileIndex = numSlots;
-
-		for (size_t i = 0; i < numSlots; i++)
-		{
-			if (m_resFiles[i].m_resourceArchive == nullptr)
-			{
-				resFileIndex = i;
-				break;
-			}
-		}
-
-		if (resFileIndex == 0x7fff)
-			return -1;
-
-
-		ResourceArchive *resFile = LoadResFile(virtualDir, filename);
-
-		if (!resFile)
-			return -1;
-
-		ResFileSlot slot;
-		slot.m_resourceArchive = resFile;
-		slot.m_prevFile = m_lastResFile;
-		slot.m_nextFile = -1;
-
-		if (resFileIndex == numSlots)
-			m_resFiles.push_back(slot);
-		else
-			m_resFiles[resFileIndex] = slot;
-
-		const short rfid = static_cast<short>(resFileIndex);
-
-		if (m_firstResFile < 0)
-			m_firstResFile = rfid;
-
-		if (m_lastResFile >= 0)
-			m_resFiles[m_lastResFile].m_nextFile = rfid;
-
-		m_lastResFile = rfid;
-		m_currentResFile = rfid;	// Resource Manager is supposed to reset the search stack on new file open
-
-		return rfid;
-	}
-
-	void ResourceManagerImpl::CloseResFile(short ref)
-	{
-		ResFileSlot &slot = m_resFiles[ref];
-
-		assert(slot.m_resourceArchive != nullptr);
-
-		slot.m_resourceArchive->Destroy();
-		slot.m_resourceArchive = nullptr;
-
-		if (m_lastResFile == ref)
-			m_lastResFile = slot.m_prevFile;
-
-		if (slot.m_prevFile >= 0)
-		{
-			ResFileSlot &prevFileSlot = m_resFiles[slot.m_prevFile];
-			prevFileSlot.m_nextFile = slot.m_nextFile;
-		}
-
-		if (slot.m_nextFile >= 0)
-		{
-			ResFileSlot &nextFileSlot = m_resFiles[slot.m_nextFile];
-			nextFileSlot.m_prevFile = slot.m_prevFile;
-		}
-
-		slot.m_nextFile = slot.m_prevFile = -1;
-
-		m_currentResFile = m_lastResFile;
 	}
 
 	PLError_t ResourceManagerImpl::CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename)
@@ -331,22 +217,17 @@ namespace PortabilityLayer
 		return PLErrors::kNone;
 	}
 
-	THandle<void> ResourceManagerImpl::GetResource(const ResTypeID &resType, int id)
+	THandle<void> ResourceManagerImpl::GetAppResource(const ResTypeID &resType, int16_t resID) const
 	{
-		short searchIndex = m_currentResFile;
-		while (searchIndex >= 0)
-		{
-			const ResFileSlot& slot = m_resFiles[searchIndex];
-			assert(slot.m_resourceArchive);
+		if (!m_appResArchive)
+			return THandle<void>();
 
-			THandle<void> resHdl = slot.m_resourceArchive->GetResource(resType, id, m_load);
-			if (resHdl != nullptr)
-				return resHdl;
+		return m_appResArchive->LoadResource(resType, resID);
+	}
 
-			searchIndex = slot.m_prevFile;
-		}
-
-		return nullptr;
+	ResourceArchive *ResourceManagerImpl::GetAppResourceArchive() const
+	{
+		return m_appResArchive;
 	}
 
 	ResourceManagerImpl ResourceManagerImpl::ms_instance;
@@ -393,6 +274,23 @@ namespace PortabilityLayer
 	{
 		this->~ResourceArchive();
 		PortabilityLayer::MemoryManager::GetInstance()->Release(this);
+	}
+
+	THandle<void> ResourceArchive::LoadResource(const ResTypeID &resTypeID, int id)
+	{
+		return GetResource(resTypeID, id, true);
+	}
+
+	bool ResourceArchive::GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize)
+	{
+		THandle<void> hdl = GetResource(resTypeID, id, false);
+		if (const PortabilityLayer::MMHandleBlock *hdlBlock = hdl.MMBlock())
+		{
+			outSize = hdlBlock->m_rmSelfRef->m_size;
+			return true;
+		}
+
+		return false;
 	}
 
 	THandle<void> ResourceArchive::GetResource(const ResTypeID &resTypeID, int id, bool load)

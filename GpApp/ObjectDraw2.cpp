@@ -15,6 +15,7 @@
 #include "Environ.h"
 #include "Objects.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 #include "Room.h"
 #include "Utilities.h"
 #include "PLHacks.h"
@@ -1052,7 +1053,7 @@ void DrawCalendar (Rect *theRect)
 	wasCPort = GetGraphicsPort();
 	SetGraphicsPort(backSrcMap);
 	
-	thePicture = GetPicture(kCalendarPictID);
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kCalendarPictID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
@@ -1078,7 +1079,7 @@ void DrawBulletin (Rect *theRect)
 	Rect					bounds;
 	THandle<BitmapImage>	thePicture;
 	
-	thePicture = GetPicture(kBulletinPictID);
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kBulletinPictID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
@@ -1128,7 +1129,7 @@ void DrawPictObject (short what, Rect *theRect)
 		break;
 	}
 	
-	thePicture = GetPicture(pictID);
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', pictID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
@@ -1295,7 +1296,7 @@ void DrawCustPictSansWhite (short pictID, Rect *theRect)
 	bounds = *theRect;
 	ZeroRectCorner(&bounds);
 	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
-	LoadGraphic(tempMap, pictID);
+	LoadGraphicCustom(tempMap, pictID);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 

@@ -167,10 +167,10 @@ void LoadGraphicPlus (DrawSurface *surface, short resID, const Rect &theRect)
 {
 	THandle<BitmapImage>	thePicture;
 	
-	thePicture = GetPicture(resID);
+	thePicture = LoadHouseResource('PICT', resID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', resID).StaticCast<BitmapImage>();
+		thePicture = LoadHouseResource('Date', resID).StaticCast<BitmapImage>();
 		if (thePicture == nil)
 		{
 			return;
@@ -361,7 +361,9 @@ void OpenMapWindow (void)
 				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 2, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 2);
 
-		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mapWindowRect, kWindoidGrowWDEF, false, true, 0, 0, PSTR("Map"));
+		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kResizable | PortabilityLayer::WindowStyleFlags::kMiniBar;
+
+		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mapWindowRect, windowStyle, false, true, 0, 0, PSTR("Map"));
 		
 		mapWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(wdef);
 

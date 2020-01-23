@@ -12,6 +12,7 @@
 #include "MainWindow.h"
 #include "Objects.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 #include "Room.h"
 #include "RoomGraphics.h"
 #include "Utilities.h"
@@ -260,7 +261,7 @@ void CreatePointers (void)
 	demoData = (demoPtr)NewPtr(kDemoLength);
 	if (demoData == nil)
 		RedAlert(kErrNoMemory);
-	tempHandle = GetResource('demo', 128);
+	tempHandle = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('demo', 128);
 	if (tempHandle == nil)
 		RedAlert(kErrNoMemory);
 	else

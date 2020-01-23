@@ -12,6 +12,7 @@
 #include "PLSound.h"
 #include "PLPasStr.h"
 #include "PLSysCalls.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
 #include "About.h"
 #include "DialogManager.h"
@@ -19,8 +20,8 @@
 #include "Environ.h"
 #include "Externs.h"
 #include "HostSystemServices.h"
+#include "ResourceManager.h"
 #include "ScanlineMask.h"
-#include "PLTimeTaggedVOSEvent.h"
 
 
 static void HiLiteOkayButton (DrawSurface *surface);
@@ -49,16 +50,13 @@ void DoAbout (void)
 	StringPtr		messagePtr;
 	VersRecHndl		version;
 	ControlHandle	itemHandle;
-	short			hit, wasResFile;
-	
-	wasResFile = CurResFile();
-	UseResFile(thisMac.thisResFile);
+	short			hit;
 	
 	aboutDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kAboutDialogID, PL_GetPutInFrontWindowPtr());
 //	if (aboutDialog == nil)
 //		RedAlert(kErrDialogDidntLoad);
 	
-	version = GetResource('vers', 1).StaticCast<VersionRecord>();
+	version = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('vers', 1).StaticCast<VersionRecord>();
 	if (version != nil)
 	{
 		messagePtr = (**version).shortVersion + 1 + (**version).shortVersion[0];
@@ -86,8 +84,6 @@ void DoAbout (void)
 	while (hit != kOkayButton);
 
 	aboutDialog->Destroy();
-	
-	UseResFile(wasResFile);
 }
 
 //==============================================================  Static Functions
@@ -101,7 +97,7 @@ static void HiLiteOkayButton (DrawSurface *surface)
 	
 	if (!okayButtIsHiLit)
 	{
-		thePict = GetPicture(kOkayButtPICTHiLit);
+		thePict = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kOkayButtPICTHiLit).StaticCast<BitmapImage>();
 		if (thePict != nil)
 		{
 			surface->DrawPicture(thePict, okayButtonBounds);
@@ -123,7 +119,7 @@ static void UnHiLiteOkayButton (DrawSurface *surface)
 	
 	if (okayButtIsHiLit)
 	{
-		thePict = GetPicture(kOkayButtPICTNotHiLit);
+		thePict = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kOkayButtPICTNotHiLit).StaticCast<BitmapImage>();
 		if (thePict != nil)
 		{
 			surface->DrawPicture(thePict, okayButtonBounds);

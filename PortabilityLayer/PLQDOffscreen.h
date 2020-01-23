@@ -22,8 +22,6 @@ void DisposeGWorld(DrawSurface *gworld);
 
 PixMapHandle GetGWorldPixMap(DrawSurface *gworld);
 
-THandle<BitmapImage> GetPicture(short resID);
-
 void OffsetRect(Rect *rect, int right, int down);
 
 DrawSurface *GetGraphicsPort();

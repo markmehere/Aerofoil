@@ -404,7 +404,7 @@ namespace PortabilityLayer
 	{
 		ResourceManager *rm = ResourceManager::GetInstance();
 
-		THandle<uint8_t> dlogH = rm->GetResource('DLOG', resID).StaticCast<uint8_t>();
+		THandle<uint8_t> dlogH = rm->GetAppResource('DLOG', resID).StaticCast<uint8_t>();
 		const uint8_t *dlogData = *dlogH;
 		const uint8_t *dlogDataEnd = dlogData + dlogH.MMBlock()->m_size;
 
@@ -434,7 +434,7 @@ namespace PortabilityLayer
 
 		WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-		WindowDef wdef = WindowDef::Create(rect, 0, header.m_visible != 0, header.m_hasCloseBox != 0, header.m_referenceConstant, positionSpec, PLPasStr(titlePStr));
+		WindowDef wdef = WindowDef::Create(rect, WindowStyleFlags::kAlert, header.m_visible != 0, header.m_hasCloseBox != 0, header.m_referenceConstant, positionSpec, PLPasStr(titlePStr));
 		Window *window = wm->CreateWindow(wdef);
 		if (!window)
 		{
@@ -499,7 +499,7 @@ namespace PortabilityLayer
 	{
 		ResourceManager *rm = ResourceManager::GetInstance();
 
-		THandle<uint8_t> dtemplateH = rm->GetResource('DITL', resID).StaticCast<uint8_t>();
+		THandle<uint8_t> dtemplateH = rm->GetAppResource('DITL', resID).StaticCast<uint8_t>();
 
 		if (!dtemplateH)
 			return nullptr;

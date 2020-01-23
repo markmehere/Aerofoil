@@ -15,6 +15,7 @@
 #include "HostMutex.h"
 #include "HostSystemServices.h"
 #include "MemoryManager.h"
+#include "ResourceManager.h"
 
 
 #define kBaseBufferMusicID			2000
@@ -212,7 +213,7 @@ PLError_t LoadMusicSounds (void)
 	
 	for (i = 0; i < kMaxMusic; i++)
 	{
-		theSound = ParseAndConvertSound(GetResource('snd ', i + kBaseBufferMusicID));
+		theSound = ParseAndConvertSound(PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferMusicID));
 		if (theSound == nil)
 			return PLErrors::kOutOfMemory;
 		
@@ -364,24 +365,18 @@ void KillMusic (void)
 
 long MusicBytesNeeded (void)
 {
-	Handle		theSound;
-	long		totalBytes;
+	size_t		totalBytes;
 	short		i;
 	
 	totalBytes = 0L;
-	SetResLoad(false);
 	for (i = 0; i < kMaxMusic; i++)
 	{
-		theSound = GetResource('snd ', i + kBaseBufferMusicID);
-		if (theSound == nil)
-		{
-			SetResLoad(true);
+		size_t resSize = 0;
+		if (!PortabilityLayer::ResourceManager::GetInstance()->GetAppResourceArchive()->GetResourceSize('snd ', i + kBaseBufferMusicID, resSize))
 			return -1;
-		}
-		totalBytes += GetMaxResourceSize(theSound);
-//		ReleaseResource(theSound);
+
+		totalBytes += static_cast<long>(resSize);
 	}
-	SetResLoad(true);
 	return totalBytes;
 }
 

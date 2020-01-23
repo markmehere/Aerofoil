@@ -87,7 +87,7 @@ Rect BERect::ToRect() const
 
 CursHandle GetCursor(int cursorID)
 {
-	return GetResource('CURS', cursorID).ReinterpretCast<Cursor>();
+	return PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('CURS', cursorID).ReinterpretCast<Cursor>();
 }
 
 void HideCursor()
@@ -117,17 +117,6 @@ short Alert(int dialogID, void *unknown)
 {
 	PL_NotYetImplemented();
 	return 0;
-}
-
-Handle GetResource(int32_t resType, int id)
-{
-	return PortabilityLayer::ResourceManager::GetInstance()->GetResource(PortabilityLayer::ResTypeID(resType), id);
-}
-
-Handle GetResource(const char(&resTypeLiteral)[5], int id)
-{
-	PL_NotYetImplemented();
-	return nullptr;
 }
 
 short FindWindow(Point point, WindowPtr *window)
@@ -198,7 +187,7 @@ void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
 {
-	Handle windowResource = GetResource('WIND', resID);
+	Handle windowResource = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('WIND', resID);
 
 	if (!windowResource)
 		return nullptr;
@@ -361,7 +350,7 @@ void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
 	if (fnameIndex < 1)
 		return;
 
-	THandle<uint8_t> istrRes = PortabilityLayer::ResourceManager::GetInstance()->GetResource('STR#', stringsID).StaticCast<uint8_t>();
+	THandle<uint8_t> istrRes = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('STR#', stringsID).StaticCast<uint8_t>();
 	if (istrRes && *istrRes)
 	{
 		const uint8_t *contentsBytes = *istrRes;
@@ -626,7 +615,7 @@ void *NewPtrClear(Size size)
 
 void DisposePtr(void *ptr)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::MemoryManager::GetInstance()->Release(ptr);
 }
 
 void BlockMove(const void *src, void *dest, Size size)

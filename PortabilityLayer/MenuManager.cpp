@@ -595,8 +595,8 @@ namespace PortabilityLayer
 		{
 			ResourceManager *resManager = ResourceManager::GetInstance();
 
-			Handle icsHandle = GetResource('ics#', kIconResID);
-			Handle ics8Handle = GetResource('ics8', kIconResID);
+			Handle icsHandle = resManager->GetAppResource('ics#', kIconResID);
+			Handle ics8Handle = resManager->GetAppResource('ics8', kIconResID);
 
 			if (icsHandle && ics8Handle)
 			{

@@ -242,7 +242,7 @@ void OpenMainWindow (void)
 			Rect scorebarRect = thisMac.screen;
 			scorebarRect.bottom = scorebarRect.top + kScoreboardTall;
 
-			PortabilityLayer::WindowDef windowDef = PortabilityLayer::WindowDef::Create(scorebarRect, 0, true, false, 0, 0, PSTR("Scoreboard"));
+			PortabilityLayer::WindowDef windowDef = PortabilityLayer::WindowDef::Create(scorebarRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, false, 0, 0, PSTR("Scoreboard"));
 			boardWindow = windowManager->CreateWindow(windowDef);
 			if (boardWindow != nil)
 				windowManager->PutWindowBehind(boardWindow, PL_GetPutInFrontWindowPtr());

@@ -300,7 +300,9 @@ void OpenToolsWindow (void)
 		QOffsetRect(&toolTextRect, 0, 157 - 15);
 
 		{
-			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(toolsWindowRect, kWindoidWDEF, false, true, 0, 0, PSTR("Tools"));
+			const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar;
+
+			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(toolsWindowRect, windowStyle, false, true, 0, 0, PSTR("Tools"));
 			toolsWindow = wm->CreateWindow(wdef);
 		}
 		

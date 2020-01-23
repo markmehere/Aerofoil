@@ -15,6 +15,7 @@ namespace PortabilityLayer
 {
 	class ResourceArchive;
 	class ScanlineMask;
+	class ResTypeID;
 }
 
 #define kPreferredDepth				8
@@ -174,6 +175,8 @@ void SetAppMemorySize (long);
 
 Boolean CheckFileError (short, const PLPasStr &);				// --- File Error.c
 
+THandle<void> LoadHouseResource(const PortabilityLayer::ResTypeID &resTypeID, int16_t resID);	// --- HouseIO.c
+
 Boolean SavePrefs (prefsInfo *, short);					// --- Prefs.c
 Boolean LoadPrefs (prefsInfo *, short);
 
@@ -193,8 +196,10 @@ void FindOurDevice (void);
 short RandomInt (short);
 long RandomLong (long);
 void RedAlert (short);
-void LoadGraphic (DrawSurface *, short);
-void LoadScaledGraphic (DrawSurface *, short, Rect *);
+void LoadGraphic (DrawSurface *surface, short resID);			// Only loads from app resources
+void LoadGraphicCustom (DrawSurface *surface, short resID);		// Supports custom graphics
+void LoadScaledGraphic (DrawSurface *, short, Rect *);			// Only loads from app resources
+void LoadScaledGraphicCustom (DrawSurface *, short, Rect *);	// Supports custom graphics
 bool LargeIconPlot (DrawSurface *, PortabilityLayer::ResourceArchive *, short, const Rect &);
 void DrawCIcon (DrawSurface *surface, short, short, short);
 char KeyMapOffsetFromRawKey (char);
@@ -225,6 +230,7 @@ void CloseThisWindow (WindowPtr *);
 //	extern pascal void GetSoundVol(short *level)
 //	THREEWORDINLINE(0x4218, 0x10B8, 0x0260);
 #endif
+
 
 #include "GliderDefines.h"
 #include "GliderStructs.h"

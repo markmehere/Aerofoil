@@ -15,7 +15,7 @@ namespace PortabilityLayer
 
 	bool ImageWidget::Init(const WidgetBasicState &state)
 	{
-		m_pict = PortabilityLayer::ResourceManager::GetInstance()->GetResource('PICT', state.m_resID).StaticCast<BitmapImage>();
+		m_pict = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', state.m_resID).StaticCast<BitmapImage>();
 
 		if (!m_pict)
 			return false;

@@ -18,6 +18,7 @@
 #include "Objects.h"
 #include "Play.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 #include "Room.h"
 
 
@@ -2237,7 +2238,7 @@ void GetThisRoomsObjRects (void)
 				break;
 				
 				case kCustomPict:
-				thePict = GetPicture(thisRoom->objects[i].data.g.height);
+				thePict = LoadHouseResource('PICT', thisRoom->objects[i].data.g.height).StaticCast<BitmapImage>();
 				if (thePict == nil)
 				{
 					thisRoom->objects[i].data.g.height = 10000;

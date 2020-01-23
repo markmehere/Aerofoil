@@ -10,7 +10,8 @@
 #include "Environ.h"
 #include "PLStandardColors.h"
 #include "RectUtils.h"
-
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 #define kFloatingKind		2048
 #define kMessageWindowTall	48
@@ -101,16 +102,16 @@ Boolean	IsWindowFloating (WindowPtr theWindow)
 
 void OpenMessageWindow (const PLPasStr &title)
 {
+	const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar;
+
 	Rect		mssgWindowRect;
 	
 	SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
-	if (thisMac.hasColor)
-		mssgWindow = NewCWindow(nil, &mssgWindowRect, 
-				title, false, noGrowDocProc, kPutInFront, false, 0L);
-	else
-		mssgWindow = NewWindow(nil, &mssgWindowRect, 
-				title, false, noGrowDocProc, kPutInFront, false, 0L);
-	
+
+	const PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mssgWindowRect, windowStyle, false, false, 0, 0, title);
+
+	mssgWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(wdef);
+
 	if (mssgWindow != nil)
 	{
 		ShowWindow(mssgWindow);
@@ -155,9 +156,7 @@ void SetMessageWindowMessage (StringPtr message)
 
 void CloseMessageWindow (void)
 {
-	if (mssgWindow != nil)
-		DisposeWindow(mssgWindow);
-	mssgWindow = nil;
+	CloseThisWindow(&mssgWindow);
 }
 
 //--------------------------------------------------------------  CloseThisWindow
@@ -168,7 +167,7 @@ void CloseMessageWindow (void)
 void CloseThisWindow (WindowPtr *theWindow)
 {
 	if (*theWindow != nil)
-		DisposeWindow(*theWindow);
+		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(*theWindow);
 	*theWindow = nil;
 }
 

@@ -261,10 +261,10 @@ void ReadyBackground (short theID, short *theTiles)
 		return;
 	}
 	
-	thePicture = GetPicture(theID);
+	thePicture = LoadHouseResource('PICT', theID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 	{
-		thePicture = GetResource('Date', theID).StaticCast<BitmapImage>();
+		thePicture = LoadHouseResource('Date', theID).StaticCast<BitmapImage>();
 		if (thePicture == nil)
 		{
 			YellowAlert(kYellowNoBackground, 0);
@@ -907,7 +907,10 @@ short GetOriginalBounding (short theID)
 	boundsHand	boundsRes;
 	short		boundCode;
 	
-	boundsRes = GetResource('bnds', theID).StaticCast<boundsType>();
+	boundsRes = LoadHouseResource('bnds', theID).StaticCast<boundsType>();
+	if (boundsRes.MMBlock()->m_size != sizeof(boundsType))
+		return 0;	// Corrupted resource
+
 	if (boundsRes == nil)
 	{
 		if (PictIDExists(theID))

@@ -3,6 +3,7 @@
 
 #include "MenuManager.h"
 #include "QDManager.h"
+#include "ResourceManager.h"
 
 // Menu resource structure:
 // uint16 menu ID
@@ -21,7 +22,7 @@
 
 MenuHandle GetMenu(int resID)
 {
-	Handle menuRes = GetResource('MENU', resID);
+	Handle menuRes = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('MENU', resID);
 
 	if (!menuRes)
 		return nullptr;

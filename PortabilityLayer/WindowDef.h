@@ -9,10 +9,22 @@ namespace PortabilityLayer
 {
 	class IOStream;
 
+	namespace WindowStyleFlags
+	{
+		enum WindowStyleFlag
+		{
+			kTitleBar	= 1,
+			kBorderless = 2,
+			kResizable	= 4,
+			kMiniBar	= 8,
+			kAlert		= 16,
+		};
+	}
+
 	struct WindowDef
 	{
 		Rect m_initialRect;
-		int16_t m_wdefResID;
+		uint16_t m_styleFlags;
 		uint16_t m_visibilityStatus;
 		uint16_t m_hasCloseBox;
 		uint32_t m_referenceConstant;
@@ -21,6 +33,6 @@ namespace PortabilityLayer
 
 		bool Deserialize(IOStream *stream);
 
-		static WindowDef Create(const Rect &initialRect, int16_t wdefID, bool isVisible, bool hasCloseBox, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title);
+		static WindowDef Create(const Rect &initialRect, uint16_t styleFlags, bool isVisible, bool hasCloseBox, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title);
 	};
 }

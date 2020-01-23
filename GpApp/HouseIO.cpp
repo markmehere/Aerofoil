@@ -15,6 +15,7 @@
 #include "Environ.h"
 #include "FileManager.h"
 #include "HostFileSystem.h"
+#include "HostSystemServices.h"
 #include "House.h"
 #include "IOStream.h"
 #include "ObjectEdit.h"
@@ -34,11 +35,13 @@ Boolean IsFileReadOnly (const VFileSpec &);
 
 Movie		theMovie;
 Rect		movieRect;
-short		houseResFork, wasHouseVersion;
+PortabilityLayer::ResourceArchive	*houseResFork;
+short		wasHouseVersion;
 PortabilityLayer::IOStream *houseStream;
 Boolean		houseOpen, fileDirty, gameDirty;
 Boolean		changeLockStateOfHouse, saveHouseLocked, houseIsReadOnly;
 Boolean		hasMovie, tvInRoom;
+
 
 extern	VFileSpec	*theHousesSpecs;
 extern	short		thisHouseIndex, tvWithMovieNumber;
@@ -324,8 +327,28 @@ void ByteSwapRect(Rect *rect)
 	PortabilityLayer::ByteSwap::BigInt16(rect->right);
 }
 
+template<size_t TSize>
+void SanitizePascalStr(uint8_t(&chars)[TSize])
+{
+	const size_t maxLength = TSize - 1;
+	size_t strLength = chars[0];
+	if (strLength > maxLength)
+	{
+		strLength = maxLength;
+		chars[0] = static_cast<uint8_t>(maxLength);
+	}
+
+	for (size_t i = 1 + strLength; i < TSize; i++)
+		chars[i] = 0;
+}
+
 void ByteSwapScores(scoresType *scores)
 {
+	SanitizePascalStr(scores->banner);
+
+	for (int i = 0; i < kMaxScores; i++)
+		SanitizePascalStr(scores->names[i]);
+
 	for (int i = 0; i < kMaxScores; i++)
 		PortabilityLayer::ByteSwap::BigInt32(scores->scores[i]);
 
@@ -568,6 +591,8 @@ void ByteSwapObject(objectType *obj)
 
 void ByteSwapRoom(roomType *room)
 {
+	SanitizePascalStr(room->name);
+
 	PortabilityLayer::ByteSwap::BigInt16(room->bounds);
 
 	PortabilityLayer::ByteSwap::BigInt16(room->background);
@@ -590,18 +615,22 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes)
 	PortabilityLayer::ByteSwap::BigInt32(house->timeStamp);
 	PortabilityLayer::ByteSwap::BigInt32(house->flags);
 	ByteSwapPoint(&house->initial);
+	SanitizePascalStr(house->banner);
+	SanitizePascalStr(house->trailer);
 	ByteSwapScores(&house->highScores);
 	ByteSwapSavedGame(&house->savedGame);
 	PortabilityLayer::ByteSwap::BigInt16(house->firstRoom);
 	PortabilityLayer::ByteSwap::BigInt16(house->nRooms);
 
 	const size_t roomDataSize = sizeInBytes - houseType::kBinaryDataSize;
-	if (house->nRooms < 1 || roomDataSize / sizeof(roomType) < static_cast<size_t>(house->nRooms))
+	if (house->nRooms < 0 || roomDataSize / sizeof(roomType) < static_cast<size_t>(house->nRooms))
 		return false;
 
 	const size_t nRooms = static_cast<size_t>(house->nRooms);
 	for (size_t i = 0; i < nRooms; i++)
 		ByteSwapRoom(house->rooms + i);
+
+	house->padding = 0;
 
 	return true;
 }
@@ -748,8 +777,6 @@ Boolean WriteHouse (Boolean checkIt)
 	UInt32			timeStamp;
 	long			byteCount;
 	PLError_t			theErr;
-
-	PL_NotYetImplemented();
 	
 	if (!houseOpen)
 	{
@@ -772,9 +799,10 @@ Boolean WriteHouse (Boolean checkIt)
 	
 	if (fileDirty)
 	{
-		GetDateTime(&timeStamp);
-		timeStamp &= 0x7FFFFFFF;
-		
+		int64_t currentTime = PortabilityLayer::HostSystemServices::GetInstance()->GetTime();
+		if (currentTime > 0x7fffffff)
+			currentTime = 0x7fffffff;
+
 		if (changeLockStateOfHouse)
 			houseUnlocked = !saveHouseLocked;
 		
@@ -869,13 +897,11 @@ Boolean CloseHouse (void)
 void OpenHouseResFork (void)
 {
 	PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
-	if (houseResFork == -1)
+	if (houseResFork == nullptr)
 	{
-		houseResFork = rm->OpenResFork(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name);
-		if (houseResFork < 0)
+		houseResFork = rm->LoadResFile(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name);
+		if (!houseResFork)
 			YellowAlert(kYellowFailedResOpen, PLErrors::kResourceError);
-		else
-			UseResFile(houseResFork);
 	}
 }
 
@@ -884,12 +910,12 @@ void OpenHouseResFork (void)
 
 void CloseHouseResFork (void)
 {
-	if (houseResFork != -1)
+	if (houseResFork)
 	{
 		PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
 
-		rm->CloseResFile(houseResFork);
-		houseResFork = -1;
+		houseResFork->Destroy();
+		houseResFork = nullptr;
 	}
 }
 
@@ -964,4 +990,15 @@ void YellowAlert (short whichAlert, short identifier)
 Boolean IsFileReadOnly (const VFileSpec &spec)
 {
 	return PortabilityLayer::FileManager::GetInstance()->FileLocked(spec.m_dir, spec.m_name);
+}
+
+//--------------------------------------------------------------  LoadHousePicture
+
+THandle<void> LoadHouseResource(const PortabilityLayer::ResTypeID &resTypeID, int16_t resID)
+{
+	THandle<void> hdl = houseResFork->LoadResource(resTypeID, resID);
+	if (hdl != nullptr)
+		return hdl;
+
+	return PortabilityLayer::ResourceManager::GetInstance()->GetAppResource(resTypeID, resID);
 }

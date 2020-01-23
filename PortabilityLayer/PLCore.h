@@ -222,11 +222,6 @@ enum EventCode
 	kHighLevelEvent,
 };
 
-enum BuiltinWDEFs
-{
-	noGrowDocProc = 4,		// Movable, not resizable
-};
-
 static const int everyEvent = -1;
 
 static const int iBeamCursor = 1;
@@ -250,9 +245,6 @@ void SetBuiltinCursor(int builtinCursor);
 
 void Delay(int ticks, UInt32 *endTickCount);
 short Alert(int dialogID, void *unknown);
-
-Handle GetResource(int32_t resType, int id);
-Handle GetResource(const char(&resTypeLiteral)[5], int id);
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
 void DragWindow(WindowPtr window, Point start, Rect *bounds);	// Drags the window (probably not implemented)

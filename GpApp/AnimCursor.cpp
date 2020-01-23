@@ -13,6 +13,7 @@
 #include "HostDisplayDriver.h"
 #include "IGpColorCursor.h"
 #include "IGpDisplayDriver.h"
+#include "ResourceManager.h"
 
 
 #define	rAcurID					128
@@ -97,7 +98,7 @@ void InitAnimatedCursor (acurHandle ballCursH)
 	compiledAcurHandle	compiledBallCursorH;
 	
 	if (ballCursH == nil) 
-		ballCursH = GetResource('acur', 128).StaticCast<acurRec>();
+		ballCursH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('acur', 128).StaticCast<acurRec>();
 	if (ballCursH && ballCursH != animCursorH)
 	{
 		compiledBallCursorH = NewHandle(sizeof(compiledAcurRec) * (*ballCursH)->n).StaticCast<compiledAcurRec>();
@@ -122,7 +123,7 @@ void InitAnimatedCursor (acurHandle ballCursH)
 
 void LoadCursors (void)
 {
-	InitAnimatedCursor(GetResource('acur', rAcurID).StaticCast<acurRec>());
+	InitAnimatedCursor(PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('acur', rAcurID).StaticCast<acurRec>());
 }
 
 //--------------------------------------------------------------  DisposCursors

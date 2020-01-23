@@ -10,6 +10,7 @@
 #include "PLSound.h"
 #include "Externs.h"
 #include "MemoryManager.h"
+#include "ResourceManager.h"
 #include "SoundSync.h"
 #include "VirtualDirectory.h"
 #include "WaveFormat.h"
@@ -187,7 +188,7 @@ PLError_t LoadTriggerSound (short soundID)
 		
 		theErr = PLErrors::kNone;
 		
-		theSound = ParseAndConvertSound(GetResource('snd ', soundID));
+		theSound = ParseAndConvertSound(LoadHouseResource('snd ', soundID));
 		if (theSound == nil)
 		{
 			theErr = PLErrors::kFileNotFound;
@@ -234,7 +235,7 @@ PLError_t LoadBufferSounds (void)
 	
 	for (i = 0; i < kMaxSounds - 1; i++)
 	{
-		theSound = ParseAndConvertSound(GetResource('snd ', i + kBaseBufferSoundID));
+		theSound = ParseAndConvertSound(PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferSoundID));
 		if (theSound == nil)
 			return (PLErrors::kOutOfMemory);
 		
@@ -369,24 +370,20 @@ void KillSound (void)
 
 long SoundBytesNeeded (void)
 {
-	Handle		theSound;
 	long		totalBytes;
 	short		i;
 	
 	totalBytes = 0L;
-	SetResLoad(false);
 	for (i = 0; i < kMaxSounds - 1; i++)
 	{
-		theSound = GetResource('snd ', i + kBaseBufferSoundID);
-		if (theSound == nil)
-		{
-			SetResLoad(true);
+		size_t resSize = 0;
+		if (!PortabilityLayer::ResourceManager::GetInstance()->GetAppResourceArchive()->GetResourceSize('snd ', i + kBaseBufferSoundID, resSize))
 			return -1;
-		}
-		totalBytes += GetMaxResourceSize(theSound);
+
+		totalBytes += static_cast<long>(resSize);
 //		ReleaseResource(theSound);
 	}
-	SetResLoad(true);
+
 	return totalBytes;
 }
 

@@ -15,7 +15,7 @@
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "FontFamily.h"
-
+#include "ResourceManager.h"
 
 #define kActive						0
 #define kInactive					255
@@ -144,7 +144,7 @@ void GetDialogRect (Rect *bounds, short dialogID)
 {
 	Byte		wasState;
 	
-	Handle dlogHandle = GetResource('DLOG', dialogID).StaticCast<void>();
+	Handle dlogHandle = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('DLOG', dialogID).StaticCast<void>();
 	if (dlogHandle != nil)
 	{
 		BERect dataRect = **dlogHandle.StaticCast<BERect>();
@@ -693,7 +693,7 @@ void LoadDialogPICT (Dialog *theDialog, short item, short theID)
 
 	Rect			iRect = theDialog->GetItems()[item - 1].GetWidget()->GetRect();;
 
-	thePict = GetPicture(theID);
+	thePict = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', theID).StaticCast<BitmapImage>();
 	if (thePict)
 		theDialog->GetWindow()->GetDrawSurface()->DrawPicture(thePict, iRect);
 }

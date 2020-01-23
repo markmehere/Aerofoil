@@ -213,7 +213,6 @@ PLError_t CreateOffScreenGWorld (DrawSurface **theGWorld, Rect *bounds, GpPixelF
 	return theErr;
 }
 
-
 //--------------------------------------------------------------  KillOffScreenPixMap
 // Destroys memory allocated by an offscreen pix map.
 /*
@@ -255,7 +254,7 @@ void LoadGraphic (DrawSurface *surface, short resID)
 	Rect					bounds;
 	THandle<BitmapImage>	thePicture;
 	
-	thePicture = GetPicture(resID);
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', resID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	
@@ -263,6 +262,24 @@ void LoadGraphic (DrawSurface *surface, short resID)
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	surface->DrawPicture(thePicture, bounds);
 	
+	thePicture.Dispose();
+}
+
+//--------------------------------------------------------------  LoadGraphicCustom
+// Same as LoadGraphic but supports custom graphics
+void LoadGraphicCustom(DrawSurface *surface, short resID)
+{
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
+
+	thePicture = LoadHouseResource('PICT', resID).StaticCast<BitmapImage>();
+	if (thePicture == nil)
+		RedAlert(kErrFailedGraphicLoad);
+
+	bounds = (*thePicture)->GetRect();
+	OffsetRect(&bounds, -bounds.left, -bounds.top);
+	surface->DrawPicture(thePicture, bounds);
+
 	thePicture.Dispose();
 }
 
@@ -275,7 +292,23 @@ void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 {
 	THandle<BitmapImage>	thePicture;
 	
-	thePicture = GetPicture(resID);
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', resID).StaticCast<BitmapImage>();
+	if (thePicture == nil)
+		RedAlert(kErrFailedGraphicLoad);
+	surface->DrawPicture(thePicture, *theRect);
+	thePicture.Dispose();
+}
+
+//--------------------------------------------------------------  LoadScaledGraphic
+// Loads the specified 'PICT' and draws it mapped to the rectangle…
+// specified.  If this rect isn't the same size of the 'PICT', scaling…
+// will occur.
+
+void LoadScaledGraphicCustom(DrawSurface *surface, short resID, Rect *theRect)
+{
+	THandle<BitmapImage>	thePicture;
+
+	thePicture = LoadHouseResource('PICT', resID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
 	surface->DrawPicture(thePicture, *theRect);
@@ -287,7 +320,7 @@ void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 
 bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::ResourceArchive *resFile, short resID, const Rect &theRect)
 {
-	Handle hdl = resFile->GetResource('icl8', resID, true);
+	Handle hdl = resFile->LoadResource('icl8', resID);
 	if (hdl)
 	{
 		THandle<PortabilityLayer::PixMapImpl> img = PortabilityLayer::IconLoader::GetInstance()->LoadSimpleColorIcon(hdl);
@@ -302,7 +335,7 @@ bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::ResourceArchive *res
 		return true;
 	}
 
-	hdl = resFile->GetResource('ICN#', resID, true);
+	hdl = resFile->LoadResource('ICN#', resID);
 	if (hdl)
 	{
 		THandle<PortabilityLayer::PixMapImpl> img = PortabilityLayer::IconLoader::GetInstance()->LoadBWIcon(hdl);

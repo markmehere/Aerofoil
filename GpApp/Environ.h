@@ -13,7 +13,6 @@ typedef struct
 	Rect		screen, gray;
 	long		dirID;
 	short		wasDepth, isDepth;
-	short		thisResFile;
 	short		numScreens;
 	short		vRefNum;
 	Boolean		can1Bit;

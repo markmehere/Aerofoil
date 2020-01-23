@@ -13,6 +13,7 @@
 #include "RectUtils.h"
 #include "PLButtonWidget.h"
 #include "PLWidgets.h"
+#include "WindowDef.h"
 #include "WindowManager.h"
 
 #define kLinkControlID			130
@@ -220,13 +221,15 @@ void OpenLinkWindow (void)
 	
 	if (linkWindow == nil)
 	{
+		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar;
+
 		QSetRect(&linkWindowRect, 0, 0, 129, 30);
 		if (thisMac.hasColor)
 			linkWindow = NewCWindow(nil, &linkWindowRect, 
-					PSTR("Link"), false, kWindoidWDEF, kPutInFront, true, 0L);
+					PSTR("Link"), false, windowStyle, kPutInFront, true, 0L);
 		else
 			linkWindow = NewWindow(nil, &linkWindowRect, 
-					PSTR("Link"), false, kWindoidWDEF, kPutInFront, true, 0L);
+					PSTR("Link"), false, windowStyle, kPutInFront, true, 0L);
 		
 		MoveWindow(linkWindow, isLinkH, isLinkV, true);
 
