@@ -112,38 +112,43 @@ void ConvertToMSDOSTimestamp(int64_t timestamp, uint16_t &msdosDate, uint16_t &m
 	int64_t epochStart64 = (static_cast<int64_t>(epochStartFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(epochStartFT.dwHighDateTime) << 32);
 	int64_t offsetDate64 = (epochStart64 + timestamp * 10000000);
 
-	FILETIME timestampFT;
-	timestampFT.dwLowDateTime = static_cast<DWORD>(offsetDate64 & 0xffffffff);
-	timestampFT.dwHighDateTime = static_cast<DWORD>((offsetDate64 >> 32) & 0xffffffff);
+	FILETIME utcTimestampFT;
+	utcTimestampFT.dwLowDateTime = static_cast<DWORD>(offsetDate64 & 0xffffffff);
+	utcTimestampFT.dwHighDateTime = static_cast<DWORD>((offsetDate64 >> 32) & 0xffffffff);
 
-	// We could use FileTimeToDosDateTime but we want to clamp
-	SYSTEMTIME timestampST;
-	FileTimeToSystemTime(&timestampFT, &timestampST);
+	TIME_ZONE_INFORMATION tzInfo;
+	GetTimeZoneInformation(&tzInfo);
 
-	DWORD yearsSince1980 = timestampST.wYear - 1980;
+	SYSTEMTIME utcTimestampST;
+	FileTimeToSystemTime(&utcTimestampFT, &utcTimestampST);
+
+	SYSTEMTIME localTimestampST;
+	SystemTimeToTzSpecificLocalTime(&tzInfo, &utcTimestampST, &localTimestampST);
+
+	DWORD yearsSince1980 = localTimestampST.wYear - 1980;
 	if (yearsSince1980 < 0)
 	{
 		// Time machine
 		yearsSince1980 = 0;
-		timestampST.wSecond = 0;
-		timestampST.wMinute = 0;
-		timestampST.wHour = 0;
-		timestampST.wDay = 1;
-		timestampST.wMonth = 1;
+		localTimestampST.wSecond = 0;
+		localTimestampST.wMinute = 0;
+		localTimestampST.wHour = 0;
+		localTimestampST.wDay = 1;
+		localTimestampST.wMonth = 1;
 	}
 	else if (yearsSince1980 > 127)
 	{
 		// I was promised flying cars, but it's 2107 and you're still flying paper airplanes...
 		yearsSince1980 = 127;
-		timestampST.wSecond = 59;
-		timestampST.wMinute = 59;
-		timestampST.wHour = 23;
-		timestampST.wDay = 31;
-		timestampST.wMonth = 12;
+		localTimestampST.wSecond = 59;
+		localTimestampST.wMinute = 59;
+		localTimestampST.wHour = 23;
+		localTimestampST.wDay = 31;
+		localTimestampST.wMonth = 12;
 	}
 
-	msdosTime = (timestampST.wSecond / 2) | (timestampST.wMinute << 5) | (timestampST.wHour << 11);
-	msdosDate = timestampST.wDay | (timestampST.wMonth << 5) | (yearsSince1980 << 9);
+	msdosTime = (localTimestampST.wSecond / 2) | (localTimestampST.wMinute << 5) | (localTimestampST.wHour << 11);
+	msdosDate = localTimestampST.wDay | (localTimestampST.wMonth << 5) | (yearsSince1980 << 9);
 }
 
 void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, const PortabilityLayer::MacFileProperties &mfp)

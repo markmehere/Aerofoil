@@ -7,7 +7,7 @@ int main(int argc, const char **argv)
 	if (argc != 2)
 	{
 		fprintf(stderr, "Usage: MakeTimestamp <output.ts>\n");
-		fprintf(stderr, "Outputs the current timestamp in 1904 epoch format");
+		fprintf(stderr, "Outputs the current timestamp in 1904 UTC epoch format");
 		return -1;
 	}
 
@@ -25,14 +25,11 @@ int main(int argc, const char **argv)
 	if (!SystemTimeToFileTime(&epochStart, &epochStartFT))
 		return 0;
 
-	SYSTEMTIME localTime;
-	GetLocalTime(&localTime);
-
-	FILETIME localTimeFT;
-	SystemTimeToFileTime(&localTime, &localTimeFT);
+	FILETIME timestampFT;
+	GetSystemTimeAsFileTime(&timestampFT);
 
 	int64_t epochStart64 = (static_cast<int64_t>(epochStartFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(epochStartFT.dwHighDateTime) << 32);
-	int64_t currentTime64 = (static_cast<int64_t>(localTimeFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(localTimeFT.dwHighDateTime) << 32);
+	int64_t currentTime64 = (static_cast<int64_t>(timestampFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(timestampFT.dwHighDateTime) << 32);
 	int64_t timeDelta = (currentTime64 - epochStart64) / 10000000;
 
 	FILE *f = nullptr;
