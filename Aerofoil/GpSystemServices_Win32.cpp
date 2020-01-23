@@ -35,7 +35,7 @@ int64_t GpSystemServices_Win32::GetTime() const
 	int64_t epochStart64 = (static_cast<int64_t>(epochStartFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(epochStartFT.dwHighDateTime) << 32);
 	int64_t currentTime64 = (static_cast<int64_t>(currentTime.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(currentTime.dwHighDateTime) << 32);
 
-	return currentTime64 - epochStart64;
+	return (currentTime64 - epochStart64) / 10000000;
 }
 
 void GpSystemServices_Win32::GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const

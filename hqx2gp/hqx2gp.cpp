@@ -34,9 +34,9 @@ using namespace PortabilityLayer;
 
 int main(int argc, const char **argv)
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
-		fprintf(stderr, "Usage: hqx2gp <input.hqx> <output>");
+		fprintf(stderr, "Usage: hqx2gp <input.hqx> <input.ts> <output>");
 		return -1;
 	}
 
@@ -54,18 +54,52 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
+#ifdef _CRT_INSECURE_DEPRECATE
+	FILE *tsF = nullptr;
+	if (fopen_s(&tsF, argv[2], "rb"))
+		tsF = nullptr;
+#else
+	FILE *tsF = fopen(argv[2], "rb");
+#endif
+
+	if (!tsF)
+	{
+		fprintf(stderr, "Could not open timestamp file");
+		return -1;
+	}
+
+	int64_t timestamp = 0;
+
+	{
+		uint8_t encodedTimestamp[8];
+		if (fread(encodedTimestamp, 1, 8, tsF) != 8)
+		{
+			fprintf(stderr, "Error reading timestamp file");
+			return -1;
+		}
+
+		for (int i = 0; i < 8; i++)
+			timestamp |= static_cast<int64_t>(encodedTimestamp[i]) << (i * 8);
+
+	}
+
+	fclose(tsF);
+
 	CFileStream fs(f, true, false, true);
 
 	ScopedPtr<MacFileMem> memFile = BinHex4::LoadHQX(&fs);
 
 	fs.Close();
 
-	std::string fname = argv[2];
+	std::string fname = argv[3];
 
 	const char* extensions[] = { ".gpf", ".gpr", ".gpd", ".gpc" };
 
+	MacFileProperties mfp = memFile->FileInfo().m_properties;
+	mfp.m_creationDate = mfp.m_modifiedDate = timestamp;
+
 	MacFilePropertiesSerialized sp;
-	sp.Serialize(memFile->FileInfo().m_properties);
+	sp.Serialize(mfp);
 
 	for (int i = 0; i < 4; i++)
 	{

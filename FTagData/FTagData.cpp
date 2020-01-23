@@ -5,56 +5,55 @@
 
 int main(int argc, const char **argv)
 {
-	if (argc < 7)
+	if (argc < 8)
 	{
-		fprintf(stderr, "FTagData <input> <output> <file type ID> <file creator ID> <x pos> <y pos> [flags]");
+		fprintf(stderr, "FTagData <input> <timestamp> <output> <file type ID> <file creator ID> <x pos> <y pos> [flags]");
 		return -1;
 	}
 
 	std::string inPath = argv[1];
-	std::string outPath = argv[2];
+	std::string timestampPath = argv[2];
+	std::string outPath = argv[3];
 
-	if (strlen(argv[3]) != 4)
+	if (strlen(argv[4]) != 4)
 	{
 		fprintf(stderr, "File type ID must be 4 characters");
 		return -2;
 	}
 
-	if (strlen(argv[4]) != 4)
+	if (strlen(argv[5]) != 4)
 	{
 		fprintf(stderr, "File creator ID must be 4 characters");
 		return -3;
 	}
 
-	FILETIME currentTime;
-	GetSystemTimeAsFileTime(&currentTime);
+	FILE *tsF = nullptr;
+	errno_t ferr = fopen_s(&tsF, timestampPath.c_str(), "rb");
+	int64_t timestamp = 0;
 
-	SYSTEMTIME epochStart;
-	epochStart.wYear = 1904;
-	epochStart.wMonth = 1;
-	epochStart.wDayOfWeek = 5;
-	epochStart.wDay = 1;
-	epochStart.wHour = 0;
-	epochStart.wMinute = 0;
-	epochStart.wSecond = 0;
-	epochStart.wMilliseconds = 0;
+	if (!ferr)
+	{
+		uint8_t encodedTimestamp[8];
+		if (fread(encodedTimestamp, 1, 8, tsF) != 8)
+		{
+			fprintf(stderr, "Error reading timestamp file");
+			return -1;
+		}
 
-	FILETIME epochStartFT;
-	SystemTimeToFileTime(&epochStart, &epochStartFT);
+		for (int i = 0; i < 8; i++)
+			timestamp |= static_cast<int64_t>(encodedTimestamp[i]) << (i * 8);
 
-	int64_t epochStart64 = (static_cast<int64_t>(epochStartFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(epochStartFT.dwHighDateTime) << 32);
-	int64_t currentTime64 = (static_cast<int64_t>(currentTime.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(currentTime.dwHighDateTime) << 32);
-
-	int64_t timeDelta = (currentTime64 - epochStart64) / 10000000;
+		fclose(tsF);
+	}
 
 	PortabilityLayer::MacFileProperties mfp;
-	memcpy(mfp.m_fileType, argv[3], 4);
-	memcpy(mfp.m_fileCreator, argv[4], 4);
-	mfp.m_xPos = atoi(argv[5]);
-	mfp.m_yPos = atoi(argv[6]);
+	memcpy(mfp.m_fileType, argv[4], 4);
+	memcpy(mfp.m_fileCreator, argv[5], 4);
+	mfp.m_xPos = atoi(argv[6]);
+	mfp.m_yPos = atoi(argv[7]);
 	mfp.m_finderFlags = 0;
 	mfp.m_protected = 0;
-	mfp.m_modifiedDate = mfp.m_creationDate = static_cast<uint32_t>(timeDelta & 0xffffffff);
+	mfp.m_modifiedDate = mfp.m_creationDate = timestamp;
 
 	for (int i = 7; i < argc; i++)
 	{

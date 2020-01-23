@@ -5,6 +5,7 @@
 #include "QDPictDecoder.h"
 #include "QDPictEmitContext.h"
 #include "QDPictEmitScanlineParameters.h"
+#include "MacFileInfo.h"
 #include "ResourceFile.h"
 #include "ResourceCompiledTypeList.h"
 #include "SharedTypes.h"
@@ -93,7 +94,59 @@ bool TryDeflate(const std::vector<uint8_t> &uncompressed, std::vector<uint8_t> &
 	return true;
 }
 
-void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries)
+void ConvertToMSDOSTimestamp(int64_t timestamp, uint16_t &msdosDate, uint16_t &msdosTime)
+{
+	SYSTEMTIME epochStart;
+	epochStart.wYear = 1904;
+	epochStart.wMonth = 1;
+	epochStart.wDayOfWeek = 5;
+	epochStart.wDay = 1;
+	epochStart.wHour = 0;
+	epochStart.wMinute = 0;
+	epochStart.wSecond = 0;
+	epochStart.wMilliseconds = 0;
+
+	FILETIME epochStartFT;
+	SystemTimeToFileTime(&epochStart, &epochStartFT);
+
+	int64_t epochStart64 = (static_cast<int64_t>(epochStartFT.dwLowDateTime) & 0xffffffff) | (static_cast<int64_t>(epochStartFT.dwHighDateTime) << 32);
+	int64_t offsetDate64 = (epochStart64 + timestamp * 10000000);
+
+	FILETIME timestampFT;
+	timestampFT.dwLowDateTime = static_cast<DWORD>(offsetDate64 & 0xffffffff);
+	timestampFT.dwHighDateTime = static_cast<DWORD>((offsetDate64 >> 32) & 0xffffffff);
+
+	// We could use FileTimeToDosDateTime but we want to clamp
+	SYSTEMTIME timestampST;
+	FileTimeToSystemTime(&timestampFT, &timestampST);
+
+	DWORD yearsSince1980 = timestampST.wYear - 1980;
+	if (yearsSince1980 < 0)
+	{
+		// Time machine
+		yearsSince1980 = 0;
+		timestampST.wSecond = 0;
+		timestampST.wMinute = 0;
+		timestampST.wHour = 0;
+		timestampST.wDay = 1;
+		timestampST.wMonth = 1;
+	}
+	else if (yearsSince1980 > 127)
+	{
+		// I was promised flying cars, but it's 2107 and you're still flying paper airplanes...
+		yearsSince1980 = 127;
+		timestampST.wSecond = 59;
+		timestampST.wMinute = 59;
+		timestampST.wHour = 23;
+		timestampST.wDay = 31;
+		timestampST.wMonth = 12;
+	}
+
+	msdosTime = (timestampST.wSecond / 2) | (timestampST.wMinute << 5) | (timestampST.wHour << 11);
+	msdosDate = timestampST.wDay | (timestampST.wMonth << 5) | (yearsSince1980 << 9);
+}
+
+void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, const PortabilityLayer::MacFileProperties &mfp)
 {
 	FILE *outF = nullptr;
 	if (fopen_s(&outF, path, "wb"))
@@ -102,41 +155,10 @@ void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries)
 		return;
 	}
 
-	SYSTEMTIME localTime;
-	GetLocalTime(&localTime);
+	uint16_t msdosModificationTime = 0;
+	uint16_t msdosModificationDate = 0;
 
-	DWORD yearsSince1980 = localTime.wYear - 1980;
-	if (yearsSince1980 < 0)
-	{
-		// Time machine
-		yearsSince1980 = 0;
-		localTime.wSecond = 0;
-		localTime.wMinute = 0;
-		localTime.wHour = 0;
-		localTime.wDay = 1;
-		localTime.wMonth = 1;
-	}
-	else if (yearsSince1980 > 127)
-	{
-		// Original author is either dead or cryofrozen
-		yearsSince1980 = 127;
-		localTime.wSecond = 59;
-		localTime.wMinute = 59;
-		localTime.wHour = 23;
-		localTime.wDay = 31;
-		localTime.wMonth = 12;
-	}
-
-	uint16_t msdosTime = 0;
-	uint16_t msdosDate = 0;
-
-	msdosTime |= localTime.wSecond / 2;
-	msdosTime |= (localTime.wMinute << 5);
-	msdosTime |= (localTime.wHour << 11);
-
-	msdosDate |= localTime.wDay;
-	msdosDate |= (localTime.wMonth << 5);
-	msdosDate |= (yearsSince1980 << 9);
+	ConvertToMSDOSTimestamp(mfp.m_modifiedDate, msdosModificationDate, msdosModificationTime);
 
 	std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> cdirRecords;
 
@@ -162,8 +184,8 @@ void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries)
 		cdirHeader.m_versionRequired = PortabilityLayer::ZipConstants::kStoredRequiredVersion;
 		cdirHeader.m_flags = 0;
 		cdirHeader.m_method = isCompressed ? PortabilityLayer::ZipConstants::kDeflatedMethod : PortabilityLayer::ZipConstants::kStoredMethod;
-		cdirHeader.m_modificationTime = msdosTime;
-		cdirHeader.m_modificationDate = msdosDate;
+		cdirHeader.m_modificationTime = msdosModificationTime;
+		cdirHeader.m_modificationDate = msdosModificationDate;
 		cdirHeader.m_crc = 0;
 
 		if (entry.m_isDirectory)
@@ -717,16 +739,37 @@ int main(int argc, const char **argv)
 {
 	if (argc != 3)
 	{
-		fprintf(stderr, "Usage: gpr2gpa <input.gpr> <output.gpa>");
+		fprintf(stderr, "Usage: gpr2gpa <prefix> <output.gpa>");
 		return -1;
 	}
 
+	std::string base = argv[1];
+	std::string metadataPath = base + ".gpf";
+	std::string resPath = base + ".gpr";
+
 	FILE *inF = nullptr;
-	if (fopen_s(&inF, argv[1], "rb"))
+	if (fopen_s(&inF, resPath.c_str(), "rb"))
 	{
 		fprintf(stderr, "Error opening input file");
 		return -1;
 	}
+
+	FILE *metaF = nullptr;
+	if (fopen_s(&metaF, metadataPath.c_str(), "rb"))
+	{
+		fprintf(stderr, "Error opening metadata file");
+		return -1;
+	}
+
+	PortabilityLayer::MacFilePropertiesSerialized mfpSerialized;
+	if (fread(mfpSerialized.m_data, 1, PortabilityLayer::MacFilePropertiesSerialized::kSize, metaF) != PortabilityLayer::MacFilePropertiesSerialized::kSize)
+	{
+		fprintf(stderr, "Error reading metadata");
+		return -1;
+	}
+
+	PortabilityLayer::MacFileProperties mfp;
+	mfpSerialized.Deserialize(mfp);
 
 	PortabilityLayer::CFileStream cfs(inF);
 
@@ -808,7 +851,7 @@ int main(int argc, const char **argv)
 		}
 	}
 
-	ExportZipFile(argv[2], contents);
+	ExportZipFile(argv[2], contents, mfp);
 
 	resFile->Destroy();
 

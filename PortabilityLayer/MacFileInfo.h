@@ -29,9 +29,6 @@ namespace PortabilityLayer
 		uint8_t m_protected;
 		int64_t m_creationDate;
 		int64_t m_modifiedDate;
-
-		void Serialize(void *buffer) const;
-		void Deserialize(const void *buffer);
 	};
 
 	struct MacFilePropertiesSerialized
