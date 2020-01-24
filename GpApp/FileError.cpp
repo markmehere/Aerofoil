@@ -9,6 +9,7 @@
 #include "PLNumberFormatting.h"
 #include "PLTextUtils.h"
 #include "PLPasStr.h"
+#include "DialogManager.h"
 #include "Externs.h"
 
 
@@ -59,7 +60,7 @@ Boolean CheckFileError (short resultCode, const PLPasStr &fileName)
 	ParamText(errMessage, errNumString, fileName, PSTR(""));
 	
 //	CenterAlert(rFileErrorAlert);
-	dummyInt = Alert(rFileErrorAlert, 0L);
+	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rFileErrorAlert);
 	
 	return(false);
 }

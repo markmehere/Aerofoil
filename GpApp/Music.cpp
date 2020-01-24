@@ -1,5 +1,3 @@
-
-#define _CRT_SECURE_NO_WARNINGS
 //============================================================================
 //----------------------------------------------------------------------------
 //									Music.c
@@ -9,6 +7,7 @@
 
 #include "PLResources.h"
 #include "PLSound.h"
+#include "DialogManager.h"
 #include "Environ.h"
 #include "Externs.h"
 #include "SoundSync.h"
@@ -388,6 +387,6 @@ void TellHerNoMusic (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMemForMusicAlert);
-	hitWhat = Alert(kNoMemForMusicAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForMusicAlert);
 }
 

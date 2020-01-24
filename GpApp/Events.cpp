@@ -11,6 +11,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLToolUtils.h"
 #include "PLQDraw.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -53,7 +54,7 @@ short BitchAboutColorDepth (void)
 	short		sheSaid;
 	
 //	CenterAlert(kColorSwitchedAlert);
-	sheSaid = Alert(kColorSwitchedAlert, nil);
+	sheSaid = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kColorSwitchedAlert);
 	
 	return (sheSaid);
 }

@@ -7,6 +7,7 @@
 
 
 #include "PLStringCompare.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "FileManager.h"
 #include "House.h"
@@ -165,7 +166,7 @@ void SavedGameMismatchError (StringPtr gameName)
 //	CenterAlert(kSavedGameErrorAlert);
 	ParamText(gameName, thisHouseName, PSTR(""), PSTR(""));
 	
-	whoCares = Alert(kSavedGameErrorAlert, nil);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSavedGameErrorAlert);
 }
 
 //--------------------------------------------------------------  OpenSavedGame

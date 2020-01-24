@@ -9,6 +9,7 @@
 #include "PLResources.h"
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -726,7 +727,7 @@ Boolean QueryNewRoom (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNewRoomAlert);
-	hitWhat = Alert(kNewRoomAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewRoomAlert);
 	if (hitWhat == kYesDoNewRoom)
 		return (true);
 	else

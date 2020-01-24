@@ -6,6 +6,7 @@
 //============================================================================
 
 #include "PLPasStr.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FileManager.h"
@@ -183,6 +184,6 @@ void BringUpDeletePrefsAlert (void)
 	
 	InitCursor();
 //	CenterAlert(kNewPrefsAlertID);
-	whoCares = Alert(kNewPrefsAlertID, nil);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewPrefsAlertID);
 }
 

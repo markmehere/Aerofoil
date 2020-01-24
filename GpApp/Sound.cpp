@@ -8,6 +8,7 @@
 
 #include "PLResources.h"
 #include "PLSound.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"
@@ -395,7 +396,7 @@ void TellHerNoSounds (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMemForSoundsAlert);
-	hitWhat = Alert(kNoMemForSoundsAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForSoundsAlert);
 }
 
 //--------------------------------------------------------------  BitchAboutSM3
@@ -406,7 +407,7 @@ void BitchAboutSM3 (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoSoundManager3Alert);
-	hitWhat = Alert(kNoSoundManager3Alert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoSoundManager3Alert);
 }
 
 

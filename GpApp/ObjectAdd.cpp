@@ -8,6 +8,7 @@
 
 #include "PLToolUtils.h"
 #include "PLKeyEncoding.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "InputManager.h"
 #include "ObjectEdit.h"
@@ -874,7 +875,7 @@ void ShoutNoMoreObjects (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMoreObjectsAlert);
-	hitWhat = Alert(kNoMoreObjectsAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMoreObjectsAlert);
 }
 
 //--------------------------------------------------------------  HowManyCandleObjects
@@ -1071,7 +1072,7 @@ void ShoutNoMoreSpecialObjects (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMoreSpecialAlert);
-	hitWhat = Alert(kNoMoreSpecialAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMoreSpecialAlert);
 }
 
 #endif

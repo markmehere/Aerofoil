@@ -14,6 +14,7 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual Dialog *LoadDialog(int16_t resID, Window *behindWindow) = 0;
+		virtual int16_t DisplayAlert(int16_t alertResID) = 0;
 
 		static DialogManager *GetInstance();
 	};

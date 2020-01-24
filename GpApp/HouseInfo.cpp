@@ -297,7 +297,7 @@ Boolean WarnLockingHouse (void)
 	short		hitWhat;
 	
 //	CenterAlert(kLockHouseAlert);
-	hitWhat = Alert(kLockHouseAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kLockHouseAlert);
 	
 	return (hitWhat == 1);
 }
@@ -309,7 +309,7 @@ void HowToZeroScores (void)
 	short		hitWhat;
 	
 //	CenterAlert(kZeroScoresAlert);
-	hitWhat = Alert(kZeroScoresAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kZeroScoresAlert);
 	
 	switch (hitWhat)
 	{

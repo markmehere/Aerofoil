@@ -773,7 +773,7 @@ void DoNotInDemo (void)
 	short		whoCares;
 	
 //	CenterAlert(kNotInDemoAlert);
-	whoCares = Alert(kNotInDemoAlert, nil);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNotInDemoAlert);
 }
 #endif
 
@@ -786,7 +786,7 @@ void HeyYourPissingAHighScore (void)
 	
 //	CenterAlert(kNoHighScoreAlert);
 	
-	whoCares = Alert(kNoHighScoreAlert, nil);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoHighScoreAlert);
 }
 
 //--------------------------------------------------------------  OpenCloseEditWindows

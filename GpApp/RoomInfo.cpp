@@ -930,7 +930,7 @@ void BitchAboutPICTNotFound (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoPICTFoundAlert);
-	hitWhat = Alert(kNoPICTFoundAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoPICTFoundAlert);
 }
 #endif
 

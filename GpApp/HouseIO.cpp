@@ -11,6 +11,7 @@
 #include "PLStringCompare.h"
 #include "PLTextUtils.h"
 #include "PLPasStr.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FileManager.h"
@@ -935,7 +936,7 @@ Boolean QuerySaveChanges (void)
 	InitCursor();
 //	CenterAlert(kSaveChangesAlert);
 	ParamText(thisHouseName, PSTR(""), PSTR(""), PSTR(""));
-	hitWhat = Alert(kSaveChangesAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveChangesAlert);
 	if (hitWhat == kSaveChanges)
 	{
 		if (wasHouseVersion < kHouseVersion)
@@ -982,7 +983,7 @@ void YellowAlert (short whichAlert, short identifier)
 //	CenterAlert(kYellowAlert);
 	ParamText(errStr, errNumStr, PSTR(""), PSTR(""));
 	
-	whoCares = Alert(kYellowAlert, nil);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kYellowAlert);
 }
 
 //--------------------------------------------------------------  IsFileReadOnly

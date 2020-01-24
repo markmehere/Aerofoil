@@ -392,11 +392,15 @@ namespace PortabilityLayer
 	{
 	public:
 		Dialog *LoadDialog(int16_t resID, Window *behindWindow) override;
+		int16_t DisplayAlert(int16_t alertResID) override;
+
 		DialogTemplate *LoadDialogTemplate(int16_t resID);
 
 		static DialogManagerImpl *GetInstance();
 
 	private:
+		void PositionWindow(Window *window, const Rect &rect);
+
 		static DialogManagerImpl ms_instance;
 	};
 
@@ -444,33 +448,7 @@ namespace PortabilityLayer
 
 		wm->PutWindowBehind(window, behindWindow);
 
-		unsigned int displayWidth, displayHeight;
-		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight, nullptr);
-
-		const unsigned int halfDisplayHeight = displayHeight / 2;
-		const unsigned int quarterDisplayWidth = displayHeight / 4;
-		const unsigned int halfDisplayWidth = displayWidth;
-
-		const uint16_t dialogWidth = rect.Width();
-		const uint16_t dialogHeight = rect.Height();
-
-		window->m_wmX = (static_cast<int32_t>(displayWidth) - static_cast<int32_t>(dialogWidth)) / 2;
-
-		// We center dialogs vertically in one of 3 ways in this priority:
-		// - Centered at 1/3 until the top edge is at the 1/4 mark
-		// - Top edge aligned to 1/4 mark until bottom edge is at 3/4 mark
-		// - Centered on screen
-
-		//if (displayHeight / 3 - dialogHeight / 2 >= displayHeight / 4)
-		if (displayHeight * 4 - dialogHeight * 6 >= displayHeight * 3)
-		{
-			//window->m_wmY = displayHeight / 3 - dialogHeight / 2;
-			window->m_wmY = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
-		}
-		else if (dialogHeight * 2U <= displayHeight)
-			window->m_wmY = displayHeight / 4;
-		else
-			window->m_wmY = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;
+		PositionWindow(window, rect);
 
 		DialogImpl *dialog = DialogImpl::Create(window, numItems);
 
@@ -493,6 +471,61 @@ namespace PortabilityLayer
 		dialog->DrawControls(true);
 
 		return dialog;
+	}
+
+	int16_t DialogManagerImpl::DisplayAlert(int16_t alertResID)
+	{
+		enum AlertStageBits
+		{
+		};
+
+		struct AlertResourceData
+		{
+			BERect m_rect;
+			BEInt16_t m_dialogTemplateResID;
+
+			// Stages are supposed to correspond to how to behave when the alert is displayed multiple times.
+			// We just treat all alerts as stage 1.
+			BEUInt16_t m_stageData;
+		};
+
+		BEUInt16_t autoPosition;
+		autoPosition = static_cast<uint16_t>(0);
+
+		THandle<void> alertResource = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('ALRT', alertResID);
+		if (!alertResource)
+			return 0;
+
+		GP_STATIC_ASSERT(sizeof(AlertResourceData) == 12);
+
+		const size_t resSize = alertResource.MMBlock()->m_rmSelfRef->m_size;
+		if (resSize < 12)
+		{
+			alertResource.Dispose();
+			return 0;
+		}
+
+		AlertResourceData alertResData;
+		memcpy(&alertResData, *alertResource, 12);
+
+		if (resSize == 14)
+			memcpy(&autoPosition, static_cast<const uint8_t*>(*alertResource) + 12, 2);
+
+		const uint16_t stageData = alertResData.m_stageData;
+		uint8_t boldIndexes[4];
+		uint8_t soundIndexes[4];
+		bool isVisible[4];
+		for (int i = 0; i < 4; i++)
+		{
+			boldIndexes[i] = static_cast<uint8_t>((stageData >> (i * 4)) & 0x1);
+			isVisible[i] = (((stageData >> (i * 4)) & 0x3) != 0);
+			soundIndexes[i] = static_cast<uint8_t>((stageData >> (i * 4 + 2)) & 0x1);
+		}
+
+		// If sound index is 0, play no sound
+
+		PL_NotYetImplemented();
+		return 0;
 	}
 
 	DialogTemplate *DialogManagerImpl::LoadDialogTemplate(int16_t resID)
@@ -533,6 +566,37 @@ namespace PortabilityLayer
 		dtemplateH.Dispose();
 
 		return dtemplate;
+	}
+
+	void DialogManagerImpl::PositionWindow(Window *window, const Rect &rect)
+	{
+		unsigned int displayWidth, displayHeight;
+		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight, nullptr);
+
+		const unsigned int halfDisplayHeight = displayHeight / 2;
+		const unsigned int quarterDisplayWidth = displayHeight / 4;
+		const unsigned int halfDisplayWidth = displayWidth;
+
+		const uint16_t dialogWidth = rect.Width();
+		const uint16_t dialogHeight = rect.Height();
+
+		window->m_wmX = (static_cast<int32_t>(displayWidth) - static_cast<int32_t>(dialogWidth)) / 2;
+
+		// We center dialogs vertically in one of 3 ways in this priority:
+		// - Centered at 1/3 until the top edge is at the 1/4 mark
+		// - Top edge aligned to 1/4 mark until bottom edge is at 3/4 mark
+		// - Centered on screen
+
+		//if (displayHeight / 3 - dialogHeight / 2 >= displayHeight / 4)
+		if (displayHeight * 4 - dialogHeight * 6 >= displayHeight * 3)
+		{
+			//window->m_wmY = displayHeight / 3 - dialogHeight / 2;
+			window->m_wmY = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
+		}
+		else if (dialogHeight * 2U <= displayHeight)
+			window->m_wmY = displayHeight / 4;
+		else
+			window->m_wmY = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;
 	}
 
 	DialogManagerImpl *DialogManagerImpl::GetInstance()

@@ -13,6 +13,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
 #include "BitmapImage.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "IconLoader.h"
 #include "InputManager.h"
@@ -108,7 +109,7 @@ void RedAlert (short errorNumber)
 	ParamText(errTitle, errMessage, errNumberString, PSTR(""));
 //	CenterAlert(rDeathAlertID);
 	
-	dummyInt = Alert(rDeathAlertID, nil);
+	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rDeathAlertID);
 	ExitToShell();
 }
 

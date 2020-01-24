@@ -244,7 +244,6 @@ void SetCursor(CursPtr cursor);
 void SetBuiltinCursor(int builtinCursor);
 
 void Delay(int ticks, UInt32 *endTickCount);
-short Alert(int dialogID, void *unknown);
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
 void DragWindow(WindowPtr window, Point start, Rect *bounds);	// Drags the window (probably not implemented)

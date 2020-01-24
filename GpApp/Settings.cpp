@@ -1373,6 +1373,6 @@ void BitchAboutChanges (void)
 	short		hitWhat;
 	
 //	CenterAlert(kChangesEffectAlert);
-	hitWhat = Alert(kChangesEffectAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kChangesEffectAlert);
 }
 

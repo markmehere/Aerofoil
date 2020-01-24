@@ -10,6 +10,7 @@
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
 #include "BitmapImage.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "FontFamily.h"
 #include "House.h"
@@ -477,7 +478,7 @@ Boolean QueryDeleteRoom (void)
 	short		hitWhat;
 	
 //	CenterAlert(kDeleteRoomAlert);
-	hitWhat = Alert(kDeleteRoomAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kDeleteRoomAlert);
 	if (hitWhat == kYesDoDeleteRoom)
 		return (true);
 	else

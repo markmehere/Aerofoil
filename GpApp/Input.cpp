@@ -8,6 +8,7 @@
 #include "PLToolUtils.h"
 #include "PLDialogs.h"
 #include "PLKeyEncoding.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "InputManager.h"
 #include "MainWindow.h"
@@ -468,7 +469,7 @@ Boolean QuerySaveGame (void)
 	InitCursor();
 	FlushEvents(everyEvent, 0);
 //	CenterAlert(kSaveGameAlert);
-	hitWhat = Alert(kSaveGameAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveGameAlert);
 	if (hitWhat == kYesSaveGameButton)
 		return (true);
 	else

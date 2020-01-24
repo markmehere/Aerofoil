@@ -113,12 +113,6 @@ void Delay(int ticks, UInt32 *endTickCount)
 		*endTickCount = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount();
 }
 
-short Alert(int dialogID, void *unknown)
-{
-	PL_NotYetImplemented();
-	return 0;
-}
-
 short FindWindow(Point point, WindowPtr *window)
 {
 	short part = 0;

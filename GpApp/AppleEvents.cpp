@@ -7,6 +7,7 @@
 
 
 #include "PLAppleEvents.h"
+#include "DialogManager.h"
 #include "Externs.h"
 #include "House.h"
 
@@ -131,7 +132,7 @@ PLError_t DoPrintDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 	short		hitWhat;
 	
 //	CenterAlert(kNoPrintingAlert);
-	hitWhat = Alert(kNoPrintingAlert, nil);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoPrintingAlert);
 	
 	return PLErrors::kInvalidParameter;
 }
