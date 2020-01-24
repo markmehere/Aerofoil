@@ -465,6 +465,9 @@
     <ClInclude Include="BitmapImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CombinedTimestamp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">

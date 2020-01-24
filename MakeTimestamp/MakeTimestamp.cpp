@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "CombinedTimestamp.h"
+
 int main(int argc, const char **argv)
 {
 	if (argc != 2)
@@ -39,11 +41,29 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
-	uint8_t encodedTimestamp[8];
-	for (int i = 0; i < 8; i++)
-		encodedTimestamp[i] = static_cast<uint8_t>((timeDelta >> (i * 8)) & 0xff);
+	TIME_ZONE_INFORMATION tz;
+	GetTimeZoneInformation(&tz);
 
-	fwrite(encodedTimestamp, 8, 1, f);
+	SYSTEMTIME utcST;
+	FileTimeToSystemTime(&timestampFT, &utcST);
+
+	SYSTEMTIME localST;
+	SystemTimeToTzSpecificLocalTime(&tz, &utcST, &localST);
+
+	PortabilityLayer::CombinedTimestamp ts;
+	ts.SetUTCTime(timeDelta);
+
+	ts.SetLocalYear(localST.wYear);
+	ts.m_localMonth = localST.wMonth;
+	ts.m_localDay = localST.wDay;
+
+	ts.m_localHour = localST.wHour;
+	ts.m_localMinute = localST.wMinute;
+	ts.m_localSecond = localST.wSecond;
+
+	memset(ts.m_padding, 0, sizeof(ts.m_padding));
+
+	fwrite(&ts, sizeof(ts), 1, f);
 
 	fclose(f);
 

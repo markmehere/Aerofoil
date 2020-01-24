@@ -147,6 +147,7 @@
     <ClInclude Include="ByteSwap.h" />
     <ClInclude Include="ByteUnpack.h" />
     <ClInclude Include="CFileStream.h" />
+    <ClInclude Include="CombinedTimestamp.h" />
     <ClInclude Include="DataTypes.h" />
     <ClInclude Include="DeflateCodec.h" />
     <ClInclude Include="DialogManager.h" />
