@@ -308,6 +308,8 @@ namespace PortabilityLayer
 			extension = ".bmp";
 			validationRule = ResourceValidationRules::kBMP;
 		}
+		else if (resTypeID == ResTypeID('STR#'))
+			extension = ".txt";
 
 		char resourceFile[64];
 

@@ -719,6 +719,46 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	return true;
 }
 
+bool ImportIndexedString(std::vector<uint8_t> &outTXT, const void *inData, size_t inSize)
+{
+	size_t remainingSize = inSize;
+	const uint8_t *inBytes = static_cast<const uint8_t*>(inData);
+
+	if (remainingSize < 2)
+		return false;
+
+	const size_t arraySize = (inBytes[0] << 8) + inBytes[1];
+
+	inBytes += 2;
+	remainingSize -= 2;
+
+	for (size_t i = 0; i < arraySize; i++)
+	{
+		if (remainingSize < 1)
+			return false;
+
+		uint8_t strLength = *inBytes;
+
+		inBytes++;
+		remainingSize--;
+
+		if (strLength > remainingSize)
+			return false;
+
+		if (i != 0)
+			outTXT.push_back('\n');
+
+		for (size_t j = 0; j < strLength; j++)
+		{
+			outTXT.push_back(*inBytes);
+			inBytes++;
+			remainingSize--;
+		}
+	}
+
+	return true;
+}
+
 int main(int argc, const char **argv)
 {
 	if (argc != 4)
@@ -765,6 +805,7 @@ int main(int argc, const char **argv)
 	const PortabilityLayer::ResTypeID pictTypeID = PortabilityLayer::ResTypeID('PICT');
 	const PortabilityLayer::ResTypeID dateTypeID = PortabilityLayer::ResTypeID('Date');
 	const PortabilityLayer::ResTypeID sndTypeID = PortabilityLayer::ResTypeID('snd ');
+	const PortabilityLayer::ResTypeID indexStringTypeID = PortabilityLayer::ResTypeID('STR#');
 
 	for (size_t tlIndex = 0; tlIndex < typeListCount; tlIndex++)
 	{
@@ -811,6 +852,17 @@ int main(int argc, const char **argv)
 				entry.m_name = resName;
 
 				if (ImportSound(entry.m_contents, resData, resSize))
+					contents.push_back(entry);
+			}
+			else if (typeList.m_resType == indexStringTypeID)
+			{
+				PlannedEntry entry;
+				char resName[256];
+				sprintf_s(resName, "%s/%i.txt", resTag.m_id, static_cast<int>(res.m_resID));
+
+				entry.m_name = resName;
+
+				if (ImportIndexedString(entry.m_contents, resData, resSize))
 					contents.push_back(entry);
 			}
 			else

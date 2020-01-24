@@ -342,25 +342,62 @@ PLError_t AEProcessAppleEvent(EventRecord *evt)
 void GetIndString(unsigned char *str, int stringsID, int fnameIndex)
 {
 	if (fnameIndex < 1)
+	{
+		str[0] = 0;
 		return;
+	}
 
 	THandle<uint8_t> istrRes = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('STR#', stringsID).StaticCast<uint8_t>();
 	if (istrRes && *istrRes)
 	{
 		const uint8_t *contentsBytes = *istrRes;
-		const BEUInt16_t *pArraySize = reinterpret_cast<const BEUInt16_t*>(contentsBytes);
+		const uint8_t *endPos = contentsBytes + istrRes.MMBlock()->m_size;
+		const uint8_t *lineStart = contentsBytes;
+		const uint8_t *lineEnd = contentsBytes;
 
-		const uint16_t arraySize = *pArraySize;
+		for (;;)
+		{
+			if (contentsBytes == endPos)
+			{
+				if (fnameIndex == 1)
+				{
+					lineEnd = contentsBytes;
+					break;
+				}
+				else
+				{
+					str[0] = 0;
+					return;
+				}
+			}
 
-		if (fnameIndex > static_cast<int>(arraySize))
-			return;
+			const uint8_t lchar = contentsBytes[0];
 
-		const uint8_t *strStart = contentsBytes + 2;
-		for (int i = 1; i < fnameIndex; i++)
-			strStart += (*strStart) + 1;
+			if (lchar == '\n')
+			{
+				if (fnameIndex == 1)
+				{
+					lineEnd = contentsBytes;
+					break;
+				}
+				else
+				{
+					fnameIndex--;
+					contentsBytes++;
+					lineStart = lineEnd = contentsBytes;
+				}
+			}
+			else
+				contentsBytes++;
+		}
 
-		str[0] = strStart[0];
-		memcpy(str + 1, strStart + 1, *strStart);
+		ptrdiff_t strLength = lineEnd - lineStart;
+		if (strLength < 0 || strLength > 255)
+			strLength = 255;
+
+		str[0] = static_cast<uint8_t>(strLength);
+
+		memcpy(str + 1, lineStart, strLength);
 	}
 }
 
