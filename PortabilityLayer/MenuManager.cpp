@@ -428,8 +428,6 @@ namespace PortabilityLayer
 	void MenuManagerImpl::RemoveMenu(const THandle<Menu> &menu)
 	{
 		Menu *menuPtr = *menu;
-		if (menuPtr->stringBlobHandle)
-			PortabilityLayer::MemoryManager::GetInstance()->ReleaseHandle(menuPtr->stringBlobHandle);
 
 		if (menuPtr->prevMenu)
 			(*menuPtr->prevMenu)->nextMenu = menuPtr->nextMenu;
@@ -442,8 +440,6 @@ namespace PortabilityLayer
 
 		if (m_lastMenu == menu)
 			m_lastMenu = menuPtr->prevMenu;
-
-		menu.Dispose();
 
 		DrawMenuBar();
 	}
