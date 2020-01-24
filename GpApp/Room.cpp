@@ -908,9 +908,6 @@ short GetOriginalBounding (short theID)
 	short		boundCode;
 	
 	boundsRes = LoadHouseResource('bnds', theID).StaticCast<boundsType>();
-	if (boundsRes.MMBlock()->m_size != sizeof(boundsType))
-		return 0;	// Corrupted resource
-
 	if (boundsRes == nil)
 	{
 		if (PictIDExists(theID))
@@ -919,6 +916,9 @@ short GetOriginalBounding (short theID)
 	}
 	else
 	{
+		if (boundsRes.MMBlock()->m_size != sizeof(boundsType))
+			return 0;	// Corrupted resource
+
 		boundCode = 0;
 		if ((*boundsRes)->left)
 			boundCode += 1;
