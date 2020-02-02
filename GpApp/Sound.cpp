@@ -396,7 +396,7 @@ void TellHerNoSounds (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMemForSoundsAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForSoundsAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForSoundsAlert, nullptr);
 }
 
 //--------------------------------------------------------------  BitchAboutSM3
@@ -407,7 +407,7 @@ void BitchAboutSM3 (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoSoundManager3Alert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoSoundManager3Alert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoSoundManager3Alert, nullptr);
 }
 
 

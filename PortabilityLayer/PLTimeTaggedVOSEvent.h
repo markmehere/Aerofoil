@@ -10,7 +10,7 @@ struct TimeTaggedVOSEvent
 	static TimeTaggedVOSEvent Create(const GpVOSEvent &vosEvent, uint32_t timestamp);
 
 	// Helpers for common cases
-	bool IsKeyDownEvent() const;
+	bool IsKeyDownEvent() const;	// Only returns true for untranslated keydown events
 	bool IsLMouseDownEvent() const;
 	bool IsLMouseUpEvent() const;
 };

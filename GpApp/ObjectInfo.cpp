@@ -940,10 +940,11 @@ void DoBlowerObjectInfo (short what)
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
 	NumToString(thisRoom->objects[objActive].data.a.distance, distStr);
-	ParamText(numberStr, kindStr, distStr, PSTR(""));
+
+	DialogTextSubstitutions substitutions(numberStr, kindStr, distStr);
 	
 //	CenterDialog(kBlowerInfoDialogID);
-	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kBlowerInfoDialogID, kPutInFront);
+	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kBlowerInfoDialogID, kPutInFront, &substitutions);
 	if (infoDial == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)infoDial);
@@ -1126,9 +1127,10 @@ void DoFurnitureObjectInfo (void)
 		NumToString(objActive + 1, numberStr);
 		GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
 	}
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
-	BringUpDialog(&infoDial, kFurnitureInfoDialogID);
+	BringUpDialog(&infoDial, kFurnitureInfoDialogID, &substitutions);
 	
 	if ((objActive < 0) || (retroLinkList[objActive].room == -1))
 		HideDialogItem(infoDial, 6);
@@ -1170,12 +1172,15 @@ void DoCustPictObjectInfo (void)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
+
+	DialogTextSubstitutions substitutions;
+
 	if (thisRoom->objects[objActive].what == kCustomPict)
-		ParamText(numberStr, kindStr, PSTR("PICT"), PSTR("10000"));
+		substitutions = DialogTextSubstitutions(numberStr, kindStr, PSTR("PICT"), PSTR("10000"));
 	else
-		ParamText(numberStr, kindStr, PSTR("Sound"), PSTR("3000"));
+		substitutions = DialogTextSubstitutions(numberStr, kindStr, PSTR("Sound"), PSTR("3000"));
 	
-	BringUpDialog(&infoDial, kCustPictInfoDialogID);
+	BringUpDialog(&infoDial, kCustPictInfoDialogID, &substitutions);
 	if (thisRoom->objects[objActive].what == kCustomPict)
 	{
 		wasPict = (long)(thisRoom->objects[objActive].data.g.height);
@@ -1277,11 +1282,11 @@ void DoSwitchObjectInfo (void)
 		PasStringCopy(PSTR("none"), objStr);
 	else
 		NumToString((long)thisRoom->objects[objActive].data.e.who + 1, objStr);
-	
-	ParamText(numberStr, kindStr, roomStr, objStr);
+
 	newType = thisRoom->objects[objActive].data.e.type;
-	
-	BringUpDialog(&infoDial, kSwitchInfoDialogID);
+
+	DialogTextSubstitutions substitutions(numberStr, kindStr, roomStr, objStr);
+	BringUpDialog(&infoDial, kSwitchInfoDialogID, &substitutions);
 	leaving = false;
 	doLink = false;
 	doGoTo = false;
@@ -1396,11 +1401,11 @@ void DoTriggerObjectInfo (void)
 		PasStringCopy(PSTR("none"), objStr);
 	else
 		NumToString((long)thisRoom->objects[objActive].data.e.who + 1, objStr);
-	
-	ParamText(numberStr, kindStr, roomStr, objStr);
+
+	DialogTextSubstitutions substitutions(numberStr, kindStr, roomStr, objStr);
 	newType = thisRoom->objects[objActive].data.e.type;
 	
-	BringUpDialog(&infoDial, kTriggerInfoDialogID);
+	BringUpDialog(&infoDial, kTriggerInfoDialogID, &substitutions);
 	leaving = false;
 	doLink = false;
 	doGoTo = false;
@@ -1532,10 +1537,11 @@ void DoLightObjectInfo (void)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
 //	CenterDialog(kLightInfoDialogID);
-	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kLightInfoDialogID, kPutInFront);
+	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kLightInfoDialogID, kPutInFront, &substitutions);
 	if (infoDial == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)infoDial);
@@ -1615,9 +1621,9 @@ void DoApplianceObjectInfo (short what)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
-	BringUpDialog(&infoDial, kApplianceInfoDialogID);
+	BringUpDialog(&infoDial, kApplianceInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 10);
@@ -1726,9 +1732,9 @@ void DoMicrowaveObjectInfo (void)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
-	BringUpDialog(&infoDial, kMicrowaveInfoDialogID);
+	BringUpDialog(&infoDial, kMicrowaveInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 11);
@@ -1846,9 +1852,9 @@ void DoGreaseObjectInfo (void)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
-	BringUpDialog(&infoDial, kGreaseInfoDialogID);
+	BringUpDialog(&infoDial, kGreaseInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 8);
@@ -1916,7 +1922,7 @@ void DoInvisBonusObjectInfo (void)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
 	switch (thisRoom->objects[objActive].data.c.points)
 	{
@@ -1933,7 +1939,7 @@ void DoInvisBonusObjectInfo (void)
 		break;
 	}
 	
-	BringUpDialog(&infoDial, kInvisBonusInfoDialogID);
+	BringUpDialog(&infoDial, kInvisBonusInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 9);
@@ -2040,10 +2046,10 @@ void DoTransObjectInfo (short what)
 		PasStringCopy(PSTR("none"), objStr);
 	else
 		NumToString((long)thisRoom->objects[objActive].data.d.who + 1, objStr);
+
+	DialogTextSubstitutions substitutions(numberStr, kindStr, roomStr, objStr);
 	
-	ParamText(numberStr, kindStr, roomStr, objStr);
-	
-	BringUpDialog(&infoDial, kTransInfoDialogID);
+	BringUpDialog(&infoDial, kTransInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 12);
@@ -2145,9 +2151,9 @@ void DoEnemyObjectInfo (short what)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
-	BringUpDialog(&infoDial, kEnemyInfoDialogID);
+	BringUpDialog(&infoDial, kEnemyInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 11);
@@ -2250,9 +2256,9 @@ void DoFlowerObjectInfo (void)
 	
 	NumToString(objActive + 1, numberStr);
 	GetIndString(kindStr, kObjectNameStrings, thisRoom->objects[objActive].what);
-	ParamText(numberStr, kindStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(numberStr, kindStr);
 	
-	BringUpDialog(&infoDial, kFlowerInfoDialogID);
+	BringUpDialog(&infoDial, kFlowerInfoDialogID, &substitutions);
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 13);

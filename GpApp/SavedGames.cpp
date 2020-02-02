@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLDialogs.h"
 #include "PLStringCompare.h"
 #include "DialogManager.h"
 #include "Externs.h"
@@ -164,9 +164,9 @@ void SavedGameMismatchError (StringPtr gameName)
 	InitCursor();
 	
 //	CenterAlert(kSavedGameErrorAlert);
-	ParamText(gameName, thisHouseName, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(gameName, thisHouseName, PSTR(""), PSTR(""));
 	
-	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSavedGameErrorAlert);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSavedGameErrorAlert, &substitutions);
 }
 
 //--------------------------------------------------------------  OpenSavedGame
@@ -305,7 +305,7 @@ Boolean OpenSavedGame (void)
 
 // This is probably about 3 days away from becoming the "old" function…
 // for saving games.
-
+#if 0
 void SaveGame (Boolean doSave)
 {
 	houseType		*thisHousePtr;
@@ -351,4 +351,4 @@ void SaveGame (Boolean doSave)
 			YellowAlert(kYellowFailedWrite, 0);
 	}
 }
-
+#endif

@@ -277,7 +277,7 @@ static bool IdentifyVKey(const WPARAM &wparam, const LPARAM &lparam, GpKeyIDSubs
 	return true;
 }
 
-static void PostKeyboardEvent(IGpVOSEventQueue *eventQueue, GpKeyboardInputEventType_t eventType, GpKeyIDSubset_t subset, const GpKeyboardInputEvent::KeyUnion &key)
+static void PostKeyboardEvent(IGpVOSEventQueue *eventQueue, GpKeyboardInputEventType_t eventType, GpKeyIDSubset_t subset, const GpKeyboardInputEvent::KeyUnion &key, uint32_t repeatCount)
 {
 	if (GpVOSEvent *evt = eventQueue->QueueEvent())
 	{
@@ -287,6 +287,7 @@ static void PostKeyboardEvent(IGpVOSEventQueue *eventQueue, GpKeyboardInputEvent
 		mEvent.m_key = key;
 		mEvent.m_eventType = eventType;
 		mEvent.m_keyIDSubset = subset;
+		mEvent.m_repeatCount = repeatCount;
 	}
 }
 
@@ -338,8 +339,12 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 			{
 				GpKeyIDSubset_t subset;
 				GpKeyboardInputEvent::KeyUnion key;
-				if (IdentifyVKey(wParam, lParam, subset, key))
-					PostKeyboardEvent(eventQueue, GpKeyboardInputEventTypes::kDown, subset, key);
+				bool isRepeat = ((lParam & 0x40000000) != 0);
+				const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAuto : GpKeyboardInputEventTypes::kDown;
+				if (!isRepeat && IdentifyVKey(wParam, lParam, subset, key))
+					PostKeyboardEvent(eventQueue, keyEventType, subset, key, static_cast<uint32_t>(lParam & 0xffff));
+
+				(void)TranslateMessage(msg);
 			}
 			break;
 		case WM_KEYUP:
@@ -348,10 +353,26 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 				GpKeyIDSubset_t subset;
 				GpKeyboardInputEvent::KeyUnion key;
 				if (IdentifyVKey(wParam, lParam, subset, key))
-					PostKeyboardEvent(eventQueue, GpKeyboardInputEventTypes::kUp, subset, key);
+					PostKeyboardEvent(eventQueue, GpKeyboardInputEventTypes::kUp, subset, key, (lParam & 0xffff));
 			}
 			break;
 		case WM_CHAR:
+			{
+				bool isRepeat = ((lParam & 0x4000000) != 0);
+				const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAutoChar : GpKeyboardInputEventTypes::kDownChar;
+				GpKeyboardInputEvent::KeyUnion key;
+				key.m_asciiChar = static_cast<char>(wParam);
+				PostKeyboardEvent(eventQueue, keyEventType, GpKeyIDSubsets::kASCII, key, (lParam & 0xffff));
+			}
+			break;
+		case WM_UNICHAR:
+			{
+				bool isRepeat = ((lParam & 0x4000000) != 0);
+				const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAutoChar : GpKeyboardInputEventTypes::kDownChar;
+				GpKeyboardInputEvent::KeyUnion key;
+				key.m_unicodeChar = static_cast<uint32_t>(wParam);
+				PostKeyboardEvent(eventQueue, keyEventType, GpKeyIDSubsets::kUnicode, key, (lParam & 0xffff));
+			}
 			break;
 		default:
 			break;

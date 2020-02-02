@@ -7,8 +7,9 @@
 
 #include "PLDialogs.h"
 
+struct DialogTextSubstitutions;
 
-void BringUpDialog (Dialog **theDialog, short dialogID);
+void BringUpDialog (Dialog **theDialog, short dialogID, const DialogTextSubstitutions *);
 //void GetPutDialogCorner (Point *);
 //void GetGetDialogCorner (Point *);
 //void CenterDialog (short);

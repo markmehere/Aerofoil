@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+#include "PLDialogs.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
@@ -15,10 +16,13 @@
 #include "BitmapImage.h"
 #include "DialogManager.h"
 #include "Externs.h"
+#include "HostSystemServices.h"
 #include "IconLoader.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "Utilities.h"
+
+#include <assert.h>
 
 
 UInt32		theSeed;
@@ -106,10 +110,10 @@ void RedAlert (short errorNumber)
 		GetIndString(errMessage, rErrMssgID, 1);
 	}
 	NumToString((long)errorNumber, errNumberString);
-	ParamText(errTitle, errMessage, errNumberString, PSTR(""));
+	DialogTextSubstitutions substitutions(errTitle, errMessage, errNumberString, PSTR(""));
 //	CenterAlert(rDeathAlertID);
 	
-	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rDeathAlertID);
+	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rDeathAlertID, &substitutions);
 	ExitToShell();
 }
 
@@ -488,11 +492,111 @@ char KeyMapOffsetFromRawKey (char rawKeyCode)
 // Given a keyDown event (it's message field), this function returns…
 // a string with that key's name (so we get "Shift" and "Esc", etc.).
 
+static const char *gs_specialKeyNames[GpKeySpecials::kCount] =
+{
+	"tab",
+	"esc",
+	"prnt scrn",
+	"scrl lock",
+	"pause",
+	"insert",
+	"home",
+	"page up",
+	"page dn",
+	"delete",
+	"end",
+	"backspace",
+	"caps lock",
+	"enter",
+	"lf shift",
+	"rt shift",
+	"lf ctrl",
+	"rt ctrl",
+	"lf alt",
+	"rt alt",
+	"num lock",
+	"lf arrow",
+	"up arrow",
+	"dn arrow",
+	"rt arrow"
+};
+
+static const char *gs_numPadSpecialKeyNames[GpNumPadSpecials::kCount] =
+{
+	"numpad /",
+	"numpad *",
+	"numpad -",
+	"numpad +"
+};
+
 void GetKeyName (intptr_t message, StringPtr theName)
 {
-	PasStringCopy(PSTR("TODO"), theName);
+	KeyEventType eventType = PL_KEY_GET_EVENT_TYPE(message);
+	const int eventValue = PL_KEY_GET_VALUE(message);
+	const char *name1 = nullptr;
+	const char *name2 = nullptr;
 
-	PL_NotYetImplemented_TODO("KeyNames");
+	char asciiNameBuffer[2];
+	char fkeyNameBuffer[5];
+
+	switch (eventType)
+	{
+	case KeyEventType_Special:
+		name1 = gs_specialKeyNames[eventValue];
+		break;
+	case KeyEventType_ASCII:
+		asciiNameBuffer[0] = static_cast<char>(eventValue);
+		asciiNameBuffer[1] = '\0';
+		name1 = asciiNameBuffer;
+
+		if (eventValue == ' ')
+			name1 = "space";
+		break;
+	case KeyEventType_MacRoman:
+		PL_NotYetImplemented_TODO("UnicodeNames");
+		break;
+	case KeyEventType_NumPadNumber:
+		asciiNameBuffer[0] = static_cast<char>('0' + eventValue);
+		asciiNameBuffer[1] = '\0';
+		name1 = "NumPad ";
+		name2 = asciiNameBuffer;
+		break;
+	case KeyEventType_NumPadSpecial:
+		name1 = "NumPad ";
+		name2 = gs_numPadSpecialKeyNames[eventValue];
+		break;
+	case KeyEventType_FKey:
+		fkeyNameBuffer[0] = 'F';
+		if (eventValue >= 10)
+		{
+			fkeyNameBuffer[1] = static_cast<char>('0' + eventValue / 10);
+			fkeyNameBuffer[2] = static_cast<char>('0' + eventValue % 10);
+			fkeyNameBuffer[3] = '\0';
+		}
+		else
+		{
+			fkeyNameBuffer[1] = static_cast<char>('0' + eventValue);
+			fkeyNameBuffer[2] = '\0';
+		}
+
+		name1 = fkeyNameBuffer;
+	case KeyEventType_GamepadButton:
+		// This should never happen
+		assert(false);
+		break;
+	}
+
+	const size_t name1Length = (name1 == nullptr) ? 0 : strlen(name1);
+	const size_t name2Length = (name2 == nullptr) ? 0 : strlen(name2);
+
+	const size_t combinedLength = name1Length + name2Length;
+	assert(combinedLength <= 255);
+
+	theName[0] = static_cast<uint8_t>(combinedLength);
+	if (name1Length)
+		memcpy(theName + 1, name1, name1Length);
+	if (name2Length)
+		memcpy(theName + 1 + name1Length, name2, name2Length);
 }
 
 //--------------------------------------------------------------  OptionKeyDown

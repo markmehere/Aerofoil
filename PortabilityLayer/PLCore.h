@@ -57,34 +57,6 @@ struct FinderInfoBlock
 	Int32 fdCreator;
 };
 
-struct FileInfoBlock
-{
-	void *ioCompletion;
-	short ioVRefNum;	// Volume ref num
-	StringPtr ioNamePtr;
-	int ioFDirIndex;	// Index: If >0, Nth directory in ioVRefNum.  If 0, lookup by name.  If <0, do behavior that we don't support.
-	long ioDirID;		// Input: Directory ID   Output: File ID
-	int ioFlAttrib;		// File attributes
-	FinderInfoBlock ioFlFndrInfo;
-	long ioFlParID;
-};
-
-struct DirInfoBlock
-{
-	void *ioCompletion;
-	short ioVRefNum;
-	long ioDrDirID;
-	unsigned char *ioNamePtr;
-	short ioFDirIndex;
-	int ioFlAttrib;
-};
-
-struct CInfoPBRec
-{
-	FileInfoBlock hFileInfo;
-	DirInfoBlock dirInfo;
-};
-
 struct DirectoryFileListEntry
 {
 	FinderInfoBlock finderInfo;
@@ -182,7 +154,6 @@ struct EventRecord
 typedef Window *WindowPtr;
 typedef Cursor *CursPtr;
 typedef Menu *MenuPtr;
-typedef CInfoPBRec *CInfoPBPtr;
 typedef VersionRecord *VersRecPtr;
 
 typedef THandle<Cursor> CursHandle;
@@ -274,7 +245,6 @@ short LoWord(Int32 v);
 short HiWord(Int32 v);
 
 void NumToString(long number, unsigned char *str);
-void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c);
 
 PLError_t AEProcessAppleEvent(EventRecord *evt);
 
@@ -293,7 +263,6 @@ Boolean StillDown();
 Boolean WaitMouseUp();
 
 short Random();
-void GetDateTime(UInt32 *dateTime);
 void GetTime(DateTimeRec *dateTime);
 UInt32 GetDblTime();
 

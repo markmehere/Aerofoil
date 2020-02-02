@@ -85,7 +85,7 @@ namespace PortabilityLayer
 
 		int16_t ExecuteModal(DialogFilterFunc_t filterFunc) override;
 
-		bool Populate(DialogTemplate *tmpl);
+		bool Populate(DialogTemplate *tmpl, const DialogTextSubstitutions *substitutions);
 
 		void DrawControls(bool redraw);
 
@@ -96,6 +96,8 @@ namespace PortabilityLayer
 	private:
 		explicit DialogImpl(Window *window, DialogItem *items, size_t numItems);
 		~DialogImpl();
+
+		static void MakeStringSubstitutions(uint8_t *outStr, const uint8_t *inStr, const DialogTextSubstitutions *substitutions);
 
 		Window *m_window;
 		DialogItem *m_items;
@@ -268,7 +270,7 @@ namespace PortabilityLayer
 		}
 	}
 
-	bool DialogImpl::Populate(DialogTemplate *tmpl)
+	bool DialogImpl::Populate(DialogTemplate *tmpl, const DialogTextSubstitutions *substitutions)
 	{
 		Window *window = this->GetWindow();
 
@@ -282,10 +284,13 @@ namespace PortabilityLayer
 
 			Widget *widget = nullptr;
 
+			Str255 substitutedStr;
+			MakeStringSubstitutions(substitutedStr, templateItem.m_name, substitutions);
+
 			WidgetBasicState basicState;
 			basicState.m_enabled = templateItem.m_enabled;
 			basicState.m_resID = templateItem.m_id;
-			basicState.m_text = PascalStr<255>(PLPasStr(templateItem.m_name));
+			basicState.m_text = PascalStr<255>(PLPasStr(substitutedStr));
 			basicState.m_rect = templateItem.m_rect;
 			basicState.m_window = window;
 
@@ -304,8 +309,8 @@ namespace PortabilityLayer
 				widget = ImageWidget::Create(basicState);
 				break;
 			case SerializedDialogItemTypeCodes::kCheckBox:
-				//widget = CheckboxWidget::Create(basicState);
-				//break;
+				widget = CheckboxWidget::Create(basicState);
+				break;
 			case SerializedDialogItemTypeCodes::kRadioButton:
 				widget = RadioButtonWidget::Create(basicState);
 				break;
@@ -336,6 +341,49 @@ namespace PortabilityLayer
 		const int32_t y = evt.m_y - window->m_wmY;
 
 		return Point::Create(x, y);
+	}
+
+	void DialogImpl::MakeStringSubstitutions(uint8_t *outStr, const uint8_t *inStr, const DialogTextSubstitutions *substitutions)
+	{
+		if (substitutions == nullptr)
+		{
+			memcpy(outStr, inStr, inStr[0] + 1);
+			return;
+		}
+
+		const uint8_t inStrLen = inStr[0];
+		const uint8_t *inStrChar = inStr + 1;
+
+		uint8_t *outStrChar = outStr + 1;
+
+		uint8_t outStrRemaining = 255;
+		uint8_t inStrRemaining = inStr[0];
+		while (outStrRemaining > 0 && inStrRemaining > 0)
+		{
+			if ((*inStrChar) != '^' || inStrRemaining < 2 || inStrChar[1] < static_cast<uint8_t>('0') || inStrChar[1] > static_cast<uint8_t>('3'))
+			{
+				*outStrChar++ = *inStrChar++;
+				inStrRemaining--;
+				outStrRemaining--;
+			}
+			else
+			{
+				const int subIndex = inStrChar[1] - '0';
+				inStrChar += 2;
+				inStrRemaining -= 2;
+
+				const uint8_t *substitution = substitutions->m_strings[subIndex];
+				const uint8_t substitutionLength = substitution[0];
+				const uint8_t *substitutionChars = substitution + 1;
+
+				const uint8_t copyLength = (substitutionLength < outStrRemaining) ? substitutionLength : outStrRemaining;
+				memcpy(outStrChar, substitutionChars, copyLength);
+				outStrChar += copyLength;
+				outStrRemaining -= copyLength;
+			}
+		}
+
+		outStr[0] = static_cast<uint8_t>(outStrChar - (outStr + 1));
 	}
 
 	DialogImpl *DialogImpl::Create(Window *window, size_t numItems)
@@ -391,8 +439,8 @@ namespace PortabilityLayer
 	class DialogManagerImpl final : public DialogManager
 	{
 	public:
-		Dialog *LoadDialog(int16_t resID, Window *behindWindow) override;
-		int16_t DisplayAlert(int16_t alertResID) override;
+		Dialog *LoadDialog(int16_t resID, Window *behindWindow, const DialogTextSubstitutions *substitutions) override;
+		int16_t DisplayAlert(int16_t alertResID, const DialogTextSubstitutions *substitutions) override;
 
 		DialogTemplate *LoadDialogTemplate(int16_t resID);
 
@@ -404,7 +452,7 @@ namespace PortabilityLayer
 		static DialogManagerImpl ms_instance;
 	};
 
-	Dialog *DialogManagerImpl::LoadDialog(int16_t resID, Window *behindWindow)
+	Dialog *DialogManagerImpl::LoadDialog(int16_t resID, Window *behindWindow, const DialogTextSubstitutions *substitutions)
 	{
 		ResourceManager *rm = ResourceManager::GetInstance();
 
@@ -459,7 +507,7 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		if (!dialog->Populate(dtemplate))
+		if (!dialog->Populate(dtemplate, substitutions))
 		{
 			dialog->Destroy();
 			dtemplate->Destroy();
@@ -473,12 +521,8 @@ namespace PortabilityLayer
 		return dialog;
 	}
 
-	int16_t DialogManagerImpl::DisplayAlert(int16_t alertResID)
+	int16_t DialogManagerImpl::DisplayAlert(int16_t alertResID, const DialogTextSubstitutions *substitutions)
 	{
-		enum AlertStageBits
-		{
-		};
-
 		struct AlertResourceData
 		{
 			BERect m_rect;

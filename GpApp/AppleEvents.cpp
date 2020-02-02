@@ -132,7 +132,7 @@ PLError_t DoPrintDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 	short		hitWhat;
 	
 //	CenterAlert(kNoPrintingAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoPrintingAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoPrintingAlert, nullptr);
 	
 	return PLErrors::kInvalidParameter;
 }

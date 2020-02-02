@@ -478,7 +478,7 @@ Boolean QueryDeleteRoom (void)
 	short		hitWhat;
 	
 //	CenterAlert(kDeleteRoomAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kDeleteRoomAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kDeleteRoomAlert, nullptr);
 	if (hitWhat == kYesDoDeleteRoom)
 		return (true);
 	else

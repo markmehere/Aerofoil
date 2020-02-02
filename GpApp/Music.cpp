@@ -387,6 +387,6 @@ void TellHerNoMusic (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMemForMusicAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForMusicAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForMusicAlert, nullptr);
 }
 

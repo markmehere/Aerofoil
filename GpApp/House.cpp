@@ -653,7 +653,7 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 	short			item, roomToGoTo;
 	Boolean			leaving, canceled;
 
-	BringUpDialog(&theDialog, kGoToDialogID);
+	BringUpDialog(&theDialog, kGoToDialogID, nullptr);
 	
 	if (GetFirstRoomNumber() == thisRoomNumber)
 		MyDisableControl(theDialog, kGoToFirstButt);

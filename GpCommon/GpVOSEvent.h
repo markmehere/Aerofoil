@@ -136,6 +136,9 @@ namespace GpKeyboardInputEventTypes
 		kDown,
 		kUp,
 		kAuto,
+
+		kDownChar,
+		kAutoChar,
 	};
 }
 
@@ -173,6 +176,7 @@ struct GpKeyboardInputEvent
 	GpKeyboardInputEventType_t m_eventType;
 	GpKeyIDSubset_t m_keyIDSubset;
 	KeyUnion m_key;
+	uint32_t m_repeatCount;	// For down and auto events, number of types to repeat this keystroke (if multiple auto-repeated events get compacted)
 };
 
 struct GpGamepadAnalogAxisEvent

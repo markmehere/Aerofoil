@@ -563,8 +563,6 @@ void GpDisplayDriverD3D11::Run()
 	{
 		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
-			TranslateMessage(&msg);
-
 			DispatchMessage(&msg);
 
 			if (msg.message == WM_QUIT)

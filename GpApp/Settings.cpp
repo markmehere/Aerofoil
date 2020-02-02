@@ -5,11 +5,13 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+#include "PLArrayView.h"
 #include "PLKeyEncoding.h"
 #include "PLSound.h"
 #include "PLStandardColors.h"
 #include "PLTextUtils.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "PLWidgets.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
@@ -62,12 +64,12 @@
 
 void SetBrainsToDefaults (Dialog *);
 void UpdateSettingsBrains (Dialog *);
-Boolean BrainsFilter (Dialog *, EventRecord *, short *);
+int16_t BrainsFilter (Dialog *, const TimeTaggedVOSEvent &);
 void DoBrainsPrefs (void);
 void SetControlsToDefaults (Dialog *);
 void UpdateControlKeyName (Dialog *);
 void UpdateSettingsControl (Dialog *);
-Boolean ControlFilter (Dialog *, EventRecord *, short *);
+int16_t ControlFilter (Dialog *, const TimeTaggedVOSEvent &);
 void DoControlPrefs (void);
 void SoundDefaults (Dialog *);
 void UpdateSettingsSound (Dialog *);
@@ -133,7 +135,6 @@ void SetBrainsToDefaults (Dialog *theDialog)
 
 void UpdateSettingsBrains (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	
 	SetDialogNumToStr(theDialog, kMaxFilesItem, (long)willMaxFiles);
@@ -144,78 +145,48 @@ void UpdateSettingsBrains (Dialog *theDialog)
 
 //--------------------------------------------------------------  BrainsFilter
 
-Boolean BrainsFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t BrainsFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
-	switch (event->what)
+	if (evt.IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		intptr_t keyCode = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+
+		switch (keyCode)
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+			return kOkayButton;
 
-			case PL_KEY_SPECIAL(kEscape):
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
+			return kCancelButton;
 
-			case PL_KEY_ASCII('A'):
-			*item = kDoDemoCheck;
-			return(true);
-			break;
+		case PL_KEY_ASCII('A'):
+			return kDoDemoCheck;
 
-			case PL_KEY_ASCII('B'):
-			*item = kDoBackgroundCheck;
-			return(true);
-			break;
+		case PL_KEY_ASCII('B'):
+			return kDoBackgroundCheck;
 
-			case PL_KEY_ASCII('D'):
-			*item = kBrainsDefault;
+		case PL_KEY_ASCII('D'):
 			FlashDialogButton(dial, kBrainsDefault);
-			return(true);
-			break;
+			return kBrainsDefault;
 
-			case PL_KEY_ASCII('E'):
-			*item = kDoErrorCheck;
-			return(true);
-			break;
+		case PL_KEY_ASCII('E'):
+			return kDoErrorCheck;
 
-			case PL_KEY_ASCII('Q'):
-			*item = kQuickTransitCheck;
-			return(true);
-			break;
+		case PL_KEY_ASCII('Q'):
+			return kQuickTransitCheck;
 
-			case PL_KEY_ASCII('Z'):
-			*item = kDoZoomsCheck;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateSettingsBrains(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+		case PL_KEY_ASCII('Z'):
+			return kDoZoomsCheck;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoBrainsPrefs
@@ -227,7 +198,7 @@ void DoBrainsPrefs (void)
 	short			itemHit, wasMaxFiles;
 	Boolean			leaving;
 	
-	BringUpDialog(&prefDlg, kBrainsPrefsDialID);
+	BringUpDialog(&prefDlg, kBrainsPrefsDialID, nullptr);
 	leaving = false;
 	wasMaxFiles = willMaxFiles;
 	
@@ -246,10 +217,12 @@ void DoBrainsPrefs (void)
 	SetDialogItemValue(prefDlg, kDoErrorCheck, (short)wasErrorCheck);
 	SetDialogItemValue(prefDlg, kDoPrettyMapCheck, (short)wasPrettyMap);
 	SetDialogItemValue(prefDlg, kDoBitchDlgsCheck, (short)wasBitchDialogs);
-	
+
+	UpdateSettingsBrains(prefDlg);
+
 	while (!leaving)
 	{
-		ModalDialog(BrainsFilter, &itemHit);
+		itemHit = prefDlg->ExecuteModal(BrainsFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -354,8 +327,6 @@ void UpdateSettingsControl (Dialog *theDialog)
 	short		i;
 	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
 	
-	DrawDialog(theDialog);
-	
 	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
 	for (i = 0; i < 4; i++)
 	{
@@ -382,123 +353,108 @@ void UpdateSettingsControl (Dialog *theDialog)
 
 //--------------------------------------------------------------  ControlFilter
 
-Boolean ControlFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t ControlFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
 	intptr_t		wasKeyMap;
-	
-	switch (event->what)
+
+	if (evt.IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (whichCtrl)
+		GpKeyIDSubset_t subset = evt.m_vosEvent.m_event.m_keyboardInputEvent.m_keyIDSubset;
+
+		// Ignore Unicode (for now) and gamepad buttons
+		if (subset == GpKeyIDSubsets::kASCII || subset == GpKeyIDSubsets::kSpecial || subset == GpKeyIDSubsets::kNumPadNumber || subset == GpKeyIDSubsets::kNumPadSpecial || subset == GpKeyIDSubsets::kFKey)
 		{
+			wasKeyMap = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+
+			switch (whichCtrl)
+			{
 			case 0:
-			wasKeyMap = event->message;
-			if ((wasKeyMap == tempLeftMap) || (wasKeyMap == tempBattMap) || 
-					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) || 
+				if ((wasKeyMap == tempLeftMap) || (wasKeyMap == tempBattMap) ||
+					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
 					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
-			{
-				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
-					FlashDialogButton(dial, kCancelButton);
-					*item = kCancelButton;
-					return(true);			
+					if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
+					{
+						FlashDialogButton(dial, kCancelButton);
+						return kCancelButton;
+					}
+					else
+						SysBeep(1);
 				}
 				else
-					SysBeep(1);
-			}
-			else
-			{
-				GetKeyName(event->message, tempRightStr);
-				tempRightMap = wasKeyMap;
-			}
-			break;
-			
+				{
+					GetKeyName(wasKeyMap, tempRightStr);
+					tempRightMap = wasKeyMap;
+				}
+				break;
+
 			case 1:
-			wasKeyMap = event->message;
-			if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempBattMap) || 
+				if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempBattMap) ||
 					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
 					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
-			{
-				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
-					FlashDialogButton(dial, kCancelButton);
-					*item = kCancelButton;
-					return(true);			
+					if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
+					{
+						FlashDialogButton(dial, kCancelButton);
+						return kCancelButton;
+					}
+					else
+						SysBeep(1);
 				}
 				else
-					SysBeep(1);
-			}
-			else
-			{
-				GetKeyName(event->message, tempLeftStr);
-				tempLeftMap = wasKeyMap;
-			}
-			break;
-			
+				{
+					GetKeyName(wasKeyMap, tempLeftStr);
+					tempLeftMap = wasKeyMap;
+				}
+				break;
+
 			case 2:
-			wasKeyMap = event->message;
-			if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempLeftMap) || 
+				if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempLeftMap) ||
 					(wasKeyMap == tempBandMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
 					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
-			{
-				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
-					FlashDialogButton(dial, kCancelButton);
-					*item = kCancelButton;
-					return(true);			
+					if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
+					{
+						FlashDialogButton(dial, kCancelButton);
+						return kCancelButton;
+						return(true);
+					}
+					else
+						SysBeep(1);
 				}
 				else
-					SysBeep(1);
-			}
-			else
-			{
-				GetKeyName(event->message, tempBattStr);
-				tempBattMap = wasKeyMap;
-			}
-			break;
-			
+				{
+					GetKeyName(wasKeyMap, tempBattStr);
+					tempBattMap = wasKeyMap;
+				}
+				break;
+
 			case 3:
-			wasKeyMap = event->message;
-			if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempLeftMap) || 
+				if ((wasKeyMap == tempRightMap) || (wasKeyMap == tempLeftMap) ||
 					(wasKeyMap == tempBattMap) || (wasKeyMap == PL_KEY_SPECIAL(kTab)) ||
 					(wasKeyMap == PL_KEY_SPECIAL(kEscape)) || (wasKeyMap == PL_KEY_SPECIAL(kDelete)))
-			{
-				if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
 				{
-					FlashDialogButton(dial, kCancelButton);
-					*item = kCancelButton;
-					return(true);			
+					if (wasKeyMap == PL_KEY_SPECIAL(kEscape))
+					{
+						FlashDialogButton(dial, kCancelButton);
+						return kCancelButton;
+					}
+					else
+						SysBeep(1);
 				}
 				else
-					SysBeep(1);
+				{
+					GetKeyName(wasKeyMap, tempBandStr);
+					tempBandMap = wasKeyMap;
+				}
+				break;
 			}
-			else
-			{
-				GetKeyName(event->message, tempBandStr);
-				tempBandMap = wasKeyMap;
-			}
-			break;
+			UpdateControlKeyName(dial);
+			return -1;
 		}
-		UpdateControlKeyName(dial);
-		return(false);
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateSettingsControl(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoControlPrefs
@@ -510,7 +466,7 @@ void DoControlPrefs (void)
 	Boolean			leaving;
 	
 //	CenterDialog(kControlPrefsDialID);
-	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront);
+	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront, nullptr);
 	if (prefDlg == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
@@ -542,10 +498,12 @@ void DoControlPrefs (void)
 				kESCPausesRadio, kTABPausesRadio);
 
 	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
+
+	UpdateSettingsControl(prefDlg);
 	
 	while (!leaving)
 	{
-		ModalDialog(ControlFilter, &itemHit);
+		itemHit = prefDlg->ExecuteModal(ControlFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -741,7 +699,7 @@ void DoSoundPrefs (void)
 	short			itemHit;
 	Boolean			leaving;
 	
-	BringUpDialog(&prefDlg, kSoundPrefsDialID);
+	BringUpDialog(&prefDlg, kSoundPrefsDialID, nullptr);
 
 	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
 
@@ -754,10 +712,11 @@ void DoSoundPrefs (void)
 	SetDialogItemValue(prefDlg, kIdleMusicItem, (short)wasIdle);
 	SetDialogItemValue(prefDlg, kPlayMusicItem, (short)wasPlay);
 	leaving = false;
-	
+
 	while (!leaving)
 	{
 		itemHit = prefDlg->ExecuteModal(SoundFilter);
+
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -801,8 +760,8 @@ void DoSoundPrefs (void)
 				SetDialogNumToStr(prefDlg, kVolNumberItem, (long)tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
 				HandleSoundMusicChange(tempVolume, true);
-				//InvalWindowRect(prefDlg->GetWindow(), &tempRect);
 				DelayTicks(8);
+				prefDlg->GetItems()[kSofterItem - 1].GetWidget()->DrawControl(surface);
 			}
 			break;
 			
@@ -819,8 +778,10 @@ void DoSoundPrefs (void)
 					SetDialogNumToStr(prefDlg, kVolNumberItem, tempVolume);
 				UnivSetSoundVolume(tempVolume, thisMac.hasSM3);
 				HandleSoundMusicChange(tempVolume, true);
-				//InvalWindowRect(prefDlg->GetWindow(), &tempRect);
+
 				DelayTicks(8);
+
+				prefDlg->GetItems()[kLouderItem - 1].GetWidget()->DrawControl(surface);
 			}
 			break;
 			
@@ -1045,9 +1006,7 @@ void DoDisplayPrefs (void)
 	short			wasNeighbors;
 	Boolean			leaving;
 	
-	BringUpDialog(&prefDlg, kDisplayPrefsDialID);
-
-	DisplayUpdate(prefDlg);
+	BringUpDialog(&prefDlg, kDisplayPrefsDialID, nullptr);
 
 	if (!thisMac.can8Bit)
 	{
@@ -1063,6 +1022,8 @@ void DoDisplayPrefs (void)
 	wasDepthPref = isDepthPref;
 	wasScreen2 = isUseSecondScreen;
 	leaving = false;
+
+	DisplayUpdate(prefDlg);
 	
 	while (!leaving)
 	{
@@ -1294,7 +1255,7 @@ void DoSettingsMain (void)
 	int16_t			itemHit;
 	Boolean			leaving;
 	
-	BringUpDialog(&prefDlg, kMainPrefsDialID);
+	BringUpDialog(&prefDlg, kMainPrefsDialID, nullptr);
 
 	DrawSurface *surface = prefDlg->GetWindow()->GetDrawSurface();
 	
@@ -1373,6 +1334,6 @@ void BitchAboutChanges (void)
 	short		hitWhat;
 	
 //	CenterAlert(kChangesEffectAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kChangesEffectAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kChangesEffectAlert, nullptr);
 }
 

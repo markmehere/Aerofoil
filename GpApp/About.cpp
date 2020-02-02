@@ -52,7 +52,7 @@ void DoAbout (void)
 	ControlHandle	itemHandle;
 	short			hit;
 	
-	aboutDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kAboutDialogID, PL_GetPutInFrontWindowPtr());
+	aboutDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kAboutDialogID, PL_GetPutInFrontWindowPtr(), nullptr);
 //	if (aboutDialog == nil)
 //		RedAlert(kErrDialogDidntLoad);
 	

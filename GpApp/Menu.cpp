@@ -733,13 +733,15 @@ short QueryResumeGame (void)
 	hadGliders = thisHousePtr->savedGame.numGliders;
 	NumToString(hadPoints, scoreStr);			// param text strings
 	NumToString((long)hadGliders, glidStr);
+
+	DialogTextSubstitutions substitutions;
 	if (hadGliders == 1)
-		ParamText(glidStr, PSTR(""), scoreStr, PSTR(""));
+		substitutions = DialogTextSubstitutions(glidStr, PSTR(""), scoreStr);
 	else
-		ParamText(glidStr, PSTR("s"), scoreStr, PSTR(""));
+		substitutions = DialogTextSubstitutions(glidStr, PSTR("s"), scoreStr);
 	
 //	CenterDialog(kResumeGameDial);
-	theDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kResumeGameDial, kPutInFront);
+	theDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kResumeGameDial, kPutInFront, &substitutions);
 	if (theDial == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)theDial);
@@ -786,7 +788,7 @@ void HeyYourPissingAHighScore (void)
 	
 //	CenterAlert(kNoHighScoreAlert);
 	
-	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoHighScoreAlert);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoHighScoreAlert, nullptr);
 }
 
 //--------------------------------------------------------------  OpenCloseEditWindows

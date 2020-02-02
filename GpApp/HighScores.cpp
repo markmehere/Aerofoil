@@ -18,10 +18,12 @@
 #include "FileManager.h"
 #include "FontFamily.h"
 #include "FontManager.h"
+#include "HostSystemServices.h"
 #include "House.h"
 #include "IOStream.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "Utilities.h"
 
 namespace PortabilityLayer
@@ -391,6 +393,12 @@ Boolean TestHighScore (void)
 	
 	if (placing != -1)
 	{
+		int64_t scoreTimestamp = PortabilityLayer::HostSystemServices::GetInstance()->GetTime();
+		if (scoreTimestamp < 0)
+			scoreTimestamp = 0;
+		else if (scoreTimestamp > 0xffffffff)
+			scoreTimestamp = 0xffffffff;
+
 		FlushEvents(everyEvent, 0);
 		GetHighScoreName(placing + 1);
 		PasStringCopy(highName, thisHousePtr->highScores.names[kMaxScores - 1]);
@@ -400,7 +408,7 @@ Boolean TestHighScore (void)
 			PasStringCopy(highBanner, thisHousePtr->highScores.banner);
 		}
 		thisHousePtr->highScores.scores[kMaxScores - 1] = theScore;
-		GetDateTime(&thisHousePtr->highScores.timeStamps[kMaxScores - 1]);
+		thisHousePtr->highScores.timeStamps[kMaxScores - 1] = static_cast<uint32_t>(scoreTimestamp);
 		thisHousePtr->highScores.levels[kMaxScores - 1] = CountRoomsVisited();
 		SortHighScores();
 		gameDirty = true;
@@ -422,7 +430,6 @@ void UpdateNameDialog (Dialog *theDialog)
 {
 	short		nChars;
 	
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	
 	nChars = GetDialogStringLen(theDialog, kHighNameItem);
@@ -432,53 +439,46 @@ void UpdateNameDialog (Dialog *theDialog)
 //--------------------------------------------------------------  NameFilter
 // Dialog filter for the "Enter High Score Name" dialog.
 
-Boolean NameFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
 	short		nChars;
-	
+
 	if (keyStroke)
 	{
 		nChars = GetDialogStringLen(dial, kHighNameItem);
 		SetDialogNumToStr(dial, kNameNCharsItem, (long)nChars);
 		keyStroke = false;
 	}
-	
-	switch (event->what)
+
+	if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 	{
-		case keyDown:
-		keyStroke = true;
-		switch (event->message)
+		const GpKeyboardInputEvent &kbEvent = evt.m_vosEvent.m_event.m_keyboardInputEvent;
+
+		if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
 		{
+			PlayPrioritySound(kTypingSound, kTypingPriority);
+			return -1;	// Don't capture, need this to forward to the editbox
+		}
+		else if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
+		{
+			const intptr_t keyCode = PackVOSKeyCode(kbEvent);
+
+			switch (keyCode)
+			{
 			case PL_KEY_SPECIAL(kEnter):
 			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			PlayPrioritySound(kCarriageSound, kCarriagePriority);
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
+				PlayPrioritySound(kCarriageSound, kCarriagePriority);
+				FlashDialogButton(dial, kOkayButton);
+				return kOkayButton;
+
 			case PL_KEY_SPECIAL(kTab):
-			SelectDialogItemText(dial, kHighNameItem, 0, 1024);
-			return(false);
-			break;
-			
-			default:
-			PlayPrioritySound(kTypingSound, kTypingPriority);
-			return(false);
+				SelectDialogItemText(dial, kHighNameItem, 0, 1024);
+				return -1;
+			}
 		}
-		break;
-		
-		case updateEvt:
-		UpdateNameDialog(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  GetHighScoreName
@@ -494,17 +494,21 @@ void GetHighScoreName (short place)
 	InitCursor();
 	NumToString(theScore, scoreStr);
 	NumToString((long)place, placeStr);
-	ParamText(scoreStr, placeStr, thisHouseName, PSTR(""));
+
+	DialogTextSubstitutions substitutions(scoreStr, placeStr, thisHouseName);
+
 	PlayPrioritySound(kEnergizeSound, kEnergizePriority);
-	BringUpDialog(&theDial, kHighNameDialogID);
+	BringUpDialog(&theDial, kHighNameDialogID, &substitutions);
 	FlushEvents(everyEvent, 0);
 	SetDialogString(theDial, kHighNameItem, highName);
 	SelectDialogItemText(theDial, kHighNameItem, 0, 1024);
 	leaving = false;
-	
+
+	UpdateNameDialog(theDial);
+
 	while (!leaving)
 	{
-		ModalDialog(NameFilter, &item);
+		item = theDial->ExecuteModal(NameFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -597,7 +601,7 @@ void GetHighScoreBanner (void)
 	Boolean			leaving;
 	
 	PlayPrioritySound(kEnergizeSound, kEnergizePriority);
-	BringUpDialog(&theDial, kHighBannerDialogID);
+	BringUpDialog(&theDial, kHighBannerDialogID, nullptr);
 	SetDialogString(theDial, kHighBannerItem, highBanner);
 	SelectDialogItemText(theDial, kHighBannerItem, 0, 1024);
 	leaving = false;

@@ -17,6 +17,8 @@
 #include "FontFamily.h"
 #include "ResourceManager.h"
 
+#include <algorithm>
+
 #define kActive						0
 #define kInactive					255
 
@@ -26,9 +28,9 @@
 // Given a dialog pointer and a resource ID, this function brings it upÉ
 // centered, visible, and with the default button outlined.
 
-void BringUpDialog (Dialog **theDialog, short dialogID)
+void BringUpDialog (Dialog **theDialog, short dialogID, const DialogTextSubstitutions *substitutions)
 {
-	*theDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(dialogID, kPutInFront);
+	*theDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(dialogID, kPutInFront, substitutions);
 
 //	CenterDialog(dialogID);
 	if (*theDialog == nil)
@@ -381,12 +383,13 @@ void DrawDefaultButton (Dialog *theDialog)
 
 void GetDialogString (Dialog *theDialog, short item, StringPtr theString)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	GetDialogItemText(itemHandle, theString);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	const PLPasStr str = itemRef.GetWidget()->GetString();
+
+	const uint8_t length = static_cast<uint8_t>(std::min<size_t>(255, str.Length()));
+
+	theString[0] = length;
+	memcpy(theString + 1, str.UChars(), length);
 }
 
 //--------------------------------------------------------------  SetDialogString
@@ -402,14 +405,8 @@ void SetDialogString (Dialog *theDialog, short item, const PLPasStr &theString)
 
 short GetDialogStringLen (Dialog *theDialog, short item)
 {
-	Rect			itemRect;
-	Str255			theString;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	GetDialogItemText(itemHandle, theString);
-	return (theString[0]);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	return itemRef.GetWidget()->GetString().Length();
 }
 
 //--------------------------------------------------------------  GetDialogItemValue
@@ -418,12 +415,8 @@ short GetDialogStringLen (Dialog *theDialog, short item)
 
 void GetDialogItemValue (Dialog *theDialog, short item, short *theState)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	*theState = GetControlValue(itemHandle);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	*theState = itemRef.GetWidget()->GetState();
 }
 
 //--------------------------------------------------------------  SetDialogItemValue
@@ -442,10 +435,11 @@ void ToggleDialogItemValue (Dialog *theDialog, short item)
 {
 	Rect			itemRect;
 	ControlHandle	itemHandle;
-	short			itemType, theState;
+	int16_t			itemType, theState;
 	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	theState = GetControlValue(itemHandle);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+
+	theState = itemRef.GetWidget()->GetState();
 	if (theState == 0)
 		theState = 1;
 	else
@@ -465,7 +459,9 @@ void SetDialogNumToStr (Dialog *theDialog, short item, long theNumber)
 	short			itemType;
 	
 	NumToString(theNumber, theString);
-	theDialog->GetItems()[item - 1].GetWidget()->SetString(theString);
+	PortabilityLayer::Widget *widget = theDialog->GetItems()[item - 1].GetWidget();
+	widget->SetString(theString);
+	widget->DrawControl(theDialog->GetWindow()->GetDrawSurface());
 }
 
 //--------------------------------------------------------------  GetDialogNumFromStr
@@ -475,12 +471,7 @@ void SetDialogNumToStr (Dialog *theDialog, short item, long theNumber)
 void GetDialogNumFromStr (Dialog *theDialog, short item, long *theNumber)
 {
 	Str255			theString;
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	GetDialogItemText(itemHandle, theString);
+	GetDialogString(theDialog, item, theString);
 	StringToNum(theString, theNumber);
 }
 
@@ -498,13 +489,10 @@ void GetDialogItemRect (Dialog *theDialog, short item, Rect *theRect)
 
 void SetDialogItemRect (Dialog *theDialog, short item, Rect *theRect)
 {
-	Rect			oldRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &oldRect);
-	OffsetRect(&oldRect, theRect->left - oldRect.left, theRect->top - oldRect.top);
-	SetDialogItem(theDialog, item, itemType, itemHandle, &oldRect);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+	widget->SetPosition(Point::Create(theRect->left, theRect->top));
+	widget->Resize(theRect->Width(), theRect->Height());
 }
 
 //--------------------------------------------------------------  OffsetDialogItemRect
@@ -512,13 +500,11 @@ void SetDialogItemRect (Dialog *theDialog, short item, Rect *theRect)
 
 void OffsetDialogItemRect (Dialog *theDialog, short item, short h, short v)
 {
-	Rect			oldRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &oldRect);
-	OffsetRect(&oldRect, h, v);
-	SetDialogItem(theDialog, item, itemType, itemHandle, &oldRect);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+
+	const Rect oldRect = widget->GetRect();
+	widget->SetPosition(Point::Create(oldRect.left + h, oldRect.top + v));
 }
 
 //--------------------------------------------------------------  SelectFromRadioGroup
@@ -553,12 +539,7 @@ void AddMenuToPopUp (Dialog *theDialog, short whichItem, MenuHandle theMenu)
 
 void GetPopUpMenuValue (Dialog *theDialog, short whichItem, short *value)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
-	short			iType;
-	
-	GetDialogItem(theDialog, whichItem, &iType, &iHandle, &iRect);
-	*value = GetControlValue(iHandle);
+	GetDialogItemValue(theDialog, whichItem, value);
 }
 
 //--------------------------------------------------------------  SetPopUpMenuValue
@@ -566,12 +547,7 @@ void GetPopUpMenuValue (Dialog *theDialog, short whichItem, short *value)
 
 void SetPopUpMenuValue (Dialog *theDialog, short whichItem, short value)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
-	short			iType;
-	
-	GetDialogItem(theDialog, whichItem, &iType, &iHandle, &iRect);
-	SetControlValue(iHandle, value);
+	SetDialogItemValue(theDialog, whichItem, value);
 }
 
 //--------------------------------------------------------------  MyEnableControl
@@ -579,12 +555,9 @@ void SetPopUpMenuValue (Dialog *theDialog, short whichItem, short value)
 
 void MyEnableControl (Dialog *theDialog, short whichItem)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
-	short			iType;
-	
-	GetDialogItem(theDialog, whichItem, &iType, &iHandle, &iRect);
-	HiliteControl(iHandle, kActive);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[whichItem - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+	widget->SetEnabled(true);
 }
 
 //--------------------------------------------------------------  MyDisableControl
@@ -592,11 +565,9 @@ void MyEnableControl (Dialog *theDialog, short whichItem)
 
 void MyDisableControl (Dialog *theDialog, short whichItem)
 {
-	Rect			iRect;
-	ControlHandle	iHandle;
-	short			iType;
-
-	theDialog->GetItems()[whichItem - 1].GetWidget()->SetEnabled(false);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[whichItem - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+	widget->SetEnabled(false);
 }
 
 //--------------------------------------------------------------  DrawDialogUserText
@@ -621,13 +592,8 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 	if ((surface->MeasureString(stringCopy) + 2) > (iRect.right - iRect.left))
 		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
 	
-	OffsetRect(&iRect, 0, 1);
-
 	surface->SetForeColor(StdColors::White());
 	surface->FillRect(iRect);
-	surface->SetForeColor(StdColors::Black());
-
-	OffsetRect(&iRect, 0, -1);
 
 	short strWidth = surface->MeasureString(stringCopy);
 	inset = ((iRect.right - iRect.left) - (strWidth + 2)) / 2;
@@ -703,13 +669,12 @@ void LoadDialogPICT (Dialog *theDialog, short item, short theID)
 
 void FrameDialogItem (Dialog *theDialog, short item)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	DrawSurface		*surface = theDialog->GetWindow()->GetDrawSurface();
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
-	surface->FrameRect(itemRect);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+
+	const Rect itemRect = widget->GetRect();
+
+	theDialog->GetWindow()->GetDrawSurface()->FrameRect(itemRect);
 }
 
 //--------------------------------------------------------------  FrameDialogItemC
@@ -731,11 +696,10 @@ void FrameDialogItemC (Dialog *theDialog, short item, long color)
 
 void FrameOvalDialogItem (Dialog *theDialog, short item)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+
+	const Rect itemRect = widget->GetRect();
 
 	theDialog->GetWindow()->GetDrawSurface()->FrameEllipse(itemRect);
 }
@@ -746,16 +710,14 @@ void FrameOvalDialogItem (Dialog *theDialog, short item)
 
 void BorderDialogItem (Dialog *theDialog, short item, short sides)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
 	// 1 = left
 	// 2 = top
 	// 4 = bottom
 	// 8 = right ... so 6 = top & bottom, 15 = all 4 sides
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
+
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+	const Rect itemRect = widget->GetRect();
 
 	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 
@@ -793,13 +755,10 @@ void BorderDialogItem (Dialog *theDialog, short item, short sides)
 
 void ShadowDialogItem (Dialog *theDialog, short item, short thickness)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-
 	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
+
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	const Rect itemRect = itemRef.GetWidget()->GetRect();
 
 	surface->SetForeColor(StdColors::Black());
 	const Point bottomLeftCorner = Point::Create(itemRect.left + thickness, itemRect.bottom);
@@ -815,11 +774,10 @@ void ShadowDialogItem (Dialog *theDialog, short item, short thickness)
 
 void EraseDialogItem (Dialog *theDialog, short item)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	short			itemType;
-	
-	GetDialogItem(theDialog, item, &itemType, &itemHandle, &itemRect);
+	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	PortabilityLayer::Widget *widget = itemRef.GetWidget();
+
+	const Rect itemRect = widget->GetRect();
 
 	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 	surface->SetForeColor(StdColors::White());

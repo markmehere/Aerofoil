@@ -875,7 +875,7 @@ void ShoutNoMoreObjects (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMoreObjectsAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMoreObjectsAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMoreObjectsAlert, nullptr);
 }
 
 //--------------------------------------------------------------  HowManyCandleObjects
@@ -1072,7 +1072,7 @@ void ShoutNoMoreSpecialObjects (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoMoreSpecialAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMoreSpecialAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMoreSpecialAlert, nullptr);
 }
 
 #endif

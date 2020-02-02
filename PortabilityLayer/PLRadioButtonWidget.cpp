@@ -28,16 +28,23 @@ namespace PortabilityLayer
 		if (!m_rect.IsValid())
 			return;
 
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(m_rect);
+
 		uint16_t radioFrameSize = std::min<uint16_t>(12, std::min(m_rect.Width(), m_rect.Height()));
 		int16_t top = (m_rect.top + m_rect.bottom - static_cast<int16_t>(radioFrameSize)) / 2;
 
 		surface->SetForeColor(StdColors::Black());
 		const Rect radioRect = Rect::Create(top, m_rect.left, top + static_cast<int16_t>(radioFrameSize), m_rect.left + static_cast<int16_t>(radioFrameSize));
 		surface->FillEllipse(radioRect);
-		if (!m_state)
+
+		surface->SetForeColor(StdColors::White());
+		surface->FillEllipse(radioRect.Inset(1, 1));
+
+		if (m_state)
 		{
-			surface->SetForeColor(StdColors::White());
-			surface->FillEllipse(radioRect.Inset(1, 1));
+			surface->SetForeColor(StdColors::Black());
+			surface->FillEllipse(radioRect.Inset(3, 3));
 		}
 
 		surface->SetForeColor(StdColors::Black());
@@ -51,4 +58,14 @@ namespace PortabilityLayer
 		m_text = PascalStr<255>(str);
 	}
 
+	PLPasStr RadioButtonWidget::GetString() const
+	{
+		return m_text.ToShortStr();
+	}
+
+	void RadioButtonWidget::OnStateChanged()
+	{
+		if (m_window)
+			DrawControl(&m_window->m_surface);
+	}
 }

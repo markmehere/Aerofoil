@@ -1,4 +1,48 @@
 #include "PLDialogs.h"
+#include "PLPasStr.h"
+
+
+DialogTextSubstitutions::DialogTextSubstitutions()
+{
+	Init(0, nullptr);
+}
+
+DialogTextSubstitutions::DialogTextSubstitutions(const PLPasStr& str0)
+{
+	Init(1, &str0);
+}
+
+DialogTextSubstitutions::DialogTextSubstitutions(const PLPasStr& str0, const PLPasStr& str1)
+{
+	PLPasStr strs[] = { str0, str1 };
+	Init(2, strs);
+}
+
+DialogTextSubstitutions::DialogTextSubstitutions(const PLPasStr& str0, const PLPasStr& str1, const PLPasStr& str2)
+{
+	PLPasStr strs[] = { str0, str1, str2 };
+	Init(3, strs);
+}
+
+DialogTextSubstitutions::DialogTextSubstitutions(const PLPasStr& str0, const PLPasStr& str1, const PLPasStr& str2, const PLPasStr& str3)
+{
+	PLPasStr strs[] = { str0, str1, str2, str3 };
+	Init(4, strs);
+}
+
+void DialogTextSubstitutions::Init(size_t numItems, const PLPasStr *items)
+{
+	for (int i = 0; i < numItems; i++)
+	{
+		const uint8_t len = items[i].Length();
+		m_strings[i][0] = len;
+		if (len)
+			memcpy(m_strings[i] + 1, items[i].UChars(), len);
+	}
+
+	for (size_t i = numItems; i < 4; i++)
+		m_strings[i][0] = 0;
+}
 
 void DrawDialog(Dialog *dialog)
 {
@@ -15,11 +59,6 @@ DrawSurface *GetDialogPort(Dialog *dialog)
 {
 	PL_NotYetImplemented();
 	return nullptr;
-}
-
-void GetDialogItem(Dialog *dialog, int index, short *itemType, THandle<Control> *itemHandle, Rect *itemRect)
-{
-	PL_NotYetImplemented();
 }
 
 void GetDialogItemText(THandle<Control> handle, StringPtr str)
@@ -39,7 +78,7 @@ void SetDialogItemText(THandle<Control> handle, const PLPasStr &str)
 
 void SelectDialogItemText(Dialog *dialog, int item, int firstSelChar, int lastSelCharExclusive)
 {
-	PL_NotYetImplemented();
+	PL_NotYetImplemented_TODO("TextBox_Critical");
 }
 
 ModalFilterUPP NewModalFilterUPP(ModalFilterUPP func)

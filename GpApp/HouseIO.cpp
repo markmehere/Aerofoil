@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLDialogs.h"
 #include "PLMovies.h"
 #include "PLResources.h"
 #include "PLStringCompare.h"
@@ -436,11 +436,19 @@ void ByteSwapClutter(clutterType *clutter)
 	PortabilityLayer::ByteSwap::BigInt16(clutter->pict);
 }
 
-void ByteSwapObject(objectType *obj)
+void ByteSwapObject(objectType *obj, bool isSwappedAfter)
 {
+	int16_t objWhat = 0;
+
+	if (isSwappedAfter)
+		objWhat = obj->what;
+
 	PortabilityLayer::ByteSwap::BigInt16(obj->what);
 
-	switch (obj->what)
+	if (!isSwappedAfter)
+		objWhat = obj->what;
+
+	switch (objWhat)
 	{
 	case kFloorVent:
 	case kCeilingVent:
@@ -590,7 +598,7 @@ void ByteSwapObject(objectType *obj)
 	};
 }
 
-void ByteSwapRoom(roomType *room)
+void ByteSwapRoom(roomType *room, bool isSwappedAfter)
 {
 	SanitizePascalStr(room->name);
 
@@ -606,11 +614,16 @@ void ByteSwapRoom(roomType *room)
 	PortabilityLayer::ByteSwap::BigInt16(room->openings);
 	PortabilityLayer::ByteSwap::BigInt16(room->numObjects);
 	for (int i = 0; i < kMaxRoomObs; i++)
-		ByteSwapObject(room->objects + i);
+		ByteSwapObject(room->objects + i, isSwappedAfter);
 }
 
-bool ByteSwapHouse(housePtr house, size_t sizeInBytes)
+bool ByteSwapHouse(housePtr house, size_t sizeInBytes, bool isSwappedAfter)
 {
+	size_t nRooms = 0;
+
+	if (isSwappedAfter)
+		nRooms = house->nRooms;
+
 	PortabilityLayer::ByteSwap::BigInt16(house->version);
 	PortabilityLayer::ByteSwap::BigInt16(house->unusedShort);
 	PortabilityLayer::ByteSwap::BigInt32(house->timeStamp);
@@ -623,13 +636,15 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes)
 	PortabilityLayer::ByteSwap::BigInt16(house->firstRoom);
 	PortabilityLayer::ByteSwap::BigInt16(house->nRooms);
 
+	if (!isSwappedAfter)
+		nRooms = house->nRooms;
+
 	const size_t roomDataSize = sizeInBytes - houseType::kBinaryDataSize;
-	if (house->nRooms < 0 || roomDataSize / sizeof(roomType) < static_cast<size_t>(house->nRooms))
+	if (nRooms < 0 || roomDataSize / sizeof(roomType) < nRooms)
 		return false;
 
-	const size_t nRooms = static_cast<size_t>(house->nRooms);
 	for (size_t i = 0; i < nRooms; i++)
-		ByteSwapRoom(house->rooms + i);
+		ByteSwapRoom(house->rooms + i, isSwappedAfter);
 
 	house->padding = 0;
 
@@ -707,7 +722,7 @@ Boolean ReadHouse (void)
 		memmove((*thisHouse)->rooms, houseDataBytes + houseType::kBinaryDataSize, roomDataSize);
 	}
 
-	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 	
 	numberRooms = (*thisHouse)->nRooms;
 	#ifdef COMPILEDEMO
@@ -815,26 +830,26 @@ Boolean WriteHouse (Boolean checkIt)
 		(*thisHouse)->version = wasHouseVersion;
 	}
 
-	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
-
 	long headerSize = houseType::kBinaryDataSize;
 	long roomsSize = sizeof(roomType) * (*thisHouse)->nRooms;
+
+	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), true);
 
 	if (houseStream->Write(*thisHouse, headerSize) != headerSize)
 	{
 		CheckFileError(PLErrors::kIOError, thisHouseName);
-		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 		return(false);
 	}
 
 	if (houseStream->Write((*thisHouse)->rooms, roomsSize) != roomsSize)
 	{
 		CheckFileError(PLErrors::kIOError, thisHouseName);
-		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 		return(false);
 	}
 
-	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount));
+	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 
 	if (!houseStream->Truncate(byteCount))
 	{
@@ -935,8 +950,8 @@ Boolean QuerySaveChanges (void)
 	
 	InitCursor();
 //	CenterAlert(kSaveChangesAlert);
-	ParamText(thisHouseName, PSTR(""), PSTR(""), PSTR(""));
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveChangesAlert);
+	DialogTextSubstitutions substitutions(thisHouseName);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveChangesAlert, &substitutions);
 	if (hitWhat == kSaveChanges)
 	{
 		if (wasHouseVersion < kHouseVersion)
@@ -981,9 +996,9 @@ void YellowAlert (short whichAlert, short identifier)
 	NumToString((long)identifier, errNumStr);
 	
 //	CenterAlert(kYellowAlert);
-	ParamText(errStr, errNumStr, PSTR(""), PSTR(""));
+	DialogTextSubstitutions substitutions(errStr, errNumStr);
 	
-	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kYellowAlert);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kYellowAlert, &substitutions);
 }
 
 //--------------------------------------------------------------  IsFileReadOnly

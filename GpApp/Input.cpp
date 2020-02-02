@@ -469,7 +469,7 @@ Boolean QuerySaveGame (void)
 	InitCursor();
 	FlushEvents(everyEvent, 0);
 //	CenterAlert(kSaveGameAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveGameAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveGameAlert, nullptr);
 	if (hitWhat == kYesSaveGameButton)
 		return (true);
 	else

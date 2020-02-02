@@ -47,7 +47,10 @@ size_t GpFileStream_Win32::Write(const void *bytes, size_t size)
 
 		BOOL writeSucceeded = WriteFile(m_handle, bytes, chunkSizeToWrite, &numWritten, nullptr);
 		if (!writeSucceeded)
+		{
+			DWORD lastError = GetLastError();
 			return totalWritten;
+		}
 
 		totalWritten += static_cast<size_t>(numWritten);
 		size -= static_cast<size_t>(numWritten);

@@ -418,7 +418,7 @@ void KillAllBands (void);
 
 void SaveGame2 (void);									// --- SavedGames.c
 Boolean OpenSavedGame (void);
-void SaveGame (Boolean);
+//void SaveGame (Boolean);
 
 void RefreshScoreboard (SInt16);							// --- Scoreboard.c
 void HandleDynamicScoreboard (void);

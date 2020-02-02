@@ -13,5 +13,5 @@ bool IsMacPlusSoundBanned()
 // High scores disabled until dialogs work
 bool IsHighScoreDisabled()
 {
-	return true;
+	return false;
 }

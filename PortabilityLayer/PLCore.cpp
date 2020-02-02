@@ -328,11 +328,6 @@ void NumToString(long number, unsigned char *str)
 	str[0] = static_cast<uint8_t>(strLength);
 }
 
-void ParamText(const PLPasStr &title, const PLPasStr &a, const PLPasStr &b, const PLPasStr &c)
-{
-	PL_NotYetImplemented();
-}
-
 PLError_t AEProcessAppleEvent(EventRecord *evt)
 {
 	PL_NotYetImplemented();
@@ -551,11 +546,6 @@ short Random()
 	}
 
 	return static_cast<short>(static_cast<int32_t>(rWord) - 0x8000);
-}
-
-void GetDateTime(UInt32 *dateTime)
-{
-	PL_NotYetImplemented();
 }
 
 void GetTime(DateTimeRec *dateTime)

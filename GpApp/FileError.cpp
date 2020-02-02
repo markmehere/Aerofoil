@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "PLDialogs.h"
 #include "PLNumberFormatting.h"
 #include "PLTextUtils.h"
 #include "PLPasStr.h"
@@ -57,10 +57,11 @@ Boolean CheckFileError (short resultCode, const PLPasStr &fileName)
 	
 	GetIndString(errMessage, rFileErrorStrings, stringIndex);
 	NumToString((long)resultCode, errNumString);
-	ParamText(errMessage, errNumString, fileName, PSTR(""));
+
+	DialogTextSubstitutions substitutions(errMessage, errNumString, fileName);
 	
 //	CenterAlert(rFileErrorAlert);
-	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rFileErrorAlert);
+	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rFileErrorAlert, &substitutions);
 	
 	return(false);
 }

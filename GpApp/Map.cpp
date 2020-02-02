@@ -727,7 +727,7 @@ Boolean QueryNewRoom (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNewRoomAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewRoomAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewRoomAlert, nullptr);
 	if (hitWhat == kYesDoNewRoom)
 		return (true);
 	else

@@ -12,6 +12,9 @@ namespace PortabilityLayer
 
 		bool Init(const WidgetBasicState &state) override;
 
+		void SetString(const PLPasStr &str) override;
+		PLPasStr GetString() const override;
+
 		void DrawControl(DrawSurface *surface) override;
 
 	private:

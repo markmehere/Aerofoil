@@ -54,7 +54,7 @@ short BitchAboutColorDepth (void)
 	short		sheSaid;
 	
 //	CenterAlert(kColorSwitchedAlert);
-	sheSaid = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kColorSwitchedAlert);
+	sheSaid = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kColorSwitchedAlert, nullptr);
 	
 	return (sheSaid);
 }

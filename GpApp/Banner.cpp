@@ -84,16 +84,17 @@ void DrawBanner (Point *topLeft)
 short CountStarsInHouse (void)
 {
 	short		i, h, numRooms, numStars;
+	housePtr	housePtr = *thisHouse;
 	
 	numStars = 0;
 	
-	numRooms = (*thisHouse)->nRooms;
+	numRooms = housePtr->nRooms;
 	for (i = 0; i < numRooms; i++)
 	{
-		if ((*thisHouse)->rooms[i].suite != kRoomIsEmpty)
+		if (housePtr->rooms[i].suite != kRoomIsEmpty)
 			for (h = 0; h < kMaxRoomObs; h++)
 			{
-				if ((*thisHouse)->rooms[i].objects[h].what == kStar)
+				if (housePtr->rooms[i].objects[h].what == kStar)
 					numStars++;
 			}
 	}

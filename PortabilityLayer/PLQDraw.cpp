@@ -820,9 +820,9 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
 						const unsigned int combinedValue = srcLow | (srcHigh << 8);
-						const unsigned int b = (srcLow & 0x1f);
-						const unsigned int g = ((srcLow >> 5) & 0x1f);
-						const unsigned int r = ((srcLow >> 10) & 0x1f);
+						const unsigned int b = (combinedValue & 0x1f);
+						const unsigned int g = ((combinedValue >> 5) & 0x1f);
+						const unsigned int r = ((combinedValue >> 10) & 0x1f);
 
 						if (r + g + b > 46)
 							currentDestRow[destColIndex] = 0;
@@ -866,9 +866,9 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
 						const unsigned int combinedValue = srcLow | (srcHigh << 8);
-						const unsigned int b = (srcLow & 0x1f);
-						const unsigned int g = ((srcLow >> 5) & 0x1f);
-						const unsigned int r = ((srcLow >> 10) & 0x1f);
+						const unsigned int b = (combinedValue & 0x1f);
+						const unsigned int g = ((combinedValue >> 5) & 0x1f);
+						const unsigned int r = ((combinedValue >> 10) & 0x1f);
 
 						if (r + g + b > 46)
 							currentDestRow[destColIndex] = 0;

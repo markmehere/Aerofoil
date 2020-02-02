@@ -349,7 +349,7 @@ void DoLoadHouse (void)
 	short			i, wasIndex, screenCount;
 	Boolean			leaving, whoCares;
 	
-	BringUpDialog(&theDial, kLoadHouseDialogID);
+	BringUpDialog(&theDial, kLoadHouseDialogID, nullptr);
 
 	DrawSurface *surface = theDial->GetWindow()->GetDrawSurface();
 

@@ -89,6 +89,11 @@ namespace PortabilityLayer
 		(void)str;
 	}
 
+	PLPasStr Widget::GetString() const
+	{
+		return PSTR("");
+	}
+
 	const Rect &Widget::GetRect() const
 	{
 		return m_rect;

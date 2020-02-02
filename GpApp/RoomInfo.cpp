@@ -447,7 +447,7 @@ void DoRoomInfo (void)
 	NumToString(thisRoom->floor, floorStr);
 	NumToString(thisRoom->suite, suiteStr);
 	NumToString(thisRoom->numObjects, objectsStr);
-	ParamText(floorStr, suiteStr, objectsStr, PSTR(""));
+	DialogTextSubstitutions substitutions(floorStr, suiteStr, objectsStr);
 	
 	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredPixelFormat);
 //	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
@@ -467,7 +467,7 @@ void DoRoomInfo (void)
 		tempTiles[i] = thisRoom->tiles[i];
 	
 //	CenterDialog(kRoomInfoDialogID);
-	roomInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kRoomInfoDialogID, kPutInFront);
+	roomInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kRoomInfoDialogID, kPutInFront, &substitutions);
 	if (roomInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)roomInfoDialog);
@@ -751,7 +751,7 @@ short ChooseOriginalArt (short was)
 		was = kUserBackground;
 	
 	InitCursor();
-	BringUpDialog(&theDialog, kOriginalArtDialogID);
+	BringUpDialog(&theDialog, kOriginalArtDialogID, nullptr);
 	if (was >= kOriginalArtworkItem)
 	{
 		newPictID = was;
@@ -930,7 +930,7 @@ void BitchAboutPICTNotFound (void)
 	short		hitWhat;
 	
 //	CenterAlert(kNoPICTFoundAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoPICTFoundAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoPICTFoundAlert, nullptr);
 }
 #endif
 

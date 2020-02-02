@@ -224,11 +224,11 @@ void DoHouseInfo (void)
 	NumToString((long)version >> 8, versStr);		// Convert version to two stringsÉ
 	NumToString((long)version % 0x0100, loVers);	// the 1's and 1/10th's part.
 	NumToString((long)numRooms, nRoomsStr);			// Number of rooms -> string.
-	
-	ParamText(versStr, loVers, nRoomsStr, PSTR(""));
+
+	DialogTextSubstitutions substitutions(versStr, loVers, nRoomsStr);
 	
 //	CenterDialog(kHouseInfoDialogID);
-	houseInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kHouseInfoDialogID, kPutInFront);
+	houseInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kHouseInfoDialogID, kPutInFront, &substitutions);
 	if (houseInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort((GrafPtr)houseInfoDialog);
@@ -297,7 +297,7 @@ Boolean WarnLockingHouse (void)
 	short		hitWhat;
 	
 //	CenterAlert(kLockHouseAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kLockHouseAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kLockHouseAlert, nullptr);
 	
 	return (hitWhat == 1);
 }
@@ -309,7 +309,7 @@ void HowToZeroScores (void)
 	short		hitWhat;
 	
 //	CenterAlert(kZeroScoresAlert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kZeroScoresAlert);
+	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kZeroScoresAlert, nullptr);
 	
 	switch (hitWhat)
 	{

@@ -15,6 +15,9 @@ namespace PortabilityLayer
 
 		void DrawControl(DrawSurface *surface) override;
 		void SetString(const PLPasStr &str) override;
+		PLPasStr GetString() const override;
+
+		void OnStateChanged() override;
 
 	private:
 		PascalStr<255> m_text;

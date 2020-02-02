@@ -60,6 +60,8 @@ namespace PortabilityLayer
 		bool IsVisible() const;
 
 		virtual void SetString(const PLPasStr &str);
+		virtual PLPasStr GetString() const;
+
 		virtual void SetHighlightStyle(int16_t style);
 
 		const Rect &GetRect() const;

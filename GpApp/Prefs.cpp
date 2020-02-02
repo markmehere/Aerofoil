@@ -184,6 +184,6 @@ void BringUpDeletePrefsAlert (void)
 	
 	InitCursor();
 //	CenterAlert(kNewPrefsAlertID);
-	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewPrefsAlertID);
+	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewPrefsAlertID, nullptr);
 }
 
