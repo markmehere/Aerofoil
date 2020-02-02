@@ -495,6 +495,11 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 				if (character == '\r')
 					break;
 
+				const PortabilityLayer::RenderedGlyphMetrics *metrics = nullptr;
+				const void *glyphData = nullptr;
+				if (rfont->GetGlyph(chars[i], metrics, glyphData))
+					spanWidth += metrics->m_advanceX;
+
 				i++;
 			}
 			else
