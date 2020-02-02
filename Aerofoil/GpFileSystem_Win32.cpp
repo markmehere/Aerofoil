@@ -201,6 +201,7 @@ bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtual
 		return false;
 	}
 
+	*exists = true;
 	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
