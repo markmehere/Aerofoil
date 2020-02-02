@@ -78,14 +78,21 @@ void DoHighScores (void)
 //		DissBitsChunky(&workSrcRect);
 //	else
 //		DissBits(&workSrcRect);
+
+	DumpScreenOn(&workSrcRect);
+
 	SpinCursor(3);
 
 	DrawHighScores(workSrcMap);
+
+	DumpScreenOn(&workSrcRect);
+
 	SpinCursor(3);
 //	if (quickerTransitions)
 //		DissBitsChunky(&workSrcRect);
 //	else
 //		DissBits(&workSrcRect);
+
 	InitCursor();
 	DelayTicks(60);
 	WaitForInputEvent(30);
