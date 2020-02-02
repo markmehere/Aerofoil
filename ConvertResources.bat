@@ -9,6 +9,8 @@ x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.ti
 
 x64\Release\ConvertColorCursors.exe
 
+attrib -R Packaged\Houses\*
+
 x64\Release\hqx2gp.exe "GliderProData\Houses\Art Museum.binhex" "DefaultTimestamp.timestamp" "Packaged\Houses\Art Museum"
 x64\Release\hqx2gp.exe "GliderProData\Houses\California or Bust!.binhex" "DefaultTimestamp.timestamp" "Packaged\Houses\California or Bust!"
 x64\Release\hqx2gp.exe "GliderProData\Houses\Castle o' the Air.binhex" "DefaultTimestamp.timestamp" "Packaged\Houses\Castle o' the Air"
@@ -73,5 +75,7 @@ x64\Release\FTagData.exe "GliderProData\Houses\Titanic.mov" "DefaultTimestamp.ti
 
 del /Q Packaged\Houses\*.gpr
 del /Q Packaged\ApplicationResources.gpr
+
+attrib +R Packaged\Houses\*
 
 pause

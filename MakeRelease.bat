@@ -10,6 +10,7 @@ copy /Y x64\Release\FreeType.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\GpApp.dll ReleasePkg\Aerofoil
 
 
-xcopy /I /E /Y Packaged ReleasePkg\Aerofoil\Packaged
-xcopy /I /E /Y Resources ReleasePkg\Aerofoil\Resources
+xcopy /I /E /Y /K Packaged ReleasePkg\Aerofoil\Packaged
+xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
+
 pause
