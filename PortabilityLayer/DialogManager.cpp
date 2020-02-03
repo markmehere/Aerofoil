@@ -8,6 +8,7 @@
 #include "PLButtonWidget.h"
 #include "PLCheckboxWidget.h"
 #include "PLDialogs.h"
+#include "PLEditboxWidget.h"
 #include "PLIconWidget.h"
 #include "PLImageWidget.h"
 #include "PLInvisibleWidget.h"
@@ -315,6 +316,8 @@ namespace PortabilityLayer
 				widget = RadioButtonWidget::Create(basicState);
 				break;
 			case SerializedDialogItemTypeCodes::kEditBox:
+				widget = EditboxWidget::Create(basicState);
+				break;
 			default:
 				widget = InvisibleWidget::Create(basicState);
 				break;

@@ -309,8 +309,8 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	if (clampedLeftCoord >= clampedRightCoord || clampedTopCoord >= clampedBottomCoord)
 		return;
 
-	const uint32_t firstOutputRow = clampedTopCoord - rect.top;
-	const uint32_t firstOutputCol = clampedLeftCoord - rect.left;
+	const uint32_t firstOutputRow = clampedTopCoord;
+	const uint32_t firstOutputCol = clampedLeftCoord;
 
 	const uint32_t firstInputRow = clampedTopCoord - topCoord;
 	const uint32_t firstInputCol = clampedLeftCoord - leftCoord;
@@ -395,6 +395,11 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 
 void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa)
 {
+	DrawStringConstrained(point, str, aa, Rect::CreateLargest());
+}
+
+void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect)
+{
 	PortabilityLayer::QDPort *port = &m_port;
 
 	PortabilityLayer::QDState *qdState = m_port.GetState();
@@ -413,10 +418,10 @@ void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa)
 
 	PixMap *pixMap = *port->GetPixMap();
 
-	const Rect rect = pixMap->m_rect;
+	const Rect rect = pixMap->m_rect.Intersect(constraintRect);
 
 	if (!rect.IsValid())
-		return;	// ???
+		return;
 
 	Point paraStartPos = penPos;
 

@@ -468,6 +468,9 @@
     <ClInclude Include="CombinedTimestamp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PLEditboxWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -732,6 +735,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BitmapImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLEditboxWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

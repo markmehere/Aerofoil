@@ -206,6 +206,7 @@
     <ClInclude Include="PLCore.h" />
     <ClInclude Include="PLCTabReducer.h" />
     <ClInclude Include="PLDialogs.h" />
+    <ClInclude Include="PLEditboxWidget.h" />
     <ClInclude Include="PLErrorCodes.h" />
     <ClInclude Include="PLEventQueue.h" />
     <ClInclude Include="PLHacks.h" />
@@ -330,6 +331,7 @@
     <ClCompile Include="PLCore.cpp" />
     <ClCompile Include="PLCTabReducer.cpp" />
     <ClCompile Include="PLDialogs.cpp" />
+    <ClCompile Include="PLEditboxWidget.cpp" />
     <ClCompile Include="PLEventQueue.cpp" />
     <ClCompile Include="PLHacks.cpp" />
     <ClCompile Include="PLIconWidget.cpp" />

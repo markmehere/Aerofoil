@@ -47,6 +47,7 @@ struct Rect
 
 	static Rect Create(int16_t top, int16_t left, int16_t bottom, int16_t right);
 	static Rect CreateFromPoints(const Point &topLeft, const Point &bottomRight);
+	static Rect CreateLargest();
 };
 
 struct BERect
@@ -243,4 +244,9 @@ inline Rect Rect::Create(int16_t top, int16_t left, int16_t bottom, int16_t righ
 inline Rect Rect::CreateFromPoints(const Point &topLeft, const Point &bottomRight)
 {
 	return Rect::Create(topLeft.v, topLeft.h, bottomRight.v, bottomRight.h);
+}
+
+inline Rect Rect::CreateLargest()
+{
+	return Rect::Create(-0x8000, -0x8000, 0x7fff, 0x7fff);
 }
