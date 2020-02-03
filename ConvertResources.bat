@@ -1,7 +1,6 @@
 mkdir Packaged
 mkdir Packaged\Houses
 mkdir Packaged\WinCursors
-mkdir ResourceTemp
 
 x64\Release\MiniRez.exe "GliderProData\Glider PRO.r" Packaged\ApplicationResources.gpr
 
