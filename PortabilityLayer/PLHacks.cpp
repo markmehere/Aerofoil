@@ -10,8 +10,12 @@ bool IsMacPlusSoundBanned()
 	return false;
 }
 
-// High scores disabled until dialogs work
 bool IsHighScoreDisabled()
 {
 	return false;
+}
+
+bool IsRoomEditorDisabled()
+{
+	return true;
 }
