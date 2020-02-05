@@ -31,6 +31,9 @@ namespace PortabilityLayer
 
 	void LabelWidget::DrawControl(DrawSurface *surface)
 	{
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(m_rect);
+
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		surface->SetForeColor(StdColors::Black());
 

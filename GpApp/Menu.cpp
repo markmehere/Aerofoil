@@ -384,6 +384,9 @@ void DoOptionsMenu (short theItem)
 	switch (theItem)
 	{
 		case iEditor:
+			if (IsRoomEditorDisabled())
+				break;
+
 #ifdef COMPILEDEMO
 		DoNotInDemo();
 #else

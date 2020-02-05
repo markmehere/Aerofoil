@@ -46,7 +46,7 @@ void UpdateNameDialog (Dialog *);
 Boolean NameFilter (Dialog *, EventRecord *, short *);
 void GetHighScoreName (short);
 void UpdateBannerDialog (Dialog *);
-Boolean BannerFilter (Dialog *, EventRecord *, short *);
+int16_t BannerFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt);
 void GetHighScoreBanner (void);
 Boolean OpenHighScoresFile (const VFileSpec &spec, PortabilityLayer::IOStream *&outStream);
 
@@ -535,7 +535,6 @@ void UpdateBannerDialog (Dialog *theDialog)
 {
 	short		nChars;
 	
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	
 	nChars = GetDialogStringLen(theDialog, kHighBannerItem);
@@ -545,7 +544,7 @@ void UpdateBannerDialog (Dialog *theDialog)
 //--------------------------------------------------------------  BannerFilter
 // Dialog filter for the "Enter Message" dialog.
 
-Boolean BannerFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t BannerFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
 {
 	short		nChars;
 	
@@ -555,44 +554,36 @@ Boolean BannerFilter (Dialog *dial, EventRecord *event, short *item)
 		SetDialogNumToStr(dial, kBannerScoreNCharsItem, (long)nChars);
 		keyStroke = false;
 	}
-	
-	switch (event->what)
+
+	if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 	{
-		
-		case keyDown:
-		keyStroke = true;
-		switch (event->message)
+		const GpKeyboardInputEvent &kbEvent = evt.m_vosEvent.m_event.m_keyboardInputEvent;
+
+		if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
 		{
+			PlayPrioritySound(kTypingSound, kTypingPriority);
+			return -1;	// Don't capture, need this to forward to the editbox
+		}
+		else if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
+		{
+			const intptr_t keyCode = PackVOSKeyCode(kbEvent);
+
+			switch (keyCode)
+			{
 			case PL_KEY_SPECIAL(kEnter):
 			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			PlayPrioritySound(kCarriageSound, kCarriagePriority);
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+				PlayPrioritySound(kCarriageSound, kCarriagePriority);
+				FlashDialogButton(dial, kOkayButton);
+				return kOkayButton;
 
 			case PL_KEY_SPECIAL(kTab):
-			SelectDialogItemText(dial, kHighBannerItem, 0, 1024);
-			return(false);
-			break;
-			
-			default:
-			PlayPrioritySound(kTypingSound, kTypingPriority);
-			return(false);
+				SelectDialogItemText(dial, kHighBannerItem, 0, 1024);
+				return -1;
+			}
 		}
-		break;
-		
-		case updateEvt:
-		UpdateBannerDialog(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  GetHighScoreBanner
@@ -612,10 +603,12 @@ void GetHighScoreBanner (void)
 	SetDialogString(theDial, kHighBannerItem, highBanner);
 	SelectDialogItemText(theDial, kHighBannerItem, 0, 1024);
 	leaving = false;
+
+	UpdateBannerDialog(theDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(BannerFilter, &item);
+		item = theDial->ExecuteModal(BannerFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -624,6 +617,8 @@ void GetHighScoreBanner (void)
 			leaving = true;
 		}
 	}
+	
+	theDial->Destroy();
 }
 
 //--------------------------------------------------------------  OpenHighScoresFile

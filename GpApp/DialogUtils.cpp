@@ -457,7 +457,7 @@ void SetDialogNumToStr (Dialog *theDialog, short item, long theNumber)
 	Rect			itemRect;
 	ControlHandle	itemHandle;
 	short			itemType;
-	
+
 	NumToString(theNumber, theString);
 	PortabilityLayer::Widget *widget = theDialog->GetItems()[item - 1].GetWidget();
 	widget->SetString(theString);
