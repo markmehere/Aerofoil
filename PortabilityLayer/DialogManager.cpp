@@ -1,5 +1,6 @@
 #include "DialogManager.h"
 #include "HostDisplayDriver.h"
+#include "HostSystemServices.h"
 #include "IconLoader.h"
 #include "IGpDisplayDriver.h"
 #include "ResourceManager.h"
@@ -451,6 +452,9 @@ namespace PortabilityLayer
 
 	private:
 		void PositionWindow(Window *window, const Rect &rect);
+		Dialog *LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions);
+
+		static int16_t AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt);
 
 		static DialogManagerImpl ms_instance;
 	};
@@ -478,7 +482,12 @@ namespace PortabilityLayer
 
 		dlogH.Dispose();
 
-		DialogTemplate *dtemplate = LoadDialogTemplate(header.m_itemsResID);
+		return LoadDialogFromTemplate(header.m_itemsResID, rect, header.m_visible != 0, header.m_hasCloseBox != 0, header.m_referenceConstant, positionSpec, behindWindow, PLPasStr(titlePStr), substitutions);
+	}
+
+	Dialog *DialogManagerImpl::LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions)
+	{
+		DialogTemplate *dtemplate = LoadDialogTemplate(templateResID);
 		const size_t numItems = (dtemplate == nullptr) ? 0 : dtemplate->GetItems().Count();
 
 		if (!rect.IsValid())
@@ -489,7 +498,7 @@ namespace PortabilityLayer
 
 		WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-		WindowDef wdef = WindowDef::Create(rect, WindowStyleFlags::kAlert, header.m_visible != 0, header.m_hasCloseBox != 0, header.m_referenceConstant, positionSpec, PLPasStr(titlePStr));
+		WindowDef wdef = WindowDef::Create(rect, WindowStyleFlags::kAlert, visible, hasCloseBox, referenceConstant, positionSpec, title);
 		Window *window = wm->CreateWindow(wdef);
 		if (!window)
 		{
@@ -522,6 +531,11 @@ namespace PortabilityLayer
 		dialog->DrawControls(true);
 
 		return dialog;
+	}
+
+	int16_t DialogManagerImpl::AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt)
+	{
+		return -1;
 	}
 
 	int16_t DialogManagerImpl::DisplayAlert(int16_t alertResID, const DialogTextSubstitutions *substitutions)
@@ -571,8 +585,19 @@ namespace PortabilityLayer
 
 		// If sound index is 0, play no sound
 
-		PL_NotYetImplemented();
-		return 0;
+		if (soundIndexes[0] != 0)
+			PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+
+		const Rect dialogRect = alertResData.m_rect.ToRect();
+
+		Dialog *dialog = LoadDialogFromTemplate(alertResData.m_dialogTemplateResID, alertResData.m_rect.ToRect(), true, false, 0, 0x300a, PL_GetPutInFrontWindowPtr(), PSTR(""), nullptr);
+		if (!dialog)
+			return 0;
+
+		int16_t hit = dialog->ExecuteModal(DialogManagerImpl::AlertFilter);
+		dialog->Destroy();
+
+		return hit;
 	}
 
 	DialogTemplate *DialogManagerImpl::LoadDialogTemplate(int16_t resID)
