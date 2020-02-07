@@ -62,6 +62,13 @@ namespace PortabilityLayer
 
 		m_length = len;
 		memcpy(m_chars, str.UChars(), len);
+
+		if (m_window)
+		{
+			DrawSurface *surface = m_window->GetDrawSurface();
+
+			DrawControl(surface);
+		}
 	}
 
 	PLPasStr EditboxWidget::GetString() const
