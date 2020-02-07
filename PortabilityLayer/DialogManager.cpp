@@ -26,6 +26,9 @@
 #include "WindowDef.h"
 #include "WindowManager.h"
 
+#include "rapidjson/rapidjson.h"
+#include "rapidjson/document.h"
+
 #include <stdlib.h>
 #include <new>
 
@@ -66,7 +69,7 @@ namespace PortabilityLayer
 	{
 	public:
 		DialogTemplate(DialogTemplateItem *itemStorage, size_t numItems);
-		void DeserializeItems(const uint8_t *data);
+		bool DeserializeItems(const rapidjson::Value &itemsArray);
 		void Destroy();
 
 		ArrayView<const DialogTemplateItem> GetItems() const;
@@ -128,46 +131,160 @@ namespace PortabilityLayer
 	{
 	}
 
-	void DialogTemplate::DeserializeItems(const uint8_t *data)
+	bool DialogTemplate::DeserializeItems(const rapidjson::Value &itemsArray)
 	{
 		for (size_t i = 0; i < m_numItems; i++)
 		{
-			BERect itemRect;
-			uint8_t itemType;
+			const rapidjson::Value &itemData = itemsArray[static_cast<rapidjson::SizeType>(i)];
 
-			data += 4;	// Unused
-
-			memcpy(&itemRect, data, 8);
-			data += 8;
-
-			itemType = *data;
-			data++;
-
-			uint8_t nameLength = *data;
-			data++;
-
-			const uint8_t *nameBytes = data;
-
-			size_t nameLengthPadded = nameLength;
-			if ((nameLength & 1) == 1)
-				nameLengthPadded++;
-
-			data += nameLengthPadded;
+			if (!itemData.IsObject())
+				return false;
 
 			DialogTemplateItem &item = m_items[i];
-			item.m_rect = itemRect.ToRect();
-			item.m_id = 0;
-			item.m_serializedType = (itemType & 0x7f);
-			item.m_enabled = ((itemType & 0x80) == 0);
-			item.m_name[0] = nameLength;
-			memcpy(item.m_name + 1, nameBytes, nameLength);
 
-			if (item.m_serializedType == SerializedDialogItemTypeCodes::kCustomControl || item.m_serializedType == SerializedDialogItemTypeCodes::kImage || item.m_serializedType == SerializedDialogItemTypeCodes::kIcon)
+			const rapidjson::Value &nameValue = itemData["name"];
+			if (nameValue.IsString())
 			{
-				memcpy(&item.m_id, item.m_name + 1, 2);
-				ByteSwap::BigInt16(item.m_id);
+				uint8_t *destName = item.m_name;
+				size_t nameLength = nameValue.GetStringLength();
+				if (nameLength > 255)
+					nameLength = 255;
+				destName[0] = static_cast<uint8_t>(nameLength);
+				memcpy(destName + 1, nameValue.GetString(), nameLength);
 			}
+			else if (nameValue.IsArray())
+			{
+				uint8_t *destName = item.m_name;
+				size_t nameLength = nameValue.GetArray().Size();
+				if (nameLength > 255)
+					nameLength = 255;
+
+				destName[0] = static_cast<uint8_t>(nameLength);
+
+				for (size_t chi = 0; chi < nameLength; chi++)
+				{
+					const rapidjson::Value &charValue = nameValue.GetArray()[static_cast<rapidjson::SizeType>(chi)];
+					if (!charValue.IsUint())
+						return false;
+					unsigned int charIntValue = charValue.GetUint();
+					if (charIntValue >= 256)
+						return false;
+
+					destName[1 + chi] = static_cast<uint8_t>(charIntValue);
+				}
+			}
+			else
+				return false;
+
+			int32_t posX = 0;
+			int32_t posY = 0;
+
+			const rapidjson::Value &posValue = itemData["pos"];
+			if (posValue.IsArray())
+			{
+				if (posValue.GetArray().Size() != 2)
+					return false;
+
+				const rapidjson::Value &posXValue = posValue.GetArray()[0];
+				const rapidjson::Value &posYValue = posValue.GetArray()[1];
+
+				if (!posXValue.IsInt())
+					return false;
+
+				if (!posYValue.IsInt())
+					return false;
+
+				posX = posXValue.GetInt();
+				posY = posYValue.GetInt();
+			}
+			else
+				return false;
+
+			int32_t sizeX = 0;
+			int32_t sizeY = 0;
+
+			const rapidjson::Value &sizeValue = itemData["size"];
+			if (sizeValue.IsArray())
+			{
+				if (sizeValue.GetArray().Size() != 2)
+					return false;
+
+				const rapidjson::Value &sizeXValue = sizeValue.GetArray()[0];
+				const rapidjson::Value &sizeYValue = sizeValue.GetArray()[1];
+
+				if (!sizeXValue.IsInt())
+					return false;
+
+				if (!sizeYValue.IsInt())
+					return false;
+
+				sizeX = sizeXValue.GetInt();
+				sizeY = sizeYValue.GetInt();
+			}
+			else
+				return false;
+
+			if (posX < INT16_MIN || posX > INT16_MAX || posY < INT16_MIN || posY > INT16_MAX)
+				return false;
+
+			if (sizeX < 0 || sizeX >= UINT16_MAX || sizeY < 0 || sizeY >= UINT16_MAX)
+				return false;
+
+			const int32_t right = posX + sizeX;
+			const int32_t bottom = posY + sizeY;
+
+			if (right > INT16_MAX || bottom > INT16_MAX)
+				return false;
+
+			item.m_rect = Rect::Create(posY, posX, bottom, right);
+
+			const rapidjson::Value &itemTypeValue = itemData["itemType"];
+			if (itemTypeValue.IsString())
+			{
+				if (!strcmp(itemTypeValue.GetString(), "UserItem"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kUserItem;
+				else if (!strcmp(itemTypeValue.GetString(), "Button"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kButton;
+				else if (!strcmp(itemTypeValue.GetString(), "CheckBox"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kCheckBox;
+				else if (!strcmp(itemTypeValue.GetString(), "RadioButton"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kRadioButton;
+				else if (!strcmp(itemTypeValue.GetString(), "CustomControl"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kCustomControl;
+				else if (!strcmp(itemTypeValue.GetString(), "Label"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kLabel;
+				else if (!strcmp(itemTypeValue.GetString(), "EditBox"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kEditBox;
+				else if (!strcmp(itemTypeValue.GetString(), "Icon"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kIcon;
+				else if (!strcmp(itemTypeValue.GetString(), "Image"))
+					item.m_serializedType = SerializedDialogItemTypeCodes::kImage;
+				else
+					return false;
+			}
+			else
+				return false;
+
+			const rapidjson::Value &idValue = itemData["id"];
+			if (idValue.IsInt())
+			{
+				int idInt = idValue.GetInt();
+				if (idInt < INT16_MIN || idInt > INT16_MAX)
+					return false;
+
+				item.m_id = static_cast<int16_t>(idInt);
+			}
+			else
+				return false;
+
+			const rapidjson::Value &enabledValue = itemData["enabled"];
+			if (enabledValue.IsBool())
+				item.m_enabled = enabledValue.GetBool();
+			else
+				return false;
 		}
+
+		return true;
 	}
 
 	void DialogTemplate::Destroy()
@@ -609,14 +726,26 @@ namespace PortabilityLayer
 		if (!dtemplateH)
 			return nullptr;
 
-		int16_t numItemsMinusOne;
-		memcpy(&numItemsMinusOne, *dtemplateH, 2);
-		ByteSwap::BigInt16(numItemsMinusOne);
+		rapidjson::Document document;
+		document.Parse(reinterpret_cast<const char*>(*dtemplateH), dtemplateH.MMBlock()->m_size);
 
-		if (numItemsMinusOne < -1)
+		dtemplateH.Dispose();
+
+		if (document.HasParseError())
 			return nullptr;
 
-		uint16_t numItems = static_cast<uint16_t>(numItemsMinusOne + 1);
+		if (!document.IsObject() || !document.HasMember("items"))
+			return nullptr;
+
+		const rapidjson::Value &itemsArray = document["items"];
+
+		if (!itemsArray.IsArray())
+			return nullptr;
+
+		const size_t numItems = itemsArray.GetArray().Size();
+
+		if (numItems > 0xffff)
+			return nullptr;
 
 		size_t dtlAlignedSize = sizeof(DialogTemplate) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
 		dtlAlignedSize -= dtlAlignedSize % GP_SYSTEM_MEMORY_ALIGNMENT;
@@ -633,9 +762,11 @@ namespace PortabilityLayer
 		uint8_t *itemsLoc = static_cast<uint8_t*>(storage) + dtlAlignedSize;
 
 		DialogTemplate *dtemplate = new (storage) DialogTemplate(reinterpret_cast<DialogTemplateItem*>(itemsLoc), numItems);
-		dtemplate->DeserializeItems((*dtemplateH) + 2);
-
-		dtemplateH.Dispose();
+		if (!dtemplate->DeserializeItems(itemsArray))
+		{
+			dtemplate->Destroy();
+			return nullptr;
+		}
 
 		return dtemplate;
 	}

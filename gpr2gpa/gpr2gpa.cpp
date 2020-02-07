@@ -31,6 +31,58 @@ struct PlannedEntry
 	}
 };
 
+void AppendStr(std::vector<uint8_t> &array, const char *str)
+{
+	size_t appendSize = strlen(str);
+
+	if (appendSize == 0)
+		return;
+
+	size_t existingSize = array.size();
+	if (SIZE_MAX - existingSize < appendSize)
+		return;
+
+	array.resize(existingSize + appendSize);
+	memcpy(&array[existingSize], str, appendSize);
+}
+
+void AppendQuotedStr(std::vector<uint8_t> &array, const char *str)
+{
+	array.push_back('\"');
+	AppendStr(array, str);
+	array.push_back('\"');
+}
+
+void AppendFmt(std::vector<uint8_t> &array, const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+
+	int resultSize = vsnprintf(nullptr, 0, fmt, args);
+	if (resultSize <= 0)
+		return;
+
+	size_t appendSize = static_cast<size_t>(resultSize);
+
+	if (SIZE_MAX == appendSize)
+		return;
+
+	appendSize++;
+
+	size_t existingSize = array.size();
+	if (SIZE_MAX - existingSize < appendSize)
+		return;
+
+	array.resize(existingSize + appendSize);
+	vsnprintf(reinterpret_cast<char*>(static_cast<uint8_t*>(&array[existingSize])), appendSize, fmt, args);
+
+	// Discard trailing null
+	array.pop_back();
+
+	va_end(args);
+}
+
  template<class T>
  void VectorAppend(std::vector<T> &vec, const T *items, size_t numItems)
  {
@@ -759,6 +811,219 @@ bool ImportIndexedString(std::vector<uint8_t> &outTXT, const void *inData, size_
 	return true;
 }
 
+namespace SerializedDialogItemTypeCodes
+{
+	enum SerializedDialogItemTypeCode
+	{
+		kUserItem = 0x00,
+		kButton = 0x04,
+		kCheckBox = 0x05,
+		kRadioButton = 0x06,
+		kCustomControl = 0x07,
+		kLabel = 0x08,
+		kEditBox = 0x10,
+		kIcon = 0x20,
+		kImage = 0x40,
+	};
+}
+
+bool ImportDialogItemTemplate(std::vector<uint8_t> &outTXT, const void *inData, size_t inSize)
+{
+	const uint8_t *inBytes = static_cast<const uint8_t*>(inData);
+
+	if (inSize < 2)
+		return false;
+
+	BEInt16_t numItemsMinusOne;
+	memcpy(&numItemsMinusOne, inBytes, 2);
+
+	if (numItemsMinusOne < -1)
+		return false;
+
+	uint16_t numItems = static_cast<uint16_t>(numItemsMinusOne + 1);
+
+	inBytes += 2;
+	inSize -= 2;
+
+
+	AppendStr(outTXT, "{\n");
+	AppendStr(outTXT, "\t\"items\" :\n");
+	AppendStr(outTXT, "\t[");
+
+	for (unsigned int item = 0; item < numItems; item++)
+	{
+		if (item != 0)
+			outTXT.push_back(',');
+
+		AppendStr(outTXT, "\n\t\t{");
+		if (inSize < 14)
+			return false;
+
+		BERect itemRect;
+		uint8_t packedItemType;
+
+		memcpy(&itemRect, inBytes + 4, 8);
+
+		packedItemType = inBytes[12];
+
+		uint8_t nameLength = inBytes[13];
+
+		inBytes += 14;
+		inSize -= 14;
+
+		const uint8_t *nameBytes = inBytes;
+
+		size_t nameLengthPadded = nameLength;
+		if ((nameLength & 1) == 1)
+			nameLengthPadded++;
+
+		if (inSize < nameLengthPadded)
+			return false;
+
+		inBytes += nameLengthPadded;
+		inSize -= nameLengthPadded;
+
+		const Rect rect = itemRect.ToRect();
+		BEInt16_t id(0);
+
+		uint8_t serializedType = (packedItemType & 0x7f);
+		bool enabled = ((packedItemType & 0x80) == 0);
+
+		if (nameLength >= 2 && (serializedType == SerializedDialogItemTypeCodes::kCustomControl || serializedType == SerializedDialogItemTypeCodes::kImage || serializedType == SerializedDialogItemTypeCodes::kIcon))
+		{
+			memcpy(&id, nameBytes, 2);
+			nameLength = 0;
+		}
+
+		bool isAsciiSafe = true;
+		for (size_t i = 0; i < nameLength; i++)
+		{
+			uint8_t nameByte = nameBytes[i];
+			switch (nameByte)
+			{
+			case '\b':
+			case '\f':
+			case '\n':
+			case '\r':
+			case '\t':
+				break;
+			default:
+				if (nameByte < ' ' || nameByte > 127)
+				{
+					isAsciiSafe = false;
+					break;
+				}
+			};
+
+			if (!isAsciiSafe)
+				break;
+		}
+
+		AppendStr(outTXT, "\n\t\t\t\"name\" : ");
+		if (isAsciiSafe)
+		{
+			outTXT.push_back('\"');
+
+			for (size_t i = 0; i < nameLength; i++)
+			{
+				uint8_t nameByte = nameBytes[i];
+				switch (nameByte)
+				{
+				case '\"':
+					AppendStr(outTXT, "\\\"");
+					break;
+				case '\\':
+					AppendStr(outTXT, "\\\\");
+					break;
+				case '\b':
+					AppendStr(outTXT, "\\b");
+					break;
+				case '\f':
+					AppendStr(outTXT, "\\f");
+					break;
+				case '\n':
+					AppendStr(outTXT, "\\n");
+					break;
+				case '\r':
+					AppendStr(outTXT, "\\r");
+					break;
+				case '\t':
+					AppendStr(outTXT, "\\r");
+					break;
+				default:
+					outTXT.push_back(nameByte);
+					break;
+				}
+			}
+
+			outTXT.push_back('\"');
+		}
+		else
+		{
+			AppendStr(outTXT, "[ ");
+
+			for (size_t i = 0; i < nameLength; i++)
+			{
+				if (i != 0)
+					AppendStr(outTXT, ", ");
+
+				uint8_t nameByte = nameBytes[i];
+				AppendFmt(outTXT, "%i", static_cast<int>(nameByte));
+
+			}
+
+			AppendStr(outTXT, " ]");
+		}
+
+		AppendStr(outTXT, ",\n\t\t\t\"itemType\" : ");
+
+		switch (serializedType)
+		{
+		case SerializedDialogItemTypeCodes::kUserItem:
+			AppendQuotedStr(outTXT, "UserItem");
+			break;
+		case SerializedDialogItemTypeCodes::kButton:
+			AppendQuotedStr(outTXT, "Button");
+			break;
+		case SerializedDialogItemTypeCodes::kCheckBox:
+			AppendQuotedStr(outTXT, "CheckBox");
+			break;
+		case SerializedDialogItemTypeCodes::kRadioButton:
+			AppendQuotedStr(outTXT, "RadioButton");
+			break;
+		case SerializedDialogItemTypeCodes::kCustomControl:
+			AppendQuotedStr(outTXT, "CustomControl");
+			break;
+		case SerializedDialogItemTypeCodes::kLabel:
+			AppendQuotedStr(outTXT, "Label");
+			break;
+		case SerializedDialogItemTypeCodes::kEditBox:
+			AppendQuotedStr(outTXT, "EditBox");
+			break;
+		case SerializedDialogItemTypeCodes::kIcon:
+			AppendQuotedStr(outTXT, "Icon");
+			break;
+		case SerializedDialogItemTypeCodes::kImage:
+			AppendQuotedStr(outTXT, "Image");
+			break;
+		default:
+			AppendFmt(outTXT, "%i", static_cast<int>(serializedType));
+			break;
+		}
+
+		AppendFmt(outTXT, ",\n\t\t\t\"pos\" : [ %i, %i ]", rect.left, rect.top);
+		AppendFmt(outTXT, ",\n\t\t\t\"size\" : [ %i, %i ]", rect.right - rect.left, rect.bottom - rect.top);
+		AppendFmt(outTXT, ",\n\t\t\t\"id\" : %i", static_cast<int16_t>(id));
+		AppendFmt(outTXT, ",\n\t\t\t\"enabled\" : %s", enabled ? "true" : "false");
+		AppendStr(outTXT, "\n\t\t}");
+	}
+
+	AppendStr(outTXT, "\n\t]\n");
+	AppendStr(outTXT, "}");
+
+	return true;
+}
+
 int main(int argc, const char **argv)
 {
 	if (argc != 4)
@@ -806,6 +1071,7 @@ int main(int argc, const char **argv)
 	const PortabilityLayer::ResTypeID dateTypeID = PortabilityLayer::ResTypeID('Date');
 	const PortabilityLayer::ResTypeID sndTypeID = PortabilityLayer::ResTypeID('snd ');
 	const PortabilityLayer::ResTypeID indexStringTypeID = PortabilityLayer::ResTypeID('STR#');
+	const PortabilityLayer::ResTypeID ditlTypeID = PortabilityLayer::ResTypeID('DITL');
 
 	for (size_t tlIndex = 0; tlIndex < typeListCount; tlIndex++)
 	{
@@ -863,6 +1129,17 @@ int main(int argc, const char **argv)
 				entry.m_name = resName;
 
 				if (ImportIndexedString(entry.m_contents, resData, resSize))
+					contents.push_back(entry);
+			}
+			else if (typeList.m_resType == ditlTypeID)
+			{
+				PlannedEntry entry;
+				char resName[256];
+				sprintf_s(resName, "%s/%i.json", resTag.m_id, static_cast<int>(res.m_resID));
+
+				entry.m_name = resName;
+
+				if (ImportDialogItemTemplate(entry.m_contents, resData, resSize))
 					contents.push_back(entry);
 			}
 			else
