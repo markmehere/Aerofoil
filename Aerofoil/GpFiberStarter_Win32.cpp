@@ -33,9 +33,13 @@ IGpFiber *GpFiberStarter::StartFiber(ThreadFunc_t threadFunc, void *context, IGp
 	ULONG_PTR lowLimit;
 	ULONG_PTR highLimit;
 
+#if 0
 	GetCurrentThreadStackLimits(&lowLimit, &highLimit);
 
 	ULONG_PTR stackSize = highLimit - lowLimit;
+#else
+	ULONG_PTR stackSize = 1024 * 1024;
+#endif
 
 	GpFiberStarter_Win32::FiberStartState startState;
 	startState.m_context = context;
