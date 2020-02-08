@@ -23,6 +23,7 @@
 #include "QDPixMap.h"
 #include "ResTypeID.h"
 #include "SharedTypes.h"
+#include "UTF8.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
 
@@ -145,12 +146,11 @@ namespace PortabilityLayer
 			const rapidjson::Value &nameValue = itemData["name"];
 			if (nameValue.IsString())
 			{
-				uint8_t *destName = item.m_name;
-				size_t nameLength = nameValue.GetStringLength();
-				if (nameLength > 255)
-					nameLength = 255;
-				destName[0] = static_cast<uint8_t>(nameLength);
-				memcpy(destName + 1, nameValue.GetString(), nameLength);
+				size_t strSize;
+				if (UTF8Processor::DecodeToMacRomanPascalStr(reinterpret_cast<const uint8_t*>(nameValue.GetString()), nameValue.GetStringLength(), item.m_name + 1, sizeof(item.m_name) - 1, strSize))
+					item.m_name[0] = static_cast<uint8_t>(strSize);
+				else
+					item.m_name[0] = 0;
 			}
 			else if (nameValue.IsArray())
 			{

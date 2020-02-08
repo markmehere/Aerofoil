@@ -2,6 +2,7 @@
 #include "CFileStream.h"
 #include "CombinedTimestamp.h"
 #include "GPArchive.h"
+#include "MacRomanConversion.h"
 #include "MemReaderStream.h"
 #include "QDPictDecoder.h"
 #include "QDPictEmitContext.h"
@@ -10,6 +11,7 @@
 #include "ResourceFile.h"
 #include "ResourceCompiledTypeList.h"
 #include "SharedTypes.h"
+#include "UTF8.h"
 #include "ZipFile.h"
 #include "WaveFormat.h"
 
@@ -81,6 +83,16 @@ void AppendFmt(std::vector<uint8_t> &array, const char *fmt, ...)
 	array.pop_back();
 
 	va_end(args);
+}
+
+void AppendUTF8(std::vector<uint8_t> &array, uint32_t codePoint)
+{
+	uint8_t bytes[5];
+	size_t sz;
+
+	PortabilityLayer::UTF8Processor::EncodeCodePoint(bytes, sz, codePoint);
+	for (size_t i = 0; i < sz; i++)
+		array.push_back(bytes[i]);
 }
 
  template<class T>
@@ -895,85 +907,47 @@ bool ImportDialogItemTemplate(std::vector<uint8_t> &outTXT, const void *inData, 
 			nameLength = 0;
 		}
 
-		bool isAsciiSafe = true;
+		AppendStr(outTXT, "\n\t\t\t\"name\" : \"");
+
 		for (size_t i = 0; i < nameLength; i++)
 		{
 			uint8_t nameByte = nameBytes[i];
 			switch (nameByte)
 			{
+			case '\"':
+				AppendStr(outTXT, "\\\"");
+				break;
+			case '\\':
+				AppendStr(outTXT, "\\\\");
+				break;
 			case '\b':
+				AppendStr(outTXT, "\\b");
+				break;
 			case '\f':
+				AppendStr(outTXT, "\\f");
+				break;
 			case '\n':
+				AppendStr(outTXT, "\\n");
+				break;
 			case '\r':
+				AppendStr(outTXT, "\\r");
+				break;
 			case '\t':
+				AppendStr(outTXT, "\\r");
 				break;
 			default:
-				if (nameByte < ' ' || nameByte > 127)
-				{
-					isAsciiSafe = false;
-					break;
-				}
-			};
-
-			if (!isAsciiSafe)
-				break;
-		}
-
-		AppendStr(outTXT, "\n\t\t\t\"name\" : ");
-		if (isAsciiSafe)
-		{
-			outTXT.push_back('\"');
-
-			for (size_t i = 0; i < nameLength; i++)
-			{
-				uint8_t nameByte = nameBytes[i];
-				switch (nameByte)
-				{
-				case '\"':
-					AppendStr(outTXT, "\\\"");
-					break;
-				case '\\':
-					AppendStr(outTXT, "\\\\");
-					break;
-				case '\b':
-					AppendStr(outTXT, "\\b");
-					break;
-				case '\f':
-					AppendStr(outTXT, "\\f");
-					break;
-				case '\n':
-					AppendStr(outTXT, "\\n");
-					break;
-				case '\r':
-					AppendStr(outTXT, "\\r");
-					break;
-				case '\t':
-					AppendStr(outTXT, "\\r");
-					break;
-				default:
+				uint16_t unicodeCodePoint = MacRoman::ToUnicode(nameByte);
+				if (unicodeCodePoint < 0x20 || unicodeCodePoint == 0x7f)
+					AppendFmt(outTXT, "\\u%04x", static_cast<int>(unicodeCodePoint));
+				else if (unicodeCodePoint > 0x7f)
+					AppendUTF8(outTXT, unicodeCodePoint);
+				else
 					outTXT.push_back(nameByte);
-					break;
-				}
+				break;
 			}
-
-			outTXT.push_back('\"');
 		}
-		else
-		{
-			AppendStr(outTXT, "[ ");
 
-			for (size_t i = 0; i < nameLength; i++)
-			{
-				if (i != 0)
-					AppendStr(outTXT, ", ");
-
-				uint8_t nameByte = nameBytes[i];
-				AppendFmt(outTXT, "%i", static_cast<int>(nameByte));
-
-			}
-
-			AppendStr(outTXT, " ]");
-		}
+		outTXT.push_back('\"');
 
 		AppendStr(outTXT, ",\n\t\t\t\"itemType\" : ");
 

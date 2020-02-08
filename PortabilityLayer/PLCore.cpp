@@ -713,6 +713,8 @@ Window::Window()
 	, m_wmY(0)
 	, m_widgets(nullptr)
 	, m_numWidgets(0)
+	, m_widgetWithFocus(0)
+	, m_haveFocus(false)
 {
 }
 

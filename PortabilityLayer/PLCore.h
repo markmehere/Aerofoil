@@ -96,6 +96,9 @@ protected:
 
 	PortabilityLayer::Widget **m_widgets;
 	size_t m_numWidgets;
+
+	size_t m_widgetWithFocus;
+	bool m_haveFocus;
 };
 
 struct DateTimeRec
