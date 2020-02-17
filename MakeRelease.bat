@@ -12,5 +12,6 @@ copy /Y x64\Release\GpApp.dll ReleasePkg\Aerofoil
 
 xcopy /I /E /Y /K Packaged ReleasePkg\Aerofoil\Packaged
 xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
+xcopy /I /E /Y /K Documentation ReleasePkg\Aerofoil\Documentation
 
 pause
