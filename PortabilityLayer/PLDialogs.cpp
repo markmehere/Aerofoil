@@ -1,5 +1,9 @@
 #include "PLDialogs.h"
+
+#include "DialogManager.h"
+#include "PLArrayView.h"
 #include "PLPasStr.h"
+#include "PLEditboxWidget.h"
 
 
 DialogTextSubstitutions::DialogTextSubstitutions()
@@ -78,7 +82,9 @@ void SetDialogItemText(THandle<Control> handle, const PLPasStr &str)
 
 void SelectDialogItemText(Dialog *dialog, int item, int firstSelChar, int lastSelCharExclusive)
 {
-	PL_NotYetImplemented_TODO("TextBox_Critical");
+	PortabilityLayer::EditboxWidget *widget = static_cast<PortabilityLayer::EditboxWidget*>(dialog->GetItems()[item - 1].GetWidget());
+	widget->GetWindow()->FocusWidget(widget);
+	widget->SetSelection(firstSelChar, lastSelCharExclusive);
 }
 
 ModalFilterUPP NewModalFilterUPP(ModalFilterUPP func)

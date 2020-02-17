@@ -166,6 +166,9 @@ namespace PortabilityLayer
 	{
 		if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 		{
+			if (!m_hasFocus)
+				return WidgetHandleStates::kIgnored;
+
 			const GpKeyboardInputEvent &keyEvent = evt.m_vosEvent.m_event.m_keyboardInputEvent;
 
 			if (keyEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar || keyEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar)
@@ -191,8 +194,6 @@ namespace PortabilityLayer
 				{
 					if (ch >= 0x20 && ch <= 0x7e)
 						HandleCharacter(ch, keyEvent.m_repeatCount);
-					else if (ch == '\b')
-						HandleBackspace(keyEvent.m_repeatCount);
 
 					return WidgetHandleStates::kDigested;
 				}
@@ -206,7 +207,7 @@ namespace PortabilityLayer
 				{
 					if (keyEvent.m_key.m_specialKey == GpKeySpecials::kBackspace)
 					{
-
+						HandleBackspace(keyEvent.m_repeatCount);
 						return WidgetHandleStates::kDigested;
 					}
 					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kDelete)
@@ -232,6 +233,24 @@ namespace PortabilityLayer
 	bool EditboxWidget::HandlesTickEvents() const
 	{
 		return true;
+	}
+
+	void EditboxWidget::SetSelection(size_t startChar, size_t endChar)
+	{
+		if (startChar > m_length)
+			startChar = m_length;
+
+		if (endChar < startChar)
+			endChar = startChar;
+
+		if (endChar > m_length)
+			endChar = m_length;
+
+		m_selStartChar = startChar;
+		m_selEndChar = endChar;
+
+		m_caratTimer = 0;
+		Redraw();
 	}
 
 	void EditboxWidget::OnTick()

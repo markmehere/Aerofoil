@@ -19,7 +19,10 @@ namespace PortabilityLayer
 
 		void OnStateChanged() override;
 
+		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
+
 	private:
 		PascalStr<255> m_text;
+		bool m_haveMouseDown;
 	};
 }

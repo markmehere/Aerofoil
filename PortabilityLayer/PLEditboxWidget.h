@@ -24,6 +24,8 @@ namespace PortabilityLayer
 
 		bool HandlesTickEvents() const;
 
+		void SetSelection(size_t startChar, size_t endChar);
+
 	private:
 		static const unsigned int kCaratBlinkRate = 20;
 

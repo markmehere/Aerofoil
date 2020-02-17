@@ -83,6 +83,7 @@
     <Import Project="GpApp.props" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
+    <Import Project="..\Release.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />

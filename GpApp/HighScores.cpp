@@ -397,6 +397,9 @@ Boolean TestHighScore (void)
 			break;
 		}
 	}
+
+	if (IsHighScoreForceTop())
+		placing = 0;
 	
 	if (placing != -1)
 	{

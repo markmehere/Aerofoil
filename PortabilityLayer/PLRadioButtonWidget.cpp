@@ -1,6 +1,7 @@
 #include "PLRadioButtonWidget.h"
 #include "PLStandardColors.h"
 #include "FontFamily.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 #include <algorithm>
 
@@ -9,6 +10,7 @@ namespace PortabilityLayer
 	RadioButtonWidget::RadioButtonWidget(const WidgetBasicState &state)
 		: WidgetSpec<RadioButtonWidget>(state)
 		, m_text(state.m_text)
+		, m_haveMouseDown(false)
 	{
 	}
 
@@ -67,5 +69,41 @@ namespace PortabilityLayer
 	{
 		if (m_window)
 			DrawControl(&m_window->m_surface);
+	}
+
+	WidgetHandleState_t RadioButtonWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	{
+		if (m_haveMouseDown)
+		{
+			if (evt.IsLMouseUpEvent())
+			{
+				m_haveMouseDown = false;
+
+				const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+				if (m_rect.Contains(pt))
+					return WidgetHandleStates::kActivated;
+				else
+					return WidgetHandleStates::kIgnored;
+			}
+
+			return WidgetHandleStates::kCaptured;
+		}
+		else
+		{
+			if (evt.IsLMouseDownEvent())
+			{
+				const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+
+				if (m_rect.Contains(pt))
+				{
+					m_haveMouseDown = true;
+					return WidgetHandleStates::kCaptured;
+				}
+				else
+					return WidgetHandleStates::kIgnored;
+			}
+		}
+
+		return WidgetHandleStates::kIgnored;
 	}
 }

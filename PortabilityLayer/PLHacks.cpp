@@ -19,3 +19,8 @@ bool IsRoomEditorDisabled()
 {
 	return true;
 }
+
+bool IsHighScoreForceTop()
+{
+	return false;
+}
