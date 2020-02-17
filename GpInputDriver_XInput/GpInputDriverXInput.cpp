@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <new>
 
-#pragma comment(lib, "xinput.lib")
+#pragma comment(lib, "xinput9_1_0.lib")
 
 void GpInputDriverXInput::ProcessInput()
 {
