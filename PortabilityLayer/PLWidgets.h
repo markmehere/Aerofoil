@@ -64,14 +64,23 @@ namespace PortabilityLayer
 
 		virtual void SetHighlightStyle(int16_t style);
 
+		virtual bool HandlesTickEvents() const;
+
 		const Rect &GetRect() const;
+		Window *GetWindow() const;
 
 	protected:
+		friend struct Window;
+
+		virtual void GainFocus();
+		virtual void LoseFocus();
+
 		explicit Widget(const WidgetBasicState &state);
 		virtual ~Widget();
 
 		virtual void OnEnabledChanged();
 		virtual void OnStateChanged();
+		virtual void OnTick();
 
 		static void BaseRelease(void *storage);
 		static void *BaseAlloc(size_t sz);

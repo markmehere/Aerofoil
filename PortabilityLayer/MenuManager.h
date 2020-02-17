@@ -36,6 +36,7 @@ namespace PortabilityLayer
 
 		virtual bool IsPointInMenuBar(const Vec2i &point) const = 0;
 
+		virtual bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) = 0;
 		virtual void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) = 0;
 
 		virtual void DrawMenuBar() = 0;

@@ -169,7 +169,7 @@ void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent 
 	const bool optionDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kAlt));
 	
 	if ((commandDown) && (!optionDown))
-		DoMenuChoice(MenuKey(static_cast<int>(theChar)));
+		DoMenuChoice(MenuKey(theChar));
 	else 
 	{
 		switch (theChar)

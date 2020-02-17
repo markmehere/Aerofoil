@@ -247,10 +247,19 @@ long MenuSelect(Point point)
 	return (static_cast<int32_t>(menuID) << 16) | (static_cast<int32_t>(menuItem));
 }
 
-long MenuKey(int charCode)
+long MenuKey(intptr_t charCode)
 {
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
+	if (PL_KEY_GET_EVENT_TYPE(charCode) != KeyEventType::KeyEventType_ASCII)
+		return 0;
+
+	const uint8_t asciiChar = PL_KEY_GET_VALUE(charCode);
+
+	uint16_t menuID;
+	uint16_t itemID;
+	if (PortabilityLayer::MenuManager::GetInstance()->FindMenuShortcut(menuID, itemID, asciiChar))
+		return (menuID << 16) | (itemID + 1);
+
+	return 0;
 }
 
 long TickCount()
@@ -713,8 +722,8 @@ Window::Window()
 	, m_wmY(0)
 	, m_widgets(nullptr)
 	, m_numWidgets(0)
-	, m_widgetWithFocus(0)
-	, m_haveFocus(false)
+	, m_widgetWithFocus(nullptr)
+	, m_numTickReceivingWidgets(0)
 {
 }
 
@@ -762,7 +771,30 @@ bool Window::AddWidget(PortabilityLayer::Widget *widget)
 
 	m_widgets[m_numWidgets++] = widget;
 
+	if (widget->HandlesTickEvents())
+		m_numTickReceivingWidgets++;
+
 	return true;
+}
+
+void Window::FocusWidget(PortabilityLayer::Widget *widget)
+{
+	if (m_widgetWithFocus != widget)
+	{
+		assert(widget->GetWindow() == this);
+
+		if (m_widgetWithFocus)
+			m_widgetWithFocus->LoseFocus();
+
+		m_widgetWithFocus = widget;
+
+		widget->GainFocus();
+	}
+}
+
+PortabilityLayer::Widget *Window::GetWidgetWithFocus() const
+{
+	return m_widgetWithFocus;
 }
 
 void Window::DrawControls()
@@ -775,4 +807,18 @@ void Window::DrawControls()
 		if (widget->IsVisible())
 			widget->DrawControl(surface);
 	}
+}
+
+bool Window::IsHandlingTickEvents()
+{
+	return m_numTickReceivingWidgets > 0;
+}
+
+void Window::OnTick()
+{
+	if (m_numTickReceivingWidgets == 0)
+		return;
+
+	for (size_t i = 0; i < m_numWidgets; i++)
+		m_widgets[i]->OnTick();
 }

@@ -43,10 +43,10 @@ namespace PortabilityLayer
 
 void DrawHighScores (DrawSurface *);
 void UpdateNameDialog (Dialog *);
-Boolean NameFilter (Dialog *, EventRecord *, short *);
+int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent *evt);
 void GetHighScoreName (short);
 void UpdateBannerDialog (Dialog *);
-int16_t BannerFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt);
+int16_t BannerFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void GetHighScoreBanner (void);
 Boolean OpenHighScoresFile (const VFileSpec &spec, PortabilityLayer::IOStream *&outStream);
 
@@ -446,7 +446,7 @@ void UpdateNameDialog (Dialog *theDialog)
 //--------------------------------------------------------------  NameFilter
 // Dialog filter for the "Enter High Score Name" dialog.
 
-int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		nChars;
 
@@ -457,13 +457,17 @@ int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 		keyStroke = false;
 	}
 
-	if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
+	if (!evt)
+		return -1;
+
+	if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 	{
-		const GpKeyboardInputEvent &kbEvent = evt.m_vosEvent.m_event.m_keyboardInputEvent;
+		const GpKeyboardInputEvent &kbEvent = evt->m_vosEvent.m_event.m_keyboardInputEvent;
 
 		if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
 		{
 			PlayPrioritySound(kTypingSound, kTypingPriority);
+			keyStroke = true;
 			return -1;	// Don't capture, need this to forward to the editbox
 		}
 		else if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
@@ -544,7 +548,7 @@ void UpdateBannerDialog (Dialog *theDialog)
 //--------------------------------------------------------------  BannerFilter
 // Dialog filter for the "Enter Message" dialog.
 
-int16_t BannerFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t BannerFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		nChars;
 	
@@ -555,13 +559,17 @@ int16_t BannerFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
 		keyStroke = false;
 	}
 
-	if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
+	if (!evt)
+		return -1;
+
+	if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 	{
-		const GpKeyboardInputEvent &kbEvent = evt.m_vosEvent.m_event.m_keyboardInputEvent;
+		const GpKeyboardInputEvent &kbEvent = evt->m_vosEvent.m_event.m_keyboardInputEvent;
 
 		if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
 		{
 			PlayPrioritySound(kTypingSound, kTypingPriority);
+			keyStroke = true;
 			return -1;	// Don't capture, need this to forward to the editbox
 		}
 		else if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDown)

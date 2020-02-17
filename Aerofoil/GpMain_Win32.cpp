@@ -341,7 +341,7 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 				GpKeyboardInputEvent::KeyUnion key;
 				bool isRepeat = ((lParam & 0x40000000) != 0);
 				const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAuto : GpKeyboardInputEventTypes::kDown;
-				if (!isRepeat && IdentifyVKey(wParam, lParam, subset, key))
+				if (IdentifyVKey(wParam, lParam, subset, key))
 					PostKeyboardEvent(eventQueue, keyEventType, subset, key, static_cast<uint32_t>(lParam & 0xffff));
 
 				(void)TranslateMessage(msg);
@@ -357,21 +357,20 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 			}
 			break;
 		case WM_CHAR:
-			{
-				bool isRepeat = ((lParam & 0x4000000) != 0);
-				const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAutoChar : GpKeyboardInputEventTypes::kDownChar;
-				GpKeyboardInputEvent::KeyUnion key;
-				key.m_asciiChar = static_cast<char>(wParam);
-				PostKeyboardEvent(eventQueue, keyEventType, GpKeyIDSubsets::kASCII, key, (lParam & 0xffff));
-			}
-			break;
 		case WM_UNICHAR:
 			{
 				bool isRepeat = ((lParam & 0x4000000) != 0);
 				const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAutoChar : GpKeyboardInputEventTypes::kDownChar;
 				GpKeyboardInputEvent::KeyUnion key;
-				key.m_unicodeChar = static_cast<uint32_t>(wParam);
-				PostKeyboardEvent(eventQueue, keyEventType, GpKeyIDSubsets::kUnicode, key, (lParam & 0xffff));
+				GpKeyIDSubset_t subset = GpKeyIDSubsets::kASCII;
+				if (wParam <= 128)
+					key.m_asciiChar = static_cast<char>(wParam);
+				else
+				{
+					subset = GpKeyIDSubsets::kUnicode;
+					key.m_unicodeChar = static_cast<uint32_t>(wParam);
+				}
+				PostKeyboardEvent(eventQueue, keyEventType, subset, key, (lParam & 0xffff));
 			}
 			break;
 		default:

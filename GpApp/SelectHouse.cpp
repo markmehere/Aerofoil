@@ -44,7 +44,7 @@
 void UpdateLoadDialog (Dialog *);
 void PageUpHouses (Dialog *);
 void PageDownHouses (Dialog *);
-int16_t LoadFilter (Dialog *, const TimeTaggedVOSEvent &);
+int16_t LoadFilter (Dialog *, const TimeTaggedVOSEvent *);
 void SortHouseList (void);
 void DoDirSearch (void);
 
@@ -201,13 +201,16 @@ void PageDownHouses (Dialog *theDial)
 //--------------------------------------------------------------  LoadFilter
 #ifndef COMPILEDEMO
 
-int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		screenCount, i, wasIndex;
 
-	if (evt.IsKeyDownEvent())
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		const intptr_t keyCode = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+		const intptr_t keyCode = PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent);
 		switch (keyCode)
 		{
 		case PL_KEY_SPECIAL(kEnter):
@@ -316,20 +319,20 @@ int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
 				return -1;
 		}
 	}
-	else if (evt.IsLMouseDownEvent())
+	else if (evt->IsLMouseDownEvent())
 	{
-		const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+		const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
 
-		lastWhenClick = evt.m_timestamp - lastWhenClick;
+		lastWhenClick = evt->m_timestamp - lastWhenClick;
 		lastWhereClick -= Point::Create(mouseEvt.m_x, mouseEvt.m_y);
 
 		return -1;
 	}
-	else if (evt.IsLMouseUpEvent())
+	else if (evt->IsLMouseUpEvent())
 	{
-		const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+		const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
 
-		lastWhenClick = evt.m_timestamp;
+		lastWhenClick = evt->m_timestamp;
 		lastWhereClick = Point::Create(mouseEvt.m_x, mouseEvt.m_y);
 
 		return -1;

@@ -14,7 +14,7 @@ class PLPasStr;
 struct Control;
 struct Dialog;
 
-typedef int16_t(*DialogFilterFunc_t)(Dialog *dialog, const TimeTaggedVOSEvent &evt);
+typedef int16_t(*DialogFilterFunc_t)(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
 struct DialogTextSubstitutions
 {

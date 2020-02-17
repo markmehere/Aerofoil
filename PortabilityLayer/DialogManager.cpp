@@ -345,13 +345,19 @@ namespace PortabilityLayer
 		for (;;)
 		{
 			TimeTaggedVOSEvent evt;
-			if (WaitForEvent(&evt, 1))
+
+			const bool haveEvent = WaitForEvent(&evt, 1);
+
+			if (window->IsHandlingTickEvents())
+				window->OnTick();
+
+			const int16_t selection = filterFunc(this, haveEvent ? &evt : nullptr);
+
+			if (selection >= 0)
+				return selection;
+
+			if (haveEvent)
 			{
-				const int16_t selection = filterFunc(this, evt);
-
-				if (selection >= 0)
-					return selection;
-
 				if (capturingWidget != nullptr)
 				{
 					const WidgetHandleState_t state = capturingWidget->ProcessEvent(evt);
@@ -571,7 +577,7 @@ namespace PortabilityLayer
 		void PositionWindow(Window *window, const Rect &rect);
 		Dialog *LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions);
 
-		static int16_t AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt);
+		static int16_t AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
 		static DialogManagerImpl ms_instance;
 	};
@@ -650,7 +656,7 @@ namespace PortabilityLayer
 		return dialog;
 	}
 
-	int16_t DialogManagerImpl::AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt)
+	int16_t DialogManagerImpl::AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
 	{
 		return -1;
 	}

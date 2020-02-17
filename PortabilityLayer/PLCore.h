@@ -82,7 +82,13 @@ struct Window
 
 	bool AddWidget(PortabilityLayer::Widget *widget);
 
+	void FocusWidget(PortabilityLayer::Widget *widget);
+	PortabilityLayer::Widget *GetWidgetWithFocus() const;
+
 	void DrawControls();
+	bool IsHandlingTickEvents();
+
+	void OnTick();
 
 	DrawSurface m_surface;	// Must be the first item until the immediate mode draw API is completely removed
 
@@ -96,9 +102,9 @@ protected:
 
 	PortabilityLayer::Widget **m_widgets;
 	size_t m_numWidgets;
+	size_t m_numTickReceivingWidgets;
 
-	size_t m_widgetWithFocus;
-	bool m_haveFocus;
+	PortabilityLayer::Widget *m_widgetWithFocus;
 };
 
 struct DateTimeRec
@@ -241,7 +247,7 @@ void SetWTitle(WindowPtr window, const PLPasStr &title);
 
 long MenuSelect(Point point);	// Breaks into menu select routine (in practice we'll just forward one from the queue?)
 
-long MenuKey(int charCode);
+long MenuKey(intptr_t charCode);
 long TickCount();
 
 short LoWord(Int32 v);

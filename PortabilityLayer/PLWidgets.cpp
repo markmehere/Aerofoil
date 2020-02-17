@@ -84,6 +84,19 @@ namespace PortabilityLayer
 		(void)style;
 	}
 
+	bool Widget::HandlesTickEvents() const
+	{
+		return false;
+	}
+
+	void Widget::GainFocus()
+	{
+	}
+
+	void Widget::LoseFocus()
+	{
+	}
+
 	void Widget::SetString(const PLPasStr &str)
 	{
 		(void)str;
@@ -97,6 +110,11 @@ namespace PortabilityLayer
 	const Rect &Widget::GetRect() const
 	{
 		return m_rect;
+	}
+
+	Window *Widget::GetWindow() const
+	{
+		return m_window;
 	}
 
 	Widget::Widget(const WidgetBasicState &state)
@@ -117,6 +135,10 @@ namespace PortabilityLayer
 	}
 
 	void Widget::OnStateChanged()
+	{
+	}
+
+	void Widget::OnTick()
 	{
 	}
 

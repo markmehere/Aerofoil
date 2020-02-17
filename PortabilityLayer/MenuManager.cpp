@@ -132,6 +132,8 @@ namespace PortabilityLayer
 		bool SetItemText(const THandle<Menu> &menu, unsigned int index, const PLPasStr &str) override;
 
 		bool IsPointInMenuBar(const Vec2i &point) const override;
+
+		bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) override;
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
 
 		void DrawMenuBar() override;
@@ -518,6 +520,33 @@ namespace PortabilityLayer
 	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const
 	{
 		return point.m_y >= 0 && static_cast<uint32_t>(point.m_y) < kMenuBarHeight;
+	}
+
+
+	bool MenuManagerImpl::FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar)
+	{
+		MenuHandle menuH = m_firstMenu;
+		while (menuH)
+		{
+			Menu *menu = *menuH;
+
+			const MenuItem *items = menu->menuItems;
+			const size_t numItems = menu->numMenuItems;
+
+			for (size_t i = 0; i < numItems; i++)
+			{
+				if (items[i].key == shortcutChar)
+				{
+					menuID = menu->menuID;
+					itemID = static_cast<uint16_t>(i);
+					return true;
+				}
+			}
+
+			menuH = menu->nextMenu;
+		}
+
+		return false;
 	}
 
 	void MenuManagerImpl::MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem)

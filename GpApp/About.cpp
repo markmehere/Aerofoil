@@ -27,7 +27,7 @@
 static void HiLiteOkayButton (DrawSurface *surface);
 static void UnHiLiteOkayButton (DrawSurface *surface);
 static void UpdateMainPict (Dialog *);
-static int16_t AboutFilter(Dialog *, const TimeTaggedVOSEvent &evt);
+static int16_t AboutFilter(Dialog *, const TimeTaggedVOSEvent *evt);
 
 
 static Point			okayButtLowerV, okayButtUpperV;
@@ -176,17 +176,20 @@ static bool PointIsInDiagonalOkayButton(const Point &pt)
 //--------------------------------------------------------------  AboutFilter
 // Dialog filter for the About dialog.
 
-static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt)
+static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
 {
 	bool		handledIt = false;
 	int16_t		hit = -1;
 
+	if (!evt)
+		return -1;
+
 	Window *window = dialog->GetWindow();
 	DrawSurface *surface = window->GetDrawSurface();
 
-	if (evt.IsKeyDownEvent())
+	if (evt->IsKeyDownEvent())
 	{
-		switch (PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent))
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
 		case PL_KEY_SPECIAL(kEnter):
 		case PL_KEY_NUMPAD_SPECIAL(kEnter):
@@ -202,9 +205,9 @@ static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt)
 			break;
 		}
 	}
-	else if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+	else if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 	{
-		const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+		const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
 		const Point mousePt = window->MouseToLocal(mouseEvt);
 
 		if (mouseEvt.m_eventType == GpMouseEventTypes::kDown)

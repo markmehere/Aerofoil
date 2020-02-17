@@ -64,27 +64,27 @@
 
 void SetBrainsToDefaults (Dialog *);
 void UpdateSettingsBrains (Dialog *);
-int16_t BrainsFilter (Dialog *, const TimeTaggedVOSEvent &);
+int16_t BrainsFilter (Dialog *, const TimeTaggedVOSEvent *);
 void DoBrainsPrefs (void);
 void SetControlsToDefaults (Dialog *);
 void UpdateControlKeyName (Dialog *);
 void UpdateSettingsControl (Dialog *);
-int16_t ControlFilter (Dialog *, const TimeTaggedVOSEvent &);
+int16_t ControlFilter (Dialog *, const TimeTaggedVOSEvent *);
 void DoControlPrefs (void);
 void SoundDefaults (Dialog *);
 void UpdateSettingsSound (Dialog *);
 void HandleSoundMusicChange (short, Boolean);
-int16_t SoundFilter(Dialog *, const TimeTaggedVOSEvent &);
+int16_t SoundFilter(Dialog *, const TimeTaggedVOSEvent *);
 void DoSoundPrefs (void);
 void DisplayDefaults (void);
 void FrameDisplayIcon (Dialog *, const PortabilityLayer::RGBAColor &color);
 void DisplayUpdate (Dialog *);
-int16_t DisplayFilter(Dialog *dialog, const TimeTaggedVOSEvent &);
+int16_t DisplayFilter(Dialog *dialog, const TimeTaggedVOSEvent *);
 void DoDisplayPrefs (void);
 void SetAllDefaults (void);
 void FlashSettingsButton (DrawSurface *, short);
 void UpdateSettingsMain (Dialog *);
-int16_t PrefsFilter(Dialog *dialog, const TimeTaggedVOSEvent &evt);
+int16_t PrefsFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void BitchAboutChanges (void);
 
 
@@ -145,11 +145,14 @@ void UpdateSettingsBrains (Dialog *theDialog)
 
 //--------------------------------------------------------------  BrainsFilter
 
-int16_t BrainsFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t BrainsFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	if (evt.IsKeyDownEvent())
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		intptr_t keyCode = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+		intptr_t keyCode = PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent);
 
 		switch (keyCode)
 		{
@@ -186,6 +189,19 @@ int16_t BrainsFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 		}
 	}
 
+	if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
+	{
+		const GpKeyboardInputEvent &keyEvent = evt->m_vosEvent.m_event.m_keyboardInputEvent;
+		if (keyEvent.m_keyIDSubset == GpKeyIDSubsets::kUnicode)
+			return 0;
+		if (keyEvent.m_keyIDSubset == GpKeyIDSubsets::kASCII)
+		{
+			char asciiChar = (keyEvent.m_key.m_asciiChar);
+			if (asciiChar < '0' || asciiChar > '9')
+				return 0;
+		}
+	}
+
 	return -1;
 }
 
@@ -219,6 +235,8 @@ void DoBrainsPrefs (void)
 	SetDialogItemValue(prefDlg, kDoBitchDlgsCheck, (short)wasBitchDialogs);
 
 	UpdateSettingsBrains(prefDlg);
+
+	prefDlg->GetWindow()->FocusWidget(prefDlg->GetItems()[kMaxFilesItem - 1].GetWidget());
 
 	while (!leaving)
 	{
@@ -353,18 +371,21 @@ void UpdateSettingsControl (Dialog *theDialog)
 
 //--------------------------------------------------------------  ControlFilter
 
-int16_t ControlFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t ControlFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	intptr_t		wasKeyMap;
 
-	if (evt.IsKeyDownEvent())
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		GpKeyIDSubset_t subset = evt.m_vosEvent.m_event.m_keyboardInputEvent.m_keyIDSubset;
+		GpKeyIDSubset_t subset = evt->m_vosEvent.m_event.m_keyboardInputEvent.m_keyIDSubset;
 
 		// Ignore Unicode (for now) and gamepad buttons
 		if (subset == GpKeyIDSubsets::kASCII || subset == GpKeyIDSubsets::kSpecial || subset == GpKeyIDSubsets::kNumPadNumber || subset == GpKeyIDSubsets::kNumPadSpecial || subset == GpKeyIDSubsets::kFKey)
 		{
-			wasKeyMap = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+			wasKeyMap = PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent);
 
 			switch (whichCtrl)
 			{
@@ -626,13 +647,16 @@ void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 
 //--------------------------------------------------------------  SoundFilter
 
-int16_t SoundFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t SoundFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		newVolume;
 
-	if (evt.IsKeyDownEvent())
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		intptr_t keyCode = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+		intptr_t keyCode = PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent);
 
 		switch (keyCode)
 		{
@@ -885,11 +909,14 @@ void DisplayUpdate (Dialog *theDialog)
 
 //--------------------------------------------------------------  DisplayFilter
 
-int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	if (evt.IsKeyDownEvent())
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		switch (PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent))
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
 		case PL_KEY_SPECIAL(kEnter):
 		case PL_KEY_NUMPAD_SPECIAL(kEnter):
@@ -1194,14 +1221,17 @@ void UpdateSettingsMain (Dialog *theDialog)
 
 //--------------------------------------------------------------  PrefsFilter
 
-int16_t PrefsFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
+int16_t PrefsFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		i;
 	Boolean		foundHit;
 
-	if (evt.IsKeyDownEvent())
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		intptr_t packedKey = PackVOSKeyCode(evt.m_vosEvent.m_event.m_keyboardInputEvent);
+		intptr_t packedKey = PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent);
 
 		switch (packedKey)
 		{
@@ -1226,10 +1256,10 @@ int16_t PrefsFilter (Dialog *dial, const TimeTaggedVOSEvent &evt)
 			return -1;
 		}
 	}
-	else if (evt.IsLMouseDownEvent())
+	else if (evt->IsLMouseDownEvent())
 	{
 		const Window *window = dial->GetWindow();
-		const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+		const GpMouseInputEvent &mouseEvent = evt->m_vosEvent.m_event.m_mouseInputEvent;
 
 		const Point testPt = Point::Create(mouseEvent.m_x - window->m_wmX, mouseEvent.m_y - window->m_wmY);
 

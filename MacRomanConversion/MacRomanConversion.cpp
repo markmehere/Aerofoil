@@ -57,4 +57,25 @@ namespace MacRoman
 		else
 			return mac_roman_2uni[character - 0x80];
 	}
+
+	bool FromUnicode(uint8_t &outChar, uint16_t codePoint)
+	{
+		if (codePoint < 0x80)
+		{
+			outChar = static_cast<uint8_t>(codePoint);
+			return true;
+		}
+		else
+		{
+			for (unsigned int i = 0; i < 128; i++)
+			{
+				if (mac_roman_2uni[i] == codePoint)
+				{
+					outChar = static_cast<uint8_t>(i + 0x80);
+					return true;
+				}
+			}
+			return false;
+		}
+	}
 }
