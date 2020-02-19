@@ -1,7 +1,16 @@
 Aerofoil is a third-party port of Glider PRO
 
-Glider PRO is (c)1994-2000 Casady & Greene, Inc., written by John Calhoun
 Aerofoil is (c)2019-2020 Eric Lasota
+Glider PRO is (c)1994-2000 Casady & Greene, Inc., written by John Calhoun
+
+
+Aerofoil is not maintained by, supported by, endorsed by, or otherwise associated with the authors and publishers of Glider PRO.
+Please do not contact any of them regarding issues related to Aerofoil.
+
+
+If you have an issue with Aerofoil, please post an issue to the Aerofoil issue tracker on GitHub:
+https://github.com/elasota/Aerofoil/issues
+
 
 Requires Windows 8 and the Visual Studio 2017 redistributable runtime.
 Please see this page for more info:
