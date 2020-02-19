@@ -1655,13 +1655,6 @@ Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection)
 }
 
 
-Boolean PtInRect(Point point, const Rect *rect)
-{
-	PL_NotYetImplemented();
-	return false;
-}
-
-
 void RestoreDeviceClut(void *unknown)
 {
 	PL_NotYetImplemented();

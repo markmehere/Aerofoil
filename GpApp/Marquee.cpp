@@ -421,7 +421,7 @@ Boolean MarqueeHasHandles (short *direction, short *dist)
 
 Boolean PtInMarqueeHandle (Point where)
 {
-	return (PtInRect(where, &theMarquee.handle));
+	return theMarquee.handle.Contains(where);
 }
 
 //--------------------------------------------------------------  DrawGliderMarquee

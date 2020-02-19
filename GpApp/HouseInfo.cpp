@@ -176,8 +176,8 @@ Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
 		default:
 		mouseIs = event->where;
 		mouseIs -= dial->GetWindow()->TopLeftCoord();
-		if ((PtInRect(mouseIs, &houseEditText1)) || 
-				(PtInRect(mouseIs, &houseEditText2)))
+		if ((houseEditText1.Contains(mouseIs)) ||
+				(houseEditText2.Contains(mouseIs)))
 		{
 			if (houseCursorIs != kBeamCursor)
 			{

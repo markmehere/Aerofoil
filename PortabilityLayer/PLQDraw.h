@@ -146,8 +146,6 @@ void SubPt(Point srcPoint, Point *destPoint);
 
 Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection);
 
-Boolean PtInRect(Point point, const Rect *rect);
-
 void RestoreDeviceClut(void *unknown);
 
 

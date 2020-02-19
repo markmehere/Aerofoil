@@ -15,8 +15,8 @@ public:
 	size_t Count() const;
 	const T &operator[](size_t index) const;
 
-	ArrayViewIterator<T> begin() const;
-	ArrayViewIterator<T> end() const;
+	ArrayViewIterator<const T> begin() const;
+	ArrayViewIterator<const T> end() const;
 
 private:
 	const T *m_items;
@@ -51,7 +51,7 @@ inline size_t ArrayView<T>::Count() const
 }
 
 template<class T>
-const T &ArrayView<T>::operator[](size_t index) const
+inline const T &ArrayView<T>::operator[](size_t index) const
 {
 #if GP_DEBUG_CONFIG
 	assert(index < m_count);
@@ -61,21 +61,21 @@ const T &ArrayView<T>::operator[](size_t index) const
 }
 
 template<class T>
-inline ArrayViewIterator<T> ArrayView<T>::begin() const
+inline ArrayViewIterator<const T> ArrayView<T>::begin() const
 {
 #if GP_DEBUG_CONFIG
-	return ArrayViewIterator<T>(m_items, m_count, 0);
+	return ArrayViewIterator<const T>(this->m_items, this->m_count, 0);
 #else
-	return ArrayViewIterator<T>(m_items);
+	return ArrayViewIterator<const T>(this->m_items);
 #endif
 }
 
 template<class T>
-inline ArrayViewIterator<T> ArrayView<T>::end() const
+inline ArrayViewIterator<const T> ArrayView<T>::end() const
 {
 #if GP_DEBUG_CONFIG
-	return ArrayViewIterator<T>(m_items, m_count, m_count);
+	return ArrayViewIterator<const T>(m_items, m_count, m_count);
 #else
-	return ArrayViewIterator<T>(m_items + m_count);
+	return ArrayViewIterator<const T>(m_items + m_count);
 #endif
 }

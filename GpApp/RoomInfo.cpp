@@ -149,7 +149,7 @@ void DragMiniTile (DrawSurface *surface, Point mouseIs, short *newTileOver)
 			QOffsetRect(&dragRect, mouseIs.h - mouseWas.h, 0);
 			surface->InvertFrameRect(dragRect, pattern);
 
-			if (PtInRect(mouseIs, &tileDest))		// is cursor in the drop rect
+			if (tileDest.Contains(mouseIs))		// is cursor in the drop rect
 			{
 				*newTileOver = (mouseIs.h - tileDest.left) / kMiniTileWide;
 				if (*newTileOver != wasTileOver)
@@ -259,7 +259,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 {
 	short		newTileOver;
 	
-	if (PtInRect(mouseIs, &tileSrc))
+	if (tileSrc.Contains(mouseIs))
 	{
 		if (cursorIs != kHandCursor)
 		{
@@ -323,7 +323,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 			tileOver = -1;
 		}
 		
-		if (PtInRect(mouseIs, &editTETextBox))
+		if (editTETextBox.Contains(mouseIs))
 		{
 			if (cursorIs != kBeamCursor)
 			{
@@ -384,7 +384,7 @@ Boolean RoomFilter (Dialog *dial, EventRecord *event, short *item)
 		case mouseDown:
 		mouseIs = event->where;
 		mouseIs -= dial->GetWindow()->TopLeftCoord();
-		if (PtInRect(mouseIs, &tileSrc))
+		if (tileSrc.Contains(mouseIs))
 		{
 			if (StillDown())
 			{
@@ -694,22 +694,22 @@ Boolean OriginalArtFilter (Dialog *dial, EventRecord *event, short *item)
 		case mouseDown:
 		mouseIs = event->where;
 		mouseIs -= dial->GetWindow()->TopLeftCoord();
-		if (PtInRect(mouseIs, &leftBound))
+		if (leftBound.Contains(mouseIs))
 		{
 			*item = 7;
 			return(true);
 		}
-		else if (PtInRect(mouseIs, &topBound))
+		else if (topBound.Contains(mouseIs))
 		{
 			*item = 8;
 			return(true);
 		}
-		else if (PtInRect(mouseIs, &rightBound))
+		else if (rightBound.Contains(mouseIs))
 		{
 			*item = 9;
 			return(true);
 		}
-		else if (PtInRect(mouseIs, &bottomBound))
+		else if (bottomBound.Contains(mouseIs))
 		{
 			*item = 10;
 			return(true);

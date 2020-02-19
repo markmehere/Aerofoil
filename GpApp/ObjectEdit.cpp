@@ -53,16 +53,16 @@ short FindObjectSelected (Point where)
 	
 	found = kNoObjectSelected;
 	
-	if (PtInRect(where, &initialGliderRect))
+	if (initialGliderRect.Contains(where))
 		return (kInitialGliderSelected);
-	else if (PtInRect(where, &leftStartGliderDest))
+	else if (leftStartGliderDest.Contains(where))
 		return (kLeftGliderSelected);
-	else if (PtInRect(where, &rightStartGliderDest))
+	else if (rightStartGliderDest.Contains(where))
 		return (kRightGliderSelected);
 	
 	for (i = kMaxRoomObs - 1; i >= 0; i--)
 	{
-		if (PtInRect(where, &roomObjectRects[i]))
+		if (roomObjectRects[i].Contains(where))
 		{
 			found = i;
 			break;

@@ -1,5 +1,7 @@
 #include "PLControlDefinitions.h"
-
+#include "PLArrayView.h"
+#include "PLArrayViewIterator.h"
+#include "PLWidgets.h"
 
 int FindControl(Point point, WindowPtr window, ControlHandle *outControl)
 {
@@ -9,7 +11,21 @@ int FindControl(Point point, WindowPtr window, ControlHandle *outControl)
 
 int FindControl(Point point, WindowPtr window, PortabilityLayer::Widget **outControl)
 {
-	PL_NotYetImplemented();
+	// Returns clicked part
+	ArrayView<PortabilityLayer::Widget*> widgets = window->GetWidgets();
+
+	for (ArrayViewIterator<PortabilityLayer::Widget*const> it = widgets.begin(), itEnd = widgets.end(); it != itEnd; ++it)
+	{
+		PortabilityLayer::Widget *widget = *it;
+		const Rect widgetRect = widget->GetRect();
+		if (widgetRect.Contains(point))
+		{
+			*outControl = widget;
+			return kControlButtonPart;
+		}
+	}
+
+	*outControl = nullptr;
 	return 0;
 }
 

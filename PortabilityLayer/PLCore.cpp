@@ -1,4 +1,6 @@
 #include "PLCore.h"
+
+#include "PLArrayView.h"
 #include "PLApplication.h"
 #include "PLPasStr.h"
 #include "PLKeyEncoding.h"
@@ -821,4 +823,9 @@ void Window::OnTick()
 
 	for (size_t i = 0; i < m_numWidgets; i++)
 		m_widgets[i]->OnTick();
+}
+
+ArrayView<PortabilityLayer::Widget*> Window::GetWidgets() const
+{
+	return ArrayView< PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
 }

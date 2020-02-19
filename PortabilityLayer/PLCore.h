@@ -13,10 +13,13 @@
 #pragma warning(error:4311)	// Pointer truncation to int
 #endif
 
+template<class T>
+class ArrayView;
 struct IGpColorCursor;
 struct GpVOSEvent;
 struct GpMouseInputEvent;
 struct TimeTaggedVOSEvent;
+
 
 namespace PortabilityLayer
 {
@@ -89,6 +92,8 @@ struct Window
 	bool IsHandlingTickEvents();
 
 	void OnTick();
+
+	ArrayView<PortabilityLayer::Widget*> GetWidgets() const;
 
 	DrawSurface m_surface;	// Must be the first item until the immediate mode draw API is completely removed
 

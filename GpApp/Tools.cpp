@@ -192,7 +192,7 @@ void DrawToolTiles (DrawSurface *surface)
 void EraseSelectedTool (void)
 {
 #ifndef COMPILEDEMO
-	DrawSurface *surface = mainWindow->GetDrawSurface();
+	DrawSurface *surface = toolsWindow->GetDrawSurface();
 	Rect		theRect;
 	short		toolIcon;
 	
@@ -269,7 +269,6 @@ void UpdateToolsWindow (void)
 		return;
 
 	DrawSurface *surface = toolsWindow->GetDrawSurface();
-	DrawControls(toolsWindow);
 	
 	DkGrayForeColor(surface);
 	surface->DrawLine(Point::Create(4, 25), Point::Create(112, 25));
@@ -353,6 +352,8 @@ void OpenToolsWindow (void)
 	}
 	
 	UpdateToolsCheckmark(true);
+
+	UpdateToolsWindow();
 #endif
 }
 
@@ -460,7 +461,7 @@ void SwitchToolModes (short newMode)
 void HandleToolsClick (Point wherePt)
 {
 #ifndef COMPILEDEMO
-	ControlHandle	theControl;
+	PortabilityLayer::Widget	*theControl;
 	short			i, part, newMode, toolIcon;
 	
 	if (toolsWindow == nil)
@@ -472,10 +473,10 @@ void HandleToolsClick (Point wherePt)
 	part = FindControl(wherePt, toolsWindow, &theControl);
 	if ((theControl != nil) && (part != 0))
 	{
-		part = TrackControl(theControl, wherePt, (ControlActionUPP)-1L);
+		part = TrackControl(theControl, wherePt, nullptr);
 		if (part != 0)
 		{
-			newMode = GetControlValue(theControl);
+			newMode = theControl->GetState();
 			if (newMode != toolMode)
 			{
 				EraseSelectedTool();
@@ -486,7 +487,7 @@ void HandleToolsClick (Point wherePt)
 	else
 	{
 		for (i = 0; i < kTotalTools; i++)
-			if ((PtInRect(wherePt, &toolRects[i])) && (i <= lastTool))
+			if ((toolRects[i].Contains(wherePt)) && (i <= lastTool))
 			{
 				EraseSelectedTool();
 				toolIcon = i;
