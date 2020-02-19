@@ -41,6 +41,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bin2gp", "bin2gp\bin2gp.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MakeTimestamp", "MakeTimestamp\MakeTimestamp.vcxproj", "{9023DF2F-A33D-485A-B13D-0973348B2F9B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flattenmov", "flattenmov\flattenmov.vcxproj", "{89F8D13E-F216-4B67-8DE9-7F842D349E94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -123,6 +125,10 @@ Global
 		{9023DF2F-A33D-485A-B13D-0973348B2F9B}.Debug|x64.Build.0 = Debug|x64
 		{9023DF2F-A33D-485A-B13D-0973348B2F9B}.Release|x64.ActiveCfg = Release|x64
 		{9023DF2F-A33D-485A-B13D-0973348B2F9B}.Release|x64.Build.0 = Release|x64
+		{89F8D13E-F216-4B67-8DE9-7F842D349E94}.Debug|x64.ActiveCfg = Debug|x64
+		{89F8D13E-F216-4B67-8DE9-7F842D349E94}.Debug|x64.Build.0 = Debug|x64
+		{89F8D13E-F216-4B67-8DE9-7F842D349E94}.Release|x64.ActiveCfg = Release|x64
+		{89F8D13E-F216-4B67-8DE9-7F842D349E94}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
