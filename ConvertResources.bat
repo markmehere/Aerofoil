@@ -56,24 +56,26 @@ x64\Release\gpr2gpa.exe "Packaged\Houses\Teddy World.gpr" "DefaultTimestamp.time
 x64\Release\gpr2gpa.exe "Packaged\Houses\The Asylum Pro.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\The Asylum Pro.gpa"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Titanic.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Titanic.gpa"
 
-x64\Release\FTagData.exe "GliderProData\Houses\Art Museum.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Art Museum.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Castle o' the Air.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Castle o' the Air.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\CD Demo House.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\CD Demo House.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Davis Station.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Davis Station.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Demo House.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Demo House.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Grand Prix.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Grand Prix.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\ImagineHouse PRO II.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\ImagineHouse PRO II.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Land of Illusion.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Land of Illusion.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Leviathan.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Leviathan.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Nemo's Market.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Nemo's Market.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Rainbow's End.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Rainbow's End.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Slumberland.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Slumberland.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\SpacePods.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\SpacePods.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Teddy World.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Teddy World.mov" MooV ozm5 0 0 locked
-x64\Release\FTagData.exe "GliderProData\Houses\Titanic.mov" "DefaultTimestamp.timestamp" "Packaged\Houses\Titanic.mov" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Art Museum.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Castle o' the Air.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\CD Demo House.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Davis Station.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Demo House.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Grand Prix.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\ImagineHouse PRO II.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Land of Illusion.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Leviathan.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Nemo's Market.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Rainbow's End.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Slumberland.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\SpacePods.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Teddy World.mov.gpf" MooV ozm5 0 0 locked
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Titanic.mov.gpf" MooV ozm5 0 0 locked
 
 del /Q Packaged\Houses\*.gpr
 del /Q Packaged\ApplicationResources.gpr
+
+copy /Y GliderProData\ConvertedMovies\*.mov.gpa Packaged\Houses\
 
 attrib +R Packaged\Houses\*
 
