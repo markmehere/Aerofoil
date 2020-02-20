@@ -622,6 +622,9 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	if (!bounds.IsValid() || bounds.Width() == 0 || bounds.Height() == 0)
 		return;
 
+	if (pictHdl.MMBlock()->m_size < sizeof(BitmapImage))
+		return;
+
 	BitmapImage *bmpPtr = *pictHdl;
 	if (!bmpPtr)
 		return;
@@ -851,9 +854,9 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
 						const unsigned int combinedValue = srcLow | (srcHigh << 8);
-						const unsigned int b = (srcLow & 0x1f);
-						const unsigned int g = ((srcLow >> 5) & 0x1f);
-						const unsigned int r = ((srcLow >> 10) & 0x1f);
+						const unsigned int b = (combinedValue & 0x1f);
+						const unsigned int g = ((combinedValue >> 5) & 0x1f);
+						const unsigned int r = ((combinedValue >> 10) & 0x1f);
 
 						const unsigned int xr = (r << 5) | (r >> 2);
 						const unsigned int xg = (g << 5) | (g >> 2);
