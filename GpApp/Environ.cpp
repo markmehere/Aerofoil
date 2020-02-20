@@ -193,8 +193,7 @@ Boolean DoWeHaveSoundManager3 (void)
 
 Boolean DoWeHaveQuickTime (void)
 {
-	PL_NotYetImplemented_TODO("Movies");
-	return false;
+	return true;
 }
 
 //--------------------------------------------------------------  DoWeHaveDragManager

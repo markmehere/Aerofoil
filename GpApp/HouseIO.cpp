@@ -11,6 +11,7 @@
 #include "PLStringCompare.h"
 #include "PLTextUtils.h"
 #include "PLPasStr.h"
+#include "BitmapImage.h"
 #include "DialogManager.h"
 #include "Externs.h"
 #include "Environ.h"
@@ -34,7 +35,7 @@ void CloseHouseMovie (void);
 Boolean IsFileReadOnly (const VFileSpec &);
 
 
-Movie		theMovie;
+AnimationPlayer		theMovie;
 Rect		movieRect;
 PortabilityLayer::ResourceArchive	*houseResFork;
 short		wasHouseVersion;
@@ -52,31 +53,12 @@ extern	Boolean		phoneBitSet, bannerStarCountOn;
 
 
 //==============================================================  Functions
-//--------------------------------------------------------------  LoopMovie
-
-void LoopMovie (void)
-{
-	THandle<long>	theLoop;
-	UserData		theUserData;
-	short			theCount;
-	
-	theLoop = NewHandle(sizeof(long)).StaticCast<long>();
-	(**theLoop) = 0;
-	theUserData = GetMovieUserData(theMovie);
-	theCount = CountUserDataType(theUserData, 'LOOP');
-	while (theCount--)
-	{
-		RemoveUserData(theUserData, 'LOOP', 1);
-	}
-	AddUserData(theUserData, theLoop.StaticCast<void>(), 'LOOP');
-}
 
 //--------------------------------------------------------------  OpenHouseMovie
 
 void OpenHouseMovie (void)
 {
 #ifdef COMPILEQT
-	TimeBase	theTime;
 	VFileSpec	theSpec;
 	VFileInfo	finderInfo;
 	Handle		spaceSaver;
@@ -92,60 +74,24 @@ void OpenHouseMovie (void)
 		theErr = FSpGetFInfo(theSpec, finderInfo);
 		if (theErr != PLErrors::kNone)
 			return;
-		
-		theErr = OpenMovieFile(theSpec, &movieRefNum, 0);
-		if (theErr != PLErrors::kNone)
+
+		AnimationPackage *anim = AnimationPackage::Create();
+		if (!anim)
+			return;
+
+		if (!anim->Load(theSpec.m_dir, theSpec.m_name))
 		{
+			anim->Destroy();
 			YellowAlert(kYellowQTMovieNotLoaded, theErr);
 			return;
 		}
-		
-		theErr = NewMovieFromFile(&theMovie, movieRefNum, nil, theSpec.m_name, 
-				newMovieActive, &dataRefWasChanged);
-		if (theErr != PLErrors::kNone)
-		{
-			YellowAlert(kYellowQTMovieNotLoaded, theErr);
-			theErr = CloseMovieFile(movieRefNum);
-			return;
-		}
-		theErr = CloseMovieFile(movieRefNum);
-		
-		spaceSaver = NewHandle(307200L);
-		if (spaceSaver == nil)
-		{
-			YellowAlert(kYellowQTMovieNotLoaded, 749);
-			CloseHouseMovie();
-			return;
-		}
-		
-		GoToBeginningOfMovie(theMovie);
-		theErr = LoadMovieIntoRam(theMovie, 
-				GetMovieTime(theMovie, 0L), GetMovieDuration(theMovie), 0);
-		if (theErr != PLErrors::kNone)
-		{
-			YellowAlert(kYellowQTMovieNotLoaded, theErr);
-			spaceSaver.Dispose();
-			CloseHouseMovie();
-			return;
-		}
-		spaceSaver.Dispose();
-				
-		theErr = PrerollMovie(theMovie, 0, 0x000F0000);
-		if (theErr != PLErrors::kNone)
-		{
-			YellowAlert(kYellowQTMovieNotLoaded, theErr);
-			CloseHouseMovie();
-			return;
-		}
-		
-		theTime = GetMovieTimeBase(theMovie);
-		SetTimeBaseFlags(theTime, loopTimeBase);
-		SetMovieMasterTimeBase(theMovie, theTime, nil);
-		LoopMovie();
-		
-		GetMovieBox(theMovie, &movieRect);
+
+		movieRect = (*anim->GetFrame(0))->GetRect();
 		
 		hasMovie = true;
+		theMovie.SetPackage(anim);
+
+		AnimationManager::GetInstance()->RegisterPlayer(&theMovie);
 	}
 #endif
 }
@@ -159,9 +105,10 @@ void CloseHouseMovie (void)
 	
 	if ((thisMac.hasQT) && (hasMovie))
 	{
-		theErr = LoadMovieIntoRam(theMovie, 
-				GetMovieTime(theMovie, 0L), GetMovieDuration(theMovie), flushFromRam);
-		DisposeMovie(theMovie);
+		AnimationManager::GetInstance()->RemovePlayer(&theMovie);
+
+		theMovie.m_animPackage->Destroy();
+		theMovie.m_animPackage = nullptr;
 	}
 #endif
 	hasMovie = false;
@@ -195,8 +142,10 @@ Boolean OpenHouse (void)
 	
 	houseOpen = true;
 	OpenHouseResFork();
-	
-	hasMovie = false;
+
+	if (hasMovie)
+		CloseHouseMovie();
+
 	tvInRoom = false;
 	tvWithMovieNumber = -1;
 	OpenHouseMovie();

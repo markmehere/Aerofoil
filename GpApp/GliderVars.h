@@ -39,7 +39,7 @@ extern	Rect		clutterSrcRect;
 extern	Rect		flowerSrc[];
 extern	Rect		*srcRects;
 
-extern	Movie		theMovie;
+extern	AnimationPlayer	theMovie;
 extern	Rect		movieRect;
 extern	Boolean		hasMovie, tvInRoom;
 

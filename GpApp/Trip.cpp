@@ -44,13 +44,13 @@ void ToggleTV (short index)
 	{
 		if (dinahs[index].active)
 		{
-			GoToBeginningOfMovie(theMovie);
-			StartMovie(theMovie);
+			theMovie.Restart();
+			theMovie.m_playing = true;
 			tvOn = true;
 		}
 		else
 		{
-			StopMovie(theMovie);
+			theMovie.m_playing = false;
 			tvOn = false;
 		}
 	}

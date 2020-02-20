@@ -3,62 +3,85 @@
 #define __PL_MOVIES_H__
 
 #include "PLApplication.h"
+#include "VirtualDirectory.h"
 
-struct UserDataObject;
-struct TimeBaseObject;
-struct MovieObject;
-
-struct UserDataBackingStorage
+namespace PortabilityLayer
 {
+	class ResourceArchive;
+}
+
+struct DrawSurface;
+class AnimationPackage;
+
+struct AnimationPlayer
+{
+	AnimationPackage *m_animPackage;
+	Rect m_renderRect;
+	Rect m_constrainRect;
+	DrawSurface *m_surface;
+	bool m_playing;
+
+	uint32_t m_timer;
+	uint16_t m_frameIndex;
+	bool m_isFrameCurrent;
+
+	AnimationPlayer *m_next;
+	AnimationPlayer *m_prev;
+
+	AnimationPlayer();
+
+	void SetPackage(AnimationPackage *animPackage);
+	void Restart();
 };
 
-typedef int64_t TimeValue;
-
-struct TimeRecord
+class AnimationPackage final
 {
+public:
+	static AnimationPackage *Create();
+	void Destroy();
+
+	bool Load(PortabilityLayer::VirtualDirectory_t virtualDir, const PLPasStr &path);
+
+	const THandle<BitmapImage> &GetFrame(size_t index) const;
+	size_t NumFrames() const;
+	uint32_t GetFrameRateNumerator() const;
+	uint32_t GetFrameRateDenominator() const;
+
+private:
+	explicit AnimationPackage();
+	~AnimationPackage();
+
+	THandle<BitmapImage> *m_images;
+	PortabilityLayer::ResourceArchive *m_resArchive;
+	size_t m_numImages;
+
+	uint32_t m_frameRateNumerator;
+	uint32_t m_frameRateDenominator;
 };
 
-enum MovieFlags
+struct AnimationPlayerRef
 {
-	newMovieActive = 1,
-	flushFromRam = 2,
+	AnimationPlayer *m_player;
 };
 
-enum TimeBaseFlags
+class AnimationManager final
 {
-	loopTimeBase = 1,
+public:
+	void RegisterPlayer(AnimationPlayer *player);
+	void RemovePlayer(AnimationPlayer *player);
+
+	void RefreshPlayer(AnimationPlayer *player);
+	void TickPlayers(uint32_t numTicks);
+
+	static AnimationManager *GetInstance();
+
+private:
+	AnimationManager();
+
+	AnimationPlayer *m_firstPlayer;
+	AnimationPlayer *m_lastPlayer;
+
+	static AnimationManager ms_instance;
 };
-
-typedef UserDataObject *UserData;
-typedef TimeBaseObject *TimeBase;
-typedef MovieObject *Movie;
-
-
-PLError_t EnterMovies();
-
-UserData GetMovieUserData(Movie movie);
-int CountUserDataType(UserData userData, UInt32 type);
-PLError_t RemoveUserData(UserData userData, UInt32 type, int index);	// Index is 1-based
-PLError_t AddUserData(UserData userData, Handle data, UInt32 type);
-PLError_t OpenMovieFile(const VFileSpec &fsSpec, short *outRefNum, int permissions);
-PLError_t NewMovieFromFile(Movie *movie, short refNum, const short *optResId, StringPtr resName, int flags, Boolean *unused);
-PLError_t CloseMovieFile(short refNum);
-PLError_t GoToBeginningOfMovie(Movie movie);
-PLError_t LoadMovieIntoRam(Movie movie, TimeValue time, TimeValue duration, int flags);
-TimeValue GetMovieTime(Movie movie, TimeRecord *outCurrentTime);
-TimeValue GetMovieDuration(Movie movie);
-PLError_t PrerollMovie(Movie movie, TimeValue time, UInt32 rate);
-TimeBase GetMovieTimeBase(Movie movie);
-PLError_t SetTimeBaseFlags(TimeBase timeBase, int flags);
-void SetMovieMasterTimeBase(Movie movie, TimeBase timeBase, void *unused);
-void GetMovieBox(Movie movie, Rect *rect);
-void StopMovie(Movie movie);
-void DisposeMovie(Movie movie);
-void SetMovieGWorld(Movie movie, DrawSurface *graf, void *unknown);
-void SetMovieActive(Movie movie, Boolean active);
-void StartMovie(Movie movie);
-void MoviesTask(Movie movie, int unknown);
-void SetMovieBox(Movie movie, const Rect *rect);
-void SetMovieDisplayClipRgn(Movie movie, const Rect *rect);
 
 #endif

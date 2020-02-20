@@ -143,7 +143,7 @@ void NewGame (short mode)
 #ifdef COMPILEQT
 	if ((thisMac.hasQT) && (hasMovie))
 	{
-		SetMovieGWorld(theMovie, &mainWindow->m_surface, nil);
+		theMovie.m_surface = &mainWindow->m_surface;
 	}
 #endif
 	
@@ -195,11 +195,11 @@ void NewGame (short mode)
 #ifdef COMPILEQT
 	if ((thisMac.hasQT) && (hasMovie) && (tvInRoom))
 	{
-		SetMovieActive(theMovie, true);
+		theMovie.m_playing = true;
 		if (tvOn)
 		{
-			StartMovie(theMovie);
-			MoviesTask(theMovie, 0);
+			AnimationManager::GetInstance()->RegisterPlayer(&theMovie);
+			AnimationManager::GetInstance()->RefreshPlayer(&theMovie);
 		}
 	}
 #endif
@@ -218,8 +218,7 @@ void NewGame (short mode)
 	if ((thisMac.hasQT) && (hasMovie) && (tvInRoom))
 	{
 		tvInRoom = false;
-		StopMovie(theMovie);
-		SetMovieActive(theMovie, false);
+		theMovie.m_playing = false;
 	}
 #endif
 	
@@ -399,7 +398,7 @@ void PlayGame (void)
 			{
 #ifdef COMPILEQT
 				if ((thisMac.hasQT) && (hasMovie) && (tvInRoom) && (tvOn))
-						MoviesTask(theMovie, 0);
+						AnimationManager::GetInstance()->RefreshPlayer(&theMovie);
 #endif
 				RenderFrame();
 				HandleDynamicScoreboard();
@@ -424,7 +423,7 @@ void PlayGame (void)
 			{
 #ifdef COMPILEQT
 				if ((thisMac.hasQT) && (hasMovie) && (tvInRoom) && (tvOn))
-						MoviesTask(theMovie, 0);
+					AnimationManager::GetInstance()->RefreshPlayer(&theMovie);
 #endif
 				RenderFrame();
 				HandleDynamicScoreboard();

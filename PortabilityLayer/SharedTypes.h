@@ -40,6 +40,9 @@ struct Rect
 	Rect &operator-=(const Point &point);
 	Rect &operator+=(const Point &point);
 
+	bool operator!=(const Rect &other) const;
+	bool operator==(const Rect &other) const;
+
 	uint16_t Height() const;
 	uint16_t Width() const;
 
@@ -213,6 +216,18 @@ inline Rect &Rect::operator+=(const Point &point)
 	return *this;
 }
 
+inline bool Rect::operator!=(const Rect &other) const
+{
+	if (this->top != other.top || this->bottom != other.bottom || this->left != other.left || this->right != other.right)
+		return true;
+
+	return false;
+}
+
+inline bool Rect::operator==(const Rect &other) const
+{
+	return !((*this) != other);
+}
 
 
 inline uint16_t Rect::Height() const

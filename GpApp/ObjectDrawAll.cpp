@@ -5,7 +5,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
+#include "BitmapImage.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "RectUtils.h"
@@ -679,10 +679,10 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						whoCares = tvScreen1;
 						ZeroRectCorner(&whoCares);
 						OffsetRect(&whoCares, itsRect.left + 17, itsRect.top + 10);
-						GetMovieBox(theMovie, &movieRect);
+						movieRect = (*theMovie.m_animPackage->GetFrame(0))->GetRect();
 						CenterRectInRect(&movieRect, &whoCares);
-						SetMovieBox(theMovie, &movieRect);
-						SetMovieDisplayClipRgn(theMovie, &whoCares);
+						theMovie.m_renderRect = movieRect;
+						theMovie.m_constrainRect = whoCares;
 						tvOn = thisObject.data.g.state;
 					}
 #endif

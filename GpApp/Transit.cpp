@@ -308,8 +308,8 @@ void MoveRoomToRoom (gliderPtr thisGlider, short where)
 	RenderFrame();
 	if ((thisMac.hasQT) && (hasMovie) && (tvInRoom) && (tvOn))
 	{
-		GoToBeginningOfMovie(theMovie);
-		StartMovie(theMovie);
+		theMovie.Restart();
+		theMovie.m_playing = true;
 	}
 #endif
 }
@@ -346,8 +346,8 @@ void TransportRoomToRoom (gliderPtr thisGlider)
 	RenderFrame();
 	if ((thisMac.hasQT) && (hasMovie) && (tvInRoom) && (tvOn))
 	{
-		GoToBeginningOfMovie(theMovie);
-		StartMovie(theMovie);
+		theMovie.Restart();
+		theMovie.m_playing = true;
 	}
 #endif
 }
@@ -385,8 +385,8 @@ void MoveDuctToDuct (gliderPtr thisGlider)
 	RenderFrame();
 	if ((thisMac.hasQT) && (hasMovie) && (tvInRoom) && (tvOn))
 	{
-		GoToBeginningOfMovie(theMovie);
-		StartMovie(theMovie);
+		theMovie.Restart();
+		theMovie.m_playing = true;
 	}
 #endif
 }
@@ -424,8 +424,8 @@ void MoveMailToMail (gliderPtr thisGlider)
 	RenderFrame();
 	if ((thisMac.hasQT) && (hasMovie) && (tvInRoom) && (tvOn))
 	{
-		GoToBeginningOfMovie(theMovie);
-		StartMovie(theMovie);
+		theMovie.Restart();
+		theMovie.m_playing = true;
 	}
 #endif
 }

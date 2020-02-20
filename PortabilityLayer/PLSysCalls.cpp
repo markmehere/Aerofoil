@@ -1,6 +1,7 @@
 #include "PLCore.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
+#include "PLMovies.h"
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "DisplayDeviceManager.h"
@@ -130,6 +131,8 @@ namespace PLSysCalls
 			PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_Delay, args, nullptr);
 
 			ImportVOSEvents(PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount());
+
+			AnimationManager::GetInstance()->TickPlayers(ticks);
 		}
 	}
 }

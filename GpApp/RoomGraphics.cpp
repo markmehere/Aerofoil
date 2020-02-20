@@ -380,7 +380,7 @@ void ReadyLevel (void)
 	{
 		tvInRoom = false;
 		tvWithMovieNumber = -1;
-		StopMovie(theMovie);
+		theMovie.m_playing = false;
 	}
 #endif
 	

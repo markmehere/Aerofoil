@@ -351,14 +351,6 @@ int gpAppMain()
 	InitSrcRects();
 	CreateOffscreens();					SpinCursor(2);
 	OpenMainWindow();
-	
-	if (thisMac.hasQT)
-	{
-		theErr = EnterMovies();
-		if (theErr != PLErrors::kNone)
-			thisMac.hasQT = false;
-	}
-	
 	InitSound();						SpinCursor(2);
 	InitMusic();						SpinCursor(2);
 	BuildHouseList();

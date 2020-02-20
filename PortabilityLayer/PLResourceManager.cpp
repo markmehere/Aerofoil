@@ -310,7 +310,7 @@ namespace PortabilityLayer
 		}
 		else if (resTypeID == ResTypeID('STR#'))
 			extension = ".txt";
-		else if (resTypeID == ResTypeID('DITL'))
+		else if (resTypeID == ResTypeID('DITL') || resTypeID == ResTypeID('muvi'))
 			extension = ".json";
 
 		char resourceFile[64];

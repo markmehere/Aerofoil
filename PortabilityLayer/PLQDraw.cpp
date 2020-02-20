@@ -698,13 +698,16 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 16 && bpp != 24)
 		return;
 
-	const uint32_t numColors = infoHeader.m_numColors;
+	uint32_t numColors = infoHeader.m_numColors;
 	if (numColors > 256)
 		return;
 
+	if (numColors == 0 && bpp <= 8)
+		numColors = (1 << bpp);
+
 	const uint8_t *ctabLoc = bmpBytes + sizeof(fileHeader) + infoHeader.m_thisStructureSize;
 
-	const size_t ctabSize = infoHeader.m_numColors * sizeof(PortabilityLayer::BitmapColorTableEntry);
+	const size_t ctabSize = numColors * sizeof(PortabilityLayer::BitmapColorTableEntry);
 	const size_t availCTabBytes = bmpSize - sizeof(fileHeader) - infoHeader.m_thisStructureSize;
 
 	if (ctabSize > availCTabBytes)
@@ -770,8 +773,8 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	int32_t firstSourceCol = sourceRect.m_topLeft.m_x;
 
 	const size_t destPitch = pixMap->GetPitch();
-	uint8_t *firstDestRow = static_cast<uint8_t*>(pixMap->GetPixelData()) + destPitch * static_cast<uint32_t>(drawOrigin.m_y + truncatedTop);
-	size_t firstDestCol = static_cast<uint32_t>(drawOrigin.m_x + truncatedLeft);
+	uint8_t *firstDestRow = static_cast<uint8_t*>(pixMap->GetPixelData()) + destPitch * static_cast<uint32_t>(drawOrigin.m_y - targetPixMapRect.top + truncatedTop);
+	size_t firstDestCol = static_cast<uint32_t>(drawOrigin.m_x - targetPixMapRect.left + truncatedLeft);
 
 	const PortabilityLayer::StandardPalette *stdPalette = PortabilityLayer::StandardPalette::GetInstance();
 
