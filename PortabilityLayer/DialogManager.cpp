@@ -713,7 +713,7 @@ namespace PortabilityLayer
 
 		const Rect dialogRect = alertResData.m_rect.ToRect();
 
-		Dialog *dialog = LoadDialogFromTemplate(alertResData.m_dialogTemplateResID, alertResData.m_rect.ToRect(), true, false, 0, 0x300a, PL_GetPutInFrontWindowPtr(), PSTR(""), nullptr);
+		Dialog *dialog = LoadDialogFromTemplate(alertResData.m_dialogTemplateResID, alertResData.m_rect.ToRect(), true, false, 0, 0x300a, PL_GetPutInFrontWindowPtr(), PSTR(""), substitutions);
 		if (!dialog)
 			return 0;
 
