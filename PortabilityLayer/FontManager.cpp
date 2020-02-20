@@ -105,7 +105,7 @@ namespace PortabilityLayer
 	FontFamily *FontManagerImpl::GetApplicationFont(int textSize, int variationFlags) const
 	{
 		if (textSize < 11 && (variationFlags & FontFamilyFlag_Bold) != 0)
-			return m_systemFont;	// Roboto Bold below 11pt doesn't even look bold, so use a better font
+			return m_systemFont;	// Use heavier font below 11pt
 
 		return m_applicationFont;
 	}

@@ -1,7 +1,3 @@
-Roboto font:
-(c)2011 Google
-Distributed under the Apache License (see Resources/Fonts/Roboto/LICENSE)
-
 Open Sans font:
 (c)2011 Google
 Distributed under the Apache License (see Resources/Fonts/OpenSans/LICENSE)

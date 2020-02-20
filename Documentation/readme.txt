@@ -25,11 +25,6 @@ Some shortcuts:
 
 
 -------------------------------------------------------------------------------
-Roboto font:
-(c)2011 Google
-Distributed under the Apache License (see license_apache.txt)
-
--------------------------------------------------------------------------------
 Open Sans font:
 (c)2011 Google
 Distributed under the Apache License (see license_apache.txt)
