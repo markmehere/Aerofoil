@@ -23,7 +23,7 @@ Some shortcuts:
 - Ctrl-Q quits the game.
 
 
-
+Aerofoil uses the following third-party software:
 -------------------------------------------------------------------------------
 Open Sans font:
 (c)2011 Google
@@ -72,3 +72,11 @@ zlib:
 
   Jean-loup Gailly        Mark Adler
   jloup@gzip.org          madler@alumni.caltech.edu
+
+
+-------------------------------------------------------------------------------
+FreeType:
+
+Portions of this software are copyright (c)2020 The FreeType Project (www.freetype.org).  All rights reserved.
+
+Distributed under the GPLv2 license (see license_gplv2.txt)
