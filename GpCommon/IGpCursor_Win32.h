@@ -1,9 +1,9 @@
 #pragma once
 
-#include "IGpColorCursor.h"
+#include "IGpCursor.h"
 #include "GpWindows.h"
 
-struct IGpColorCursor_Win32 : public IGpColorCursor
+struct IGpCursor_Win32 : public IGpCursor
 {
 public:
 	virtual const HCURSOR &GetHCursor() const = 0;

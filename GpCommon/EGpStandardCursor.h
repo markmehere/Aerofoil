@@ -5,6 +5,8 @@ namespace EGpStandardCursors
 	enum EGpStandardCursor
 	{
 		kArrow,
+		kIBeam,
+		kWait,
 		kHidden,
 	};
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-struct IGpColorCursor
+struct IGpCursor
 {
 	virtual void Destroy() = 0;
 };

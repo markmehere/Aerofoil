@@ -127,15 +127,15 @@ void OpenCoordWindow (void)
 	
 	if (coordWindow == nil)
 	{
-		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar;
+		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;
 
 		QSetRect(&coordWindowRect, 0, 0, 50, 38);
 		if (thisMac.hasColor)
 			coordWindow = NewCWindow(nil, &coordWindowRect, 
-					PSTR("Tools"), false, windowStyle, kPutInFront, true, 0L);
+					PSTR("Tools"), false, windowStyle, kPutInFront, 0L);
 		else
 			coordWindow = NewWindow(nil, &coordWindowRect, 
-					PSTR("Tools"), false, windowStyle, kPutInFront, true, 0L);
+					PSTR("Tools"), false, windowStyle, kPutInFront, 0L);
 		
 		if (coordWindow == nil)
 			RedAlert(kErrNoMemory);

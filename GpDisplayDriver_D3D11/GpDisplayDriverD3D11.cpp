@@ -3,7 +3,7 @@
 #include "GpDisplayDriverD3D11.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
 #include "GpWindows.h"
-#include "IGpColorCursor_Win32.h"
+#include "IGpCursor_Win32.h"
 #include "IGpFiber.h"
 
 #include <d3d11.h>
@@ -502,7 +502,7 @@ void GpDisplayDriverD3D11::SynchronizeCursors()
 void GpDisplayDriverD3D11::ChangeToCursor(HCURSOR cursor)
 {
 	if (m_mouseIsInClientArea)
-		SetCursor(cursor);
+		::SetCursor(cursor);
 
 	SetClassLongPtrW(m_hwnd, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(cursor));
 }
@@ -511,6 +511,12 @@ void GpDisplayDriverD3D11::ChangeToStandardCursor(EGpStandardCursor_t cursor)
 {
 	switch (cursor)
 	{
+	case EGpStandardCursors::kIBeam:
+		ChangeToCursor(m_ibeamCursor);
+		break;
+	case EGpStandardCursors::kWait:
+		ChangeToCursor(m_waitCursor);
+		break;
 	case EGpStandardCursors::kArrow:
 	default:
 		ChangeToCursor(m_arrowCursor);
@@ -624,7 +630,7 @@ IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_
 	return GpDisplayDriverSurfaceD3D11::Create(m_device, m_deviceContext, width, height, pixelFormat);
 }
 
-void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, size_t x, size_t y, size_t width, size_t height)
+void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height)
 {
 	ID3D11Buffer *vbPtr = m_quadVertexBuffer;
 	UINT vbStride = sizeof(float) * 2;
@@ -710,24 +716,30 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, size_t 
 	m_deviceContext->DrawIndexed(6, 0, 0);
 }
 
-IGpColorCursor *GpDisplayDriverD3D11::LoadColorCursor(int cursorID)
+IGpCursor *GpDisplayDriverD3D11::LoadCursor(bool isColor, int cursorID)
 {
 	const size_t bufSize = MAX_PATH;
 	wchar_t path[bufSize];
 
-	int sz = _snwprintf(path, bufSize, L"%sPackaged\\WinCursors\\%i.cur", m_osGlobals->m_baseDir, cursorID);
+	int sz = 0;
+	if (isColor)
+		sz = _snwprintf(path, bufSize, L"%sPackaged\\WinCursors\\c%i.cur", m_osGlobals->m_baseDir, cursorID);
+	else
+		sz = _snwprintf(path, bufSize, L"%sPackaged\\WinCursors\\b%i.cur", m_osGlobals->m_baseDir, cursorID);
+
 	if (sz < 0 || static_cast<size_t>(sz) >= bufSize)
 		return nullptr;
 
-	return m_osGlobals->m_loadColorCursorFunc(path);
+	return m_osGlobals->m_loadCursorFunc(path);
 }
+
 
 // We can't just set the cursor because we want to post WM_SETCURSOR to keep it limited
 // to the game window area, but depending on the fiber implementation, this may not be
 // the window thread.
-void GpDisplayDriverD3D11::SetColorCursor(IGpColorCursor *colorCursor)
+void GpDisplayDriverD3D11::SetCursor(IGpCursor *cursor)
 {
-	IGpColorCursor_Win32 *winCursor = static_cast<IGpColorCursor_Win32*>(colorCursor);
+	IGpCursor_Win32 *winCursor = static_cast<IGpCursor_Win32*>(cursor);
 
 	winCursor->IncRef();
 
@@ -797,6 +809,8 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	m_frameTimeSliceSize = m_QPFrequency.QuadPart * static_cast<LONGLONG>(properties.m_frameTimeLockNumerator) / static_cast<LONGLONG>(properties.m_frameTimeLockDenominator);
 
 	m_arrowCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_SHARED));
+	m_ibeamCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_IBEAM), IMAGE_CURSOR, 0, 0, LR_SHARED));
+	m_waitCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_WAIT), IMAGE_CURSOR, 0, 0, LR_SHARED));
 }
 
 GpDisplayDriverD3D11::~GpDisplayDriverD3D11()

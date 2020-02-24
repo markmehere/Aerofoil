@@ -69,7 +69,7 @@ void DoHighScores (void)
 	Rect		tempRect;
 	
 	SpinCursor(3);
-	SetPort((GrafPtr)workSrcMap);
+	SetPort(&workSrcMap->m_port);
 	workSrcMap->FillRect(workSrcRect);
 	QSetRect(&tempRect, 0, 0, 640, 480);
 	QOffsetRect(&tempRect, splashOriginH, splashOriginV);

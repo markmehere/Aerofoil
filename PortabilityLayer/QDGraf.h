@@ -71,7 +71,6 @@ struct DrawSurface final
 	void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask);
 
 	void DrawLine(const Point &a, const Point &b);
-	void InvertDrawLine(const Point &a, const Point &b, const uint8_t *pattern);
 
 	void SetForeColor(const PortabilityLayer::RGBAColor &color);
 	const PortabilityLayer::RGBAColor &GetForeColor() const;

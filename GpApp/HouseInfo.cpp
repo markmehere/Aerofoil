@@ -12,6 +12,8 @@
 #include "Externs.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
+#include "HostDisplayDriver.h"
+#include "IGpDisplayDriver.h"
 
 
 #define kHouseInfoDialogID		1001
@@ -181,7 +183,7 @@ Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
 		{
 			if (houseCursorIs != kBeamCursor)
 			{
-				SetBuiltinCursor(iBeamCursor);
+				PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kIBeam);
 				houseCursorIs = kBeamCursor;
 			}
 		}
@@ -231,7 +233,7 @@ void DoHouseInfo (void)
 	houseInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kHouseInfoDialogID, kPutInFront, &substitutions);
 	if (houseInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort((GrafPtr)houseInfoDialog);
+	SetPort(&houseInfoDialog->GetWindow()->GetDrawSurface()->m_port);
 	ShowWindow(houseInfoDialog->GetWindow());
 	
 	SetDialogString(houseInfoDialog, kBannerTextItem, banner);

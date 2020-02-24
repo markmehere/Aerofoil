@@ -281,32 +281,41 @@ namespace PortabilityLayer
 		return GetResource(resTypeID, id, true);
 	}
 
-	bool ResourceArchive::GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize)
+	bool ResourceArchive::GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize) const
 	{
-		THandle<void> hdl = GetResource(resTypeID, id, false);
-		if (const PortabilityLayer::MMHandleBlock *hdlBlock = hdl.MMBlock())
-		{
-			outSize = hdlBlock->m_rmSelfRef->m_size;
-			return true;
-		}
+		size_t index = 0;
+		int validationRule = 0;
+		if (!IndexResource(resTypeID, id, index, validationRule))
+			return false;
 
-		return false;
+		outSize = m_zipFileProxy->GetFileSize(index);
+		return true;
 	}
 
-	THandle<void> ResourceArchive::GetResource(const ResTypeID &resTypeID, int id, bool load)
+	bool ResourceArchive::HasAnyResourcesOfType(const ResTypeID &resTypeID) const
+	{
+		char resPrefix[6];
+		resTypeID.ExportAsChars(resPrefix);
+		resPrefix[4] = '/';
+		resPrefix[5] = '\0';
+
+		return m_zipFileProxy->HasPrefix(resPrefix);
+	}
+
+	bool ResourceArchive::IndexResource(const ResTypeID &resTypeID, int id, size_t &outIndex, int &outValidationRule) const
 	{
 		const char *extension = ".bin";
-		ResourceValidationRule_t validationRule = ResourceValidationRules::kNone;
+		outValidationRule = ResourceValidationRules::kNone;
 
 		if (resTypeID == ResTypeID('snd '))
 		{
 			extension = ".wav";
-			validationRule = ResourceValidationRules::kWAV;
+			outValidationRule = ResourceValidationRules::kWAV;
 		}
 		else if (resTypeID == ResTypeID('Date') || resTypeID == ResTypeID('PICT'))
 		{
 			extension = ".bmp";
-			validationRule = ResourceValidationRules::kBMP;
+			outValidationRule = ResourceValidationRules::kBMP;
 		}
 		else if (resTypeID == ResTypeID('STR#'))
 			extension = ".txt";
@@ -320,7 +329,14 @@ namespace PortabilityLayer
 		snprintf(resourceFile, sizeof(resourceFile) - 1, "%s/%i%s", resTag.m_id, id, extension);
 
 		size_t index = 0;
-		if (!m_zipFileProxy->IndexFile(resourceFile, index))
+		return m_zipFileProxy->IndexFile(resourceFile, outIndex);
+	}
+
+	THandle<void> ResourceArchive::GetResource(const ResTypeID &resTypeID, int id, bool load)
+	{
+		int validationRule = 0;
+		size_t index = 0;
+		if (!IndexResource(resTypeID, id, index, validationRule))
 			return THandle<void>();
 
 		ResourceArchiveRef *ref = m_resourceHandles + index;
@@ -348,7 +364,7 @@ namespace PortabilityLayer
 				handle->m_contents = contents;
 				handle->m_size = ref->m_size;
 
-				if (!m_zipFileProxy->LoadFile(index, contents) || (validationRule != ResourceValidationRules::kNone && !ValidateResource(contents, ref->m_size, validationRule)))
+				if (!m_zipFileProxy->LoadFile(index, contents) || (validationRule != ResourceValidationRules::kNone && !ValidateResource(contents, ref->m_size, static_cast<ResourceValidationRule_t>(validationRule))))
 				{
 					MemoryManager::GetInstance()->Release(contents);
 					handle->m_contents = nullptr;

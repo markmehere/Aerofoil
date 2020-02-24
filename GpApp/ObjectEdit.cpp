@@ -2316,8 +2316,7 @@ void DrawThisRoomsObjects (void)
 		if (GetNumberOfLights(thisRoomNumber) <= 0)
 		{
 			surface->SetMaskMode(true);
-			surface->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
-			surface->FillRect(backSrcRect);
+			surface->FillRectWithPattern8x8(backSrcRect, *GetQDGlobalsGray(&dummyPattern));
 			surface->SetMaskMode(false);
 		}
 		

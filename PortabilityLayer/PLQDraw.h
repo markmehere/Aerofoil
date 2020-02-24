@@ -133,9 +133,11 @@ void CopyBitsConstrained(const BitMap *srcBitmap, BitMap *destBitmap, const Rect
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRect, const Rect *maskRect, const Rect *destRect);
 void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *constraintRect);
 
+void ImageInvert(const PixMap *invertMask, PixMap *targetBitmap, const Rect &srcRect, const Rect &destRect);
+
 bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMask);
 
-BitMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr);
+PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr);
 DrawSurface *GetWindowPort(WindowPtr window);
 
 // Computes A - B and returns it packed?

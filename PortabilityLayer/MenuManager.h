@@ -34,6 +34,11 @@ namespace PortabilityLayer
 		virtual void SetItemChecked(const THandle<Menu> &menu, unsigned int index, bool checked) = 0;
 		virtual bool SetItemText(const THandle<Menu> &menu, unsigned int index, const PLPasStr &str) = 0;
 
+		virtual bool GetMenuEnabled(const THandle<Menu> &menuHandle) const = 0;
+		virtual bool GetItemEnabled(const THandle<Menu> &menu, unsigned int index) const = 0;
+		virtual bool GetItemChecked(const THandle<Menu> &menu, unsigned int index) const = 0;
+		virtual PLPasStr GetItemText(const THandle<Menu> &menu, unsigned int index) const = 0;
+
 		virtual bool IsPointInMenuBar(const Vec2i &point) const = 0;
 
 		virtual bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) = 0;

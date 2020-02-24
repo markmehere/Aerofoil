@@ -328,11 +328,6 @@ namespace PortabilityLayer
 
 			if (isVisible)
 				widget->DrawControl(surface);
-			else
-			{
-				surface->SetForeColor(StdColors::Red());
-				surface->FrameRect(surface->m_port.GetRect());
-			}
 		}
 	}
 
@@ -621,7 +616,11 @@ namespace PortabilityLayer
 
 		WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-		WindowDef wdef = WindowDef::Create(rect, WindowStyleFlags::kAlert, visible, hasCloseBox, referenceConstant, positionSpec, title);
+		uint16_t styleFlags = WindowStyleFlags::kAlert;
+		if (hasCloseBox)
+			styleFlags |= PortabilityLayer::WindowStyleFlags::kCloseBox;
+
+		WindowDef wdef = WindowDef::Create(rect, styleFlags, visible, referenceConstant, positionSpec, title);
 		Window *window = wm->CreateWindow(wdef);
 		if (!window)
 		{

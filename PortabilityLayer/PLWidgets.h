@@ -10,6 +10,8 @@ struct Window;
 
 namespace PortabilityLayer
 {
+	class Widget;
+
 	namespace WidgetHandleStates
 	{
 		enum WidgetHandleState
@@ -22,6 +24,8 @@ namespace PortabilityLayer
 	}
 
 	typedef WidgetHandleStates::WidgetHandleState WidgetHandleState_t;
+
+	typedef void (*WidgetUpdateCallback_t)(Widget *control, int part);
 
 	struct WidgetBasicState
 	{
@@ -44,6 +48,7 @@ namespace PortabilityLayer
 		virtual bool Init(const WidgetBasicState &state) = 0;
 		virtual void Destroy() = 0;
 		virtual WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
+		virtual int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);
 		virtual void DrawControl(DrawSurface *surface);
 
 		virtual void SetMin(int32_t v);
@@ -61,6 +66,8 @@ namespace PortabilityLayer
 
 		virtual void SetString(const PLPasStr &str);
 		virtual PLPasStr GetString() const;
+
+		uint32_t GetReferenceConstant() const;
 
 		virtual void SetHighlightStyle(int16_t style);
 
@@ -87,6 +94,7 @@ namespace PortabilityLayer
 
 		Window *m_window;
 		Rect m_rect;
+		uint32_t m_referenceConstant;
 		int16_t m_state;
 		bool m_enabled;
 		bool m_visible;

@@ -12,6 +12,7 @@
 #include "Objects.h"
 #include "Play.h"
 #include "Player.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 #include "Room.h"
 #include "RubberBands.h"
@@ -148,7 +149,7 @@ void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 	dest = thisGlider->dest;
 	QOffsetRect(&dest, playOriginH - 20, playOriginV - 16);
 	
-	SetPort((GrafPtr)workSrcMap);
+	SetPort(&workSrcMap->m_port);
 
 	long numMirrorRects = GetHandleSize(mirrorRects.StaticCast<void>()) / sizeof(Rect);
 

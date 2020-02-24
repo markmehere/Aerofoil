@@ -108,7 +108,7 @@ void OpenMessageWindow (const PLPasStr &title)
 	
 	SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 
-	const PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mssgWindowRect, windowStyle, false, false, 0, 0, title);
+	const PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mssgWindowRect, windowStyle, false, 0, 0, title);
 
 	mssgWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(wdef);
 

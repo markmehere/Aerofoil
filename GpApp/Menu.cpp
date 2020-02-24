@@ -747,7 +747,7 @@ short QueryResumeGame (void)
 	theDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kResumeGameDial, kPutInFront, &substitutions);
 	if (theDial == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort((GrafPtr)theDial);
+	SetPort(&theDial->GetWindow()->GetDrawSurface()->m_port);
 	
 	ShowWindow(theDial->GetWindow());
 	DrawDefaultButton(theDial);

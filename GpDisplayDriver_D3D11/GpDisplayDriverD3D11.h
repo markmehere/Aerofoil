@@ -11,7 +11,8 @@
 #include "GpPixelFormat.h"
 
 struct GpWindowsGlobals;
-struct IGpColorCursor_Win32;
+struct IGpCursor_Win32;
+struct IGpCursor;
 struct IGpFiber;
 
 struct IDXGISwapChain1;
@@ -37,10 +38,10 @@ public:
 	void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) override;
 
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) override;
-	void DrawSurface(IGpDisplayDriverSurface *surface, size_t x, size_t y, size_t width, size_t height) override;
+	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height) override;
 
-	IGpColorCursor *LoadColorCursor(int cursorID) override;
-	void SetColorCursor(IGpColorCursor *colorCursor) override;
+	IGpCursor *LoadCursor(bool isColor, int cursorID) override;
+	void SetCursor(IGpCursor *cursor) override;
 	void SetStandardCursor(EGpStandardCursor_t standardCursor) override;
 
 	void UpdatePalette(const void *paletteData) override;
@@ -109,8 +110,8 @@ private:
 	DWORD m_windowWidth;
 	DWORD m_windowHeight;
 
-	IGpColorCursor_Win32 *m_activeCursor;
-	IGpColorCursor_Win32 *m_pendingCursor;
+	IGpCursor_Win32 *m_activeCursor;
+	IGpCursor_Win32 *m_pendingCursor;
 	EGpStandardCursor_t m_currentStandardCursor;
 	EGpStandardCursor_t m_pendingStandardCursor;
 	bool m_mouseIsInClientArea;
@@ -119,5 +120,7 @@ private:
 	GpWindowsGlobals *m_osGlobals;
 
 	HCURSOR m_arrowCursor;
+	HCURSOR m_waitCursor;
+	HCURSOR m_ibeamCursor;
 	HWND m_hwnd;
 };

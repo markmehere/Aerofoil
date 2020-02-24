@@ -28,6 +28,8 @@
 void UpdateGoToDialog (Dialog *);
 Boolean GoToFilter (Dialog *, EventRecord *, short *);
 
+extern PortabilityLayer::ResourceArchive	*houseResFork;
+
 
 houseHand	thisHouse;
 linksPtr	linksList;
@@ -241,11 +243,7 @@ void WhereDoesGliderBegin (Rect *theRect, short mode)
 
 Boolean HouseHasOriginalPicts (void)
 {
-	short		nPicts;
-
-	PL_NotYetImplemented();	nPicts = 0;
-	//nPicts = Count1Resources('PICT');
-	return (nPicts > 0);
+	return houseResFork->HasAnyResourcesOfType('PICT');
 }
 
 //--------------------------------------------------------------  CountHouseLinks

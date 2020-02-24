@@ -789,7 +789,7 @@ Boolean AddNewObject (Point where, short what, Boolean showItNow)
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 		GetThisRoomsObjRects();
 		DrawThisRoomsObjects();
-		InvalWindowRect(mainWindow, &mainWindowRect);
+		UpdateMainWindow();
 		
 		if (handled)
 		{

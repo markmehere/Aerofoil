@@ -14,6 +14,7 @@
 #include "House.h"
 #include "InputManager.h"
 #include "MenuManager.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 #include "PLKeyEncoding.h"
 #include "PLStandardColors.h"
@@ -35,10 +36,8 @@ CTabHandle		theCTab;
 PixMapHandle	thePMap;
 ColorSpec *		wasColors;
 ColorSpec *		newColors;
-CursHandle		handCursorH, vertCursorH, horiCursorH;
-CursHandle		diagCursorH;
-Cursor			handCursor, vertCursor, horiCursor;
-Cursor			diagCursor;
+IGpCursor		*handCursor, *vertCursor, *horiCursor;
+IGpCursor		*diagCursor;
 Rect			workSrcRect;
 DrawSurface		*workSrcMap;
 Rect			mainWindowRect;
@@ -209,8 +208,8 @@ void OpenMainWindow (void)
 		
 		if (OptionKeyDown())
 		{
-			isEditH = 3;
-			isEditV = 41;
+			isEditH = 10;
+			isEditV = 46;
 		}
 		MoveWindow(mainWindow, isEditH, isEditV, true);
 		ShowWindow(mainWindow);
@@ -242,7 +241,7 @@ void OpenMainWindow (void)
 			Rect scorebarRect = thisMac.screen;
 			scorebarRect.bottom = scorebarRect.top + kScoreboardTall;
 
-			PortabilityLayer::WindowDef windowDef = PortabilityLayer::WindowDef::Create(scorebarRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, false, 0, 0, PSTR("Scoreboard"));
+			PortabilityLayer::WindowDef windowDef = PortabilityLayer::WindowDef::Create(scorebarRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, 0, 0, PSTR("Scoreboard"));
 			boardWindow = windowManager->CreateWindow(windowDef);
 			if (boardWindow != nil)
 				windowManager->PutWindowBehind(boardWindow, PL_GetPutInFrontWindowPtr());

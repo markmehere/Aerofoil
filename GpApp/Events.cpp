@@ -442,7 +442,7 @@ void HandleIdleTask (void)
 {
 	if (theMode == kEditMode)
 	{
-		SetPort((GrafPtr)mainWindow);
+		SetPort(&mainWindow->GetDrawSurface()->m_port);
 		DoMarquee();
 		
 		if ((autoRoomEdit) && (newRoomNow))

@@ -9,6 +9,7 @@
 #include "Environ.h"
 #include "MainWindow.h"
 #include "Objects.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 #include "Room.h"
 #include "Utilities.h"

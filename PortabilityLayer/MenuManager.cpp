@@ -131,6 +131,11 @@ namespace PortabilityLayer
 		void SetItemChecked(const THandle<Menu> &menu, unsigned int index, bool checked) override;
 		bool SetItemText(const THandle<Menu> &menu, unsigned int index, const PLPasStr &str) override;
 
+		bool GetMenuEnabled(const THandle<Menu> &menuHandle) const override;
+		bool GetItemEnabled(const THandle<Menu> &menu, unsigned int index) const override;
+		bool GetItemChecked(const THandle<Menu> &menu, unsigned int index) const override;
+		PLPasStr GetItemText(const THandle<Menu> &menu, unsigned int index) const override;
+
 		bool IsPointInMenuBar(const Vec2i &point) const override;
 
 		bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) override;
@@ -515,6 +520,42 @@ namespace PortabilityLayer
 		menuPtr->stringBlobHandle = newHandle.MMBlock();
 
 		return true;
+	}
+
+	bool MenuManagerImpl::GetMenuEnabled(const THandle<Menu> &menuHandle) const
+	{
+		const Menu *menu = (*menuHandle);
+		return menu->enabled;
+	}
+
+	bool MenuManagerImpl::GetItemEnabled(const THandle<Menu> &menuHandle, unsigned int index) const
+	{
+		const Menu *menu = (*menuHandle);
+		if (index >= menu->numMenuItems)
+			return false;
+
+		return menu->menuItems[index].enabled;
+	}
+
+	bool MenuManagerImpl::GetItemChecked(const THandle<Menu> &menuHandle, unsigned int index) const
+	{
+		const Menu *menu = (*menuHandle);
+		if (index >= menu->numMenuItems)
+			return false;
+
+		return menu->menuItems[index].checked;
+	}
+
+	PLPasStr MenuManagerImpl::GetItemText(const THandle<Menu> &menuHandle, unsigned int index) const
+	{
+		const Menu *menu = (*menuHandle);
+		if (index >= menu->numMenuItems)
+			return PSTR("");
+
+		const uint32_t nameOffset = menu->menuItems[index].nameOffsetInStringBlob;
+
+		const uint8_t *pstr = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents) + nameOffset;
+		return PLPasStr(pstr);
 	}
 
 	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const

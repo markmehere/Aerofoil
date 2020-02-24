@@ -397,7 +397,9 @@ void GetDialogString (Dialog *theDialog, short item, StringPtr theString)
 
 void SetDialogString (Dialog *theDialog, short item, const PLPasStr &theString)
 {
-	theDialog->GetItems()[item - 1].GetWidget()->SetString(theString);
+	PortabilityLayer::Widget *widget = theDialog->GetItems()[item - 1].GetWidget();
+	widget->SetString(theString);
+	widget->DrawControl(theDialog->GetWindow()->GetDrawSurface());
 }
 
 //--------------------------------------------------------------  GetDialogStringLen

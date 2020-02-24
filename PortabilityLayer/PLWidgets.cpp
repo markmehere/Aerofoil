@@ -22,6 +22,11 @@ namespace PortabilityLayer
 		return WidgetHandleStates::kIgnored;
 	}
 
+	int16_t Widget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	{
+		return 0;
+	}
+
 	void Widget::DrawControl(DrawSurface *surface)
 	{
 		(void)surface;
@@ -107,6 +112,11 @@ namespace PortabilityLayer
 		return PSTR("");
 	}
 
+	uint32_t Widget::GetReferenceConstant() const
+	{
+		return m_referenceConstant;
+	}
+
 	const Rect &Widget::GetRect() const
 	{
 		return m_rect;
@@ -121,6 +131,7 @@ namespace PortabilityLayer
 		: m_rect(state.m_rect)
 		, m_window(state.m_window)
 		, m_enabled(state.m_enabled)
+		, m_referenceConstant(state.m_refConstant)
 		, m_state(state.m_state)
 		, m_visible(true)
 	{

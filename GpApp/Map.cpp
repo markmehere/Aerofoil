@@ -17,6 +17,7 @@
 #include "PLWidgets.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 #include "Utilities.h"
 
@@ -111,8 +112,7 @@ void FlagMapRoomsForUpdate (void)
 		return;
 	
 //	SetPortWindowPort(mapWindow);
-	InvalWindowRect(mapWindow, &wasActiveRoomRect);
-	InvalWindowRect(mapWindow, &activeRoomRect);
+	UpdateMapWindow();
 }
 #endif
 
@@ -343,8 +343,8 @@ void ResizeMapWindow (short newH, short newV)
 	mapVScroll->SetPosition(Point::Create(mapWindowRect.right - kMapScrollBarWidth + 2, 0));
 	mapVScroll->Resize(kMapScrollBarWidth, mapWindowRect.bottom - kMapScrollBarWidth + 3);
 	mapTopRoom = mapVScroll->GetState();
-	
-	InvalWindowRect(mapWindow, &mapWindowRect);
+
+	UpdateMapWindow();
 #endif
 }
 
@@ -362,9 +362,9 @@ void OpenMapWindow (void)
 				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 2, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 2);
 
-		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kResizable | PortabilityLayer::WindowStyleFlags::kMiniBar;
+		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kResizable | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;;
 
-		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mapWindowRect, windowStyle, false, true, 0, 0, PSTR("Map"));
+		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mapWindowRect, windowStyle, false, 0, 0, PSTR("Map"));
 		
 		mapWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(wdef);
 
@@ -386,7 +386,7 @@ void OpenMapWindow (void)
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(mapWindow);
 //		FlagWindowFloating(mapWindow);	TEMP - use flaoting windows
 		
-		SetPort((GrafPtr)mapWindow);
+		SetPort(&mapWindow->GetDrawSurface()->m_port);
 		QSetRect(&mapHScrollRect, -1, mapRoomsHigh * kMapRoomHeight, 
 				mapRoomsWide * kMapRoomWidth + 1, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth);
@@ -425,6 +425,8 @@ void OpenMapWindow (void)
 				mapWindowRect.bottom + 2);
 		
 		CenterMapOnRoom(thisRoom->suite, thisRoom->floor);
+
+		UpdateMapWindow();
 	}
 	
 	UpdateMapCheckmark(true);
@@ -579,7 +581,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 {
 #ifndef COMPILEDEMO
 	Rect				aRoom;
-	ControlHandle		whichControl;
+	PortabilityLayer::Widget	*whichControl = nullptr;
 	Point				wherePt, globalWhere;
 	long				controlRef;
 	short				whichPart, localH, localV;
@@ -665,7 +667,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 	}
 	else
 	{
-		controlRef = GetControlReference(whichControl);
+		controlRef = whichControl->GetReferenceConstant();
 		if (controlRef == kHScrollRef)
 		{
 			switch (whichPart)
@@ -683,7 +685,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 				case kControlIndicatorPart:
 				if (TrackControl(whichControl, wherePt, nil))
 				{
-					mapLeftRoom = GetControlValue(whichControl);
+					mapLeftRoom = whichControl->GetState();
 					RedrawMapContents();
 				}
 				break;
@@ -706,7 +708,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 				case kControlIndicatorPart:
 				if (TrackControl(whichControl, wherePt, nil))
 				{
-					mapTopRoom = GetControlValue(whichControl);
+					mapTopRoom = whichControl->GetState();
 					RedrawMapContents();
 				}
 				break;

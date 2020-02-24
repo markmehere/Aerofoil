@@ -6,10 +6,14 @@
 
 
 #include "Externs.h"
+#include "HostDisplayDriver.h"
+#include "IGpDisplayDriver.h"
 #include "Marquee.h"
 #include "Objects.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
+
+#include <assert.h>
 
 
 #define	kMarqueePatListID		128
@@ -25,7 +29,7 @@ Rect		marqueeGliderRect;
 Boolean		gliderMarqueeUp;
 
 
-extern	Cursor		handCursor, vertCursor, horiCursor, diagCursor;
+extern	IGpCursor	*handCursor, *vertCursor, *horiCursor, *diagCursor;
 extern	Rect		leftStartGliderSrc;
 
 
@@ -216,7 +220,7 @@ void DragMarqueeRect (DrawSurface *surface, Point start, Rect *theRect, Boolean 
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
 	
-	SetCursor(&handCursor);
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(handCursor);
 	StopMarquee();
 
 	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
@@ -259,9 +263,9 @@ void DragMarqueeHandle (DrawSurface *surface, Point start, short *dragged)
 	short		deltaH, deltaV;
 	
 	if ((theMarquee.direction == kAbove) || (theMarquee.direction == kBelow))
-		SetCursor(&vertCursor);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(vertCursor);
 	else
-		SetCursor(&horiCursor);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(horiCursor);
 	StopMarquee();
 
 	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
@@ -344,7 +348,7 @@ void DragMarqueeCorner (DrawSurface *surface, Point start, short *hDragged, shor
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
 	
-	SetCursor(&diagCursor);
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(diagCursor);
 	StopMarquee();
 
 	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
@@ -428,11 +432,9 @@ Boolean PtInMarqueeHandle (Point where)
 
 void DrawGliderMarquee (void)
 {
-	CopyBits((BitMap *)*GetGWorldPixMap(blowerMaskMap), 
-			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
-			&leftStartGliderSrc, 
-			&marqueeGliderRect, 
-			srcXor);
+	DrawSurface *surface = GetWindowPort(mainWindow);
+	ImageInvert(*GetGWorldPixMap(blowerMaskMap), GetPortBitMapForCopyBits(surface), leftStartGliderSrc, marqueeGliderRect);
+	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 //--------------------------------------------------------------  SetMarqueeGliderCenter
@@ -488,7 +490,7 @@ void DrawMarquee (DrawSurface *surface, const uint8_t *pattern)
 			break;
 		}
 
-		surface->InvertDrawLine(points[0], points[1], pattern);
+		surface->InvertFillRect(Rect::Create(points[0].v, points[0].h, points[1].v, points[1].h), pattern);
 	}
 	
 	if (gliderMarqueeUp)

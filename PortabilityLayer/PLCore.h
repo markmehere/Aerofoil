@@ -15,7 +15,7 @@
 
 template<class T>
 class ArrayView;
-struct IGpColorCursor;
+struct IGpCursor;
 struct GpVOSEvent;
 struct GpMouseInputEvent;
 struct TimeTaggedVOSEvent;
@@ -71,6 +71,21 @@ struct Cursor
 {
 };
 
+namespace WindowChromeSides
+{
+	enum WindowChromeSide
+	{
+		kTop,
+		kLeft,
+		kBottom,
+		kRight,
+
+		kCount
+	};
+}
+
+typedef WindowChromeSides::WindowChromeSide WindowChromeSide_t;
+
 struct Window
 {
 	Window();
@@ -84,6 +99,8 @@ struct Window
 	Point TopLeftCoord() const;
 
 	bool AddWidget(PortabilityLayer::Widget *widget);
+	ArrayView<PortabilityLayer::Widget*> GetWidgets() const;
+	PortabilityLayer::Widget* GetWidgetById() const;
 
 	void FocusWidget(PortabilityLayer::Widget *widget);
 	PortabilityLayer::Widget *GetWidgetWithFocus() const;
@@ -93,7 +110,7 @@ struct Window
 
 	void OnTick();
 
-	ArrayView<PortabilityLayer::Widget*> GetWidgets() const;
+	DrawSurface *GetChromeSurface(WindowChromeSide_t aChromeSide) const;
 
 	DrawSurface m_surface;	// Must be the first item until the immediate mode draw API is completely removed
 
@@ -104,6 +121,8 @@ struct Window
 
 protected:
 	~Window();
+
+	DrawSurface m_chromeSurfaces[WindowChromeSides::kCount];
 
 	PortabilityLayer::Widget **m_widgets;
 	size_t m_numWidgets;
@@ -225,9 +244,6 @@ void InitCursor();
 CursHandle GetCursor(int cursorID);
 void HideCursor();
 
-void SetCursor(CursPtr cursor);
-void SetBuiltinCursor(int builtinCursor);
-
 void Delay(int ticks, UInt32 *endTickCount);
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
@@ -243,8 +259,8 @@ void DisposeWindow(WindowPtr window);
 void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect);
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind);
-WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, Boolean hasCloseBox, long userdata);
-WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, Boolean hasCloseBox, long userdata);
+WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata);
+WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata);
 void SizeWindow(WindowPtr window, int width, int height, Boolean addToUpdateRegion);
 void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront);
 void ShowWindow(WindowPtr window);
@@ -288,7 +304,6 @@ void InvalWindowRect(WindowPtr window, const Rect *rect);
 Handle NewHandle(Size size);
 long GetHandleSize(Handle handle);
 
-PLError_t PtrAndHand(const void *data, Handle handle, Size size);	// Appends data to the end of a handle
 PLError_t SetHandleSize(Handle hdl, Size newSize);
 
 void *NewPtr(Size size);

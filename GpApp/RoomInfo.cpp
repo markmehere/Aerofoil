@@ -14,7 +14,11 @@
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
+#include "HostDisplayDriver.h"
+#include "IGpDisplayDriver.h"
 #include "RectUtils.h"
+#include "PLTimeTaggedVOSEvent.h"
+#include "QDPixMap.h"
 #include "ResourceCompiledRef.h"
 #include "ResourceManager.h"
 #include "Utilities.h"
@@ -41,7 +45,8 @@
 void UpdateRoomInfoDialog (Dialog *);
 void DragMiniTile (DrawSurface *, Point, short *);
 void HiliteTileOver (DrawSurface *, Point);
-Boolean RoomFilter (Dialog *, EventRecord *, short *);
+int16_t RoomFilter (Dialog *dialog, const TimeTaggedVOSEvent *evt);
+
 short ChooseOriginalArt (short);
 void UpdateOriginalArt (Dialog *);
 Boolean OriginalArtFilter (Dialog *, EventRecord *, short *);
@@ -58,7 +63,7 @@ short		tileOver, tempBack, cursorIs;
 Boolean		originalLeftOpen, originalTopOpen, originalRightOpen, originalBottomOpen;
 Boolean		originalFloor;
 
-extern	Cursor		handCursor;
+extern	IGpCursor	*handCursor;
 extern	short		lastBackground;
 
 
@@ -71,7 +76,6 @@ void UpdateRoomInfoDialog (Dialog *theDialog)
 	Rect		src, dest;
 	short		i;
 	
-	DrawDialog(theDialog);
 	if (tempBack >= kUserBackground)
 		SetPopUpMenuValue(theDialog, kRoomPopupItem, kOriginalArtworkItem);
 	else
@@ -81,7 +85,7 @@ void UpdateRoomInfoDialog (Dialog *theDialog)
 	
 	
 	CopyBits(GetPortBitMapForCopyBits(tileSrcMap), 
-			GetPortBitMapForCopyBits(GetDialogPort(theDialog)), 
+			GetPortBitMapForCopyBits(theDialog->GetWindow()->GetDrawSurface()),
 			&tileSrcRect, &tileSrc, srcCopy);
 	/*
 	CopyBits(&((GrafPtr)tileSrcMap)->portBits, 
@@ -96,7 +100,7 @@ void UpdateRoomInfoDialog (Dialog *theDialog)
 		QOffsetRect(&src, tempTiles[i] * kMiniTileWide, 0);
 		
 		CopyBits(GetPortBitMapForCopyBits(tileSrcMap), 
-				GetPortBitMapForCopyBits(GetDialogPort(theDialog)), 
+				GetPortBitMapForCopyBits(theDialog->GetWindow()->GetDrawSurface()),
 				&src, &dest, srcCopy);
 		/*
 		CopyBits(&((GrafPtr)tileSrcMap)->portBits, 
@@ -263,7 +267,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 	{
 		if (cursorIs != kHandCursor)
 		{
-			SetCursor(&handCursor);
+			PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(handCursor);
 			cursorIs = kHandCursor;
 		}
 		
@@ -327,7 +331,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 		{
 			if (cursorIs != kBeamCursor)
 			{
-				SetBuiltinCursor(iBeamCursor);
+				PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kIBeam);
 				cursorIs = kBeamCursor;
 			}
 		}
@@ -346,78 +350,66 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 //--------------------------------------------------------------  RoomFilter
 #ifndef COMPILEDEMO
 
-Boolean RoomFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	Point		mouseIs;
 	short		newTileOver;
 
+	if (!evt)
+		return -1;
+
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
-	
-	switch (event->what)
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+			return kOkayButton;
 
-			case PL_KEY_SPECIAL(kEscape):
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
+			return kCancelButton;
 
-			case PL_KEY_SPECIAL(kTab):
+		case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kRoomNameItem, 0, 1024);
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		mouseIs = event->where;
-		mouseIs -= dial->GetWindow()->TopLeftCoord();
-		if (tileSrc.Contains(mouseIs))
-		{
-			if (StillDown())
-			{
-				DragMiniTile(surface, mouseIs, &newTileOver);
-				if ((newTileOver >= 0) && (newTileOver < kNumTiles))
-				{
-					tempTiles[newTileOver] = tileOver;
-					UpdateRoomInfoDialog(dial);
-				}
-			}
-			return(true);
-		}
-		else
-			return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateRoomInfoDialog(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return 0;
+
 		default:
-		GetMouse(&mouseIs);
-		HiliteTileOver(surface, mouseIs);
-		return(false);
-		break;
+			return -1;
+		}
+	}
+	else if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+	{
+		const GpMouseInputEvent &mouseEvent = evt->m_vosEvent.m_event.m_mouseInputEvent;
+
+		if (evt->IsLMouseDownEvent())
+		{
+			mouseIs = Point::Create(mouseEvent.m_x, mouseEvent.m_y);
+			mouseIs -= dial->GetWindow()->TopLeftCoord();
+			if (tileSrc.Contains(mouseIs))
+			{
+				if (StillDown())
+				{
+					DragMiniTile(surface, mouseIs, &newTileOver);
+					if ((newTileOver >= 0) && (newTileOver < kNumTiles))
+					{
+						tempTiles[newTileOver] = tileOver;
+						UpdateRoomInfoDialog(dial);
+					}
+				}
+				return 0;
+			}
+			else
+				return -1;
+		}
+		else if (mouseEvent.m_eventType == GpMouseEventTypes::kMove)
+		{
+			mouseIs = dial->GetWindow()->MouseToLocal(mouseEvent);
+			HiliteTileOver(surface, mouseIs);
+		}
 	}
 }
 #endif
@@ -470,7 +462,7 @@ void DoRoomInfo (void)
 	roomInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kRoomInfoDialogID, kPutInFront, &substitutions);
 	if (roomInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort((GrafPtr)roomInfoDialog);
+	SetPort(&roomInfoDialog->GetWindow()->GetDrawSurface()->m_port);
 	
 	// Fix this later.  TEMP
 //	AddMenuToPopUp(roomInfoDialog, kRoomPopupItem, backgroundsMenu);
@@ -497,10 +489,12 @@ void DoRoomInfo (void)
 		MyDisableControl(roomInfoDialog, kBoundsButton);
 	
 	leaving = false;
+
+	UpdateRoomInfoDialog(roomInfoDialog);
 	
 	while (!leaving)
 	{
-		ModalDialog(RoomFilter, &item);
+		item = roomInfoDialog->ExecuteModal(RoomFilter);
 		
 		if (item == kOkayButton)
 		{

@@ -7,14 +7,18 @@
 
 #include "DeflateCodec.h"
 
+#include <algorithm>
+
 namespace
 {
-	static int ZipDirectorySearchPredicate(const char *path, PortabilityLayer::ZipCentralDirectoryFileHeader *item)
+	static const char *GetZipItemName(const PortabilityLayer::UnalignedPtr<PortabilityLayer::ZipCentralDirectoryFileHeader> &itemPtr)
 	{
-		const uint16_t fnameLength = item->m_fileNameLength;
-		const char *itemPath = reinterpret_cast<const char*>(item) + sizeof(PortabilityLayer::ZipCentralDirectoryFileHeader);
+		return reinterpret_cast<const char*>(itemPtr.GetRawPtr()) + sizeof(PortabilityLayer::ZipCentralDirectoryFileHeader);
+	}
 
-		for (size_t i = 0; i < fnameLength; i++)
+	static int ZipDirectorySearchPredicateResolved(const char *path, const char *itemPath, uint16_t itemPathLength)
+	{
+		for (size_t i = 0; i < itemPathLength; i++)
 		{
 			const uint8_t pathC = static_cast<uint8_t>(path[i] & 0xff);
 
@@ -29,10 +33,18 @@ namespace
 				return 1;
 		}
 
-		if (path[fnameLength] == 0)
+		if (path[itemPathLength] == 0)
 			return 0;
 		else
 			return 1;
+	}
+
+	static int ZipDirectorySearchPredicate(const char *path, const PortabilityLayer::UnalignedPtr<PortabilityLayer::ZipCentralDirectoryFileHeader> &itemPtr)
+	{
+		const uint16_t fnameLength = itemPtr.Get().m_fileNameLength;
+		const char *itemPath = GetZipItemName(itemPtr);
+
+		return ZipDirectorySearchPredicateResolved(path, itemPath, fnameLength);
 	}
 
 	static int ZipDirectorySortPredicate(const void *a, const void *b)
@@ -93,7 +105,7 @@ namespace PortabilityLayer
 
 	bool ZipFileProxy::IndexFile(const char *path, size_t &outIndex) const
 	{
-		PortabilityLayer::ZipCentralDirectoryFileHeader **indexLoc = BinarySearch(m_sortedFiles, m_sortedFiles + m_numFiles, path, ZipDirectorySearchPredicate);
+		UnalignedPtr<ZipCentralDirectoryFileHeader> *indexLoc = BinarySearch(m_sortedFiles, m_sortedFiles + m_numFiles, path, ZipDirectorySearchPredicate);
 		const size_t index = static_cast<size_t>(indexLoc - m_sortedFiles);
 
 		if (index == m_numFiles)
@@ -105,11 +117,57 @@ namespace PortabilityLayer
 		}
 	}
 
+
+	bool ZipFileProxy::HasPrefix(const char *prefix) const
+	{
+		size_t prefixLen = strlen(prefix);
+
+		size_t firstFile = 0;
+		size_t lastFileExclusive = m_numFiles;
+		size_t midFile = (firstFile + lastFileExclusive) / 2;
+
+		while (firstFile != lastFileExclusive)
+		{
+			const UnalignedPtr<PortabilityLayer::ZipCentralDirectoryFileHeader> itemPtr = m_sortedFiles[midFile];
+			const PortabilityLayer::ZipCentralDirectoryFileHeader item = itemPtr.Get();
+			const uint16_t itemNameLength = item.m_fileNameLength;
+			const char *itemPath = GetZipItemName(itemPtr);
+
+			const int delta = ZipDirectorySearchPredicateResolved(prefix, itemPath, itemNameLength);
+
+			// -1 = path precedes item, 1 = path succeeds item
+			if (delta < 0)
+			{
+				lastFileExclusive = midFile;
+				midFile = (firstFile + lastFileExclusive) / 2;
+			}
+			else if (delta > 0)
+			{
+				const bool isPathPrefix = ((itemNameLength > prefixLen) && !memcmp(prefix, itemPath, prefixLen));
+				if (isPathPrefix)
+					return true;
+				else
+				{
+					firstFile = midFile + 1;
+					midFile = (firstFile + lastFileExclusive) / 2;
+				}
+			}
+			else //if(delta == 0)
+			{
+				// Found the directory
+				firstFile = midFile + 1;
+				midFile = (firstFile + lastFileExclusive) / 2;
+			}
+		}
+
+		return false;
+	}
+
 	bool ZipFileProxy::LoadFile(size_t index, void *outBuffer)
 	{
-		ZipCentralDirectoryFileHeader *centralDirHeader = m_sortedFiles[index];
+		ZipCentralDirectoryFileHeader centralDirHeader = m_sortedFiles[index].Get();
 
-		if (!m_stream->SeekStart(centralDirHeader->m_localHeaderOffset))
+		if (!m_stream->SeekStart(centralDirHeader.m_localHeaderOffset))
 			return false;
 
 		ZipFileLocalHeader localHeader;
@@ -119,15 +177,15 @@ namespace PortabilityLayer
 		if (!m_stream->SeekCurrent(localHeader.m_fileNameLength + localHeader.m_extraFieldLength))
 			return false;
 
-		if (localHeader.m_compressedSize != centralDirHeader->m_compressedSize || localHeader.m_uncompressedSize != centralDirHeader->m_uncompressedSize || localHeader.m_method != centralDirHeader->m_method)
+		if (localHeader.m_compressedSize != centralDirHeader.m_compressedSize || localHeader.m_uncompressedSize != centralDirHeader.m_uncompressedSize || localHeader.m_method != centralDirHeader.m_method)
 			return false;
 
-		const size_t uncompressedSize = centralDirHeader->m_uncompressedSize;
+		const size_t uncompressedSize = centralDirHeader.m_uncompressedSize;
 		if (localHeader.m_method == PortabilityLayer::ZipConstants::kStoredMethod)
 			return m_stream->Read(outBuffer, uncompressedSize) == uncompressedSize;
 		else if (localHeader.m_method == PortabilityLayer::ZipConstants::kDeflatedMethod)
 		{
-			const size_t compressedSize = centralDirHeader->m_compressedSize;
+			const size_t compressedSize = centralDirHeader.m_compressedSize;
 
 			return DeflateCodec::DecompressStream(m_stream, compressedSize, outBuffer, uncompressedSize);
 		}
@@ -142,7 +200,7 @@ namespace PortabilityLayer
 
 	size_t ZipFileProxy::GetFileSize(size_t index) const
 	{
-		return m_sortedFiles[index]->m_uncompressedSize;
+		return m_sortedFiles[index].Get().m_uncompressedSize;
 	}
 
 	ZipFileProxy *ZipFileProxy::Create(IOStream *stream)
@@ -164,7 +222,7 @@ namespace PortabilityLayer
 
 		const size_t centralDirSize = eocd.m_centralDirectorySizeBytes;
 		void *centralDirImage = nullptr;
-		ZipCentralDirectoryFileHeader **centralDirFiles = nullptr;
+		UnalignedPtr<ZipCentralDirectoryFileHeader> *centralDirFiles = nullptr;
 
 		const size_t numFiles = eocd.m_numCentralDirRecords;
 
@@ -174,7 +232,7 @@ namespace PortabilityLayer
 			if (!centralDirImage)
 				return nullptr;
 
-			centralDirFiles = static_cast<ZipCentralDirectoryFileHeader **>(mm->Alloc(sizeof(ZipCentralDirectoryFileHeader*) * numFiles));
+			centralDirFiles = static_cast<UnalignedPtr<ZipCentralDirectoryFileHeader>*>(mm->Alloc(sizeof(UnalignedPtr<ZipCentralDirectoryFileHeader>) * numFiles));
 			if (!centralDirFiles)
 			{
 				mm->Release(centralDirImage);
@@ -203,46 +261,48 @@ namespace PortabilityLayer
 				break;
 			}
 
-			ZipCentralDirectoryFileHeader *centralDirHeader = reinterpret_cast<ZipCentralDirectoryFileHeader*>(centralDirCursor);
+			UnalignedPtr<ZipCentralDirectoryFileHeader> centralDirHeaderPtr = UnalignedPtr<ZipCentralDirectoryFileHeader>(reinterpret_cast<ZipCentralDirectoryFileHeader*>(centralDirCursor));
+			ZipCentralDirectoryFileHeader centralDirHeader = centralDirHeaderPtr.Get();
+
 			centralDirCursor += sizeof(ZipCentralDirectoryFileHeader);
 
-			if (centralDirHeader->m_signature != ZipCentralDirectoryFileHeader::kSignature)
+			if (centralDirHeader.m_signature != ZipCentralDirectoryFileHeader::kSignature)
 			{
 				failed = true;
 				break;
 			}
 
-			if (centralDirEnd - centralDirCursor < centralDirHeader->m_fileNameLength)
+			if (centralDirEnd - centralDirCursor < centralDirHeader.m_fileNameLength)
 			{
 				failed = true;
 				break;
 			}
 
-			if (!CheckAndFixFileName(centralDirCursor, centralDirHeader->m_fileNameLength))
+			if (!CheckAndFixFileName(centralDirCursor, centralDirHeader.m_fileNameLength))
 			{
 				failed = true;
 				break;
 			}
 
-			centralDirCursor += centralDirHeader->m_fileNameLength;
+			centralDirCursor += centralDirHeader.m_fileNameLength;
 
-			if (centralDirEnd - centralDirCursor < centralDirHeader->m_extraFieldLength)
+			if (centralDirEnd - centralDirCursor < centralDirHeader.m_extraFieldLength)
 			{
 				failed = true;
 				break;
 			}
 
-			centralDirCursor += centralDirHeader->m_extraFieldLength;
+			centralDirCursor += centralDirHeader.m_extraFieldLength;
 
-			if (centralDirEnd - centralDirCursor < centralDirHeader->m_commentLength)
+			if (centralDirEnd - centralDirCursor < centralDirHeader.m_commentLength)
 			{
 				failed = true;
 				break;
 			}
 
-			centralDirCursor += centralDirHeader->m_commentLength;
+			centralDirCursor += centralDirHeader.m_commentLength;
 
-			centralDirFiles[i] = centralDirHeader;
+			centralDirFiles[i] = centralDirHeaderPtr;
 		}
 
 		if (failed)
@@ -277,7 +337,7 @@ namespace PortabilityLayer
 		return new (storage) ZipFileProxy(stream, centralDirImage, centralDirFiles, numFiles);
 	}
 
-	ZipFileProxy::ZipFileProxy(IOStream *stream, void *centralDirImage, ZipCentralDirectoryFileHeader **sortedFiles, size_t numFiles)
+	ZipFileProxy::ZipFileProxy(IOStream *stream, void *centralDirImage, UnalignedPtr<ZipCentralDirectoryFileHeader> *sortedFiles, size_t numFiles)
 		: m_stream(stream)
 		, m_centralDirImage(centralDirImage)
 		, m_sortedFiles(sortedFiles)

@@ -5,7 +5,7 @@
 #include "GpPixelFormat.h"
 #include "EGpStandardCursor.h"
 
-struct IGpColorCursor;
+struct IGpCursor;
 struct IGpDisplayDriver;
 
 namespace PortabilityLayer

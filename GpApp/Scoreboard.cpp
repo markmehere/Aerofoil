@@ -11,6 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "MenuManager.h"
+#include "QDPixMap.h"
 #include "QDStandardPalette.h"
 #include "RectUtils.h"
 

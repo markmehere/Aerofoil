@@ -69,10 +69,12 @@ namespace PortabilityLayer
 			return false;	// Unsupported window style
 		}
 
+		if (wdefPart1.m_hasCloseBox != 0)
+			styleFlags |= WindowStyleFlags::kCloseBox;
+
 		m_initialRect = wdefPart1.m_initialRect.ToRect();
 		m_styleFlags = styleFlags;
 		m_visibilityStatus = wdefPart1.m_visibilityStatus;
-		m_hasCloseBox = wdefPart1.m_hasCloseBox;
 		m_referenceConstant = wdefPart1.m_referenceConstant;
 
 		m_title[0] = wdefPart1.m_titleLength;
@@ -87,17 +89,16 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	WindowDef WindowDef::Create(const Rect &initialRect, uint16_t styleFlags, bool isVisible, bool hasCloseBox, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title)
+	WindowDef WindowDef::Create(const Rect &initialRect, uint16_t styleFlags, bool isVisible, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title)
 	{
 		WindowDef wdef;
 		wdef.m_initialRect = initialRect;
 		wdef.m_styleFlags = styleFlags;
 		wdef.m_visibilityStatus = isVisible ? 1 : 0;
-		wdef.m_hasCloseBox = hasCloseBox ? 1 : 0;
 		wdef.m_referenceConstant = refConstant;
 		wdef.m_positionSpec = positionSpec;
 
-		const uint8_t titleLength = static_cast<uint8_t>(std::max<size_t>(255, title.Length()));
+		const uint8_t titleLength = static_cast<uint8_t>(std::min<size_t>(255, title.Length()));
 		wdef.m_title[0] = titleLength;
 		memcpy(wdef.m_title + 1, title.UChars(), titleLength);
 

@@ -8,10 +8,11 @@
 
 #undef CreateMutex
 #undef DeleteFile
-
+#undef LoadCursor
 
 struct IGpFiber;
-struct IGpColorCursor_Win32;
+struct IGpBWCursor_Win32;
+struct IGpCursor_Win32;
 struct IGpVOSEventQueue;
 
 struct GpWindowsGlobals
@@ -23,7 +24,6 @@ struct GpWindowsGlobals
 	int m_nCmdShow;
 
 	IGpFiber *(*m_createFiberFunc)(LPVOID fiber);
-	IGpColorCursor_Win32 *(*m_loadColorCursorFunc)(const wchar_t *path);
+	IGpCursor_Win32 *(*m_loadCursorFunc)(const wchar_t *path);
 	void (*m_translateWindowsMessageFunc)(const MSG *msg, IGpVOSEventQueue *eventQueue);
 };
-

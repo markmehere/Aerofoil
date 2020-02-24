@@ -9,6 +9,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "MainWindow.h"
+#include "QDPixMap.h"
 #include "PLQDraw.h"
 #include "RectUtils.h"
 

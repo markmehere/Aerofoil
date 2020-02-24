@@ -14,6 +14,7 @@
 #include "FontFamily.h"
 #include "PLWidgets.h"
 #include "PLPopupMenuWidget.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 #include "Utilities.h"
 #include "WindowDef.h"
@@ -199,7 +200,7 @@ void EraseSelectedTool (void)
 	if (toolsWindow == nil)
 		return;
 	
-	SetPort((GrafPtr)toolsWindow);
+	SetPort(&toolsWindow->GetDrawSurface()->m_port);
 	
 	toolIcon = toolSelected;
 	if ((toolMode == kBlowerMode) && (toolIcon >= 7))
@@ -299,9 +300,9 @@ void OpenToolsWindow (void)
 		QOffsetRect(&toolTextRect, 0, 157 - 15);
 
 		{
-			const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar;
+			const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;
 
-			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(toolsWindowRect, windowStyle, false, true, 0, 0, PSTR("Tools"));
+			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(toolsWindowRect, windowStyle, false, 0, 0, PSTR("Tools"));
 			toolsWindow = wm->CreateWindow(wdef);
 		}
 		
@@ -332,6 +333,8 @@ void OpenToolsWindow (void)
 
 			classPopUp = PortabilityLayer::PopupMenuWidget::Create(state);
 		}
+
+		toolsWindow->DrawControls();
 
 		if (classPopUp == nil)
 			RedAlert(kErrFailedResourceLoad);
@@ -473,7 +476,7 @@ void HandleToolsClick (Point wherePt)
 	part = FindControl(wherePt, toolsWindow, &theControl);
 	if ((theControl != nil) && (part != 0))
 	{
-		part = TrackControl(theControl, wherePt, nullptr);
+		part = theControl->Capture(wherePt, nullptr);
 		if (part != 0)
 		{
 			newMode = theControl->GetState();

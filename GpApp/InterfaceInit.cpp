@@ -8,6 +8,8 @@
 
 #include "Externs.h"
 #include "Environ.h"
+#include "HostDisplayDriver.h"
+#include "IGpDisplayDriver.h"
 #include "Map.h"
 #include "MenuManager.h"
 #include "PLKeyEncoding.h"
@@ -20,15 +22,14 @@
 #define kHoriCursorID		130
 #define kDiagCursorID		131
 
+struct IGpCursor;
 
 extern	THandle<Rect>	mirrorRects;
 extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
 extern	WindowPtr		menuWindow;
 extern	Rect			shieldRect, boardSrcRect, localRoomsDest[];
-extern	CursHandle		handCursorH, vertCursorH, horiCursorH;
-extern	CursHandle		diagCursorH;
-extern	Cursor			handCursor, vertCursor, horiCursor;
-extern	Cursor			diagCursor;
+extern	IGpCursor		*handCursor, *vertCursor, *horiCursor;
+extern	IGpCursor		*diagCursor;
 extern	MenuHandle		appleMenu, gameMenu, optionsMenu, houseMenu;
 extern	Point			shieldPt;
 extern	long			incrementModeTime;
@@ -81,25 +82,21 @@ void InitializeMenus (void)
 
 void GetExtraCursors (void)
 {
-	handCursorH = GetCursor(kHandCursorID);
-	if (handCursorH == nil)
+	handCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kHandCursorID);
+	if (handCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
-	handCursor = **handCursorH;
 	
-	vertCursorH = GetCursor(kVertCursorID);
-	if (vertCursorH == nil)
+	vertCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kVertCursorID);
+	if (vertCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
-	vertCursor = **vertCursorH;
 	
-	horiCursorH = GetCursor(kHoriCursorID);
-	if (horiCursorH == nil)
+	horiCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kHoriCursorID);
+	if (horiCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
-	horiCursor = **horiCursorH;
 	
-	diagCursorH = GetCursor(kDiagCursorID);
-	if (diagCursorH == nil)
+	diagCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kDiagCursorID);
+	if (diagCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
-	diagCursor = **diagCursorH;
 }
 
 //--------------------------------------------------------------  VariableInit

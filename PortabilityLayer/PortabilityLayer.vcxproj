@@ -226,6 +226,7 @@
     <ClInclude Include="PLPopupMenuWidget.h" />
     <ClInclude Include="PLRadioButtonWidget.h" />
     <ClInclude Include="PLScrollBarWidget.h" />
+    <ClInclude Include="PLUnalignedPtr.h" />
     <ClInclude Include="PLWidgets.h" />
     <ClInclude Include="UTF8.h" />
     <ClInclude Include="ZipFileProxy.h" />

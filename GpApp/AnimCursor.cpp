@@ -11,7 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "HostDisplayDriver.h"
-#include "IGpColorCursor.h"
+#include "IGpCursor.h"
 #include "IGpDisplayDriver.h"
 #include "ResourceManager.h"
 
@@ -37,7 +37,7 @@ typedef struct
 {
 	struct
 	{
-		IGpColorCursor *hwCursor;
+		IGpCursor *hwCursor;
 	} frame[1];
 } compiledAcurRec;
 
@@ -61,7 +61,7 @@ compiledAcurHandle	compiledAnimCursorH = nil;
 Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCursH)
 {
 	short			i, j;
-	IGpColorCursor *hwCursor;
+	IGpCursor *hwCursor;
 	Boolean			result = true;
 	
 	if (ballCursH)
@@ -70,7 +70,7 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 		HideCursor();						// Hide the cursor
 		for (i = 0; i < j; i++)				// Walk through the acur resource
 		{
-			hwCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadColorCursor((*ballCursH)->frame[i].resID);	// Get the cursor
+			hwCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(true, (*ballCursH)->frame[i].resID);	// Get the cursor
 			if (hwCursor == nil)		// Make sure a real cursor was returned
 			{								// If not, trash all cursors loaded
 				for (j = 0; j < i; j++)
@@ -81,7 +81,7 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 			else							// But, if the cursor loaded ok
 			{								// add it to our list or cursor handles
 				(*compiledBallCursH)->frame[i].hwCursor = hwCursor;
-				PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor(hwCursor);
+				PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(hwCursor);
 			}
 		}
 		InitCursor();						// Show the cursor again (as arrow)
@@ -168,10 +168,10 @@ void IncrementCursor (void)
 		(*animCursorH)->index++;
 		(*animCursorH)->index %= (*animCursorH)->n;
 
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}
 	else
-		SetBuiltinCursor(watchCursor);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kWait);
 }
 
 //--------------------------------------------------------------  DecrementCursor
@@ -188,10 +188,10 @@ void DecrementCursor (void)
 		if (((*animCursorH)->index) < 0)
 			(*animCursorH)->index = ((*animCursorH)->n) - 1;
 
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetColorCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}
 	else
-		SetBuiltinCursor(watchCursor);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kWait);
 }
 
 //--------------------------------------------------------------  SpinCursor

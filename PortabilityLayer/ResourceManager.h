@@ -31,11 +31,15 @@ namespace PortabilityLayer
 		void Destroy();
 
 		THandle<void> LoadResource(const ResTypeID &resTypeID, int id);
-		bool GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize);
+		bool GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize) const;
+
+		bool HasAnyResourcesOfType(const ResTypeID &resTypeID) const;
 
 	private:
 		ResourceArchive(ZipFileProxy *zipFileProxy, IOStream *stream, ResourceArchiveRef *resourceHandles);
 		~ResourceArchive();
+
+		bool IndexResource(const ResTypeID &resTypeID, int id, size_t &outIndex, int &outValidationRule) const;
 
 		THandle<void> GetResource(const ResTypeID &resTypeID, int id, bool load);
 

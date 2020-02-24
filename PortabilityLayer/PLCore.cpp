@@ -20,7 +20,7 @@
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
 #include "HostVOSEventQueue.h"
-#include "IGpColorCursor.h"
+#include "IGpCursor.h"
 #include "IGpDisplayDriver.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
@@ -87,24 +87,9 @@ Rect BERect::ToRect() const
 	return rect;
 }
 
-CursHandle GetCursor(int cursorID)
-{
-	return PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('CURS', cursorID).ReinterpretCast<Cursor>();
-}
-
 void HideCursor()
 {
 	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kHidden);
-}
-
-void SetCursor(CursPtr cursor)
-{
-	PL_NotYetImplemented();
-}
-
-void SetBuiltinCursor(int builtinCursor)
-{
-	PL_NotYetImplemented();
 }
 
 void Delay(int ticks, UInt32 *endTickCount)
@@ -203,13 +188,13 @@ WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
 	return window;
 }
 
-WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, Boolean hasCloseBox, long userdata)
+WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata)
 {
 	PL_NotYetImplemented();
 	return nullptr;
 }
 
-WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, Boolean hasCloseBox, long userdata)
+WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata)
 {
 	PL_NotYetImplemented();
 	return nullptr;
@@ -616,12 +601,6 @@ long GetHandleSize(Handle handle)
 	return handle.MMBlock()->m_size;
 }
 
-PLError_t PtrAndHand(const void *data, Handle handle, Size size)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
 PLError_t SetHandleSize(Handle hdl, Size newSize)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
@@ -779,6 +758,19 @@ bool Window::AddWidget(PortabilityLayer::Widget *widget)
 	return true;
 }
 
+ArrayView<PortabilityLayer::Widget*> Window::GetWidgets() const
+{
+	return ArrayView<PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
+}
+
+PortabilityLayer::Widget* Window::GetWidgetById() const
+{
+	//for (size_t i = 0; i < m_numWidgets; i++)
+	//	m_widgets[i]->get
+	//return ArrayView<PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
+	return nullptr;
+}
+
 void Window::FocusWidget(PortabilityLayer::Widget *widget)
 {
 	if (m_widgetWithFocus != widget)
@@ -825,7 +817,7 @@ void Window::OnTick()
 		m_widgets[i]->OnTick();
 }
 
-ArrayView<PortabilityLayer::Widget*> Window::GetWidgets() const
+DrawSurface *Window::GetChromeSurface(WindowChromeSide_t aChromeSide) const
 {
-	return ArrayView< PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
+	return const_cast<DrawSurface*>(m_chromeSurfaces + aChromeSide);
 }

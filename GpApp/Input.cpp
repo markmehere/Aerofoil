@@ -12,6 +12,7 @@
 #include "Externs.h"
 #include "InputManager.h"
 #include "MainWindow.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 
 

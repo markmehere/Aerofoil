@@ -170,7 +170,7 @@
     <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h" />
     <ClInclude Include="..\GpCommon\GpFileCreationDisposition.h" />
     <ClInclude Include="..\GpCommon\GpInputDriverProperties.h" />
-    <ClInclude Include="..\GpCommon\IGpColorCursor.h" />
+    <ClInclude Include="..\GpCommon\IGpCursor.h" />
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
     <ClInclude Include="..\GpCommon\GpColorCursor_Win32.h" />
     <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />

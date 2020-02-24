@@ -998,7 +998,61 @@ void DrawSurface::FillRect(const Rect &rect)
 
 void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern)
 {
-	PL_NotYetImplemented_TODO("FillWithPattern");
+	if (!rect.IsValid())
+		return;
+
+	PortabilityLayer::QDPort *qdPort = &m_port;
+
+	GpPixelFormat_t pixelFormat = qdPort->GetPixelFormat();
+
+	Rect constrainedRect = rect;
+	const Rect portRect = qdPort->GetRect();
+
+	PortabilityLayer::QDState *qdState = qdPort->GetState();
+	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
+	constrainedRect = constrainedRect.Intersect(qdPort->GetRect());
+
+	if (!constrainedRect.IsValid())
+		return;
+
+	assert(portRect.left == 0 && portRect.top == 0);
+
+	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
+	const size_t pitch = pixMap->GetPitch();
+	const size_t firstIndex = static_cast<size_t>(constrainedRect.top) * pitch + static_cast<size_t>(constrainedRect.left);
+	const size_t numLines = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
+	const size_t numCols = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
+	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
+
+	const int patternFirstRow = (constrainedRect.top & 7);
+	const int patternFirstCol = (constrainedRect.left & 7);
+
+	switch (pixelFormat)
+	{
+	case GpPixelFormats::k8BitStandard:
+	{
+		const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+
+		size_t scanlineIndex = 0;
+		for (size_t ln = 0; ln < numLines; ln++)
+		{
+			const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
+			const size_t firstLineIndex = firstIndex + ln * pitch;
+
+			for (size_t col = 0; col < numCols; col++)
+			{
+				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
+				if ((pattern[patternRow] >> patternCol) & 1)
+					pixData[firstLineIndex + col] = color;
+			}
+		}
+	}
+	break;
+	default:
+		PL_NotYetImplemented();
+		return;
+	}
+
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
@@ -1238,11 +1292,6 @@ void DrawSurface::DrawLine(const Point &a, const Point &b)
 	PlotLine(m_port.GetState(), this, PortabilityLayer::Vec2i(a.h, a.v), PortabilityLayer::Vec2i(b.h, b.v));
 }
 
-void DrawSurface::InvertDrawLine(const Point &a, const Point &b, const uint8_t *pattern)
-{
-	PL_NotYetImplemented();
-}
-
 void GetClip(Rect *rect)
 {
 	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
@@ -1301,12 +1350,81 @@ void DrawSurface::FrameRoundRect(const Rect &rect, int quadrantWidth, int quadra
 
 void DrawSurface::InvertFrameRect(const Rect &rect, const uint8_t *pattern)
 {
-	PL_NotYetImplemented();
+	if (!rect.IsValid())
+		return;
+
+	if (rect.Width() <= 2 || rect.Height() <= 2)
+	{
+		InvertFillRect(rect, pattern);
+		return;
+	}
+	else
+	{
+		InvertFillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right), pattern);
+		InvertFillRect(Rect::Create(rect.top + 1, rect.left, rect.bottom - 1, rect.left + 1), pattern);
+		InvertFillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom + 1, rect.right), pattern);
+		InvertFillRect(Rect::Create(rect.top + 1, rect.right - 1, rect.bottom - 1, rect.right), pattern);
+	}
 }
 
 void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 {
-	PL_NotYetImplemented_TODO("InvertFillRect");
+	if (!rect.IsValid())
+		return;
+
+	PortabilityLayer::QDPort *qdPort = &m_port;
+
+	GpPixelFormat_t pixelFormat = qdPort->GetPixelFormat();
+
+	Rect constrainedRect = rect;
+	const Rect portRect = qdPort->GetRect();
+
+	PortabilityLayer::QDState *qdState = qdPort->GetState();
+	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
+	constrainedRect = constrainedRect.Intersect(qdPort->GetRect());
+
+	if (!constrainedRect.IsValid())
+		return;
+
+	assert(portRect.left == 0 && portRect.top == 0);
+
+	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
+	const size_t pitch = pixMap->GetPitch();
+	const size_t firstIndex = static_cast<size_t>(constrainedRect.top) * pitch + static_cast<size_t>(constrainedRect.left);
+	const size_t numLines = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
+	const size_t numCols = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
+	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
+
+	const int patternFirstRow = (constrainedRect.top & 7);
+	const int patternFirstCol = (constrainedRect.left & 7);
+
+	switch (pixelFormat)
+	{
+	case GpPixelFormats::k8BitStandard:
+	{
+		const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+
+		size_t scanlineIndex = 0;
+		for (size_t ln = 0; ln < numLines; ln++)
+		{
+			const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
+			const size_t firstLineIndex = firstIndex + ln * pitch;
+
+			for (size_t col = 0; col < numCols; col++)
+			{
+				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
+				if ((pattern[patternRow] >> patternCol) & 1)
+					pixData[firstLineIndex + col] = 255 - pixData[firstLineIndex + col];
+			}
+		}
+	}
+	break;
+	default:
+		PL_NotYetImplemented();
+		return;
+	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 void DrawSurface::SetForeColor(const PortabilityLayer::RGBAColor &color)
@@ -1617,6 +1735,63 @@ void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitM
 	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, constrainRect);
 }
 
+// This doesn't bounds-check the source (because it's only used in one place)
+void ImageInvert(const PixMap *invertMask, PixMap *targetBitmap, const Rect &srcRect, const Rect &destRect)
+{
+	assert(srcRect.Width() == destRect.Width());
+	assert(srcRect.Height() == destRect.Height());
+
+	assert(invertMask->m_pixelFormat == GpPixelFormats::kBW1);
+
+	const Rect invertBitmapRect = invertMask->m_rect;
+	const Rect targetBitmapRect = targetBitmap->m_rect;
+
+	const Rect constrainedDestRect = targetBitmapRect.Intersect(destRect);
+	if (!constrainedDestRect.IsValid())
+		return;
+
+	const int32_t leftInset = constrainedDestRect.left - destRect.left;
+	const int32_t topInset = constrainedDestRect.top - destRect.top;
+	const int32_t rightInset = destRect.right - constrainedDestRect.right;
+	const int32_t bottomInset = destRect.bottom - constrainedDestRect.bottom;
+
+	const int32_t firstSrcRow = srcRect.top - invertBitmapRect.top + topInset;
+	const int32_t firstSrcCol = srcRect.left - invertBitmapRect.left + leftInset;
+	const int32_t firstDestRow = destRect.top - targetBitmapRect.top + topInset;
+	const int32_t firstDestCol = destRect.left - targetBitmapRect.left + leftInset;
+
+	const uint16_t numRows = destRect.Height();
+	const uint16_t numCols = destRect.Width();
+
+	const size_t invertPitch = invertMask->m_pitch;
+	const uint8_t *invertPixelDataFirstRow = static_cast<const uint8_t*>(invertMask->m_data) + firstSrcRow * invertPitch;
+	const size_t targetPitch = targetBitmap->m_pitch;
+	uint8_t *targetPixelDataFirstRow = static_cast<uint8_t*>(targetBitmap->m_data) + firstDestRow * targetPitch;
+
+	const GpPixelFormat_t targetPixelFormat = targetBitmap->m_pixelFormat;
+
+	for (uint16_t r = 0; r < numRows; r++)
+	{
+		const uint8_t *invertRowStart = invertPixelDataFirstRow + r * invertPitch;
+		uint8_t *targetRowStart = targetPixelDataFirstRow + r * targetPitch;
+
+		switch (targetPixelFormat)
+		{
+		case GpPixelFormats::k8BitStandard:
+			for (uint16_t c = 0; c < numCols; c++)
+			{
+				const int32_t srcCol = c + firstSrcCol;
+				const int32_t destCol = c + firstDestCol;
+				if (invertRowStart[srcCol] != 0)
+					targetRowStart[destCol] = 255 - targetRowStart[destCol];
+			}
+			break;
+		default:
+			PL_NotYetImplemented();
+			break;
+		}
+	}
+}
 
 bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMask)
 {
@@ -1629,7 +1804,7 @@ void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBit
 	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
 }
 
-BitMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr)
+PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr)
 {
 	return *grafPtr->m_port.GetPixMap();
 }

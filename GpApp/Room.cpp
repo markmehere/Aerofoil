@@ -16,6 +16,7 @@
 #include "House.h"
 #include "InputManager.h"
 #include "MainWindow.h"
+#include "MemoryManager.h"
 #include "RectUtils.h"
 
 
@@ -197,13 +198,13 @@ Boolean CreateNewRoom (short h, short v)
 	
 	if (availableRoom == -1)				// found no available rooms
 	{
-		howMuch = sizeof(roomType);			// add new room to end of house
-		theErr = PtrAndHand((Ptr)thisRoom, thisHouse.StaticCast<void>(), howMuch);
-		if (theErr != PLErrors::kNone)
+		// add new room to end of house
+		if (!PortabilityLayer::MemoryManager::GetInstance()->ResizeHandle(thisHouse.MMBlock(), thisHouse.MMBlock()->m_size + sizeof(roomType)))
 		{
-			YellowAlert(kYellowUnaccounted, theErr);
+			YellowAlert(kYellowUnaccounted, PLErrors::kOutOfMemory);
 			return (false);
 		}
+		(*thisHouse)->rooms[(*thisHouse)->nRooms] = *thisRoom;
 		(*thisHouse)->nRooms++;				// increment nRooms
 		numberRooms = (*thisHouse)->nRooms;
 		previousRoom = thisRoomNumber;
@@ -336,7 +337,7 @@ void ReflectCurrentRoom (Boolean forceMapRedraw)
 
 	PL_NotYetImplemented_TODO("FixMe");
 	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash6");
-	//InvalWindowRect(mainWindow, &mainWindowRect);
+	UpdateMainWindow();
 #endif
 }
 

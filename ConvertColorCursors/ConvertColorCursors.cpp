@@ -1,4 +1,5 @@
 #include "CFileStream.h"
+#include "BMPFormat.h"
 #include "MMHandleBlock.h"
 #include "ResourceCompiledTypeList.h"
 #include "ResourceFile.h"
@@ -8,6 +9,7 @@
 #include <assert.h>
 
 #include <string>
+#include <vector>
 
 #include "stb_image_write.h"
 
@@ -53,6 +55,14 @@ struct CursorHeader
 	BEUInt32_t m_cursorResourceID;
 };
 
+struct BWCursor
+{
+	uint8_t m_pixels[32];
+	uint8_t m_mask[32];
+	BEUInt16_t m_hotSpotX;
+	BEUInt16_t m_hotSpotY;
+};
+
 struct IconDir
 {
 	uint16_t m_reserved;
@@ -82,6 +92,108 @@ uint8_t CompactChannel(const uint8_t *doublet)
 void WriteToFileCallback(void *context, void *data, int size)
 {
 	fwrite(data, 1, size, static_cast<FILE*>(context));
+}
+
+void WriteToVectorCallback(void *context, void *data, int size)
+{
+	std::vector<uint8_t> *vec = static_cast<std::vector<uint8_t>*>(context);
+	for (int i = 0; i < size; i++)
+		vec->push_back(static_cast<const uint8_t*>(data)[i]);
+}
+
+void ConvertBWCursors(PortabilityLayer::ResourceFile *resFile)
+{
+	const PortabilityLayer::ResourceCompiledTypeList *typeList = resFile->GetResourceTypeList('CURS');
+	if (!typeList)
+		return;
+
+	const size_t numRefs = typeList->m_numRefs;
+	for (size_t i = 0; i < numRefs; i++)
+	{
+		const int resID = typeList->m_firstRef[i].m_resID;
+		const THandle<void> resHdl = resFile->LoadResource('CURS', resID);
+		const void *cursorDataBase = *resHdl;
+		const BWCursor *cursorData = static_cast<const BWCursor *>(cursorDataBase);
+
+		char outPathDebug[64];
+		sprintf_s(outPathDebug, "Packaged\\WinCursors\\b%i.bmp", resID);
+
+		char outPath[64];
+		sprintf_s(outPath, "Packaged\\WinCursors\\b%i.cur", resID);
+
+		FILE *outF = nullptr;
+		errno_t outErr = fopen_s(&outF, outPath, "wb");
+
+		if (!outErr)
+		{
+			IconDir iconDir;
+			iconDir.m_reserved = 0;
+			iconDir.m_type = 2;
+			iconDir.m_numImages = 1;
+
+			IconDirEntry iconDirEntry;
+			iconDirEntry.m_width = 16;
+			iconDirEntry.m_height = 16;
+			iconDirEntry.m_numColors = 0;
+			iconDirEntry.m_reserved = 0;
+			iconDirEntry.m_numPlanes_HotSpotX = cursorData->m_hotSpotX;
+			iconDirEntry.m_bpp_HotSpotY = cursorData->m_hotSpotY;
+			iconDirEntry.m_imageDataSize = 0;
+			iconDirEntry.m_imageDataOffset = sizeof(IconDir) + sizeof(IconDirEntry);
+
+			fwrite(&iconDir, 1, sizeof(IconDir), outF);
+			fwrite(&iconDirEntry, 1, sizeof(IconDirEntry), outF);
+
+			long imageDataStart = ftell(outF);
+
+			PortabilityLayer::BitmapInfoHeader bmpHeader;
+			bmpHeader.m_thisStructureSize = sizeof(bmpHeader);
+			bmpHeader.m_width = 16;
+			bmpHeader.m_height = 32;
+			bmpHeader.m_planes = 1;
+			bmpHeader.m_bitsPerPixel = 1;
+			bmpHeader.m_compression = 0;
+			bmpHeader.m_imageSize = (16 * 16 / 8);
+			bmpHeader.m_xPixelsPerMeter = 0;
+			bmpHeader.m_yPixelsPerMeter = 0;
+			bmpHeader.m_numColors = 2;
+			bmpHeader.m_importantColorCount = 2;
+
+			fwrite(&bmpHeader, 1, sizeof(bmpHeader), outF);
+
+			const uint8_t paletteData[] = {
+				0, 0, 0, 0,
+				255, 255, 255, 0 };
+
+			fwrite(paletteData, 1, sizeof(paletteData), outF);
+			uint8_t padding[2] = { 0, 0 };
+
+			for (int y = 0; y < 16; y++)
+			{
+				const uint8_t *maskRow = cursorData->m_mask + (15 - y) * 2;
+				const uint8_t *row = cursorData->m_pixels + (15 - y) * 2;
+				const uint8_t modifiedRow[] = { row[0] ^ maskRow[0], row[1] ^ maskRow[1] };
+				fwrite(modifiedRow, 1, 2, outF);
+				fwrite(padding, 1, 2, outF);
+			}
+
+			for (int y = 0; y < 16; y++)
+			{
+				const uint8_t *row = cursorData->m_mask + (15 - y) * 2;
+				const uint8_t modifiedRow[] = { row[0] ^ 255, row[1] ^ 255 };
+				fwrite(modifiedRow, 1, 2, outF);
+				fwrite(padding, 1, 2, outF);
+			}
+
+			long imageDataEnd = ftell(outF);
+
+			fseek(outF, sizeof(IconDir), SEEK_SET);
+
+			iconDirEntry.m_imageDataSize = static_cast<uint32_t>(imageDataEnd - imageDataStart);
+			fwrite(&iconDirEntry, 1, sizeof(IconDirEntry), outF);
+			fclose(outF);
+		}
+	}
 }
 
 void ConvertCursors(PortabilityLayer::ResourceFile *resFile)
@@ -196,7 +308,7 @@ void ConvertCursors(PortabilityLayer::ResourceFile *resFile)
 		}
 
 		char outPath[64];
-		sprintf_s(outPath, "Packaged\\WinCursors\\%i.cur", resID);
+		sprintf_s(outPath, "Packaged\\WinCursors\\c%i.cur", resID);
 
 		FILE *outF = nullptr;
 		errno_t outErr = fopen_s(&outF, outPath, "wb");
@@ -335,6 +447,7 @@ int main(int argc, const char **argv)
 	stream.Close();
 
 	ConvertCursors(resFile);
+	ConvertBWCursors(resFile);
 	ConvertIconFamily(resFile, 'ics#', 'ics8', "Small", 16);
 	ConvertIconFamily(resFile, 'ICN#', 'icl8', "Large", 32);
 
