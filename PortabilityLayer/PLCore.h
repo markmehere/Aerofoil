@@ -247,8 +247,6 @@ void HideCursor();
 void Delay(int ticks, UInt32 *endTickCount);
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
-void DragWindow(WindowPtr window, Point start, Rect *bounds);	// Drags the window (probably not implemented)
-void SendBehind(WindowPtr window, WindowPtr behind);
 void BringToFront(WindowPtr window);
 bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close box was actually clicked (?)
 Int32 GrowWindow(WindowPtr window, Point start, Rect *size);

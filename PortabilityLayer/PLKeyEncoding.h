@@ -60,6 +60,7 @@ struct KeyDownStates
 	GpBitfield<GpNumPadSpecials::kCount> m_numPadSpecial;
 	GpBitfield<GpFKeyMaximumInclusive> m_fKey;
 	GpBitfield<GpGamepadButtons::kCount> m_gamepadButtons[PL_INPUT_MAX_PLAYERS];
+	GpBitfield<GpMouseButtons::kCount> m_mouse;
 
 	bool IsSet(intptr_t packedVOSCode) const;
 };

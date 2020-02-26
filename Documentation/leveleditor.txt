@@ -1,0 +1,26 @@
+The Room Editor is not yet fully functional.
+
+As with Glider PRO's Room Editor, custom backgrounds, sounds, and TV videos
+are supported.
+
+Since Glider PRO used formats that were very Mac-specific, Aerofoil has
+replaced most of them with more current formats.
+
+To add resources to a house, create a ZIP file with the extension ".gpa" with
+the same name as the .gpd and .gpf files that already exist for the house.
+
+You can add resources by adding them to a folder named as the resource type,
+with the appropriate extension.
+
+For example, for a "PICT" resource of ID "3000", create a file named "3000.bmp"
+and put it in the "PICT" directory in the .gpa archive.
+
+PICT resources, used for custom decorations and backgrounds, must be BMP files.
+
+Sounds should go in a directory named "snd$20"
+Sounds must be WAV format, monaural, 8-bit unsigned PCM, 22255 Hz.
+Sounds recorded at a different sample rate will play back at the wrong speed.
+Sounds that are not monaural or 8-bit unsigned PCM will fail to load.
+
+Resource IDs must be between -32768 and 32767.  Other resource IDs will fail
+to load.

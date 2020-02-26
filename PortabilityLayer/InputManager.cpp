@@ -15,6 +15,7 @@ namespace PortabilityLayer
 		const KeyDownStates *GetKeys() const override;
 		void ApplyKeyboardEvent(const GpKeyboardInputEvent &vosEvent) override;
 		void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) override;
+		void ApplyMouseEvent(const GpMouseInputEvent &vosEvent) override;
 		int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) override;
 		void ClearState() override;
 
@@ -22,6 +23,7 @@ namespace PortabilityLayer
 
 	private:
 		void ApplyEventAsKey(const GpKeyboardInputEvent &vosEvent, bool bit);
+		void ApplyEventAsMouseButton(const GpMouseInputEvent &vosEvent, bool bit);
 		void ApplyAnalogAxisEvent(const GpGamepadAnalogAxisEvent &axisEvent);
 
 		KeyDownStates m_keyMap;
@@ -47,6 +49,14 @@ namespace PortabilityLayer
 	{
 		if (vosEvent.m_eventType == GpGamepadInputEventTypes::kAnalogAxisChanged)
 			ApplyAnalogAxisEvent(vosEvent.m_event.m_analogAxisEvent);
+	}
+
+	void InputManagerImpl::ApplyMouseEvent(const GpMouseInputEvent &vosEvent)
+	{
+		if (vosEvent.m_eventType == GpMouseEventTypes::kUp || vosEvent.m_eventType == GpMouseEventTypes::kLeave)
+			this->ApplyEventAsMouseButton(vosEvent, false);
+		else if (vosEvent.m_eventType == GpMouseEventTypes::kDown)
+			this->ApplyEventAsMouseButton(vosEvent, true);
 	}
 
 	int16_t InputManagerImpl::GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis)
@@ -103,6 +113,11 @@ namespace PortabilityLayer
 			assert(false);
 			break;
 		}
+	}
+
+	void InputManagerImpl::ApplyEventAsMouseButton(const GpMouseInputEvent &vosEvent, bool bit)
+	{
+		m_keyMap.m_mouse.Set(vosEvent.m_button, bit);
 	}
 
 	void InputManagerImpl::ApplyAnalogAxisEvent(const GpGamepadAnalogAxisEvent &axisEvent)

@@ -108,16 +108,6 @@ short FindWindow(Point point, WindowPtr *window)
 	return part;
 }
 
-void DragWindow(WindowPtr window, Point start, Rect *bounds)
-{
-	PL_NotYetImplemented();
-}
-
-void SendBehind(WindowPtr window, WindowPtr behind)
-{
-	PL_NotYetImplemented();
-}
-
 void BringToFront(WindowPtr window)
 {
 	PL_NotYetImplemented();
@@ -519,14 +509,12 @@ Boolean Button()
 
 Boolean StillDown()
 {
-	PL_NotYetImplemented();
-	return false;
+	return PortabilityLayer::InputManager::GetInstance()->GetKeys()->m_mouse.Get(GpMouseButtons::kLeft);
 }
 
 Boolean WaitMouseUp()
 {
-	PL_NotYetImplemented();
-	return false;
+	return StillDown();
 }
 
 short Random()

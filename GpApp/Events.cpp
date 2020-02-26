@@ -17,6 +17,7 @@
 #include "House.h"
 #include "InputManager.h"
 #include "ObjectEdit.h"
+#include "WindowManager.h"
 
 
 short BitchAboutColorDepth (void);
@@ -74,18 +75,15 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 	
 	switch (thePart)
 	{
-		case inMenuBar:
+	case inMenuBar:
 		menuChoice = MenuSelect(evtPoint);
 		DoMenuChoice(menuChoice);
 		break;
 		
-		case inDrag:
-		DragWindow(whichWindow, evtPoint, &thisMac.screen);
+	case inDrag:
+		PortabilityLayer::WindowManager::GetInstance()->DragWindow(whichWindow, evtPoint, thisMac.screen);
 		if (whichWindow == mainWindow)
-		{
-			SendBehind(mainWindow, (WindowPtr)0L);
 			GetWindowLeftTop(whichWindow, &isEditH, &isEditV);
-		}
 		else if (whichWindow == mapWindow)
 			GetWindowLeftTop(whichWindow, &isMapH, &isMapV);
 		else if (whichWindow == toolsWindow)
@@ -97,7 +95,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		HiliteAllWindows();
 		break;
 		
-		case inGoAway:
+	case inGoAway:
 		if (TrackGoAway(whichWindow, evtPoint))
 		{
 			if (whichWindow == mapWindow)
@@ -111,7 +109,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		}
 		break;
 		
-		case inGrow:
+	case inGrow:
 		if (whichWindow == mapWindow)
 		{
 			newSize = GrowWindow(mapWindow, evtPoint, &thisMac.gray);
@@ -119,13 +117,13 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		}
 		break;
 		
-		case inZoomIn:
-		case inZoomOut:
+	case inZoomIn:
+	case inZoomOut:
 		if (TrackBox(whichWindow, evtPoint, thePart))
 			ZoomWindow(whichWindow, thePart, true);
 		break;
 		
-		case inContent:
+	case inContent:
 		if (whichWindow == mainWindow)
 		{
 			hDelta = evtPoint.h - lastWhere.h;
@@ -153,7 +151,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 			HandleLinkClick(evtPoint);
 		break;
 		
-		default:
+	default:
 		break;
 	}
 }

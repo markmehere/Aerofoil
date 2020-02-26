@@ -32,6 +32,10 @@ static void TranslateMouseInputEvent(const GpVOSEvent &vosEventBase, uint32_t ti
 		if (TimeTaggedVOSEvent *evt = queue->Enqueue())
 			*evt = TimeTaggedVOSEvent::Create(vosEventBase, timestamp);
 	}
+
+	PortabilityLayer::InputManager *inputManager = PortabilityLayer::InputManager::GetInstance();
+
+	inputManager->ApplyMouseEvent(vosEvent);
 }
 
 static void TranslateGamepadInputEvent(const GpGamepadInputEvent &vosEvent, PortabilityLayer::EventQueue *queue)

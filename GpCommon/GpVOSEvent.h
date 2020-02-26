@@ -220,6 +220,8 @@ namespace GpMouseButtons
 		kRight,
 		kX1,
 		kX2,
+
+		kCount
 	};
 }
 
