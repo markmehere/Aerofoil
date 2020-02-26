@@ -197,16 +197,21 @@ typedef WindowPtr WindowRef;	// wtf?
 
 struct KeyDownStates;
 
-enum RegionID
+namespace RegionIDs
 {
-	inMenuBar = 1,
-	inContent,
-	inDrag,
-	inGrow,
-	inGoAway,
-	inZoomIn,
-	inZoomOut,
-};
+	enum RegionID
+	{
+		kNone,
+
+		kMenuBar = 1,
+		kContent,
+		kTitleBar,
+		kClose,
+		kExpand,
+	};
+}
+
+typedef RegionIDs::RegionID RegionID_t;
 
 enum WindowRegionType
 {
@@ -251,7 +256,6 @@ void BringToFront(WindowPtr window);
 bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close box was actually clicked (?)
 Int32 GrowWindow(WindowPtr window, Point start, Rect *size);
 bool TrackBox(WindowPtr window, Point point, int part);	// Returns true if grow/shrink box was clicked (part corresponds to type)
-void ZoomWindow(WindowPtr window, int part, bool bringToFront);
 void HiliteWindow(WindowPtr window, bool highlighted);
 void DisposeWindow(WindowPtr window);
 void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect);

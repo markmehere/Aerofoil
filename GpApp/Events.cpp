@@ -75,12 +75,12 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 	
 	switch (thePart)
 	{
-	case inMenuBar:
+	case RegionIDs::kMenuBar:
 		menuChoice = MenuSelect(evtPoint);
 		DoMenuChoice(menuChoice);
 		break;
 		
-	case inDrag:
+	case RegionIDs::kTitleBar:
 		PortabilityLayer::WindowManager::GetInstance()->DragWindow(whichWindow, evtPoint, thisMac.screen);
 		if (whichWindow == mainWindow)
 			GetWindowLeftTop(whichWindow, &isEditH, &isEditV);
@@ -95,7 +95,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		HiliteAllWindows();
 		break;
 		
-	case inGoAway:
+	case RegionIDs::kClose:
 		if (TrackGoAway(whichWindow, evtPoint))
 		{
 			if (whichWindow == mapWindow)
@@ -109,7 +109,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		}
 		break;
 		
-	case inGrow:
+	case RegionIDs::kExpand:
 		if (whichWindow == mapWindow)
 		{
 			newSize = GrowWindow(mapWindow, evtPoint, &thisMac.gray);
@@ -117,13 +117,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		}
 		break;
 		
-	case inZoomIn:
-	case inZoomOut:
-		if (TrackBox(whichWindow, evtPoint, thePart))
-			ZoomWindow(whichWindow, thePart, true);
-		break;
-		
-	case inContent:
+	case RegionIDs::kContent:
 		if (whichWindow == mainWindow)
 		{
 			hDelta = evtPoint.h - lastWhere.h;

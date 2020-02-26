@@ -131,11 +131,6 @@ bool TrackBox(WindowPtr window, Point point, int part)
 	return false;
 }
 
-void ZoomWindow(WindowPtr window, int part, bool bringToFront)
-{
-	PL_NotYetImplemented();
-}
-
 void HiliteWindow(WindowPtr window, bool highlighted)
 {
 	PL_NotYetImplemented();
