@@ -1,6 +1,7 @@
 #include "InputManager.h"
 #include "MacRomanConversion.h"
 #include "PLKeyEncoding.h"
+#include "Vec2i.h"
 
 #include <string.h>
 #include <assert.h>
@@ -17,6 +18,7 @@ namespace PortabilityLayer
 		void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) override;
 		void ApplyMouseEvent(const GpMouseInputEvent &vosEvent) override;
 		int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) override;
+		Vec2i GetMousePosition() const override;
 		void ClearState() override;
 
 		static InputManagerImpl *GetInstance();
@@ -28,6 +30,7 @@ namespace PortabilityLayer
 
 		KeyDownStates m_keyMap;
 		int16_t m_axisStates[PL_INPUT_MAX_PLAYERS][GpGamepadAxes::kCount];
+		Vec2i m_mousePos;
 
 		static InputManagerImpl ms_instance;
 	};
@@ -53,6 +56,9 @@ namespace PortabilityLayer
 
 	void InputManagerImpl::ApplyMouseEvent(const GpMouseInputEvent &vosEvent)
 	{
+		m_mousePos.m_x = vosEvent.m_x;
+		m_mousePos.m_y = vosEvent.m_y;
+
 		if (vosEvent.m_eventType == GpMouseEventTypes::kUp || vosEvent.m_eventType == GpMouseEventTypes::kLeave)
 			this->ApplyEventAsMouseButton(vosEvent, false);
 		else if (vosEvent.m_eventType == GpMouseEventTypes::kDown)
@@ -64,6 +70,11 @@ namespace PortabilityLayer
 		assert(playerNum < PL_INPUT_MAX_PLAYERS);
 
 		return m_axisStates[playerNum][gamepadAxis];
+	}
+
+	Vec2i InputManagerImpl::GetMousePosition() const
+	{
+		return m_mousePos;
 	}
 
 	void InputManagerImpl::ClearState()
@@ -132,6 +143,7 @@ namespace PortabilityLayer
 	}
 
 	InputManagerImpl::InputManagerImpl()
+		: m_mousePos(0, 0)
 	{
 		memset(m_axisStates, 0, sizeof(m_axisStates));
 	}

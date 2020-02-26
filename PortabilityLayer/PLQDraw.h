@@ -117,7 +117,6 @@ void PenMask(bool maskMode);
 void PenPat(const Pattern *pattern);
 void PenSize(int w, int h);
 void PenNormal();
-void InvertRect(const Rect *rect);
 void InsetRect(Rect *rect, int x, int y);
 Pattern *GetQDGlobalsGray(Pattern *pattern);
 Pattern *GetQDGlobalsBlack(Pattern *pattern);
@@ -139,9 +138,6 @@ bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMa
 
 PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr);
 DrawSurface *GetWindowPort(WindowPtr window);
-
-// Computes A - B and returns it packed?
-Int32 DeltaPoint(Point pointA, Point pointB);
 
 // Subtracts srcPoint from destPoint (reverse of DeltaPoint)
 void SubPt(Point srcPoint, Point *destPoint);

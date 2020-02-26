@@ -28,7 +28,7 @@ namespace PortabilityLayer
 	{
 		virtual void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const = 0;
 		virtual void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const = 0;
-		virtual bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID &outRegion) const = 0;
+		virtual bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const = 0;
 	};
 
 	template<class T>
@@ -46,7 +46,7 @@ namespace PortabilityLayer
 	public:
 		void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const override;
 		void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const override;
-		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID &outRegion) const override;
+		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const override;
 	};
 
 	class GenericWindowChromeTheme final : public WindowChromeThemeSingleton<GenericWindowChromeTheme>
@@ -54,7 +54,7 @@ namespace PortabilityLayer
 	public:
 		void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const override;
 		void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const override;
-		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID &outRegion) const override;
+		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const override;
 
 	private:
 		void RenderChromeTop(WindowImpl *window, DrawSurface *surface) const;
@@ -93,7 +93,7 @@ namespace PortabilityLayer
 
 		void GetChromePadding(uint16_t padding[WindowChromeSides::kCount]) const;
 		void GetChromeDimensions(int width, int height, Rect dimensions[WindowChromeSides::kCount]) const;
-		bool GetChromeInteractionZone(const Vec2i &point, RegionID &outRegion) const;
+		bool GetChromeInteractionZone(const Vec2i &point, RegionID_t &outRegion) const;
 
 		bool IsBorderless() const;
 		uint16_t GetStyleFlags() const;
@@ -163,7 +163,7 @@ namespace PortabilityLayer
 		padding[WindowChromeSides::kRight] = 1;
 	}
 
-	bool SimpleBoxChromeTheme::GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID &outRegion) const
+	bool SimpleBoxChromeTheme::GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const
 	{
 		return false;
 	}
@@ -205,7 +205,7 @@ namespace PortabilityLayer
 		}
 	}
 
-	bool GenericWindowChromeTheme::GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID &outRegion) const
+	bool GenericWindowChromeTheme::GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const
 	{
 		const DrawSurface *surface = window->GetDrawSurface();
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
@@ -214,7 +214,7 @@ namespace PortabilityLayer
 		{
 			if (point.m_x >= 0 && point.m_x < rect.Width() && point.m_y < 0 && point.m_y >= -13)
 			{
-				outRegion = RegionID::inDrag;
+				outRegion = RegionIDs::kTitleBar;
 				return true;
 			}
 		}
@@ -222,7 +222,7 @@ namespace PortabilityLayer
 		{
 			if (point.m_x >= 0 && point.m_x < rect.Width() && point.m_y < 0 && point.m_y >= -17)
 			{
-				outRegion = RegionID::inDrag;
+				outRegion = RegionIDs::kTitleBar;
 				return true;
 			}
 		}
@@ -457,6 +457,8 @@ namespace PortabilityLayer
 		m_styleFlags = windowDef.m_styleFlags;
 
 		const Rect adjustedBounds = Rect::Create(0, 0, bounds.Height(), bounds.Width());
+		m_wmX = bounds.left;
+		m_wmY = bounds.top;
 
 		GpPixelFormat_t pixelFormat = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
@@ -565,7 +567,7 @@ namespace PortabilityLayer
 		dimensions[WindowChromeSides::kRight] = Rect::Create(0, 0, leftAndRightHeight, padding[WindowChromeSides::kRight]);
 	}
 
-	bool WindowImpl::GetChromeInteractionZone(const Vec2i &point, RegionID &outRegion) const
+	bool WindowImpl::GetChromeInteractionZone(const Vec2i &point, RegionID_t &outRegion) const
 	{
 		return m_chromeTheme->GetChromeInteractionZone(this, point, outRegion);
 	}
@@ -669,24 +671,13 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::FindWindow(const Point &point, Window **outWindow, short *outRegion) const
 	{
-		// outRegion = One of:
-		/*
-		inMenuBar,
-		inContent,
-		inDrag,
-		inGrow,
-		inGoAway,
-		inZoomIn,
-		inZoomOut,
-		*/
-
 		if (PortabilityLayer::MenuManager::GetInstance()->IsPointInMenuBar(PortabilityLayer::Vec2i(point.h, point.v)))
 		{
 			if (outWindow)
 				*outWindow = nullptr;
 
 			if (outRegion)
-				*outRegion = inMenuBar;
+				*outRegion = RegionIDs::kMenuBar;
 
 			return;
 		}
@@ -699,7 +690,7 @@ namespace PortabilityLayer
 			const int32_t localX = point.h - window->m_wmX;
 			const int32_t localY = point.v - window->m_wmY;
 
-			RegionID chromeInteractionZone = inContent;
+			RegionID_t chromeInteractionZone = RegionIDs::kContent;
 			if (window->GetChromeInteractionZone(Vec2i(localX, localY), chromeInteractionZone))
 			{
 				*outRegion = chromeInteractionZone;
@@ -713,7 +704,7 @@ namespace PortabilityLayer
 					*outWindow = window;
 
 				if (outRegion)
-					*outRegion = inContent;
+					*outRegion = RegionIDs::kContent;
 
 				return;
 			}

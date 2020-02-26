@@ -164,6 +164,9 @@ namespace PortabilityLayer
 
 	WidgetHandleState_t EditboxWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
 	{
+		if (!m_visible || !m_enabled)
+			return WidgetHandleStates::kIgnored;
+
 		if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 		{
 			if (!m_hasFocus)

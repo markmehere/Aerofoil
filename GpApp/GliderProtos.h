@@ -173,10 +173,10 @@ void StartMarqueeHandled (Rect *, SInt16, SInt16);
 void StopMarquee (void);
 void PauseMarquee (void);
 void ResumeMarquee (void);
-void DragOutMarqueeRect (Point, Rect *);
-void DragMarqueeRect (DrawSurface *, Point, Rect *, Boolean, Boolean);
-void DragMarqueeHandle (DrawSurface *, Point, SInt16 *);
-void DragMarqueeCorner (DrawSurface *, Point, SInt16 *, SInt16 *, Boolean);
+void DragOutMarqueeRect (Window *, Point, Rect *);
+void DragMarqueeRect (Window *, DrawSurface *, Point, Rect *, Boolean, Boolean);
+void DragMarqueeHandle (Window *, DrawSurface *, Point, SInt16 *);
+void DragMarqueeCorner (Window *, DrawSurface *, Point, SInt16 *, SInt16 *, Boolean);
 Boolean MarqueeHasHandles (SInt16 *, SInt16 *);
 Boolean PtInMarqueeHandle (Point);
 void SetMarqueeGliderRect (SInt16, SInt16);
@@ -306,7 +306,7 @@ void DrawCustPictSansWhite (SInt16, Rect *);
 
 void DrawARoomsObjects (SInt16, Boolean);				// --- ObjectDrawAll.c
 
-void DoSelectionClick (DrawSurface *, Point, Boolean);	// --- ObjectEdit.c
+void DoSelectionClick (Window *, DrawSurface *, Point, Boolean);	// --- ObjectEdit.c
 void DoNewObjectClick (Point);
 void DeleteObject (void);
 void DuplicateObject (void);

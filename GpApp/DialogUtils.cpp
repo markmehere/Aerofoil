@@ -435,18 +435,17 @@ void SetDialogItemValue (Dialog *theDialog, short item, short theState)
 
 void ToggleDialogItemValue (Dialog *theDialog, short item)
 {
-	Rect			itemRect;
-	ControlHandle	itemHandle;
-	int16_t			itemType, theState;
-	
-	const PortabilityLayer::DialogItem &itemRef = theDialog->GetItems()[item - 1];
+	int16_t			theState;
 
-	theState = itemRef.GetWidget()->GetState();
+	PortabilityLayer::Widget *widget = theDialog->GetItems()[item - 1].GetWidget();
+
+	theState = widget->GetState();
 	if (theState == 0)
 		theState = 1;
 	else
 		theState = 0;
-	SetControlValue(itemHandle, theState);
+	widget->SetState(theState);
+	widget->DrawControl(theDialog->GetWindow()->GetDrawSurface());
 }
 
 //--------------------------------------------------------------  SetDialogNumToStr

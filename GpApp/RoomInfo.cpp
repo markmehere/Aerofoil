@@ -43,7 +43,7 @@
 
 
 void UpdateRoomInfoDialog (Dialog *);
-void DragMiniTile (DrawSurface *, Point, short *);
+void DragMiniTile (Window *, DrawSurface *, Point, short *);
 void HiliteTileOver (DrawSurface *, Point);
 int16_t RoomFilter (Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
@@ -125,7 +125,7 @@ void UpdateRoomInfoDialog (Dialog *theDialog)
 //--------------------------------------------------------------  DragMiniTile
 
 #ifndef COMPILEDEMO
-void DragMiniTile (DrawSurface *surface, Point mouseIs, short *newTileOver)
+void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *newTileOver)
 {
 	Rect		dragRect;
 	Point		mouseWas;
@@ -146,8 +146,8 @@ void DragMiniTile (DrawSurface *surface, Point mouseIs, short *newTileOver)
 	mouseWas = mouseIs;
 	while (WaitMouseUp())							// loop until mouse button let up
 	{
-		GetMouse(&mouseIs);							// get mouse coords
-		if (DeltaPoint(mouseWas, mouseIs) != 0L)	// the mouse has moved
+		GetMouse(window, &mouseIs);							// get mouse coords
+		if (mouseWas != mouseIs)					// the mouse has moved
 		{
 			surface->InvertFrameRect(dragRect, pattern);
 			QOffsetRect(&dragRect, mouseIs.h - mouseWas.h, 0);
@@ -358,6 +358,7 @@ int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 	if (!evt)
 		return -1;
 
+	Window *window = dial->GetWindow();
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 
 	if (evt->IsKeyDownEvent())
@@ -393,7 +394,7 @@ int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 			{
 				if (StillDown())
 				{
-					DragMiniTile(surface, mouseIs, &newTileOver);
+					DragMiniTile(window, surface, mouseIs, &newTileOver);
 					if ((newTileOver >= 0) && (newTileOver < kNumTiles))
 					{
 						tempTiles[newTileOver] = tileOver;

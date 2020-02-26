@@ -389,7 +389,7 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 	
 	if (toolSelected == kSelectTool)
-		DoSelectionClick(mainWindowSurface, wherePt, isDoubleClick);
+		DoSelectionClick(mainWindow, mainWindowSurface, wherePt, isDoubleClick);
 	else
 		DoNewObjectClick(wherePt);
 

@@ -8,12 +8,14 @@
 #include "Externs.h"
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
+#include "InputManager.h"
 #include "Marquee.h"
 #include "Objects.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
 
 #include <assert.h>
+#include <algorithm>
 
 
 #define	kMarqueePatListID		128
@@ -186,7 +188,7 @@ void ResumeMarquee (void)
 
 //--------------------------------------------------------------  DragOutMarqueeRect
 
-void DragOutMarqueeRect (Point start, Rect *theRect)
+void DragOutMarqueeRect (Window *window, Point start, Rect *theRect)
 {
 	Point		wasPt, newPt;
 	DrawSurface	*surface = mainWindow->GetDrawSurface();
@@ -200,8 +202,8 @@ void DragOutMarqueeRect (Point start, Rect *theRect)
 	
 	while (WaitMouseUp())
 	{
-		GetMouse(&newPt);
-		if (DeltaPoint(wasPt, newPt))
+		GetMouse(window, &newPt);
+		if (wasPt != newPt)
 		{
 			surface->InvertFrameRect(*theRect, pattern);
 			QSetRect(theRect, start.h, start.v, newPt.h, newPt.v);
@@ -215,7 +217,7 @@ void DragOutMarqueeRect (Point start, Rect *theRect)
 
 //--------------------------------------------------------------  DragMarqueeRect
 
-void DragMarqueeRect (DrawSurface *surface, Point start, Rect *theRect, Boolean lockH, Boolean lockV)
+void DragMarqueeRect (Window *window, DrawSurface *surface, Point start, Rect *theRect, Boolean lockH, Boolean lockV)
 {
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
@@ -230,8 +232,8 @@ void DragMarqueeRect (DrawSurface *surface, Point start, Rect *theRect, Boolean 
 	wasPt = start;
 	while (WaitMouseUp())
 	{
-		GetMouse(&newPt);
-		if (DeltaPoint(wasPt, newPt))
+		GetMouse(window, &newPt);
+		if (wasPt != newPt)
 		{
 			if (lockV)
 				deltaH = 0;
@@ -257,7 +259,7 @@ void DragMarqueeRect (DrawSurface *surface, Point start, Rect *theRect, Boolean 
 
 //--------------------------------------------------------------  DragMarqueeHandle
 
-void DragMarqueeHandle (DrawSurface *surface, Point start, short *dragged)
+void DragMarqueeHandle (Window *window, DrawSurface *surface, Point start, short *dragged)
 {
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
@@ -275,8 +277,8 @@ void DragMarqueeHandle (DrawSurface *surface, Point start, short *dragged)
 	wasPt = start;
 	while (WaitMouseUp())
 	{
-		GetMouse(&newPt);
-		if (DeltaPoint(wasPt, newPt))
+		GetMouse(window, &newPt);
+		if (wasPt != newPt)
 		{
 			switch (theMarquee.direction)
 			{
@@ -343,7 +345,7 @@ void DragMarqueeHandle (DrawSurface *surface, Point start, short *dragged)
 
 //--------------------------------------------------------------  DragMarqueeCorner
 
-void DragMarqueeCorner (DrawSurface *surface, Point start, short *hDragged, short *vDragged, Boolean isTop)
+void DragMarqueeCorner (Window *window, DrawSurface *surface, Point start, short *hDragged, short *vDragged, Boolean isTop)
 {
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
@@ -358,8 +360,8 @@ void DragMarqueeCorner (DrawSurface *surface, Point start, short *hDragged, shor
 	wasPt = start;
 	while (WaitMouseUp())
 	{
-		GetMouse(&newPt);
-		if (DeltaPoint(wasPt, newPt))
+		GetMouse(window, &newPt);
+		if (wasPt != newPt)
 		{
 			deltaH = newPt.h - wasPt.h;
 			if (isTop)
@@ -490,7 +492,12 @@ void DrawMarquee (DrawSurface *surface, const uint8_t *pattern)
 			break;
 		}
 
-		surface->InvertFillRect(Rect::Create(points[0].v, points[0].h, points[1].v, points[1].h), pattern);
+		if (points[1].h < points[0].h)
+			std::swap(points[0].h, points[1].h);
+		if (points[1].v < points[0].v)
+			std::swap(points[0].v, points[1].v);
+
+		surface->InvertFillRect(Rect::Create(points[0].v, points[0].h, points[1].v + 1, points[1].h + 1), pattern);
 	}
 	
 	if (gliderMarqueeUp)

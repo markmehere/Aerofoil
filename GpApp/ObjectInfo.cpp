@@ -15,6 +15,8 @@
 #include "Externs.h"
 #include "ObjectEdit.h"
 #include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
+#include "QDPixMap.h"
 #include "RectUtils.h"
 
 
@@ -78,7 +80,7 @@ void UpdateInvisBonusInfo (Dialog *);
 void UpdateTransInfo (Dialog *);
 void UpdateEnemyInfo (Dialog *);
 void UpdateFlowerInfo (Dialog *);
-Boolean BlowerFilter (Dialog *, EventRecord *, short *);
+int16_t BlowerFilter (Dialog *, const TimeTaggedVOSEvent *evt);
 Boolean FurnitureFilter (Dialog *, EventRecord *, short *);
 Boolean CustPictFilter (Dialog *, EventRecord *, short *);
 Boolean SwitchFilter (Dialog *, EventRecord *, short *);
@@ -124,12 +126,16 @@ void UpdateBlowerInfo (Dialog *theDialog)
 {
 	#define		kArrowheadLength	4
 	Rect		bounds;
+
+	Window *window = theDialog->GetWindow();
+	DrawSurface *surface = window->GetDrawSurface();
+	surface->SetForeColor(StdColors::White());
+	surface->FillRect((*surface->m_port.GetPixMap())->m_rect);
+
+	window->DrawControls();
 	
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
-
-	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 	
 	if ((thisRoom->objects[objActive].what != kLeftFan) && 
 			(thisRoom->objects[objActive].what != kRightFan))
@@ -143,6 +149,8 @@ void UpdateBlowerInfo (Dialog *theDialog)
 		bounds.right -= 2;
 		bounds.bottom -= 2;
 
+		surface->SetForeColor(StdColors::Black());
+
 		for (int16_t offsetChunk = 0; offsetChunk < 4; offsetChunk++)
 		{
 			const int16_t xOffset = offsetChunk & 1;
@@ -153,39 +161,39 @@ void UpdateBlowerInfo (Dialog *theDialog)
 			switch (newDirection)
 			{
 				case 1:		// up
-					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
-						offset + Point::Create(0, RectTall(&bounds)));
-					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
-						offset + Point::Create(kArrowheadLength, kArrowheadLength));
-					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
-						offset + Point::Create(-kArrowheadLength, kArrowheadLength));
+				{
+					const Point basePoint = offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top);
+					surface->DrawLine(basePoint, basePoint + Point::Create(0, RectTall(&bounds)));
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, kArrowheadLength));
+				}
 				break;
 			
 				case 2:		// right
-					surface->DrawLine(offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds)),
-						offset + Point::Create(-RectWide(&bounds), 0));
-					surface->DrawLine(offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds)),
-						offset + Point::Create(-kArrowheadLength, kArrowheadLength));
-					surface->DrawLine(offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds)),
-						offset + Point::Create(-kArrowheadLength, -kArrowheadLength));
+				{
+					const Point basePoint = offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds));
+					surface->DrawLine(basePoint, basePoint + Point::Create(-RectWide(&bounds), 0));
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, -kArrowheadLength));
+				}
 				break;
 			
 				case 4:		// down
-					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top),
-						offset + Point::Create(0, RectTall(&bounds)));
-					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.bottom),
-						offset + Point::Create(kArrowheadLength, -kArrowheadLength));
-					surface->DrawLine(offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.bottom),
-						offset + Point::Create(-kArrowheadLength, -kArrowheadLength));
+				{
+					const Point basePoint = offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.bottom);
+					surface->DrawLine(basePoint, basePoint + Point::Create(0, -RectTall(&bounds)));
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, -kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, -kArrowheadLength));
+				}
 				break;
 			
 				case 8:		// left
-					surface->DrawLine(offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds)),
-						offset + Point::Create(RectWide(&bounds), 0));
-					surface->DrawLine(offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds)),
-						offset + Point::Create(kArrowheadLength, -kArrowheadLength));
-					surface->DrawLine(offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds)),
-						offset + Point::Create(kArrowheadLength, kArrowheadLength));
+				{
+					const Point basePoint = offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds));
+					surface->DrawLine(basePoint, basePoint + Point::Create(RectWide(&bounds), 0));
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, -kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, kArrowheadLength));
+				}
 				break;
 			
 				default:
@@ -347,56 +355,36 @@ void UpdateFlowerInfo (Dialog *theDialog)
 
 //--------------------------------------------------------------  BlowerFilter
 
-Boolean BlowerFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t BlowerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		const GpKeyboardInputEvent &keyboardEvent = evt->m_vosEvent.m_event.m_keyboardInputEvent;
+
+		switch (PackVOSKeyCode(keyboardEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kEscape):
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kTab):
-//			SelectDialogItemText(dial, kRoomNameItem, 0, 1024);
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateBlowerInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
+		case PL_KEY_SPECIAL(kTab):
+			// SelectDialogItemText(dial, kRoomNameItem, 0, 1024);
+			return 0;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  FurnitureFilter
@@ -985,7 +973,9 @@ void DoBlowerObjectInfo (short what)
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 15);
-	
+
+	UpdateBlowerInfo(infoDial);
+
 	ShowWindow(infoDial->GetWindow());
 	
 	leaving = false;
@@ -993,7 +983,7 @@ void DoBlowerObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		ModalDialog(BlowerFilter, &item);
+		item = infoDial->ExecuteModal(BlowerFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1012,10 +1002,10 @@ void DoBlowerObjectInfo (short what)
 				if (KeepObjectLegal())
 				{
 				}
-				InvalWindowRect(mainWindow, &mainWindowRect);
 				GetThisRoomsObjRects();
 				ReadyBackground(thisRoom->background, thisRoom->tiles);
 				DrawThisRoomsObjects();
+				UpdateMainWindow();
 			}
 			fileDirty = true;
 			UpdateMenus(false);

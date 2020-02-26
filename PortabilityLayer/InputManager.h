@@ -9,6 +9,8 @@ struct KeyDownStates;
 
 namespace PortabilityLayer
 {
+	struct Vec2i;
+
 	class InputManager
 	{
 	public:
@@ -17,6 +19,7 @@ namespace PortabilityLayer
 		virtual void ApplyGamepadEvent(const GpGamepadInputEvent &vosEvent) = 0;
 		virtual void ApplyMouseEvent(const GpMouseInputEvent &vosEvent) = 0;
 		virtual int16_t GetGamepadAxis(unsigned int playerNum, GpGamepadAxis_t gamepadAxis) = 0;
+		virtual Vec2i GetMousePosition() const = 0;
 		virtual void ClearState() = 0;
 
 		static InputManager *GetInstance();

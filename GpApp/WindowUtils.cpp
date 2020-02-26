@@ -108,9 +108,14 @@ void OpenMessageWindow (const PLPasStr &title)
 	
 	SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 
-	const PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mssgWindowRect, windowStyle, false, 0, 0, title);
+	Rect placementRect = mssgWindowRect;
+	CenterRectInRect(&placementRect, &thisMac.screen);
 
-	mssgWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(wdef);
+	const PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(placementRect, windowStyle, false, 0, 0, title);
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
+	mssgWindow = wm->CreateWindow(wdef);
+	wm->PutWindowBehind(mssgWindow, wm->GetPutInFrontSentinel());
 
 	if (mssgWindow != nil)
 	{

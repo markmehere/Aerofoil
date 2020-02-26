@@ -15,6 +15,9 @@ namespace PortabilityLayer
 
 	WidgetHandleState_t ButtonWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
 	{
+		if (!m_visible || !m_enabled)
+			return WidgetHandleStates::kIgnored;
+
 		if (m_haveMouseDown)
 		{
 			if (evt.IsLMouseUpEvent())

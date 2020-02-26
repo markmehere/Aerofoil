@@ -31,6 +31,11 @@
 #include <algorithm>
 #include <assert.h>
 
+static inline void InvertPixel8(uint8_t &pixel)
+{
+	pixel = 255 ^ pixel;
+}
+
 
 void GetPort(GrafPtr *graf)
 {
@@ -1362,7 +1367,7 @@ void DrawSurface::InvertFrameRect(const Rect &rect, const uint8_t *pattern)
 	{
 		InvertFillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right), pattern);
 		InvertFillRect(Rect::Create(rect.top + 1, rect.left, rect.bottom - 1, rect.left + 1), pattern);
-		InvertFillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom + 1, rect.right), pattern);
+		InvertFillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom, rect.right), pattern);
 		InvertFillRect(Rect::Create(rect.top + 1, rect.right - 1, rect.bottom - 1, rect.right), pattern);
 	}
 }
@@ -1414,7 +1419,7 @@ void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 			{
 				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
 				if ((pattern[patternRow] >> patternCol) & 1)
-					pixData[firstLineIndex + col] = 255 - pixData[firstLineIndex + col];
+					InvertPixel8(pixData[firstLineIndex + col]);
 			}
 		}
 	}
@@ -1475,11 +1480,6 @@ void PenNormal()
 	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
 	qdState->m_penInvert = false;
 	qdState->m_penMask = false;
-}
-
-void InvertRect(const Rect *rect)
-{
-	PL_NotYetImplemented();
 }
 
 void InsetRect(Rect *rect, int x, int y)
@@ -1783,7 +1783,7 @@ void ImageInvert(const PixMap *invertMask, PixMap *targetBitmap, const Rect &src
 				const int32_t srcCol = c + firstSrcCol;
 				const int32_t destCol = c + firstDestCol;
 				if (invertRowStart[srcCol] != 0)
-					targetRowStart[destCol] = 255 - targetRowStart[destCol];
+					InvertPixel8(targetRowStart[destCol]);
 			}
 			break;
 		default:
@@ -1813,14 +1813,6 @@ DrawSurface *GetWindowPort(WindowPtr window)
 {
 	return &window->m_surface;
 }
-
-
-Int32 DeltaPoint(Point pointA, Point pointB)
-{
-	PL_NotYetImplemented();
-	return 0;
-}
-
 
 void SubPt(Point srcPoint, Point *destPoint)
 {

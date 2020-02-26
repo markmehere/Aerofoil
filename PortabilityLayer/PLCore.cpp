@@ -496,9 +496,11 @@ void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL)
 	}
 }
 
-void GetMouse(Point *point)
+void GetMouse(Window *window, Point *point)
 {
-	PL_NotYetImplemented();
+	const PortabilityLayer::Vec2i mousePos = PortabilityLayer::InputManager::GetInstance()->GetMousePosition();
+	point->h = mousePos.m_x - window->m_wmX;
+	point->v = mousePos.m_y - window->m_wmY;
 }
 
 Boolean Button()
@@ -514,7 +516,11 @@ Boolean StillDown()
 
 Boolean WaitMouseUp()
 {
-	return StillDown();
+	const Boolean isDown = StillDown();
+	if (isDown)
+		PLSysCalls::Sleep(1);
+
+	return isDown;
 }
 
 short Random()

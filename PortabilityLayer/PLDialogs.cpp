@@ -109,5 +109,5 @@ void ShowDialogItem(Dialog *dialog, int item)
 
 void HideDialogItem(Dialog *dialog, int item)
 {
-	PL_NotYetImplemented();
+	dialog->GetItems()[item - 1].GetWidget()->SetVisible(false);
 }

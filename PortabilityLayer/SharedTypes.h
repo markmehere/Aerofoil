@@ -18,6 +18,9 @@ struct Point
 	Point &operator-=(const Point &other);
 	Point &operator+=(const Point &other);
 
+	bool operator==(const Point &other) const;
+	bool operator!=(const Point &other) const;
+
 	static Point Create(int16_t h, int16_t v);
 };
 
@@ -138,6 +141,17 @@ inline Point &Point::operator+=(const Point &other)
 	this->v += other.v;
 	return *this;
 }
+
+inline bool Point::operator==(const Point &other) const
+{
+	return this->h == other.h && this->v == other.v;
+}
+
+inline bool Point::operator!=(const Point &other) const
+{
+	return !((*this) == other);
+}
+
 
 inline Point Point::Create(int16_t h, int16_t v)
 {
