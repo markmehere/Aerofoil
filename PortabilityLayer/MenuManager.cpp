@@ -12,6 +12,7 @@
 #include "PLCore.h"
 #include "PLPasStr.h"
 #include "PLResources.h"
+#include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLQDOffscreen.h"
 #include "RenderedFont.h"
@@ -28,6 +29,7 @@
 namespace
 {
 	static const int kMidGray = 187;
+	static const int kDarkGray = 102;
 
 	const PortabilityLayer::RGBAColor gs_barTopLeftCornerGraphicPixels[] =
 	{
@@ -52,6 +54,7 @@ namespace
 	const PortabilityLayer::RGBAColor gs_barDarkColor = { 102, 102, 102, 255 };
 	const PortabilityLayer::RGBAColor gs_barBottomEdgeColor = { 0, 0, 0, 255 };
 	const PortabilityLayer::RGBAColor gs_barNormalTextColor = { 0, 0, 0, 255 };
+	const PortabilityLayer::RGBAColor gs_barDisabledTextColor = { kDarkGray, kDarkGray, kDarkGray, 255 };
 	const PortabilityLayer::RGBAColor gs_barHighlightTextColor = { 255, 255, 255, 255 };
 
 	const PortabilityLayer::RGBAColor gs_barHighlightBrightColor = { 153, 204, 255, 255 };
@@ -179,6 +182,8 @@ namespace PortabilityLayer
 		void ProcessMouseMoveTo(const Vec2i &point);
 		void ProcessMouseMoveToMenuBar(const Vec2i &point);
 		void ProcessMouseMoveToMenu(const Vec2i &point);
+
+		static bool ItemIsSeparator(const Menu &menu, const MenuItem &item);
 
 		static const unsigned int kIconResID = 128;
 		static const unsigned int kMenuFontSize = 12;
@@ -965,6 +970,9 @@ namespace PortabilityLayer
 			item.layoutYOffset = static_cast<uint16_t>(cumulativeHeight);
 			item.layoutHeight = kMenuItemHeight;
 
+			if (ItemIsSeparator(*menu, item))
+				item.layoutHeight = kMenuSeparatorHeight;
+
 			const uint8_t *itemName = strBlob + item.nameOffsetInStringBlob;
 			const PLPasStr itemNamePStr = PLPasStr(itemName);
 
@@ -988,7 +996,10 @@ namespace PortabilityLayer
 			return;
 
 		if (point.m_y < static_cast<int>(kMenuBarHeight))
+		{
+			m_menuSelectionState.ClearSelection();
 			ProcessMouseMoveToMenuBar(point);
+		}
 		else
 			ProcessMouseMoveToMenu(point);
 	}
@@ -1042,7 +1053,10 @@ namespace PortabilityLayer
 			const Vec2i localPoint = point - Vec2i(xCoordinate, kMenuBarHeight);
 
 			if (localPoint.m_x < 0 || localPoint.m_y < 0 || static_cast<size_t>(localPoint.m_x) >= menu->layoutWidth || static_cast<size_t>(localPoint.m_y) >= menu->layoutHeight)
+			{
+				m_menuSelectionState.ClearSelection();
 				return;
+			}
 
 			const size_t localY = localPoint.m_y;
 
@@ -1052,13 +1066,26 @@ namespace PortabilityLayer
 
 				if (localY >= item.layoutYOffset && localY - item.layoutYOffset < item.layoutHeight)
 				{
-					m_menuSelectionState.SelectItem(i);
-					return;
+					if (item.enabled && !ItemIsSeparator(*menu, item))
+					{
+						m_menuSelectionState.SelectItem(i);
+						return;
+					}
+					else
+						break;
 				}
 			}
 		}
 
 		m_menuSelectionState.ClearSelection();
+	}
+
+	bool MenuManagerImpl::ItemIsSeparator(const Menu &menu, const MenuItem &item)
+	{
+		const uint8_t *strBlob = static_cast<const uint8_t*>(menu.stringBlobHandle->m_contents);
+
+		const uint8_t *namePStr = strBlob + item.nameOffsetInStringBlob;
+		return namePStr[0] == 1 && namePStr[1] == '-';
 	}
 
 	MenuManagerImpl *MenuManagerImpl::GetInstance()
@@ -1183,6 +1210,14 @@ namespace PortabilityLayer
 		{
 			const Rect rect = Rect::Create(0, 0, menu->layoutHeight, menu->layoutWidth);
 			surface->FillRect(rect);
+
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(Rect::Create(0, 0, 1, menu->layoutWidth - 1));
+			surface->FillRect(Rect::Create(1, 0, menu->layoutHeight - 1, 1));
+
+			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillRect(Rect::Create(1, menu->layoutWidth - 1, menu->layoutHeight, menu->layoutWidth));
+			surface->FillRect(Rect::Create(menu->layoutHeight - 1, 1, menu->layoutHeight, menu->layoutWidth - 1));
 		}
 
 		m_menuGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
@@ -1191,8 +1226,6 @@ namespace PortabilityLayer
 
 		Point itemPos = Point::Create(kMenuItemLeftPadding, 0);
 
-		qdState->SetForeColor(gs_barNormalTextColor);
-
 		for (size_t i = 0; i < menu->numMenuItems; i++)
 		{
 			if (m_haveItem && i == m_itemIndex)
@@ -1200,9 +1233,24 @@ namespace PortabilityLayer
 
 			const MenuItem &item = menu->menuItems[i];
 
-			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
+			if (ItemIsSeparator(*menu, item))
+			{
+				surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+				surface->FillRect(Rect::Create(item.layoutYOffset + 2, 0, item.layoutYOffset + 3, menu->layoutWidth));
+				surface->SetForeColor(StdColors::White());
+				surface->FillRect(Rect::Create(item.layoutYOffset + 3, 0, item.layoutYOffset + 4, menu->layoutWidth));
+			}
+			else
+			{
+				itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
+				if (item.enabled)
+					qdState->SetForeColor(gs_barNormalTextColor);
+				else
+					qdState->SetForeColor(gs_barDisabledTextColor);
+
+				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
+			}
 		}
 
 		if (m_haveItem)
@@ -1211,6 +1259,16 @@ namespace PortabilityLayer
 			qdState->SetForeColor(gs_barHighlightMidColor);
 			const Rect itemRect = Rect::Create(selectedItem.layoutYOffset, 0, selectedItem.layoutYOffset + selectedItem.layoutHeight, menu->layoutWidth);
 			surface->FillRect(itemRect);
+
+			qdState->SetForeColor(gs_barHighlightBrightColor);
+			surface->FillRect(Rect::Create(itemRect.top, 0, itemRect.bottom, 1));
+			if (m_itemIndex == 0)
+				surface->FillRect(Rect::Create(0, 1, 1, itemRect.right - 1));
+
+			qdState->SetForeColor(gs_barHighlightDarkColor);
+			surface->FillRect(Rect::Create(itemRect.top, itemRect.right - 1, itemRect.bottom, itemRect.right));
+			if (m_itemIndex == menu->numMenuItems - 1)
+				surface->FillRect(Rect::Create(itemRect.bottom - 1, 1, itemRect.bottom, itemRect.right - 1));
 
 			qdState->SetForeColor(gs_barHighlightTextColor);
 
