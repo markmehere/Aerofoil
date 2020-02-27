@@ -499,7 +499,11 @@ namespace PortabilityLayer
 
 		uint8_t *strWritePtr = *newHandle;
 
-		uint32_t writeOffset = 0;
+		const uint32_t titleSize = oldStrBlob[0];
+
+		memcpy(strWritePtr, oldStrBlob, titleSize + 1);
+
+		uint32_t writeOffset = titleSize + 1;
 		for (size_t i = 0; i < menuPtr->numMenuItems; i++)
 		{
 			MenuItem &menuItem = menuPtr->menuItems[i];
