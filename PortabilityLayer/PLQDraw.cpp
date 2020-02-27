@@ -464,7 +464,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 
 	PixMap *pixMap = *port->GetPixMap();
 
-	const Rect limitRect = pixMap->m_rect.Intersect(constrainRect);;
+	const Rect limitRect = pixMap->m_rect.Intersect(constrainRect);
 	const Rect areaRect = constrainRect;
 
 	if (!limitRect.IsValid() || !areaRect.IsValid())
@@ -547,7 +547,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 		{
 			const uint8_t character = chars[currentStartChar + ci];
 
-			DrawGlyph(qdState, pixMap, pixMap->m_rect, penPos, rfont, character, m_cachedAATable, m_cachedAAColor);
+			DrawGlyph(qdState, pixMap, limitRect, penPos, rfont, character, m_cachedAATable, m_cachedAAColor);
 		}
 
 		currentStartChar += committedLength;
