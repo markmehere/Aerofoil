@@ -14,6 +14,7 @@
 #include "DialogUtils.h"
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 
 #define kHouseInfoDialogID		1001
@@ -31,7 +32,7 @@
 
 long CountTotalHousePoints (void);
 void UpdateHouseInfoDialog (Dialog *);
-Boolean HouseFilter (Dialog *, EventRecord *, short *);
+int16_t HouseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt);
 Boolean WarnLockingHouse (void);
 void HowToZeroScores (void);
 
@@ -109,7 +110,6 @@ void UpdateHouseInfoDialog (Dialog *theDialog)
 {
 	short		nChars;
 	
-	DrawDialog(theDialog);
 	nChars = GetDialogStringLen(theDialog, kBannerTextItem);
 	SetDialogNumToStr(theDialog, kBannerNCharsItem, (long)nChars);
 	nChars = GetDialogStringLen(theDialog, kTrailerTextItem);
@@ -121,7 +121,7 @@ void UpdateHouseInfoDialog (Dialog *theDialog)
 
 //--------------------------------------------------------------  HouseFilter
 
-Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t HouseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	Point		mouseIs;
 	short		nChars;
@@ -134,70 +134,66 @@ Boolean HouseFilter (Dialog *dial, EventRecord *event, short *item)
 		SetDialogNumToStr(dial, kTrailerNCharsItem, (long)nChars);
 		keyHit = false;
 	}
-	
-	switch (event->what)
-	{
-		case keyDown:
-		switch (event->message)
-		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
 
-			case PL_KEY_SPECIAL(kEscape):
-			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			keyHit = true;
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateHouseInfoDialog(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		mouseIs = event->where;
-		mouseIs -= dial->GetWindow()->TopLeftCoord();
-		if ((houseEditText1.Contains(mouseIs)) ||
-				(houseEditText2.Contains(mouseIs)))
+	if (evt)
+	{
+		if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 		{
-			if (houseCursorIs != kBeamCursor)
+			const GpKeyboardInputEvent &keyEvt = evt->m_vosEvent.m_event.m_keyboardInputEvent;
+
+			if (keyEvt.m_eventType == GpKeyboardInputEventTypes::kDown)
 			{
-				PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kIBeam);
-				houseCursorIs = kBeamCursor;
+				switch (PackVOSKeyCode(keyEvt))
+				{
+				case PL_KEY_NUMPAD_SPECIAL(kEnter):
+					FlashDialogButton(dial, kOkayButton);
+					return kOkayButton;
+
+				case PL_KEY_SPECIAL(kEscape):
+					FlashDialogButton(dial, kCancelButton);
+					return kCancelButton;
+
+				default:
+					keyHit = true;
+					return -1;
+				}
+			}
+			else if (keyEvt.m_eventType == GpKeyboardInputEventTypes::kDownChar || keyEvt.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
+			{
+				keyHit = true;
+				return -1;
 			}
 		}
-		else
+		else if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 		{
-			if (houseCursorIs != kArrowCursor)
+			const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
+
+			if (mouseEvt.m_eventType == GpMouseEventTypes::kMove)
 			{
-				InitCursor();
-				houseCursorIs = kArrowCursor;
+				mouseIs = Point::Create(mouseEvt.m_x, mouseEvt.m_y);
+				mouseIs -= dial->GetWindow()->TopLeftCoord();
+				if ((houseEditText1.Contains(mouseIs)) ||
+					(houseEditText2.Contains(mouseIs)))
+				{
+					if (houseCursorIs != kBeamCursor)
+					{
+						PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kIBeam);
+						houseCursorIs = kBeamCursor;
+					}
+				}
+				else
+				{
+					if (houseCursorIs != kArrowCursor)
+					{
+						InitCursor();
+						houseCursorIs = kArrowCursor;
+					}
+				}
 			}
 		}
-		return(false);
-		break;
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoHouseInfo
@@ -243,10 +239,12 @@ void DoHouseInfo (void)
 	GetDialogItemRect(houseInfoDialog, kTrailerTextItem, &houseEditText2);
 	houseCursorIs = kArrowCursor;
 	leaving = false;
+
+	UpdateHouseInfoDialog(houseInfoDialog);
 	
 	while (!leaving)
 	{
-		ModalDialog(HouseFilter, &item);
+		item = houseInfoDialog->ExecuteModal(HouseFilter);
 		
 		if (item == kOkayButton)
 		{

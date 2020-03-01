@@ -22,6 +22,8 @@ namespace PortabilityLayer
 
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
 
+		Rect GetExpandedRect() const override;
+
 		bool HandlesTickEvents() const;
 
 		void SetSelection(size_t startChar, size_t endChar);

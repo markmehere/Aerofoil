@@ -4,7 +4,9 @@
 #include "PLMenus.h"
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "FontFamily.h"
+#include "Vec2i.h"
 
 namespace PortabilityLayer
 {
@@ -13,17 +15,59 @@ namespace PortabilityLayer
 	{
 	}
 
+	PopupMenuWidget::~PopupMenuWidget()
+	{
+		if (m_menu)
+			m_menu.Dispose();
+	}
+
 	bool PopupMenuWidget::Init(const WidgetBasicState &state)
 	{
-		m_menu = GetMenu(state.m_resID);
+		m_menu = ::GetMenu(state.m_resID);
 		if (!m_menu)
 			return false;
 
 		return true;
 	}
 
-	//WidgetHandleState_t PopupMenuWidget::ProcessEvent(const TimeTaggedVOSEvent &evt);
-	//int16_t PopupMenuWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback);
+	WidgetHandleState_t PopupMenuWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	{
+		if (evt.IsLMouseDownEvent())
+		{
+			const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+			const Vec2i globalPoint = Vec2i(mouseEvent.m_x, mouseEvent.m_y);
+			const Vec2i localPoint = globalPoint - Vec2i(m_window->m_wmX, m_window->m_wmY);
+
+			if (this->m_rect.Contains(Point::Create(localPoint.m_x, localPoint.m_y)))
+			{
+				int16_t part = Capture(Point::Create(localPoint.m_x, localPoint.m_y), nullptr);
+				if (part >= 1)
+					return WidgetHandleStates::kActivated;
+				else
+					return WidgetHandleStates::kIgnored;
+			}
+		}
+
+		return WidgetHandleStates::kIgnored;
+	}
+
+	int16_t PopupMenuWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	{
+		MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+
+		const Vec2i popupMenuPos = Vec2i(m_window->m_wmX, m_window->m_wmY) + Vec2i(m_rect.left, m_rect.top);
+		const Vec2i globalPos = Vec2i(pos.h, pos.v) + Vec2i(m_window->m_wmX, m_window->m_wmY);
+
+		uint16_t item = 0;
+		mm->PopupMenuSelect(m_menu, popupMenuPos, globalPos, m_state - 1, &item);
+
+		if (item < 1)
+			return -1;
+
+		this->SetState(item);
+		return item;
+	}
+
 	void PopupMenuWidget::DrawControl(DrawSurface *surface)
 	{
 		const Rect rect = m_rect;
@@ -59,9 +103,22 @@ namespace PortabilityLayer
 		}
 	}
 
+	void PopupMenuWidget::OnStateChanged()
+	{
+		DrawControl(m_window->GetDrawSurface());
+	}
+
 	PLPasStr PopupMenuWidget::GetString() const
 	{
+		if (m_state < 1)
+			return PSTR("");
+
 		const Menu *menu = (*m_menu);
 		return PortabilityLayer::MenuManager::GetInstance()->GetItemText(m_menu, m_state - 1);
+	}
+
+	const THandle<Menu> &PopupMenuWidget::GetMenu() const
+	{
+		return m_menu;
 	}
 }

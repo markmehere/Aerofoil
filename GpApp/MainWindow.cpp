@@ -368,7 +368,8 @@ void UpdateEditWindowTitle (void)
 	}
 	else
 		PasStringConcat(newTitle, PSTR("House Locked"));
-	SetWTitle(mainWindow, newTitle);
+
+	PortabilityLayer::WindowManager::GetInstance()->SetWindowTitle(mainWindow, newTitle);
 }
 #endif
 

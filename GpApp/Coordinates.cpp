@@ -124,18 +124,19 @@ void OpenCoordWindow (void)
 	Rect		src, dest;
 	Point		globalMouse;
 	short		direction, dist;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	if (coordWindow == nil)
 	{
 		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;
 
 		QSetRect(&coordWindowRect, 0, 0, 50, 38);
-		if (thisMac.hasColor)
-			coordWindow = NewCWindow(nil, &coordWindowRect, 
-					PSTR("Tools"), false, windowStyle, kPutInFront, 0L);
-		else
-			coordWindow = NewWindow(nil, &coordWindowRect, 
-					PSTR("Tools"), false, windowStyle, kPutInFront, 0L);
+
+		{
+			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(coordWindowRect, windowStyle, true, 0, 0, PSTR("Tools"));
+			coordWindow = wm->CreateWindow(wdef);
+		}
 		
 		if (coordWindow == nil)
 			RedAlert(kErrNoMemory);
@@ -148,7 +149,7 @@ void OpenCoordWindow (void)
 		MoveWindow(coordWindow, isCoordH, isCoordV, true);
 
 		GetWindowRect(coordWindow, &dest);
-		BringToFront(coordWindow);
+		wm->PutWindowBehind(coordWindow, wm->GetPutInFrontSentinel());
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(coordWindow);
 //		FlagWindowFloating(coordWindow);	TEMP - use flaoting windows
 		HiliteAllWindows();

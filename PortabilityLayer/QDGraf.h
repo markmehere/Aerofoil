@@ -59,16 +59,18 @@ struct DrawSurface final
 	void PushToDDSurface(IGpDisplayDriver *displayDriver);
 
 	void FillRect(const Rect &rect);
-	void FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern);
+	void FillRectWithPattern8x8(const Rect &rect, bool isMask, const uint8_t *pattern);
 	void FrameRect(const Rect &rect);
 	void FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight);
 	void InvertFrameRect(const Rect &rect, const uint8_t *pattern);
 	void InvertFillRect(const Rect &rect, const uint8_t *pattern);
 
 	void FillEllipse(const Rect &rect);
+	void FillEllipseWithPattern(const Rect &rect, bool isMask, const uint8_t *pattern);
 	void FrameEllipse(const Rect &rect);
 
 	void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask);
+	void FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMask *scanlineMask, bool isMask, const uint8_t *pattern);
 
 	void DrawLine(const Point &a, const Point &b);
 
@@ -89,11 +91,6 @@ struct DrawSurface final
 	int32_t MeasureFontLineGap();
 
 	void DrawPicture(THandle<BitmapImage> pictHandle, const Rect &rect);
-
-	void SetPattern8x8(const uint8_t *pattern);
-	void ClearPattern();
-
-	void SetMaskMode(bool maskMode);
 
 	Rect GetClipRect() const;
 	void SetClipRect(const Rect &rect);

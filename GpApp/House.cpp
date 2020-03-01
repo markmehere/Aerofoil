@@ -17,6 +17,7 @@
 #include "FileManager.h"
 #include "HostFileSystem.h"
 #include "House.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
 #include "ResourceManager.h"
 
@@ -26,7 +27,7 @@
 
 
 void UpdateGoToDialog (Dialog *);
-Boolean GoToFilter (Dialog *, EventRecord *, short *);
+int16_t GoToFilter (Dialog *dial, const TimeTaggedVOSEvent *evt);
 
 extern PortabilityLayer::ResourceArchive	*houseResFork;
 
@@ -594,7 +595,6 @@ void GenerateRetroLinks (void)
 
 void UpdateGoToDialog (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 10, kRedOrangeColor8);
 }
@@ -602,37 +602,27 @@ void UpdateGoToDialog (Dialog *theDialog)
 //--------------------------------------------------------------  GoToFilter
 // Dialog filter for the "Go To Room..." dialog.
 
-Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t GoToFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		const GpKeyboardInputEvent &keyEvt = evt->m_vosEvent.m_event.m_keyboardInputEvent;
+		switch (PackVOSKeyCode(keyEvt))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateGoToDialog(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kOkayButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoGoToDialog
@@ -664,10 +654,12 @@ Boolean GoToFilter (Dialog *dial, EventRecord *event, short *item)
 	
 	leaving = false;
 	canceled = false;
+
+	UpdateGoToDialog(theDialog);
 	
 	while (!leaving)
 	{
-		ModalDialog(GoToFilter, &item);
+		item = theDialog->ExecuteModal(GoToFilter);
 		
 		if (item == kOkayButton)
 		{

@@ -43,6 +43,6 @@ void LoadDialogPICT (Dialog *, short, short);
 void FrameDialogItem (Dialog *, short);
 void FrameDialogItemC (Dialog *, short, long);
 void FrameOvalDialogItem (Dialog *, short);
-void BorderDialogItem (Dialog *, short, short);
+void BorderDialogItem (Dialog *theDialog, short item, short sides, short thickness, const uint8_t *pattern);
 void ShadowDialogItem (Dialog *, short, short);
 void EraseDialogItem (Dialog *, short);

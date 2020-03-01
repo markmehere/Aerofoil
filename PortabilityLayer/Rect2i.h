@@ -41,6 +41,7 @@ namespace PortabilityLayer
 
 		bool IsValid() const;
 		Rect2i Intersect(const Rect2i &other) const;
+		bool Contains(const Vec2i &pt) const;
 
 		Rect ToShortRect() const;
 	};
@@ -156,6 +157,11 @@ namespace PortabilityLayer
 		const int32_t right = std::min(m_bottomRight.m_x, other.m_bottomRight.m_x);
 
 		return Rect2i(top, left, bottom, right);
+	}
+
+	inline bool Rect2i::Contains(const Vec2i &pt) const
+	{
+		return pt.m_x >= m_topLeft.m_x && pt.m_x < m_bottomRight.m_x && pt.m_y >= m_topLeft.m_y && pt.m_y < m_bottomRight.m_y;
 	}
 
 	inline Rect Rect2i::ToShortRect() const

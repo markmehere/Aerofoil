@@ -16,6 +16,10 @@ namespace PortabilityLayer
 
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
 
+		void OnEnabledChanged() override;
+
+		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
+
 	private:
 		bool m_haveMouseDown;
 		PascalStr<255> m_text;

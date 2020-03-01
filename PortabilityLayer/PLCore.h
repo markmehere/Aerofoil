@@ -100,7 +100,8 @@ struct Window
 
 	bool AddWidget(PortabilityLayer::Widget *widget);
 	ArrayView<PortabilityLayer::Widget*> GetWidgets() const;
-	PortabilityLayer::Widget* GetWidgetById() const;
+	PortabilityLayer::Widget *GetWidgetById() const;
+	bool ReplaceWidget(PortabilityLayer::Widget *oldWidget, PortabilityLayer::Widget *newWidget);
 
 	void FocusWidget(PortabilityLayer::Widget *widget);
 	PortabilityLayer::Widget *GetWidgetWithFocus() const;
@@ -257,7 +258,6 @@ bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close bo
 Int32 GrowWindow(WindowPtr window, Point start, Rect *size);
 bool TrackBox(WindowPtr window, Point point, int part);	// Returns true if grow/shrink box was clicked (part corresponds to type)
 void HiliteWindow(WindowPtr window, bool highlighted);
-void DisposeWindow(WindowPtr window);
 void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect);
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind);
@@ -266,7 +266,6 @@ WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Bo
 void SizeWindow(WindowPtr window, int width, int height, Boolean addToUpdateRegion);
 void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront);
 void ShowWindow(WindowPtr window);
-void SetWTitle(WindowPtr window, const PLPasStr &title);
 
 long MenuSelect(Point point);	// Breaks into menu select routine (in practice we'll just forward one from the queue?)
 

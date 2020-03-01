@@ -339,7 +339,6 @@ void DragMarqueeHandle (Window *window, DrawSurface *surface, Point start, short
 	}
 	surface->InvertFrameRect(theMarquee.bounds, pattern);
 	surface->InvertFillRect(theMarquee.handle, pattern);
-	PenNormal();
 	InitCursor();
 }
 
@@ -401,7 +400,6 @@ void DragMarqueeCorner (Window *window, DrawSurface *surface, Point start, short
 	}
 	surface->InvertFrameRect(theMarquee.bounds, pattern);
 	surface->InvertFillRect(theMarquee.handle, pattern);
-	PenNormal();
 	InitCursor();
 }
 

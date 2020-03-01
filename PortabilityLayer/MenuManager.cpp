@@ -90,7 +90,11 @@ struct Menu
 	bool haveMenuLayout;
 
 	size_t layoutWidth;
-	size_t layoutHeight;
+	size_t layoutBaseHeight;
+
+	size_t topItemsTruncated;
+	size_t bottomItemsTruncated;
+	size_t layoutFinalHeight;
 
 	PortabilityLayer::MMHandleBlock *stringBlobHandle;
 
@@ -143,6 +147,7 @@ namespace PortabilityLayer
 
 		bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) override;
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
+		void PopupMenuSelect(const THandle<Menu> &menu, const Vec2i &popupMenuPos, const Vec2i &initialPoint, size_t initialItem, uint16_t *outItem) override;
 
 		void DrawMenuBar() override;
 		void SetMenuVisible(bool isVisible) override;
@@ -158,12 +163,16 @@ namespace PortabilityLayer
 			MenuSelectionState();
 			~MenuSelectionState();
 
-			void HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool &outNeedRedraw);
+			void HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool isPopup, size_t initialItem, bool &outNeedRedraw);
 			void Dismiss();
 
 			THandle<Menu> GetSelectedMenu() const;
 			DrawSurface *GetRenderedMenu() const;
 			const unsigned int *GetSelectedItem() const;
+
+			bool IsPopup() const;
+			const Vec2i &GetPopupPosition() const;
+			void SetPopupPosition(const Vec2i &popupPosition);
 
 			void SelectItem(size_t item);
 			void ClearSelection();
@@ -173,8 +182,10 @@ namespace PortabilityLayer
 
 			THandle<Menu> m_currentMenu;
 			DrawSurface *m_menuGraf;
+			Vec2i m_popupPosition;
 			unsigned int m_itemIndex;
 			bool m_haveItem;
+			bool m_isPopup;
 		};
 
 		void RefreshMenuBarLayout();
@@ -347,7 +358,10 @@ namespace PortabilityLayer
 		menu->prevMenu = nullptr;
 		menu->nextMenu = nullptr;
 		menu->layoutWidth = 0;
-		menu->layoutHeight = 0;
+		menu->layoutBaseHeight = 0;
+		menu->layoutFinalHeight = 0;
+		menu->bottomItemsTruncated = 0;
+		menu->topItemsTruncated = 0;
 
 		return THandle<Menu>(menuData);
 	}
@@ -664,6 +678,56 @@ namespace PortabilityLayer
 		this->DrawMenuBar();
 	}
 
+	void MenuManagerImpl::PopupMenuSelect(const THandle<Menu> &menuHdl, const Vec2i &popupMenuPos, const Vec2i &initialPoint, size_t initialItem, uint16_t *outItem)
+	{
+		THandle<Menu> menuHdlCopy = menuHdl;	// Hack
+
+		bool needRedraw = false;
+		m_menuSelectionState.SetPopupPosition(popupMenuPos);
+		m_menuSelectionState.HandleSelectionOfMenu(this, menuHdlCopy, true, initialItem, needRedraw);
+
+		ProcessMouseMoveTo(initialPoint);
+
+		TimeTaggedVOSEvent evt;
+		bool canDismiss = false;
+		while (!canDismiss)
+		{
+			if (WaitForEvent(&evt, 1))
+			{
+				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+				{
+					switch (evt.m_vosEvent.m_event.m_mouseInputEvent.m_eventType)
+					{
+					case GpMouseEventTypes::kMove:
+						ProcessMouseMoveTo(PortabilityLayer::Vec2i(evt.m_vosEvent.m_event.m_mouseInputEvent.m_x, evt.m_vosEvent.m_event.m_mouseInputEvent.m_y));
+						break;
+					case GpMouseEventTypes::kDown:
+						if (evt.m_vosEvent.m_event.m_mouseInputEvent.m_button == GpMouseButtons::kLeft)
+							ProcessMouseMoveTo(PortabilityLayer::Vec2i(evt.m_vosEvent.m_event.m_mouseInputEvent.m_x, evt.m_vosEvent.m_event.m_mouseInputEvent.m_y));
+						break;
+					case GpMouseEventTypes::kUp:
+						if (evt.m_vosEvent.m_event.m_mouseInputEvent.m_button == GpMouseButtons::kLeft)
+							canDismiss = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (outItem)
+			*outItem = 0;
+
+		Menu *menu = *menuHdl;
+
+		if (const unsigned int *selectedItem = m_menuSelectionState.GetSelectedItem())
+		{
+			if (outItem)
+				*outItem = (*selectedItem) + 1;
+		}
+
+		m_menuSelectionState.Dismiss();
+	}
+
 	void MenuManagerImpl::DrawMenuBar()
 	{
 		if (!m_haveIcon)
@@ -893,9 +957,21 @@ namespace PortabilityLayer
 			Menu *selectedMenu = *m_menuSelectionState.GetSelectedMenu();
 			const PixMap *pixMap = *renderedMenu->m_port.GetPixMap();
 
-			const size_t xCoordinate = kMenuBarInitialPadding + selectedMenu->menuIndex * kMenuBarItemPadding * 2 + selectedMenu->cumulativeOffset - kMenuBarItemPadding;
+			int32_t xCoordinate = 0;
+			int32_t yCoordinate = 0;
+			if (!m_menuSelectionState.IsPopup())
+			{
+				xCoordinate = kMenuBarInitialPadding + selectedMenu->menuIndex * kMenuBarItemPadding * 2 + selectedMenu->cumulativeOffset - kMenuBarItemPadding;
+				yCoordinate = kMenuBarHeight;
+			}
+			else
+			{
+				const Vec2i popupPosition = m_menuSelectionState.GetPopupPosition();
+				xCoordinate = popupPosition.m_x;
+				yCoordinate = popupPosition.m_y;
+			}
 
-			displayDriver->DrawSurface(renderedMenu->m_ddSurface, xCoordinate, kMenuBarHeight, pixMap->m_rect.right, pixMap->m_rect.bottom);
+			displayDriver->DrawSurface(renderedMenu->m_ddSurface, xCoordinate, yCoordinate, pixMap->m_rect.right, pixMap->m_rect.bottom);
 		}
 	}
 
@@ -987,7 +1063,8 @@ namespace PortabilityLayer
 
 		menu->haveMenuLayout = true;
 		menu->layoutWidth = width;
-		menu->layoutHeight = cumulativeHeight;
+		menu->layoutBaseHeight = cumulativeHeight;
+		menu->layoutFinalHeight = menu->layoutBaseHeight;
 	}
 
 	void MenuManagerImpl::ProcessMouseMoveTo(const Vec2i &point)
@@ -995,7 +1072,7 @@ namespace PortabilityLayer
 		if (point.m_y < 0)
 			return;
 
-		if (point.m_y < static_cast<int>(kMenuBarHeight))
+		if (!m_menuSelectionState.IsPopup() &&  point.m_y < static_cast<int>(kMenuBarHeight))
 		{
 			m_menuSelectionState.ClearSelection();
 			ProcessMouseMoveToMenuBar(point);
@@ -1034,7 +1111,7 @@ namespace PortabilityLayer
 		if (selectedMenu)
 		{
 			bool needRedraw = false;
-			m_menuSelectionState.HandleSelectionOfMenu(this, menuHdl, needRedraw);
+			m_menuSelectionState.HandleSelectionOfMenu(this, menuHdl, false, 0, needRedraw);
 
 			if (needRedraw)
 				DrawMenuBar();
@@ -1048,11 +1125,24 @@ namespace PortabilityLayer
 		if (selectedMenuHandle)
 		{
 			Menu *menu = *selectedMenuHandle;
-			const int32_t xCoordinate = static_cast<int32_t>(kMenuBarInitialPadding + menu->menuIndex * kMenuBarItemPadding * 2 + menu->cumulativeOffset - kMenuBarItemPadding);
+			int32_t xCoordinate = 0;
+			int32_t yCoordinate = 0;
 
-			const Vec2i localPoint = point - Vec2i(xCoordinate, kMenuBarHeight);
+			if (!m_menuSelectionState.IsPopup())
+			{
+				xCoordinate = static_cast<int32_t>(kMenuBarInitialPadding + menu->menuIndex * kMenuBarItemPadding * 2 + menu->cumulativeOffset - kMenuBarItemPadding);
+				yCoordinate = kMenuBarHeight;
+			}
+			else
+			{
+				const Vec2i popupPos = m_menuSelectionState.GetPopupPosition();
+				xCoordinate = popupPos.m_x;
+				yCoordinate = popupPos.m_y;
+			}
 
-			if (localPoint.m_x < 0 || localPoint.m_y < 0 || static_cast<size_t>(localPoint.m_x) >= menu->layoutWidth || static_cast<size_t>(localPoint.m_y) >= menu->layoutHeight)
+			const Vec2i localPoint = point - Vec2i(xCoordinate, yCoordinate);
+
+			if (localPoint.m_x < 0 || localPoint.m_y < 0 || static_cast<size_t>(localPoint.m_x) >= menu->layoutWidth || static_cast<size_t>(localPoint.m_y) >= menu->layoutFinalHeight)
 			{
 				m_menuSelectionState.ClearSelection();
 				return;
@@ -1098,6 +1188,7 @@ namespace PortabilityLayer
 	MenuManagerImpl::MenuSelectionState::MenuSelectionState()
 		: m_menuGraf(nullptr)
 		, m_haveItem(false)
+		, m_isPopup(false)
 		, m_itemIndex(0)
 	{
 	}
@@ -1107,7 +1198,7 @@ namespace PortabilityLayer
 		Dismiss();
 	}
 
-	void MenuManagerImpl::MenuSelectionState::HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool &outNeedRedraw)
+	void MenuManagerImpl::MenuSelectionState::HandleSelectionOfMenu(MenuManagerImpl *mm, Menu **menuHdl, bool isPopup, size_t initialItem, bool &outNeedRedraw)
 	{
 		outNeedRedraw = false;
 
@@ -1117,13 +1208,23 @@ namespace PortabilityLayer
 		if (menuHdl != m_currentMenu)
 		{
 			Dismiss();
+
 			m_currentMenu = menuHdl;
+			m_isPopup = isPopup;
 
 			Menu *menu = *menuHdl;
 
 			outNeedRedraw = true;
 
+			int32_t yCoordinate = isPopup ? m_popupPosition.m_y : kMenuBarHeight;
+
 			mm->RefreshMenuLayout(menu);
+
+			if (m_isPopup)
+			{
+				assert(initialItem < menu->numMenuItems);
+				m_popupPosition.m_y -= static_cast<int32_t>(menu->menuItems[initialItem].layoutYOffset);
+			}
 
 			RenderMenu(menu);
 		}
@@ -1139,6 +1240,7 @@ namespace PortabilityLayer
 
 		m_currentMenu = nullptr;
 		m_haveItem = false;
+		m_isPopup = false;
 	}
 
 	THandle<Menu> MenuManagerImpl::MenuSelectionState::GetSelectedMenu() const
@@ -1157,6 +1259,21 @@ namespace PortabilityLayer
 			return nullptr;
 
 		return &m_itemIndex;
+	}
+
+	bool MenuManagerImpl::MenuSelectionState::IsPopup() const
+	{
+		return m_isPopup;
+	}
+
+	const Vec2i &MenuManagerImpl::MenuSelectionState::GetPopupPosition() const
+	{
+		return m_popupPosition;
+	}
+
+	void MenuManagerImpl::MenuSelectionState::SetPopupPosition(const Vec2i &popupPosition)
+	{
+		m_popupPosition = popupPosition;
 	}
 
 	void MenuManagerImpl::MenuSelectionState::SelectItem(size_t item)
@@ -1186,7 +1303,7 @@ namespace PortabilityLayer
 	{
 		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
 
-		const Rect menuRect = Rect::Create(0, 0, static_cast<int16_t>(menu->layoutHeight), static_cast<int16_t>(menu->layoutWidth));
+		const Rect menuRect = Rect::Create(0, 0, static_cast<int16_t>(menu->layoutFinalHeight), static_cast<int16_t>(menu->layoutWidth));
 
 		if (m_menuGraf == nullptr)
 		{
@@ -1208,16 +1325,16 @@ namespace PortabilityLayer
 		qdState->SetForeColor(gs_barMidColor);
 
 		{
-			const Rect rect = Rect::Create(0, 0, menu->layoutHeight, menu->layoutWidth);
+			const Rect rect = Rect::Create(0, 0, menu->layoutFinalHeight, menu->layoutWidth);
 			surface->FillRect(rect);
 
 			surface->SetForeColor(StdColors::White());
 			surface->FillRect(Rect::Create(0, 0, 1, menu->layoutWidth - 1));
-			surface->FillRect(Rect::Create(1, 0, menu->layoutHeight - 1, 1));
+			surface->FillRect(Rect::Create(1, 0, menu->layoutFinalHeight - 1, 1));
 
 			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(Rect::Create(1, menu->layoutWidth - 1, menu->layoutHeight, menu->layoutWidth));
-			surface->FillRect(Rect::Create(menu->layoutHeight - 1, 1, menu->layoutHeight, menu->layoutWidth - 1));
+			surface->FillRect(Rect::Create(1, menu->layoutWidth - 1, menu->layoutFinalHeight, menu->layoutWidth));
+			surface->FillRect(Rect::Create(menu->layoutFinalHeight - 1, 1, menu->layoutFinalHeight, menu->layoutWidth - 1));
 		}
 
 		m_menuGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);

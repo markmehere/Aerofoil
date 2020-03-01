@@ -4,6 +4,7 @@
 #include "PLArrayView.h"
 #include "PLPasStr.h"
 #include "PLEditboxWidget.h"
+#include "PLStandardColors.h"
 
 
 DialogTextSubstitutions::DialogTextSubstitutions()
@@ -109,5 +110,14 @@ void ShowDialogItem(Dialog *dialog, int item)
 
 void HideDialogItem(Dialog *dialog, int item)
 {
-	dialog->GetItems()[item - 1].GetWidget()->SetVisible(false);
+	PortabilityLayer::Widget *widget = dialog->GetItems()[item - 1].GetWidget();
+
+	if (widget->IsVisible())
+	{
+		widget->SetVisible(false);
+
+		DrawSurface *surface = dialog->GetWindow()->GetDrawSurface();
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(widget->GetExpandedRect());
+	}
 }

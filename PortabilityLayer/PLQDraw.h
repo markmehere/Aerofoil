@@ -112,11 +112,7 @@ void GetForeColor(RGBColor *color);
 void ClipRect(const Rect *rect);
 void GetClip(Rect *rect);
 
-void PenInvertMode(bool invertMode);
-void PenMask(bool maskMode);
-void PenPat(const Pattern *pattern);
 void PenSize(int w, int h);
-void PenNormal();
 void InsetRect(Rect *rect, int x, int y);
 Pattern *GetQDGlobalsGray(Pattern *pattern);
 Pattern *GetQDGlobalsBlack(Pattern *pattern);

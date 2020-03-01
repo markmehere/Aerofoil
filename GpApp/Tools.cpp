@@ -134,7 +134,6 @@ void FrameSelectedTool (DrawSurface *surface)
 	InsetRect(&theRect, 1, 1);
 	surface->FrameRect(theRect);
 
-	PenNormal();
 	ForeColor(blackColor);
 }
 #endif
@@ -484,6 +483,7 @@ void HandleToolsClick (Point wherePt)
 			{
 				EraseSelectedTool();
 				SwitchToolModes(newMode);
+				UpdateToolsWindow();
 			}
 		}
 	}

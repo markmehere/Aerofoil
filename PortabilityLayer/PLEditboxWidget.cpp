@@ -46,6 +46,9 @@ namespace PortabilityLayer
 
 	void EditboxWidget::EditboxWidget::DrawControl(DrawSurface *surface)
 	{
+		if (!m_visible)
+			return;
+
 		const Rect textRect = m_rect;
 		const Rect innerRect = textRect.Inset(-2, -2);
 		const Rect outerRect = innerRect.Inset(-1, -1);
@@ -222,6 +225,11 @@ namespace PortabilityLayer
 		}
 
 		return WidgetHandleStates::kIgnored;
+	}
+
+	Rect EditboxWidget::GetExpandedRect() const
+	{
+		return GetRect().Inset(-3, -3);
 	}
 
 	void EditboxWidget::Redraw()

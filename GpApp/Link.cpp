@@ -66,9 +66,9 @@ void UpdateLinkControl (void)
 	
 	switch (linkType)
 	{
-		case kSwitchLinkOnly:
+	case kSwitchLinkOnly:
 		if (objActive == kNoObjectSelected)
-			HiliteControl(linkControl, kControlInactive);
+			linkControl->SetEnabled(false);// HiliteControl(linkControl, kControlInactive);
 		else
 			switch (thisRoom->objects[objActive].what)
 			{
@@ -119,18 +119,18 @@ void UpdateLinkControl (void)
 				case kBall:
 				case kDrip:
 				case kFish:
-				HiliteControl(linkControl, kControlActive);
+					linkControl->SetEnabled(true);
 				break;
 				
 				default:
-				HiliteControl(linkControl, kControlInactive);
+					linkControl->SetEnabled(false);
 				break;
 			}
 		break;
 		
 		case kTriggerLinkOnly:
 		if (objActive == kNoObjectSelected)
-			HiliteControl(linkControl, kControlInactive);
+			linkControl->SetEnabled(false);
 		else
 			switch (thisRoom->objects[objActive].what)
 			{
@@ -147,7 +147,7 @@ void UpdateLinkControl (void)
 				case kDartRt:
 				case kDrip:
 				case kFish:
-				HiliteControl(linkControl, kControlActive);
+					linkControl->SetEnabled(true);
 				break;
 				
 				case kLightSwitch:
@@ -157,18 +157,18 @@ void UpdateLinkControl (void)
 				case kKnifeSwitch:
 				case kInvisSwitch:
 				if (linkRoom == thisRoomNumber)
-					HiliteControl(linkControl, kControlActive);
+					linkControl->SetEnabled(true);
 				break;
 				
 				default:
-				HiliteControl(linkControl, kControlInactive);
+					linkControl->SetEnabled(false);
 				break;
 			}
 		break;
 		
 		case kTransportLinkOnly:
 		if (objActive == kNoObjectSelected)
-			HiliteControl(linkControl, kControlInactive);
+			linkControl->SetEnabled(false);
 		else
 			switch (thisRoom->objects[objActive].what)
 			{
@@ -185,11 +185,11 @@ void UpdateLinkControl (void)
 				case kCalendar:
 				case kBulletin:
 				case kCloud:
-				HiliteControl(linkControl, kControlActive);
+					linkControl->SetEnabled(true);
 				break;
 				
 				default:
-				HiliteControl(linkControl, kControlInactive);
+					linkControl->SetEnabled(false);
 				break;
 			}
 		break;
@@ -218,23 +218,25 @@ void OpenLinkWindow (void)
 #ifndef COMPILEDEMO
 	Rect		src, dest;
 	Point		globalMouse;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	if (linkWindow == nil)
 	{
 		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;
 
 		QSetRect(&linkWindowRect, 0, 0, 129, 30);
-		if (thisMac.hasColor)
-			linkWindow = NewCWindow(nil, &linkWindowRect, 
-					PSTR("Link"), false, windowStyle, kPutInFront, 0L);
-		else
-			linkWindow = NewWindow(nil, &linkWindowRect, 
-					PSTR("Link"), false, windowStyle, kPutInFront, 0L);
+
+		{
+			PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(linkWindowRect, windowStyle, true, 0, 0, PSTR("Link"));
+			linkWindow = wm->CreateWindow(wdef);
+		}
 		
+		wm->PutWindowBehind(linkWindow, wm->GetPutInFrontSentinel());
+
 		MoveWindow(linkWindow, isLinkH, isLinkV, true);
 
 		GetWindowRect(linkWindow, &dest);
-		BringToFront(linkWindow);
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(linkWindow);
 //		FlagWindowFloating(linkWindow);	TEMP - use flaoting windows
 		HiliteAllWindows();
@@ -250,6 +252,8 @@ void OpenLinkWindow (void)
 		basicState.m_text.Set(6, "Unlink");
 		basicState.m_window = linkWindow;
 		unlinkControl = PortabilityLayer::ButtonWidget::Create(basicState);
+
+		linkWindow->DrawControls();
 		
 		linkRoom = -1;
 		linkObject = 255;
@@ -265,7 +269,7 @@ void CloseLinkWindow (void)
 {
 #ifndef COMPILEDEMO
 	if (linkWindow != nil)
-		DisposeWindow(linkWindow);
+		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(linkWindow);
 	
 	linkWindow = nil;
 	isLinkOpen = false;
@@ -380,7 +384,7 @@ void HandleLinkClick (Point wherePt)
 	part = FindControl(wherePt, linkWindow, &theControl);
 	if ((theControl != nil) && (part != 0))
 	{
-		part = TrackControl(theControl, wherePt, nil);
+		part = theControl->Capture(wherePt, nullptr);
 		if (part != 0)
 		{
 			if (theControl == linkControl)

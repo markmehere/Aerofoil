@@ -63,7 +63,11 @@ int GpMain::Run()
 	// This appears to be the "standard" Mac sample rate, probably rounded from 244800/11.
 	adProps.m_type = g_gpGlobalConfig.m_audioDriverType;
 	adProps.m_sampleRate = (244800 * 2 + 11) / (11 * 2);
+#ifdef NDEBUG
 	adProps.m_debug = true;
+#else
+	adProps.m_debug = false;
+#endif
 
 	IGpInputDriver **inputDrivers = static_cast<IGpInputDriver**>(malloc(sizeof(IGpInputDriver*) * g_gpGlobalConfig.m_numInputDrivers));
 

@@ -138,25 +138,59 @@ namespace PortabilityLayer
 			// -1 = path precedes item, 1 = path succeeds item
 			if (delta < 0)
 			{
-				lastFileExclusive = midFile;
-				midFile = (firstFile + lastFileExclusive) / 2;
-			}
-			else if (delta > 0)
-			{
 				const bool isPathPrefix = ((itemNameLength > prefixLen) && !memcmp(prefix, itemPath, prefixLen));
 				if (isPathPrefix)
 					return true;
 				else
 				{
-					firstFile = midFile + 1;
+					lastFileExclusive = midFile;
 					midFile = (firstFile + lastFileExclusive) / 2;
 				}
+			}
+			else if (delta > 0)
+			{
+				firstFile = midFile + 1;
+				midFile = (firstFile + lastFileExclusive) / 2;
 			}
 			else //if(delta == 0)
 			{
 				// Found the directory
 				firstFile = midFile + 1;
 				midFile = (firstFile + lastFileExclusive) / 2;
+			}
+		}
+
+		return false;
+	}
+
+	bool ZipFileProxy::FindFirstWithPrefix(const char *prefix, size_t &outFileIndex) const
+	{
+		size_t prefixLen = strlen(prefix);
+
+		// Could do binary search, but it's much more complicated in this case, just do linear scan...
+		for (size_t i = 0; i < m_numFiles; i++)
+		{
+			const UnalignedPtr<PortabilityLayer::ZipCentralDirectoryFileHeader> itemPtr = m_sortedFiles[i];
+			const PortabilityLayer::ZipCentralDirectoryFileHeader item = itemPtr.Get();
+
+			const uint16_t itemNameLength = item.m_fileNameLength;
+			const char *itemPath = GetZipItemName(itemPtr);
+
+			const int delta = ZipDirectorySearchPredicateResolved(prefix, itemPath, itemNameLength);
+			if (delta == 0)
+				continue;
+
+			if (delta < 0)
+			{
+				const bool isPathPrefix = ((itemNameLength > prefixLen) && !memcmp(prefix, itemPath, prefixLen));
+
+				if (isPathPrefix)
+				{
+					outFileIndex = i;
+					return true;
+				}
+				else
+					return false;
 			}
 		}
 
@@ -201,6 +235,15 @@ namespace PortabilityLayer
 	size_t ZipFileProxy::GetFileSize(size_t index) const
 	{
 		return m_sortedFiles[index].Get().m_uncompressedSize;
+	}
+
+	void ZipFileProxy::GetFileName(size_t index, const char *&outName, size_t &outLength) const
+	{
+		const UnalignedPtr<PortabilityLayer::ZipCentralDirectoryFileHeader> itemPtr = m_sortedFiles[index];
+		const PortabilityLayer::ZipCentralDirectoryFileHeader item = itemPtr.Get();
+
+		outLength = item.m_fileNameLength;
+		outName = GetZipItemName(itemPtr);
 	}
 
 	ZipFileProxy *ZipFileProxy::Create(IOStream *stream)

@@ -374,8 +374,6 @@ void DrawDefaultButton (Dialog *theDialog)
 			surface->FrameRoundRect(offsetRect, 8, 8);
 		}
 	}
-
-	PenNormal();
 }
 
 //--------------------------------------------------------------  GetDialogString
@@ -602,7 +600,6 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 	iRect.right -= inset;
 
 	// Draw centered
-	PL_NotYetImplemented_TODO("Clip to iRect");
 
 	const int32_t ascender = surface->MeasureFontAscender();
 
@@ -709,7 +706,7 @@ void FrameOvalDialogItem (Dialog *theDialog, short item)
 // Given a dialog item, this function draws any combination of 4 sidesÉ
 // of a box around it.  Which sides get drawn is encoded in "sides".
 
-void BorderDialogItem (Dialog *theDialog, short item, short sides)
+void BorderDialogItem(Dialog *theDialog, short item, short sides, short thickness, const uint8_t *pattern)
 {
 	// 1 = left
 	// 2 = top
@@ -725,29 +722,65 @@ void BorderDialogItem (Dialog *theDialog, short item, short sides)
 	if (sides >= 8)				// 8 = right
 	{
 		const Point pointA = Point::Create(itemRect.right, itemRect.top);
-		const Point pointB = Point::Create(itemRect.right, itemRect.bottom);
-		surface->DrawLine(pointA, pointB);
+		const Point pointB = Point::Create(itemRect.right + thickness, itemRect.bottom + 1);
+		const Rect rect = Rect::Create(pointA.v, pointA.h, pointB.v, pointB.h);
+		if (pattern)
+		{
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(rect);
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRectWithPattern8x8(rect, true, pattern);
+		}
+		else
+			surface->FillRect(rect);
 		sides -= 8;
 	}
 	if (sides >= 4)				// 4 = bottom
 	{
 		const Point pointA = Point::Create(itemRect.left, itemRect.bottom);
-		const Point pointB = Point::Create(itemRect.right, itemRect.bottom);
-		surface->DrawLine(pointA, pointB);
+		const Point pointB = Point::Create(itemRect.right + 1, itemRect.bottom + thickness);
+		const Rect rect = Rect::Create(pointA.v, pointA.h, pointB.v, pointB.h);
+		if (pattern)
+		{
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(rect);
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRectWithPattern8x8(rect, true, pattern);
+		}
+		else
+			surface->FillRect(rect);
 		sides -= 4;
 	}
 	if (sides >= 2)				// 2 = top
 	{
 		const Point pointA = Point::Create(itemRect.left, itemRect.top - 1);
-		const Point pointB = Point::Create(itemRect.right, itemRect.top - 1);
-		surface->DrawLine(pointA, pointB);
+		const Point pointB = Point::Create(itemRect.right + 1, itemRect.top + thickness);
+		const Rect rect = Rect::Create(pointA.v, pointA.h, pointB.v, pointB.h);
+		if (pattern)
+		{
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(rect);
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRectWithPattern8x8(rect, true, pattern);
+		}
+		else
+			surface->FillRect(rect);
 		sides -= 2;
 	}
 	if (sides >= 1)				// 1 = left
 	{
 		const Point pointA = Point::Create(itemRect.left - 1, itemRect.top);
-		const Point pointB = Point::Create(itemRect.left - 1, itemRect.bottom);
-		surface->DrawLine(pointA, pointB);
+		const Point pointB = Point::Create(itemRect.left - 1 + thickness, itemRect.bottom + 1);
+		const Rect rect = Rect::Create(pointA.v, pointA.h, pointB.v, pointB.h);
+		if (pattern)
+		{
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(rect);
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRectWithPattern8x8(rect, true, pattern);
+		}
+		else
+			surface->FillRect(rect);
 	}
 }
 

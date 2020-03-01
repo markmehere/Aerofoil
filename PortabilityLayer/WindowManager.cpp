@@ -97,6 +97,8 @@ namespace PortabilityLayer
 
 		bool IsBorderless() const;
 		uint16_t GetStyleFlags() const;
+
+		void SetTitle(const PLPasStr &str);
 		const PascalStr<255> &GetTitle() const;
 
 	private:
@@ -124,6 +126,7 @@ namespace PortabilityLayer
 		void FindWindow(const Point &point, Window **outWindow, short *outRegion) const override;
 		void DestroyWindow(Window *window) override;
 		void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) override;
+		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
@@ -582,6 +585,12 @@ namespace PortabilityLayer
 		return m_styleFlags;
 	}
 
+	void WindowImpl::SetTitle(const PLPasStr &str)
+	{
+		m_title.Set(str.Length(), str.Chars());
+		m_chromeTheme->RenderChrome(this, m_chromeSurfaces + WindowChromeSides::kTop, WindowChromeSides::kTop);
+	}
+
 	const PascalStr<255> &WindowImpl::GetTitle() const
 	{
 		return m_title;
@@ -768,6 +777,11 @@ namespace PortabilityLayer
 				}
 			}
 		}
+	}
+
+	void WindowManagerImpl::SetWindowTitle(Window *window, const PLPasStr &title)
+	{
+		static_cast<WindowImpl*>(window)->SetTitle(title);
 	}
 
 	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)

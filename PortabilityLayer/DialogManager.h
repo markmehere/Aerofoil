@@ -9,6 +9,7 @@ struct TimeTaggedVOSEvent;
 
 namespace PortabilityLayer
 {
+	class DialogImpl;
 	class Widget;
 
 	class DialogManager
@@ -20,7 +21,7 @@ namespace PortabilityLayer
 		static DialogManager *GetInstance();
 	};
 
-	class DialogItem
+	class DialogItem final
 	{
 	public:
 		explicit DialogItem(Widget *widget);
@@ -29,6 +30,8 @@ namespace PortabilityLayer
 		Widget *GetWidget() const;
 
 	private:
+		friend class DialogImpl;
+
 		Widget *m_widget;
 	};
 }

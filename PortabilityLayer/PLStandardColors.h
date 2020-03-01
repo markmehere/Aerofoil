@@ -13,4 +13,5 @@ public:
 	static PortabilityLayer::RGBAColor Red();
 	static PortabilityLayer::RGBAColor Green();
 	static PortabilityLayer::RGBAColor Blue();
+	static PortabilityLayer::RGBAColor Magenta();
 };

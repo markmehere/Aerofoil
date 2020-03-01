@@ -40,6 +40,8 @@ struct Dialog
 	virtual void SetItemVisibility(unsigned int itemIndex, bool isVisible) = 0;
 
 	virtual int16_t ExecuteModal(DialogFilterFunc_t filterFunc) = 0;
+
+	virtual bool ReplaceWidget(unsigned int itemIndex, PortabilityLayer::Widget *widget) = 0;
 };
 
 typedef Boolean(*ModalFilterUPP)(Dialog *dial, EventRecord *event, short *item);

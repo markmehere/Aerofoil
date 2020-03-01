@@ -3,6 +3,7 @@
 #include "QDState.h"
 #include "BitmapImage.h"
 #include "DisplayDeviceManager.h"
+#include "EllipsePlotter.h"
 #include "FontFamily.h"
 #include "FontManager.h"
 #include "LinePlotter.h"
@@ -927,22 +928,6 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-
-void DrawSurface::SetPattern8x8(const uint8_t *pattern)
-{
-	m_port.GetState()->SetPenPattern8x8(pattern);
-}
-
-void DrawSurface::ClearPattern()
-{
-	m_port.GetState()->SetPenPattern8x8(nullptr);
-}
-
-void DrawSurface::SetMaskMode(bool maskMode)
-{
-	m_port.GetState()->m_penMask = maskMode;
-}
-
 Rect DrawSurface::GetClipRect() const
 {
 	return m_port.GetState()->m_clipRect;
@@ -1001,7 +986,7 @@ void DrawSurface::FillRect(const Rect &rect)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *pattern)
+void DrawSurface::FillRectWithPattern8x8(const Rect &rect, bool isMask, const uint8_t *pattern)
 {
 	if (!rect.IsValid())
 		return;
@@ -1037,6 +1022,10 @@ void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *patter
 	case GpPixelFormats::k8BitStandard:
 	{
 		const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+		uint8_t backColor = 0;
+
+		if (!isMask)
+			backColor = qdState->ResolveBackColor8(nullptr, 0);
 
 		size_t scanlineIndex = 0;
 		for (size_t ln = 0; ln < numLines; ln++)
@@ -1049,6 +1038,8 @@ void DrawSurface::FillRectWithPattern8x8(const Rect &rect, const uint8_t *patter
 				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
 				if ((pattern[patternRow] >> patternCol) & 1)
 					pixData[firstLineIndex + col] = color;
+				else if (!isMask)
+					pixData[firstLineIndex + col] = backColor;
 			}
 		}
 	}
@@ -1106,9 +1097,90 @@ void DrawSurface::FillEllipse(const Rect &rect)
 	}
 }
 
+void DrawSurface::FillEllipseWithPattern(const Rect &rect, bool isMask, const uint8_t *pattern)
+{
+	if (!rect.IsValid() || rect.Width() < 1 || rect.Height() < 1)
+		return;
+
+	if (rect.Width() <= 2 || rect.Height() <= 2)
+	{
+		FillRectWithPattern8x8(rect, isMask, pattern);
+		return;
+	}
+
+	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
+	if (mask)
+	{
+		FillScanlineMaskWithPattern(mask, isMask, pattern);
+		mask->Destroy();
+	}
+}
+
 void DrawSurface::FrameEllipse(const Rect &rect)
 {
-	PL_NotYetImplemented();
+	if (!rect.IsValid())
+		return;
+
+	if (rect.Width() <= 2 || rect.Height() <= 2)
+	{
+		FillRect(rect);
+		return;
+	}
+
+	Rect constrainedRect = rect;
+
+	PortabilityLayer::QDPort *qdPort = &m_port;
+
+	const Rect portRect = qdPort->GetRect();
+
+	PortabilityLayer::QDState *qdState = qdPort->GetState();
+	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
+	constrainedRect = constrainedRect.Intersect(portRect);
+
+	if (!constrainedRect.IsValid())
+		return;
+
+	GpPixelFormat_t pixelFormat = qdPort->GetPixelFormat();
+
+	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
+	const size_t pitch = pixMap->GetPitch();
+	const size_t firstIndex = static_cast<size_t>(constrainedRect.top) * pitch + static_cast<size_t>(constrainedRect.left);
+	const size_t numLines = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
+	const size_t numCols = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
+	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
+
+	PortabilityLayer::EllipsePlotter plotter;
+	plotter.Reset(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
+
+	PortabilityLayer::Rect2i constraintRect32 = PortabilityLayer::Rect2i(constrainedRect.top, constrainedRect.left, constrainedRect.bottom, constrainedRect.right);
+
+	switch (pixelFormat)
+	{
+	case GpPixelFormats::k8BitStandard:
+		{
+			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+
+			for (;;)
+			{
+				const PortabilityLayer::Vec2i pt = plotter.GetPoint();
+
+				if (constraintRect32.Contains(pt))
+				{
+					const size_t pixelIndex = static_cast<size_t>(pt.m_y - portRect.top) * pitch + static_cast<size_t>(pt.m_x - portRect.left);
+					pixData[pixelIndex] = color;
+				}
+
+				if (plotter.PlotNext() == PortabilityLayer::PlotDirection_Exhausted)
+					break;
+			}
+		}
+		break;
+	default:
+		PL_NotYetImplemented();
+		return;
+	}
+
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor, uint8_t bgColor, bool mask)
@@ -1143,6 +1215,11 @@ static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, 
 
 void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 {
+	FillScanlineMaskWithPattern(scanlineMask, false, nullptr);
+}
+
+void DrawSurface::FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMask *scanlineMask, bool isMask, const uint8_t *pattern)
+{
 	if (!scanlineMask)
 		return;
 
@@ -1175,7 +1252,6 @@ void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlin
 
 	uint8_t foreColor8 = 0;
 	uint8_t backColor8 = 0;
-	const bool isMask = qdState->m_penMask;
 
 	const GpPixelFormat_t pixelFormat = pixMap->m_pixelFormat;
 
@@ -1193,9 +1269,9 @@ void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlin
 
 	uint8_t pattern8x8[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	bool havePattern = false;
-	if (const uint8_t *statePattern = qdState->GetPattern8x8())
+	if (pattern)
 	{
-		memcpy(pattern8x8, statePattern, 8);
+		memcpy(pattern8x8, pattern, 8);
 		for (int i = 0; i < 8; i++)
 		{
 			if (pattern8x8[i] != 0xff)
@@ -1452,34 +1528,9 @@ const PortabilityLayer::RGBAColor &DrawSurface::GetBackColor() const
 	return m_port.GetState()->GetBackColor();
 }
 
-void PenInvertMode(bool invertMode)
-{
-	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	qdState->m_penInvert = invertMode;
-}
-
-void PenMask(bool maskMode)
-{
-	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	qdState->m_penMask = maskMode;
-}
-
-void PenPat(const Pattern *pattern)
-{
-	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	qdState->SetPenPattern8x8(*pattern);
-}
-
 void PenSize(int w, int h)
 {
 	PL_NotYetImplemented();
-}
-
-void PenNormal()
-{
-	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	qdState->m_penInvert = false;
-	qdState->m_penMask = false;
 }
 
 void InsetRect(Rect *rect, int x, int y)

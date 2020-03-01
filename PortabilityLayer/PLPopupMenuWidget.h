@@ -14,11 +14,18 @@ namespace PortabilityLayer
 
 		bool Init(const WidgetBasicState &state) override;
 
-		//WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
-		//int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);
+		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
+		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);
 		void DrawControl(DrawSurface *surface) override;
 
+		void OnStateChanged() override;
+
 		PLPasStr GetString() const override;
+
+		const THandle<Menu> &GetMenu() const;
+
+	protected:
+		~PopupMenuWidget();
 
 	private:
 		THandle<Menu> m_menu;

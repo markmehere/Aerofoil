@@ -17,6 +17,7 @@
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
 #include "RectUtils.h"
+#include "PLPopupMenuWidget.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
 #include "ResourceCompiledRef.h"
@@ -49,7 +50,7 @@ int16_t RoomFilter (Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
 short ChooseOriginalArt (short);
 void UpdateOriginalArt (Dialog *);
-Boolean OriginalArtFilter (Dialog *, EventRecord *, short *);
+int16_t OriginalArtFilter (Dialog *dialog, const TimeTaggedVOSEvent *evt);
 Boolean PictIDExists (short);
 short GetFirstPICT (void);
 void BitchAboutPICTNotFound (void);
@@ -65,6 +66,8 @@ Boolean		originalFloor;
 
 extern	IGpCursor	*handCursor;
 extern	short		lastBackground;
+
+extern PortabilityLayer::ResourceArchive *houseResFork;
 
 
 //==============================================================  Functions
@@ -323,7 +326,6 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 			}
 
 			surface->SetForeColor(StdColors::Black());
-			PenNormal();
 			tileOver = -1;
 		}
 		
@@ -417,56 +419,64 @@ int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  DoRoomInfo
 
-void DoRoomInfo (void)
+void DoRoomInfo(void)
 {
 #ifndef COMPILEDEMO
-	#define			kBackgroundsMenuID		140
+#define			kBackgroundsMenuID		140
 	Dialog			*roomInfoDialog;
-	MenuHandle		backgroundsMenu;
 	Str255			floorStr, suiteStr, objectsStr, tempStr;
 	short			item, i, newBack;
 	char			wasState;
 	Boolean			leaving, wasFirstRoom, forceDraw;
 	PLError_t		theErr;
-	
+
 	tileOver = -1;
 	cursorIs = kArrowCursor;
 	tempBack = thisRoom->background;
-	backgroundsMenu = GetMenu(kBackgroundsMenuID);
-//	SetMenuItemTextStyle(backgroundsMenu, kOriginalArtworkItem, italic);
-	if (HouseHasOriginalPicts())
-		EnableMenuItem(backgroundsMenu, kOriginalArtworkItem);
-	
+	//	SetMenuItemTextStyle(backgroundsMenu, kOriginalArtworkItem, italic);
+
 	NumToString(thisRoom->floor, floorStr);
 	NumToString(thisRoom->suite, suiteStr);
 	NumToString(thisRoom->numObjects, objectsStr);
 	DialogTextSubstitutions substitutions(floorStr, suiteStr, objectsStr);
-	
+
 	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredPixelFormat);
-//	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
-//	SetPort((GrafPtr)tileSrcMap);
+	//	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
+	//	SetPort((GrafPtr)tileSrcMap);
 	if ((tempBack > kStars) && (!PictIDExists(tempBack)))
 	{
 		BitchAboutPICTNotFound();
 		tempBack = kSimpleRoom;
 	}
-	if ((tempBack == 2002) || (tempBack == 2011) || 
-			(tempBack == 2016) || (tempBack == 2017))
+	if ((tempBack == 2002) || (tempBack == 2011) ||
+		(tempBack == 2016) || (tempBack == 2017))
 		LoadScaledGraphicCustom(tileSrcMap, tempBack - 800, &tileSrcRect);
 	else
 		LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
-	
+
 	for (i = 0; i < kNumTiles; i++)
 		tempTiles[i] = thisRoom->tiles[i];
-	
-//	CenterDialog(kRoomInfoDialogID);
+
+	//	CenterDialog(kRoomInfoDialogID);
 	roomInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kRoomInfoDialogID, kPutInFront, &substitutions);
 	if (roomInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort(&roomInfoDialog->GetWindow()->GetDrawSurface()->m_port);
-	
-	// Fix this later.  TEMP
-//	AddMenuToPopUp(roomInfoDialog, kRoomPopupItem, backgroundsMenu);
+
+	{
+		PortabilityLayer::WidgetBasicState state;
+
+		GetDialogItemRect(roomInfoDialog, kRoomPopupItem, &state.m_rect);
+		state.m_resID = kBackgroundsMenuID;
+		state.m_enabled = true;
+
+		PortabilityLayer::PopupMenuWidget *roomPopupWidget = PortabilityLayer::PopupMenuWidget::Create(state);
+		roomInfoDialog->ReplaceWidget(kRoomPopupItem - 1, roomPopupWidget);
+
+		if (HouseHasOriginalPicts())
+			EnableMenuItem(roomPopupWidget->GetMenu(), kOriginalArtworkItem);
+	}
+
 	if (tempBack >= kUserBackground)
 		SetPopUpMenuValue(roomInfoDialog, kRoomPopupItem, kOriginalArtworkItem);
 	else
@@ -495,6 +505,8 @@ void DoRoomInfo (void)
 	
 	while (!leaving)
 	{
+		bool needRedraw = false;
+
 		item = roomInfoDialog->ExecuteModal(RoomFilter);
 		
 		if (item == kOkayButton)
@@ -543,8 +555,7 @@ void DoRoomInfo (void)
 				{
 					tempBack = newBack;
 					LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
-					InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
-					InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
+					needRedraw = true;
 				}
 			}
 			else
@@ -571,8 +582,7 @@ void DoRoomInfo (void)
 					LoadScaledGraphicCustom(tileSrcMap, tempBack - 800, &tileSrcRect);
 				else
 					LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
-				InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
-				InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
+				needRedraw = true;
 			}
 		}
 		else if (item == kBoundsButton)
@@ -582,10 +592,12 @@ void DoRoomInfo (void)
 			{
 				tempBack = newBack;
 				LoadScaledGraphicCustom(tileSrcMap, tempBack, &tileSrcRect);
-				InvalWindowRect(roomInfoDialog->GetWindow(), &tileSrc);
-				InvalWindowRect(roomInfoDialog->GetWindow(), &tileDest);
+				needRedraw = true;
 			}
 		}
+
+		if (needRedraw)
+			UpdateRoomInfoDialog(roomInfoDialog);
 	}
 	
 	InitCursor();
@@ -602,133 +614,83 @@ void DoRoomInfo (void)
 #ifndef COMPILEDEMO
 void UpdateOriginalArt (Dialog *theDialog)
 {
-	Pattern		dummyPattern;
+	Pattern		grayPattern;
+	GetQDGlobalsGray(&grayPattern);
 	
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	
-	PenSize(2, 1);
 	if (!originalLeftOpen)
-		BorderDialogItem(theDialog, 7, 8);
+		BorderDialogItem(theDialog, 7, 8, 2, nullptr);
 	else
-	{
-		PenPat(GetQDGlobalsGray(&dummyPattern));
-		BorderDialogItem(theDialog, 7, 8);
-		PenPat(GetQDGlobalsBlack(&dummyPattern));
-	}
+		BorderDialogItem(theDialog, 7, 8, 2, grayPattern);
 	
-	PenSize(1, 2);
 	if (!originalTopOpen)
-		BorderDialogItem(theDialog, 8, 4);
+		BorderDialogItem(theDialog, 8, 4, 2, nullptr);
 	else
-	{
-		PenPat(GetQDGlobalsGray(&dummyPattern));
-		BorderDialogItem(theDialog, 8, 4);
-		PenPat(GetQDGlobalsBlack(&dummyPattern));
-	}
+		BorderDialogItem(theDialog, 8, 4, 2, grayPattern);
 	
-	PenSize(2, 1);
 	if (!originalRightOpen)
-		BorderDialogItem(theDialog, 9, 1);
+		BorderDialogItem(theDialog, 9, 1, 2, nullptr);
 	else
-	{
-		PenPat(GetQDGlobalsGray(&dummyPattern));
-		BorderDialogItem(theDialog, 9, 1);
-		PenPat(GetQDGlobalsBlack(&dummyPattern));
-	}
+		BorderDialogItem(theDialog, 9, 1, 2, grayPattern);
 	
-	PenSize(1, 2);
 	if (!originalBottomOpen)
-		BorderDialogItem(theDialog, 10, 2);
+		BorderDialogItem(theDialog, 10, 2, 2, nullptr);
 	else
-	{
-		PenPat(GetQDGlobalsGray(&dummyPattern));
-		BorderDialogItem(theDialog, 10, 2);
-		PenPat(GetQDGlobalsBlack(&dummyPattern));
-	}
-	
-	PenSize(1, 1);
+		BorderDialogItem(theDialog, 10, 2, 2, grayPattern);
 }
 #endif
 
 //--------------------------------------------------------------  OriginalArtFilter
 #ifndef COMPILEDEMO
 
-Boolean OriginalArtFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t OriginalArtFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	Point		mouseIs;
-	
-	switch (event->what)
+
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+			return kOkayButton;
 
-			case PL_KEY_SPECIAL(kEscape):
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
+			return kCancelButton;
 
-			case PL_KEY_SPECIAL(kTab):
+		case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kPICTIDItem, 0, 1024);
-			return(true);
-			break;
-			
-			default:
-			return(false);
+			return 0;
+
+		default:
+			return -1;
 		}
-		break;
-		
-		case mouseDown:
-		mouseIs = event->where;
+	}
+	else if (evt->IsLMouseDownEvent())
+	{
+		const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
+
+		mouseIs = Point::Create(mouseEvt.m_x, mouseEvt.m_y);
 		mouseIs -= dial->GetWindow()->TopLeftCoord();
 		if (leftBound.Contains(mouseIs))
-		{
-			*item = 7;
-			return(true);
-		}
+			return 7;
 		else if (topBound.Contains(mouseIs))
-		{
-			*item = 8;
-			return(true);
-		}
+			return 8;
 		else if (rightBound.Contains(mouseIs))
-		{
-			*item = 9;
-			return(true);
-		}
+			return 9;
 		else if (bottomBound.Contains(mouseIs))
-		{
-			*item = 10;
-			return(true);
-		}
+			return 10;
 		else
-			return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateOriginalArt(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
+			return -1;
 	}
+
+	return -1;
 }
 #endif
 
@@ -775,10 +737,12 @@ short ChooseOriginalArt (short was)
 	SetDialogItemValue(theDialog, kFloorSupportCheck, (short)originalFloor);
 	
 	leaving = false;
+
+	UpdateOriginalArt(theDialog);
 	
 	while (!leaving)
 	{
-		ModalDialog(OriginalArtFilter, &item);
+		item = theDialog->ExecuteModal(OriginalArtFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -903,18 +867,11 @@ short GetFirstPICT (void)
 	Handle		resHandle;
 	Str255		resName;
 
-	PL_NotYetImplemented();
+	int16_t resID = 0;
+	if (!houseResFork->FindFirstResourceOfType('PICT', resID))
+		return -1;
 
-	//resHandle = Get1IndResource('PICT', 1);
-	resHandle = Handle();
-	if (resHandle != nil)
-	{
-		const PortabilityLayer::ResourceArchiveRef *resRef = PortabilityLayer::ResourceManager::GetInstance()->ResourceForHandle(resHandle.MMBlock());
-		resHandle.Dispose();
-		return resRef->m_resID;
-	}
-	else
-		return (-1);
+	return resID;
 }
 
 //--------------------------------------------------------------  BitchAboutPICTNotFound

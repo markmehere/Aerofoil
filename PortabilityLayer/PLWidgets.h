@@ -72,6 +72,7 @@ namespace PortabilityLayer
 		virtual void SetHighlightStyle(int16_t style);
 
 		virtual bool HandlesTickEvents() const;
+		virtual Rect GetExpandedRect() const;
 
 		const Rect &GetRect() const;
 		Window *GetWindow() const;
@@ -118,7 +119,7 @@ namespace PortabilityLayer
 
 		void Destroy() override
 		{
-			static_cast<T*>(this)->~T();
+			this->~WidgetSpec();
 			Widget::BaseRelease(static_cast<T*>(this));
 		}
 
@@ -141,7 +142,7 @@ namespace PortabilityLayer
 				return nullptr;
 			}
 
-			if (!static_cast<Window*>(state.m_window)->AddWidget(widget))
+			if (state.m_window != nullptr && !static_cast<Window*>(state.m_window)->AddWidget(widget))
 			{
 				widget->Destroy();
 				return nullptr;

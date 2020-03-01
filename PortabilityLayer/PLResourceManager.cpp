@@ -32,6 +32,8 @@ namespace ResourceValidationRules
 	};
 }
 
+static const char *kPICTExtension = ".bmp";
+
 typedef ResourceValidationRules::ResourceValidationRule ResourceValidationRule_t;
 
 namespace
@@ -302,6 +304,82 @@ namespace PortabilityLayer
 		return m_zipFileProxy->HasPrefix(resPrefix);
 	}
 
+	bool ResourceArchive::FindFirstResourceOfType(const ResTypeID &resTypeID, int16_t &outID) const
+	{
+		char resPrefix[6];
+		resTypeID.ExportAsChars(resPrefix);
+		resPrefix[4] = '/';
+		resPrefix[5] = '\0';
+
+		size_t fileIndex = 0;
+		if (!m_zipFileProxy->FindFirstWithPrefix(resPrefix, fileIndex))
+			return false;
+
+		const char *resName = nullptr;
+		size_t fnLength = 0;
+		m_zipFileProxy->GetFileName(fileIndex, resName, fnLength);
+
+		assert(fnLength > 5);
+
+		const char *idChars = resName + 5;
+		size_t idCharsRemaining = fnLength - 5;
+
+		const size_t extLength = strlen(kPICTExtension);
+
+		if (idCharsRemaining <= extLength)
+			return false;
+
+		if (memcmp(idChars + idCharsRemaining - extLength, kPICTExtension, extLength))
+			return false;
+
+		idCharsRemaining -= extLength;
+
+		bool isNegative = false;
+
+		if (idChars[0] == '-')
+		{
+			isNegative = true;
+			idCharsRemaining--;
+			idChars++;
+		}
+
+		if (idCharsRemaining == 0)
+			return false;
+
+		if (idChars[0] == '0' && (idCharsRemaining > 1 || isNegative))
+			return false;
+
+		int32_t resID = 0;
+		while (idCharsRemaining)
+		{
+			const char idChar = *idChars;
+
+			if (idChar < '0' || idChar > '9')
+				return false;
+
+			resID = resID * 10;
+			if (isNegative)
+			{
+				resID -= (idChar - '0');
+				if (resID < -32768)
+					return false;
+			}
+			else
+			{
+				resID += (idChar - '0');
+				if (resID > 32767)
+					return false;
+			}
+
+			idChars++;
+			idCharsRemaining--;
+		}
+
+		outID = static_cast<int16_t>(resID);
+
+		return true;
+	}
+
 	bool ResourceArchive::IndexResource(const ResTypeID &resTypeID, int id, size_t &outIndex, int &outValidationRule) const
 	{
 		const char *extension = ".bin";
@@ -314,7 +392,7 @@ namespace PortabilityLayer
 		}
 		else if (resTypeID == ResTypeID('Date') || resTypeID == ResTypeID('PICT'))
 		{
-			extension = ".bmp";
+			extension = kPICTExtension;
 			outValidationRule = ResourceValidationRules::kBMP;
 		}
 		else if (resTypeID == ResTypeID('STR#'))

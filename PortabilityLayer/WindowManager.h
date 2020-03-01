@@ -5,6 +5,7 @@ struct DrawSurface;
 struct GDevice;
 struct IGpDisplayDriver;
 struct Point;
+class PLPasStr;
 struct Rect;
 struct Window;
 
@@ -25,6 +26,7 @@ namespace PortabilityLayer
 		virtual void FindWindow(const Point &point, Window **outWindow, short *outRegion) const = 0;
 		virtual void DestroyWindow(Window *window) = 0;
 		virtual void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) = 0;
+		virtual void SetWindowTitle(Window *window, const PLPasStr &title) = 0;
 
 		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;
 

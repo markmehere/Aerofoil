@@ -94,6 +94,11 @@ namespace PortabilityLayer
 		return false;
 	}
 
+	Rect Widget::GetExpandedRect() const
+	{
+		return GetRect();
+	}
+
 	void Widget::GainFocus()
 	{
 	}

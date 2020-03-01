@@ -34,6 +34,7 @@ namespace PortabilityLayer
 		bool GetResourceSize(const ResTypeID &resTypeID, int id, size_t &outSize) const;
 
 		bool HasAnyResourcesOfType(const ResTypeID &resTypeID) const;
+		bool FindFirstResourceOfType(const ResTypeID &resTypeID, int16_t &outID) const;
 
 	private:
 		ResourceArchive(ZipFileProxy *zipFileProxy, IOStream *stream, ResourceArchiveRef *resourceHandles);

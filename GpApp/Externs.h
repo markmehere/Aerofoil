@@ -135,7 +135,8 @@ void BackSpinCursor (short);
 void ColorText (DrawSurface *surface, const Point &, StringPtr, long);						// --- ColorUtils.c
 void ColorRect (DrawSurface *surface, const Rect &, long);
 void ColorOval (DrawSurface *surface, const Rect &, long);
-void ColorRegion (DrawSurface *surface, PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex);
+void ColorOvalMaskPattern (DrawSurface *surface, const Rect &, long, bool, const uint8_t *);
+void ColorRegionMaskPattern (DrawSurface *surface, PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex, bool isMask, const uint8_t *pattern);
 void ColorLine (DrawSurface *surface, short, short, short, short, long);
 void HiliteRect (DrawSurface *surface, const Rect &rect, short, short);
 void ColorFrameRect (DrawSurface *surface, const Rect &theRect, long colorIndex);

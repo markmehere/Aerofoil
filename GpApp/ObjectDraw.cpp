@@ -161,15 +161,12 @@ void DrawTable (Rect *tableTop, short down)
 			-HalfRectTall(&tempRect) + kTableShadowTop + down);
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
 
-	backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
-	backSrcMap->SetMaskMode(true);
+	GetQDGlobalsGray(&dummyPattern);
 
 	if (thisMac.isDepth == 4)
-		ColorOval(backSrcMap, tempRect, 15);
+		ColorOvalMaskPattern(backSrcMap, tempRect, 15, true, dummyPattern);
 	else
-		ColorOval(backSrcMap, tempRect, k8DkstGrayColor);
-	backSrcMap->ClearPattern();
-	backSrcMap->SetMaskMode(false);
+		ColorOvalMaskPattern(backSrcMap, tempRect, k8DkstGrayColor, true, dummyPattern);
 	
 	InsetRect(tableTop, 0, 1);
 	ColorRect(backSrcMap, *tableTop, brownC);
@@ -280,14 +277,11 @@ void DrawShelf (Rect *shelfTop)
 
 	if (mask)
 	{
-		backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
-		backSrcMap->SetMaskMode(true);
+		GetQDGlobalsGray(&dummyPattern);
 		if (thisMac.isDepth == 4)
-			ColorRegion(backSrcMap, mask, 15);
+			ColorRegionMaskPattern(backSrcMap, mask, 15, true, dummyPattern);
 		else
-			ColorRegion(backSrcMap, mask, k8DkstGrayColor);
-		backSrcMap->ClearPattern();
-		backSrcMap->SetMaskMode(false);
+			ColorRegionMaskPattern(backSrcMap, mask, k8DkstGrayColor, true, dummyPattern);
 		mask->Destroy();
 	}
 
@@ -371,14 +365,11 @@ void DrawCabinet (Rect *cabinet)
 
 		if (mask)
 		{
-			backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
-			backSrcMap->SetMaskMode(true);
+			GetQDGlobalsGray(&dummyPattern);
 			if (thisMac.isDepth == 4)
-				ColorRegion(backSrcMap, mask, 15);
+				ColorRegionMaskPattern(backSrcMap, mask, 15, true, dummyPattern);
 			else
-				ColorRegion(backSrcMap, mask, dkGrayC);
-			backSrcMap->ClearPattern();
-			backSrcMap->SetMaskMode(false);
+				ColorRegionMaskPattern(backSrcMap, mask, dkGrayC, true, dummyPattern);
 
 			mask->Destroy();
 		}
@@ -511,14 +502,11 @@ void DrawCounter(Rect *counter)
 
 		if (mask)
 		{
-			backSrcMap->SetPattern8x8(*GetQDGlobalsGray(&dummyPattern));
-			backSrcMap->SetMaskMode(true);
+			GetQDGlobalsGray(&dummyPattern);
 			if (thisMac.isDepth == 4)
-				ColorRegion(backSrcMap, mask, 15);
+				ColorRegionMaskPattern(backSrcMap, mask, 15, true, dummyPattern);
 			else
-				ColorRegion(backSrcMap, mask, dkGrayC);
-			backSrcMap->ClearPattern();
-			backSrcMap->SetMaskMode(false);
+				ColorRegionMaskPattern(backSrcMap, mask, dkGrayC, true, dummyPattern);
 
 			mask->Destroy();
 		}
@@ -758,10 +746,8 @@ void DrawDeckTable (Rect *tableTop, short down)
 	QOffsetRect(&tempRect, 0, 
 			-HalfRectTall(&tempRect) + kTableShadowTop + down);
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
-	PenPat(GetQDGlobalsGray(&dummyPattern));
-	PenMask(true);
-	ColorOval(backSrcMap, tempRect, dkGrayC);
-	PenNormal();
+	GetQDGlobalsGray(&dummyPattern);
+	ColorOvalMaskPattern(backSrcMap, tempRect, dkGrayC, true, dummyPattern);
 	
 	InsetRect(tableTop, 0, 1);
 	ColorRect(backSrcMap, *tableTop, kGoldColor);

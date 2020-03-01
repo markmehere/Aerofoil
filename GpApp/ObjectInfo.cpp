@@ -81,18 +81,18 @@ void UpdateTransInfo (Dialog *);
 void UpdateEnemyInfo (Dialog *);
 void UpdateFlowerInfo (Dialog *);
 int16_t BlowerFilter (Dialog *, const TimeTaggedVOSEvent *evt);
-Boolean FurnitureFilter (Dialog *, EventRecord *, short *);
-Boolean CustPictFilter (Dialog *, EventRecord *, short *);
-Boolean SwitchFilter (Dialog *, EventRecord *, short *);
-Boolean TriggerFilter (Dialog *, EventRecord *, short *);
-Boolean LightFilter (Dialog *, EventRecord *, short *);
-Boolean ApplianceFilter (Dialog *, EventRecord *, short *);
-Boolean MicrowaveFilter (Dialog *, EventRecord *, short *);
-Boolean GreaseFilter (Dialog *, EventRecord *, short *);
-Boolean InvisBonusFilter (Dialog *, EventRecord *, short *);
-Boolean TransFilter (Dialog *, EventRecord *, short *);
-Boolean EnemyFilter (Dialog *, EventRecord *, short *);
-Boolean FlowerFilter (Dialog *, EventRecord *, short *);
+int16_t FurnitureFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t CustPictFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t SwitchFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t TriggerFilter(Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t LightFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t ApplianceFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t MicrowaveFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t GreaseFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t InvisBonusFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t TransFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t EnemyFilter (Dialog *, const TimeTaggedVOSEvent *evt);
+int16_t FlowerFilter (Dialog *, const TimeTaggedVOSEvent *evt);
 void DoBlowerObjectInfo (short);
 void DoFurnitureObjectInfo (void);
 void DoCustPictObjectInfo (void);
@@ -242,7 +242,6 @@ void UpdateBlowerInfo (Dialog *theDialog)
 
 void UpdateFurnitureInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 4, kRedOrangeColor8);
 }
@@ -251,7 +250,6 @@ void UpdateFurnitureInfo (Dialog *theDialog)
 
 void UpdateCustPictInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
 }
@@ -260,7 +258,6 @@ void UpdateCustPictInfo (Dialog *theDialog)
 
 void UpdateSwitchInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	SelectFromRadioGroup(theDialog, newType + kToggleRadio, 
 			kToggleRadio, kForceOffRadio);
@@ -272,7 +269,6 @@ void UpdateSwitchInfo (Dialog *theDialog)
 
 void UpdateTriggerInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 4, kRedOrangeColor8);
 	FrameDialogItemC(theDialog, 13, kRedOrangeColor8);
@@ -282,7 +278,6 @@ void UpdateTriggerInfo (Dialog *theDialog)
 
 void UpdateLightInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
 }
@@ -291,7 +286,6 @@ void UpdateLightInfo (Dialog *theDialog)
 
 void UpdateApplianceInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
 }
@@ -300,7 +294,6 @@ void UpdateApplianceInfo (Dialog *theDialog)
 
 void UpdateMicrowaveInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
 }
@@ -309,7 +302,6 @@ void UpdateMicrowaveInfo (Dialog *theDialog)
 
 void UpdateGreaseInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 5, kRedOrangeColor8);
 }
@@ -318,7 +310,6 @@ void UpdateGreaseInfo (Dialog *theDialog)
 
 void UpdateInvisBonusInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	SelectFromRadioGroup(theDialog, newPoint + k100PtRadio, 
 			k100PtRadio, k500PtRadio);
@@ -329,7 +320,6 @@ void UpdateInvisBonusInfo (Dialog *theDialog)
 
 void UpdateTransInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 4, kRedOrangeColor8);
 	FrameDialogItemC(theDialog, 10, kRedOrangeColor8);
@@ -339,7 +329,6 @@ void UpdateTransInfo (Dialog *theDialog)
 
 void UpdateEnemyInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 4, kRedOrangeColor8);
 }
@@ -348,7 +337,6 @@ void UpdateEnemyInfo (Dialog *theDialog)
 
 void UpdateFlowerInfo (Dialog *theDialog)
 {
-	DrawDialog(theDialog);
 	DrawDefaultButton(theDialog);
 	FrameDialogItemC(theDialog, 4, kRedOrangeColor8);
 }
@@ -389,531 +377,340 @@ int16_t BlowerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  FurnitureFilter
 
-Boolean FurnitureFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t FurnitureFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		const GpKeyboardInputEvent &keyEvt = evt->m_vosEvent.m_event.m_keyboardInputEvent;
+
+		switch (PackVOSKeyCode(keyEvt))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateFurnitureInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kOkayButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  CustPictFilter
 
-Boolean CustPictFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t CustPictFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateCustPictInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kOkayButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  SwitchFilter
 
-Boolean SwitchFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t SwitchFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kEscape):
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateSwitchInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  TriggerFilter
 
-Boolean TriggerFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t TriggerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kEscape):
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kTab):
+			return kCancelButton;
+
+		case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kDelay3Item, 0, 1024);
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateTriggerInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return 0;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  LightFilter
 
-Boolean LightFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t LightFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
-	{
-		case keyDown:
-		switch (event->message)
-		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+	if (!evt)
+		return -1;
 
-			case PL_KEY_SPECIAL(kEscape):
+	if (evt->IsKeyDownEvent())
+	{
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
+		{
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
+			FlashDialogButton(dial, kOkayButton);
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateLightInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  ApplianceFilter
 
-Boolean ApplianceFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t ApplianceFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+			return kOkayButton;
 
-			case PL_KEY_SPECIAL(kEscape):
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
+			return kCancelButton;
 
-			case PL_KEY_SPECIAL(kTab):
+		case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kDelayItem, 0, 1024);
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateApplianceInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return 0;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  MicrowaveFilter
 
-Boolean MicrowaveFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t MicrowaveFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
-	{
-		case keyDown:
-		switch (event->message)
-		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+	if (!evt)
+		return -1;
 
-			case PL_KEY_SPECIAL(kTab):
+	if (evt->IsKeyDownEvent())
+	{
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
+		{
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
+			FlashDialogButton(dial, kOkayButton);
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kTab):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateMicrowaveInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  GreaseFilter
 
-Boolean GreaseFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t GreaseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
-	{
-		case keyDown:
-		switch (event->message)
-		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+	if (!evt)
+		return -1;
 
-			case PL_KEY_SPECIAL(kEscape):
+	if (evt->IsKeyDownEvent())
+	{
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
+		{
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
+			FlashDialogButton(dial, kOkayButton);
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateGreaseInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  InvisBonusFilter
 
-Boolean InvisBonusFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t InvisBonusFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateInvisBonusInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kOkayButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  TransFilter
 
-Boolean TransFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t TransFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
-	{
-		case keyDown:
-		switch (event->message)
-		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+	if (!evt)
+		return -1;
 
-			case PL_KEY_SPECIAL(kEscape):
+	if (evt->IsKeyDownEvent())
+	{
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
+		{
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
+			FlashDialogButton(dial, kOkayButton);
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateTransInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  EnemyFilter
 
-Boolean EnemyFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t EnemyFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
+			return kOkayButton;
 
-			case PL_KEY_SPECIAL(kEscape):
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
+			return kCancelButton;
 
-			case PL_KEY_SPECIAL(kTab):
+		case PL_KEY_SPECIAL(kTab):
 			SelectDialogItemText(dial, kDelay2Item, 0, 1024);
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateEnemyInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return 0;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
-//--------------------------------------------------------------  EnemyFilter
+//--------------------------------------------------------------  FlowerFilter
 
-Boolean FlowerFilter (Dialog *dial, EventRecord *event, short *item)
+int16_t FlowerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
-	switch (event->what)
+	if (!evt)
+		return -1;
+
+	if (evt->IsKeyDownEvent())
 	{
-		case keyDown:
-		switch (event->message)
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
 		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
 			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			case PL_KEY_SPECIAL(kEscape):
+			return kOkayButton;
+
+		case PL_KEY_SPECIAL(kEscape):
 			FlashDialogButton(dial, kCancelButton);
-			*item = kCancelButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case mouseDown:
-		return(false);
-		break;
-		
-		case mouseUp:
-		return(false);
-		break;
-		
-		case updateEvt:
-		SetPortDialogPort(dial);
-		UpdateFlowerInfo(dial);
-		EndUpdate(dial->GetWindow());
-		event->what = nullEvent;
-		return(false);
-		break;
-		
+			return kCancelButton;
+
 		default:
-		return(false);
-		break;
+			return -1;
+		}
 	}
+
+	return -1;
 }
 
 //--------------------------------------------------------------  DoBlowerObjectInfo
@@ -983,6 +780,8 @@ void DoBlowerObjectInfo (short what)
 	
 	while (!leaving)
 	{
+		bool redrawMain = false;
+
 		item = infoDial->ExecuteModal(BlowerFilter);
 		
 		if (item == kOkayButton)
@@ -1032,7 +831,7 @@ void DoBlowerObjectInfo (short what)
 				if (KeepObjectLegal())
 				{
 				}
-				InvalWindowRect(mainWindow, &mainWindowRect);
+				redrawMain = true;
 				GetThisRoomsObjRects();
 				ReadyBackground(thisRoom->background, thisRoom->tiles);
 				DrawThisRoomsObjects();
@@ -1077,6 +876,9 @@ void DoBlowerObjectInfo (short what)
 			}
 			UpdateBlowerInfo(infoDial);
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 	
 	infoDial->Destroy();
@@ -1124,13 +926,15 @@ void DoFurnitureObjectInfo (void)
 	
 	if ((objActive < 0) || (retroLinkList[objActive].room == -1))
 		HideDialogItem(infoDial, 6);
+
+	UpdateFurnitureInfo(infoDial);
 	
 	leaving = false;
 	doReturn = false;
 	
 	while (!leaving)
 	{
-		ModalDialog(FurnitureFilter, &item);
+		item = infoDial->ExecuteModal(FurnitureFilter);
 		
 		if (item == kOkayButton)
 			leaving = true;
@@ -1183,10 +987,14 @@ void DoCustPictObjectInfo (void)
 	}
 	SelectDialogItemText(infoDial, kCustPictIDItem, 0, 1024);
 	leaving = false;
-	
+
+	UpdateCustPictInfo(infoDial);
+
 	while (!leaving)
 	{
-		ModalDialog(CustPictFilter, &item);
+		bool redrawMain = false;
+
+		item = infoDial->ExecuteModal(CustPictFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1208,7 +1016,7 @@ void DoCustPictObjectInfo (void)
 					}
 					fileDirty = true;
 					UpdateMenus(false);
-					InvalWindowRect(mainWindow, &mainWindowRect);
+					redrawMain = true;
 					GetThisRoomsObjRects();
 					ReadyBackground(thisRoom->background, thisRoom->tiles);
 					DrawThisRoomsObjects();
@@ -1229,7 +1037,7 @@ void DoCustPictObjectInfo (void)
 					thisRoom->objects[objActive].data.e.where = (short)wasPict;
 					fileDirty = true;
 					UpdateMenus(false);
-					InvalWindowRect(mainWindow, &mainWindowRect);
+					redrawMain = true;
 					GetThisRoomsObjRects();
 					ReadyBackground(thisRoom->background, thisRoom->tiles);
 					DrawThisRoomsObjects();
@@ -1241,6 +1049,9 @@ void DoCustPictObjectInfo (void)
 		{
 			leaving = true;
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 
 	infoDial->Destroy();
@@ -1287,10 +1098,12 @@ void DoSwitchObjectInfo (void)
 	
 	if (retroLinkList[objActive].room == -1)
 		HideDialogItem(infoDial, 15);
+
+	UpdateSwitchInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(SwitchFilter, &item);
+		item = infoDial->ExecuteModal(SwitchFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1410,10 +1223,12 @@ void DoTriggerObjectInfo (void)
 	SetDialogNumToStr(infoDial, kDelay3Item, 
 			(long)thisRoom->objects[objActive].data.e.delay);
 	SelectDialogItemText(infoDial, kDelay3Item, 0, 1024);
+
+	UpdateTriggerInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(TriggerFilter, &item);
+		item = infoDial->ExecuteModal(TriggerFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1548,10 +1363,13 @@ void DoLightObjectInfo (void)
 	
 	leaving = false;
 	doReturn = false;
+
+	UpdateLightInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(LightFilter, &item);
+		bool redrawMain = false;
+		item = infoDial->ExecuteModal(LightFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1563,7 +1381,7 @@ void DoLightObjectInfo (void)
 			
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 			DrawThisRoomsObjects();
-			InvalWindowRect(mainWindow, &mainWindowRect);
+			redrawMain = true;
 			fileDirty = true;
 			UpdateMenus(false);
 			leaving = true;
@@ -1582,12 +1400,15 @@ void DoLightObjectInfo (void)
 			
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 			DrawThisRoomsObjects();
-			InvalWindowRect(mainWindow, &mainWindowRect);
+			redrawMain = true;
 			fileDirty = true;
 			UpdateMenus(false);
 			leaving = true;
 			doReturn = true;
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 
 	infoDial->Destroy();
@@ -1636,10 +1457,13 @@ void DoApplianceObjectInfo (short what)
 	
 	leaving = false;
 	doReturn = false;
+
+	UpdateApplianceInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(ApplianceFilter, &item);
+		bool redrawMain = false;
+		item = infoDial->ExecuteModal(ApplianceFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1661,7 +1485,7 @@ void DoApplianceObjectInfo (short what)
 					thisRoom->objects[objActive].data.g.initial = false;
 				fileDirty = true;
 				UpdateMenus(false);
-				InvalWindowRect(mainWindow, &mainWindowRect);
+				redrawMain = true;
 				GetThisRoomsObjRects();
 				ReadyBackground(thisRoom->background, thisRoom->tiles);
 				DrawThisRoomsObjects();
@@ -1692,7 +1516,7 @@ void DoApplianceObjectInfo (short what)
 					thisRoom->objects[objActive].data.g.initial = false;
 				fileDirty = true;
 				UpdateMenus(false);
-				InvalWindowRect(mainWindow, &mainWindowRect);
+				redrawMain = true;
 				GetThisRoomsObjRects();
 				ReadyBackground(thisRoom->background, thisRoom->tiles);
 				DrawThisRoomsObjects();
@@ -1700,6 +1524,9 @@ void DoApplianceObjectInfo (short what)
 				doReturn = true;
 			}
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 
 	infoDial->Destroy();
@@ -1750,10 +1577,13 @@ void DoMicrowaveObjectInfo (void)
 	
 	leaving = false;
 	doReturn = false;
+
+	UpdateMicrowaveInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(MicrowaveFilter, &item);
+		bool redrawMain = false;
+		item = infoDial->ExecuteModal(MicrowaveFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1776,7 +1606,7 @@ void DoMicrowaveObjectInfo (void)
 			
 			fileDirty = true;
 			UpdateMenus(false);
-			InvalWindowRect(mainWindow, &mainWindowRect);
+			redrawMain = true;
 			GetThisRoomsObjRects();
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 			DrawThisRoomsObjects();
@@ -1813,13 +1643,16 @@ void DoMicrowaveObjectInfo (void)
 			
 			fileDirty = true;
 			UpdateMenus(false);
-			InvalWindowRect(mainWindow, &mainWindowRect);
+			redrawMain = true;
 			GetThisRoomsObjRects();
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 			DrawThisRoomsObjects();
 			leaving = true;
 			doReturn = true;
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 
 	infoDial->Destroy();
@@ -1853,17 +1686,21 @@ void DoGreaseObjectInfo (void)
 	SetDialogItemValue(infoDial, kGreaseItem, (short)wasSpilled);
 	leaving = false;
 	doReturn = false;
+
+	UpdateGreaseInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(GreaseFilter, &item);
+		bool redrawMain = false;
+
+		item = infoDial->ExecuteModal(GreaseFilter);
 		
 		if (item == kOkayButton)
 		{
 			thisRoom->objects[objActive].data.c.initial = !wasSpilled;
 			fileDirty = true;
 			UpdateMenus(false);
-			InvalWindowRect(mainWindow, &mainWindowRect);
+			redrawMain = true;
 			GetThisRoomsObjRects();
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 			DrawThisRoomsObjects();
@@ -1883,13 +1720,16 @@ void DoGreaseObjectInfo (void)
 			thisRoom->objects[objActive].data.c.initial = !wasSpilled;
 			fileDirty = true;
 			UpdateMenus(false);
-			InvalWindowRect(mainWindow, &mainWindowRect);
+			redrawMain = true;
 			GetThisRoomsObjRects();
 			ReadyBackground(thisRoom->background, thisRoom->tiles);
 			DrawThisRoomsObjects();
 			leaving = true;
 			doReturn = true;
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 
 	infoDial->Destroy();
@@ -1936,10 +1776,12 @@ void DoInvisBonusObjectInfo (void)
 	
 	leaving = false;
 	doReturn = false;
+
+	UpdateInvisBonusInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(InvisBonusFilter, &item);
+		item = infoDial->ExecuteModal(InvisBonusFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -2058,10 +1900,12 @@ void DoTransObjectInfo (short what)
 	
 	if (thisRoom->objects[objActive].data.d.who == 255)
 		MyDisableControl(infoDial, kGotoButton1);
+
+	UpdateTransInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(TransFilter, &item);
+		item = infoDial->ExecuteModal(TransFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -2166,10 +2010,12 @@ void DoEnemyObjectInfo (short what)
 	
 	leaving = false;
 	doReturn = false;
+
+	UpdateEnemyInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(EnemyFilter, &item);
+		item = infoDial->ExecuteModal(EnemyFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -2258,17 +2104,20 @@ void DoFlowerObjectInfo (void)
 	
 	leaving = false;
 	doReturn = false;
+
+	UpdateFlowerInfo(infoDial);
 	
 	while (!leaving)
 	{
-		ModalDialog(FlowerFilter, &item);
+		bool redrawMain = false;
+
+		item = infoDial->ExecuteModal(FlowerFilter);
 		
 		if (item == kOkayButton)
 		{
 			flower -= kRadioFlower1;
 			if (flower != thisRoom->objects[objActive].data.i.pict)
 			{
-				InvalWindowRect(mainWindow, &thisRoom->objects[objActive].data.i.bounds);
 				thisRoom->objects[objActive].data.i.bounds.right = 
 						thisRoom->objects[objActive].data.i.bounds.left + 
 						RectWide(&flowerSrc[flower]);
@@ -2276,7 +2125,7 @@ void DoFlowerObjectInfo (void)
 						thisRoom->objects[objActive].data.i.bounds.bottom - 
 						RectTall(&flowerSrc[flower]);
 				thisRoom->objects[objActive].data.i.pict = flower;
-				InvalWindowRect(mainWindow, &thisRoom->objects[objActive].data.i.bounds);
+				redrawMain = true;
 				GetThisRoomsObjRects();
 				ReadyBackground(thisRoom->background, thisRoom->tiles);
 				DrawThisRoomsObjects();
@@ -2300,7 +2149,6 @@ void DoFlowerObjectInfo (void)
 			flower -= kRadioFlower1;
 			if (flower != thisRoom->objects[objActive].data.i.pict)
 			{
-				InvalWindowRect(mainWindow, &thisRoom->objects[objActive].data.i.bounds);
 				thisRoom->objects[objActive].data.i.bounds.right = 
 						thisRoom->objects[objActive].data.i.bounds.left + 
 						RectWide(&flowerSrc[flower]);
@@ -2308,7 +2156,7 @@ void DoFlowerObjectInfo (void)
 						thisRoom->objects[objActive].data.i.bounds.bottom - 
 						RectTall(&flowerSrc[flower]);
 				thisRoom->objects[objActive].data.i.pict = flower;
-				InvalWindowRect(mainWindow, &thisRoom->objects[objActive].data.i.bounds);
+				redrawMain = true;
 				GetThisRoomsObjRects();
 				ReadyBackground(thisRoom->background, thisRoom->tiles);
 				DrawThisRoomsObjects();
@@ -2319,6 +2167,9 @@ void DoFlowerObjectInfo (void)
 			leaving = true;
 			doReturn = true;
 		}
+
+		if (redrawMain)
+			UpdateMainWindow();
 	}
 
 	infoDial->Destroy();

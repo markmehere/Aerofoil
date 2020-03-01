@@ -52,6 +52,31 @@ namespace PortabilityLayer
 		return WidgetHandleStates::kIgnored;
 	}
 
+	void ButtonWidget::OnEnabledChanged()
+	{
+		DrawControl(m_window->GetDrawSurface());
+	}
+
+	int16_t ButtonWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	{
+		for (;;)
+		{
+			TimeTaggedVOSEvent evt;
+			if (WaitForEvent(&evt, 1))
+			{
+				if (evt.IsLMouseUpEvent())
+				{
+					const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+
+					if (m_rect.Contains(pt))
+						return RegionIDs::kContent;
+					else
+						return RegionIDs::kNone;
+				}
+			}
+		}
+	}
+
 	bool ButtonWidget::Init(const WidgetBasicState &state)
 	{
 		(void)state;
@@ -60,7 +85,14 @@ namespace PortabilityLayer
 
 	void ButtonWidget::DrawControl(DrawSurface *surface)
 	{
-		surface->SetForeColor(StdColors::Black());
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(this->m_rect.Inset(1, 1));
+
+		if (m_enabled)
+			surface->SetForeColor(StdColors::Black());
+		else
+			surface->SetForeColor(RGBAColor::Create(136, 136, 136, 255));
+
 		surface->FrameRect(this->m_rect);
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;

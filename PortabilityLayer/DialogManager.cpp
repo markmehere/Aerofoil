@@ -91,6 +91,8 @@ namespace PortabilityLayer
 
 		int16_t ExecuteModal(DialogFilterFunc_t filterFunc) override;
 
+		bool ReplaceWidget(unsigned int itemIndex, Widget *widget) override;
+
 		bool Populate(DialogTemplate *tmpl, const DialogTextSubstitutions *substitutions);
 
 		void DrawControls(bool redraw);
@@ -388,6 +390,19 @@ namespace PortabilityLayer
 				}
 			}
 		}
+	}
+
+	bool DialogImpl::ReplaceWidget(unsigned int itemIndex, Widget *widget)
+	{
+		DialogItem &item = m_items[itemIndex];
+		Widget *oldWidget = item.GetWidget();
+
+		if (!m_window->ReplaceWidget(oldWidget, widget))
+			return false;
+
+		m_items[itemIndex].m_widget = widget;
+
+		return true;
 	}
 
 	bool DialogImpl::Populate(DialogTemplate *tmpl, const DialogTextSubstitutions *substitutions)

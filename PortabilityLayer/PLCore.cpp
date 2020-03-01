@@ -136,11 +136,6 @@ void HiliteWindow(WindowPtr window, bool highlighted)
 	PL_NotYetImplemented();
 }
 
-void DisposeWindow(WindowPtr window)
-{
-	PL_NotYetImplemented();
-}
-
 void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect)
 {
 	if (windowRegion == kWindowContentRgn)
@@ -202,11 +197,6 @@ void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront)
 void ShowWindow(WindowPtr window)
 {
 	PortabilityLayer::WindowManager::GetInstance()->ShowWindow(window);
-}
-
-void SetWTitle(WindowPtr window, const PLPasStr &title)
-{
-	PL_NotYetImplemented_TODO("Editor");
 }
 
 long MenuSelect(Point point)
@@ -759,6 +749,29 @@ PortabilityLayer::Widget* Window::GetWidgetById() const
 	//return ArrayView<PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
 	return nullptr;
 }
+
+bool Window::ReplaceWidget(PortabilityLayer::Widget *oldWidget, PortabilityLayer::Widget *newWidget)
+{
+	for (size_t i = 0; i < m_numWidgets; i++)
+	{
+		if (m_widgets[i] == oldWidget)
+		{
+			assert(newWidget->GetWindow() == nullptr);
+
+			oldWidget->Destroy();
+			m_widgets[i] = newWidget;
+			newWidget->m_window = this;
+
+			newWidget->DrawControl(&m_surface);
+			m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 
 void Window::FocusWidget(PortabilityLayer::Widget *widget)
 {
