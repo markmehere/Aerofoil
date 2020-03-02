@@ -325,18 +325,11 @@ void ReflectCurrentRoom (Boolean forceMapRedraw)
 		}
 	}
 	GenerateRetroLinks();
-	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash1");
 	UpdateEditWindowTitle();
-	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash2");
 	ReadyBackground(thisRoom->background, thisRoom->tiles);
-	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash3");
 	GetThisRoomsObjRects();
-	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash4");
 	DrawThisRoomsObjects();
-	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash5");
 
-	PL_NotYetImplemented_TODO("FixMe");
-	DebugPixMap(backSrcMap->m_port.GetPixMap(), "DebugData/EditorSplash6");
 	UpdateMainWindow();
 #endif
 }
