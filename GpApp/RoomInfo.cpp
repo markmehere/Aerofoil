@@ -412,8 +412,12 @@ int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 		{
 			mouseIs = dial->GetWindow()->MouseToLocal(mouseEvent);
 			HiliteTileOver(surface, mouseIs);
+
+			return -1;
 		}
 	}
+
+	return -1;
 }
 #endif
 
