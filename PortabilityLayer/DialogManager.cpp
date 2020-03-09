@@ -811,7 +811,7 @@ namespace PortabilityLayer
 		// - Centered on screen
 
 		//if (displayHeight / 3 - dialogHeight / 2 >= displayHeight / 4)
-		if (displayHeight * 4 - dialogHeight * 6 >= displayHeight * 3)
+		if (static_cast<int32_t>(displayHeight * 4) - static_cast<int32_t>(dialogHeight * 6) >= static_cast<int32_t>(displayHeight * 3))
 		{
 			//window->m_wmY = displayHeight / 3 - dialogHeight / 2;
 			window->m_wmY = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
