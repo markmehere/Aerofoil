@@ -14,6 +14,8 @@
 #include "DialogUtils.h"
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
+#include "PLArrayView.h"
+#include "PLEditboxWidget.h"
 #include "PLTimeTaggedVOSEvent.h"
 
 
@@ -231,7 +233,10 @@ void DoHouseInfo (void)
 		RedAlert(kErrDialogDidntLoad);
 	SetPort(&houseInfoDialog->GetWindow()->GetDrawSurface()->m_port);
 	ShowWindow(houseInfoDialog->GetWindow());
-	
+
+	static_cast<PortabilityLayer::EditboxWidget*>(houseInfoDialog->GetItems()[kBannerTextItem - 1].GetWidget())->SetMultiLine(true);
+	static_cast<PortabilityLayer::EditboxWidget*>(houseInfoDialog->GetItems()[kTrailerTextItem - 1].GetWidget())->SetMultiLine(true);
+
 	SetDialogString(houseInfoDialog, kBannerTextItem, banner);
 	SetDialogString(houseInfoDialog, kTrailerTextItem, trailer);
 	SelectDialogItemText(houseInfoDialog, kBannerTextItem, 0, 1024);

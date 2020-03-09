@@ -2,6 +2,9 @@
 
 #include "PascalStr.h"
 #include "PLWidgets.h"
+#include "Vec2i.h"
+
+struct DrawSurface;
 
 namespace PortabilityLayer
 {
@@ -28,8 +31,16 @@ namespace PortabilityLayer
 
 		void SetSelection(size_t startChar, size_t endChar);
 
+		void SetMultiLine(bool isMultiLine);
+
 	private:
 		static const unsigned int kCaratBlinkRate = 20;
+
+		enum CaratSelectionAnchor
+		{
+			CaratSelectionAnchor_Start,
+			CaratSelectionAnchor_End
+		};
 
 		void OnTick() override;
 		void Redraw();
@@ -38,13 +49,35 @@ namespace PortabilityLayer
 		void HandleBackspace(const uint32_t numRepeatsRequested);
 		void HandleForwardDelete(const uint32_t numRepeatsRequested);
 
+		void HandleUpArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
+		void HandleDownArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
+		void HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
+		void HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
+
+		size_t FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange) const;
+		void HandleKeyMoveCarat(size_t newPos, bool shiftHeld);
+
+		void DrawSelection(DrawSurface *surface, const Vec2i &basePoint) const;
+
+		Vec2i ResolveCaratPos(const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const;
+		Vec2i ResolveBasePoint() const;
+		size_t ResolveCaratChar() const;
+
+		PortabilityLayer::FontFamily *GetFontFamily() const;
+		PortabilityLayer::RenderedFont *GetRenderedFont() const;
+
 		uint8_t *m_chars;
 		size_t m_capacity;
 		size_t m_length;
 		size_t m_selStartChar;
 		size_t m_selEndChar;
+		CaratSelectionAnchor m_caratSelectionAnchor;
+
+		Vec2i m_caratScrollPosition;
+		bool m_caratScrollLocked;
 
 		bool m_hasFocus;
+		bool m_isMultiLine;
 		uint16_t m_caratTimer;
 	};
 }

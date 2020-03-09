@@ -12,6 +12,7 @@ namespace PortabilityLayer
 	struct AntiAliasTable;
 	class FontFamily;
 	struct RGBAColor;
+	class RenderedFont;
 	class ScanlineMask;
 }
 
@@ -94,6 +95,8 @@ struct DrawSurface final
 
 	Rect GetClipRect() const;
 	void SetClipRect(const Rect &rect);
+
+	PortabilityLayer::RenderedFont *ResolveFont(bool aa) const;
 
 	// Must be the first item
 	PortabilityLayer::QDPort m_port;

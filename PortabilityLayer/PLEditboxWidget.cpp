@@ -1,12 +1,16 @@
 #include "PLEditboxWidget.h"
 
 #include "FontFamily.h"
+#include "FontManager.h"
 #include "InputManager.h"
 #include "MacRomanConversion.h"
 #include "MemoryManager.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "PLKeyEncoding.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "TextPlacer.h"
 
 #include <algorithm>
 
@@ -19,8 +23,12 @@ namespace PortabilityLayer
 		, m_chars(nullptr)
 		, m_selStartChar(0)
 		, m_selEndChar(0)
+		, m_caratSelectionAnchor(CaratSelectionAnchor_End)
+		, m_caratScrollPosition(0, 0)
+		, m_caratScrollLocked(false)
 		, m_hasFocus(false)
 		, m_caratTimer(0)
+		, m_isMultiLine(false)
 	{
 	}
 
@@ -70,45 +78,29 @@ namespace PortabilityLayer
 
 		const char *strChars = str.Chars();
 
-		size_t preSelWidth = 0;
-		size_t selWidth = 0;
-		//size_t postSelWidth = 0;
-		if (m_selStartChar > 0)
-			preSelWidth = surface->MeasureString(PLPasStr(static_cast<uint8_t>(m_selStartChar), strChars));
+		Vec2i basePoint = ResolveBasePoint();
 
-		if (m_selEndChar > m_selStartChar)
-			selWidth = surface->MeasureString(PLPasStr(static_cast<uint8_t>(m_selEndChar - m_selStartChar), strChars + m_selStartChar));
+		if (m_hasFocus && m_selStartChar != m_selEndChar)
+			DrawSelection(surface, basePoint);
 
-		//if (m_selEndChar < str.Length())
-		//	postSelWidth = surface->MeasureString(PLPasStr(static_cast<uint8_t>(m_selEndChar - str.Length()), strChars + m_selEndChar));
-
-		Point basePoint = Point::Create(textRect.left, (textRect.top + textRect.bottom + ascender + 1) / 2);
-
-		if (m_hasFocus && selWidth > 0)
-		{
-			Rect selRect = Rect::Create(m_rect.top, static_cast<int16_t>(basePoint.h + preSelWidth), m_rect.bottom, m_rect.right);
-			if (m_selEndChar != str.Length())
-				selRect.right = static_cast<int16_t>(basePoint.h + preSelWidth + selWidth);
-
-			selRect = selRect.Intersect(m_rect);
-
-			if (selRect.IsValid())
-			{
-				PortabilityLayer::RGBAColor focusColor = PortabilityLayer::RGBAColor::Create(153, 153, 255, 255);
-				surface->SetForeColor(focusColor);
-				surface->FillRect(selRect);
-			}
-		}
+		int32_t verticalOffset = (ascender + lineGap + 1) / 2;
 
 		surface->SetForeColor(StdColors::Black());
-		surface->DrawStringConstrained(basePoint, this->GetString(), true, m_rect);
+
+		const Point stringBasePoint = Point::Create(basePoint.m_x, basePoint.m_y + verticalOffset);
+
+		if (m_isMultiLine)
+			surface->DrawStringWrap(stringBasePoint, m_rect, this->GetString(), true);
+		else
+			surface->DrawStringConstrained(stringBasePoint, this->GetString(), true, m_rect);
 
 		if (m_hasFocus && m_selEndChar == m_selStartChar && m_caratTimer < kCaratBlinkRate)
 		{
-			int16_t caratTop = (textRect.top + textRect.bottom - lineGap + 1) / 2;
-			int16_t caratBottom = (textRect.top + textRect.bottom + lineGap + 1) / 2;
-			int16_t caratH = static_cast<int16_t>(basePoint.h + preSelWidth);
-			Rect caratRect = Rect::Create(caratTop, caratH, caratBottom, caratH + 1);
+			PortabilityLayer::Vec2i caratPos = ResolveCaratPos(basePoint, surface->ResolveFont(true));
+
+			int32_t caratTop = caratPos.m_y;
+			int32_t caratBottom = caratTop + lineGap;
+			Rect caratRect = Rect::Create(caratTop, caratPos.m_x, caratBottom, caratPos.m_x + 1);
 
 			caratRect = caratRect.Intersect(m_rect);
 
@@ -148,6 +140,8 @@ namespace PortabilityLayer
 		m_hasFocus = true;
 		m_selStartChar = 0;
 		m_selEndChar = this->GetString().Length();
+		m_caratSelectionAnchor = CaratSelectionAnchor_End;
+		m_caratScrollLocked = false;
 
 		if (m_window)
 		{
@@ -161,6 +155,8 @@ namespace PortabilityLayer
 		m_hasFocus = false;
 		m_selStartChar = 0;
 		m_selEndChar = 0;
+		m_caratSelectionAnchor = CaratSelectionAnchor_End;
+		m_caratScrollLocked = false;
 
 		Redraw();
 	}
@@ -200,6 +196,8 @@ namespace PortabilityLayer
 				{
 					if (ch >= 0x20 && ch <= 0x7e)
 						HandleCharacter(ch, keyEvent.m_repeatCount);
+					else if ((ch == '\r' || ch == '\n') && m_isMultiLine)
+						HandleCharacter('\r', keyEvent.m_repeatCount);
 
 					return WidgetHandleStates::kDigested;
 				}
@@ -216,12 +214,37 @@ namespace PortabilityLayer
 						HandleBackspace(keyEvent.m_repeatCount);
 						return WidgetHandleStates::kDigested;
 					}
+					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kUpArrow)
+					{
+						HandleUpArrow(keyEvent.m_repeatCount, isShiftHeld);
+						return WidgetHandleStates::kDigested;
+					}
+					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kLeftArrow)
+					{
+						HandleLeftArrow(keyEvent.m_repeatCount, isShiftHeld);
+						return WidgetHandleStates::kDigested;
+					}
+					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kRightArrow)
+					{
+						HandleRightArrow(keyEvent.m_repeatCount, isShiftHeld);
+						return WidgetHandleStates::kDigested;
+					}
+					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kDownArrow)
+					{
+						HandleDownArrow(keyEvent.m_repeatCount, isShiftHeld);
+						return WidgetHandleStates::kDigested;
+					}
+#if 0
 					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kDelete)
 					{
 						return WidgetHandleStates::kDigested;
 					}
+#endif
 				}
 			}
+		}
+		else if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+		{
 		}
 
 		return WidgetHandleStates::kIgnored;
@@ -259,6 +282,7 @@ namespace PortabilityLayer
 
 		m_selStartChar = startChar;
 		m_selEndChar = endChar;
+		m_caratSelectionAnchor = CaratSelectionAnchor_End;
 
 		m_caratTimer = 0;
 		Redraw();
@@ -313,6 +337,8 @@ namespace PortabilityLayer
 
 		m_caratTimer = 0;
 		Redraw();
+
+		m_caratScrollLocked = false;
 	}
 
 	void EditboxWidget::HandleBackspace(uint32_t numRepeatsRequested)
@@ -345,5 +371,369 @@ namespace PortabilityLayer
 
 		m_caratTimer = 0;
 		Redraw();
+
+		m_caratScrollLocked = false;
+	}
+
+	void EditboxWidget::HandleUpArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
+	{
+		if (!m_isMultiLine)
+			return;
+
+		size_t caratChar = ResolveCaratChar();
+
+		PortabilityLayer::RenderedFont *rfont = GetRenderedFont();
+		int32_t lineGap = rfont->GetMetrics().m_linegap;
+
+		if (!rfont)
+			return;
+
+		if (!m_caratScrollLocked)
+		{
+			m_caratScrollPosition = ResolveCaratPos(Vec2i(0, 0), rfont);
+			m_caratScrollLocked = true;
+		}
+
+		Vec2i caratPos = m_caratScrollPosition;
+
+		for (uint32_t r = 0; r < numRepeatsRequested; r++)
+		{
+			bool isOutOfRange = false;
+			m_caratScrollPosition.m_y -= lineGap;
+			caratChar = FindVerticalMovementCaratPos(m_caratScrollPosition, isOutOfRange);
+			HandleKeyMoveCarat(caratChar, shiftHeld);
+
+			if (isOutOfRange)
+			{
+				m_caratScrollPosition.m_y += lineGap;
+				break;
+			}
+		}
+
+		m_caratTimer = 0;
+		Redraw();
+	}
+
+	void EditboxWidget::HandleDownArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
+	{
+		if (!m_isMultiLine)
+			return;
+
+		size_t caratChar = ResolveCaratChar();
+
+		PortabilityLayer::RenderedFont *rfont = GetRenderedFont();
+		int32_t lineGap = rfont->GetMetrics().m_linegap;
+
+		if (!rfont)
+			return;
+
+		if (!m_caratScrollLocked)
+		{
+			m_caratScrollPosition = ResolveCaratPos(Vec2i(0, 0), rfont);
+			m_caratScrollLocked = true;
+		}
+
+		Vec2i caratPos = m_caratScrollPosition;
+
+		for (uint32_t r = 0; r < numRepeatsRequested; r++)
+		{
+			bool isOutOfRange = false;
+			m_caratScrollPosition.m_y += lineGap;
+			caratChar = FindVerticalMovementCaratPos(m_caratScrollPosition, isOutOfRange);
+			HandleKeyMoveCarat(caratChar, shiftHeld);
+
+			if (isOutOfRange)
+			{
+				m_caratScrollPosition.m_y -= lineGap;
+				break;
+			}
+		}
+
+		m_caratTimer = 0;
+		Redraw();
+	}
+
+	void EditboxWidget::HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
+	{
+		size_t caratChar = ResolveCaratChar();
+
+		for (uint32_t r = 0; r < numRepeatsRequested; r++)
+		{
+			if (!shiftHeld && m_selStartChar != m_selEndChar)
+				m_selEndChar = m_selStartChar;
+			else if (caratChar > 0)
+				HandleKeyMoveCarat(caratChar - 1, shiftHeld);
+		}
+
+		m_caratScrollLocked = false;
+
+		m_caratTimer = 0;
+		Redraw();
+	}
+
+	void EditboxWidget::HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
+	{
+		size_t caratChar = ResolveCaratChar();
+
+		for (uint32_t r = 0; r < numRepeatsRequested; r++)
+		{
+			if (!shiftHeld && m_selStartChar != m_selEndChar)
+				m_selStartChar = m_selEndChar;
+			else if (caratChar < m_length)
+				HandleKeyMoveCarat(caratChar + 1, shiftHeld);
+		}
+
+		m_caratScrollLocked = false;
+
+		m_caratTimer = 0;
+		Redraw();
+	}
+
+	size_t EditboxWidget::FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &outShouldUnlock) const
+	{
+		assert(m_isMultiLine);
+
+		Vec2i basePoint = Vec2i(0, 0);
+
+		if (desiredPos.m_y < basePoint.m_y)
+		{
+			outShouldUnlock = true;
+			return 0;
+		}
+
+		PortabilityLayer::TextPlacer placer(basePoint, m_rect.Width(), GetRenderedFont(), GetString());
+
+		bool foundLine = false;
+		size_t caratChar = 0;
+
+		PortabilityLayer::GlyphPlacementCharacteristics characteristics;
+		while (placer.PlaceGlyph(characteristics))
+		{
+			if (characteristics.m_glyphStartPos.m_y > desiredPos.m_y)
+				break;
+
+			if (characteristics.m_glyphStartPos.m_y == desiredPos.m_y)
+			{
+				caratChar = characteristics.m_characterIndex;
+				if (characteristics.m_character == '\r')
+					caratChar--;
+				foundLine = true;
+
+				if (characteristics.m_glyphStartPos.m_x <= desiredPos.m_x && characteristics.m_glyphEndPos.m_x > desiredPos.m_x)
+				{
+					int32_t distanceToEnd = characteristics.m_glyphEndPos.m_x - desiredPos.m_x;
+					int32_t distanceToStart = desiredPos.m_x - characteristics.m_glyphStartPos.m_x;
+
+					if (distanceToStart <= distanceToEnd)
+						caratChar = characteristics.m_characterIndex;
+					else
+						caratChar = characteristics.m_characterIndex + 1;
+
+					break;
+				}
+			}
+		}
+
+		if (foundLine)
+		{
+			outShouldUnlock = false;
+			return caratChar;
+		}
+
+		outShouldUnlock = true;
+		return m_length;
+	}
+
+	void EditboxWidget::HandleKeyMoveCarat(size_t newPos, bool shiftHeld)
+	{
+		if (shiftHeld)
+		{
+			size_t otherSelection = m_selStartChar;
+			if (m_caratSelectionAnchor == CaratSelectionAnchor_Start)
+				otherSelection = m_selEndChar;
+
+			m_selStartChar = std::min<size_t>(newPos, otherSelection);
+			m_selEndChar = std::max<size_t>(newPos, otherSelection);
+
+			if (m_selStartChar == newPos)
+				m_caratSelectionAnchor = CaratSelectionAnchor_Start;
+			else if (m_selEndChar == newPos)
+				m_caratSelectionAnchor = CaratSelectionAnchor_End;
+		}
+		else
+		{
+			m_selStartChar = newPos;
+			m_selEndChar = newPos;
+		}
+	}
+
+	void EditboxWidget::DrawSelection(DrawSurface *surface, const Vec2i &basePoint) const
+	{
+		PortabilityLayer::RenderedFont *rfont = surface->ResolveFont(true);
+		PortabilityLayer::TextPlacer placer(basePoint, m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
+
+#if 0
+		if (m_selStartChar == m_selEndChar)
+		{
+			PortabilityLayer::GlyphPlacementCharacteristics characteristics;
+
+			for (;;)
+			{
+				const bool placedGlyph = placer.PlaceGlyph(characteristics);
+
+				if (!placedGlyph)
+					break;
+
+				if (characteristics.m_characterIndex == m_selStartChar)
+				{
+					caratPos = characteristics.m_glyphStartPos;
+					break;
+				}
+				else if (characteristics.m_characterIndex < m_selStartChar)
+					caratPos = characteristics.m_glyphEndPos;
+				else
+					break;				
+			}
+
+			outCaratPos = Point::Create(caratPos.m_x, caratPos.m_y);
+			return;
+		}
+#endif
+
+		PortabilityLayer::Vec2i globalSelStart;
+		PortabilityLayer::Vec2i globalSelEnd;
+		bool endIsLineBreak = false;
+		bool startSet = false;
+		bool endSet = false;
+
+		PortabilityLayer::GlyphPlacementCharacteristics characteristics;
+		size_t placedIndex = 0;
+
+		while (placer.PlaceGlyph(characteristics))
+		{
+			bool isTerminalForThisPara = false;
+			bool isTerminalForEverything = false;
+			bool isLineBreakSelected = false;
+
+			if (characteristics.m_characterIndex == m_selStartChar)
+			{
+				globalSelStart = characteristics.m_glyphStartPos;
+				startSet = true;
+			}
+
+			if (characteristics.m_characterIndex + 1 == m_selEndChar)
+			{
+				globalSelEnd = characteristics.m_glyphEndPos;
+				if (characteristics.m_character == '\r')
+					endIsLineBreak = true;
+
+				endSet = true;
+				break;
+			}
+		}
+
+		if (!endSet || !startSet)
+		{
+			assert(false);
+			return;
+		}
+
+		PortabilityLayer::RGBAColor focusColor = PortabilityLayer::RGBAColor::Create(153, 153, 255, 255);
+		surface->SetForeColor(focusColor);
+
+		int32_t lineGap = rfont->GetMetrics().m_linegap;
+		int32_t ascender = rfont->GetMetrics().m_ascent;
+		int32_t startY = basePoint.m_y;
+
+		if (globalSelStart.m_y == globalSelEnd.m_y)
+		{
+			Rect selRect = Rect::Create(globalSelStart.m_y, globalSelStart.m_x, globalSelStart.m_y + lineGap, globalSelEnd.m_x).Intersect(m_rect);
+			if (endIsLineBreak || (m_isMultiLine == false && m_selEndChar == m_length))
+				selRect.right = m_rect.right;
+
+			surface->FillRect(selRect);
+		}
+		else
+		{
+			const Rect firstLineRect = Rect::Create(globalSelStart.m_y, globalSelStart.m_x, globalSelStart.m_y + lineGap, m_rect.right).Intersect(m_rect);
+			surface->FillRect(firstLineRect);
+
+			const Rect midLinesRect = Rect::Create(globalSelStart.m_y + lineGap, m_rect.left, globalSelEnd.m_y, m_rect.right).Intersect(m_rect);
+			surface->FillRect(midLinesRect);
+
+			Rect lastLineRect = Rect::Create(globalSelEnd.m_y, m_rect.left, globalSelEnd.m_y + lineGap, globalSelEnd.m_x);
+			if (endIsLineBreak || (m_isMultiLine == false && m_selEndChar == m_length))
+				lastLineRect.right = m_rect.right;
+
+			surface->FillRect(lastLineRect);
+		}
+	}
+
+	Vec2i EditboxWidget::ResolveCaratPos(const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const
+	{
+		int32_t lineGap = rfont->GetMetrics().m_linegap;
+		bool failed = false;
+
+		PortabilityLayer::Vec2i caratPos = basePoint;
+
+		const size_t caratChar = ResolveCaratChar();
+
+		if (caratChar > 0)
+		{
+			PortabilityLayer::RenderedFont *rfont = GetRenderedFont();
+			PortabilityLayer::TextPlacer placer(basePoint, m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
+
+			PortabilityLayer::GlyphPlacementCharacteristics characteristics;
+			for (size_t i = 0; i < caratChar; i++)
+			{
+				if (!placer.PlaceGlyph(characteristics))
+				{
+					failed = true;
+					break;
+				}
+			}
+
+			if (!failed)
+			{
+				if (characteristics.m_character == '\r')
+					caratPos = PortabilityLayer::Vec2i(basePoint.m_x, characteristics.m_glyphStartPos.m_y + lineGap);
+				else
+					caratPos = characteristics.m_glyphEndPos;
+			}
+		}
+
+		return caratPos;
+	}
+
+	Vec2i EditboxWidget::ResolveBasePoint() const
+	{
+		return Vec2i(m_rect.left, m_rect.top);
+	}
+
+	size_t EditboxWidget::ResolveCaratChar() const
+	{
+		if (m_caratSelectionAnchor == CaratSelectionAnchor_End)
+			return m_selEndChar;
+		else
+			return m_selStartChar;
+	}
+
+	FontFamily *EditboxWidget::GetFontFamily() const
+	{
+		return PortabilityLayer::FontManager::GetInstance()->GetSystemFont(12, FontFamilyFlag_None);
+	}
+
+	RenderedFont *EditboxWidget::GetRenderedFont() const
+	{
+		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(GetFontFamily(), 12, true, FontFamilyFlag_None);
+	}
+
+	void EditboxWidget::SetMultiLine(bool isMultiLine)
+	{
+		if (m_isMultiLine != isMultiLine)
+		{
+			m_isMultiLine = isMultiLine;
+			Redraw();
+		}
 	}
 }

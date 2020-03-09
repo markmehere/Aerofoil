@@ -24,6 +24,7 @@
 #include "ScanlineMaskIterator.h"
 #include "QDGraf.h"
 #include "QDStandardPalette.h"
+#include "TextPlacer.h"
 #include "WindowManager.h"
 #include "QDGraf.h"
 #include "QDPixMap.h"
@@ -288,7 +289,7 @@ void GetForeColor(RGBColor *color)
 	*color = RGBColor(foreColor.r, foreColor.g, foreColor.b);
 }
 
-static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
+static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, const Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
 	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor)
 {
 	assert(rect.IsValid());
@@ -298,12 +299,8 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	if (!rfont->GetGlyph(character, metrics, data))
 		return;
 
-	const Point originalPoint = penPos;
-
-	penPos.h += metrics->m_advanceX;
-
-	const int32_t leftCoord = originalPoint.h + metrics->m_bearingX;
-	const int32_t topCoord = originalPoint.v - metrics->m_bearingY;
+	const int32_t leftCoord = penPos.h + metrics->m_bearingX;
+	const int32_t topCoord = penPos.v - metrics->m_bearingY;
 	const int32_t rightCoord = leftCoord + metrics->m_glyphWidth;
 	const int32_t bottomCoord = topCoord + metrics->m_glyphHeight;
 
@@ -399,6 +396,17 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	}
 }
 
+static void DrawText(PortabilityLayer::TextPlacer &placer, PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, const PortabilityLayer::RenderedFont *rfont,
+	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor)
+{
+	PortabilityLayer::GlyphPlacementCharacteristics characteristics;
+	while (placer.PlaceGlyph(characteristics))
+	{
+		if (characteristics.m_haveGlyph)
+			DrawGlyph(qdState, pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cachedAATable, cachedAATableColor);
+	}
+}
+
 void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa)
 {
 	DrawStringConstrained(point, str, aa, Rect::CreateLargest());
@@ -417,11 +425,6 @@ void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str,
 	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
 
 	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
-
-	Point penPos = point;
-	const size_t len = str.Length();
-	const uint8_t *chars = str.UChars();
-
 	PixMap *pixMap = *port->GetPixMap();
 
 	const Rect rect = pixMap->m_rect.Intersect(constraintRect);
@@ -429,18 +432,9 @@ void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str,
 	if (!rect.IsValid())
 		return;
 
-	Point paraStartPos = penPos;
+	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), -1, rfont, str);
 
-	for (size_t i = 0; i < len; i++)
-	{
-		if (chars[i] == static_cast<uint8_t>('\r'))
-		{
-			paraStartPos.v += rfont->GetMetrics().m_linegap;
-			penPos = paraStartPos;
-		}
-		else
-			DrawGlyph(qdState, pixMap, rect, penPos, rfont, chars[i], m_cachedAATable, m_cachedAAColor);
-	}
+	DrawText(placer, qdState, pixMap, rect, rfont, m_cachedAATable, m_cachedAAColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
@@ -471,91 +465,9 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 	if (!limitRect.IsValid() || !areaRect.IsValid())
 		return;	// ???
 
-	Point paraStartPos = penPos;
+	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), areaRect.Width(), rfont, str);
 
-	size_t currentStartChar = 0;
-	size_t currentSpanLength = 0;
-
-	for (;;)
-	{
-		if (currentStartChar == len)
-			break;
-
-		size_t lastWhitespace = currentStartChar;
-		bool shouldSkipSpaces = false;
-
-		size_t committedLength = 0;
-
-		size_t i = currentStartChar;
-
-		// Find a span to print
-		int32_t spanWidth = 0;
-		for (;;)
-		{
-			if (i == len)
-			{
-				committedLength = i - currentStartChar;
-				break;
-			}
-
-			uint8_t character = chars[i];
-
-			if (character <= ' ')
-			{
-				committedLength = i - currentStartChar + 1;
-				if (character == '\r')
-					break;
-
-				const PortabilityLayer::RenderedGlyphMetrics *metrics = nullptr;
-				const void *glyphData = nullptr;
-				if (rfont->GetGlyph(chars[i], metrics, glyphData))
-					spanWidth += metrics->m_advanceX;
-
-				i++;
-			}
-			else
-			{
-				const PortabilityLayer::RenderedGlyphMetrics *metrics = nullptr;
-				const void *glyphData = nullptr;
-				if (!rfont->GetGlyph(chars[i], metrics, glyphData))
-				{
-					i++;
-					continue;
-				}
-
-				spanWidth += metrics->m_advanceX;
-
-				int32_t glyphEnd = penPos.h + spanWidth;
-
-				if (glyphEnd >= constrainRect.right)
-				{
-					if (committedLength == 0)
-					{
-						// Word didn't fit
-						committedLength = i - currentStartChar;
-						if (committedLength == 0)
-							committedLength = 1;	// Nothing fit, consume one char
-					}
-
-					break;
-				}
-
-				i++;
-			}
-		}
-
-		for (size_t ci = 0; ci < committedLength; ci++)
-		{
-			const uint8_t character = chars[currentStartChar + ci];
-
-			DrawGlyph(qdState, pixMap, limitRect, penPos, rfont, character, m_cachedAATable, m_cachedAAColor);
-		}
-
-		currentStartChar += committedLength;
-
-		paraStartPos.v += rfont->GetMetrics().m_linegap;
-		penPos = paraStartPos;
-	}
+	DrawText(placer, qdState, pixMap, limitRect, rfont, m_cachedAATable, m_cachedAAColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
@@ -936,6 +848,19 @@ Rect DrawSurface::GetClipRect() const
 void DrawSurface::SetClipRect(const Rect &rect)
 {
 	m_port.GetState()->m_clipRect = rect;;
+}
+
+PortabilityLayer::RenderedFont *DrawSurface::ResolveFont(bool aa) const
+{
+	const PortabilityLayer::QDState *qdState = m_port.GetState();
+
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	const int fontSize = qdState->m_fontSize;
+	const int fontVariationFlags = qdState->m_fontVariationFlags;
+	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
+
+	return fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
 }
 
 void DrawSurface::FillRect(const Rect &rect)
