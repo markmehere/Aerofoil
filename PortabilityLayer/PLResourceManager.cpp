@@ -311,73 +311,102 @@ namespace PortabilityLayer
 		resPrefix[4] = '/';
 		resPrefix[5] = '\0';
 
-		size_t fileIndex = 0;
-		if (!m_zipFileProxy->FindFirstWithPrefix(resPrefix, fileIndex))
+		size_t firstFileIndex = 0;
+		if (!m_zipFileProxy->FindFirstWithPrefix(resPrefix, firstFileIndex))
 			return false;
 
-		const char *resName = nullptr;
-		size_t fnLength = 0;
-		m_zipFileProxy->GetFileName(fileIndex, resName, fnLength);
+		const size_t numFiles = m_zipFileProxy->NumFiles();
 
-		assert(fnLength > 5);
+		bool haveAny = false;
+		int16_t lowestID = 32767;
 
-		const char *idChars = resName + 5;
-		size_t idCharsRemaining = fnLength - 5;
-
-		const size_t extLength = strlen(kPICTExtension);
-
-		if (idCharsRemaining <= extLength)
-			return false;
-
-		if (memcmp(idChars + idCharsRemaining - extLength, kPICTExtension, extLength))
-			return false;
-
-		idCharsRemaining -= extLength;
-
-		bool isNegative = false;
-
-		if (idChars[0] == '-')
+		for (size_t fileIndex = firstFileIndex; fileIndex < numFiles; fileIndex++)
 		{
-			isNegative = true;
-			idCharsRemaining--;
-			idChars++;
-		}
+			const char *resName = nullptr;
+			size_t fnLength = 0;
+			m_zipFileProxy->GetFileName(fileIndex, resName, fnLength);
 
-		if (idCharsRemaining == 0)
-			return false;
+			if (fnLength <= 5 || memcmp(resName, resPrefix, 5))
+				break;
 
-		if (idChars[0] == '0' && (idCharsRemaining > 1 || isNegative))
-			return false;
+			const char *idChars = resName + 5;
+			size_t idCharsRemaining = fnLength - 5;
 
-		int32_t resID = 0;
-		while (idCharsRemaining)
-		{
-			const char idChar = *idChars;
+			const size_t extLength = strlen(kPICTExtension);
 
-			if (idChar < '0' || idChar > '9')
-				return false;
+			if (idCharsRemaining <= extLength)
+				continue;
 
-			resID = resID * 10;
-			if (isNegative)
+			if (memcmp(idChars + idCharsRemaining - extLength, kPICTExtension, extLength))
+				continue;
+
+			idCharsRemaining -= extLength;
+
+			bool isNegative = false;
+
+			if (idChars[0] == '-')
 			{
-				resID -= (idChar - '0');
-				if (resID < -32768)
-					return false;
-			}
-			else
-			{
-				resID += (idChar - '0');
-				if (resID > 32767)
-					return false;
+				isNegative = true;
+				idCharsRemaining--;
+				idChars++;
 			}
 
-			idChars++;
-			idCharsRemaining--;
+			if (idCharsRemaining == 0)
+				continue;
+
+			if (idChars[0] == '0' && (idCharsRemaining > 1 || isNegative))
+				continue;
+
+			int32_t resID = 0;
+			bool failedName = false;
+			while (idCharsRemaining)
+			{
+				const char idChar = *idChars;
+
+				if (idChar < '0' || idChar > '9')
+				{
+					failedName = true;
+					break;
+				}
+
+				resID = resID * 10;
+				if (isNegative)
+				{
+					resID -= (idChar - '0');
+					if (resID < -32768)
+					{
+						failedName = true;
+						break;
+					}
+				}
+				else
+				{
+					resID += (idChar - '0');
+					if (resID > 32767)
+					{
+						failedName = true;
+						break;
+					}
+				}
+
+				idChars++;
+				idCharsRemaining--;
+			}
+
+			if (failedName)
+				continue;
+
+			if (haveAny == false || resID < lowestID)
+			{
+				lowestID = resID;
+				haveAny = true;
+			}
 		}
 
-		outID = static_cast<int16_t>(resID);
+		if (haveAny)
+			outID = static_cast<int16_t>(lowestID);
 
-		return true;
+		return haveAny;
 	}
 
 	bool ResourceArchive::IndexResource(const ResTypeID &resTypeID, int id, size_t &outIndex, int &outValidationRule) const
