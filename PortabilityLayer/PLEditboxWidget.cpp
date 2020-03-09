@@ -29,6 +29,8 @@ namespace PortabilityLayer
 		, m_hasFocus(false)
 		, m_caratTimer(0)
 		, m_isMultiLine(false)
+		, m_isDraggingSelection(false)
+		, m_dragSelectionStartChar(false)
 	{
 	}
 
@@ -163,12 +165,15 @@ namespace PortabilityLayer
 
 	WidgetHandleState_t EditboxWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
 	{
+		if (m_isDraggingSelection)
+			return HandleDragSelection(evt);
+
 		if (!m_visible || !m_enabled)
 			return WidgetHandleStates::kIgnored;
 
 		if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kKeyboardInput)
 		{
-			if (!m_hasFocus)
+			if (!m_hasFocus || m_isDraggingSelection)
 				return WidgetHandleStates::kIgnored;
 
 			const GpKeyboardInputEvent &keyEvent = evt.m_vosEvent.m_event.m_keyboardInputEvent;
@@ -245,6 +250,21 @@ namespace PortabilityLayer
 		}
 		else if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 		{
+			const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+			if (evt.IsLMouseDownEvent())
+			{
+				const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+
+				if (m_rect.Contains(pt))
+				{
+					m_window->FocusWidget(this);
+					m_isDraggingSelection = true;
+					return HandleDragSelection(evt);
+				}
+				else
+					return WidgetHandleStates::kIgnored;
+			}
 		}
 
 		return WidgetHandleStates::kIgnored;
@@ -489,15 +509,13 @@ namespace PortabilityLayer
 		Redraw();
 	}
 
-	size_t EditboxWidget::FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &outShouldUnlock) const
+	size_t EditboxWidget::FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange) const
 	{
-		assert(m_isMultiLine);
-
 		Vec2i basePoint = Vec2i(0, 0);
 
 		if (desiredPos.m_y < basePoint.m_y)
 		{
-			outShouldUnlock = true;
+			isOutOfRange = true;
 			return 0;
 		}
 
@@ -514,10 +532,15 @@ namespace PortabilityLayer
 
 			if (characteristics.m_glyphStartPos.m_y == desiredPos.m_y)
 			{
-				caratChar = characteristics.m_characterIndex;
-				if (characteristics.m_character == '\r')
-					caratChar--;
 				foundLine = true;
+
+				caratChar = characteristics.m_characterIndex;
+
+				if (desiredPos.m_x <= 0)
+					break;
+
+				if (characteristics.m_character != '\r')
+					caratChar++;
 
 				if (characteristics.m_glyphStartPos.m_x <= desiredPos.m_x && characteristics.m_glyphEndPos.m_x > desiredPos.m_x)
 				{
@@ -536,11 +559,11 @@ namespace PortabilityLayer
 
 		if (foundLine)
 		{
-			outShouldUnlock = false;
+			isOutOfRange = false;
 			return caratChar;
 		}
 
-		outShouldUnlock = true;
+		isOutOfRange = true;
 		return m_length;
 	}
 
@@ -565,6 +588,70 @@ namespace PortabilityLayer
 			m_selStartChar = newPos;
 			m_selEndChar = newPos;
 		}
+	}
+
+	WidgetHandleState_t EditboxWidget::HandleDragSelection(const TimeTaggedVOSEvent &evt)
+	{
+		if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+		{
+			const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+			const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+
+			RenderedFont *rfont = GetRenderedFont();
+			const int32_t linegap = rfont->GetMetrics().m_linegap;
+
+			const Vec2i basePoint = ResolveBasePoint();
+			const Vec2i relativePoint = Vec2i(pt.h, pt.v) - basePoint;
+
+			int32_t relativeY = relativePoint.m_y;
+			int32_t paragraph = 0;
+			if (relativeY >= 0)
+				paragraph = relativeY / linegap;
+			else
+				paragraph = -((-relativeY + (linegap - 1)) / linegap);
+
+			bool isOutOfRange = false;
+			const size_t caratPos = FindVerticalMovementCaratPos(Vec2i(relativePoint.m_x, paragraph * linegap), isOutOfRange);
+
+			if (mouseEvent.m_eventType == GpMouseEventTypes::kDown)
+			{
+				m_dragSelectionStartChar = caratPos;
+				m_selStartChar = caratPos;
+				m_selEndChar = caratPos;
+				m_caratSelectionAnchor = CaratSelectionAnchor_End;
+
+				m_caratTimer = 0;
+				Redraw();
+			}
+			else
+			{
+				if (caratPos < m_dragSelectionStartChar)
+				{
+					m_caratSelectionAnchor = CaratSelectionAnchor_Start;
+					m_selStartChar = caratPos;
+					m_selEndChar = m_dragSelectionStartChar;
+				}
+				else
+				{
+					m_caratSelectionAnchor = CaratSelectionAnchor_End;
+					m_selEndChar = caratPos;
+					m_selStartChar = m_dragSelectionStartChar;
+				}
+
+				m_caratTimer = 0;
+				Redraw();
+
+				if (mouseEvent.m_eventType == GpMouseEventTypes::kUp)
+				{
+					m_caratScrollLocked = false;
+					m_isDraggingSelection = false;
+					return WidgetHandleStates::kDigested;
+				}
+			}
+		}
+
+		return WidgetHandleStates::kCaptured;
 	}
 
 	void EditboxWidget::DrawSelection(DrawSurface *surface, const Vec2i &basePoint) const

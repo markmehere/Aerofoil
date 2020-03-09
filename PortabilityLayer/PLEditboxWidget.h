@@ -57,6 +57,8 @@ namespace PortabilityLayer
 		size_t FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange) const;
 		void HandleKeyMoveCarat(size_t newPos, bool shiftHeld);
 
+		WidgetHandleState_t HandleDragSelection(const TimeTaggedVOSEvent &evt);
+
 		void DrawSelection(DrawSurface *surface, const Vec2i &basePoint) const;
 
 		Vec2i ResolveCaratPos(const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const;
@@ -78,6 +80,9 @@ namespace PortabilityLayer
 
 		bool m_hasFocus;
 		bool m_isMultiLine;
+		bool m_isDraggingSelection;
+		size_t m_dragSelectionStartChar;
+
 		uint16_t m_caratTimer;
 	};
 }
