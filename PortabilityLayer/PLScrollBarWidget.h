@@ -3,6 +3,8 @@
 #include "PascalStr.h"
 #include "PLWidgets.h"
 
+struct Rect;
+
 namespace PortabilityLayer
 {
 	class ScrollBarWidget final : public WidgetSpec<ScrollBarWidget>
@@ -11,5 +13,30 @@ namespace PortabilityLayer
 		explicit ScrollBarWidget(const WidgetBasicState &state);
 
 		bool Init(const WidgetBasicState &state) override;
+
+		void OnEnabledChanged() override;
+		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
+		void DrawControl(DrawSurface *surface) override;
+
+		void OnStateChanged() override;
+
+		int ResolvePart(const Point &point) const override;
+
+	private:
+		bool IsHorizontal() const;
+		bool Isvertical() const;
+
+		void DrawControlHorizontal(DrawSurface *surface);
+		void DrawControlVertical(DrawSurface *surface);
+
+		void RefreshGrip();
+
+		static void DrawBeveledBox(DrawSurface *surface, const Rect &rect);
+
+		int32_t m_min;
+		int32_t m_max;
+		int32_t m_gripSize;
+		int32_t m_gripPos;
+		int32_t m_laneCapacity;
 	};
 }

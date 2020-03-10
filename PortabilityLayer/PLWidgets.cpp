@@ -1,5 +1,6 @@
 #include "PLWidgets.h"
 #include "MemoryManager.h"
+#include "PLControlDefinitions.h"
 
 namespace PortabilityLayer
 {
@@ -97,6 +98,11 @@ namespace PortabilityLayer
 	Rect Widget::GetExpandedRect() const
 	{
 		return GetRect();
+	}
+
+	int Widget::ResolvePart(const Point &point) const
+	{
+		return kControlButtonPart;
 	}
 
 	void Widget::GainFocus()

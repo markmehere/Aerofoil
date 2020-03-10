@@ -20,8 +20,12 @@ int FindControl(Point point, WindowPtr window, PortabilityLayer::Widget **outCon
 		const Rect widgetRect = widget->GetRect();
 		if (widgetRect.Contains(point))
 		{
-			*outControl = widget;
-			return kControlButtonPart;
+			int part = widget->ResolvePart(point);
+			if (part != 0)
+			{
+				*outControl = widget;
+				return part;
+			}
 		}
 	}
 

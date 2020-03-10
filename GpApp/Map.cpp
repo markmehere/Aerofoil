@@ -327,20 +327,20 @@ void ResizeMapWindow (short newH, short newV)
 	if (mapRoomsHigh < 3)
 		mapRoomsHigh = 3;
 	QSetRect(&mapWindowRect, 0, 0, 
-			mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 2, 
-			mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 2);
+			mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 1, 
+			mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 1);
 
 	surface->SetForeColor(StdColors::White());
 	surface->FillRect(mapWindowRect);
 	SizeWindow(mapWindow, mapWindowRect.right, mapWindowRect.bottom, true);
 	
 	mapHScroll->SetMax(kMaxNumRoomsH - mapRoomsWide);
-	mapHScroll->SetPosition(Point::Create(0, mapWindowRect.bottom - kMapScrollBarWidth + 2));
+	mapHScroll->SetPosition(Point::Create(0, mapWindowRect.bottom - kMapScrollBarWidth + 1));
 	mapHScroll->Resize(mapWindowRect.right - kMapScrollBarWidth + 3, kMapScrollBarWidth);
 	mapLeftRoom = mapHScroll->GetState();
 	
 	mapVScroll->SetMax(kMaxNumRoomsV - mapRoomsHigh);
-	mapVScroll->SetPosition(Point::Create(mapWindowRect.right - kMapScrollBarWidth + 2, 0));
+	mapVScroll->SetPosition(Point::Create(mapWindowRect.right - kMapScrollBarWidth + 1, 0));
 	mapVScroll->Resize(kMapScrollBarWidth, mapWindowRect.bottom - kMapScrollBarWidth + 3);
 	mapTopRoom = mapVScroll->GetState();
 
@@ -359,8 +359,8 @@ void OpenMapWindow (void)
 	{
 		CreateNailOffscreen();
 		QSetRect(&mapWindowRect, 0, 0, 
-				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 2, 
-				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 2);
+				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 1, 
+				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 1);
 
 		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kResizable | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;;
 

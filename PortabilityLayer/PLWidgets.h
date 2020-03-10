@@ -74,6 +74,8 @@ namespace PortabilityLayer
 		virtual bool HandlesTickEvents() const;
 		virtual Rect GetExpandedRect() const;
 
+		virtual int ResolvePart(const Point &point) const;
+
 		const Rect &GetRect() const;
 		Window *GetWindow() const;
 
