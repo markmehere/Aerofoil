@@ -65,7 +65,7 @@ void DrawOnSplash(DrawSurface *surface)
 	PasStringCopy(PSTR("House: "), houseLoadedStr);
 	PasStringConcat(houseLoadedStr, thisHouseName);
 	if ((thisMac.hasQT) && (hasMovie))
-		PasStringConcat(houseLoadedStr, PSTR(" (QT)"));
+		PasStringConcat(houseLoadedStr, PSTR(" (TV)"));
 
 	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold);
 
