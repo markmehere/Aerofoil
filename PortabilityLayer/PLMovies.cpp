@@ -165,7 +165,8 @@ AnimationPackage::AnimationPackage()
 
 AnimationPackage::~AnimationPackage()
 {
-	m_resArchive->Destroy();
+	if (m_resArchive)
+		m_resArchive->Destroy();
 	PortabilityLayer::MemoryManager::GetInstance()->Release(m_images);
 }
 
