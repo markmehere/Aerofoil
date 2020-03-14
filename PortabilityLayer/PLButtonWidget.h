@@ -21,7 +21,8 @@ namespace PortabilityLayer
 		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
 
 	private:
-		bool m_haveMouseDown;
+		void DrawControlInternal(DrawSurface *surface, bool inverted);
+
 		PascalStr<255> m_text;
 	};
 }
