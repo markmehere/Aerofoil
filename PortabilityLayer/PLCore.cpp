@@ -108,11 +108,6 @@ short FindWindow(Point point, WindowPtr *window)
 	return part;
 }
 
-void BringToFront(WindowPtr window)
-{
-	PL_NotYetImplemented();
-}
-
 bool TrackGoAway(WindowPtr window, Point point)
 {
 	PL_NotYetImplemented();
@@ -129,21 +124,6 @@ bool TrackBox(WindowPtr window, Point point, int part)
 {
 	PL_NotYetImplemented();
 	return false;
-}
-
-void HiliteWindow(WindowPtr window, bool highlighted)
-{
-	PL_NotYetImplemented();
-}
-
-void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect)
-{
-	if (windowRegion == kWindowContentRgn)
-		*rect = window->m_surface.m_port.GetRect();
-	else
-	{
-		PL_NotYetImplemented();
-	}
 }
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
@@ -166,18 +146,6 @@ WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
 		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(window, behind);
 
 	return window;
-}
-
-WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata)
-{
-	PL_NotYetImplemented();
-	return nullptr;
-}
-
-WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata)
-{
-	PL_NotYetImplemented();
-	return nullptr;
 }
 
 void SizeWindow(WindowPtr window, int width, int height, Boolean addToUpdateRegion)

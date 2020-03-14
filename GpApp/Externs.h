@@ -162,7 +162,6 @@ void FillScreenRed (void);
 void DumpToResEditFile (Ptr, long);
 
 void HandleEvent (void);								// --- Event.c
-void HiliteAllWindows (void);
 void IgnoreThisClick (void);
 
 short WhatsOurDepth (void);								// --- Environs.c

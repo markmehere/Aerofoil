@@ -92,7 +92,6 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 			GetWindowLeftTop(whichWindow, &isLinkH, &isLinkV);
 		else if (whichWindow == coordWindow)
 			GetWindowLeftTop(whichWindow, &isCoordH, &isCoordV);
-		HiliteAllWindows();
 		break;
 		
 	case RegionIDs::kClose:
@@ -505,28 +504,6 @@ void HandleEvent (void)
 		if (TickCount() >= incrementModeTime)
 			DoDemoGame();
 	}
-}
-
-//--------------------------------------------------------------  HiliteAllWindows
-
-// Ugly kludge in order to keep "floating windows" (palettes) on top of…
-// the main window.
-
-void HiliteAllWindows (void)
-{
-	PL_NotYetImplemented_TODO("DeleteMe");
-#if 0
-	if (mainWindow != nil)
-		HiliteWindow(mainWindow, true);
-	if (mapWindow != nil)
-		HiliteWindow(mapWindow, true);
-	if (toolsWindow != nil)
-		HiliteWindow(toolsWindow, true);
-	if (coordWindow != nil)
-		HiliteWindow(coordWindow, true);
-	if (linkWindow != nil)
-		HiliteWindow(linkWindow, true);
-#endif
 }
 
 //--------------------------------------------------------------  IgnoreThisClick

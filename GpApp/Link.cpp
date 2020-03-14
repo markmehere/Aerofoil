@@ -238,7 +238,6 @@ void OpenLinkWindow (void)
 		GetWindowRect(linkWindow, &dest);
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(linkWindow);
 //		FlagWindowFloating(linkWindow);	TEMP - use flaoting windows
-		HiliteAllWindows();
 
 		PortabilityLayer::WidgetBasicState basicState;
 		basicState.m_rect = Rect::Create(5, 70, 25, 124);

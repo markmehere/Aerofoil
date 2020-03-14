@@ -319,7 +319,6 @@ void OpenToolsWindow (void)
 		wm->PutWindowBehind(toolsWindow, wm->GetPutInFrontSentinel());
 		wm->ShowWindow(toolsWindow);
 //		FlagWindowFloating(toolsWindow);	TEMP - use flaoting windows
-		HiliteAllWindows();
 
 		{
 			PortabilityLayer::WidgetBasicState state;

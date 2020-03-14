@@ -76,7 +76,7 @@ void UpdateLoadDialog (Dialog *theDialog)
 	theWindow = theDialog->GetWindow();
 	DrawSurface *surface = theWindow->GetDrawSurface();
 
-	GetWindowBounds(theWindow, kWindowContentRgn, &dialogRect);
+	dialogRect = theWindow->GetDrawSurface()->m_port.GetRect();
 
 	ColorFrameWHRect(theDialog->GetWindow()->GetDrawSurface(), 8, 39, 413, 184, kRedOrangeColor8);	// box around files
 	

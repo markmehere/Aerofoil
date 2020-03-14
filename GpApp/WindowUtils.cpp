@@ -63,7 +63,7 @@ void GetLocalWindowRect (WindowPtr theWindow, Rect *bounds)
 	if (theWindow != nil)
 	{
 		SetPortWindowPort(theWindow);
-		GetWindowBounds(theWindow, kWindowContentRgn, bounds);
+		*bounds = theWindow->GetDrawSurface()->m_port.GetRect();
 	}
 }
 

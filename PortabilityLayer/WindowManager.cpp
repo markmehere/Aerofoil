@@ -674,7 +674,7 @@ namespace PortabilityLayer
 		if (m_windowStackTop == impl)
 		{
 			if (WindowImpl *below = impl->GetWindowBelow())
-				BringToFront(below);
+				PutWindowBehind(below, GetPutInFrontSentinel());
 		}
 	}
 

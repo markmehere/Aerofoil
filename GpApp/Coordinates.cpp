@@ -152,7 +152,6 @@ void OpenCoordWindow (void)
 		wm->PutWindowBehind(coordWindow, wm->GetPutInFrontSentinel());
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(coordWindow);
 //		FlagWindowFloating(coordWindow);	TEMP - use flaoting windows
-		HiliteAllWindows();
 		
 		coordH = -1;
 		coordV = -1;

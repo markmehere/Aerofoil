@@ -214,24 +214,6 @@ namespace RegionIDs
 
 typedef RegionIDs::RegionID RegionID_t;
 
-enum WindowRegionType
-{
-	kWindowContentRgn
-};
-
-enum EventCode
-{
-	mouseDown,
-	mouseUp,
-	mouseMove,
-	keyDown,
-	keyUp,
-	autoKey,
-	updateEvt,
-	osEvt,
-	kHighLevelEvent,
-};
-
 static const int everyEvent = -1;
 
 static const int iBeamCursor = 1;
@@ -252,16 +234,11 @@ void HideCursor();
 void Delay(int ticks, UInt32 *endTickCount);
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
-void BringToFront(WindowPtr window);
 bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close box was actually clicked (?)
 Int32 GrowWindow(WindowPtr window, Point start, Rect *size);
 bool TrackBox(WindowPtr window, Point point, int part);	// Returns true if grow/shrink box was clicked (part corresponds to type)
-void HiliteWindow(WindowPtr window, bool highlighted);
-void GetWindowBounds(WindowPtr window, WindowRegionType windowRegion, Rect *rect);
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind);
-WindowPtr NewCWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata);
-WindowPtr NewWindow(void *storage, const Rect *bounds, const PLPasStr &title, Boolean visible, int wdef, WindowPtr behind, long userdata);
 void SizeWindow(WindowPtr window, int width, int height, Boolean addToUpdateRegion);
 void MoveWindow(WindowPtr window, int x, int y, Boolean moveToFront);
 void ShowWindow(WindowPtr window);

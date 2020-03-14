@@ -29,9 +29,6 @@ void UpdateMenusEditMode (void);
 void UpdateMenusNonEditMode (void);
 void UpdateMenusHouseOpen (void);
 void UpdateMenusHouseClosed (void);
-void UpdateResumeDialog (Dialog *);
-Boolean ResumeFilter (Dialog *, EventRecord *, short *);
-short QueryResumeGame (void);
 void HeyYourPissingAHighScore (void);
 
 
@@ -664,106 +661,6 @@ void UpdateCoordinateCheckmark (Boolean checkIt)
 		return;
 	
 	CheckMenuItem(houseMenu, iCoordinateWindow, checkIt);
-}
-
-//--------------------------------------------------------------  UpdateResumeDialog
-// Update function for Resume dialog (below).
-
-void UpdateResumeDialog (Dialog *theDialog)
-{
-	DrawDialog(theDialog);
-	DrawDefaultButton(theDialog);
-}
-
-//--------------------------------------------------------------  ResumeFilter
-// Dialog filter for the Resume dialog (below).
-
-Boolean ResumeFilter (Dialog *dial, EventRecord *event, short *item)
-{
-	switch (event->what)
-	{
-		case keyDown:
-		switch (event->message)
-		{
-			case PL_KEY_SPECIAL(kEnter):
-			case PL_KEY_NUMPAD_SPECIAL(kEnter):
-			FlashDialogButton(dial, kOkayButton);
-			*item = kOkayButton;
-			return(true);
-			break;
-			
-			default:
-			return(false);
-		}
-		break;
-		
-		case updateEvt:
-		if ((WindowPtr)event->message == dial->GetWindow())
-		{
-			SetPortDialogPort(dial);
-			UpdateResumeDialog(dial);
-			EndUpdate(dial->GetWindow());
-			event->what = nullEvent;
-		}
-		return(false);
-		break;
-		
-		default:
-		return(false);
-		break;
-	}
-}
-
-//--------------------------------------------------------------  QueryResumeGame
-// Dialog that asks user whether they want to resume a saved game orÉ
-// begin a new one.  It displays a little info on the state of theirÉ
-// saved game (number of glider left, points, etc.).
-
-short QueryResumeGame (void)
-{
-	#define			kResumeGameDial		1025
-	Dialog			*theDial;
-	houseType		*thisHousePtr;
-	Str255			scoreStr, glidStr;
-	long			hadPoints;
-	short			hitWhat, hadGliders;
-	char			wasState;
-	Boolean			leaving;
-
-	// get score & num. gliders
-	thisHousePtr = *thisHouse;
-	hadPoints = thisHousePtr->savedGame.score;
-	hadGliders = thisHousePtr->savedGame.numGliders;
-	NumToString(hadPoints, scoreStr);			// param text strings
-	NumToString((long)hadGliders, glidStr);
-
-	DialogTextSubstitutions substitutions;
-	if (hadGliders == 1)
-		substitutions = DialogTextSubstitutions(glidStr, PSTR(""), scoreStr);
-	else
-		substitutions = DialogTextSubstitutions(glidStr, PSTR("s"), scoreStr);
-	
-//	CenterDialog(kResumeGameDial);
-	theDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kResumeGameDial, kPutInFront, &substitutions);
-	if (theDial == nil)
-		RedAlert(kErrDialogDidntLoad);
-	SetPort(&theDial->GetWindow()->GetDrawSurface()->m_port);
-	
-	ShowWindow(theDial->GetWindow());
-	DrawDefaultButton(theDial);
-	leaving = false;
-	
-	while (!leaving)
-	{
-		ModalDialog(ResumeFilter, &hitWhat);
-		if ((hitWhat == kSheWantsNewGame) || (hitWhat == kSheWantsResumeGame))
-		{
-			leaving = true;
-		}
-	}
-	theDial->Destroy();
-	
-	return (hitWhat);
 }
 
 //--------------------------------------------------------------  DoNotInDemo
