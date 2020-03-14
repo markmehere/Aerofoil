@@ -90,6 +90,7 @@ struct Menu
 	bool haveMenuLayout;
 
 	size_t layoutWidth;
+	size_t layoutHintHorizontalOffset;
 	size_t layoutBaseHeight;
 
 	size_t topItemsTruncated;
@@ -208,6 +209,12 @@ namespace PortabilityLayer
 		static const unsigned int kMenuItemTextYOffset = 13;
 		static const unsigned int kMenuSeparatorHeight = 6;
 
+
+		static const unsigned int kMenuItemCheckTopOffset = 7;
+		static const unsigned int kMenuItemCheckBottomOffset = 11;
+		static const unsigned int kMenuItemCheckLeftOffset = 8;
+		static const unsigned int kMenuItemCheckRightOffset = 12;
+
 		static const unsigned int kMenuItemRightPadding = 8;
 		static const unsigned int kMenuItemLeftPadding = 16 + 2 + 2;	// 2 for left border, 16 for icon, 2 for spacing
 
@@ -227,6 +234,10 @@ namespace PortabilityLayer
 		SimpleGraphic *m_iconGraphic;
 
 		MenuSelectionState m_menuSelectionState;
+
+		static const int kHintTextCapacity = 6;
+
+		static size_t FormatHintText(uint8_t *buffer, uint8_t key);
 
 		static MenuManagerImpl ms_instance;
 	};
@@ -357,6 +368,7 @@ namespace PortabilityLayer
 		menu->stringBlobHandle = stringData;
 		menu->prevMenu = nullptr;
 		menu->nextMenu = nullptr;
+		menu->layoutHintHorizontalOffset = 0;
 		menu->layoutWidth = 0;
 		menu->layoutBaseHeight = 0;
 		menu->layoutFinalHeight = 0;
@@ -1039,6 +1051,8 @@ namespace PortabilityLayer
 		size_t cumulativeHeight = 0;
 		size_t width = menu->width;
 
+		size_t hintWidth = 0;
+
 		const size_t numItems = menu->numMenuItems;
 		for (size_t i = 0; i < numItems; i++)
 		{
@@ -1059,10 +1073,18 @@ namespace PortabilityLayer
 			width = std::max<size_t>(width, paddedWidth);
 
 			cumulativeHeight += item.layoutHeight;
+
+			if (item.key != 0)
+			{
+				uint8_t hintText[kHintTextCapacity];
+				const size_t hintLength = FormatHintText(hintText, item.key);
+				hintWidth = std::max<size_t>(rfont->MeasureString(hintText, hintLength) + kMenuItemRightPadding, hintWidth);
+			}
 		}
 
 		menu->haveMenuLayout = true;
-		menu->layoutWidth = width;
+		menu->layoutHintHorizontalOffset = width;
+		menu->layoutWidth = width + hintWidth;
 		menu->layoutBaseHeight = cumulativeHeight;
 		menu->layoutFinalHeight = menu->layoutBaseHeight;
 	}
@@ -1176,6 +1198,18 @@ namespace PortabilityLayer
 
 		const uint8_t *namePStr = strBlob + item.nameOffsetInStringBlob;
 		return namePStr[0] == 1 && namePStr[1] == '-';
+	}
+
+	size_t MenuManagerImpl::FormatHintText(uint8_t *buffer, uint8_t key)
+	{
+		buffer[0] = 'C';
+		buffer[1] = 't';
+		buffer[2] = 'r';
+		buffer[3] = 'l';
+		buffer[4] = '+';
+		buffer[5] = key;
+
+		return 6;
 	}
 
 	MenuManagerImpl *MenuManagerImpl::GetInstance()
@@ -1367,6 +1401,18 @@ namespace PortabilityLayer
 					qdState->SetForeColor(gs_barDisabledTextColor);
 
 				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
+
+				if (item.key)
+				{
+					const Point hintPos = Point::Create(menu->layoutHintHorizontalOffset, itemPos.v);
+
+					uint8_t hintText[kHintTextCapacity];
+					const size_t hintLength = FormatHintText(hintText, item.key);
+					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true);
+				}
+
+				if (item.checked)
+					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset));
 			}
 		}
 
@@ -1394,6 +1440,18 @@ namespace PortabilityLayer
 			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
 			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
+
+			if (item.key)
+			{
+				const Point hintPos = Point::Create(menu->layoutHintHorizontalOffset, itemPos.v);
+
+				uint8_t hintText[kHintTextCapacity];
+				const size_t hintLength = FormatHintText(hintText, item.key);
+				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true);
+
+				if (item.checked)
+					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset));
+			}
 		}
 
 		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
