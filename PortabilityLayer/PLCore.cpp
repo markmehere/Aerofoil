@@ -620,10 +620,10 @@ bool WaitForEvent(TimeTaggedVOSEvent *eventOut, uint32_t ticks)
 		if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(eventOut))
 			return true;
 
-		Delay(1, nullptr);
-
 		if (ticks == 0)
 			break;
+
+		Delay(1, nullptr);
 
 		ticks--;
 	}
