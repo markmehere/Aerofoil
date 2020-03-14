@@ -1,6 +1,7 @@
 #include "PLScrollBarWidget.h"
 #include "PLControlDefinitions.h"
 #include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 namespace PortabilityLayer
 {
@@ -196,10 +197,159 @@ namespace PortabilityLayer
 		}
 	}
 
+	void ScrollBarWidget::SetState(int16_t state)
+	{
+		if (state < m_min)
+			WidgetSpec<ScrollBarWidget>::SetState(m_min);
+		else if (state > m_max)
+			WidgetSpec<ScrollBarWidget>::SetState(m_max);
+		else
+			WidgetSpec<ScrollBarWidget>::SetState(state);
+	}
+
 	void ScrollBarWidget::OnStateChanged()
 	{
 		RefreshGrip();
 		DrawControl(m_window->GetDrawSurface());
+	}
+
+	int16_t ScrollBarWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	{
+		int part = ResolvePart(pos);
+		if (!part)
+			return 0;
+
+		if (part == kControlIndicatorPart)
+			return CaptureIndicator(pos, callback);
+		else
+			return CaptureScrollSegment(pos, part, callback);
+	}
+
+	int16_t ScrollBarWidget::CaptureScrollSegment(const Point &pos, int part, WidgetUpdateCallback_t callback)
+	{
+		int tickDelay = 15;
+
+		Point currentPos = pos;
+		bool wasInBounds = false;
+		bool isInBounds = (ResolvePart(pos) == part);
+
+		int ticksUntilIterate = 0;
+		for (;;)
+		{
+			if (ticksUntilIterate == 0)
+			{
+				if (isInBounds)
+				{
+					IterateScrollSegment(part, callback);
+					isInBounds = (ResolvePart(currentPos) == part);	// Update in-bounds since the scroll may invalidate it
+				}
+
+				ticksUntilIterate = tickDelay;
+			}
+
+			TimeTaggedVOSEvent evt;
+			if (WaitForEvent(&evt, 1))
+			{
+				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+				{
+					const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+					if (mouseEvt.m_button == GpMouseButtons::kLeft && mouseEvt.m_eventType == GpMouseEventTypes::kUp)
+						return part;
+					else
+					{
+						currentPos = m_window->MouseToLocal(mouseEvt);
+						isInBounds = (ResolvePart(currentPos) == part);
+					}
+				}
+			}
+			else
+				ticksUntilIterate--;
+		}
+	}
+
+	int16_t ScrollBarWidget::CaptureIndicator(const Point &pos, WidgetUpdateCallback_t callback)
+	{
+		const bool isHorizontal = IsHorizontal();
+
+		const int32_t startCoordinate = isHorizontal ? pos.h : pos.v;
+		int32_t currentGripPos = m_gripPos;
+
+		Rect currentHandle;
+		if (isHorizontal)
+			currentHandle = Rect::Create(m_rect.top, m_rect.left + 16 + m_gripPos, m_rect.bottom, m_rect.left + 16 + m_gripPos + m_gripSize);
+		else
+			currentHandle = Rect::Create(m_rect.top + 16 + m_gripPos, m_rect.left, m_rect.top + 16 + m_gripPos + m_gripSize, m_rect.right);
+
+		DrawSurface *surface = this->m_window->GetDrawSurface();
+
+		uint8_t solidPattern[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+		surface->InvertFillRect(currentHandle, solidPattern);
+
+		for (;;)
+		{
+			TimeTaggedVOSEvent evt;
+			if (WaitForEvent(&evt, 1))
+			{
+				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+				{
+					const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+					if (mouseEvt.m_eventType == GpMouseEventTypes::kUp || mouseEvt.m_eventType == GpMouseEventTypes::kMove)
+					{
+						const Point localPoint = m_window->MouseToLocal(mouseEvt);
+						int32_t desiredCoordinate = isHorizontal ? localPoint.h : localPoint.v;
+						int32_t desiredGripPos = m_gripPos + (desiredCoordinate - startCoordinate);
+
+						if (desiredGripPos < 0)
+							desiredGripPos = 0;
+						else if (desiredGripPos > m_laneCapacity)
+							desiredGripPos = m_laneCapacity;
+
+						if (desiredGripPos != currentGripPos)
+						{
+							surface->InvertFillRect(currentHandle, solidPattern);
+
+							if (isHorizontal)
+								currentHandle = Rect::Create(m_rect.top, m_rect.left + 16 + desiredGripPos, m_rect.bottom, m_rect.left + 16 + desiredGripPos + m_gripSize);
+							else
+								currentHandle = Rect::Create(m_rect.top + 16 + desiredGripPos, m_rect.left, m_rect.top + 16 + desiredGripPos + m_gripSize, m_rect.right);
+
+							surface->InvertFillRect(currentHandle, solidPattern);
+
+							currentGripPos = desiredGripPos;
+						}
+					}
+
+					if (mouseEvt.m_eventType == GpMouseEventTypes::kUp && mouseEvt.m_button == GpMouseButtons::kLeft)
+					{
+						surface->InvertFillRect(currentHandle, solidPattern);
+
+						//int32_t desiredState = (currentGripPos / m_laneCapacity) * (m_max - m_min);
+						int32_t desiredState = m_min;
+
+						if (m_laneCapacity > 0)
+						{
+							desiredState = ((currentGripPos * (m_max - m_min)) * 2 + m_laneCapacity) / (m_laneCapacity * 2);
+
+							// This shouldn't happen unless something weird happens like an int overflow
+							if (desiredState < m_min)
+								desiredState = m_min;
+							else if (desiredState > m_max)
+								desiredState = m_max;
+
+							SetState(desiredState);
+						}
+
+						return kControlIndicatorPart;
+					}
+				}
+			}
+		}
+	}
+
+	void ScrollBarWidget::IterateScrollSegment(int part, WidgetUpdateCallback_t callback)
+	{
+		if (callback != nullptr)
+			callback(this, part);
 	}
 
 	int ScrollBarWidget::ResolvePart(const Point &point) const
@@ -222,17 +372,17 @@ namespace PortabilityLayer
 		}
 
 		if (coord < 16)
-			return isHorizontal ? kControlDownButtonPart : kControlUpButtonPart;
+			return kControlUpButtonPart;
 
-		if (coord < m_gripPos)
-			return isHorizontal ? kControlPageDownPart : kControlPageUpPart;
+		if (coord - 16 < m_gripPos)
+			return kControlPageUpPart;
 
-		if (coord - m_gripPos < m_gripSize)
+		if (coord - 16 - m_gripPos < m_gripSize)
 			return kControlIndicatorPart;
 
 		if (coord < span - 16)
-			return isHorizontal ? kControlPageUpPart : kControlPageDownPart;
+			return kControlPageDownPart;
 
-		return isHorizontal ? kControlUpButtonPart : kControlDownButtonPart;
+		return kControlDownButtonPart;
 	}
 }

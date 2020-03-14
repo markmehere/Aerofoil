@@ -18,7 +18,10 @@ namespace PortabilityLayer
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
 		void DrawControl(DrawSurface *surface) override;
 
+		void SetState(int16_t state) override;
 		void OnStateChanged() override;
+
+		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
 
 		int ResolvePart(const Point &point) const override;
 
@@ -32,6 +35,10 @@ namespace PortabilityLayer
 		void RefreshGrip();
 
 		static void DrawBeveledBox(DrawSurface *surface, const Rect &rect);
+
+		int16_t CaptureScrollSegment(const Point &pos, int part, WidgetUpdateCallback_t callback);
+		int16_t CaptureIndicator(const Point &pos, WidgetUpdateCallback_t callback);
+		void IterateScrollSegment(int part, WidgetUpdateCallback_t callback);
 
 		int32_t m_min;
 		int32_t m_max;

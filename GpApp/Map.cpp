@@ -248,6 +248,9 @@ void RedrawMapContents (void)
 			}
 			else
 			{
+				surface->SetForeColor(StdColors::White());
+				surface->FillRect(aRoom);
+
 				if (i >= groundLevel)
 					surface->SetForeColor(StdColors::Green());
 				else
@@ -464,50 +467,50 @@ void ToggleMapWindow (void)
 //--------------------------------------------------------------  LiveHScrollAction
 #ifndef COMPILEDEMO
 
-void LiveHScrollAction (ControlHandle theControl, short thePart)
+void LiveHScrollAction (PortabilityLayer::Widget *theControl, int thePart)
 {
 	short		wasValue, newValue;
 	
 	switch (thePart)
 	{
 		case kControlUpButtonPart:
-		wasValue = GetControlValue(theControl);
-		SetControlValue(theControl, wasValue - 1);
-		if (GetControlValue(theControl) != wasValue)
+		wasValue = theControl->GetState();
+		theControl->SetState(wasValue - 1);
+		if (theControl->GetState() != wasValue)
 		{
-			mapLeftRoom = GetControlValue(theControl);
+			mapLeftRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
 		
 		case kControlDownButtonPart:
-		wasValue = GetControlValue(theControl);
-		SetControlValue(theControl, wasValue + 1);
-		if (GetControlValue(theControl) != wasValue)
+		wasValue = theControl->GetState();
+		theControl->SetState(wasValue + 1);
+		if (theControl->GetState() != wasValue)
 		{
-			mapLeftRoom = GetControlValue(theControl);
+			mapLeftRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
 		
 		case kControlPageUpPart:
-		wasValue = GetControlValue(theControl);
+		wasValue = theControl->GetState();
 		newValue = wasValue - (mapRoomsWide / 2);
-		SetControlValue(theControl, newValue);
-		if (GetControlValue(theControl) != wasValue)
+		theControl->SetState(newValue);
+		if (theControl->GetState() != wasValue)
 		{
-			mapLeftRoom = GetControlValue(theControl);
+			mapLeftRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
 		
 		case kControlPageDownPart:
-		wasValue = GetControlValue(theControl);
+		wasValue = theControl->GetState();
 		newValue = wasValue + (mapRoomsWide / 2);
-		SetControlValue(theControl, newValue);
-		if (GetControlValue(theControl) != wasValue)
+		theControl->SetState(newValue);
+		if (theControl->GetState() != wasValue)
 		{
-			mapLeftRoom = GetControlValue(theControl);
+			mapLeftRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
@@ -521,50 +524,50 @@ void LiveHScrollAction (ControlHandle theControl, short thePart)
 //--------------------------------------------------------------  LiveVScrollAction
 #ifndef COMPILEDEMO
 
-void LiveVScrollAction (ControlHandle theControl, short thePart)
+void LiveVScrollAction (PortabilityLayer::Widget *theControl, int thePart)
 {
 	short		wasValue, newValue;
 	
 	switch (thePart)
 	{
 		case kControlUpButtonPart:
-		wasValue = GetControlValue(theControl);
-		SetControlValue(theControl, wasValue - 1);
-		if (GetControlValue(theControl) != wasValue)
+		wasValue = theControl->GetState();
+		theControl->SetState(wasValue - 1);
+		if (theControl->GetState() != wasValue)
 		{
-			mapTopRoom = GetControlValue(theControl);
+			mapTopRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
 		
 		case kControlDownButtonPart:
-		wasValue = GetControlValue(theControl);
-		SetControlValue(theControl, wasValue + 1);
-		if (GetControlValue(theControl) != wasValue)
+		wasValue = theControl->GetState();
+		theControl->SetState(wasValue + 1);
+		if (theControl->GetState() != wasValue)
 		{
-			mapTopRoom = GetControlValue(theControl);
+			mapTopRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
 		
 		case kControlPageUpPart:
-		wasValue = GetControlValue(theControl);
+		wasValue = theControl->GetState();
 		newValue = wasValue - (mapRoomsHigh / 2);
-		SetControlValue(theControl, newValue);
-		if (GetControlValue(theControl) != wasValue)
+		theControl->SetState(newValue);
+		if (theControl->GetState() != wasValue)
 		{
-			mapTopRoom = GetControlValue(theControl);
+			mapTopRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
 		
 		case kControlPageDownPart:
-		wasValue = GetControlValue(theControl);
+		wasValue = theControl->GetState();
 		newValue = wasValue + (mapRoomsHigh / 2);
-		SetControlValue(theControl, newValue);
-		if (GetControlValue(theControl) != wasValue)
+		theControl->SetState(newValue);
+		if (theControl->GetState() != wasValue)
 		{
-			mapTopRoom = GetControlValue(theControl);
+			mapTopRoom = theControl->GetState();
 			RedrawMapContents();
 		}
 		break;
@@ -586,12 +589,8 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 	long				controlRef;
 	short				whichPart, localH, localV;
 	short				roomH, roomV, itsNumber;
-	ControlActionUPP	scrollHActionUPP, scrollVActionUPP;
 	
 	wherePt = Point::Create(theEvent.m_x, theEvent.m_y);
-	
-	scrollHActionUPP = NewControlActionUPP(LiveHScrollAction);
-	scrollVActionUPP = NewControlActionUPP(LiveVScrollAction);
 	
 	if (mapWindow == nil)
 		return;
@@ -676,14 +675,11 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 				case kControlDownButtonPart:
 				case kControlPageUpPart:
 				case kControlPageDownPart:
-				if (TrackControl(whichControl, wherePt, scrollHActionUPP))
-				{
-					
-				}
+				whichControl->Capture(wherePt, LiveHScrollAction);
 				break;
 				
 				case kControlIndicatorPart:
-				if (TrackControl(whichControl, wherePt, nil))
+				if (whichControl->Capture(wherePt, nil))
 				{
 					mapLeftRoom = whichControl->GetState();
 					RedrawMapContents();
@@ -699,14 +695,11 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 				case kControlDownButtonPart:
 				case kControlPageUpPart:
 				case kControlPageDownPart:
-				if (TrackControl(whichControl, wherePt, scrollVActionUPP))
-				{
-					
-				}
+				whichControl->Capture(wherePt, LiveVScrollAction);
 				break;
 				
 				case kControlIndicatorPart:
-				if (TrackControl(whichControl, wherePt, nil))
+				if (whichControl->Capture(wherePt, nil))
 				{
 					mapTopRoom = whichControl->GetState();
 					RedrawMapContents();
@@ -715,9 +708,6 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 			}
 		}
 	}
-	
-	DisposeControlActionUPP(scrollHActionUPP);
-	DisposeControlActionUPP(scrollVActionUPP);
 #endif
 }
 

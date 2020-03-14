@@ -58,7 +58,7 @@ namespace PortabilityLayer
 		void Resize(uint16_t width, uint16_t height);
 
 		void SetEnabled(bool enabled);
-		void SetState(int16_t state);
+		virtual void SetState(int16_t state);
 		int16_t GetState() const;
 
 		void SetVisible(bool visible);
