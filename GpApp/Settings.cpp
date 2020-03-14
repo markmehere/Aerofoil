@@ -31,13 +31,16 @@
 #define kDisplay1Item			3
 #define kDisplay3Item			4
 #define kDisplay9Item			5
+#define kBorder1Item			8
 #define kDoColorFadeItem		9
-#define kCurrentDepth			10
-#define k256Depth				11
-#define k16Depth				12
-#define kDispDefault			15
-#define kUseQDItem				16
-#define kUseScreen2Item			17
+//#define kCurrentDepth			10
+//#define k256Depth				11
+//#define k16Depth				12
+#define kBorder2Item			10
+#define kBorder3Item			11
+#define kDispDefault			12
+//#define kUseQDItem				13
+//#define kUseScreen2Item			14
 #define kSofterItem				4
 #define kLouderItem				5
 #define kVolNumberItem			7
@@ -894,17 +897,13 @@ void DisplayUpdate (Dialog *theDialog)
 	DrawDefaultButton(theDialog);
 	
 	SetDialogItemValue(theDialog, kDoColorFadeItem, (short)wasFade);
-	SelectFromRadioGroup(theDialog, kCurrentDepth + wasDepthPref, 
-			kCurrentDepth, k16Depth);
-//	SetDialogItemValue(theDialog, kUseQDItem, (short)wasQD);
-	SetDialogItemValue(theDialog, kUseScreen2Item, (short)wasScreen2);
 	
 	ForeColor(redColor);
 	FrameDisplayIcon(theDialog, StdColors::Red());
 	ForeColor(blackColor);
-	FrameDialogItemC(theDialog, 8, kRedOrangeColor8);
-	FrameDialogItemC(theDialog, 13, kRedOrangeColor8);
-	FrameDialogItemC(theDialog, 14, kRedOrangeColor8);
+	FrameDialogItemC(theDialog, kBorder1Item, kRedOrangeColor8);
+	FrameDialogItemC(theDialog, kBorder2Item, kRedOrangeColor8);
+	FrameDialogItemC(theDialog, kBorder3Item, kRedOrangeColor8);
 }
 
 //--------------------------------------------------------------  DisplayFilter
@@ -961,37 +960,6 @@ int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 			}
 			break;
 
-		case PL_KEY_SPECIAL(kUpArrow):
-			switch (wasDepthPref)
-			{
-			case kSwitchIfNeeded:
-				return k16Depth;
-
-			case kSwitchTo256Colors:
-				return kCurrentDepth;
-
-			case kSwitchTo16Grays:
-				return k256Depth;
-
-			default:
-				return -1;
-			}
-			break;
-
-		case PL_KEY_SPECIAL(kDownArrow):
-			switch (wasDepthPref)
-			{
-			case kSwitchIfNeeded:
-				return k256Depth;
-
-			case kSwitchTo256Colors:
-				return k16Depth;
-
-			case kSwitchTo16Grays:
-				return kCurrentDepth;
-			}
-			break;
-
 		case PL_KEY_ASCII('1'):
 			return kDisplay1Item;
 
@@ -1007,15 +975,6 @@ int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 		case PL_KEY_ASCII('D'):
 			FlashDialogButton(dial, kDispDefault);
 			return kDispDefault;
-
-		case PL_KEY_ASCII('R'):
-			PL_NotYetImplemented_TODO("FixMe");	// GP: This looks like a bug
-
-			FlashDialogButton(dial, kUseQDItem);
-			return kUseScreen2Item;
-
-		case PL_KEY_ASCII('U'):
-			return kUseQDItem;
 
 		default:
 			return -1;
@@ -1036,14 +995,8 @@ void DoDisplayPrefs (void)
 	BringUpDialog(&prefDlg, kDisplayPrefsDialID, nullptr);
 
 	if (!thisMac.can8Bit)
-	{
 		MyDisableControl(prefDlg, kDoColorFadeItem);
-		MyDisableControl(prefDlg, k256Depth);
-	}
-	if (!thisMac.can4Bit)
-		MyDisableControl(prefDlg, k16Depth);
-	if (thisMac.numScreens < 2)
-		MyDisableControl(prefDlg, kUseScreen2Item);
+
 	wasNeighbors = numNeighbors;
 	wasFade = isDoColorFade;
 	wasDepthPref = isDepthPref;
@@ -1100,28 +1053,11 @@ void DoDisplayPrefs (void)
 			SetDialogItemValue(prefDlg, kDoColorFadeItem, (short)wasFade);
 			break;
 			
-			case kCurrentDepth:
-			case k256Depth:
-			case k16Depth:
-			wasDepthPref = itemHit - kCurrentDepth;
-			SelectFromRadioGroup(prefDlg, itemHit, kCurrentDepth, k16Depth);
-			break;
-			
 			case kDispDefault:
 			FrameDisplayIcon(prefDlg, StdColors::White());
 			ForeColor(blackColor);
 			DisplayDefaults();
 			DisplayUpdate(prefDlg);
-			break;
-			
-			case kUseQDItem:
-//			wasQD = !wasQD;
-//			SetDialogItemValue(prefDlg, kUseQDItem, (short)wasQD);
-			break;
-			
-			case kUseScreen2Item:
-			wasScreen2 = !wasScreen2;
-			SetDialogItemValue(prefDlg, kUseScreen2Item, (short)wasScreen2);
 			break;
 		}
 	}

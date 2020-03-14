@@ -1,0 +1,9 @@
+{
+	"add" :
+	{
+		"DITL/1017.json" : "ApplicationResourcePatches/DITL/1017.json"
+	},
+	"delete" :
+	[
+	]
+}

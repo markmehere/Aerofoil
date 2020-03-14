@@ -4,7 +4,7 @@ mkdir Packaged\WinCursors
 
 x64\Release\MiniRez.exe "GliderProData\Glider PRO.r" Packaged\ApplicationResources.gpr
 
-x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpa"
+x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpa" "ApplicationResourcePatches\manifest.json"
 
 x64\Release\ConvertColorCursors.exe
 

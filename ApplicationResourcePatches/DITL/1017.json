@@ -1,0 +1,101 @@
+{
+	"items" :
+	[
+		{
+			"name" : "Okay",
+			"itemType" : "Button",
+			"pos" : [ 267, 211 ],
+			"size" : [ 58, 20 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "Cancel",
+			"itemType" : "Button",
+			"pos" : [ 201, 211 ],
+			"size" : [ 58, 20 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "",
+			"itemType" : "Icon",
+			"pos" : [ 209, 40 ],
+			"size" : [ 32, 32 ],
+			"id" : 1020,
+			"enabled" : true
+		},
+		{
+			"name" : "",
+			"itemType" : "Icon",
+			"pos" : [ 249, 40 ],
+			"size" : [ 32, 32 ],
+			"id" : 1021,
+			"enabled" : true
+		},
+		{
+			"name" : "",
+			"itemType" : "Icon",
+			"pos" : [ 289, 40 ],
+			"size" : [ 32, 32 ],
+			"id" : 1022,
+			"enabled" : true
+		},
+		{
+			"name" : "Number of Rooms to Display:\r(the less rooms, the faster)",
+			"itemType" : "Label",
+			"pos" : [ 8, 40 ],
+			"size" : [ 195, 32 ],
+			"id" : 0,
+			"enabled" : false
+		},
+		{
+			"name" : "",
+			"itemType" : "Image",
+			"pos" : [ 0, 0 ],
+			"size" : [ 333, 32 ],
+			"id" : 1006,
+			"enabled" : false
+		},
+		{
+			"name" : "",
+			"itemType" : "UserItem",
+			"pos" : [ 8, 80 ],
+			"size" : [ 317, 1 ],
+			"id" : 0,
+			"enabled" : false
+		},
+		{
+			"name" : "Beautiful opening color fade",
+			"itemType" : "CheckBox",
+			"pos" : [ 8, 142 ],
+			"size" : [ 256, 18 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "",
+			"itemType" : "UserItem",
+			"pos" : [ 8, 137 ],
+			"size" : [ 317, 1 ],
+			"id" : 0,
+			"enabled" : false
+		},
+		{
+			"name" : "",
+			"itemType" : "UserItem",
+			"pos" : [ 8, 200 ],
+			"size" : [ 317, 1 ],
+			"id" : 0,
+			"enabled" : false
+		},
+		{
+			"name" : "Defaults",
+			"itemType" : "Button",
+			"pos" : [ 8, 211 ],
+			"size" : [ 64, 20 ],
+			"id" : 0,
+			"enabled" : true
+		}
+	]
+}

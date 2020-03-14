@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "BMPFormat.h"
 #include "CFileStream.h"
 #include "CombinedTimestamp.h"
@@ -17,8 +19,12 @@
 
 #include "zlib.h"
 
+#include "rapidjson/rapidjson.h"
+#include "rapidjson/document.h"
+
 #include <stdio.h>
 #include <vector>
+#include <algorithm>
 #include <Windows.h>
 
 struct PlannedEntry
@@ -32,6 +38,11 @@ struct PlannedEntry
 	{
 	}
 };
+
+bool EntryAlphaSortPredicate(const PlannedEntry &a, const PlannedEntry &b)
+{
+	return a.m_name < b.m_name;
+}
 
 void AppendStr(std::vector<uint8_t> &array, const char *str)
 {
@@ -998,11 +1009,129 @@ bool ImportDialogItemTemplate(std::vector<uint8_t> &outTXT, const void *inData, 
 	return true;
 }
 
+void ReadFileToVector(FILE *f, std::vector<uint8_t> &vec)
+{
+	fseek(f, 0, SEEK_END);
+	long fsize = ftell(f);
+	vec.resize(fsize);
+
+	if (fsize > 0)
+	{
+		fseek(f, 0, SEEK_SET);
+		fread(&vec[0], 1, fsize, f);
+	}
+}
+
+bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<PlannedEntry> &archive)
+{
+	rapidjson::Document document;
+	document.Parse(reinterpret_cast<const char*>(&patchFileContents[0]), patchFileContents.size());
+	if (document.HasParseError())
+	{
+		fprintf(stderr, "Error occurred parsing patch data");
+		fprintf(stderr, "Error code %i  Location %i", static_cast<int>(document.GetParseError()), static_cast<int>(document.GetErrorOffset()));
+		return false;
+	}
+
+	if (!document.IsObject())
+	{
+		fprintf(stderr, "Patch document is not an object");
+		return false;
+	}
+
+	if (document.HasMember("add"))
+	{
+		const rapidjson::Value &addValue = document["add"];
+		if (!addValue.IsObject())
+		{
+			fprintf(stderr, "Patch add list is not an object");
+			return false;
+		}
+
+		for (rapidjson::Value::ConstMemberIterator it = addValue.MemberBegin(), itEnd = addValue.MemberEnd(); it != itEnd; ++it)
+		{
+			const rapidjson::Value &itemName = it->name;
+			if (!itemName.IsString())
+			{
+				fprintf(stderr, "Patch add list item key is not a string");
+				return false;
+			}
+
+			const rapidjson::Value &itemValue = it->value;
+			if (!itemValue.IsString())
+			{
+				fprintf(stderr, "Patch add list item value is not a string");
+				return false;
+			}
+
+			PlannedEntry *entry = nullptr;
+			for (std::vector<PlannedEntry>::iterator it = archive.begin(), itEnd = archive.end(); it != itEnd; ++it)
+			{
+				if (it->m_name == itemName.GetString())
+				{
+					entry = &(*it);
+					break;
+				}
+			}
+
+			if (!entry)
+			{
+				archive.push_back(PlannedEntry());
+				entry = &archive.back();
+			}
+
+			FILE *f = fopen(itemValue.GetString(), "rb");
+			if (!f)
+			{
+				fprintf(stderr, "Could not find source file %s for patch", static_cast<const char*>(itemValue.GetString()));
+				return false;
+			}
+
+			entry->m_isDirectory = false;
+			entry->m_contents.clear();
+			ReadFileToVector(f, entry->m_contents);
+			fclose(f);
+		}
+	}
+
+	if (document.HasMember("delete"))
+	{
+		const rapidjson::Value &deleteValue = document["delete"];
+		if (!deleteValue.IsArray())
+		{
+			fprintf(stderr, "Patch add list is not an object");
+			return false;
+		}
+
+		for (const rapidjson::Value *it = deleteValue.Begin(), *itEnd = deleteValue.End(); it != itEnd; ++it)
+		{
+			const rapidjson::Value &item = *it;
+			if (!item.IsString())
+			{
+				fprintf(stderr, "Patch delete list item key is not a string");
+				return false;
+			}
+
+			PlannedEntry *entry = nullptr;
+			for (std::vector<PlannedEntry>::iterator it = archive.begin(), itEnd = archive.end(); it != itEnd; ++it)
+			{
+				if (it->m_name == item.GetString())
+				{
+					archive.erase(it);
+					break;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 int main(int argc, const char **argv)
 {
-	if (argc != 4)
+	if (argc != 4 && argc != 5)
 	{
-		fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa>");
+		fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]");
 		return -1;
 	}
 
@@ -1027,6 +1156,23 @@ int main(int argc, const char **argv)
 	{
 		fprintf(stderr, "Error reading timestamp");
 		return -1;
+	}
+
+	bool havePatchFile = false;
+	std::vector<uint8_t> patchFileContents;
+
+	FILE *patchF = nullptr;
+	if (argc == 5 && fopen_s(&patchF, argv[4], "rb"))
+	{
+		fprintf(stderr, "Error reading patch file");
+		return -1;
+	}
+
+	if (patchF)
+	{
+		havePatchFile = true;
+		ReadFileToVector(patchF, patchFileContents);
+		fclose(patchF);
 	}
 
 	PortabilityLayer::CFileStream cfs(inF);
@@ -1132,6 +1278,14 @@ int main(int argc, const char **argv)
 			}
 		}
 	}
+
+	if (havePatchFile)
+	{
+		if (!ApplyPatch(patchFileContents, contents))
+			return -1;
+	}
+
+	std::sort(contents.begin(), contents.end(), EntryAlphaSortPredicate);
 
 	ExportZipFile(argv[3], contents, ts);
 
