@@ -173,7 +173,7 @@ void VariableInit (void)
 	fadeInSequence[14] = 9;
 	fadeInSequence[15] = 10;
 	
-	doubleTime = GetDblTime();
+	doubleTime = 30;	// PL_NotYetImplemented_TODO: Get this from the system settings
 	
 	mirrorRects = nil;
 	mainWindow = nil;

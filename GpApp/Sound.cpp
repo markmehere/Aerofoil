@@ -205,7 +205,7 @@ PLError_t LoadTriggerSound (short soundID)
 			}
 			else
 			{
-				BlockMove((Byte*)(*theSound), theSoundData[kMaxSounds - 1], soundDataSize);
+				memcpy(theSoundData[kMaxSounds - 1], (Byte*)(*theSound), soundDataSize);
 				theSound.Dispose();
 			}
 		}
@@ -246,7 +246,7 @@ PLError_t LoadBufferSounds (void)
 		if (theSoundData[i] == nil)
 			return (PLErrors::kOutOfMemory);
 		
-		BlockMove(*theSound, theSoundData[i], soundDataSize);
+		memcpy(theSoundData[i], *theSound, soundDataSize);
 		theSound.Dispose();
 	}
 	

@@ -61,7 +61,7 @@ void DoAbout (void)
 	{
 		messagePtr = (**version).shortVersion + 1 + (**version).shortVersion[0];
 
-		BlockMove((Ptr)messagePtr, &longVersion, ((UInt8)*messagePtr) + 1);
+		memcpy(&longVersion, messagePtr, ((UInt8)*messagePtr) + 1);
 		SetDialogString(aboutDialog, kTextItemVers, longVersion);
 	}
 

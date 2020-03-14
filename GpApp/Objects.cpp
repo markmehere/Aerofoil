@@ -967,7 +967,6 @@ void BringSendFrontBack (Boolean bringFront)
 	
 	fileDirty = true;
 	UpdateMenus(false);
-	InvalWindowRect(mainWindow, &mainWindowRect);
 	DeselectObject();
 	GetThisRoomsObjRects();
 	ReadyBackground(thisRoom->background, thisRoom->tiles);
@@ -975,6 +974,8 @@ void BringSendFrontBack (Boolean bringFront)
 	GenerateRetroLinks();
 	
 	InitCursor();
+
+	UpdateMainWindow();
 }
 #endif
 

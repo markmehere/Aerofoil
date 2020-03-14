@@ -187,7 +187,7 @@ void UpdateClipboardMenus (void)
 			mm->SetItemText(houseMenu, iCopy - 1, title);
 			GetLocalizedString(38, title);
 			mm->SetItemText(houseMenu, iClear - 1, title);
-			mm->SetItemEnabled(houseMenu, iDuplicate - 1, false);
+			mm->SetItemEnabled(houseMenu, iDuplicate - 1, true);
 		}
 		else
 		{

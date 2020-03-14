@@ -114,7 +114,9 @@ void RedAlert (short errorNumber)
 //	CenterAlert(rDeathAlertID);
 	
 	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rDeathAlertID, &substitutions);
-	ExitToShell();
+	//ExitToShell();
+
+	PL_NotYetImplemented_TODO("Exit");
 }
 
 //--------------------------------------------------------------  CreateOffScreenBitMap

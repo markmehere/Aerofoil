@@ -268,7 +268,7 @@ void CreatePointers (void)
 	{
 		GP_STATIC_ASSERT(sizeof(demoType) == 6);
 
-		BlockMove(*tempHandle, demoData, kDemoLength);
+		memcpy(demoData, *tempHandle, kDemoLength);
 		tempHandle.Dispose();
 	}
 #endif

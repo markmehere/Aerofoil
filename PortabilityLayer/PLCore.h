@@ -247,7 +247,6 @@ static const int nullEvent = 0;
 //void FlushEvents(int eventMask, int stopMask);
 
 void InitCursor();
-CursHandle GetCursor(int cursorID);
 void HideCursor();
 
 void Delay(int ticks, UInt32 *endTickCount);
@@ -295,12 +294,8 @@ Boolean WaitMouseUp();
 
 short Random();
 void GetTime(DateTimeRec *dateTime);
-UInt32 GetDblTime();
 
 void FlushEvents(int mask, int unknown);
-void ExitToShell();
-
-void InvalWindowRect(WindowPtr window, const Rect *rect);
 
 Handle NewHandle(Size size);
 long GetHandleSize(Handle handle);
@@ -311,14 +306,8 @@ void *NewPtr(Size size);
 void *NewPtrClear(Size size);
 void DisposePtr(void *ptr);
 
-void BlockMove(const void *src, void *dest, Size size);
 
 bool WaitForEvent(TimeTaggedVOSEvent *evt, uint32_t ticks);
-
-void DrawControls(WindowPtr window);
-void DrawGrowIcon(WindowPtr window);
-
-void DebugStr(const PLPasStr &str);
 
 static const Boolean PL_TRUE = 1;
 static const Boolean PL_FALSE = 0;

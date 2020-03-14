@@ -42,6 +42,9 @@ namespace PortabilityLayer
 
 	int16_t ButtonWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
 	{
+		if (!m_enabled || !m_visible)
+			return 0;
+
 		bool drawingDownState = false;
 		bool isInBounds = m_rect.Contains(pos);
 		for (;;)

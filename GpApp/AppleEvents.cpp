@@ -56,6 +56,7 @@ PLError_t DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 	DescType		returnedType;
 	PLError_t			theErr, whoCares;
 	short			i;
+	bool			redrawMainWindow = false;
 	
 	theErr = AEGetParamDesc(theAE, keyDirectObject, typeAEList, &docList);
 	if (theErr != PLErrors::kNone)
@@ -112,7 +113,7 @@ PLError_t DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 					Rect		updateRect;
 					
 					SetRect(&updateRect, splashOriginH + 474, splashOriginV + 304, splashOriginH + 474 + 166, splashOriginV + 304 + 12);
-					InvalWindowRect(mainWindow, &updateRect);
+					redrawMainWindow = true;
 				}
 			}
 		}
@@ -120,6 +121,9 @@ PLError_t DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 	}
 #endif
 	whoCares = AEDisposeDesc(&docList);
+
+	if (redrawMainWindow)
+		UpdateMainWindow();
 	
 	return theErr;
 }

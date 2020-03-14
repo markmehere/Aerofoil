@@ -222,7 +222,7 @@ PLError_t LoadMusicSounds (void)
 		if (theMusicData[i] == nil)
 			return PLErrors::kOutOfMemory;
 
-		BlockMove(static_cast<Byte*>(*theSound), theMusicData[i], soundDataSize);
+		memcpy(theMusicData[i], static_cast<Byte*>(*theSound), soundDataSize);
 		theSound.Dispose();
 	}
 	return (theErr);

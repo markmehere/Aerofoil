@@ -229,7 +229,6 @@ int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 			return kScrollDownItem;
 
 		case PL_KEY_SPECIAL(kUpArrow):
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex -= 4;
 			if (thisHouseIndex < 0)
 			{
@@ -243,23 +242,20 @@ int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 				if (thisHouseIndex >= screenCount)
 					thisHouseIndex -= 4;
 			}
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
+			UpdateLoadDialog(dial);
 			return 0;
 
 		case PL_KEY_SPECIAL(kDownArrow):
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex += 4;
 			screenCount = housesFound - housePage;
 			if (screenCount > kDispFiles)
 				screenCount = kDispFiles;
 			if (thisHouseIndex >= screenCount)
 				thisHouseIndex %= 4;
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
-
+			UpdateLoadDialog(dial);
 			return 0;
 
 		case PL_KEY_SPECIAL(kLeftArrow):
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex--;
 			if (thisHouseIndex < 0)
 			{
@@ -268,19 +264,18 @@ int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 					screenCount = kDispFiles;
 				thisHouseIndex = screenCount - 1;
 			}
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
+			UpdateLoadDialog(dial);
 			return 0;
 
 		case PL_KEY_SPECIAL(kTab):
 		case PL_KEY_SPECIAL(kRightArrow):
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
 			thisHouseIndex++;
 			screenCount = housesFound - housePage;
 			if (screenCount > kDispFiles)
 				screenCount = kDispFiles;
 			if (thisHouseIndex >= screenCount)
 				thisHouseIndex = 0;
-			InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
+			UpdateLoadDialog(dial);
 			return 0;
 
 		default:
@@ -308,10 +303,7 @@ int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 						thisHouseIndex = screenCount - 1;
 					}
 					if (wasIndex != thisHouseIndex)
-					{
-						InvalWindowRect(dial->GetWindow(), &loadHouseRects[wasIndex]);
-						InvalWindowRect(dial->GetWindow(), &loadHouseRects[thisHouseIndex]);
-					}
+						UpdateLoadDialog(dial);
 				}
 				return 0;
 			}

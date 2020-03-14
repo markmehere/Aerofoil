@@ -306,7 +306,7 @@ void DragHandle (Window *window, DrawSurface *surface, Point where)
 		DragMarqueeHandle(window, surface, where, &hDelta);
 		thisRoom->objects[objActive].data.f.length = hDelta;
 		whoCares = KeepObjectLegal();
-		InvalWindowRect(mainWindow, &mainWindowRect);
+		redrawMainWindow = true;
 		GetThisRoomsObjRects();
 		ReadyBackground(thisRoom->background, thisRoom->tiles);
 		DrawThisRoomsObjects();
@@ -1150,6 +1150,7 @@ void DuplicateObject (void)
 	Point		placePt;
 	short		direction, dist;
 	Boolean		handled;
+	bool		redrawMainWindow = false;
 	
 	tempObject = thisRoom->objects[objActive];
 	
@@ -1313,7 +1314,7 @@ void DuplicateObject (void)
 		ReadyBackground(thisRoom->background, thisRoom->tiles);
 		GetThisRoomsObjRects();
 		DrawThisRoomsObjects();
-		InvalWindowRect(mainWindow, &mainWindowRect);
+		redrawMainWindow = true;
 		
 		if (handled)
 		{
@@ -1323,6 +1324,9 @@ void DuplicateObject (void)
 		else
 			StartMarquee(&roomObjectRects[objActive]);
 	}
+
+	if (redrawMainWindow)
+		UpdateMainWindow();
 }
 
 //--------------------------------------------------------------  MoveObject
@@ -1657,51 +1661,6 @@ void MoveObject (short whichWay, Boolean shiftDown)
 	UpdateMenus(false);
 	GetThisRoomsObjRects();
 	
-	if (objActive == kInitialGliderSelected)
-	{
-		InvalWindowRect(mainWindow, &wasRect);
-		InvalWindowRect(mainWindow, &initialGliderRect);
-	}
-	else if (objActive == kLeftGliderSelected)
-	{
-		InvalWindowRect(mainWindow, &wasRect);
-		InvalWindowRect(mainWindow, &leftStartGliderDest);
-	}
-	else if (objActive == kRightGliderSelected)
-	{
-		InvalWindowRect(mainWindow, &wasRect);
-		InvalWindowRect(mainWindow, &rightStartGliderDest);
-	}
-	else
-	{
-		switch (thisRoom->objects[objActive].what)
-		{
-			case kTiki:
-			case kTable:
-			case kShelf:
-			case kCabinet:
-			case kDeckTable:
-			case kStool:
-			case kCounter:
-			case kDresser:
-			case kGreaseRt:
-			case kGreaseLf:
-			case kSlider:
-			case kMailboxLf:
-			case kMailboxRt:
-			case kTrackLight:
-			case kMirror:
-			case kWallWindow:
-			InvalWindowRect(mainWindow, &mainWindowRect);
-			break;
-			
-			default:
-			InvalWindowRect(mainWindow, &wasRect);
-			InvalWindowRect(mainWindow, &roomObjectRects[objActive]);
-			break;
-		}
-	}
-	
 	ReadyBackground(thisRoom->background, thisRoom->tiles);
 	DrawThisRoomsObjects();
 	
@@ -1721,6 +1680,8 @@ void MoveObject (short whichWay, Boolean shiftDown)
 		else
 			StartMarquee(&roomObjectRects[objActive]);
 	}
+
+	UpdateMainWindow();
 #endif
 }
 

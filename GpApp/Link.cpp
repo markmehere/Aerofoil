@@ -206,7 +206,6 @@ void UpdateLinkWindow (void)
 		return;
 	
 	SetPortWindowPort(linkWindow);
-	DrawControls(linkWindow);
 	UpdateLinkControl();
 #endif
 }
@@ -259,6 +258,8 @@ void OpenLinkWindow (void)
 		linkObject = 255;
 		
 		isLinkOpen = true;
+
+		UpdateLinkWindow();
 	}
 #endif
 }

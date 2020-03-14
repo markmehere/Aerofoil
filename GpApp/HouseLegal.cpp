@@ -648,8 +648,8 @@ void CheckDuplicateFloorSuite (void)
 		{
 			bitPlace = (((*thisHouse)->rooms[i].floor + 7) * 128) + 
 					(*thisHouse)->rooms[i].suite;
-			if ((bitPlace < 0) || (bitPlace >= 8192))
-				DebugStr(PSTR("Blew array"));
+			//if ((bitPlace < 0) || (bitPlace >= 8192))
+			//	DebugStr(PSTR("Blew array"));
 			if (pidgeonHoles[bitPlace] != 0)
 			{
 				houseErrors++;

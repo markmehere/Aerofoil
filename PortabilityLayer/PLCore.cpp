@@ -538,12 +538,6 @@ void GetTime(DateTimeRec *dateTime)
 	dateTime->minute = minute;
 }
 
-UInt32 GetDblTime()
-{
-	PL_NotYetImplemented_Minor();
-	return 30;
-}
-
 void FlushEvents(int mask, int unknown)
 {
 	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
@@ -554,11 +548,6 @@ void FlushEvents(int mask, int unknown)
 }
 
 void ExitToShell()
-{
-	PL_NotYetImplemented();
-}
-
-void InvalWindowRect(WindowPtr window, const Rect *rect)
 {
 	PL_NotYetImplemented();
 }
@@ -608,11 +597,6 @@ void DisposePtr(void *ptr)
 	PortabilityLayer::MemoryManager::GetInstance()->Release(ptr);
 }
 
-void BlockMove(const void *src, void *dest, Size size)
-{
-	memcpy(dest, src, size);
-}
-
 bool WaitForEvent(TimeTaggedVOSEvent *eventOut, uint32_t ticks)
 {
 	for (;;)
@@ -629,21 +613,6 @@ bool WaitForEvent(TimeTaggedVOSEvent *eventOut, uint32_t ticks)
 	}
 
 	return false;
-}
-
-void DrawControls(WindowPtr window)
-{
-	PL_NotYetImplemented();
-}
-
-void DrawGrowIcon(WindowPtr window)
-{
-	PL_NotYetImplemented();
-}
-
-void DebugStr(const PLPasStr &str)
-{
-	PL_NotYetImplemented();
 }
 
 void PL_NotYetImplemented()
