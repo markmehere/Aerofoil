@@ -1,5 +1,3 @@
-The Room Editor is not yet fully functional.
-
 As with Glider PRO's Room Editor, custom backgrounds, sounds, and TV videos
 are supported.
 

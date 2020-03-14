@@ -1,0 +1,16 @@
+If you want to import an existing third-party Glider PRO house to Aerofoil, a few steps are required.
+
+First, you need to generate a timestamp file.  Use the "MakeTimestamp" utility to dump the current time to a timestamp file.
+
+Second, you need to extract the house data from the original archive.  Most existing Glider PRO houses are in StuffIt! archives (.sit extension), which can be difficult to extract.  There is a utility called The Unarchiver for macOS which appears to support it.  An alternative is to extract the file on an actual vintage Mac.
+
+The next step depends on whether or not the house has custom resources.  If the house doesn't have custom resources, then add a ".gpd" extension to the house and use the FTagData utility to generate a corresponding ".gpf" metadata file, using the timestamp you generated in the first step.  You need to specify "gliH" as the file type ID and "ozm5" as the file creator ID.
+
+If the house does have custom resources, then you need to get the resource data somehow, and you still need to generate the metadata.  There are a few options there:
+- If extracting the file generated a separate file containing the resource data, which I think is what happens when extracting files on macOS, then you can use the resource file directly, and handle the other steps the same as you would if it didn't have custom resources.
+- If you can get the house into MacBinary format, then you can use the "bin2gp" utility to convert it to .gpf, .gpd, and .gpr files.
+- If you can get the house into BinHex4 (.hqx) format, then you can use the "hqx2gp" utility to convert it to .gpf, .gpd, and .gpr files.
+
+Once you have a .gpr file of the raw Mac-format resource data, you need to convert it to Aerofoil's ZIP-based resource archive format and convert the internal resources out of Mac-specific formats.  Use the "gpr2gpa" utility to do this.
+
+gpr2gpa's PICT converter may not support all PICT encodings.  If you find a house with custom PICT resources that isn't supported, please submit a sample to Aerofoil's issue tracker.
