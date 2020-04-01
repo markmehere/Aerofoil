@@ -47,6 +47,13 @@ static void TranslateGamepadInputEvent(const GpGamepadInputEvent &vosEvent, Port
 	PL_DEAD(queue);
 }
 
+static void TranslateVideoResolutionChangedEvent(const GpVideoResolutionChangedEvent &evt)
+{
+	PortabilityLayer::DisplayDeviceManager::IResolutionChangeHandler *chgHandler = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetResolutionChangeHandler();
+	if (chgHandler)
+		chgHandler->OnResolutionChanged(evt.m_prevWidth, evt.m_prevHeight, evt.m_newWidth, evt.m_newHeight);
+}
+
 static void TranslateKeyboardInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
 	const GpKeyboardInputEvent &vosEvent = vosEventBase.m_event.m_keyboardInputEvent;
@@ -107,6 +114,9 @@ static void TranslateVOSEvent(const GpVOSEvent *vosEvent, uint32_t timestamp, Po
 		break;
 	case GpVOSEventTypes::kGamepadInput:
 		TranslateGamepadInputEvent(vosEvent->m_event.m_gamepadInputEvent, queue);
+		break;
+	case GpVOSEventTypes::kVideoResolutionChanged:
+		TranslateVideoResolutionChangedEvent(vosEvent->m_event.m_resolutionChangedEvent);
 		break;
 	}
 }

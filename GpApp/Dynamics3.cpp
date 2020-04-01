@@ -153,6 +153,48 @@ void RenderDynamics (void)
 	}
 }
 
+//--------------------------------------------------------------  ZeroDinah
+
+void ZeroDinah(dynaType &dinah)
+{
+	dinah.type = kObjectIsEmpty;
+	QSetRect(&dinah.dest, 0, 0, 0, 0);
+	QSetRect(&dinah.whole, 0, 0, 0, 0);
+	dinah.hVel = 0;
+	dinah.vVel = 0;
+	dinah.count = 0;
+	dinah.frame = 0;
+	dinah.timer = 0;
+	dinah.position = 0;
+	dinah.room = 0;
+	dinah.byte0 = 0;
+	dinah.active = false;
+}
+
+//--------------------------------------------------------------  ZeroDinahsNotInRoom
+void ZeroDinahsNotInRoom (SInt16 room)
+{
+	short		i;
+	short		newNumDynamics = 0;
+
+	for (i = 0; i < numDynamics; i++)
+	{
+		dynaType &dinah = dinahs[i];
+		if (dinah.room == room)
+		{
+			if (newNumDynamics != numDynamics)
+				memcpy(&dinahs[newNumDynamics], &dinahs[i], sizeof(dynaType));
+
+			newNumDynamics++;
+		}
+	}
+
+	for (i = newNumDynamics; i < kMaxDynamicObs; i++)
+		ZeroDinah(dinahs[i]);
+
+	numDynamics = newNumDynamics;
+}
+
 //--------------------------------------------------------------  ZeroDinahs
 
 // This clears all dynamics - zeros them all out.  Used to initialize them.
@@ -162,20 +204,8 @@ void ZeroDinahs (void)
 	short		i;
 	
 	for (i = 0; i < kMaxDynamicObs; i++)
-	{
-		dinahs[i].type = kObjectIsEmpty;
-		QSetRect(&dinahs[i].dest, 0, 0, 0, 0);
-		QSetRect(&dinahs[i].whole, 0, 0, 0, 0);
-		dinahs[i].hVel = 0;
-		dinahs[i].vVel = 0;
-		dinahs[i].count = 0;
-		dinahs[i].frame = 0;
-		dinahs[i].timer = 0;
-		dinahs[i].position = 0;
-		dinahs[i].room = 0;
-		dinahs[i].byte0 = 0;
-		dinahs[i].active = false;
-	}
+		ZeroDinah(dinahs[i]);
+
 	numDynamics = 0;
 }
 
@@ -553,3 +583,12 @@ short AddDynamicObject (short what, Rect *where, objectType *who,
 	return (numDynamics - 1);
 }
 
+void OffsetDynamics(SInt16 h, SInt16 v)
+{
+	for (int i = 0; i < numDynamics; i++)
+	{
+		dynaType &dinah = dinahs[i];
+		//QOffsetRect(&dinah.dest, h, v);
+		//QOffsetRect(&dinah.whole, h, v);
+	}
+}

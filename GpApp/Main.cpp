@@ -315,6 +315,7 @@ int gpAppMain()
 	
 	ToolBoxInit();
 	CheckOurEnvirons();
+	InstallResolutionHandler();
 	if (!thisMac.hasColor)
 		RedAlert(kErrNeedColorQD);
 	if (!thisMac.hasSystem7)

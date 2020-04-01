@@ -43,6 +43,7 @@ Rect		badgesDestRects[4];
 DrawSurface	*boardPSrcMap;
 long		displayedScore;
 short		wasScoreboardMode;
+short		wasScoreboardTitleMode;
 Boolean		doRollScore;
 
 extern	Rect		localRoomsDest[], justRoomsRect;
@@ -63,6 +64,7 @@ void MarkScoreboardPortDirty(void)
 
 void RefreshScoreboard (SInt16 mode)
 {
+	wasScoreboardTitleMode = mode;
 	doRollScore = true;
 	
 	RefreshRoomTitle(mode);

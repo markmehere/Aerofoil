@@ -112,6 +112,8 @@ short ReBackUpSavedMap (Rect *theRect, short where, short who)
 			foundIndex = i;
 			mapRect = *theRect;
 			ZeroRectCorner(&mapRect);
+
+			savedMaps[foundIndex].dest = *theRect;
 			
 			CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 					GetPortBitMapForCopyBits(savedMaps[foundIndex].map), 
@@ -544,7 +546,7 @@ void BackUpPendulum (Rect *src, short index)
 
 // Backs up the pendulums in the event of lights going on or off.
 
-void ReBackUpPendulum (short where, short who)
+void ReBackUpPendulum (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -556,7 +558,12 @@ void ReBackUpPendulum (short where, short who)
 			{
 				if (pendulums[f].who == i)
 				{
-					BackUpPendulum(&pendulums[f].dest, i);
+					Rect &pendulumDest = pendulums[f].dest;
+					pendulumDest.right += h - pendulumDest.left;
+					pendulumDest.bottom += v - pendulumDest.top;
+					pendulumDest.left = h;
+					pendulumDest.top = v;
+					BackUpPendulum(&pendulumDest, i);
 					return;
 				}
 			}

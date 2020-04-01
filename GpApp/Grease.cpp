@@ -28,8 +28,7 @@ short		numGrease;
 
 extern	hotPtr		hotSpots;
 extern	savedType	savedMaps[];
-extern	Point		shieldPt;
-extern	Rect		greaseSrcRt[], greaseSrcLf[], shieldRect;
+extern	Rect		greaseSrcRt[], greaseSrcLf[];
 
 
 //==============================================================  Functions

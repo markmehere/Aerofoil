@@ -333,8 +333,10 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 					if (legit != -1)
 					{
 						DrawCuckoo(&itsRect);
+						short pendulumH = itsRect.left + 4;
+						short pendulumV = itsRect.top + 46;
 						if (redraw)
-							ReBackUpPendulum(localNumbers[neighbor], i);
+							ReBackUpPendulum(localNumbers[neighbor], i, pendulumH, pendulumV);
 						else
 							AddPendulum(localNumbers[neighbor], i, 
 									itsRect.left + 4, itsRect.top + 46);

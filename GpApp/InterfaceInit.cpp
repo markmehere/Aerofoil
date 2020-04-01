@@ -27,11 +27,10 @@ struct IGpCursor;
 extern	THandle<Rect>	mirrorRects;
 extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
 extern	WindowPtr		menuWindow;
-extern	Rect			shieldRect, boardSrcRect, localRoomsDest[];
+extern	Rect			boardSrcRect, localRoomsDest[];
 extern	IGpCursor		*handCursor, *vertCursor, *horiCursor;
 extern	IGpCursor		*diagCursor;
 extern	MenuHandle		appleMenu, gameMenu, optionsMenu, houseMenu;
-extern	Point			shieldPt;
 extern	long			incrementModeTime;
 extern	UInt32			doubleTime;
 extern	short			fadeInSequence[], idleMode;
@@ -99,6 +98,34 @@ void GetExtraCursors (void)
 		RedAlert(kErrFailedResourceLoad);
 }
 
+//--------------------------------------------------------------  RecomputeScreenRects
+void RecomputeInterfaceRects (void)
+{
+	houseRect = thisMac.screen;
+	houseRect.bottom -= kScoreboardTall;
+	if (houseRect.right > kMaxViewWidth)
+		houseRect.right = kMaxViewWidth;
+	if (houseRect.bottom > kMaxViewHeight)
+		houseRect.bottom = kMaxViewHeight;
+
+	playOriginH = (RectWide(&thisMac.screen) - kRoomWide) / 2;
+	playOriginV = (RectTall(&thisMac.screen) - kTileHigh) / 2;
+
+	for (int i = 0; i < 9; i++)
+	{
+		QSetRect(&localRoomsDest[i], 0, 0, kRoomWide, kTileHigh);
+		QOffsetRect(&localRoomsDest[i], playOriginH, playOriginV);
+	}
+	QOffsetRect(&localRoomsDest[kNorthRoom], 0, -kVertLocalOffset);
+	QOffsetRect(&localRoomsDest[kNorthEastRoom], kRoomWide, -kVertLocalOffset);
+	QOffsetRect(&localRoomsDest[kEastRoom], kRoomWide, 0);
+	QOffsetRect(&localRoomsDest[kSouthEastRoom], kRoomWide, kVertLocalOffset);
+	QOffsetRect(&localRoomsDest[kSouthRoom], 0, kVertLocalOffset);
+	QOffsetRect(&localRoomsDest[kSouthWestRoom], -kRoomWide, kVertLocalOffset);
+	QOffsetRect(&localRoomsDest[kWestRoom], -kRoomWide, 0);
+	QOffsetRect(&localRoomsDest[kNorthWestRoom], -kRoomWide, -kVertLocalOffset);
+}
+
 //--------------------------------------------------------------  VariableInit
 
 // All the simple interface variables are intialized here - Booleans,É
@@ -107,10 +134,6 @@ void GetExtraCursors (void)
 void VariableInit (void)
 {
 	short		i;
-	
-	shieldPt.h = 0;
-	shieldPt.v = 0;
-	shieldRect = thisMac.screen;
 	
 	menusUp = false;
 	quitting = false;
@@ -186,28 +209,5 @@ void VariableInit (void)
 	nailSrcMap = nil;
 	menuWindow = nil;
 	
-	houseRect = thisMac.screen;
-	houseRect.bottom -= kScoreboardTall;
-	if (houseRect.right > kMaxViewWidth)
-		houseRect.right = kMaxViewWidth;
-	if (houseRect.bottom > kMaxViewHeight)
-		houseRect.bottom = kMaxViewHeight;
-	
-	playOriginH = (RectWide(&thisMac.screen) - kRoomWide) / 2;
-	playOriginV = (RectTall(&thisMac.screen) - kTileHigh) / 2;
-	
-	for (i = 0; i < 9; i++)
-	{
-		QSetRect(&localRoomsDest[i], 0, 0, kRoomWide, kTileHigh);
-		QOffsetRect(&localRoomsDest[i], playOriginH, playOriginV);
-	}
-	QOffsetRect(&localRoomsDest[kNorthRoom], 0, -kVertLocalOffset);
-	QOffsetRect(&localRoomsDest[kNorthEastRoom], kRoomWide, -kVertLocalOffset);
-	QOffsetRect(&localRoomsDest[kEastRoom], kRoomWide, 0);
-	QOffsetRect(&localRoomsDest[kSouthEastRoom], kRoomWide, kVertLocalOffset);
-	QOffsetRect(&localRoomsDest[kSouthRoom], 0, kVertLocalOffset);
-	QOffsetRect(&localRoomsDest[kSouthWestRoom], -kRoomWide, kVertLocalOffset);
-	QOffsetRect(&localRoomsDest[kWestRoom], -kRoomWide, 0);
-	QOffsetRect(&localRoomsDest[kNorthWestRoom], -kRoomWide, -kVertLocalOffset);
+	RecomputeInterfaceRects();
 }
-

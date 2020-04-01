@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 struct Window;
 struct DrawSurface;
 struct GDevice;
@@ -29,6 +31,8 @@ namespace PortabilityLayer
 		virtual void SetWindowTitle(Window *window, const PLPasStr &title) = 0;
 
 		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;
+
+		virtual void HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) = 0;
 
 		static WindowManager *GetInstance();
 	};

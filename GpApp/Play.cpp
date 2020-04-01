@@ -8,6 +8,7 @@
 
 #include "PLResources.h"
 #include "PLStandardColors.h"
+#include "DisplayDeviceManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -66,6 +67,7 @@ extern	short		numStarsRemaining, numChimes, saidFollow;
 extern	Boolean		quitting, isMusicOn, gameOver, hasMirror, onePlayerLeft;
 extern	Boolean		isPlayMusicIdle, failedMusic, quickerTransitions;
 extern	Boolean		switchedOut;
+extern	short		wasScoreboardTitleMode;
 
 
 //==============================================================  Functions
@@ -156,7 +158,7 @@ void NewGame (short mode)
 	
 //	DebugStr("\pIf screen isn't black, exit to shell.");	// TEMP TEMP TEMP
 	
-	DrawLocale();
+	ResetLocale(false);
 	RefreshScoreboard(kNormalTitleMode);
 //	if (quickerTransitions)
 //		DissBitsChunky(&justRoomsRect);
@@ -362,12 +364,42 @@ void SetHouseToSavedRoom (void)
 	ForceThisRoom(smallGame.roomNumber);
 }
 
+//--------------------------------------------------------------  HandleGameResolutionChange
+
+void HandleGameResolutionChange(void)
+{
+	short prevPlayOriginH = playOriginH;
+	short prevPlayOriginV = playOriginV;
+
+	Rect prevResolution = thisMac.screen;
+	FlushResolutionChange();
+
+	RecomputeInterfaceRects();
+	RecreateOffscreens();
+	CloseMainWindow();
+	OpenMainWindow();
+
+	if (hasMovie)
+		theMovie.m_surface = &mainWindow->m_surface;
+
+	OffsetDynamics(playOriginH - prevPlayOriginH, playOriginV - prevPlayOriginV);
+
+	ResetLocale(true);
+	RefreshScoreboard(wasScoreboardTitleMode);
+	DumpScreenOn(&justRoomsRect);
+}
+
 //--------------------------------------------------------------  PlayGame
 
 void PlayGame (void)
 {
 	while ((playing) && (!quitting))
 	{
+		if (thisMac.isResolutionDirty)
+		{
+			HandleGameResolutionChange();
+		}
+
 		gameFrame++;
 		evenFrame = !evenFrame;
 		
@@ -730,7 +762,7 @@ void RestoreEntireGameScreen (void)
 	surface->SetForeColor(StdColors::Black());
 	surface->FillRect(tempRect);
 	
-	DrawLocale();
+	ResetLocale(false);
 	RefreshScoreboard(kNormalTitleMode);
 //	if (quickerTransitions)
 //		DissBitsChunky(&justRoomsRect);

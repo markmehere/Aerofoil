@@ -70,6 +70,8 @@ private:
 	GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties);
 	~GpDisplayDriverD3D11();
 
+	bool DetachSwapChain();
+	bool InitBackBuffer();
 	bool InitResources();
 	GpDisplayDriverTickStatus_t PresentFrameAndSync();
 

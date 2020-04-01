@@ -22,12 +22,17 @@ namespace PortabilityLayer
 		void IncrementTickCount(uint32_t count) override;
 		uint32_t GetTickCount() override;
 
+		void SetResolutionChangeHandler(IResolutionChangeHandler *handler) override;
+		IResolutionChangeHandler *GetResolutionChangeHandler() const override;
+
 		static DisplayDeviceManagerImpl *GetInstance();
 
 	private:
 		uint32_t m_tickCount;
 		GpPixelFormat_t m_pixelFormat;
 		bool m_paletteIsDirty;
+
+		IResolutionChangeHandler *m_resChangeHandler;
 
 		PortabilityLayer::RGBAColor *m_palette;
 		uint8_t m_paletteStorage[256 * sizeof(PortabilityLayer::RGBAColor) + GP_SYSTEM_MEMORY_ALIGNMENT];
@@ -39,6 +44,7 @@ namespace PortabilityLayer
 		: m_tickCount(1)
 		, m_paletteIsDirty(true)
 		, m_pixelFormat(GpPixelFormats::k8BitStandard)
+		, m_resChangeHandler(nullptr)
 	{
 		uint8_t *paletteStorage = m_paletteStorage;
 		while (reinterpret_cast<intptr_t>(paletteStorage) % GP_SYSTEM_MEMORY_ALIGNMENT != 0)
@@ -93,6 +99,15 @@ namespace PortabilityLayer
 		return m_tickCount;
 	}
 
+	void DisplayDeviceManagerImpl::SetResolutionChangeHandler(IResolutionChangeHandler *handler)
+	{
+		m_resChangeHandler = handler;
+	}
+
+	DisplayDeviceManagerImpl::IResolutionChangeHandler *DisplayDeviceManagerImpl::GetResolutionChangeHandler() const
+	{
+		return m_resChangeHandler;
+	}
 
 	DisplayDeviceManagerImpl *DisplayDeviceManagerImpl::GetInstance()
 	{

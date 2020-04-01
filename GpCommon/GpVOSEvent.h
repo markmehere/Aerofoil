@@ -235,6 +235,14 @@ struct GpMouseInputEvent
 	GpMouseButton_t m_button;
 };
 
+struct GpVideoResolutionChangedEvent
+{
+	uint32_t m_prevWidth;
+	uint32_t m_prevHeight;
+	uint32_t m_newWidth;
+	uint32_t m_newHeight;
+};
+
 namespace GpVOSEventTypes
 {
 	enum GpVOSEventType
@@ -242,6 +250,7 @@ namespace GpVOSEventTypes
 		kKeyboardInput,
 		kMouseInput,
 		kGamepadInput,
+		kVideoResolutionChanged,
 	};
 }
 
@@ -254,6 +263,7 @@ struct GpVOSEvent
 		GpKeyboardInputEvent m_keyboardInputEvent;
 		GpMouseInputEvent m_mouseInputEvent;
 		GpGamepadInputEvent m_gamepadInputEvent;
+		GpVideoResolutionChangedEvent m_resolutionChangedEvent;
 	};
 
 	EventUnion m_event;

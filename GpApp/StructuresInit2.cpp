@@ -11,6 +11,7 @@
 #include "GameOver.h"
 #include "MainWindow.h"
 #include "Objects.h"
+#include "QDManager.h"
 #include "RectUtils.h"
 #include "ResourceManager.h"
 #include "Room.h"
@@ -112,6 +113,34 @@ void InitAngel (void)
 	LoadGraphic(angelMaskMap, kAngelPictID + 1);
 }
 
+//--------------------------------------------------------------  RecreateOffscreens
+// Recreates resolution-dependent offscreen work
+PLError_t RecreateOffscreens(void)
+{
+	PLError_t		theErr;
+
+	PortabilityLayer::QDManager::GetInstance()->SetPort(nullptr);
+
+	if (workSrcMap)
+		DisposeGWorld(workSrcMap);
+
+	if (backSrcMap)
+		DisposeGWorld(backSrcMap);
+
+	justRoomsRect = houseRect;
+	ZeroRectCorner(&justRoomsRect);
+
+	workSrcRect = houseRect;			// Set up work map
+	ZeroRectCorner(&workSrcRect);
+	theErr = CreateOffScreenGWorld(&workSrcMap, &workSrcRect, kPreferredPixelFormat);
+
+	backSrcRect = houseRect;			// Set up background map
+	ZeroRectCorner(&backSrcRect);
+	theErr = CreateOffScreenGWorld(&backSrcMap, &backSrcRect, kPreferredPixelFormat);
+
+	return PLErrors::kNone;
+}
+
 //--------------------------------------------------------------  CreateOffscreens
 // All "utility" or "work" offscreen pix/bit maps are created here.
 // These would be offscreens that are reused throughout a game - they…
@@ -121,17 +150,8 @@ void InitAngel (void)
 void CreateOffscreens (void)
 {
 	PLError_t		theErr;
-	
-	justRoomsRect = houseRect;
-	ZeroRectCorner(&justRoomsRect);
-	
-	workSrcRect = houseRect;			// Set up work map
-	ZeroRectCorner(&workSrcRect);
-	theErr = CreateOffScreenGWorld(&workSrcMap, &workSrcRect, kPreferredPixelFormat);
-	
-	backSrcRect = houseRect;			// Set up background map
-	ZeroRectCorner(&backSrcRect);
-	theErr = CreateOffScreenGWorld(&backSrcMap, &backSrcRect, kPreferredPixelFormat);
+
+	theErr = RecreateOffscreens();
 	
 	InitScoreboardMap();	SpinCursor(1);
 	InitGliderMap();		SpinCursor(1);

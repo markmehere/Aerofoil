@@ -34,7 +34,7 @@ void ReBackUpTikiFlames (SInt16, SInt16);
 void AddTikiFlame (SInt16, SInt16, SInt16, SInt16);
 void ReBackUpBBQCoals (SInt16, SInt16);
 void AddBBQCoals (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpPendulum (SInt16, SInt16);
+void ReBackUpPendulum (SInt16, SInt16, SInt16, SInt16);
 void AddPendulum (SInt16, SInt16, SInt16, SInt16);
 void ReBackUpStar (SInt16, SInt16);
 void AddStar (SInt16, SInt16, SInt16, SInt16);
@@ -73,7 +73,10 @@ void HandleFish (SInt16);
 void HandleDynamics (void);								// --- Dynamics3.c
 void RenderDynamics (void);
 void ZeroDinahs (void);
+void ZeroDinahsNotInRoom (SInt16);
+
 SInt16 AddDynamicObject (SInt16, Rect *, objectType *, SInt16, SInt16, Boolean);
+void OffsetDynamics(SInt16 h, SInt16 v);
 
 void DoGameOver (void);									// --- GameOver.c
 void FlagGameOver (void);
@@ -132,6 +135,7 @@ void FlagStillOvers (gliderPtr);
 
 void InitializeMenus (void);							// --- InterfaceInit.c
 void GetExtraCursors (void);
+void RecomputeInterfaceRects (void);
 void VariableInit (void);
 
 void GetDemoInput (gliderPtr);							// --- Input.c
@@ -407,7 +411,8 @@ Boolean DoesRoomHaveFloor (void);
 Boolean DoesRoomHaveCeiling (void);
 
 void ReadyLevel (void);									// --- RoomGraphics.c
-void DrawLocale (void);
+void ResetLocale (Boolean soft);
+void DrawLocale (Boolean soft);
 void RedrawRoomLighting (void);
 
 Boolean PictIDExists (SInt16);							// --- RoomInfo.c
@@ -470,6 +475,7 @@ void InitEnemies (void);
 void CreateOffscreens (void);							// --- StructuresInit2.c
 void CreatePointers (void);
 void InitSrcRects (void);
+PLError_t RecreateOffscreens (void);
 
 void UpdateToolsWindow (void);							// --- Tools.c
 void EraseSelectedTool (void);

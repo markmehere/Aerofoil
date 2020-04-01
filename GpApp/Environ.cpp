@@ -8,12 +8,14 @@
 
 #include "PLResources.h"
 #include "PLPasStr.h"
+#include "DisplayDeviceManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
+#include "MenuManager.h"
 #include "IGpDisplayDriver.h"
-
+#include "WindowManager.h"
 
 #define	kSwitchDepthAlert		130
 #define kSetMemoryAlert			180
@@ -272,6 +274,18 @@ short HowManyUsableScreens (Boolean use1Bit, Boolean use4Bit, Boolean use8Bit)
 	return 1;
 }
 
+//--------------------------------------------------------------  FlushResolutionChange
+void FlushResolutionChange(void)
+{
+	if (thisMac.isResolutionDirty)
+	{
+		GetDeviceRect(&thisMac.screen);
+		thisMac.gray = thisMac.screen;
+		thisMac.gray.top = 20;
+		thisMac.isResolutionDirty = false;
+	}
+}
+
 //--------------------------------------------------------------  CheckOurEnvirons  
 // Calls all the above functions in order to fill out a sort of "spec sheet"É
 // for the current Mac.
@@ -293,10 +307,41 @@ void CheckOurEnvirons (void)
 	thisMac.can4Bit = true;
 	thisMac.can8Bit = true;
 	thisMac.numScreens = HowManyUsableScreens(false, true, true);
-	GetDeviceRect(&thisMac.screen);
 	
 	thisMac.wasDepth = WhatsOurDepth();
 	thisMac.wasColorOrGray = AreWeColorOrGrayscale();
+
+	thisMac.isResolutionDirty = true;
+	FlushResolutionChange();
+}
+
+//--------------------------------------------------------------  HandleResolutionChange
+// Installs handler
+void HandleResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight)
+{
+	PortabilityLayer::WindowManager::GetInstance()->HandleScreenResolutionChange(prevWidth, prevHeight, newWidth, newHeight);
+	PortabilityLayer::MenuManager::GetInstance()->DrawMenuBar();
+	thisMac.isResolutionDirty = true;	// Because of legacy code, we don't want to update thisMac.screen immediately, but rather, let the editor or game pick it up
+}
+
+class GpAppResolutionChangeHandler final : public PortabilityLayer::DisplayDeviceManager::IResolutionChangeHandler
+{
+public:
+	void OnResolutionChanged(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) override
+	{
+		HandleResolutionChange(prevWidth, prevHeight, newWidth, newHeight);
+	}
+
+	static GpAppResolutionChangeHandler ms_instance;
+};
+
+GpAppResolutionChangeHandler GpAppResolutionChangeHandler::ms_instance;
+
+//--------------------------------------------------------------  InstallResolutionHandler
+// Installs handler
+void InstallResolutionHandler(void)
+{
+	PortabilityLayer::DisplayDeviceManager::GetInstance()->SetResolutionChangeHandler(&GpAppResolutionChangeHandler::ms_instance);
 }
 
 //--------------------------------------------------------------  ReflectMonitor2Environs

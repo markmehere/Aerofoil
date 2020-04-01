@@ -17,6 +17,8 @@
 #include "Vec2i.h"
 #include "WindowDef.h"
 
+#include <algorithm>
+
 struct GDevice;
 
 namespace PortabilityLayer
@@ -129,6 +131,8 @@ namespace PortabilityLayer
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
+
+		void HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) override;
 
 		Window *GetPutInFrontSentinel() const override;
 
@@ -553,7 +557,13 @@ namespace PortabilityLayer
 
 	void WindowImpl::GetChromePadding(uint16_t padding[WindowChromeSides::kCount]) const
 	{
-		return m_chromeTheme->GetChromePadding(this, padding);
+		if (m_chromeTheme)
+			m_chromeTheme->GetChromePadding(this, padding);
+		else
+		{
+			for (int i = 0; i < WindowChromeSides::kCount; i++)
+				padding[i] = 0;
+		}
 	}
 
 	void WindowImpl::GetChromeDimensions(int width, int height, Rect dimensions[WindowChromeSides::kCount]) const
@@ -572,6 +582,9 @@ namespace PortabilityLayer
 
 	bool WindowImpl::GetChromeInteractionZone(const Vec2i &point, RegionID_t &outRegion) const
 	{
+		if (!m_chromeTheme)
+			return false;
+
 		return m_chromeTheme->GetChromeInteractionZone(this, point, outRegion);
 	}
 
@@ -795,6 +808,46 @@ namespace PortabilityLayer
 		{
 			RenderWindow(window, displayDriver);
 			window = window->GetWindowAbove();
+		}
+	}
+
+	void WindowManagerImpl::HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight)
+	{
+		for (PortabilityLayer::WindowImpl *window = m_windowStackTop; window != nullptr; window = window->GetWindowBelow())
+		{
+			uint16_t chromePadding[WindowChromeSides::kCount];
+			window->GetChromePadding(chromePadding);
+
+			const Rect surfaceRect = window->GetDrawSurface()->m_port.GetRect();
+
+			uint32_t paddedWidth = surfaceRect.Width() + chromePadding[WindowChromeSides::kLeft] + chromePadding[WindowChromeSides::kRight];
+			uint32_t paddedHeight = surfaceRect.Height() + chromePadding[WindowChromeSides::kTop] + chromePadding[WindowChromeSides::kBottom];
+
+			int64_t newX = 0;
+			if (newWidth <= paddedWidth || prevWidth <= paddedWidth)
+				newX = (static_cast<int64_t>(newWidth) - paddedWidth) / 2;
+			else
+			{
+				uint32_t prevClearanceX = prevWidth - paddedWidth;
+				uint32_t newClearanceX = newWidth - paddedWidth;
+				newX = static_cast<int64_t>(window->m_wmX) * static_cast<int64_t>(newClearanceX) / static_cast<int64_t>(prevClearanceX);
+			}
+
+			int64_t newY = 0;
+			if (newHeight <= paddedHeight || prevHeight <= paddedHeight)
+				newY = (static_cast<int64_t>(newHeight) - paddedHeight) / 2;
+			else
+			{
+				uint32_t prevClearanceY = prevHeight - paddedHeight;
+				uint32_t newClearanceY = newHeight - paddedHeight;
+				newY = static_cast<int64_t>(window->m_wmY) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY);
+			}
+
+			newX = std::max<int64_t>(0, std::min<int64_t>(newX, newWidth - 1));
+			newY = std::max<int64_t>(0, std::min<int64_t>(newY, newHeight - 1));
+
+			window->m_wmX = static_cast<int32_t>(newX);
+			window->m_wmY = static_cast<int32_t>(newY);
 		}
 	}
 
