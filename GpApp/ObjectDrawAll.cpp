@@ -369,7 +369,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 					if (SectRect(&itsRect, &testRect, &whoCares))
 					{
 						if (redraw)
-							dynamicNum = ReBackUpGrease(localNumbers[neighbor], i);
+							dynamicNum = ReBackUpGrease(localNumbers[neighbor], i, itsRect.left, itsRect.top);
 						else
 							dynamicNum = AddGrease(localNumbers[neighbor], i, 
 									itsRect.left, itsRect.top, 
@@ -390,7 +390,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 					if (SectRect(&itsRect, &testRect, &whoCares))
 					{
 						if (redraw)
-							dynamicNum = ReBackUpGrease(localNumbers[neighbor], i);
+							dynamicNum = ReBackUpGrease(localNumbers[neighbor], i, itsRect.left, itsRect.top);
 						else
 							dynamicNum = AddGrease(localNumbers[neighbor], i, 
 									itsRect.left, itsRect.top, 

@@ -83,7 +83,7 @@ void FlagGameOver (void);
 void DoDiedGameOver (void);
 
 void HandleGrease (void);								// --- Grease.c
-SInt16 ReBackUpGrease (SInt16, SInt16);
+SInt16 ReBackUpGrease (SInt16 where, SInt16 who, SInt16 h, SInt16 v);
 SInt16 AddGrease (SInt16, SInt16, SInt16, SInt16, SInt16, Boolean);
 void SpillGrease (SInt16, SInt16);
 void RedrawAllGrease (void);

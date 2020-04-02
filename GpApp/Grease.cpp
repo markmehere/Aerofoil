@@ -167,7 +167,7 @@ void BackupGrease (Rect *src, short index, Boolean isRight)
 // off or on the lights).  It assumes certain data strucutures are…
 // already declared from an earlier call to the above funciton.
 
-short ReBackUpGrease (short where, short who)
+short ReBackUpGrease (short where, short who, short h, short v)
 {
 	Rect		src;
 	short		i;
@@ -178,6 +178,7 @@ short ReBackUpGrease (short where, short who)
 		{
 			if ((grease[i].mode == kGreaseIdle) || (grease[i].mode == kGreaseFalling))
 			{
+				QOffsetRect(&grease[i].dest, h - grease[i].dest.left, v - grease[i].dest.top);
 				src = grease[i].dest;
 				BackupGrease(&src, grease[i].mapNum, grease[i].isRight);
 			}
