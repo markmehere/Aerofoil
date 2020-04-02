@@ -2388,7 +2388,7 @@ void DrawThisRoomsObjects (void)
 				if (!thisRoom->objects[i].data.c.initial)
 					QOffsetRect(&tempRect, -8, 0);
 				DrawGreaseRt(&tempRect, thisRoom->objects[i].data.c.length, 
-						thisRoom->objects[i].data.c.initial);
+						thisRoom->objects[i].data.c.initial, true);
 				break;
 				
 				case kGreaseLf:
@@ -2396,7 +2396,7 @@ void DrawThisRoomsObjects (void)
 				if (!thisRoom->objects[i].data.c.initial)
 					QOffsetRect(&tempRect, 8, 0);
 				DrawGreaseLf(&tempRect, thisRoom->objects[i].data.c.length, 
-						thisRoom->objects[i].data.c.initial);
+						thisRoom->objects[i].data.c.initial, true);
 				break;
 				
 				case kFoil:

@@ -292,7 +292,7 @@ void BackUpFlames (Rect *src, short index)
 // Like the above function but this is called when the lighting changes…
 // in a room (lights go on or off).
 
-void ReBackUpFlames (short where, short who)
+void ReBackUpFlames (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -304,6 +304,7 @@ void ReBackUpFlames (short where, short who)
 			{
 				if (flames[f].who == i)
 				{
+					QOffsetRect(&flames[f].dest, h - 8 - flames[f].dest.left, v - 15 - flames[f].dest.top);
 					BackUpFlames(&flames[f].dest, i);
 					return;
 				}

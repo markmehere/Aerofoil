@@ -178,7 +178,13 @@ short ReBackUpGrease (short where, short who, short h, short v)
 		{
 			if ((grease[i].mode == kGreaseIdle) || (grease[i].mode == kGreaseFalling))
 			{
-				QOffsetRect(&grease[i].dest, h - grease[i].dest.left, v - grease[i].dest.top);
+				greasePtr greaseItem = &grease[i];
+				const short hDelta = h - grease[i].dest.left;
+				const short vDelta = v - grease[i].dest.top;
+				QOffsetRect(&greaseItem->dest, hDelta, vDelta);
+				greaseItem->start += hDelta;
+				greaseItem->stop += hDelta;
+
 				src = grease[i].dest;
 				BackupGrease(&src, grease[i].mapNum, grease[i].isRight);
 			}
@@ -269,10 +275,12 @@ void RedrawAllGrease (void)
 	
 	for (i = 0; i < numGrease; i++)
 	{
+		if (grease[i].mode == kGreaseIdle)
+			continue;
+
 		src = hotSpots[grease[i].hotNum].bounds;
 		if ((grease[i].where == thisRoomNumber) && 
-				((src.bottom - src.top) == 2) && 
-				(grease[i].mode != kGreaseIdle))
+				((src.bottom - src.top) == 2))
 		{
 			QOffsetRect(&src, playOriginH, playOriginV);
 			
@@ -288,3 +296,29 @@ void RedrawAllGrease (void)
 	}
 }
 
+void FixupFallenGrease(SInt16 where, SInt16 who, SInt16 h, SInt16 v, Boolean *isDynamic)
+{
+	short		i;
+
+	for (i = 0; i < numGrease; i++)
+	{
+		greasePtr greaseItem = grease + i;
+		if ((greaseItem->where == where) && (greaseItem->who == who))
+		{
+			short hDelta = h - greaseItem->dest.left;
+			short vDelta = v - greaseItem->dest.top;
+			QOffsetRect(&greaseItem->dest, hDelta, vDelta);
+			greaseItem->start += hDelta;
+			greaseItem->stop += hDelta;
+			if (greaseItem->mode != kGreaseIdle)
+			{
+				hotPtr hotSpot = &hotSpots[greaseItem->hotNum];
+				//QOffsetRect(&hotSpot->bounds, hDelta, vDelta);
+			}
+			*isDynamic = true;
+			return;
+		}
+	}
+
+	*isDynamic = false;
+}

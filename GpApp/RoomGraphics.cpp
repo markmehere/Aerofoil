@@ -128,6 +128,9 @@ void ResetLocale (Boolean soft)
 		DrawFloorSupport();
 	RestoreWorkMap();
 	shadowVisible = IsShadowVisible();
+
+	if (soft)
+		RedrawAllGrease();
 	
 	SetGraphicsPort(wasCPort);
 }

@@ -73,11 +73,13 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						DrawSimpleBlowers(thisObject.what, &itsRect);
 					if (neighbor == kCentralRoom)
 					{
+						const short h = itsRect.left + 10;
+						const short v = itsRect.top + 7;
 						if (redraw)
-							ReBackUpFlames(localNumbers[neighbor], i);
+							ReBackUpFlames(localNumbers[neighbor], i, h, v);
 						else
 							AddCandleFlame(localNumbers[neighbor], i, 
-									itsRect.left + 10, itsRect.top + 7);
+									h, v);
 					}
 					else
 					{
@@ -88,11 +90,13 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						rectB.bottom += kFloorSupportTall;
 						if (!SectRect(&rectA, &rectB, &whoCares))
 						{
+							const short h = itsRect.left + 10;
+							const short v = itsRect.top + 7;
 							if (redraw)
-								ReBackUpFlames(localNumbers[neighbor], i);
+								ReBackUpFlames(localNumbers[neighbor], i, h, v);
 							else
 								AddCandleFlame(localNumbers[neighbor], i, 
-										itsRect.left + 10, itsRect.top + 7);
+										h, v);
 						}
 					}
 				}
@@ -107,11 +111,13 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						DrawSimpleBlowers(thisObject.what, &itsRect);
 					if (neighbor == kCentralRoom)
 					{
+						const short h = itsRect.left + 14;
+						const short v = itsRect.top + 7;
 						if (redraw)
-							ReBackUpFlames(localNumbers[neighbor], i);
+							ReBackUpFlames(localNumbers[neighbor], i, h, v);
 						else
 							AddCandleFlame(localNumbers[neighbor], i, 
-									itsRect.left + 14, itsRect.top + 7);
+									h, v);
 					}
 					else
 					{
@@ -122,11 +128,13 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						rectB.bottom += kFloorSupportTall;
 						if (!SectRect(&rectA, &rectB, &whoCares))
 						{
+							const short h = itsRect.left + 14;
+							const short v = itsRect.top + 7;
 							if (redraw)
-								ReBackUpFlames(localNumbers[neighbor], i);
+								ReBackUpFlames(localNumbers[neighbor], i, h, v);
 							else
 								AddCandleFlame(localNumbers[neighbor], i, 
-										itsRect.left + 14, itsRect.top + 7);
+										h, v);
 						}
 					}
 				}
@@ -141,11 +149,13 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						DrawSimpleBlowers(thisObject.what, &itsRect);
 					if (neighbor == kCentralRoom)
 					{
+						const short h = itsRect.left + 9;
+						const short v = itsRect.top + 7;
 						if (redraw)
-							ReBackUpFlames(localNumbers[neighbor], i);
+							ReBackUpFlames(localNumbers[neighbor], i, h, v);
 						else
 							AddCandleFlame(localNumbers[neighbor], i, 
-									itsRect.left + 9, itsRect.top + 7);
+									h, v);
 					}
 					else
 					{
@@ -156,11 +166,13 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						rectB.bottom += kFloorSupportTall;
 						if (!SectRect(&rectA, &rectB, &whoCares))
 						{
+							const short h = itsRect.left + 9;
+							const short v = itsRect.top + 7;
 							if (redraw)
-								ReBackUpFlames(localNumbers[neighbor], i);
+								ReBackUpFlames(localNumbers[neighbor], i, h, v);
 							else
 								AddCandleFlame(localNumbers[neighbor], i, 
-										itsRect.left + 9, itsRect.top + 7);
+										h, v);
 						}
 					}
 				}
@@ -375,11 +387,16 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 									itsRect.left, itsRect.top, 
 									thisObject.data.c.length, true);
 						if (dynamicNum != -1)
-							DrawGreaseRt(&itsRect, thisObject.data.c.length, true);
+							DrawGreaseRt(&itsRect, thisObject.data.c.length, true, false);
 					}
 				}
 				else								// fallen
-					DrawGreaseRt(&itsRect, thisObject.data.c.length, false);
+				{
+					Boolean isDynamic = false;
+					if (redraw)
+						FixupFallenGrease(localNumbers[neighbor], i, itsRect.left, itsRect.top, &isDynamic);
+					DrawGreaseRt(&itsRect, thisObject.data.c.length, false, !isDynamic);
+				}
 				break;
 				
 				case kGreaseLf:
@@ -396,11 +413,16 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 									itsRect.left, itsRect.top, 
 									thisObject.data.c.length, false);
 						if (dynamicNum != -1)
-							DrawGreaseLf(&itsRect, thisObject.data.c.length, true);
+							DrawGreaseLf(&itsRect, thisObject.data.c.length, true, false);
 					}
 				}
 				else
-					DrawGreaseLf(&itsRect, thisObject.data.c.length, false);
+				{
+					Boolean isDynamic = false;
+					if (redraw)
+						FixupFallenGrease(localNumbers[neighbor], i, itsRect.left, itsRect.top, &isDynamic);
+					DrawGreaseLf(&itsRect, thisObject.data.c.length, false, !isDynamic);
+				}
 				break;
 				
 				case kFoil:

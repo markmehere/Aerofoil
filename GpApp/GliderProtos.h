@@ -28,7 +28,7 @@ SInt16 ReBackUpSavedMap (Rect *, SInt16, SInt16);
 void RestoreFromSavedMap (SInt16, SInt16, Boolean);
 void AddSparkle (Rect *);
 void AddFlyingPoint (Rect *, SInt16, SInt16, SInt16);
-void ReBackUpFlames (SInt16, SInt16);
+void ReBackUpFlames (SInt16, SInt16, SInt16, SInt16);
 void AddCandleFlame (SInt16, SInt16, SInt16, SInt16);
 void ReBackUpTikiFlames (SInt16, SInt16);
 void AddTikiFlame (SInt16, SInt16, SInt16, SInt16);
@@ -87,6 +87,7 @@ SInt16 ReBackUpGrease (SInt16 where, SInt16 who, SInt16 h, SInt16 v);
 SInt16 AddGrease (SInt16, SInt16, SInt16, SInt16, SInt16, Boolean);
 void SpillGrease (SInt16, SInt16);
 void RedrawAllGrease (void);
+void FixupFallenGrease(SInt16 where, SInt16 who, SInt16 h, SInt16 v, Boolean *isDynamic);
 
 void DoHighScores (void);								// --- HighScores.c
 void SortHighScores (void);
@@ -261,8 +262,8 @@ void DrawBlueClock (Rect *);
 void DrawYellowClock (Rect *);
 void DrawCuckoo (Rect *);
 void DrawSimplePrizes (SInt16, Rect *);
-void DrawGreaseRt (Rect *, SInt16, Boolean);
-void DrawGreaseLf (Rect *, SInt16, Boolean);
+void DrawGreaseRt (Rect *, SInt16, Boolean, Boolean);
+void DrawGreaseLf (Rect *, SInt16, Boolean, Boolean);
 void DrawFoil (Rect *);
 void DrawInvisBonus (Rect *);
 void DrawSlider (Rect *);
