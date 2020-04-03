@@ -377,7 +377,7 @@ void BackUpTikiFlames (Rect *src, short index)
 
 // This is like the function ReBackUpFlames() but customized for Tiki torches.
 
-void ReBackUpTikiFlames (short where, short who)
+void ReBackUpTikiFlames (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -389,6 +389,7 @@ void ReBackUpTikiFlames (short where, short who)
 			{
 				if (tikiFlames[f].who == i)
 				{
+					QOffsetRect(&tikiFlames[f].dest, h - tikiFlames[f].dest.left, v - tikiFlames[f].dest.top);
 					BackUpTikiFlames(&tikiFlames[f].dest, i);
 					return;
 				}
@@ -463,7 +464,7 @@ void BackUpBBQCoals (Rect *src, short index)
 
 // Sense a pattern here?
 
-void ReBackUpBBQCoals (short where, short who)
+void ReBackUpBBQCoals (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -475,6 +476,7 @@ void ReBackUpBBQCoals (short where, short who)
 			{
 				if (bbqCoals[f].who == i)
 				{
+					QOffsetRect(&bbqCoals[f].dest, h - bbqCoals[f].dest.left, v - bbqCoals[f].dest.top);
 					BackUpBBQCoals(&bbqCoals[f].dest, i);
 					return;
 				}
@@ -644,7 +646,7 @@ void BackUpStar (Rect *src, short index)
 
 // Re-backs up the stars - in the event of lighting switch.
 
-void ReBackUpStar (short where, short who)
+void ReBackUpStar (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -656,6 +658,7 @@ void ReBackUpStar (short where, short who)
 			{
 				if (theStars[f].who == i)
 				{
+					QOffsetRect(&theStars[f].dest, h - theStars[f].dest.left, v - theStars[f].dest.top);
 					BackUpStar(&theStars[f].dest, i);
 					return;
 				}

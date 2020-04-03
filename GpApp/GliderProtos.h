@@ -30,13 +30,13 @@ void AddSparkle (Rect *);
 void AddFlyingPoint (Rect *, SInt16, SInt16, SInt16);
 void ReBackUpFlames (SInt16, SInt16, SInt16, SInt16);
 void AddCandleFlame (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpTikiFlames (SInt16, SInt16);
+void ReBackUpTikiFlames (SInt16, SInt16, SInt16, SInt16);
 void AddTikiFlame (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpBBQCoals (SInt16, SInt16);
+void ReBackUpBBQCoals (SInt16, SInt16, SInt16, SInt16);
 void AddBBQCoals (SInt16, SInt16, SInt16, SInt16);
 void ReBackUpPendulum (SInt16, SInt16, SInt16, SInt16);
 void AddPendulum (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpStar (SInt16, SInt16);
+void ReBackUpStar (SInt16, SInt16, SInt16, SInt16);
 void AddStar (SInt16, SInt16, SInt16, SInt16);
 void StopPendulum (SInt16, SInt16);
 void StopStar (SInt16, SInt16);
@@ -75,7 +75,7 @@ void RenderDynamics (void);
 void ZeroDinahs (void);
 void ZeroDinahsNotInRoom (SInt16);
 
-SInt16 AddDynamicObject (SInt16, Rect *, objectType *, SInt16, SInt16, Boolean);
+SInt16 AddDynamicObject(SInt16 what, Rect *where, objectType *who, SInt16 room, SInt16 index, Boolean isOn, Boolean keepExisting);
 void OffsetDynamics(SInt16 h, SInt16 v);
 
 void DoGameOver (void);									// --- GameOver.c
