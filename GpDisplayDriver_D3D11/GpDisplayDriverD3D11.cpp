@@ -683,12 +683,14 @@ void GpDisplayDriverD3D11::Run()
 			RECT clientRect;
 			GetClientRect(m_hwnd, &clientRect);
 
-			LONG desiredWidth = clientRect.right - clientRect.left;
-			LONG desiredHeight = clientRect.bottom - clientRect.top;
+			unsigned int desiredWidth = clientRect.right - clientRect.left;
+			unsigned int desiredHeight = clientRect.bottom - clientRect.top;
 			if (clientRect.right - clientRect.left != m_windowWidth || clientRect.bottom - clientRect.top != m_windowHeight)
 			{
 				uint32_t prevWidth = m_windowWidth;
 				uint32_t prevHeight = m_windowHeight;
+
+				m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight);
 
 				bool resizedOK = ResizeD3DWindow(m_hwnd, m_windowWidth, m_windowHeight, desiredWidth, desiredHeight, windowStyle, menus);
 				resizedOK = resizedOK && DetachSwapChain();

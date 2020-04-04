@@ -229,16 +229,16 @@ void OpenMainWindow (void)
 		if (menuWindow == nil)
 		{
 			menuWindow = GetNewCWindow(kMenuWindowID, nil, kPutInFront);
-			SizeWindow(menuWindow, RectWide(&thisMac.screen), 20, false);
-			MoveWindow(menuWindow, thisMac.screen.left, 
-					thisMac.screen.top, true);
+			SizeWindow(menuWindow, RectWide(&thisMac.constrainedScreen), 20, false);
+			MoveWindow(menuWindow, thisMac.constrainedScreen.left,
+					thisMac.constrainedScreen.top, true);
 			ShowWindow(menuWindow);
 		}
 		if (boardWindow == nil)
 		{
 			PortabilityLayer::WindowManager *windowManager = PortabilityLayer::WindowManager::GetInstance();
 
-			Rect scorebarRect = thisMac.screen;
+			Rect scorebarRect = thisMac.constrainedScreen;
 			scorebarRect.bottom = scorebarRect.top + kScoreboardTall;
 
 			PortabilityLayer::WindowDef windowDef = PortabilityLayer::WindowDef::Create(scorebarRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, 0, 0, PSTR("Scoreboard"));
@@ -248,14 +248,14 @@ void OpenMainWindow (void)
 			else
 				PL_NotYetImplemented_TODO("Errors");
 		}
-		mainWindowRect = thisMac.screen;
+		mainWindowRect = thisMac.constrainedScreen;
 		ZeroRectCorner(&mainWindowRect);
 		mainWindowRect.bottom -= 20;		// thisMac.menuHigh
 		mainWindow = GetNewCWindow(kMainWindowID, nil, kPutInFront);
 		SizeWindow(mainWindow, mainWindowRect.right - mainWindowRect.left, 
 				mainWindowRect.bottom - mainWindowRect.top, false);
-		MoveWindow(mainWindow, thisMac.screen.left, 
-				thisMac.screen.top + 20, true);	// thisMac.menuHigh
+		MoveWindow(mainWindow, thisMac.constrainedScreen.left,
+				thisMac.constrainedScreen.top + 20, true);	// thisMac.menuHigh
 		ShowWindow(mainWindow);
 		SetPortWindowPort(mainWindow);
 
@@ -267,10 +267,10 @@ void OpenMainWindow (void)
 		mainWindowSurface->SetBackColor(StdColors::White());
 		mainWindowSurface->FillRect(mainWindowRect);
 		
-		splashOriginH = ((thisMac.screen.right - thisMac.screen.left) - 640) / 2;
+		splashOriginH = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) - 640) / 2;
 		if (splashOriginH < 0)
 			splashOriginH = 0;
-		splashOriginV = ((thisMac.screen.bottom - thisMac.screen.top) - 480) / 2;
+		splashOriginV = ((thisMac.constrainedScreen.bottom - thisMac.constrainedScreen.top) - 480) / 2;
 		if (splashOriginV < 0)
 			splashOriginV = 0;
 		

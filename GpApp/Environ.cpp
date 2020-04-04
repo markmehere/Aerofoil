@@ -279,8 +279,20 @@ void FlushResolutionChange(void)
 {
 	if (thisMac.isResolutionDirty)
 	{
-		GetDeviceRect(&thisMac.screen);
-		thisMac.gray = thisMac.screen;
+		GetDeviceRect(&thisMac.fullScreen);
+		thisMac.constrainedScreen = thisMac.fullScreen;
+		if (thisMac.constrainedScreen.Width() > kMaxViewWidth)
+		{
+			thisMac.constrainedScreen.left = 0;
+			thisMac.constrainedScreen.right = kMaxViewWidth;
+		}
+		if (thisMac.constrainedScreen.Height() > kMaxViewHeight)
+		{
+			thisMac.constrainedScreen.top = 0;
+			thisMac.constrainedScreen.bottom = kMaxViewHeight;
+		}
+
+		thisMac.gray = thisMac.fullScreen;
 		thisMac.gray.top = 20;
 		thisMac.isResolutionDirty = false;
 	}
@@ -330,6 +342,10 @@ public:
 	void OnResolutionChanged(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) override
 	{
 		HandleResolutionChange(prevWidth, prevHeight, newWidth, newHeight);
+	}
+
+	void AdjustRequestedResolution(uint32_t &width, uint32_t &height) override
+	{
 	}
 
 	static GpAppResolutionChangeHandler ms_instance;
@@ -455,7 +471,7 @@ void CheckMemorySize (void)
 		RedAlert(kErrNoMemory);
 	else
 		bytesNeeded += musicBytes;
-	bytesNeeded += 4L * (long)thisMac.screen.bottom;		// main screen
+	bytesNeeded += 4L * (long)thisMac.constrainedScreen.bottom;		// main screen
 	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) * 
 			((long)houseRect.bottom + 1 - (long)houseRect.top) * 
 			(long)thisMac.isDepth) / 8L;					// work map

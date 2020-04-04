@@ -15,6 +15,7 @@ namespace PortabilityLayer
 		struct IResolutionChangeHandler
 		{
 			virtual void OnResolutionChanged(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) = 0;
+			virtual void AdjustRequestedResolution(uint32_t &width, uint32_t &height) = 0;
 		};
 
 		virtual void Init() = 0;

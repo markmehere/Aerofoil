@@ -27,6 +27,11 @@ namespace
 	{
 		static_cast<GpAppEnvironment*>(context)->Render();
 	}
+
+	void AdjustRequestedResolution(void *context, unsigned int &width, unsigned int &height)
+	{
+		static_cast<GpAppEnvironment*>(context)->AdjustRequestedResolution(width, height);
+	}
 }
 
 int GpMain::Run()
@@ -51,6 +56,9 @@ int GpMain::Run()
 
 	ddProps.m_renderFunc = RenderAppEnvironment;
 	ddProps.m_renderFuncContext = appEnvironment;
+
+	ddProps.m_adjustRequestedResolutionFunc = AdjustRequestedResolution;
+	ddProps.m_adjustRequestedResolutionFuncContext = appEnvironment;
 
 	ddProps.m_type = g_gpGlobalConfig.m_displayDriverType;
 	ddProps.m_osGlobals = g_gpGlobalConfig.m_osGlobals;

@@ -138,7 +138,7 @@ void NewGame (short mode)
 
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 
-	tempRect = thisMac.screen;
+	tempRect = thisMac.constrainedScreen;
 	tempRect.top = tempRect.bottom - 20;	// thisMac.menuHigh
 	mainWindowSurface->FillRect(tempRect);
 	
@@ -366,12 +366,12 @@ void SetHouseToSavedRoom (void)
 
 //--------------------------------------------------------------  HandleGameResolutionChange
 
+extern DrawSurface *backSrcMap;
 void HandleGameResolutionChange(void)
 {
 	short prevPlayOriginH = playOriginH;
 	short prevPlayOriginV = playOriginV;
 
-	Rect prevResolution = thisMac.screen;
 	FlushResolutionChange();
 
 	RecomputeInterfaceRects();
@@ -385,6 +385,7 @@ void HandleGameResolutionChange(void)
 	OffsetDynamics(playOriginH - prevPlayOriginH, playOriginV - prevPlayOriginV);
 
 	ResetLocale(true);
+	InitScoreboardMap();
 	RefreshScoreboard(wasScoreboardTitleMode);
 	DumpScreenOn(&justRoomsRect);
 }
@@ -757,7 +758,7 @@ void RestoreEntireGameScreen (void)
 #endif
 	
 	DrawSurface *surface = mainWindow->GetDrawSurface();
-	tempRect = thisMac.screen;
+	tempRect = thisMac.constrainedScreen;
 
 	surface->SetForeColor(StdColors::Black());
 	surface->FillRect(tempRect);

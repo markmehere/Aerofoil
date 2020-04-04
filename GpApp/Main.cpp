@@ -204,7 +204,7 @@ void ReadInPrefs (void)
 		doBitchDialogs = true;
 	}
 	
-	if ((numNeighbors > 1) && (thisMac.screen.right <= 512))
+	if ((numNeighbors > 1) && (thisMac.constrainedScreen.right <= 512))
 		numNeighbors = 1;
 	
 	UnivGetSoundVolume(&wasVolume, thisMac.hasSM3);

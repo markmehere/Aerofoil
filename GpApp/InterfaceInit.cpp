@@ -101,15 +101,21 @@ void GetExtraCursors (void)
 //--------------------------------------------------------------  RecomputeScreenRects
 void RecomputeInterfaceRects (void)
 {
-	houseRect = thisMac.screen;
+	houseRect = thisMac.constrainedScreen;
 	houseRect.bottom -= kScoreboardTall;
 	if (houseRect.right > kMaxViewWidth)
 		houseRect.right = kMaxViewWidth;
 	if (houseRect.bottom > kMaxViewHeight)
 		houseRect.bottom = kMaxViewHeight;
 
-	playOriginH = (RectWide(&thisMac.screen) - kRoomWide) / 2;
-	playOriginV = (RectTall(&thisMac.screen) - kTileHigh) / 2;
+	// NOTE: This is actually buggy, since the visible area is houseRect, not screen.
+	// We preserve the buggy behavior for authenticity unless the window is very tall.
+	short poHeight = RectTall(&thisMac.constrainedScreen);
+	if (poHeight > kMaxViewHeight - kScoreboardTall)
+		poHeight = kMaxViewHeight - kScoreboardTall;
+
+	playOriginH = (RectWide(&thisMac.constrainedScreen) - kRoomWide) / 2;
+	playOriginV = (poHeight - kTileHigh) / 2;
 
 	for (int i = 0; i < 9; i++)
 	{

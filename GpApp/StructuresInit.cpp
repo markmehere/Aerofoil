@@ -60,20 +60,23 @@ extern	short		wasScoreboardMode;
 // Any graphics and structures relating to the scoreboard that appears…
 // across the top of the game are initialized and loaded up here.
 
-void InitScoreboardMap (void)
+void InitScoreboardMap(void)
 {
 	Rect					bounds;
 	THandle<BitmapImage>	thePicture;
 	DrawSurface				*wasCPort;
 	PLError_t				theErr;
 	short					hOffset;
-	
+
+	if (boardSrcMap)
+		DisposeGWorld(boardSrcMap);
+
 	wasScoreboardMode = kScoreboardHigh;
 	boardSrcRect = houseRect;
 	ZeroRectCorner(&boardSrcRect);
 	boardSrcRect.bottom = kScoreboardTall;
 	theErr = CreateOffScreenGWorld(&boardSrcMap, &boardSrcRect, kPreferredPixelFormat);
-	
+
 	if (boardSrcRect.right >= 640)
 		hOffset = (RectWide(&boardSrcRect) - kMaxViewWidth) / 2;
 	else
@@ -86,39 +89,49 @@ void InitScoreboardMap (void)
 	QOffsetRect(&bounds, hOffset, 0);
 	boardSrcMap->DrawPicture(thePicture, bounds);
 	thePicture.Dispose();
-	
+
 	QSetRect(&badgeSrcRect, 0, 0, 32, 66);				// 2144 pixels
-	theErr = CreateOffScreenGWorld(&badgeSrcMap, &badgeSrcRect, kPreferredPixelFormat);
-	LoadGraphic(badgeSrcMap, kBadgePictID);
-	
+	if (!badgeSrcMap)
+	{
+		theErr = CreateOffScreenGWorld(&badgeSrcMap, &badgeSrcRect, kPreferredPixelFormat);
+		LoadGraphic(badgeSrcMap, kBadgePictID);
+	}
+
 	boardDestRect = boardSrcRect;
-	
+
 	hOffset = (RectWide(&houseRect) - 640) / 2;
 	if (hOffset < 0)
 		hOffset = -128;
-	
+
 	QSetRect(&boardTSrcRect, 0, 0, 256, 12);			// room title
-	theErr = CreateOffScreenGWorld(&boardTSrcMap, &boardTSrcRect, kPreferredPixelFormat);
+	if (!boardTSrcMap)
+	{
+		theErr = CreateOffScreenGWorld(&boardTSrcMap, &boardTSrcRect, kPreferredPixelFormat);
+		boardTSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	}
 	boardTDestRect = boardTSrcRect;
 	QOffsetRect(&boardTDestRect, 137 + hOffset, 5);
 
-	boardTSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
-	
 	QSetRect(&boardGSrcRect, 0, 0, 20, 10);				// # gliders
-	theErr = CreateOffScreenGWorld(&boardGSrcMap, &boardGSrcRect, kPreferredPixelFormat);
+	if (!boardGSrcMap)
+	{
+		theErr = CreateOffScreenGWorld(&boardGSrcMap, &boardGSrcRect, kPreferredPixelFormat);
+		boardGSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	}
 	boardGDestRect = boardGSrcRect;
 	QOffsetRect(&boardGDestRect, 526 + hOffset, 5);
 
-	boardGSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
-	
+
 	QSetRect(&boardPSrcRect, 0, 0, 64, 10);				// points
-	theErr = CreateOffScreenGWorld(&boardPSrcMap, &boardPSrcRect, kPreferredPixelFormat);
+	if (!boardPSrcMap)
+	{
+		theErr = CreateOffScreenGWorld(&boardPSrcMap, &boardPSrcRect, kPreferredPixelFormat);
+		boardPSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	}
 	boardPDestRect = boardPSrcRect;
 	QOffsetRect(&boardPDestRect, 570 + hOffset, 5);		// total = 6396 pixels
 	boardPQDestRect = boardPDestRect;
 	boardGQDestRect = boardGDestRect;
-
-	boardPSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 
 	QSetRect(&badgesBlankRects[0], 0, 0, 16, 16);		// foil
 	QOffsetRect(&badgesBlankRects[0], 0, 0);

@@ -81,7 +81,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		break;
 		
 	case RegionIDs::kTitleBar:
-		PortabilityLayer::WindowManager::GetInstance()->DragWindow(whichWindow, evtPoint, thisMac.screen);
+		PortabilityLayer::WindowManager::GetInstance()->DragWindow(whichWindow, evtPoint, thisMac.fullScreen);
 		if (whichWindow == mainWindow)
 			GetWindowLeftTop(whichWindow, &isEditH, &isEditV);
 		else if (whichWindow == mapWindow)

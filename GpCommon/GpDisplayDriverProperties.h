@@ -11,6 +11,7 @@ struct GpDisplayDriverProperties
 {
 	typedef GpDisplayDriverTickStatus_t (*TickFunc_t)(void *context, IGpFiber *vosFiber);
 	typedef void(*RenderFunc_t)(void *context);
+	typedef void(*AdjustRequestedResolutionFunc_t)(void *context, unsigned int &width, unsigned int &height);
 
 	EGpDisplayDriverType m_type;
 
@@ -31,6 +32,9 @@ struct GpDisplayDriverProperties
 
 	RenderFunc_t m_renderFunc;
 	void *m_renderFuncContext;
+
+	AdjustRequestedResolutionFunc_t m_adjustRequestedResolutionFunc;
+	void *m_adjustRequestedResolutionFuncContext;
 
 	IGpVOSEventQueue *m_eventQueue;
 };

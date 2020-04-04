@@ -10,7 +10,7 @@
 
 typedef struct
 {
-	Rect		screen, gray;
+	Rect		fullScreen, constrainedScreen, gray;
 	long		dirID;
 	short		wasDepth, isDepth;
 	short		numScreens;

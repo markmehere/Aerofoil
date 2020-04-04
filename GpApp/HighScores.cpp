@@ -123,7 +123,7 @@ void DrawHighScores (DrawSurface *surface)
 	PortabilityLayer::RGBAColor whiteColor = PortabilityLayer::RGBAColor::Create(255, 255, 255, 255);
 	PortabilityLayer::RGBAColor blueColor = PortabilityLayer::RGBAColor::Create(0, 0, 255, 255);
 	
-	scoreLeft = ((thisMac.screen.right - thisMac.screen.left) - kScoreWide) / 2;
+	scoreLeft = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) - kScoreWide) / 2;
 	dropIt = 129 + splashOriginV;
 	
 	QSetRect(&tempRect, 0, 0, 332, 30);

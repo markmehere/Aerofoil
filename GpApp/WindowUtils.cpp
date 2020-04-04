@@ -109,7 +109,7 @@ void OpenMessageWindow (const PLPasStr &title)
 	SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 
 	Rect placementRect = mssgWindowRect;
-	CenterRectInRect(&placementRect, &thisMac.screen);
+	CenterRectInRect(&placementRect, &thisMac.fullScreen);
 
 	const PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(placementRect, windowStyle, false, 0, 0, title);
 

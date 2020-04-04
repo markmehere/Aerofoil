@@ -149,10 +149,10 @@ static void UpdateMainPict (Dialog *theDial)
 	DrawDialogUserText2(theDial, 7, theStr);
 	
 	PasStringCopy(PSTR("Screen:   "), theStr);		// display screen size/depth
-	NumToString((long)(thisMac.screen.right - thisMac.screen.left), theStr2);
+	NumToString((long)(thisMac.fullScreen.right - thisMac.fullScreen.left), theStr2);
 	PasStringConcat(theStr, theStr2);
 	PasStringConcat(theStr, PSTR("x"));
-	NumToString((long)(thisMac.screen.bottom - thisMac.screen.top), theStr2);
+	NumToString((long)(thisMac.fullScreen.bottom - thisMac.fullScreen.top), theStr2);
 	PasStringConcat(theStr, theStr2);
 	PasStringConcat(theStr, PSTR("x"));
 	NumToString((long)thisMac.isDepth, theStr2);

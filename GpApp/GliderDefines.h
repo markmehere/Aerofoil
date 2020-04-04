@@ -265,7 +265,7 @@
 #define kMaxDynamicObs				18
 #define kMaxMasterObjects			216		// kMaxRoomObs * 9
 #define kMaxViewWidth				1536
-#define kMaxViewHeight				1026
+#define kMaxViewHeight				(kTileHigh*3+20)
 
 #define kSelectTool					0
 

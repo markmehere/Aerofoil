@@ -482,56 +482,74 @@ short AddDynamicObject (short what, Rect *where, objectType *who,
 		break;
 		
 	case kBalloon:
-		dinahs[dynIndex].dest = balloonSrc[0];
-		ZeroRectCorner(&dinahs[dynIndex].dest);
-		QOffsetRect(&dinahs[dynIndex].dest, where->left, 0);
-		dinahs[dynIndex].dest.bottom = kBalloonStart;
-		dinahs[dynIndex].dest.top = dinahs[dynIndex].dest.bottom - 
-				RectTall(&balloonSrc[0]);
-		dinahs[dynIndex].whole = dinahs[dynIndex].dest;
-
-		if (!keepExisting)
 		{
-			dinahs[dynIndex].hVel = 0;
-			dinahs[dynIndex].vVel = -2;
-			dinahs[dynIndex].count = ((short)who->data.h.delay * 6) / kTicksPerFrame;
-			dinahs[dynIndex].frame = 0;
-			dinahs[dynIndex].timer = dinahs[dynIndex].count;
-			dinahs[dynIndex].position = 0;
-			dinahs[dynIndex].room = room;
-			dinahs[dynIndex].byte0 = (Byte)index;
-			dinahs[dynIndex].byte1 = 0;
-			dinahs[dynIndex].moving = false;
-			dinahs[dynIndex].active = isOn;			// initially idle
+			short baselineDelta = 0;
+			if (keepExisting)
+				baselineDelta = dinahs[dynIndex].dest.bottom - kBalloonStart;
+
+			dinahs[dynIndex].dest = balloonSrc[0];
+			ZeroRectCorner(&dinahs[dynIndex].dest);
+			QOffsetRect(&dinahs[dynIndex].dest, where->left, 0);
+			dinahs[dynIndex].dest.bottom = kBalloonStart + baselineDelta;
+			dinahs[dynIndex].dest.top = dinahs[dynIndex].dest.bottom -
+				RectTall(&balloonSrc[0]);
+			dinahs[dynIndex].whole = dinahs[dynIndex].dest;
+
+			if (!keepExisting)
+			{
+				dinahs[dynIndex].hVel = 0;
+				dinahs[dynIndex].vVel = -2;
+				dinahs[dynIndex].count = ((short)who->data.h.delay * 6) / kTicksPerFrame;
+				dinahs[dynIndex].frame = 0;
+				dinahs[dynIndex].timer = dinahs[dynIndex].count;
+				dinahs[dynIndex].position = 0;
+				dinahs[dynIndex].room = room;
+				dinahs[dynIndex].byte0 = (Byte)index;
+				dinahs[dynIndex].byte1 = 0;
+				dinahs[dynIndex].moving = false;
+				dinahs[dynIndex].active = isOn;			// initially idle
+			}
 		}
 		break;
 		
 	case kCopterLf:
 	case kCopterRt:
-		dinahs[dynIndex].dest = copterSrc[0];
-		ZeroRectCorner(&dinahs[dynIndex].dest);
-		QOffsetRect(&dinahs[dynIndex].dest, where->left, 0);
-		dinahs[dynIndex].dest.top = kCopterStart;
-		dinahs[dynIndex].dest.bottom = dinahs[dynIndex].dest.top + 
-				RectTall(&copterSrc[0]);
-		dinahs[dynIndex].whole = dinahs[dynIndex].dest;
-		dinahs[dynIndex].position = dinahs[dynIndex].dest.left;
-
-		if (!keepExisting)
 		{
-			if (what == kCopterLf)
-				dinahs[dynIndex].hVel = -1;
-			else
-				dinahs[dynIndex].hVel = 1;
-			dinahs[dynIndex].vVel = 2;
-			dinahs[dynIndex].count = ((short)who->data.h.delay * 6) / kTicksPerFrame;
-			dinahs[dynIndex].frame = 0;
-			dinahs[dynIndex].timer = dinahs[dynIndex].count;
-			dinahs[dynIndex].room = room;
-			dinahs[dynIndex].byte0 = (Byte)index;
-			dinahs[dynIndex].byte1 = 0;
-			dinahs[dynIndex].moving = false;
-			dinahs[dynIndex].active = isOn;			// initially idle
+			short baselineDeltaH = 0;
+			short baselineDeltaV = 0;
+
+			if (keepExisting)
+			{
+				baselineDeltaH = dinahs[dynIndex].dest.left - dinahs[dynIndex].position;
+				baselineDeltaV = dinahs[dynIndex].dest.top - kCopterStart;
+			}
+
+			dinahs[dynIndex].dest = copterSrc[0];
+			ZeroRectCorner(&dinahs[dynIndex].dest);
+			QOffsetRect(&dinahs[dynIndex].dest, where->left, 0);
+			dinahs[dynIndex].dest.top = kCopterStart + baselineDeltaV;
+			dinahs[dynIndex].dest.bottom = dinahs[dynIndex].dest.top + 
+					RectTall(&copterSrc[0]);
+			dinahs[dynIndex].whole = dinahs[dynIndex].dest;
+
+			if (!keepExisting)
+			{
+				dinahs[dynIndex].position = dinahs[dynIndex].dest.left;
+
+				if (what == kCopterLf)
+					dinahs[dynIndex].hVel = -1;
+				else
+					dinahs[dynIndex].hVel = 1;
+				dinahs[dynIndex].vVel = 2;
+				dinahs[dynIndex].count = ((short)who->data.h.delay * 6) / kTicksPerFrame;
+				dinahs[dynIndex].frame = 0;
+				dinahs[dynIndex].timer = dinahs[dynIndex].count;
+				dinahs[dynIndex].room = room;
+				dinahs[dynIndex].byte0 = (Byte)index;
+				dinahs[dynIndex].byte1 = 0;
+				dinahs[dynIndex].moving = false;
+				dinahs[dynIndex].active = isOn;			// initially idle
+			}
 		}
 		break;
 		
@@ -568,93 +586,117 @@ short AddDynamicObject (short what, Rect *where, objectType *who,
 		break;
 		
 	case kBall:
-		dinahs[dynIndex].dest = ballSrc[0];
-		ZeroRectCorner(&dinahs[dynIndex].dest);
-		QOffsetRect(&dinahs[dynIndex].dest, 
-				where->left, where->top);
-		dinahs[dynIndex].whole = dinahs[dynIndex].dest;
-		dinahs[dynIndex].position = dinahs[dynIndex].dest.bottom;
-
-		if (!keepExisting)
 		{
-			dinahs[dynIndex].hVel = 0;
-			position = who->data.h.length;			// reverse engineer init. vel.
-			velocity = 0;
-			evenFrame = true;
-			lilFrame = true;
-			do
+			short baselineDelta = 0;
+
+			if (keepExisting)
+				baselineDelta = dinahs[dynIndex].dest.bottom - dinahs[dynIndex].position;
+
+			dinahs[dynIndex].dest = ballSrc[0];
+			ZeroRectCorner(&dinahs[dynIndex].dest);
+			QOffsetRect(&dinahs[dynIndex].dest, 
+					where->left, where->top + baselineDelta);
+			dinahs[dynIndex].whole = dinahs[dynIndex].dest;
+
+			if (!keepExisting)
 			{
-				if (lilFrame)
-					velocity++;
-				lilFrame = !lilFrame;
-				position -= velocity;
-			} while (position > 0);
-			dinahs[dynIndex].vVel = -velocity;
-			dinahs[dynIndex].moving = false;
-			dinahs[dynIndex].count = -velocity;	// count = initial velocity
-			dinahs[dynIndex].frame = 0;
-			dinahs[dynIndex].timer = 0;
-			dinahs[dynIndex].room = room;
-			dinahs[dynIndex].byte0 = (Byte)index;
-			dinahs[dynIndex].byte1 = 0;
-			dinahs[dynIndex].active = isOn;
+				dinahs[dynIndex].position = dinahs[dynIndex].dest.bottom;
+
+				dinahs[dynIndex].hVel = 0;
+				position = who->data.h.length;			// reverse engineer init. vel.
+				velocity = 0;
+				evenFrame = true;
+				lilFrame = true;
+				do
+				{
+					if (lilFrame)
+						velocity++;
+					lilFrame = !lilFrame;
+					position -= velocity;
+				} while (position > 0);
+				dinahs[dynIndex].vVel = -velocity;
+				dinahs[dynIndex].moving = false;
+				dinahs[dynIndex].count = -velocity;	// count = initial velocity
+				dinahs[dynIndex].frame = 0;
+				dinahs[dynIndex].timer = 0;
+				dinahs[dynIndex].room = room;
+				dinahs[dynIndex].byte0 = (Byte)index;
+				dinahs[dynIndex].byte1 = 0;
+				dinahs[dynIndex].active = isOn;
+			}
 		}
 		break;
 		
 	case kDrip:
-		dinahs[dynIndex].dest = dripSrc[0];
-		CenterRectInRect(&dinahs[dynIndex].dest, where);
-		VOffsetRect(&dinahs[dynIndex].dest, 
-				where->top - dinahs[dynIndex].dest.top);
-		dinahs[dynIndex].whole = dinahs[dynIndex].dest;
-		dinahs[dynIndex].hVel = dinahs[dynIndex].dest.top;	// remember
-		dinahs[dynIndex].position = dinahs[dynIndex].dest.top +
-			who->data.h.length;
-
-		if (!keepExisting)
 		{
-			dinahs[dynIndex].vVel = 0;
-			dinahs[dynIndex].count = ((short)who->data.h.delay * 6) / kTicksPerFrame;
-			dinahs[dynIndex].frame = 3;
-			dinahs[dynIndex].timer = dinahs[dynIndex].count;
-			dinahs[dynIndex].room = room;
-			dinahs[dynIndex].byte0 = (Byte)index;
-			dinahs[dynIndex].byte1 = 0;
-			dinahs[dynIndex].moving = false;
-			dinahs[dynIndex].active = isOn;
+			short baselineDelta = 0;
+
+			if (keepExisting)
+				baselineDelta = dinahs[dynIndex].dest.top - dinahs[dynIndex].hVel;
+
+			dinahs[dynIndex].dest = dripSrc[0];
+			CenterRectInRect(&dinahs[dynIndex].dest, where);
+			VOffsetRect(&dinahs[dynIndex].dest, 
+					where->top - dinahs[dynIndex].dest.top + baselineDelta);
+			dinahs[dynIndex].whole = dinahs[dynIndex].dest;
+
+			if (!keepExisting)
+			{
+				dinahs[dynIndex].hVel = dinahs[dynIndex].dest.top;	// remember
+				dinahs[dynIndex].position = dinahs[dynIndex].dest.top +
+					who->data.h.length;
+
+				dinahs[dynIndex].vVel = 0;
+				dinahs[dynIndex].count = ((short)who->data.h.delay * 6) / kTicksPerFrame;
+				dinahs[dynIndex].frame = 3;
+				dinahs[dynIndex].timer = dinahs[dynIndex].count;
+				dinahs[dynIndex].room = room;
+				dinahs[dynIndex].byte0 = (Byte)index;
+				dinahs[dynIndex].byte1 = 0;
+				dinahs[dynIndex].moving = false;
+				dinahs[dynIndex].active = isOn;
+			}
 		}
 		break;
 		
 	case kFish:
-		dinahs[dynIndex].dest = fishSrc[0];
-		QOffsetRect(&dinahs[dynIndex].dest, 
-				where->left + 10, where->top + 8);
-		dinahs[dynIndex].whole = dinahs[dynIndex].dest;
-		dinahs[dynIndex].position = dinahs[dynIndex].dest.bottom;
-
-		if (!keepExisting)
 		{
-			dinahs[dynIndex].hVel = ((short)who->data.h.delay * 6) / kTicksPerFrame;
-			position = who->data.g.height;			// reverse engineer init. vel.
-			velocity = 0;
-			evenFrame = true;
-			lilFrame = true;
-			do
+			short baselineDelta = 0;
+
+			if (keepExisting)
+				baselineDelta = dinahs[dynIndex].dest.bottom - dinahs[dynIndex].position;
+
+			dinahs[dynIndex].dest = fishSrc[0];
+			QOffsetRect(&dinahs[dynIndex].dest,
+				where->left + 10, where->top + 8 + baselineDelta);
+			dinahs[dynIndex].whole = dinahs[dynIndex].dest;
+
+			if (!keepExisting)
 			{
-				if (lilFrame)
-					velocity++;
-				lilFrame = !lilFrame;
-				position -= velocity;
-			} while (position > 0);
-			dinahs[dynIndex].vVel = -velocity;
-			dinahs[dynIndex].count = -velocity;	// count = initial velocity
-			dinahs[dynIndex].frame = 0;
-			dinahs[dynIndex].timer = dinahs[dynIndex].hVel;
-			dinahs[dynIndex].room = room;
-			dinahs[dynIndex].byte0 = (Byte)index;
-			dinahs[dynIndex].byte1 = 0;
-			dinahs[dynIndex].moving = false;
-			dinahs[dynIndex].active = isOn;
+				dinahs[dynIndex].position = dinahs[dynIndex].dest.bottom;
+
+				dinahs[dynIndex].hVel = ((short)who->data.h.delay * 6) / kTicksPerFrame;
+				position = who->data.g.height;			// reverse engineer init. vel.
+				velocity = 0;
+				evenFrame = true;
+				lilFrame = true;
+				do
+				{
+					if (lilFrame)
+						velocity++;
+					lilFrame = !lilFrame;
+					position -= velocity;
+				} while (position > 0);
+				dinahs[dynIndex].vVel = -velocity;
+				dinahs[dynIndex].count = -velocity;	// count = initial velocity
+				dinahs[dynIndex].frame = 0;
+				dinahs[dynIndex].timer = dinahs[dynIndex].hVel;
+				dinahs[dynIndex].room = room;
+				dinahs[dynIndex].byte0 = (Byte)index;
+				dinahs[dynIndex].byte1 = 0;
+				dinahs[dynIndex].moving = false;
+				dinahs[dynIndex].active = isOn;
+			}
 		}
 		break;
 		
