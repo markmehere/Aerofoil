@@ -426,6 +426,25 @@ void HandleHighLevelEvent (EventRecord *theEvent)
 }
 #endif
 
+
+//--------------------------------------------------------------  HandleSplashResolutionChange
+void HandleSplashResolutionChange(void)
+{
+	FlushResolutionChange();
+
+	RecomputeInterfaceRects();
+	RecreateOffscreens();
+	CloseMainWindow();
+	OpenMainWindow();
+
+	UpdateMainWindow();
+
+	//ResetLocale(true);
+	//InitScoreboardMap();
+	//RefreshScoreboard(wasScoreboardTitleMode);
+	//DumpScreenOn(&justRoomsRect);
+}
+
 //--------------------------------------------------------------  HandleIdleTask
 // Handle some processing during event lulls.
 
@@ -441,6 +460,14 @@ void HandleIdleTask (void)
 			if (theMode == kEditMode)
 				DoRoomInfo();
 			newRoomNow = false;
+		}
+	}
+
+	if (theMode == kSplashMode)
+	{
+		if (thisMac.isResolutionDirty)
+		{
+			HandleSplashResolutionChange();
 		}
 	}
 }

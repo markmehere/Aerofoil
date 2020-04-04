@@ -698,8 +698,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 #ifdef COMPILEQT
-					if ((thisMac.hasQT) && (hasMovie) && (neighbor == kCentralRoom) && 
-							(!tvInRoom))
+					if ((thisMac.hasQT) && (hasMovie) && (neighbor == kCentralRoom))
 					{
 						whoCares = tvScreen1;
 						ZeroRectCorner(&whoCares);
@@ -708,7 +707,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 						CenterRectInRect(&movieRect, &whoCares);
 						theMovie.m_renderRect = movieRect;
 						theMovie.m_constrainRect = whoCares;
-						tvOn = thisObject.data.g.state;
+
+						if (!tvInRoom)
+							tvOn = thisObject.data.g.state;
 					}
 #endif
 					DrawTV(&itsRect, thisObject.data.g.state, isLit);

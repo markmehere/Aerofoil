@@ -706,13 +706,3 @@ short AddDynamicObject (short what, Rect *where, objectType *who,
 
 	return dynIndex;
 }
-
-void OffsetDynamics(SInt16 h, SInt16 v)
-{
-	for (int i = 0; i < numDynamics; i++)
-	{
-		dynaType &dinah = dinahs[i];
-		//QOffsetRect(&dinah.dest, h, v);
-		//QOffsetRect(&dinah.whole, h, v);
-	}
-}

@@ -366,12 +366,8 @@ void SetHouseToSavedRoom (void)
 
 //--------------------------------------------------------------  HandleGameResolutionChange
 
-extern DrawSurface *backSrcMap;
 void HandleGameResolutionChange(void)
 {
-	short prevPlayOriginH = playOriginH;
-	short prevPlayOriginV = playOriginV;
-
 	FlushResolutionChange();
 
 	RecomputeInterfaceRects();
@@ -381,8 +377,6 @@ void HandleGameResolutionChange(void)
 
 	if (hasMovie)
 		theMovie.m_surface = &mainWindow->m_surface;
-
-	OffsetDynamics(playOriginH - prevPlayOriginH, playOriginV - prevPlayOriginV);
 
 	ResetLocale(true);
 	InitScoreboardMap();

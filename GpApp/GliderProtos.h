@@ -76,7 +76,6 @@ void ZeroDinahs (void);
 void ZeroDinahsNotInRoom (SInt16);
 
 SInt16 AddDynamicObject(SInt16 what, Rect *where, objectType *who, SInt16 room, SInt16 index, Boolean isOn, Boolean keepExisting);
-void OffsetDynamics(SInt16 h, SInt16 v);
 
 void DoGameOver (void);									// --- GameOver.c
 void FlagGameOver (void);
