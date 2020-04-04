@@ -102,10 +102,10 @@ void SetUpFinalScreen (void)
 	do
 	{
 		GetLineOfText(tempStr, count, subStr);
-		offset = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) -
-				surface->MeasureString(subStr)) / 2;
 
 		surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+		offset = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) -
+				surface->MeasureString(subStr)) / 2;
 
 		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
 		const Point textShadowPos = Point::Create(offset + 1, textDown + 33 + (count * 20));
