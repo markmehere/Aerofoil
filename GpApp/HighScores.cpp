@@ -23,6 +23,7 @@
 #include "IOStream.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "Utilities.h"
 
@@ -70,6 +71,7 @@ void DoHighScores (void)
 	
 	SpinCursor(3);
 	SetPort(&workSrcMap->m_port);
+	workSrcMap->SetForeColor(StdColors::Black());
 	workSrcMap->FillRect(workSrcRect);
 	QSetRect(&tempRect, 0, 0, 640, 480);
 	QOffsetRect(&tempRect, splashOriginH, splashOriginV);
