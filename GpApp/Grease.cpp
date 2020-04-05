@@ -322,3 +322,15 @@ void FixupFallenGrease(SInt16 where, SInt16 who, SInt16 h, SInt16 v, Boolean *is
 
 	*isDynamic = false;
 }
+
+void RemapGreaseSavedMap(SInt16 removedItem, SInt16 substituteItem)
+{
+	for (int i = 0; i < numGrease; i++)
+	{
+		if (grease[i].mapNum == substituteItem)
+		{
+			grease[i].mapNum = removedItem;
+			return;
+		}
+	}
+}

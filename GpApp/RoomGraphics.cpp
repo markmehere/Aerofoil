@@ -44,11 +44,12 @@ extern	Boolean		shadowVisible, takingTheStairs;
 
 void ResetLocale (Boolean soft)
 {
-	short		i;
 	char		wasState;
 
 	if (soft)
 	{
+		RemoveSavedMapsNotInRoom(localNumbers[kCentralRoom]);
+		ZeroDinahsNotInRoom(localNumbers[kCentralRoom]);
 	}
 	else
 	{
@@ -62,7 +63,7 @@ void ResetLocale (Boolean soft)
 		tvInRoom = false;
 		tvWithMovieNumber = -1;
 
-		for (i = 0; i < 9; i++)
+		for (int i = 0; i < 9; i++)
 		{
 			localNumbers[i] = GetNeighborRoomNumber(i);
 			isStructure[i] = IsRoomAStructure(localNumbers[i]);
@@ -84,39 +85,39 @@ void ResetLocale (Boolean soft)
 	{
 		numLights = GetNumberOfLights(localNumbers[kNorthWestRoom]);
 		DrawRoomBackground(localNumbers[kNorthWestRoom], kNorthWestRoom, roomV + 1);
-		DrawARoomsObjects(kNorthWestRoom, soft);
+		DrawARoomsObjects(kNorthWestRoom, false);
 		
 		numLights = GetNumberOfLights(localNumbers[kNorthEastRoom]);
 		DrawRoomBackground(localNumbers[kNorthEastRoom], kNorthEastRoom, roomV + 1);
-		DrawARoomsObjects(kNorthEastRoom, soft);
+		DrawARoomsObjects(kNorthEastRoom, false);
 		
 		numLights = GetNumberOfLights(localNumbers[kNorthRoom]);
 		DrawRoomBackground(localNumbers[kNorthRoom], kNorthRoom, roomV + 1);
-		DrawARoomsObjects(kNorthRoom, soft);
+		DrawARoomsObjects(kNorthRoom, false);
 		
 		numLights = GetNumberOfLights(localNumbers[kSouthWestRoom]);
 		DrawRoomBackground(localNumbers[kSouthWestRoom], kSouthWestRoom, roomV - 1);
-		DrawARoomsObjects(kSouthWestRoom, soft);
+		DrawARoomsObjects(kSouthWestRoom, false);
 		
 		numLights = GetNumberOfLights(localNumbers[kSouthEastRoom]);
 		DrawRoomBackground(localNumbers[kSouthEastRoom], kSouthEastRoom, roomV - 1);
-		DrawARoomsObjects(kSouthEastRoom, soft);
+		DrawARoomsObjects(kSouthEastRoom, false);
 		
 		numLights = GetNumberOfLights(localNumbers[kSouthRoom]);
 		DrawRoomBackground(localNumbers[kSouthRoom], kSouthRoom, roomV - 1);
-		DrawARoomsObjects(kSouthRoom, soft);
+		DrawARoomsObjects(kSouthRoom, false);
 	}
 	
 	if (numNeighbors > 1)
 	{
 		numLights = GetNumberOfLights(localNumbers[kWestRoom]);
 		DrawRoomBackground(localNumbers[kWestRoom], kWestRoom, roomV);
-		DrawARoomsObjects(kWestRoom, soft);
+		DrawARoomsObjects(kWestRoom, false);
 		DrawLighting();
 		
 		numLights = GetNumberOfLights(localNumbers[kEastRoom]);
 		DrawRoomBackground(localNumbers[kEastRoom], kEastRoom, roomV);
-		DrawARoomsObjects(kEastRoom, soft);
+		DrawARoomsObjects(kEastRoom, false);
 		DrawLighting();
 	}
 	

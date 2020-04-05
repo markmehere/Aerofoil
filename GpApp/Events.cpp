@@ -440,6 +440,29 @@ void HandleSplashResolutionChange(void)
 	//DumpScreenOn(&justRoomsRect);
 }
 
+void HandleEditorResolutionChange(void)
+{
+	FlushResolutionChange();
+
+	RecomputeInterfaceRects();
+	RecreateOffscreens();
+	CloseMainWindow();
+	OpenMainWindow();
+
+	UpdateMainWindow();
+
+	//ResetLocale(true);
+	InitScoreboardMap();
+	//RefreshScoreboard(wasScoreboardTitleMode);
+	//DumpScreenOn(&justRoomsRect);
+
+	if (toolsWindow)
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(toolsWindow, PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel());
+
+	if (mapWindow)
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(mapWindow, PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel());
+}
+
 //--------------------------------------------------------------  HandleIdleTask
 // Handle some processing during event lulls.
 
@@ -447,6 +470,11 @@ void HandleIdleTask (void)
 {
 	if (theMode == kEditMode)
 	{
+		if (thisMac.isResolutionDirty)
+		{
+			HandleEditorResolutionChange();
+		}
+
 		SetPort(&mainWindow->GetDrawSurface()->m_port);
 		DoMarquee();
 		

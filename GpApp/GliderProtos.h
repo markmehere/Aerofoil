@@ -25,16 +25,17 @@ void ToggleCoordinateWindow (void);
 void NilSavedMaps (void);								// --- DynamicMaps.c
 SInt16 BackUpToSavedMap (Rect *, SInt16,  SInt16);
 SInt16 ReBackUpSavedMap (Rect *, SInt16, SInt16);
+SInt16 RemoveFromSavedMap(SInt16);
 void RestoreFromSavedMap (SInt16, SInt16, Boolean);
 void AddSparkle (Rect *);
 void AddFlyingPoint (Rect *, SInt16, SInt16, SInt16);
-void ReBackUpFlames (SInt16, SInt16, SInt16, SInt16);
+Boolean ReBackUpFlames (SInt16, SInt16, SInt16, SInt16);
 void AddCandleFlame (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpTikiFlames (SInt16, SInt16, SInt16, SInt16);
+Boolean ReBackUpTikiFlames (SInt16, SInt16, SInt16, SInt16);
 void AddTikiFlame (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpBBQCoals (SInt16, SInt16, SInt16, SInt16);
+Boolean ReBackUpBBQCoals (SInt16, SInt16, SInt16, SInt16);
 void AddBBQCoals (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpPendulum (SInt16, SInt16, SInt16, SInt16);
+Boolean ReBackUpPendulum (SInt16, SInt16, SInt16, SInt16);
 void AddPendulum (SInt16, SInt16, SInt16, SInt16);
 void ReBackUpStar (SInt16, SInt16, SInt16, SInt16);
 void AddStar (SInt16, SInt16, SInt16, SInt16);
@@ -43,6 +44,7 @@ void StopStar (SInt16, SInt16);
 void AddAShreddedGlider (Rect *);
 void RemoveShreds (void);
 void ZeroFlamesAndTheLike (void);
+void RemoveSavedMapsNotInRoom (SInt16);
 
 void CheckDynamicCollision (SInt16, gliderPtr, Boolean);	// --- Dynamics.c
 Boolean DidBandHitDynamic (SInt16);
@@ -87,6 +89,7 @@ SInt16 AddGrease (SInt16, SInt16, SInt16, SInt16, SInt16, Boolean);
 void SpillGrease (SInt16, SInt16);
 void RedrawAllGrease (void);
 void FixupFallenGrease(SInt16 where, SInt16 who, SInt16 h, SInt16 v, Boolean *isDynamic);
+void RemapGreaseSavedMap(SInt16 removedItem, SInt16 substituteItem);
 
 void DoHighScores (void);								// --- HighScores.c
 void SortHighScores (void);
