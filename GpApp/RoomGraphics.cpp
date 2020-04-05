@@ -55,7 +55,6 @@ void ResetLocale (Boolean soft)
 		ZeroFlamesAndTheLike();
 		ZeroDinahs();
 		KillAllBands();
-		ZeroMirrorRegion();
 		ZeroTriggers();
 		numTempManholes = 0;
 		FlushAnyTriggerPlaying();
@@ -70,6 +69,8 @@ void ResetLocale (Boolean soft)
 		}
 		ListAllLocalObjects();
 	}
+
+	ZeroMirrorRegion();
 
 	takingTheStairs = false;
 

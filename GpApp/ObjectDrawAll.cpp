@@ -908,7 +908,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				OffsetRectRoomRelative(&itsRect, neighbor);
 				if ((SectRect(&itsRect, &testRect, &whoCares)) && isLit)
 					DrawMirror(&itsRect);
-				if ((neighbor == kCentralRoom) && (!redraw))
+				if (neighbor == kCentralRoom)
 				{
 					InsetRect(&itsRect, 4, 4);
 					AddToMirrorRegion(&itsRect);
