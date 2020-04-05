@@ -12,6 +12,12 @@ namespace PortabilityLayer
 	class DisplayDeviceManager
 	{
 	public:
+		struct IResolutionChangeHandler
+		{
+			virtual void OnResolutionChanged(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) = 0;
+			virtual void AdjustRequestedResolution(uint32_t &width, uint32_t &height) = 0;
+		};
+
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
 
@@ -21,7 +27,12 @@ namespace PortabilityLayer
 		virtual void IncrementTickCount(uint32_t count) = 0;
 		virtual uint32_t GetTickCount() = 0;
 
+		virtual void SetResolutionChangeHandler(IResolutionChangeHandler *handler) = 0;
+		virtual IResolutionChangeHandler *GetResolutionChangeHandler() const = 0;
+
 		static DisplayDeviceManager *GetInstance();
+
+	public:
 	};
 }
 

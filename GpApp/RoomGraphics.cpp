@@ -42,33 +42,41 @@ extern	Boolean		shadowVisible, takingTheStairs;
 //==============================================================  Functions
 //--------------------------------------------------------------  DrawLocale
 
-void DrawLocale (void)
+void ResetLocale (Boolean soft)
 {
-	short		i, roomV;
 	char		wasState;
-	DrawSurface	*wasCPort;
-		
-	ZeroFlamesAndTheLike();
-	ZeroDinahs();
-	KillAllBands();
-	ZeroMirrorRegion();
-	ZeroTriggers();
-	numTempManholes = 0;
-	FlushAnyTriggerPlaying();
-	DumpTriggerSound();
-	tvInRoom = false;
-	tvWithMovieNumber = -1;
-	
-	roomV = (*thisHouse)->rooms[thisRoomNumber].floor;
-	
-	for (i = 0; i < 9; i++)
+
+	if (soft)
 	{
-		localNumbers[i] = GetNeighborRoomNumber(i);
-		isStructure[i] = IsRoomAStructure(localNumbers[i]);
+		RemoveSavedMapsNotInRoom(localNumbers[kCentralRoom]);
+		ZeroDinahsNotInRoom(localNumbers[kCentralRoom]);
 	}
-	ListAllLocalObjects();
-	
-	wasCPort = GetGraphicsPort();
+	else
+	{
+		ZeroFlamesAndTheLike();
+		ZeroDinahs();
+		KillAllBands();
+		ZeroTriggers();
+		numTempManholes = 0;
+		FlushAnyTriggerPlaying();
+		DumpTriggerSound();
+		tvInRoom = false;
+		tvWithMovieNumber = -1;
+
+		for (int i = 0; i < 9; i++)
+		{
+			localNumbers[i] = GetNeighborRoomNumber(i);
+			isStructure[i] = IsRoomAStructure(localNumbers[i]);
+		}
+		ListAllLocalObjects();
+	}
+
+	ZeroMirrorRegion();
+
+	takingTheStairs = false;
+
+	DrawSurface	*wasCPort = GetGraphicsPort();
+	const short roomV = (*thisHouse)->rooms[thisRoomNumber].floor;
 
 	backSrcMap->SetForeColor(StdColors::Black());
 	backSrcMap->FillRect(backSrcRect);
@@ -115,14 +123,16 @@ void DrawLocale (void)
 	
 	numLights = GetNumberOfLights(localNumbers[kCentralRoom]);
 	DrawRoomBackground(localNumbers[kCentralRoom], kCentralRoom, roomV);
-	DrawARoomsObjects(kCentralRoom, false);
+	DrawARoomsObjects(kCentralRoom, soft);
 	DrawLighting();
 
 	if (numNeighbors > 3)
 		DrawFloorSupport();
 	RestoreWorkMap();
 	shadowVisible = IsShadowVisible();
-	takingTheStairs = false;
+
+	if (soft)
+		RedrawAllGrease();
 	
 	SetGraphicsPort(wasCPort);
 }
@@ -385,7 +395,7 @@ void ReadyLevel (void)
 #endif
 	
 	DetermineRoomOpenings();
-	DrawLocale();
+	ResetLocale(false);
 	InitGarbageRects();
 }
 

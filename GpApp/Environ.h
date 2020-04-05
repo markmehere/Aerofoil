@@ -10,7 +10,7 @@
 
 typedef struct
 {
-	Rect		screen, gray;
+	Rect		fullScreen, constrainedScreen, gray;
 	long		dirID;
 	short		wasDepth, isDepth;
 	short		numScreens;
@@ -28,9 +28,10 @@ typedef struct
 	Boolean		hasSM3;
 	Boolean		hasQT;
 	Boolean		hasDrag;
+	Boolean		isResolutionDirty;
 } macEnviron;
 
 
 extern macEnviron	thisMac;
 
-
+void FlushResolutionChange(void);

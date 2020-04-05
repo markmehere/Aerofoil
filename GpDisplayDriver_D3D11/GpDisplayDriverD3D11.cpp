@@ -2,9 +2,11 @@
 #include "GpApplicationName.h"
 #include "GpDisplayDriverD3D11.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
+#include "GpVOSEvent.h"
 #include "GpWindows.h"
 #include "IGpCursor_Win32.h"
 #include "IGpFiber.h"
+#include "IGpVOSEventQueue.h"
 
 #include <d3d11.h>
 #include <dxgi1_2.h>
@@ -64,8 +66,10 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpComPtr<ID3D11Device>& outDevice, GpComPtr<ID3D11DeviceContext>& outContext)
+bool InitSwapChainForWindow(HWND hWnd, ID3D11Device *device, GpComPtr<IDXGISwapChain1>& outSwapChain)
 {
+	outSwapChain = nullptr;
+
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
 
 	ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
@@ -76,6 +80,50 @@ void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpCom
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
+	HRESULT result;
+
+	IDXGIDevice2 *dxgiDevice = nullptr;
+	result = device->QueryInterface(__uuidof(IDXGIDevice2), reinterpret_cast<void**>(&dxgiDevice));
+	if (result != S_OK)
+		return false;
+
+	IDXGIAdapter *dxgiAdapter = nullptr;
+	result = dxgiDevice->GetAdapter(&dxgiAdapter);
+	if (result != S_OK)
+		return false;
+
+	IDXGIFactory2 *dxgiFactory = nullptr;
+	result = dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(&dxgiFactory));
+	if (result != S_OK)
+		return false;
+
+	IDXGISwapChain1 *swapChain = nullptr;
+	result = dxgiFactory->CreateSwapChainForHwnd(device, hWnd, &swapChainDesc, nullptr, nullptr, &swapChain);
+	if (result != S_OK)
+		return false;
+
+	result = dxgiFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
+	if (result != S_OK)
+		return false;
+
+	outSwapChain = swapChain;
+
+	return true;
+}
+
+bool ResizeSwapChain(IDXGISwapChain1 *swapChain, UINT width, UINT height)
+{
+	HRESULT result;
+
+	result = swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+	if (result != S_OK)
+		return false;
+
+	return true;
+}
+
+void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpComPtr<ID3D11Device>& outDevice, GpComPtr<ID3D11DeviceContext>& outContext)
+{
 	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc;
 
 	ZeroMemory(&swapChainFullscreenDesc, sizeof(swapChainFullscreenDesc));
@@ -90,7 +138,9 @@ void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpCom
 		D3D_FEATURE_LEVEL_10_0
 	};
 
+#ifndef NDEBUG
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 
 	ID3D11Device *device = NULL;
 	ID3D11DeviceContext *context = NULL;
@@ -100,27 +150,54 @@ void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpCom
 	HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, flags, featureLevels, sizeof(featureLevels) / sizeof(featureLevels[0]),
 		D3D11_SDK_VERSION, &device, &selectedFeatureLevel, &context);
 
-	IDXGIDevice2 *dxgiDevice = nullptr;
-	result = device->QueryInterface(__uuidof(IDXGIDevice2), reinterpret_cast<void**>(&dxgiDevice));
-
-	IDXGIAdapter *dxgiAdapter = nullptr;
-	result = dxgiDevice->GetAdapter(&dxgiAdapter);
-
-	IDXGIFactory2 *dxgiFactory = nullptr;
-	result = dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(&dxgiFactory));
-
-	IDXGISwapChain1 *swapChain = nullptr;
-	result = dxgiFactory->CreateSwapChainForHwnd(device, hWnd, &swapChainDesc, nullptr, nullptr, &swapChain);
+	InitSwapChainForWindow(hWnd, device, outSwapChain);
 
 	// GP TODO: Fix the error handling here, it's bad...
-	outSwapChain = swapChain;
 	outDevice = device;
 	outContext = context;
 }
 
-bool GpDisplayDriverD3D11::InitResources()
+bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG desiredWidth, LONG desiredHeight, DWORD windowStyle, HMENU menus)
 {
-	// Fetch back buffer
+	if (desiredWidth < 640)
+		desiredWidth = 640;
+	else if (desiredWidth > MAXDWORD)
+		desiredWidth = MAXDWORD;
+
+	if (desiredHeight < 480)
+		desiredHeight = 480;
+	else if (desiredHeight > MAXDWORD)
+		desiredHeight = MAXDWORD;
+
+	RECT windowRect;
+	GetClientRect(hWnd, &windowRect);
+	windowRect.right = windowRect.left + desiredWidth;
+	windowRect.bottom = windowRect.top + desiredHeight;
+	if (!AdjustWindowRect(&windowRect, windowStyle, menus != nullptr))
+		return false;
+
+	SetWindowPos(hWnd, HWND_TOP, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOMOVE);
+
+	windowWidth = desiredWidth;
+	windowHeight = desiredHeight;
+
+	return true;
+}
+
+bool GpDisplayDriverD3D11::DetachSwapChain()
+{
+	m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+	m_backBufferRTV = nullptr;
+	m_backBufferTexture = nullptr;
+
+	m_deviceContext->ClearState();
+	m_deviceContext->Flush();
+
+	return true;
+}
+
+bool GpDisplayDriverD3D11::InitBackBuffer()
+{
 	m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(m_backBufferTexture.GetMutablePtr()));
 
 	{
@@ -135,6 +212,14 @@ bool GpDisplayDriverD3D11::InitResources()
 		if (m_device->CreateRenderTargetView(m_backBufferTexture, &rtvDesc, m_backBufferRTV.GetMutablePtr()) != S_OK)
 			return false;
 	}
+
+	return true;
+}
+
+bool GpDisplayDriverD3D11::InitResources()
+{
+	if (!InitBackBuffer())
+		return false;
 
 	// Quad vertex constant buffer
 	{
@@ -314,9 +399,7 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 {
 	SynchronizeCursors();
 
-	float clearColor[4] = { 0.2f, 0.2f, 0.4f, 1.0f };
-
-	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, clearColor);
+	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, m_bgColor);
 
 	ID3D11RenderTargetView *const rtv = m_backBufferRTV;
 	m_deviceContext->OMSetRenderTargets(1, &rtv, nullptr);
@@ -599,6 +682,36 @@ void GpDisplayDriverD3D11::Run()
 		}
 		else
 		{
+			RECT clientRect;
+			GetClientRect(m_hwnd, &clientRect);
+
+			unsigned int desiredWidth = clientRect.right - clientRect.left;
+			unsigned int desiredHeight = clientRect.bottom - clientRect.top;
+			if (clientRect.right - clientRect.left != m_windowWidth || clientRect.bottom - clientRect.top != m_windowHeight)
+			{
+				uint32_t prevWidth = m_windowWidth;
+				uint32_t prevHeight = m_windowHeight;
+
+				m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight);
+
+				bool resizedOK = ResizeD3DWindow(m_hwnd, m_windowWidth, m_windowHeight, desiredWidth, desiredHeight, windowStyle, menus);
+				resizedOK = resizedOK && DetachSwapChain();
+				resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidth, m_windowHeight);
+				resizedOK = resizedOK && InitBackBuffer();
+
+				if (!resizedOK)
+					break;	// Critical video driver error, exit
+
+				if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
+				{
+					resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
+					resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidth;
+					resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeight;
+					resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidth;
+					resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeight;
+				}
+			}
+
 			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
 			if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault || tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
 				break;
@@ -779,6 +892,13 @@ void GpDisplayDriverD3D11::UpdatePalette(const void *paletteData)
 		m_deviceContext->Unmap(m_paletteTexture, 0);
 	}
 }
+void GpDisplayDriverD3D11::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+	m_bgColor[0] = static_cast<float>(r) / 255.0f;
+	m_bgColor[1] = static_cast<float>(g) / 255.0f;
+	m_bgColor[2] = static_cast<float>(b) / 255.0f;
+	m_bgColor[3] = static_cast<float>(a) / 255.0f;
+}
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)
 {
@@ -811,6 +931,11 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	m_arrowCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_SHARED));
 	m_ibeamCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_IBEAM), IMAGE_CURSOR, 0, 0, LR_SHARED));
 	m_waitCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_WAIT), IMAGE_CURSOR, 0, 0, LR_SHARED));
+
+	m_bgColor[0] = 0;
+	m_bgColor[1] = 0;
+	m_bgColor[2] = 0;
+	m_bgColor[3] = 255;
 }
 
 GpDisplayDriverD3D11::~GpDisplayDriverD3D11()

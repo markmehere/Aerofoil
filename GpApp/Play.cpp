@@ -8,6 +8,7 @@
 
 #include "PLResources.h"
 #include "PLStandardColors.h"
+#include "DisplayDeviceManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
@@ -53,7 +54,6 @@ short		batteryTotal, bandsTotal, foilTotal, mortals;
 Boolean		playing, evenFrame, twoPlayerGame, showFoil, demoGoing;
 Boolean		doBackground, playerSuicide, phoneBitSet, tvOn;
 
-extern	WindowPtr	menuWindow;
 extern	VFileSpec	*theHousesSpecs;
 extern	demoPtr		demoData;
 extern	gameType	smallGame;
@@ -66,6 +66,7 @@ extern	short		numStarsRemaining, numChimes, saidFollow;
 extern	Boolean		quitting, isMusicOn, gameOver, hasMirror, onePlayerLeft;
 extern	Boolean		isPlayMusicIdle, failedMusic, quickerTransitions;
 extern	Boolean		switchedOut;
+extern	short		wasScoreboardTitleMode;
 
 
 //==============================================================  Functions
@@ -77,7 +78,6 @@ void NewGame (short mode)
 	PLError_t		theErr;
 	Boolean		wasPlayMusicPref;
 	
-	AdjustScoreboardHeight();
 	gameOver = false;
 	theMode = kPlayMode;
 	if (isPlayMusicGame)
@@ -136,7 +136,7 @@ void NewGame (short mode)
 
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 
-	tempRect = thisMac.screen;
+	tempRect = thisMac.constrainedScreen;
 	tempRect.top = tempRect.bottom - 20;	// thisMac.menuHigh
 	mainWindowSurface->FillRect(tempRect);
 	
@@ -156,7 +156,7 @@ void NewGame (short mode)
 	
 //	DebugStr("\pIf screen isn't black, exit to shell.");	// TEMP TEMP TEMP
 	
-	DrawLocale();
+	ResetLocale(false);
 	RefreshScoreboard(kNormalTitleMode);
 //	if (quickerTransitions)
 //		DissBitsChunky(&justRoomsRect);
@@ -362,12 +362,37 @@ void SetHouseToSavedRoom (void)
 	ForceThisRoom(smallGame.roomNumber);
 }
 
+//--------------------------------------------------------------  HandleGameResolutionChange
+
+void HandleGameResolutionChange(void)
+{
+	FlushResolutionChange();
+
+	RecomputeInterfaceRects();
+	RecreateOffscreens();
+	CloseMainWindow();
+	OpenMainWindow();
+
+	if (hasMovie)
+		theMovie.m_surface = &mainWindow->m_surface;
+
+	ResetLocale(true);
+	InitScoreboardMap();
+	RefreshScoreboard(wasScoreboardTitleMode);
+	DumpScreenOn(&justRoomsRect);
+}
+
 //--------------------------------------------------------------  PlayGame
 
 void PlayGame (void)
 {
 	while ((playing) && (!quitting))
 	{
+		if (thisMac.isResolutionDirty)
+		{
+			HandleGameResolutionChange();
+		}
+
 		gameFrame++;
 		evenFrame = !evenFrame;
 		
@@ -725,12 +750,12 @@ void RestoreEntireGameScreen (void)
 #endif
 	
 	DrawSurface *surface = mainWindow->GetDrawSurface();
-	tempRect = thisMac.screen;
+	tempRect = thisMac.constrainedScreen;
 
 	surface->SetForeColor(StdColors::Black());
 	surface->FillRect(tempRect);
 	
-	DrawLocale();
+	ResetLocale(false);
 	RefreshScoreboard(kNormalTitleMode);
 //	if (quickerTransitions)
 //		DissBitsChunky(&justRoomsRect);

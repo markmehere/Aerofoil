@@ -146,6 +146,7 @@
     <ClInclude Include="AEHandlerDesc.h" />
     <ClInclude Include="AEManager.h" />
     <ClInclude Include="AntiAliasTable.h" />
+    <ClInclude Include="ArrayTools.h" />
     <ClInclude Include="BinarySearch.h" />
     <ClInclude Include="BinHex4.h" />
     <ClInclude Include="BitmapImage.h" />

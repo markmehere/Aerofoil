@@ -81,7 +81,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		break;
 		
 	case RegionIDs::kTitleBar:
-		PortabilityLayer::WindowManager::GetInstance()->DragWindow(whichWindow, evtPoint, thisMac.screen);
+		PortabilityLayer::WindowManager::GetInstance()->DragWindow(whichWindow, evtPoint, thisMac.fullScreen);
 		if (whichWindow == mainWindow)
 			GetWindowLeftTop(whichWindow, &isEditH, &isEditV);
 		else if (whichWindow == mapWindow)
@@ -349,11 +349,6 @@ void HandleUpdateEvent (EventRecord *theEvent)
 		UpdateCoordWindow();
 		EndUpdate(coordWindow);
 	}
-	else if ((WindowPtr)theEvent->message == menuWindow)
-	{
-		UpdateMenuBarWindow(menuWindow->GetDrawSurface());
-		EndUpdate(menuWindow);
-	}
 }
 
 //--------------------------------------------------------------  HandleOSEvent
@@ -426,6 +421,48 @@ void HandleHighLevelEvent (EventRecord *theEvent)
 }
 #endif
 
+
+//--------------------------------------------------------------  HandleSplashResolutionChange
+void HandleSplashResolutionChange(void)
+{
+	FlushResolutionChange();
+
+	RecomputeInterfaceRects();
+	RecreateOffscreens();
+	CloseMainWindow();
+	OpenMainWindow();
+
+	UpdateMainWindow();
+
+	//ResetLocale(true);
+	InitScoreboardMap();
+	//RefreshScoreboard(wasScoreboardTitleMode);
+	//DumpScreenOn(&justRoomsRect);
+}
+
+void HandleEditorResolutionChange(void)
+{
+	FlushResolutionChange();
+
+	RecomputeInterfaceRects();
+	RecreateOffscreens();
+	CloseMainWindow();
+	OpenMainWindow();
+
+	UpdateMainWindow();
+
+	//ResetLocale(true);
+	InitScoreboardMap();
+	//RefreshScoreboard(wasScoreboardTitleMode);
+	//DumpScreenOn(&justRoomsRect);
+
+	if (toolsWindow)
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(toolsWindow, PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel());
+
+	if (mapWindow)
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(mapWindow, PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel());
+}
+
 //--------------------------------------------------------------  HandleIdleTask
 // Handle some processing during event lulls.
 
@@ -433,6 +470,11 @@ void HandleIdleTask (void)
 {
 	if (theMode == kEditMode)
 	{
+		if (thisMac.isResolutionDirty)
+		{
+			HandleEditorResolutionChange();
+		}
+
 		SetPort(&mainWindow->GetDrawSurface()->m_port);
 		DoMarquee();
 		
@@ -441,6 +483,14 @@ void HandleIdleTask (void)
 			if (theMode == kEditMode)
 				DoRoomInfo();
 			newRoomNow = false;
+		}
+	}
+
+	if (theMode == kSplashMode)
+	{
+		if (thisMac.isResolutionDirty)
+		{
+			HandleSplashResolutionChange();
 		}
 	}
 }

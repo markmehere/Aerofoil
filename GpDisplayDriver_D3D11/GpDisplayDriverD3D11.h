@@ -46,6 +46,8 @@ public:
 
 	void UpdatePalette(const void *paletteData) override;
 
+	void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
+
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
 
 private:
@@ -70,6 +72,8 @@ private:
 	GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties);
 	~GpDisplayDriverD3D11();
 
+	bool DetachSwapChain();
+	bool InitBackBuffer();
 	bool InitResources();
 	GpDisplayDriverTickStatus_t PresentFrameAndSync();
 
@@ -123,4 +127,6 @@ private:
 	HCURSOR m_waitCursor;
 	HCURSOR m_ibeamCursor;
 	HWND m_hwnd;
+
+	float m_bgColor[4];
 };

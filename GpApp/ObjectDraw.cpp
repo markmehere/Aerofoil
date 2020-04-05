@@ -1224,7 +1224,7 @@ void DrawSimplePrizes (short what, Rect *theRect)
 
 //--------------------------------------------------------------  DrawGreaseRt
 
-void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
+void DrawGreaseRt (Rect *theRect, short distance, Boolean state, Boolean drawSpill)
 {
 	Rect		spill, dest;
 	
@@ -1243,18 +1243,21 @@ void DrawGreaseRt (Rect *theRect, short distance, Boolean state)
 				(BitMap *)*GetGWorldPixMap(bonusMaskMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&greaseSrcRt[3], &greaseSrcRt[3], &dest);
-		
-		QSetRect(&spill, 0, -2, distance - 5, 0);
-		QOffsetRect(&spill, dest.right - 1, dest.bottom);
 
-		backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-		backSrcMap->FillRect(spill);
+		if (drawSpill)
+		{
+			QSetRect(&spill, 0, -2, distance - 5, 0);
+			QOffsetRect(&spill, dest.right - 1, dest.bottom);
+
+			backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+			backSrcMap->FillRect(spill);
+		}
 	}
 }
 
 //--------------------------------------------------------------  DrawGreaseLf
 
-void DrawGreaseLf (Rect *theRect, short distance, Boolean state)
+void DrawGreaseLf (Rect *theRect, short distance, Boolean state, Boolean drawSpill)
 {
 	Rect		spill, dest;
 	DrawSurface	*wasCPort;
@@ -1275,11 +1278,14 @@ void DrawGreaseLf (Rect *theRect, short distance, Boolean state)
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 
 				&greaseSrcLf[3], &greaseSrcLf[3], &dest);
 
-		backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+		if (drawSpill)
+		{
+			backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
 
-		QSetRect(&spill, -distance + 5, -2, 0, 0);
-		QOffsetRect(&spill, dest.left + 1, dest.bottom);
-		backSrcMap->FillRect(spill);
+			QSetRect(&spill, -distance + 5, -2, 0, 0);
+			QOffsetRect(&spill, dest.left + 1, dest.bottom);
+			backSrcMap->FillRect(spill);
+		}
 	}
 }
 

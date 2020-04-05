@@ -42,7 +42,7 @@ Rect		badgesBlankRects[4], badgesBadgesRects[4];
 Rect		badgesDestRects[4];
 DrawSurface	*boardPSrcMap;
 long		displayedScore;
-short		wasScoreboardMode;
+short		wasScoreboardTitleMode;
 Boolean		doRollScore;
 
 extern	Rect		localRoomsDest[], justRoomsRect;
@@ -63,6 +63,7 @@ void MarkScoreboardPortDirty(void)
 
 void RefreshScoreboard (SInt16 mode)
 {
+	wasScoreboardTitleMode = mode;
 	doRollScore = true;
 	
 	RefreshRoomTitle(mode);
@@ -407,52 +408,3 @@ void QuickFoilRefresh (Boolean flash)
 
 	MarkScoreboardPortDirty();
 }
-
-//--------------------------------------------------------------  AdjustScoreboardHeight
-
-void AdjustScoreboardHeight (void)
-{
-	short		offset, newMode;
-	
-	if (numNeighbors == 9)
-		newMode = kScoreboardHigh;
-	else
-		newMode = kScoreboardLow;
-	
-	if (wasScoreboardMode != newMode)
-	{
-		switch (newMode)
-		{
-			case kScoreboardHigh:		// 9 neighbors
-			offset = localRoomsDest[kCentralRoom].top;
-			offset = -offset;
-			justRoomsRect = workSrcRect;
-			break;
-			
-			case kScoreboardLow:		// 1 or 3 neighbors
-			offset = localRoomsDest[kCentralRoom].top;
-			justRoomsRect = workSrcRect;
-			justRoomsRect.top = localRoomsDest[kCentralRoom].top;
-			justRoomsRect.bottom = localRoomsDest[kCentralRoom].bottom;
-			break;
-		}
-		
-		QOffsetRect(&boardDestRect, 0, offset);
-		QOffsetRect(&boardGQDestRect, 0, offset);
-		QOffsetRect(&boardPQDestRect, 0, offset);
-		QOffsetRect(&badgesDestRects[kBatteryBadge], 0, offset);
-		QOffsetRect(&badgesDestRects[kBandsBadge], 0, offset);
-		QOffsetRect(&badgesDestRects[kFoilBadge], 0, offset);
-		QOffsetRect(&badgesDestRects[kHeliumBadge], 0, offset);
-		
-		wasScoreboardMode = newMode;
-	}
-}
-
-//--------------------------------------------------------------  BlackenScoreboard
-
-void BlackenScoreboard (DrawSurface *surface)
-{
-	UpdateMenuBarWindow(surface);
-}
-

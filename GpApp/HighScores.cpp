@@ -23,6 +23,7 @@
 #include "IOStream.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "Utilities.h"
 
@@ -70,6 +71,7 @@ void DoHighScores (void)
 	
 	SpinCursor(3);
 	SetPort(&workSrcMap->m_port);
+	workSrcMap->SetForeColor(StdColors::Black());
 	workSrcMap->FillRect(workSrcRect);
 	QSetRect(&tempRect, 0, 0, 640, 480);
 	QOffsetRect(&tempRect, splashOriginH, splashOriginV);
@@ -123,7 +125,7 @@ void DrawHighScores (DrawSurface *surface)
 	PortabilityLayer::RGBAColor whiteColor = PortabilityLayer::RGBAColor::Create(255, 255, 255, 255);
 	PortabilityLayer::RGBAColor blueColor = PortabilityLayer::RGBAColor::Create(0, 0, 255, 255);
 	
-	scoreLeft = ((thisMac.screen.right - thisMac.screen.left) - kScoreWide) / 2;
+	scoreLeft = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) - kScoreWide) / 2;
 	dropIt = 129 + splashOriginV;
 	
 	QSetRect(&tempRect, 0, 0, 332, 30);

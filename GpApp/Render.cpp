@@ -34,9 +34,7 @@ void CopyRectsQD (void);
 
 Rect		work2MainRects[kMaxGarbageRects];
 Rect		back2WorkRects[kMaxGarbageRects];
-Rect		shieldRect;
 THandle<Rect>	mirrorRects;
-Point		shieldPt;
 long		nextFrame;
 short		numWork2Main, numBack2Work;
 Boolean		hasMirror;

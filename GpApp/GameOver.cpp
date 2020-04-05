@@ -102,10 +102,10 @@ void SetUpFinalScreen (void)
 	do
 	{
 		GetLineOfText(tempStr, count, subStr);
-		offset = ((thisMac.screen.right - thisMac.screen.left) - 
-				surface->MeasureString(subStr)) / 2;
 
 		surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+		offset = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) -
+				surface->MeasureString(subStr)) / 2;
 
 		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
 		const Point textShadowPos = Point::Create(offset + 1, textDown + 33 + (count * 20));
@@ -146,6 +146,12 @@ void DoGameOverStarAnimation (void)
 	long		nextLoop;
 	short		which, i, count, pass;
 	Boolean		noInteruption;
+
+	short starFallSpeed = kStarFalls;
+	const int kStarSpacing = 32;
+	const int kAngelSpeed = 2;
+	const int kStarsReserved = 5;
+	const int kMaxFramesAlive = (kStarSpacing * kStarsReserved + kAngelSpeed - 1) / kAngelSpeed;
 	
 	angelDest = angelSrcRect;
 	QOffsetRect(&angelDest, -96, 0);
@@ -154,16 +160,19 @@ void DoGameOverStarAnimation (void)
 	count = 0;
 	pass = 0;
 	FlushEvents(everyEvent, 0);
+
+	if (workSrcRect.bottom - angelDest.bottom > kMaxFramesAlive * starFallSpeed)
+		starFallSpeed = (workSrcRect.bottom - angelDest.bottom + kMaxFramesAlive - 1) / kMaxFramesAlive;
 	
 	while (noInteruption)
 	{
-		if ((angelDest.left % 32) == 0)		// add a star
+		if ((angelDest.left % kStarSpacing) == 0)		// add a star
 		{
 			PlayPrioritySound(kMysticSound, kMysticPriority);
-			which = angelDest.left / 32;
-			which = which % 5;
+			which = angelDest.left / kStarSpacing;
+			which = which % kStarsReserved;
 			if (which < 0)
-				which += 5;
+				which += kStarsReserved;
 			ZeroRectCorner(&pages[which].dest);
 			QOffsetRect(&pages[which].dest, angelDest.left, angelDest.bottom);
 			if (count < (which + 1))
@@ -184,13 +193,13 @@ void DoGameOverStarAnimation (void)
 					&pages[i].dest);
 			
 			pages[i].was = pages[i].dest;
-			pages[i].was.top -= kStarFalls;
+			pages[i].was.top -= starFallSpeed;
 			
 			AddRectToWorkRectsWhole(&pages[i].was);
 			AddRectToBackRects(&pages[i].dest);
 			
 			if (pages[i].dest.top < workSrcRect.bottom)
-				QOffsetRect(&pages[i].dest, 0, kStarFalls);
+				QOffsetRect(&pages[i].dest, 0, starFallSpeed);
 		}
 		
 		if (angelDest.left <= (workSrcRect.right + 2))
@@ -199,11 +208,11 @@ void DoGameOverStarAnimation (void)
 					(BitMap *)*GetGWorldPixMap(angelMaskMap), 
 					(BitMap *)*GetGWorldPixMap(workSrcMap), 
 					&angelSrcRect, &angelSrcRect, &angelDest);
-			angelDest.left -= 2;
+			angelDest.left -= kAngelSpeed;
 			AddRectToWorkRectsWhole(&angelDest);
-			angelDest.left += 2;
+			angelDest.left += kAngelSpeed;
 			AddRectToBackRects(&angelDest);
-			QOffsetRect(&angelDest, 2, 0);
+			QOffsetRect(&angelDest, kAngelSpeed, 0);
 			pass = 0;
 		}
 		
@@ -285,14 +294,14 @@ void InitDiedGameOver (void)
 	for (i = 0; i < 8; i++)				// initialize dest page rects
 	{
 		QSetRect(&pages[i].dest, 0, 0, 32, 32);
-		CenterRectInRect(&pages[i].dest, &thisMac.screen);
-		QOffsetRect(&pages[i].dest, -thisMac.screen.left, -thisMac.screen.top);
+		CenterRectInRect(&pages[i].dest, &thisMac.constrainedScreen);
+		QOffsetRect(&pages[i].dest, -thisMac.constrainedScreen.left, -thisMac.constrainedScreen.top);
 		if (i < 4)
 			QOffsetRect(&pages[i].dest, -kPageSpacing * (4 - i), 0);
 		else
 			QOffsetRect(&pages[i].dest, kPageSpacing * (i - 3), 0);
-		QOffsetRect(&pages[i].dest, (thisMac.screen.right - thisMac.screen.left) / -2, 
-				(thisMac.screen.right - thisMac.screen.left) / -2);
+		QOffsetRect(&pages[i].dest, (thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) / -2,
+				(thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) / -2);
 		if (pages[i].dest.left % 2 == 1)
 			QOffsetRect(&pages[i].dest, 1, 0);
 		pages[i].was = pages[i].dest;
@@ -308,7 +317,7 @@ void InitDiedGameOver (void)
 	}
 
 	pagesStuck = 0;
-	stopPages = ((thisMac.screen.bottom - thisMac.screen.top) / 2) - 16;
+	stopPages = ((thisMac.constrainedScreen.bottom - thisMac.constrainedScreen.top) / 2) - 16;
 }
 
 //--------------------------------------------------------------  HandlePages

@@ -94,6 +94,11 @@ void GpAppEnvironment::Render()
 	GpAppInterface_Get()->PL_Render(m_displayDriver);
 }
 
+void GpAppEnvironment::AdjustRequestedResolution(unsigned int &width, unsigned int &height)
+{
+	GpAppInterface_Get()->PL_AdjustRequestedResolution(width, height);
+}
+
 void GpAppEnvironment::SetDisplayDriver(IGpDisplayDriver *displayDriver)
 {
 	m_displayDriver = displayDriver;

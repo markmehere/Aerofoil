@@ -50,7 +50,7 @@ void DrawBanner (Point *topLeft)
 	PLError_t	theErr;
 	
 	QSetRect(&wholePage, 0, 0, 330, 220);
-	mapBounds = thisMac.screen;
+	mapBounds = thisMac.fullScreen;
 	ZeroRectCorner(&mapBounds);
 	CenterRectInRect(&wholePage, &mapBounds);
 	topLeft->h = wholePage.left;
@@ -203,8 +203,8 @@ void DisplayStarsRemaining (void)
 	DrawSurface *surface = mainWindow->GetDrawSurface();
 
 	QSetRect(&bounds, 0, 0, 256, 64);
-	CenterRectInRect(&bounds, &thisMac.screen);
-	QOffsetRect(&bounds, -thisMac.screen.left, -thisMac.screen.top);
+	CenterRectInRect(&bounds, &thisMac.fullScreen);
+	QOffsetRect(&bounds, -thisMac.fullScreen.left, -thisMac.fullScreen.top);
 	src = bounds;
 	InsetRect(&src, 64, 32);
 

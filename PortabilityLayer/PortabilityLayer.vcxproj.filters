@@ -480,6 +480,9 @@
     <ClInclude Include="TextPlacer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ArrayTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">

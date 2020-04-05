@@ -5,6 +5,7 @@
 //============================================================================
 
 
+#include "ArrayTools.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "MainWindow.h"
@@ -68,7 +69,7 @@ void NilSavedMaps (void)
 // room that it obscured so that, should the player get the object,…
 // it can be made to "disappear".
 
-short BackUpToSavedMap (Rect *theRect, short where, short who)
+short BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who)
 {
 	Rect		mapRect;
 	PLError_t		theErr;
@@ -98,7 +99,7 @@ short BackUpToSavedMap (Rect *theRect, short where, short who)
 // a slot in the pixmap array for the object.  It re-copies the background…
 // and is needed when the lights in the room go on or off.
 
-short ReBackUpSavedMap (Rect *theRect, short where, short who)
+SInt16 ReBackUpSavedMap (Rect *theRect, SInt16 where, SInt16 who)
 {
 	Rect		mapRect;
 	short		i, foundIndex;
@@ -112,6 +113,8 @@ short ReBackUpSavedMap (Rect *theRect, short where, short who)
 			foundIndex = i;
 			mapRect = *theRect;
 			ZeroRectCorner(&mapRect);
+
+			savedMaps[foundIndex].dest = *theRect;
 			
 			CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 					GetPortBitMapForCopyBits(savedMaps[foundIndex].map), 
@@ -121,7 +124,54 @@ short ReBackUpSavedMap (Rect *theRect, short where, short who)
 		}
 	}
 	
-	return (foundIndex);
+	return BackUpToSavedMap(theRect, where, who);
+}
+
+//--------------------------------------------------------------  RemoveFromSavedMap
+template<class T>
+void RemapDynamicObject(T *arr, short &count, int removedIndex, int substituteIndex)
+{
+	short countCopy = count;
+	for (int i = 0; i < countCopy; i++)
+	{
+		if (arr[i].who == removedIndex)
+		{
+			PortabilityLayer::ArrayTools::RemoveFromArray(arr, countCopy, i);
+			i--;
+		}
+		else if (arr[i].who == substituteIndex)
+			arr[i].who = removedIndex;
+	}
+
+	count = countCopy;
+}
+
+SInt16 RemoveFromSavedMap (SInt16 index)
+{
+	int swappedIn = numSavedMaps - 1;
+	RemapDynamicObject(flames, numFlames, index, swappedIn);
+	RemapDynamicObject(tikiFlames, numTikiFlames, index, swappedIn);
+	RemapDynamicObject(bbqCoals, numCoals, index, swappedIn);
+	RemapDynamicObject(pendulums, numPendulums, index, swappedIn);
+	RemapDynamicObject(theStars, numStars, index, swappedIn);
+
+	RemapGreaseSavedMap(index, swappedIn);
+
+	// Have to do this explicitly so we don't trash the draw surface pointer
+	if (swappedIn != index)
+	{
+		savedType &dest = savedMaps[index];
+		savedType &src = savedMaps[swappedIn];
+
+		DisposeGWorld(dest.map);
+		dest = src;
+
+		src.map = nil;
+	}
+
+	numSavedMaps--;
+
+	return -1;
 }
 
 //--------------------------------------------------------------  RestoreFromSavedMap
@@ -290,7 +340,7 @@ void BackUpFlames (Rect *src, short index)
 // Like the above function but this is called when the lighting changes…
 // in a room (lights go on or off).
 
-void ReBackUpFlames (short where, short who)
+Boolean ReBackUpFlames (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -302,19 +352,22 @@ void ReBackUpFlames (short where, short who)
 			{
 				if (flames[f].who == i)
 				{
+					QOffsetRect(&flames[f].dest, h - 8 - flames[f].dest.left, v - 15 - flames[f].dest.top);
 					BackUpFlames(&flames[f].dest, i);
-					return;
+					return true;
 				}
 			}
 		}
 	}
+
+	return false;
 }
 
 //--------------------------------------------------------------  AddCandleFlame
 
 // This adds a candle flame to tha array of flames.
 
-void AddCandleFlame (short where, short who, short h, short v)
+void AddCandleFlame (SInt16 where, SInt16 who, SInt16 h, SInt16 v)
 {
 	Rect		src, bounds;
 	short		savedNum;
@@ -374,7 +427,7 @@ void BackUpTikiFlames (Rect *src, short index)
 
 // This is like the function ReBackUpFlames() but customized for Tiki torches.
 
-void ReBackUpTikiFlames (short where, short who)
+Boolean ReBackUpTikiFlames (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -386,12 +439,15 @@ void ReBackUpTikiFlames (short where, short who)
 			{
 				if (tikiFlames[f].who == i)
 				{
+					QOffsetRect(&tikiFlames[f].dest, h - tikiFlames[f].dest.left, v - tikiFlames[f].dest.top);
 					BackUpTikiFlames(&tikiFlames[f].dest, i);
-					return;
+					return true;
 				}
 			}
 		}
 	}
+
+	return false;
 }
 
 //--------------------------------------------------------------  AddTikiFlame
@@ -460,7 +516,7 @@ void BackUpBBQCoals (Rect *src, short index)
 
 // Sense a pattern here?
 
-void ReBackUpBBQCoals (short where, short who)
+Boolean ReBackUpBBQCoals (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -472,12 +528,15 @@ void ReBackUpBBQCoals (short where, short who)
 			{
 				if (bbqCoals[f].who == i)
 				{
+					QOffsetRect(&bbqCoals[f].dest, h - bbqCoals[f].dest.left, v - bbqCoals[f].dest.top);
 					BackUpBBQCoals(&bbqCoals[f].dest, i);
-					return;
+					return true;
 				}
 			}
 		}
 	}
+
+	return false;
 }
 
 //--------------------------------------------------------------  AddBBQCoals
@@ -544,7 +603,7 @@ void BackUpPendulum (Rect *src, short index)
 
 // Backs up the pendulums in the event of lights going on or off.
 
-void ReBackUpPendulum (short where, short who)
+Boolean ReBackUpPendulum (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -556,19 +615,26 @@ void ReBackUpPendulum (short where, short who)
 			{
 				if (pendulums[f].who == i)
 				{
-					BackUpPendulum(&pendulums[f].dest, i);
-					return;
+					Rect &pendulumDest = pendulums[f].dest;
+					pendulumDest.right += h - pendulumDest.left;
+					pendulumDest.bottom += v - pendulumDest.top;
+					pendulumDest.left = h;
+					pendulumDest.top = v;
+					BackUpPendulum(&pendulumDest, i);
+					return true;
 				}
 			}
 		}
 	}
+
+	return false;
 }
 
 //--------------------------------------------------------------  AddPendulum
 
 // Adds a pendulum to the array of pendulums.
 
-void AddPendulum (short where, short who, short h, short v)
+void AddPendulum (SInt16 where, SInt16 who, SInt16 h, SInt16 v)
 {
 	Rect		src, bounds;
 	short		savedNum;
@@ -636,7 +702,7 @@ void BackUpStar (Rect *src, short index)
 
 // Re-backs up the stars - in the event of lighting switch.
 
-void ReBackUpStar (short where, short who)
+void ReBackUpStar (short where, short who, short h, short v)
 {
 	short		i, f;
 	
@@ -648,6 +714,7 @@ void ReBackUpStar (short where, short who)
 			{
 				if (theStars[f].who == i)
 				{
+					QOffsetRect(&theStars[f].dest, h - theStars[f].dest.left, v - theStars[f].dest.top);
 					BackUpStar(&theStars[f].dest, i);
 					return;
 				}
@@ -797,3 +864,14 @@ void ZeroFlamesAndTheLike (void)
 	numChimes = 0;
 }
 
+void RemoveSavedMapsNotInRoom(SInt16 where)
+{
+	for (int i = 0; i < numSavedMaps; i++)
+	{
+		if (savedMaps[i].where != where)
+		{
+			RemoveFromSavedMap(i);
+			i--;
+		}
+	}
+}

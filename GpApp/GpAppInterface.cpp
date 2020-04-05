@@ -25,6 +25,7 @@ public:
 	void PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance) override;
 	void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) override;
 	void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) override;
+	void PL_AdjustRequestedResolution(unsigned int &width, unsigned int &height) override;
 };
 
 
@@ -78,6 +79,16 @@ void GpAppInterfaceImpl::PL_InstallHostSuspendHook(PortabilityLayer::HostSuspend
 {
 	PortabilityLayer::InstallHostSuspendHook(hook, context);
 }
+
+void GpAppInterfaceImpl::PL_AdjustRequestedResolution(unsigned int &width, unsigned int &height)
+{
+	uint32_t w32 = width;
+	uint32_t h32 = height;
+	PortabilityLayer::DisplayDeviceManager::GetInstance()->GetResolutionChangeHandler()->AdjustRequestedResolution(w32, h32);
+	width = w32;
+	height = h32;
+}
+
 
 static GpAppInterfaceImpl gs_application;
 

@@ -167,6 +167,7 @@ void IgnoreThisClick (void);
 short WhatsOurDepth (void);								// --- Environs.c
 void SwitchToDepth (short, Boolean);
 void CheckOurEnvirons (void);
+void InstallResolutionHandler (void);
 //void ReflectSecondMonitorEnvirons (Boolean, Boolean, Boolean);
 void HandleDepthSwitching (void);
 void RestoreColorDepth (void);

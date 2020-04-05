@@ -1031,7 +1031,7 @@ void DoDisplayPrefs (void)
 			break;
 			
 			case kDisplay3Item:
-			if (thisMac.screen.right > 512)
+			if (thisMac.constrainedScreen.right > 512)
 			{
 				FrameDisplayIcon(prefDlg, StdColors::White());
 				numNeighbors = 3;
@@ -1040,7 +1040,7 @@ void DoDisplayPrefs (void)
 			break;
 			
 			case kDisplay9Item:
-			if (thisMac.screen.right > 512)
+			if (thisMac.constrainedScreen.right > 512)
 			{
 				FrameDisplayIcon(prefDlg, StdColors::White());
 				numNeighbors = 9;

@@ -25,24 +25,26 @@ void ToggleCoordinateWindow (void);
 void NilSavedMaps (void);								// --- DynamicMaps.c
 SInt16 BackUpToSavedMap (Rect *, SInt16,  SInt16);
 SInt16 ReBackUpSavedMap (Rect *, SInt16, SInt16);
+SInt16 RemoveFromSavedMap(SInt16);
 void RestoreFromSavedMap (SInt16, SInt16, Boolean);
 void AddSparkle (Rect *);
 void AddFlyingPoint (Rect *, SInt16, SInt16, SInt16);
-void ReBackUpFlames (SInt16, SInt16);
+Boolean ReBackUpFlames (SInt16, SInt16, SInt16, SInt16);
 void AddCandleFlame (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpTikiFlames (SInt16, SInt16);
+Boolean ReBackUpTikiFlames (SInt16, SInt16, SInt16, SInt16);
 void AddTikiFlame (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpBBQCoals (SInt16, SInt16);
+Boolean ReBackUpBBQCoals (SInt16, SInt16, SInt16, SInt16);
 void AddBBQCoals (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpPendulum (SInt16, SInt16);
+Boolean ReBackUpPendulum (SInt16, SInt16, SInt16, SInt16);
 void AddPendulum (SInt16, SInt16, SInt16, SInt16);
-void ReBackUpStar (SInt16, SInt16);
+void ReBackUpStar (SInt16, SInt16, SInt16, SInt16);
 void AddStar (SInt16, SInt16, SInt16, SInt16);
 void StopPendulum (SInt16, SInt16);
 void StopStar (SInt16, SInt16);
 void AddAShreddedGlider (Rect *);
 void RemoveShreds (void);
 void ZeroFlamesAndTheLike (void);
+void RemoveSavedMapsNotInRoom (SInt16);
 
 void CheckDynamicCollision (SInt16, gliderPtr, Boolean);	// --- Dynamics.c
 Boolean DidBandHitDynamic (SInt16);
@@ -73,17 +75,21 @@ void HandleFish (SInt16);
 void HandleDynamics (void);								// --- Dynamics3.c
 void RenderDynamics (void);
 void ZeroDinahs (void);
-SInt16 AddDynamicObject (SInt16, Rect *, objectType *, SInt16, SInt16, Boolean);
+void ZeroDinahsNotInRoom (SInt16);
+
+SInt16 AddDynamicObject(SInt16 what, Rect *where, objectType *who, SInt16 room, SInt16 index, Boolean isOn, Boolean keepExisting);
 
 void DoGameOver (void);									// --- GameOver.c
 void FlagGameOver (void);
 void DoDiedGameOver (void);
 
 void HandleGrease (void);								// --- Grease.c
-SInt16 ReBackUpGrease (SInt16, SInt16);
+SInt16 ReBackUpGrease (SInt16 where, SInt16 who, SInt16 h, SInt16 v);
 SInt16 AddGrease (SInt16, SInt16, SInt16, SInt16, SInt16, Boolean);
 void SpillGrease (SInt16, SInt16);
 void RedrawAllGrease (void);
+void FixupFallenGrease(SInt16 where, SInt16 who, SInt16 h, SInt16 v, Boolean *isDynamic);
+void RemapGreaseSavedMap(SInt16 removedItem, SInt16 substituteItem);
 
 void DoHighScores (void);								// --- HighScores.c
 void SortHighScores (void);
@@ -132,6 +138,7 @@ void FlagStillOvers (gliderPtr);
 
 void InitializeMenus (void);							// --- InterfaceInit.c
 void GetExtraCursors (void);
+void RecomputeInterfaceRects (void);
 void VariableInit (void);
 
 void GetDemoInput (gliderPtr);							// --- Input.c
@@ -147,7 +154,6 @@ void HandleLinkClick (Point);
 
 void RedrawSplashScreen (void);							// --- MainWindow.c
 void UpdateMainWindow (void);
-void UpdateMenuBarWindow (DrawSurface *surface);
 void OpenMainWindow (void);
 void CloseMainWindow (void);
 void ZoomBetweenWindows (void);
@@ -257,8 +263,8 @@ void DrawBlueClock (Rect *);
 void DrawYellowClock (Rect *);
 void DrawCuckoo (Rect *);
 void DrawSimplePrizes (SInt16, Rect *);
-void DrawGreaseRt (Rect *, SInt16, Boolean);
-void DrawGreaseLf (Rect *, SInt16, Boolean);
+void DrawGreaseRt (Rect *, SInt16, Boolean, Boolean);
+void DrawGreaseLf (Rect *, SInt16, Boolean, Boolean);
 void DrawFoil (Rect *);
 void DrawInvisBonus (Rect *);
 void DrawSlider (Rect *);
@@ -407,7 +413,8 @@ Boolean DoesRoomHaveFloor (void);
 Boolean DoesRoomHaveCeiling (void);
 
 void ReadyLevel (void);									// --- RoomGraphics.c
-void DrawLocale (void);
+void ResetLocale (Boolean soft);
+void DrawLocale (Boolean soft);
 void RedrawRoomLighting (void);
 
 Boolean PictIDExists (SInt16);							// --- RoomInfo.c
@@ -428,8 +435,6 @@ void QuickBatteryRefresh (Boolean);
 void QuickBandsRefresh (Boolean);
 void QuickFoilRefresh (Boolean);
 void HandleScore (void);
-void AdjustScoreboardHeight (void);
-void BlackenScoreboard (DrawSurface *);
 
 //void PutRoomScrap (void);								// --- Scrap.c
 //void PutObjectScrap (void);
@@ -470,6 +475,7 @@ void InitEnemies (void);
 void CreateOffscreens (void);							// --- StructuresInit2.c
 void CreatePointers (void);
 void InitSrcRects (void);
+PLError_t RecreateOffscreens (void);
 
 void UpdateToolsWindow (void);							// --- Tools.c
 void EraseSelectedTool (void);
