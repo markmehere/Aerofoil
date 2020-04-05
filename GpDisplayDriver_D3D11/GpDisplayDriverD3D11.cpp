@@ -102,6 +102,10 @@ bool InitSwapChainForWindow(HWND hWnd, ID3D11Device *device, GpComPtr<IDXGISwapC
 	if (result != S_OK)
 		return false;
 
+	result = dxgiFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
+	if (result != S_OK)
+		return false;
+
 	outSwapChain = swapChain;
 
 	return true;
