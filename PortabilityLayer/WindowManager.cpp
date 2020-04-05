@@ -813,6 +813,8 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight)
 	{
+		const uint32_t menuBarHeight = PortabilityLayer::MenuManager::GetInstance()->GetMenuBarHeight();
+
 		for (PortabilityLayer::WindowImpl *window = m_windowStackTop; window != nullptr; window = window->GetWindowBelow())
 		{
 			uint16_t chromePadding[WindowChromeSides::kCount];
@@ -834,13 +836,18 @@ namespace PortabilityLayer
 			}
 
 			int64_t newY = 0;
-			if (newHeight <= paddedHeight || prevHeight <= paddedHeight)
-				newY = (static_cast<int64_t>(newHeight) - paddedHeight) / 2;
+			if (window->m_wmY < static_cast<int32_t>(menuBarHeight))
+				newY = window->m_wmY;
 			else
 			{
-				uint32_t prevClearanceY = prevHeight - paddedHeight;
-				uint32_t newClearanceY = newHeight - paddedHeight;
-				newY = static_cast<int64_t>(window->m_wmY) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY);
+				if (newHeight <= (paddedHeight + menuBarHeight) || prevHeight <= paddedHeight + menuBarHeight)
+					newY = (static_cast<int64_t>(newHeight) - paddedHeight - menuBarHeight) / 2 + menuBarHeight;
+				else
+				{
+					uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
+					uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
+					newY = (static_cast<int64_t>(window->m_wmY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + menuBarHeight + chromePadding[WindowChromeSides::kTop];
+				}
 			}
 
 			newX = std::max<int64_t>(0, std::min<int64_t>(newX, newWidth - 1));

@@ -145,6 +145,7 @@ namespace PortabilityLayer
 		PLPasStr GetItemText(const THandle<Menu> &menu, unsigned int index) const override;
 
 		bool IsPointInMenuBar(const Vec2i &point) const override;
+		uint16_t GetMenuBarHeight() const override;
 
 		bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) override;
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) override;
@@ -598,6 +599,10 @@ namespace PortabilityLayer
 		return point.m_y >= 0 && static_cast<uint32_t>(point.m_y) < kMenuBarHeight;
 	}
 
+	uint16_t MenuManagerImpl::GetMenuBarHeight() const
+	{
+		return kMenuBarHeight;
+	}
 
 	bool MenuManagerImpl::FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar)
 	{
