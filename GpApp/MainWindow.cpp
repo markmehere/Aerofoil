@@ -41,7 +41,7 @@ IGpCursor		*diagCursor;
 Rect			workSrcRect;
 DrawSurface		*workSrcMap;
 Rect			mainWindowRect;
-WindowPtr		mainWindow, menuWindow, boardWindow;
+WindowPtr		mainWindow, boardWindow;
 short			isEditH, isEditV;
 short			playOriginH, playOriginV;
 short			splashOriginH, splashOriginV;
@@ -165,22 +165,6 @@ void UpdateMainWindow (void)
 	splashDrawn = true;
 }
 
-//--------------------------------------------------------------  UpdateMenuBarWindow
-// Ugly kludge to cover over the menu bar when playing game on 2nd monitor.
-
-void UpdateMenuBarWindow (DrawSurface *surface)
-{
-	Rect		bounds;
-	
-	if (menuWindow == nil)
-		return;
-	
-	GetLocalWindowRect(menuWindow, &bounds);
-
-	surface->SetForeColor(StdColors::Black());
-	surface->FillRect(bounds);
-}
-
 //--------------------------------------------------------------  OpenMainWindow
 // Opens up the main window (how it does this depends on mode were in).
 
@@ -197,10 +181,6 @@ void OpenMainWindow (void)
 	
 	if (theMode == kEditMode)
 	{
-		if (menuWindow != nil)
-			PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(menuWindow);
-		menuWindow = nil;
-		
 		QSetRect(&mainWindowRect, 0, 0, 512, 322);
 		mainWindow = GetNewCWindow(kEditWindowID, nil, kPutInFront);
 		SizeWindow(mainWindow, mainWindowRect.right, 
@@ -226,14 +206,6 @@ void OpenMainWindow (void)
 	}
 	else
 	{
-		if (menuWindow == nil)
-		{
-			menuWindow = GetNewCWindow(kMenuWindowID, nil, kPutInFront);
-			SizeWindow(menuWindow, RectWide(&thisMac.constrainedScreen), 20, false);
-			MoveWindow(menuWindow, thisMac.constrainedScreen.left,
-					thisMac.constrainedScreen.top, true);
-			ShowWindow(menuWindow);
-		}
 		if (boardWindow == nil)
 		{
 			PortabilityLayer::WindowManager *windowManager = PortabilityLayer::WindowManager::GetInstance();

@@ -26,7 +26,6 @@ struct IGpCursor;
 
 extern	THandle<Rect>	mirrorRects;
 extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
-extern	WindowPtr		menuWindow;
 extern	Rect			boardSrcRect, localRoomsDest[];
 extern	IGpCursor		*handCursor, *vertCursor, *horiCursor;
 extern	IGpCursor		*diagCursor;
@@ -213,7 +212,6 @@ void VariableInit (void)
 	coordWindow = nil;
 	toolSrcMap = nil;
 	nailSrcMap = nil;
-	menuWindow = nil;
 	
 	RecomputeInterfaceRects();
 }

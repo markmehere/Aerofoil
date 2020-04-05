@@ -151,7 +151,6 @@ void HandleLinkClick (Point);
 
 void RedrawSplashScreen (void);							// --- MainWindow.c
 void UpdateMainWindow (void);
-void UpdateMenuBarWindow (DrawSurface *surface);
 void OpenMainWindow (void);
 void CloseMainWindow (void);
 void ZoomBetweenWindows (void);
@@ -434,7 +433,6 @@ void QuickBandsRefresh (Boolean);
 void QuickFoilRefresh (Boolean);
 void HandleScore (void);
 void AdjustScoreboardHeight (void);
-void BlackenScoreboard (DrawSurface *);
 
 //void PutRoomScrap (void);								// --- Scrap.c
 //void PutObjectScrap (void);

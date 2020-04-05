@@ -349,11 +349,6 @@ void HandleUpdateEvent (EventRecord *theEvent)
 		UpdateCoordWindow();
 		EndUpdate(coordWindow);
 	}
-	else if ((WindowPtr)theEvent->message == menuWindow)
-	{
-		UpdateMenuBarWindow(menuWindow->GetDrawSurface());
-		EndUpdate(menuWindow);
-	}
 }
 
 //--------------------------------------------------------------  HandleOSEvent

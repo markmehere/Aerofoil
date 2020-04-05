@@ -450,11 +450,3 @@ void AdjustScoreboardHeight (void)
 		wasScoreboardMode = newMode;
 	}
 }
-
-//--------------------------------------------------------------  BlackenScoreboard
-
-void BlackenScoreboard (DrawSurface *surface)
-{
-	UpdateMenuBarWindow(surface);
-}
-
