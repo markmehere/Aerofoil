@@ -510,8 +510,6 @@
 #define kNoCeilingLimit				-10
 #define kNoFloorLimit				332
 
-#define kScoreboardHigh				0
-#define kScoreboardLow				1
 #define kScoreboardTall				20
 
 #define kHouseVersion				0x0200

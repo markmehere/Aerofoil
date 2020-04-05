@@ -432,7 +432,6 @@ void QuickBatteryRefresh (Boolean);
 void QuickBandsRefresh (Boolean);
 void QuickFoilRefresh (Boolean);
 void HandleScore (void);
-void AdjustScoreboardHeight (void);
 
 //void PutRoomScrap (void);								// --- Scrap.c
 //void PutObjectScrap (void);

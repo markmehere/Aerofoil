@@ -52,7 +52,6 @@ extern	Rect		boardPQDestRect, boardGQDestRect, badgesBlankRects[];
 extern	Rect		badgesBadgesRects[], badgesDestRects[];
 extern	Rect		nailSrcRect, sparkleSrc[];
 extern	Rect		pointsSrc[], breadSrc[];
-extern	short		wasScoreboardMode;
 
 
 //==============================================================  Functions
@@ -71,7 +70,6 @@ void InitScoreboardMap(void)
 	if (boardSrcMap)
 		DisposeGWorld(boardSrcMap);
 
-	wasScoreboardMode = kScoreboardHigh;
 	boardSrcRect = houseRect;
 	ZeroRectCorner(&boardSrcRect);
 	boardSrcRect.bottom = kScoreboardTall;

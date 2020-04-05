@@ -78,7 +78,6 @@ void NewGame (short mode)
 	PLError_t		theErr;
 	Boolean		wasPlayMusicPref;
 	
-	AdjustScoreboardHeight();
 	gameOver = false;
 	theMode = kPlayMode;
 	if (isPlayMusicGame)
