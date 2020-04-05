@@ -23,4 +23,6 @@ public:
 	virtual void SetStandardCursor(EGpStandardCursor_t standardCursor) = 0;
 
 	virtual void UpdatePalette(const void *paletteData) = 0;
+
+	virtual void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
 };

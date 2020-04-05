@@ -11,7 +11,9 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
+#include "HostDisplayDriver.h"
 #include "House.h"
+#include "IGpDisplayDriver.h"
 #include "InputManager.h"
 #include "MenuManager.h"
 #include "QDPixMap.h"
@@ -181,6 +183,8 @@ void OpenMainWindow (void)
 	
 	if (theMode == kEditMode)
 	{
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetBackgroundColor(51, 51, 102, 255);
+
 		QSetRect(&mainWindowRect, 0, 0, 512, 322);
 		mainWindow = GetNewCWindow(kEditWindowID, nil, kPutInFront);
 		SizeWindow(mainWindow, mainWindowRect.right, 
@@ -206,6 +210,12 @@ void OpenMainWindow (void)
 	}
 	else
 	{
+#ifdef NDEBUG
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetBackgroundColor(0, 0, 0, 255);
+#else
+		PortabilityLayer::HostDisplayDriver::GetInstance()->SetBackgroundColor(51, 0, 0, 255);
+#endif
+
 		if (boardWindow == nil)
 		{
 			PortabilityLayer::WindowManager *windowManager = PortabilityLayer::WindowManager::GetInstance();
@@ -222,12 +232,16 @@ void OpenMainWindow (void)
 		}
 		mainWindowRect = thisMac.constrainedScreen;
 		ZeroRectCorner(&mainWindowRect);
-		mainWindowRect.bottom -= 20;		// thisMac.menuHigh
+		mainWindowRect.bottom -= kScoreboardTall;		// thisMac.menuHigh
 		mainWindow = GetNewCWindow(kMainWindowID, nil, kPutInFront);
 		SizeWindow(mainWindow, mainWindowRect.right - mainWindowRect.left, 
 				mainWindowRect.bottom - mainWindowRect.top, false);
-		MoveWindow(mainWindow, thisMac.constrainedScreen.left,
-				thisMac.constrainedScreen.top + 20, true);	// thisMac.menuHigh
+
+		const short mainWindowLeft = (thisMac.fullScreen.left + thisMac.fullScreen.right + thisMac.constrainedScreen.left - thisMac.constrainedScreen.right) / 2;
+		const short mainWindowTop = (thisMac.fullScreen.top + thisMac.fullScreen.bottom + thisMac.constrainedScreen.top - thisMac.constrainedScreen.bottom) / 2 + kScoreboardTall;
+
+		MoveWindow(boardWindow, mainWindowLeft, 0, true);
+		MoveWindow(mainWindow, mainWindowLeft, mainWindowTop, true);	// thisMac.menuHigh
 		ShowWindow(mainWindow);
 		SetPortWindowPort(mainWindow);
 
@@ -247,7 +261,6 @@ void OpenMainWindow (void)
 			splashOriginV = 0;
 		
 		workSrcMap->FillRect(workSrcRect);
-		LoadGraphic(workSrcMap, kSplash8BitPICT);
 		
 //		if ((fadeGraysOut) && (isDoColorFade))
 //		{
@@ -260,6 +273,7 @@ void OpenMainWindow (void)
 //		}
 		
 		SetPortWindowPort(mainWindow);
+		UpdateMainWindow();
 	}
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),

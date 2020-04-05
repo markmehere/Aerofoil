@@ -399,9 +399,7 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 {
 	SynchronizeCursors();
 
-	float clearColor[4] = { 0.2f, 0.2f, 0.4f, 1.0f };
-
-	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, clearColor);
+	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, m_bgColor);
 
 	ID3D11RenderTargetView *const rtv = m_backBufferRTV;
 	m_deviceContext->OMSetRenderTargets(1, &rtv, nullptr);
@@ -894,6 +892,13 @@ void GpDisplayDriverD3D11::UpdatePalette(const void *paletteData)
 		m_deviceContext->Unmap(m_paletteTexture, 0);
 	}
 }
+void GpDisplayDriverD3D11::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+	m_bgColor[0] = static_cast<float>(r) / 255.0f;
+	m_bgColor[1] = static_cast<float>(g) / 255.0f;
+	m_bgColor[2] = static_cast<float>(b) / 255.0f;
+	m_bgColor[3] = static_cast<float>(a) / 255.0f;
+}
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)
 {
@@ -926,6 +931,11 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	m_arrowCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_SHARED));
 	m_ibeamCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_IBEAM), IMAGE_CURSOR, 0, 0, LR_SHARED));
 	m_waitCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_WAIT), IMAGE_CURSOR, 0, 0, LR_SHARED));
+
+	m_bgColor[0] = 0;
+	m_bgColor[1] = 0;
+	m_bgColor[2] = 0;
+	m_bgColor[3] = 255;
 }
 
 GpDisplayDriverD3D11::~GpDisplayDriverD3D11()
