@@ -440,7 +440,7 @@ void HandleSplashResolutionChange(void)
 	UpdateMainWindow();
 
 	//ResetLocale(true);
-	//InitScoreboardMap();
+	InitScoreboardMap();
 	//RefreshScoreboard(wasScoreboardTitleMode);
 	//DumpScreenOn(&justRoomsRect);
 }
