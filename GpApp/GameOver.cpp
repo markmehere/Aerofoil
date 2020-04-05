@@ -162,6 +162,8 @@ void DoGameOverStarAnimation (void)
 			PlayPrioritySound(kMysticSound, kMysticPriority);
 			which = angelDest.left / 32;
 			which = which % 5;
+			if (which < 0)
+				which += 5;
 			ZeroRectCorner(&pages[which].dest);
 			QOffsetRect(&pages[which].dest, angelDest.left, angelDest.bottom);
 			if (count < (which + 1))
