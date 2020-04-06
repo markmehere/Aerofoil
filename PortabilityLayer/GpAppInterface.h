@@ -46,7 +46,7 @@ public:
 	virtual void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) = 0;
 
 	virtual void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) = 0;
-	virtual void PL_AdjustRequestedResolution(unsigned int &width, unsigned int &height) = 0;
+	virtual bool PL_AdjustRequestedResolution(unsigned int &width, unsigned int &height) = 0;
 };
 
 GP_APP_DLL_EXPORT_API GpAppInterface *GpAppInterface_Get();

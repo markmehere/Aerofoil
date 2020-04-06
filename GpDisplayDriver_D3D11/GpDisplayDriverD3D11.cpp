@@ -102,9 +102,11 @@ bool InitSwapChainForWindow(HWND hWnd, ID3D11Device *device, GpComPtr<IDXGISwapC
 	if (result != S_OK)
 		return false;
 
+#if 0
 	result = dxgiFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
 	if (result != S_OK)
 		return false;
+#endif
 
 	outSwapChain = swapChain;
 
@@ -173,7 +175,10 @@ bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG de
 	GetClientRect(hWnd, &windowRect);
 	windowRect.right = windowRect.left + desiredWidth;
 	windowRect.bottom = windowRect.top + desiredHeight;
-	if (!AdjustWindowRect(&windowRect, windowStyle, menus != nullptr))
+
+	LONG_PTR style = GetWindowLongPtrA(hWnd, GWL_STYLE);
+
+	if (!AdjustWindowRect(&windowRect, static_cast<DWORD>(style), menus != nullptr))
 		return false;
 
 	SetWindowPos(hWnd, HWND_TOP, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOMOVE);
@@ -692,23 +697,24 @@ void GpDisplayDriverD3D11::Run()
 				uint32_t prevWidth = m_windowWidth;
 				uint32_t prevHeight = m_windowHeight;
 
-				m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight);
-
-				bool resizedOK = ResizeD3DWindow(m_hwnd, m_windowWidth, m_windowHeight, desiredWidth, desiredHeight, windowStyle, menus);
-				resizedOK = resizedOK && DetachSwapChain();
-				resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidth, m_windowHeight);
-				resizedOK = resizedOK && InitBackBuffer();
-
-				if (!resizedOK)
-					break;	// Critical video driver error, exit
-
-				if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
+				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight))
 				{
-					resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
-					resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidth;
-					resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeight;
-					resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidth;
-					resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeight;
+					bool resizedOK = ResizeD3DWindow(m_hwnd, m_windowWidth, m_windowHeight, desiredWidth, desiredHeight, windowStyle, menus);
+					resizedOK = resizedOK && DetachSwapChain();
+					resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidth, m_windowHeight);
+					resizedOK = resizedOK && InitBackBuffer();
+
+					if (!resizedOK)
+						break;	// Critical video driver error, exit
+
+					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
+					{
+						resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidth;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeight;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidth;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeight;
+					}
 				}
 			}
 

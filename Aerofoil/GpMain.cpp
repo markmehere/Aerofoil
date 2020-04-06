@@ -28,9 +28,9 @@ namespace
 		static_cast<GpAppEnvironment*>(context)->Render();
 	}
 
-	void AdjustRequestedResolution(void *context, unsigned int &width, unsigned int &height)
+	bool AdjustRequestedResolution(void *context, unsigned int &width, unsigned int &height)
 	{
-		static_cast<GpAppEnvironment*>(context)->AdjustRequestedResolution(width, height);
+		return static_cast<GpAppEnvironment*>(context)->AdjustRequestedResolution(width, height);
 	}
 }
 
