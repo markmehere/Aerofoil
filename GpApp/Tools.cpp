@@ -61,6 +61,7 @@ void FrameSelectedTool (DrawSurface *);
 void DrawToolName (DrawSurface *);
 void DrawToolTiles (DrawSurface *);
 void SwitchToolModes (short);
+void KeepWindowInBounds (Window *window);
 
 
 Rect			toolsWindowRect, toolSrcRect, toolTextRect;
@@ -350,6 +351,8 @@ void OpenToolsWindow (void)
 		
 		SwitchToolModes(toolMode);
 		toolSelected = kSelectTool;
+
+		KeepWindowInBounds(toolsWindow);
 	}
 	
 	UpdateToolsCheckmark(true);

@@ -32,7 +32,7 @@
 void DrawOnSplash (DrawSurface *surface);
 void SetPaletteToGrays (void);
 void HardDrawMainWindow (void);
-
+void KeepWindowInBounds(Window *window);
 
 CTabHandle		theCTab;
 PixMapHandle	thePMap;
@@ -207,6 +207,8 @@ void OpenMainWindow (void)
 		whichRoom = GetFirstRoomNumber();
 		CopyRoomToThisRoom(whichRoom);
 		ReflectCurrentRoom(false);
+
+		KeepWindowInBounds(mainWindow);
 	}
 	else
 	{

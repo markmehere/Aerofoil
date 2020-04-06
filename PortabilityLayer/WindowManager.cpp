@@ -14,6 +14,7 @@
 #include "QDManager.h"
 #include "QDPixMap.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "Rect2i.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
 
@@ -129,6 +130,7 @@ namespace PortabilityLayer
 		void DestroyWindow(Window *window) override;
 		void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) override;
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
+		Rect2i GetWindowFullRect(Window *window) const override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
@@ -795,6 +797,18 @@ namespace PortabilityLayer
 	void WindowManagerImpl::SetWindowTitle(Window *window, const PLPasStr &title)
 	{
 		static_cast<WindowImpl*>(window)->SetTitle(title);
+	}
+
+	Rect2i WindowManagerImpl::GetWindowFullRect(Window *window) const
+	{
+		WindowImpl *windowImpl = static_cast<WindowImpl*>(window);
+
+		uint16_t padding[WindowChromeSides::kCount];
+		windowImpl->GetChromePadding(padding);
+
+		const Rect portRect = windowImpl->m_surface.m_port.GetRect();
+
+		return Rect2i(window->m_wmY - padding[WindowChromeSides::kTop], window->m_wmX - padding[WindowChromeSides::kLeft], window->m_wmY + portRect.Height() + padding[WindowChromeSides::kBottom], window->m_wmX + portRect.Width() + padding[WindowChromeSides::kRight]);
 	}
 
 	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)

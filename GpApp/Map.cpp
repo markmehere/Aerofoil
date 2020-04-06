@@ -40,6 +40,7 @@ void LiveVScrollAction (ControlHandle, short);
 Boolean QueryNewRoom (void);
 void CreateNailOffscreen (void);
 void KillNailOffscreen (void);
+void KeepWindowInBounds (Window *window);
 
 Rect			nailSrcRect, activeRoomRect, wasActiveRoomRect;
 Rect			mapHScrollRect, mapVScrollRect, mapCenterRect;
@@ -430,6 +431,8 @@ void OpenMapWindow (void)
 		CenterMapOnRoom(thisRoom->suite, thisRoom->floor);
 
 		UpdateMapWindow();
+
+		KeepWindowInBounds(mapWindow);
 	}
 	
 	UpdateMapCheckmark(true);

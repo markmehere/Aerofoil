@@ -17,6 +17,7 @@
 #include "House.h"
 #include "InputManager.h"
 #include "ObjectEdit.h"
+#include "Rect2i.h"
 #include "WindowManager.h"
 
 
@@ -28,6 +29,7 @@ void HandleOSEvent (EventRecord *);
 void HandleHighLevelEvent (EventRecord *);
 void HandleIdleTask (void);
 void IncrementMode (void);
+
 
 
 long			lastUp, incrementModeTime;
@@ -440,6 +442,22 @@ void HandleSplashResolutionChange(void)
 	//DumpScreenOn(&justRoomsRect);
 }
 
+void KeepWindowInBounds(Window *window)
+{
+	if (!window)
+		return;
+
+	PortabilityLayer::Rect2i windowRect = PortabilityLayer::WindowManager::GetInstance()->GetWindowFullRect(window);
+
+	int32_t topNudge = std::max<int32_t>(kScoreboardTall - windowRect.Top(), 0);
+	int32_t bottomNudge = std::min<int32_t>(thisMac.fullScreen.bottom - windowRect.Bottom(), 0);
+	int32_t leftNudge = std::max<int32_t>(-windowRect.Left(), 0);
+	int32_t rightNudge = std::min<int32_t>(thisMac.fullScreen.right - windowRect.Right(), 0);
+
+	window->m_wmX += leftNudge + rightNudge;
+	window->m_wmY += topNudge + bottomNudge;
+}
+
 void HandleEditorResolutionChange(void)
 {
 	FlushResolutionChange();
@@ -461,6 +479,10 @@ void HandleEditorResolutionChange(void)
 
 	if (mapWindow)
 		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(mapWindow, PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel());
+
+	KeepWindowInBounds(mainWindow);
+	KeepWindowInBounds(toolsWindow);
+	KeepWindowInBounds(mapWindow);
 }
 
 //--------------------------------------------------------------  HandleIdleTask
