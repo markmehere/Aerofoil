@@ -1,4 +1,5 @@
 #include "PLCore.h"
+#include "AppEventHandler.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
 #include "PLMovies.h"
@@ -134,6 +135,14 @@ static void TranslateVOSEvent(const GpVOSEvent *vosEvent, uint32_t timestamp, Po
 		break;
 	case GpVOSEventTypes::kVideoResolutionChanged:
 		TranslateVideoResolutionChangedEvent(vosEvent->m_event.m_resolutionChangedEvent);
+		break;
+	case GpVOSEventTypes::kQuit:
+		if (TimeTaggedVOSEvent *evt = queue->Enqueue())
+			*evt = TimeTaggedVOSEvent::Create(*vosEvent, timestamp);
+
+		if (PortabilityLayer::IAppEventHandler *appHandler = PortabilityLayer::AppEventHandler::GetInstance())
+			appHandler->OnQuit();
+
 		break;
 	}
 }

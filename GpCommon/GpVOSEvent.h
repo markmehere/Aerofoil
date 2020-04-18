@@ -251,6 +251,7 @@ namespace GpVOSEventTypes
 		kMouseInput,
 		kGamepadInput,
 		kVideoResolutionChanged,
+		kQuit
 	};
 }
 

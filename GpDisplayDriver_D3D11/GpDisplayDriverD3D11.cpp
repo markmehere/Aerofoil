@@ -56,6 +56,7 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_DESTROY:
+	case WM_CLOSE:
 		{
 			PostQuitMessage(0);
 			return 0;
@@ -756,9 +757,6 @@ void GpDisplayDriverD3D11::Run()
 		{
 			DispatchMessage(&msg);
 
-			if (msg.message == WM_QUIT)
-				break;
-			else
 			{
 				if (msg.message == WM_MOUSEMOVE)
 				{

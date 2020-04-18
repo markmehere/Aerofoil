@@ -379,6 +379,12 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 				PostKeyboardEvent(eventQueue, keyEventType, subset, key, (lParam & 0xffff));
 			}
 			break;
+		case WM_QUIT:
+			{
+				if (GpVOSEvent *evt = eventQueue->QueueEvent())
+					evt->m_eventType = GpVOSEventTypes::kQuit;
+			}
+			break;
 		default:
 			break;
 	}

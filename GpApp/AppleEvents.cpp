@@ -7,6 +7,7 @@
 
 
 #include "PLAppleEvents.h"
+#include "AppEventHandler.h"
 #include "DialogManager.h"
 #include "Externs.h"
 #include "House.h"
@@ -168,12 +169,38 @@ PLError_t MyGotRequiredParams (const AppleEvent *theAE)
 			PLErrors::kInvalidParameter;
 }
 
+class SystemEventHandlerImpl : public PortabilityLayer::IAppEventHandler
+{
+public:
+	void OnQuit() override;
+
+	static SystemEventHandlerImpl *GetInstance();
+
+private:
+	static SystemEventHandlerImpl ms_instance;
+};
+
+void SystemEventHandlerImpl::OnQuit()
+{
+	quitting = true;
+}
+
+
+SystemEventHandlerImpl *SystemEventHandlerImpl::GetInstance()
+{
+	return &ms_instance;
+}
+
+SystemEventHandlerImpl SystemEventHandlerImpl::ms_instance;
+
 //--------------------------------------------------------------  SetUpAppleEvents
 // Initializes all handlers, etc. for dealing with Apple Events.
 
 void SetUpAppleEvents (void)
 {
 	PLError_t		theErr;
+
+	PortabilityLayer::AppEventHandler::SetInstance(SystemEventHandlerImpl::GetInstance());
 	
 	openAppAEUPP = NewAEEventHandlerProc(DoOpenAppAE);
 	openDocAEUPP = NewAEEventHandlerProc(DoOpenDocAE);

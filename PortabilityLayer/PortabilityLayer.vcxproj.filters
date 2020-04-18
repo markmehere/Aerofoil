@@ -483,6 +483,9 @@
     <ClInclude Include="ArrayTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AppEventHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -757,6 +760,9 @@
     </ClCompile>
     <ClCompile Include="TextPlacer.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AppEventHandler.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
