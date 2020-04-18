@@ -432,9 +432,10 @@ void RedrawRoomLighting (void)
 	{
 		DrawRoomBackground(localNumbers[kCentralRoom], kCentralRoom, roomV);
 		DrawARoomsObjects(kCentralRoom, true);
+		RedrawAllGrease();
 		DrawLighting();
 		UpdateOutletsLighting(localNumbers[kCentralRoom], numLights);
-		
+
 		if (numNeighbors > 3)
 			DrawFloorSupport();
 		RestoreWorkMap();
