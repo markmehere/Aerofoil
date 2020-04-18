@@ -3,6 +3,8 @@
 #include "EGpDisplayDriverType.h"
 #include "GpDisplayDriverTickStatus.h"
 
+#include <stdint.h>
+
 struct IGpDisplayDriver;
 struct IGpFiber;
 struct IGpVOSEventQueue;
@@ -11,7 +13,7 @@ struct GpDisplayDriverProperties
 {
 	typedef GpDisplayDriverTickStatus_t (*TickFunc_t)(void *context, IGpFiber *vosFiber);
 	typedef void(*RenderFunc_t)(void *context);
-	typedef bool(*AdjustRequestedResolutionFunc_t)(void *context, unsigned int &width, unsigned int &height);
+	typedef bool(*AdjustRequestedResolutionFunc_t)(void *context, uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY);
 
 	EGpDisplayDriverType m_type;
 

@@ -21,9 +21,10 @@ struct GpWindowsGlobals
 	HINSTANCE m_hPrevInstance;
 	LPCSTR m_cmdLine;
 	LPCWSTR m_baseDir;
+	HWND m_hwnd;
 	int m_nCmdShow;
 
 	IGpFiber *(*m_createFiberFunc)(LPVOID fiber);
 	IGpCursor_Win32 *(*m_loadCursorFunc)(const wchar_t *path);
-	void (*m_translateWindowsMessageFunc)(const MSG *msg, IGpVOSEventQueue *eventQueue);
+	void (*m_translateWindowsMessageFunc)(const MSG *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY);
 };

@@ -24,7 +24,7 @@ extern "C" __declspec(dllimport) IGpAudioDriver *GpDriver_CreateAudioDriver_XAud
 extern "C" __declspec(dllimport) IGpDisplayDriver *GpDriver_CreateDisplayDriver_D3D11(const GpDisplayDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpInputDriver *GpDriver_CreateInputDriver_XInput(const GpInputDriverProperties &properties);
 
-static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y)
+static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
 {
 	if (GpVOSEvent *evt = eventQueue->QueueEvent())
 	{
@@ -35,6 +35,12 @@ static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t even
 		mEvent.m_x = x;
 		mEvent.m_y = y;
 		mEvent.m_eventType = eventType;
+
+		if (pixelScaleX != 1.0f)
+			mEvent.m_x = static_cast<int32_t>(static_cast<float>(x) / pixelScaleX);
+
+		if (pixelScaleY != 1.0f)
+			mEvent.m_y = static_cast<int32_t>(static_cast<float>(y) / pixelScaleX);
 	}
 }
 
@@ -291,7 +297,7 @@ static void PostKeyboardEvent(IGpVOSEventQueue *eventQueue, GpKeyboardInputEvent
 	}
 }
 
-static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue)
+static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY)
 {
 	WPARAM wParam = msg->wParam;
 	LPARAM lParam = msg->lParam;
@@ -299,40 +305,40 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 	switch (msg->message)
 	{
 		case WM_LBUTTONDOWN:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_LBUTTONUP:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kLeft, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_MBUTTONDOWN:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kMiddle, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kMiddle, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_MBUTTONUP:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kMiddle, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kMiddle, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_RBUTTONDOWN:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kRight, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kRight, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_RBUTTONUP:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kRight, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kRight, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_XBUTTONDOWN:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-				PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kX1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kX1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2)
-				PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kX2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				PostMouseEvent(eventQueue, GpMouseEventTypes::kDown, GpMouseButtons::kX2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_XBUTTONUP:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-				PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kX1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kX1, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2)
-				PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kX2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				PostMouseEvent(eventQueue, GpMouseEventTypes::kUp, GpMouseButtons::kX2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_MOUSEMOVE:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kMove, GpMouseButtons::kNone, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kMove, GpMouseButtons::kNone, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), pixelScaleX, pixelScaleY);
 			break;
 		case WM_MOUSELEAVE:
-			PostMouseEvent(eventQueue, GpMouseEventTypes::kLeave, GpMouseButtons::kNone, 0, 0);
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kLeave, GpMouseButtons::kNone, 0, 0, pixelScaleX, pixelScaleY);
 			break;
 		case WM_KEYDOWN:
 		case WM_SYSKEYDOWN:
@@ -388,6 +394,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpWindowsGlobals.m_cmdLine = lpCmdLine;
 	g_gpWindowsGlobals.m_nCmdShow = nCmdShow;
 	g_gpWindowsGlobals.m_baseDir = GpFileSystem_Win32::GetInstance()->GetBasePath();
+	g_gpWindowsGlobals.m_hwnd = nullptr;
 
 	g_gpWindowsGlobals.m_createFiberFunc = GpFiber_Win32::Create;
 	g_gpWindowsGlobals.m_loadCursorFunc = GpCursor_Win32::Load;

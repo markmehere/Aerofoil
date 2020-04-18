@@ -94,9 +94,9 @@ void GpAppEnvironment::Render()
 	GpAppInterface_Get()->PL_Render(m_displayDriver);
 }
 
-bool GpAppEnvironment::AdjustRequestedResolution(unsigned int &width, unsigned int &height)
+bool GpAppEnvironment::AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY)
 {
-	return GpAppInterface_Get()->PL_AdjustRequestedResolution(width, height);
+	return GpAppInterface_Get()->PL_AdjustRequestedResolution(physicalWidth, physicalHeight, virtualWidth, virtualheight, pixelScaleX, pixelScaleY);
 }
 
 void GpAppEnvironment::SetDisplayDriver(IGpDisplayDriver *displayDriver)
@@ -174,6 +174,10 @@ void GpAppEnvironment::DispatchSystemCall(PortabilityLayer::HostSuspendCallID ca
 	case PortabilityLayer::HostSuspendCallID_Delay:
 		m_applicationState = ApplicationState_TimedSuspend;
 		m_delaySuspendTicks = args[0].m_uint;
+		break;
+	case PortabilityLayer::HostSuspendCallID_CallOnVOSThread:
+		args[0].m_functionPtr(static_cast<const PortabilityLayer::HostSuspendCallArgument*>(args[1].m_constPointer), static_cast<PortabilityLayer::HostSuspendCallArgument*>(args[2].m_pointer));
+		m_applicationState = ApplicationState_Running;
 		break;
 	default:
 		assert(false);

@@ -48,6 +48,8 @@ public:
 
 	void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
 
+	void RequestToggleFullScreen(uint32_t timestamp) override;
+
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
 
 private:
@@ -81,6 +83,9 @@ private:
 	void ChangeToCursor(HCURSOR cursor);
 	void ChangeToStandardCursor(EGpStandardCursor_t cursor);
 
+	void BecomeFullScreen(LONG &windowStyle);
+	void BecomeWindowed(LONG &windowStyle);
+
 	GpComPtr<IDXGISwapChain1> m_swapChain;
 	GpComPtr<ID3D11Device> m_device;
 	GpComPtr<ID3D11DeviceContext> m_deviceContext;
@@ -108,11 +113,20 @@ private:
 	UINT m_expectedSyncDelta;
 	bool m_isResettingSwapChain;
 
+	bool m_isFullScreen;
+	bool m_isFullScreenDesired;
+	RECT m_windowModeRevertRect;
+	uint32_t m_lastFullScreenToggleTimeStamp;
+
 	LONGLONG m_frameTimeAccumulated;
 	LONGLONG m_frameTimeSliceSize;
 
-	DWORD m_windowWidth;
-	DWORD m_windowHeight;
+	DWORD m_windowWidthPhysical;	// Physical resolution is the resolution of the actual window
+	DWORD m_windowHeightPhysical;
+	DWORD m_windowWidthVirtual;		// Virtual resolution is the resolution reported to teh game
+	DWORD m_windowHeightVirtual;
+	float m_pixelScaleX;
+	float m_pixelScaleY;
 
 	IGpCursor_Win32 *m_activeCursor;
 	IGpCursor_Win32 *m_pendingCursor;
@@ -126,7 +140,6 @@ private:
 	HCURSOR m_arrowCursor;
 	HCURSOR m_waitCursor;
 	HCURSOR m_ibeamCursor;
-	HWND m_hwnd;
 
 	float m_bgColor[4];
 };

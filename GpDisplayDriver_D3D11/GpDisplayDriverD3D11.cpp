@@ -102,11 +102,9 @@ bool InitSwapChainForWindow(HWND hWnd, ID3D11Device *device, GpComPtr<IDXGISwapC
 	if (result != S_OK)
 		return false;
 
-#if 0
 	result = dxgiFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
 	if (result != S_OK)
 		return false;
-#endif
 
 	outSwapChain = swapChain;
 
@@ -413,8 +411,8 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 		D3D11_VIEWPORT viewport;
 		viewport.TopLeftX = 0;
 		viewport.TopLeftY = 0;
-		viewport.Width = static_cast<FLOAT>(m_windowWidth);
-		viewport.Height = static_cast<FLOAT>(m_windowHeight);
+		viewport.Width = static_cast<FLOAT>(m_windowWidthPhysical);
+		viewport.Height = static_cast<FLOAT>(m_windowHeightPhysical);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 
@@ -592,7 +590,7 @@ void GpDisplayDriverD3D11::ChangeToCursor(HCURSOR cursor)
 	if (m_mouseIsInClientArea)
 		::SetCursor(cursor);
 
-	SetClassLongPtrW(m_hwnd, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(cursor));
+	SetClassLongPtrW(m_osGlobals->m_hwnd, GCLP_HCURSOR, reinterpret_cast<LONG_PTR>(cursor));
 }
 
 void GpDisplayDriverD3D11::ChangeToStandardCursor(EGpStandardCursor_t cursor)
@@ -610,6 +608,105 @@ void GpDisplayDriverD3D11::ChangeToStandardCursor(EGpStandardCursor_t cursor)
 		ChangeToCursor(m_arrowCursor);
 		break;
 	}
+}
+
+void GpDisplayDriverD3D11::BecomeFullScreen(LONG &windowStyle)
+{
+	assert(!m_isFullScreen);
+
+	RECT windowRect;
+	if (!GetWindowRect(m_osGlobals->m_hwnd, &windowRect))
+		return;	// ???
+
+	HMONITOR monitor = MonitorFromRect(&windowRect, MONITOR_DEFAULTTONULL);
+	if (!monitor)
+	{
+		// If the window is off-screen, use the primary monitor
+		monitor = MonitorFromRect(&windowRect, MONITOR_DEFAULTTOPRIMARY);
+	}
+	else
+	{
+		// Otherwise, use the nearest
+		monitor = MonitorFromRect(&windowRect, MONITOR_DEFAULTTONEAREST);
+	}
+
+	if (!monitor)
+		return;	// No monitor?
+
+	MONITORINFO monitorInfo;
+	monitorInfo.cbSize = sizeof(monitorInfo);
+	if (!GetMonitorInfoA(monitor, &monitorInfo))
+		return;
+
+	m_windowModeRevertRect = windowRect;
+	SetWindowLongPtr(m_osGlobals->m_hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+
+	SetWindowPos(m_osGlobals->m_hwnd, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top, SWP_FRAMECHANGED);
+
+	m_isFullScreen = true;
+	windowStyle = (WS_VISIBLE | WS_POPUP);
+}
+
+void GpDisplayDriverD3D11::BecomeWindowed(LONG &windowStyle)
+{
+	assert(m_isFullScreen);
+
+	RECT revertRect = m_windowModeRevertRect;
+
+	HMONITOR monitor = MonitorFromRect(&m_windowModeRevertRect, MONITOR_DEFAULTTONULL);
+	if (!monitor)
+	{
+		// If the window is off-screen, use the primary monitor
+		monitor = MonitorFromRect(&revertRect, MONITOR_DEFAULTTOPRIMARY);
+		if (!monitor)
+			return;
+
+		MONITORINFO monitorInfo;
+		monitorInfo.cbSize = sizeof(monitorInfo);
+		if (!GetMonitorInfoA(monitor, &monitorInfo))
+			return;
+
+		RECT monitorRect = monitorInfo.rcWork;
+		LONG monitorWidth = monitorRect.right - monitorRect.left;
+		LONG monitorHeight = monitorRect.bottom - monitorRect.top;
+
+		LONG revertHeight = revertRect.bottom - revertRect.top;
+		LONG revertWidth = revertRect.right - revertRect.left;
+
+		if (revertWidth > monitorWidth)
+			revertWidth = monitorWidth;
+
+		if (revertHeight > monitorHeight)
+			revertHeight = monitorHeight;
+
+		revertRect.bottom = revertRect.top + revertHeight;
+		revertRect.right = revertRect.right + revertWidth;
+
+		LONG xDelta = 0;
+		if (revertRect.right > monitorRect.right)
+			xDelta = monitorRect.right - revertRect.right;
+		else if (revertRect.left < monitorRect.left)
+			xDelta = monitorRect.left - revertRect.left;
+
+		LONG yDelta = 0;
+		if (revertRect.bottom > monitorRect.bottom)
+			yDelta = monitorRect.bottom - revertRect.bottom;
+		else if (revertRect.top < monitorRect.top)
+			yDelta = monitorRect.top - revertRect.top;
+
+
+		revertRect.left = revertRect.left + xDelta;
+		revertRect.top = revertRect.top + yDelta;
+		revertRect.bottom = revertRect.top + revertHeight;
+		revertRect.right = revertRect.right + revertWidth;
+	}
+
+	SetWindowLongPtr(m_osGlobals->m_hwnd, GWL_STYLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW);
+
+	SetWindowPos(m_osGlobals->m_hwnd, HWND_TOP, revertRect.left, revertRect.top, revertRect.right - revertRect.left, revertRect.bottom - revertRect.top, SWP_FRAMECHANGED);
+
+	m_isFullScreen = false;
+	windowStyle = (WS_VISIBLE | WS_OVERLAPPEDWINDOW);
 }
 
 void GpDisplayDriverD3D11::Run()
@@ -638,14 +735,14 @@ void GpDisplayDriverD3D11::Run()
 	HMENU menus = NULL;
 
 	// TODO: Fix the resolution here
-	RECT wr = { 0, 0, m_windowWidth, m_windowHeight };
+	RECT wr = { 0, 0, m_windowWidthPhysical, m_windowHeightPhysical };
 	AdjustWindowRect(&wr, windowStyle, menus != NULL);
 
-	m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", GP_APPLICATION_NAME_W L" (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
+	m_osGlobals->m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", GP_APPLICATION_NAME_W L" (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
 
-	ShowWindow(m_hwnd, m_osGlobals->m_nCmdShow);
+	ShowWindow(m_osGlobals->m_hwnd, m_osGlobals->m_nCmdShow);
 
-	StartD3DForWindow(m_hwnd, m_swapChain, m_device, m_deviceContext);
+	StartD3DForWindow(m_osGlobals->m_hwnd, m_swapChain, m_device, m_deviceContext);
 
 	InitResources();
 
@@ -674,7 +771,7 @@ void GpDisplayDriverD3D11::Run()
 
 						tme.cbSize = sizeof(tme);
 						tme.dwFlags = TME_LEAVE;
-						tme.hwndTrack = m_hwnd;
+						tme.hwndTrack = m_osGlobals->m_hwnd;
 						tme.dwHoverTime = HOVER_DEFAULT;
 						TrackMouseEvent(&tme);
 					}
@@ -682,38 +779,55 @@ void GpDisplayDriverD3D11::Run()
 				else if (msg.message == WM_MOUSELEAVE)
 					m_mouseIsInClientArea = false;
 
-				m_osGlobals->m_translateWindowsMessageFunc(&msg, m_properties.m_eventQueue);
+				m_osGlobals->m_translateWindowsMessageFunc(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY);
 			}
 		}
 		else
 		{
+			if (m_isFullScreen != m_isFullScreenDesired)
+			{
+				if (m_isFullScreenDesired)
+					BecomeFullScreen(windowStyle);
+				else
+					BecomeWindowed(windowStyle);
+			}
+
 			RECT clientRect;
-			GetClientRect(m_hwnd, &clientRect);
+			GetClientRect(m_osGlobals->m_hwnd, &clientRect);
 
 			unsigned int desiredWidth = clientRect.right - clientRect.left;
 			unsigned int desiredHeight = clientRect.bottom - clientRect.top;
-			if (clientRect.right - clientRect.left != m_windowWidth || clientRect.bottom - clientRect.top != m_windowHeight)
+			if (clientRect.right - clientRect.left != m_windowWidthPhysical || clientRect.bottom - clientRect.top != m_windowHeightPhysical)
 			{
-				uint32_t prevWidth = m_windowWidth;
-				uint32_t prevHeight = m_windowHeight;
+				uint32_t prevWidth = m_windowWidthPhysical;
+				uint32_t prevHeight = m_windowHeightPhysical;
+				uint32_t virtualWidth = m_windowWidthVirtual;
+				uint32_t virtualHeight = m_windowHeightVirtual;
+				float pixelScaleX = 1.0f;
+				float pixelScaleY = 1.0f;
 
-				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight))
+				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
 				{
-					bool resizedOK = ResizeD3DWindow(m_hwnd, m_windowWidth, m_windowHeight, desiredWidth, desiredHeight, windowStyle, menus);
+					bool resizedOK = ResizeD3DWindow(m_osGlobals->m_hwnd, m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, windowStyle, menus);
 					resizedOK = resizedOK && DetachSwapChain();
-					resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidth, m_windowHeight);
+					resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidthPhysical, m_windowHeightPhysical);
 					resizedOK = resizedOK && InitBackBuffer();
 
 					if (!resizedOK)
 						break;	// Critical video driver error, exit
+
+					m_windowWidthVirtual = virtualWidth;
+					m_windowHeightVirtual = virtualHeight;
+					m_pixelScaleX = pixelScaleX;
+					m_pixelScaleY = pixelScaleY;
 
 					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
 					{
 						resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
 						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidth;
 						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeight;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidth;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeight;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidthVirtual;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
 					}
 				}
 			}
@@ -737,9 +851,9 @@ void GpDisplayDriverD3D11::Shutdown()
 void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *pixelFormat)
 {
 	if (width)
-		*width = m_windowWidth;
+		*width = m_windowWidthVirtual;
 	if (height)
-		*height = m_windowHeight;
+		*height = m_windowHeightVirtual;
 	if (pixelFormat)
 		*pixelFormat = GpPixelFormats::k8BitStandard;
 }
@@ -760,8 +874,8 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 	//m_deviceContext->OMSetDepthStencilState(m_drawQuadDepthStencilState, 0);
 
 	{
-		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidth);
-		const float negativeTwoDivHeight = -2.0f / static_cast<float>(m_windowHeight);
+		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthVirtual);
+		const float negativeTwoDivHeight = -2.0f / static_cast<float>(m_windowHeightVirtual);
 
 		DrawQuadVertexConstants constantsData;
 		constantsData.m_ndcOriginX = static_cast<float>(x) * twoDivWidth - 1.0f;
@@ -906,6 +1020,16 @@ void GpDisplayDriverD3D11::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, u
 	m_bgColor[3] = static_cast<float>(a) / 255.0f;
 }
 
+void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
+{
+	// Alt-Enter gets re-sent after a full-screen toggle, so we ignore toggle requests until half a second has  seconds have elapsed
+	if (timestamp > m_lastFullScreenToggleTimeStamp + 30)
+	{
+		m_isFullScreenDesired = !m_isFullScreenDesired;
+		m_lastFullScreenToggleTimeStamp = timestamp;
+	}
+}
+
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)
 {
 	void *storage = malloc(sizeof(GpDisplayDriverD3D11));
@@ -918,8 +1042,12 @@ GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperti
 GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &properties)
 	: m_properties(properties)
 	, m_frameTimeAccumulated(0)
-	, m_windowWidth(640)
-	, m_windowHeight(480)
+	, m_windowWidthPhysical(640)
+	, m_windowHeightPhysical(480)
+	, m_windowWidthVirtual(640)
+	, m_windowHeightVirtual(480)
+	, m_pixelScaleX(1.0f)
+	, m_pixelScaleY(1.0f)
 	, m_vosFiber(nullptr)
 	, m_osGlobals(static_cast<GpWindowsGlobals*>(properties.m_osGlobals))
 	, m_pendingCursor(nullptr)
@@ -927,8 +1055,12 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_currentStandardCursor(EGpStandardCursors::kArrow)
 	, m_pendingStandardCursor(EGpStandardCursors::kArrow)
 	, m_mouseIsInClientArea(false)
+	, m_isFullScreen(false)
+	, m_isFullScreenDesired(false)
+	, m_lastFullScreenToggleTimeStamp(0)
 {
 	memset(&m_syncTimeBase, 0, sizeof(m_syncTimeBase));
+	memset(&m_windowModeRevertRect, 0, sizeof(m_windowModeRevertRect));
 
 	QueryPerformanceFrequency(&m_QPFrequency);
 

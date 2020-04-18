@@ -28,7 +28,7 @@ public:
 
 	GpDisplayDriverTickStatus_t Tick(IGpFiber *vosFiber);
 	void Render();
-	bool AdjustRequestedResolution(unsigned int &width, unsigned int &height);
+	bool AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY);
 
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);
 	void SetAudioDriver(IGpAudioDriver *audioDriver);

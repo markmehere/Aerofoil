@@ -25,7 +25,7 @@ public:
 	void PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance) override;
 	void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) override;
 	void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) override;
-	bool PL_AdjustRequestedResolution(unsigned int &width, unsigned int &height) override;
+	bool PL_AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY) override;
 };
 
 
@@ -80,18 +80,14 @@ void GpAppInterfaceImpl::PL_InstallHostSuspendHook(PortabilityLayer::HostSuspend
 	PortabilityLayer::InstallHostSuspendHook(hook, context);
 }
 
-bool GpAppInterfaceImpl::PL_AdjustRequestedResolution(unsigned int &width, unsigned int &height)
+bool GpAppInterfaceImpl::PL_AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY)
 {
 	PortabilityLayer::DisplayDeviceManager::IResolutionChangeHandler *handler = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetResolutionChangeHandler();
 
 	if (!handler)
 		return false;
 
-	uint32_t w32 = width;
-	uint32_t h32 = height;
-	handler->AdjustRequestedResolution(w32, h32);
-	width = w32;
-	height = h32;
+	handler->AdjustRequestedResolution(physicalWidth, physicalHeight, virtualWidth, virtualheight, pixelScaleX, pixelScaleY);
 
 	return true;
 }

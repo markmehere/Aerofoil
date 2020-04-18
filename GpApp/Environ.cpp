@@ -17,6 +17,8 @@
 #include "IGpDisplayDriver.h"
 #include "WindowManager.h"
 
+#include <algorithm>
+
 #define	kSwitchDepthAlert		130
 #define kSetMemoryAlert			180
 #define kLowMemoryAlert			181
@@ -344,8 +346,20 @@ public:
 		HandleResolutionChange(prevWidth, prevHeight, newWidth, newHeight);
 	}
 
-	void AdjustRequestedResolution(uint32_t &width, uint32_t &height) override
+	void AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualHeight, float &pixelScaleX, float &pixelScaleY) override
 	{
+		double xMul = static_cast<double>(physicalWidth) / 640;
+		double yMul = static_cast<double>(physicalHeight) / 480;
+
+		xMul = floor(xMul);
+		yMul = floor(yMul);
+
+		double minMul = std::max<double>(1.0, std::min(xMul, yMul));
+
+		virtualWidth = physicalWidth / minMul;
+		virtualHeight = physicalHeight / minMul;
+		pixelScaleX = static_cast<float>(minMul);
+		pixelScaleY = static_cast<float>(minMul);
 	}
 
 	static GpAppResolutionChangeHandler ms_instance;

@@ -6,6 +6,7 @@
 #include "MacFileMem.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
+#include "PLSysCalls.h"
 #include "ResTypeID.h"
 #include "HostSystemServices.h"
 
@@ -184,7 +185,7 @@ namespace PortabilityLayer
 
 	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity)
 	{
-		return PortabilityLayer::HostFileSystem::GetInstance()->PromptOpenFile(dirID, path, outPathLength, pathCapacity);
+		return PLSysCalls::PromptOpenFile(dirID, path, outPathLength, pathCapacity);
 	}
 
 	FileManagerImpl *FileManagerImpl::GetInstance()

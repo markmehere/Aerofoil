@@ -13,6 +13,8 @@
 
 #include <assert.h>
 
+extern GpWindowsGlobals g_gpWindowsGlobals;
+
 class GpDirectoryCursor_Win32 final : public PortabilityLayer::HostDirectoryCursor
 {
 public:
@@ -307,6 +309,7 @@ bool GpFileSystem_Win32::PromptSaveFile(PortabilityLayer::VirtualDirectory_t vir
 	ofn.nMaxFile = MAX_PATH;
 	ofn.lpstrInitialDir = baseDir;
 	ofn.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
+	ofn.hwndOwner = g_gpWindowsGlobals.m_hwnd;
 
 	if (!GetSaveFileNameW(&ofn))
 		return false;
@@ -387,6 +390,7 @@ bool GpFileSystem_Win32::PromptOpenFile(PortabilityLayer::VirtualDirectory_t vir
 	ofn.nMaxFile = MAX_PATH;
 	ofn.lpstrInitialDir = baseDir;
 	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
+	ofn.hwndOwner = g_gpWindowsGlobals.m_hwnd;
 
 	if (!GetOpenFileNameW(&ofn))
 		return false;

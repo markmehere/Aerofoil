@@ -6,7 +6,10 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "DisplayDeviceManager.h"
 #include "GpVOSEvent.h"
+#include "IGpDisplayDriver.h"
 #include "InputManager.h"
+#include "HostDisplayDriver.h"
+#include "HostFileSystem.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
 #include "HostVOSEventQueue.h"
@@ -65,6 +68,20 @@ static void TranslateKeyboardInputEvent(const GpVOSEvent &vosEventBase, uint32_t
 
 	if (vosEvent.m_eventType == GpKeyboardInputEventTypes::kUp || vosEvent.m_eventType == GpKeyboardInputEventTypes::kDown)
 		inputManager->ApplyKeyboardEvent(vosEvent);
+
+	// Special handling of alt-enter, redirect to display driver
+	if (vosEventBase.m_eventType == GpKeyboardInputEventTypes::kDown &&
+		vosEventBase.m_event.m_keyboardInputEvent.m_keyIDSubset == GpKeyIDSubsets::kSpecial &&
+		vosEventBase.m_event.m_keyboardInputEvent.m_key.m_specialKey == GpKeySpecials::kEnter)
+	{
+		const KeyDownStates *keyStates = inputManager->GetKeys();
+		if (keyStates->m_special.Get(GpKeySpecials::kLeftAlt) || keyStates->m_special.Get(GpKeySpecials::kRightAlt))
+		{
+			IGpDisplayDriver *dd = PortabilityLayer::HostDisplayDriver::GetInstance();
+			if (dd)
+				dd->RequestToggleFullScreen(timestamp);
+		}
+	}
 
 	if (TimeTaggedVOSEvent *evt = queue->Enqueue())
 		*evt = TimeTaggedVOSEvent::Create(vosEventBase, timestamp);
@@ -148,5 +165,64 @@ namespace PLSysCalls
 
 			AnimationManager::GetInstance()->TickPlayers(ticks);
 		}
+	}
+
+	static void PromptOpenFileCallback(const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue)
+	{
+		bool result = PortabilityLayer::HostFileSystem::GetInstance()->PromptOpenFile(static_cast<PortabilityLayer::VirtualDirectory_t>(args[0].m_int), static_cast<char*>(args[1].m_pointer), *static_cast<size_t*>(args[2].m_pointer), args[3].m_uint);
+		returnValue->m_uint = (result ? 1 : 0);
+	}
+
+	bool PromptOpenFile(PortabilityLayer::VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity)
+	{
+		PortabilityLayer::HostSuspendCallArgument cbArgs[4];
+		cbArgs[0].m_int = static_cast<int32_t>(dirID);
+		cbArgs[1].m_pointer = path;
+		cbArgs[2].m_pointer = &outPathLength;
+		cbArgs[3].m_size = pathCapacity;
+
+		PortabilityLayer::HostSuspendCallArgument cbReturnValue;
+
+		PortabilityLayer::HostSuspendCallArgument dispatchArgs[3];
+		dispatchArgs[0].m_functionPtr = PromptOpenFileCallback;
+		dispatchArgs[1].m_constPointer = cbArgs;
+		dispatchArgs[2].m_pointer = &cbReturnValue;
+
+		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_CallOnVOSThread, dispatchArgs, nullptr);
+
+		return cbReturnValue.m_uint != 0;
+	}
+
+	static void PromptSaveFileCallback(const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue)
+	{
+		bool result = PortabilityLayer::HostFileSystem::GetInstance()->PromptSaveFile(
+			static_cast<PortabilityLayer::VirtualDirectory_t>(args[0].m_int),
+			static_cast<char*>(args[1].m_pointer),
+			*static_cast<size_t*>(args[2].m_pointer),
+			args[3].m_uint,
+			static_cast<const char*>(args[4].m_constPointer));
+
+		returnValue->m_uint = (result ? 1 : 0);
+	}
+
+	bool PromptSaveFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName)
+	{
+		PortabilityLayer::HostSuspendCallArgument cbArgs[5];
+		cbArgs[0].m_int = static_cast<int32_t>(virtualDirectory);
+		cbArgs[1].m_pointer = path;
+		cbArgs[2].m_pointer = &outPathLength;
+		cbArgs[3].m_size = pathCapacity;
+		cbArgs[3].m_constPointer = initialFileName;
+
+		PortabilityLayer::HostSuspendCallArgument cbReturnValue;
+
+		PortabilityLayer::HostSuspendCallArgument dispatchArgs[3];
+		dispatchArgs[0].m_functionPtr = PromptSaveFileCallback;
+		dispatchArgs[1].m_constPointer = cbArgs;
+		dispatchArgs[2].m_pointer = &cbReturnValue;
+
+		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_CallOnVOSThread, dispatchArgs, nullptr);
+
+		return cbReturnValue.m_uint != 0;
 	}
 }

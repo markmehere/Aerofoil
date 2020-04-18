@@ -9,6 +9,7 @@ namespace PortabilityLayer
 		HostSuspendCallID_Unknown,
 
 		HostSuspendCallID_Delay,
+		HostSuspendCallID_CallOnVOSThread,
 	};
 }
 
