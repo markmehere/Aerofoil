@@ -953,15 +953,12 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				
 			}
 		}
-		
-		if (!redraw)									// set up links
+
+		for (n = 0; n < numMasterObjects; n++)
 		{
-			for (n = 0; n < numMasterObjects; n++)
-			{
-				if ((masterObjects[n].objectNum == i) && 
-						(masterObjects[n].roomNum == localNumbers[neighbor]))
-					masterObjects[n].dynaNum = dynamicNum;
-			}
+			if ((masterObjects[n].objectNum == i) && 
+					(masterObjects[n].roomNum == localNumbers[neighbor]))
+				masterObjects[n].dynaNum = dynamicNum;
 		}
 	}
 }

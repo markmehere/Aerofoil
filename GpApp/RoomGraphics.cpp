@@ -50,6 +50,10 @@ void ResetLocale (Boolean soft)
 	{
 		RemoveSavedMapsNotInRoom(localNumbers[kCentralRoom]);
 		ZeroDinahsNotInRoom(localNumbers[kCentralRoom]);
+
+		// Clear all dinah indexes, they'll be remapped
+		for (int i = 0; i < numMasterObjects; i++)
+			masterObjects[i].dynaNum = -1;
 	}
 	else
 	{
