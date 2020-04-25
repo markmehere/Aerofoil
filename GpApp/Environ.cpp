@@ -357,7 +357,7 @@ public:
 		double xMul = static_cast<double>(physicalWidth) / 640;
 		double yMul = static_cast<double>(physicalHeight) / 480;
 
-		double granularity = 4.0;
+		double granularity = 2.0;
 
 		xMul = floor(xMul * granularity) / granularity;
 		yMul = floor(yMul * granularity) / granularity;
