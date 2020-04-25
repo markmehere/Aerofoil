@@ -23,10 +23,10 @@ void CloseCoordWindow (void);
 void ToggleCoordinateWindow (void);
 
 void NilSavedMaps (void);								// --- DynamicMaps.c
-SInt16 BackUpToSavedMap (Rect *, SInt16,  SInt16);
-SInt16 ReBackUpSavedMap (Rect *, SInt16, SInt16);
+SInt16 BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who, SInt16 component);
+SInt16 ReBackUpSavedMap (Rect *theRect, SInt16 where, SInt16 who, SInt16 component);
 SInt16 RemoveFromSavedMap(SInt16);
-void RestoreFromSavedMap (SInt16, SInt16, Boolean);
+void RestoreFromSavedMap (SInt16 where, SInt16 who, SInt16 component, Boolean doSparkle);
 void AddSparkle (Rect *);
 void AddFlyingPoint (Rect *, SInt16, SInt16, SInt16);
 Boolean ReBackUpFlames (SInt16, SInt16, SInt16, SInt16);

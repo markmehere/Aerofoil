@@ -621,3 +621,10 @@ static const Boolean kFaceLeft = FALSE;	// Conflicts with GP input driver
 #define kDemoLength					6702
 
 #define kGamepadDeadzone			4096	// Out of 32768
+
+#define kDefaultComponent			0
+#define kCandleFlameComponent		1
+#define kTikiFlamesComponent		1
+#define kBBQCoalsComponent			1
+#define kPendulumComponent			1
+#define kStarComponent				1

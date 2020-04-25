@@ -213,7 +213,7 @@ short AddGrease (short where, short who, short h, short v,
 	QOffsetRect(&src, h, v);
 	
 	QSetRect(&bounds, 0, 0, 32, 27 * 4);
-	savedNum = BackUpToSavedMap(&bounds, where, who);
+	savedNum = BackUpToSavedMap(&bounds, where, who, kDefaultComponent);
 	if (savedNum != -1)
 	{
 		BackupGrease (&src, savedNum, isRight);

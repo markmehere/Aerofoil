@@ -301,9 +301,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 						DrawRedClock(&itsRect);
 				}
@@ -315,9 +315,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 						DrawBlueClock(&itsRect);
 				}
@@ -329,9 +329,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 						DrawYellowClock(&itsRect);
 				}
@@ -343,9 +343,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 					{
 						DrawCuckoo(&itsRect);
@@ -369,9 +369,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 						DrawSimplePrizes(thisObject.what, &itsRect);
 				}
@@ -435,9 +435,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 						DrawFoil(&itsRect);
 				}
@@ -453,9 +453,9 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
 					if (redraw)
-						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = ReBackUpSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					else
-						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i);
+						legit = BackUpToSavedMap(&itsRect, localNumbers[neighbor], i, kDefaultComponent);
 					if (legit != -1)
 					{
 						if (redraw)

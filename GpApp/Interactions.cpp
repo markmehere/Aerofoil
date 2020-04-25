@@ -769,7 +769,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kBeepsSound, kBeepsPriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddFlyingPoint(&bounds, 100, thisGlider->hVel / 2, thisGlider->vVel / 2);
 			thisGlider->hVel /= 4;
 			thisGlider->vVel /= 4;
@@ -785,7 +785,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kBuzzerSound, kBuzzerPriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddFlyingPoint(&bounds, 300, thisGlider->hVel / 2, thisGlider->vVel / 2);
 			thisGlider->hVel /= 4;
 			thisGlider->vVel /= 4;
@@ -801,7 +801,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kDingSound, kDingPriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddFlyingPoint(&bounds, 500, thisGlider->hVel / 2, thisGlider->vVel / 2);
 			thisGlider->hVel /= 4;
 			thisGlider->vVel /= 4;
@@ -817,7 +817,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kCuckooSound, kCuckooPriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			StopPendulum(thisRoomNumber, masterObjects[whoLinked].objectNum);
 			AddFlyingPoint(&bounds, 1000, thisGlider->hVel / 2, thisGlider->vVel / 2);
 			thisGlider->hVel /= 4;
@@ -834,7 +834,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddSparkle(&bounds);
 			thisGlider->hVel /= 2;
 			thisGlider->vVel /= 2;
@@ -853,7 +853,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddSparkle(&bounds);
 			thisGlider->hVel /= 2;
 			thisGlider->vVel /= 2;
@@ -875,7 +875,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddSparkle(&bounds);
 			thisGlider->hVel /= 2;
 			thisGlider->vVel /= 2;
@@ -903,7 +903,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddSparkle(&bounds);
 			thisGlider->hVel /= 2;
 			thisGlider->vVel /= 2;
@@ -936,7 +936,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddSparkle(&bounds);
 			StopStar(thisRoomNumber, masterObjects[whoLinked].objectNum);
 			numStarsRemaining--;
@@ -959,7 +959,7 @@ void HandleRewards (gliderPtr thisGlider, hotPtr who)
 		{
 			PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 			RestoreFromSavedMap(thisRoomNumber, 
-					masterObjects[whoLinked].objectNum, false);
+					masterObjects[whoLinked].objectNum, kDefaultComponent, false);
 			AddSparkle(&bounds);
 			thisGlider->hVel /= 2;
 			thisGlider->vVel /= 2;
@@ -1050,12 +1050,12 @@ void HandleSwitches (hotPtr who)
 				case kFoil:
 				case kStar:
 				case kHelium:
-				RestoreFromSavedMap(roomLinked, objectLinked, true);
+				RestoreFromSavedMap(roomLinked, objectLinked, kDefaultComponent, true);
 				AddSparkle(&bounds);
 				break;
 				
 				case kCuckoo:
-				RestoreFromSavedMap(roomLinked, objectLinked, true);
+				RestoreFromSavedMap(roomLinked, objectLinked, kDefaultComponent, true);
 				StopPendulum(roomLinked, objectLinked);
 				break;
 				

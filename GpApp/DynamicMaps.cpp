@@ -59,6 +59,7 @@ void NilSavedMaps (void)
 		}
 		savedMaps[i].where = -1;
 		savedMaps[i].who = -1;
+		savedMaps[i].component = -1;
 	}
 	numSavedMaps = 0;
 }
@@ -69,7 +70,7 @@ void NilSavedMaps (void)
 // room that it obscured so that, should the player get the object,…
 // it can be made to "disappear".
 
-short BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who)
+short BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who, SInt16 component)
 {
 	Rect		mapRect;
 	PLError_t		theErr;
@@ -89,6 +90,7 @@ short BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who)
 	
 	savedMaps[numSavedMaps].where = where;
 	savedMaps[numSavedMaps].who = who;
+	savedMaps[numSavedMaps].component = component;
 	numSavedMaps++;
 	
 	return (numSavedMaps - 1);	// return array index
@@ -99,7 +101,7 @@ short BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who)
 // a slot in the pixmap array for the object.  It re-copies the background…
 // and is needed when the lights in the room go on or off.
 
-SInt16 ReBackUpSavedMap (Rect *theRect, SInt16 where, SInt16 who)
+SInt16 ReBackUpSavedMap (Rect *theRect, SInt16 where, SInt16 who, SInt16 component)
 {
 	Rect		mapRect;
 	short		i, foundIndex;
@@ -108,7 +110,7 @@ SInt16 ReBackUpSavedMap (Rect *theRect, SInt16 where, SInt16 who)
 	
 	for (i = 0; i < numSavedMaps; i++)
 	{
-		if ((savedMaps[i].where == where) && (savedMaps[i].who == who))
+		if ((savedMaps[i].where == where) && (savedMaps[i].who == who) && (savedMaps[i].component == component))
 		{
 			foundIndex = i;
 			mapRect = *theRect;
@@ -124,7 +126,7 @@ SInt16 ReBackUpSavedMap (Rect *theRect, SInt16 where, SInt16 who)
 		}
 	}
 	
-	return BackUpToSavedMap(theRect, where, who);
+	return BackUpToSavedMap(theRect, where, who, component);
 }
 
 //--------------------------------------------------------------  RemoveFromSavedMap
@@ -179,14 +181,14 @@ SInt16 RemoveFromSavedMap (SInt16 index)
 // This copies the saved background swatch to the screen - effectively…
 // covering up or "erasing" the object.
 
-void RestoreFromSavedMap (short where, short who, Boolean doSparkle)
+void RestoreFromSavedMap (SInt16 where, SInt16 who, SInt16 component, Boolean doSparkle)
 {
 	Rect		mapRect, bounds;
 	short		i;
 	
 	for (i = 0; i < numSavedMaps; i++)
 	{
-		if ((savedMaps[i].where == where) && (savedMaps[i].who == who) && 
+		if ((savedMaps[i].where == where) && (savedMaps[i].who == who) && (savedMaps[i].component == component) &&
 				(savedMaps[i].map != nil))
 		{
 			mapRect = savedMaps[i].dest;
@@ -384,7 +386,7 @@ void AddCandleFlame (SInt16 where, SInt16 who, SInt16 h, SInt16 v)
 			QOffsetRect(&src, 2, 0);
 	}
 	QSetRect(&bounds, 0, 0, 16, 15 * kNumCandleFlames);
-	savedNum = BackUpToSavedMap(&bounds, where, who);
+	savedNum = BackUpToSavedMap(&bounds, where, who, kCandleFlameComponent);
 	if (savedNum != -1)
 	{
 		BackUpFlames(&src, savedNum);
@@ -471,7 +473,7 @@ void AddTikiFlame (short where, short who, short h, short v)
 	}
 	QOffsetRect(&src, h, v);
 	QSetRect(&bounds, 0, 0, 8, 10 * kNumTikiFlames);
-	savedNum = BackUpToSavedMap(&bounds, where, who);
+	savedNum = BackUpToSavedMap(&bounds, where, who, kTikiFlamesComponent);
 	if (savedNum != -1)
 	{
 		BackUpTikiFlames(&src, savedNum);
@@ -560,7 +562,7 @@ void AddBBQCoals (short where, short who, short h, short v)
 	}
 	QOffsetRect(&src, h, v);
 	QSetRect(&bounds, 0, 0, 32, 9 * kNumBBQCoals);
-	savedNum = BackUpToSavedMap(&bounds, where, who);
+	savedNum = BackUpToSavedMap(&bounds, where, who, kBBQCoalsComponent);
 	if (savedNum != -1)
 	{
 		BackUpBBQCoals(&src, savedNum);
@@ -644,7 +646,7 @@ void AddPendulum (SInt16 where, SInt16 who, SInt16 h, SInt16 v)
 	
 	clockFrame = 10;
 	QSetRect(&bounds, 0, 0, 32, 28 * kNumPendulums);
-	savedNum = BackUpToSavedMap(&bounds, where, who);
+	savedNum = BackUpToSavedMap(&bounds, where, who, kPendulumComponent);
 	if (savedNum != -1)
 	{
 		QSetRect(&src, 0, 0, 32, 28);
@@ -745,7 +747,7 @@ void AddStar (short where, short who, short h, short v)
 	QOffsetRect(&src, h, v);
 	
 	QSetRect(&bounds, 0, 0, 32, 31 * 6);
-	savedNum = BackUpToSavedMap(&bounds, where, who);
+	savedNum = BackUpToSavedMap(&bounds, where, who, kStarComponent);
 	if (savedNum != -1)
 	{
 		BackUpStar(&src, savedNum);

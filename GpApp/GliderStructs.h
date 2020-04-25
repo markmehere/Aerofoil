@@ -241,6 +241,7 @@ typedef struct
 	DrawSurface		*map;
 	short			where;
 	short			who;
+	short			component;
 } savedType, *savedPtr;
 
 typedef struct
