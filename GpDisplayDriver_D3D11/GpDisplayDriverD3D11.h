@@ -65,6 +65,13 @@ private:
 		float m_unused[2];
 	};
 
+	struct ScaleQuadPixelConstants
+	{
+		float m_dx;
+		float m_dy;
+		float m_unused[2];
+	};
+
 	struct CompactedPresentHistoryItem
 	{
 		LARGE_INTEGER m_timestamp;
@@ -99,6 +106,7 @@ private:
 	GpComPtr<ID3D11PixelShader> m_drawQuadRGBPixelShader;
 	GpComPtr<ID3D11PixelShader> m_scaleQuadPixelShader;
 	GpComPtr<ID3D11Buffer> m_drawQuadVertexConstantBuffer;
+	GpComPtr<ID3D11Buffer> m_scaleQuadPixelConstantBuffer;
 	GpComPtr<ID3D11DepthStencilState> m_drawQuadDepthStencilState;
 	GpComPtr<ID3D11SamplerState> m_nearestNeighborSamplerState;
 	GpComPtr<ID3D11Texture1D> m_paletteTexture;

@@ -333,6 +333,19 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 			return false;
 	}
 
+	{
+		D3D11_BUFFER_DESC bufferDesc;
+		bufferDesc.ByteWidth = sizeof(ScaleQuadPixelConstants);
+		bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		bufferDesc.MiscFlags = 0;
+		bufferDesc.StructureByteStride = 0;
+
+		if (m_device->CreateBuffer(&bufferDesc, nullptr, m_scaleQuadPixelConstantBuffer.GetMutablePtr()) != S_OK)
+			return false;
+	}
+
 	const GpShaderCodeBlob drawQuadVBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadV_D3D11);
 	const GpShaderCodeBlob drawQuadPalettePBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadPaletteP_D3D11);
 	const GpShaderCodeBlob drawQuadRGBPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadRGBP_D3D11);
@@ -618,20 +631,31 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
 		const float negativeTwoDivHeight = -2.0f / static_cast<float>(m_windowHeightPhysical);
 
-		DrawQuadVertexConstants constantsData;
-		constantsData.m_ndcOriginX = -1.0f;
-		constantsData.m_ndcOriginY = 1.0f;
-		constantsData.m_ndcWidth = static_cast<float>(m_windowWidthPhysical) * twoDivWidth;
-		constantsData.m_ndcHeight = static_cast<float>(m_windowHeightPhysical) * negativeTwoDivHeight;
+		DrawQuadVertexConstants vConstantsData;
+		vConstantsData.m_ndcOriginX = -1.0f;
+		vConstantsData.m_ndcOriginY = 1.0f;
+		vConstantsData.m_ndcWidth = 2.0f;
+		vConstantsData.m_ndcHeight = -2.0f;
 
-		constantsData.m_surfaceDimensionX = static_cast<float>(m_windowWidthVirtual);
-		constantsData.m_surfaceDimensionY = static_cast<float>(m_windowHeightVirtual);
+		vConstantsData.m_surfaceDimensionX = static_cast<float>(m_windowWidthVirtual);
+		vConstantsData.m_surfaceDimensionY = static_cast<float>(m_windowHeightVirtual);
 
-		D3D11_MAPPED_SUBRESOURCE mappedConstants;
-		if (m_deviceContext->Map(m_drawQuadVertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedConstants) == S_OK)
+		D3D11_MAPPED_SUBRESOURCE mappedVConstants;
+		if (m_deviceContext->Map(m_drawQuadVertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedVConstants) == S_OK)
 		{
-			memcpy(mappedConstants.pData, &constantsData, sizeof(constantsData));
+			memcpy(mappedVConstants.pData, &vConstantsData, sizeof(vConstantsData));
 			m_deviceContext->Unmap(m_drawQuadVertexConstantBuffer, 0);
+		}
+
+		ScaleQuadPixelConstants pConstantsData;
+		pConstantsData.m_dx = static_cast<float>(static_cast<double>(m_windowWidthVirtual) / static_cast<double>(m_windowWidthPhysical));
+		pConstantsData.m_dy = static_cast<float>(static_cast<double>(m_windowHeightVirtual) / static_cast<double>(m_windowHeightPhysical));
+
+		D3D11_MAPPED_SUBRESOURCE mappedPConstants;
+		if (m_deviceContext->Map(m_scaleQuadPixelConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedPConstants) == S_OK)
+		{
+			memcpy(mappedPConstants.pData, &pConstantsData, sizeof(pConstantsData));
+			m_deviceContext->Unmap(m_scaleQuadPixelConstantBuffer, 0);
 		}
 	}
 
@@ -656,8 +680,11 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 		m_virtualScreenTextureSRV,
 	};
 
+	ID3D11Buffer *psConstants = m_scaleQuadPixelConstantBuffer;
+
 	m_deviceContext->PSSetShader(m_scaleQuadPixelShader, nullptr, 0);
 	m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
+	m_deviceContext->PSSetConstantBuffers(0, 1, &psConstants);
 
 	m_deviceContext->DrawIndexed(6, 0, 0);
 
@@ -666,6 +693,9 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 		0,
 	};
 	m_deviceContext->PSSetShaderResources(0, sizeof(unbindPSResourceViews) / sizeof(unbindPSResourceViews[0]), unbindPSResourceViews);
+
+	ID3D11Buffer *clearBuffer = nullptr;
+	m_deviceContext->PSSetConstantBuffers(0, 1, &clearBuffer);
 }
 
 void GpDisplayDriverD3D11::SynchronizeCursors()

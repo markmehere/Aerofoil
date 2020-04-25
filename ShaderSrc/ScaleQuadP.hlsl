@@ -3,6 +3,11 @@
 SamplerState surfaceSampler : register(s0);
 Texture2D<float3> surfaceTexture : register(t0);
 
+cbuffer SScaleQuadPixelConstants : register(b0)
+{
+	float4 dxdy_Unused;
+};
+
 struct SDrawQuadPixelOutput
 {
 	float4 color : SV_TARGET;
@@ -15,8 +20,8 @@ float3 SamplePixel(int2 coord)
 
 SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 {
-	float dx = ddx(input.texCoord.x);
-	float dy = ddy(input.texCoord.y);
+	float dx = dxdy_Unused.x;
+	float dy = dxdy_Unused.y;
 
 	float2 pixelTopLeftCoord = max(0.0, input.texCoord.xy - float2(dx, dy) * 0.5);
 	float2 pixelBottomRightCoord = pixelTopLeftCoord + min(float2(1.0, 1.0), float2(dx, dy));
@@ -37,5 +42,6 @@ SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 
 	SDrawQuadPixelOutput result;
 	result.color = float4(interpolatedColor, 1.0);
+
 	return result;
 }
