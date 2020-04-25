@@ -127,6 +127,7 @@
     <ClCompile Include="CompiledShaders\DrawQuadPaletteP_D3D11.cpp" />
     <ClCompile Include="CompiledShaders\DrawQuadRGBP_D3D11.cpp" />
     <ClCompile Include="CompiledShaders\DrawQuadV_D3D11.cpp" />
+    <ClCompile Include="CompiledShaders\ScaleQuadP_D3D11.cpp" />
     <ClCompile Include="GpDisplayDriverD3D11.cpp" />
     <ClCompile Include="GpDisplayDriverFactoryD3D11.cpp" />
     <ClCompile Include="GpDisplayDriverSurfaceD3D11.cpp" />

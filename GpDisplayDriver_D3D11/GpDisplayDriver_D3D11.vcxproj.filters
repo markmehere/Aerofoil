@@ -39,6 +39,9 @@
     <ClCompile Include="CompiledShaders\DrawQuadV_D3D11.cpp">
       <Filter>Source Files\CompiledShaders</Filter>
     </ClCompile>
+    <ClCompile Include="CompiledShaders\ScaleQuadP_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GpDisplayDriverD3D11.h">

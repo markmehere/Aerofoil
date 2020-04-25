@@ -52,6 +52,14 @@ const CompileJob kCompileJobs[] =
 		drawQuadDefs,
 		"PSMain",
 		"ps_4_0"
+	},
+	{
+		L"ShaderSrc\\ScaleQuadP.hlsl",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\ScaleQuadP_D3D11.cpp",
+		"g_scaleQuadP_D3D11",
+		drawQuadDefs,
+		"PSMain",
+		"ps_4_0"
 	}
 };
 

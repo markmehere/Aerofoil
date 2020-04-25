@@ -23,6 +23,7 @@ namespace GpBinarizedShaders
 	extern const unsigned char *g_drawQuadV_D3D11[2];
 	extern const unsigned char *g_drawQuadPaletteP_D3D11[2];
 	extern const unsigned char *g_drawQuadRGBP_D3D11[2];
+	extern const unsigned char *g_scaleQuadP_D3D11[2];
 	extern const unsigned char *g_drawQuad15BitP_D3D11[2];
 }
 
@@ -200,7 +201,7 @@ bool GpDisplayDriverD3D11::DetachSwapChain()
 	return true;
 }
 
-bool GpDisplayDriverD3D11::InitBackBuffer()
+bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtualHeight)
 {
 	m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(m_backBufferTexture.GetMutablePtr()));
 
@@ -213,16 +214,61 @@ bool GpDisplayDriverD3D11::InitBackBuffer()
 		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 		rtvDesc.Texture2D.MipSlice = 0;
 
+		m_backBufferRTV = nullptr;
 		if (m_device->CreateRenderTargetView(m_backBufferTexture, &rtvDesc, m_backBufferRTV.GetMutablePtr()) != S_OK)
+			return false;
+	}
+
+	DXGI_FORMAT vbbFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+
+	{
+		D3D11_TEXTURE2D_DESC vbbTextureDesc;
+		vbbTextureDesc.Width = static_cast<UINT>(virtualWidth);
+		vbbTextureDesc.Height = static_cast<UINT>(virtualHeight);
+		vbbTextureDesc.MipLevels = 1;
+		vbbTextureDesc.ArraySize = 1;
+		vbbTextureDesc.Format = vbbFormat;
+		vbbTextureDesc.SampleDesc.Count = 1;
+		vbbTextureDesc.SampleDesc.Quality = 0;
+		vbbTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+		vbbTextureDesc.BindFlags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+		vbbTextureDesc.CPUAccessFlags = 0;
+		vbbTextureDesc.MiscFlags = 0;
+
+		m_virtualScreenTexture = nullptr;
+		if (m_device->CreateTexture2D(&vbbTextureDesc, nullptr, m_virtualScreenTexture.GetMutablePtr()) != S_OK)
+			return false;
+	}
+
+	{
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+		rtvDesc.Format = vbbFormat;
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+
+		m_virtualScreenTextureRTV = nullptr;
+		if (m_device->CreateRenderTargetView(m_virtualScreenTexture, &rtvDesc, m_virtualScreenTextureRTV.GetMutablePtr()) != S_OK)
+			return false;
+	}
+
+	{
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		srvDesc.Format = vbbFormat;
+		srvDesc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+
+		m_virtualScreenTextureSRV = nullptr;
+		if (m_device->CreateShaderResourceView(m_virtualScreenTexture, &srvDesc, m_virtualScreenTextureSRV.GetMutablePtr()) != S_OK)
 			return false;
 	}
 
 	return true;
 }
 
-bool GpDisplayDriverD3D11::InitResources()
+bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtualHeight)
 {
-	if (!InitBackBuffer())
+	if (!InitBackBuffer(virtualWidth, virtualHeight))
 		return false;
 
 	// Quad vertex constant buffer
@@ -291,11 +337,13 @@ bool GpDisplayDriverD3D11::InitResources()
 	const GpShaderCodeBlob drawQuadPalettePBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadPaletteP_D3D11);
 	const GpShaderCodeBlob drawQuadRGBPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadRGBP_D3D11);
 	const GpShaderCodeBlob drawQuad15BitPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuad15BitP_D3D11);
+	const GpShaderCodeBlob scaleQuadPBlob = GetBinarizedShader(GpBinarizedShaders::g_scaleQuadP_D3D11);
 
 	m_device->CreateVertexShader(drawQuadVBlob.m_data, drawQuadVBlob.m_size, nullptr, m_drawQuadVertexShader.GetMutablePtr());
 	m_device->CreatePixelShader(drawQuadPalettePBlob.m_data, drawQuadPalettePBlob.m_size, nullptr, m_drawQuadPalettePixelShader.GetMutablePtr());
 	m_device->CreatePixelShader(drawQuadRGBPBlob.m_data, drawQuadRGBPBlob.m_size, nullptr, m_drawQuadRGBPixelShader.GetMutablePtr());
 	m_device->CreatePixelShader(drawQuad15BitPBlob.m_data, drawQuad15BitPBlob.m_size, nullptr, m_drawQuad15BitPixelShader.GetMutablePtr());
+	m_device->CreatePixelShader(scaleQuadPBlob.m_data, scaleQuadPBlob.m_size, nullptr, m_scaleQuadPixelShader.GetMutablePtr());
 
 	// Quad input layout
 	{
@@ -403,17 +451,18 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 {
 	SynchronizeCursors();
 
-	m_deviceContext->ClearRenderTargetView(m_backBufferRTV, m_bgColor);
+	m_deviceContext->ClearRenderTargetView(m_virtualScreenTextureRTV, m_bgColor);
 
-	ID3D11RenderTargetView *const rtv = m_backBufferRTV;
-	m_deviceContext->OMSetRenderTargets(1, &rtv, nullptr);
+	//ID3D11RenderTargetView *const rtv = m_backBufferRTV;
+	ID3D11RenderTargetView *const vsRTV = m_virtualScreenTextureRTV;
+	m_deviceContext->OMSetRenderTargets(1, &vsRTV, nullptr);
 
 	{
 		D3D11_VIEWPORT viewport;
 		viewport.TopLeftX = 0;
 		viewport.TopLeftY = 0;
-		viewport.Width = static_cast<FLOAT>(m_windowWidthPhysical);
-		viewport.Height = static_cast<FLOAT>(m_windowHeightPhysical);
+		viewport.Width = static_cast<FLOAT>(m_windowWidthVirtual);
+		viewport.Height = static_cast<FLOAT>(m_windowHeightVirtual);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 
@@ -421,6 +470,8 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 	}
 
 	m_properties.m_renderFunc(m_properties.m_renderFuncContext);
+
+	ScaleVirtualScreen();
 
 	DXGI_PRESENT_PARAMETERS presentParams;
 
@@ -537,6 +588,84 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 	}
 
 	return GpDisplayDriverTickStatuses::kOK;
+}
+
+void GpDisplayDriverD3D11::ScaleVirtualScreen()
+{
+	{
+		D3D11_VIEWPORT viewport;
+		viewport.TopLeftX = 0;
+		viewport.TopLeftY = 0;
+		viewport.Width = static_cast<FLOAT>(m_windowWidthPhysical);
+		viewport.Height = static_cast<FLOAT>(m_windowHeightPhysical);
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+
+		m_deviceContext->RSSetViewports(1, &viewport);
+	}
+
+
+	ID3D11Buffer *vbPtr = m_quadVertexBuffer;
+	UINT vbStride = sizeof(float) * 2;
+	UINT zero = 0;
+
+	ID3D11RenderTargetView *const rtv = m_backBufferRTV;
+	m_deviceContext->OMSetRenderTargets(1, &rtv, nullptr);
+
+	//m_deviceContext->OMSetDepthStencilState(m_drawQuadDepthStencilState, 0);
+
+	{
+		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
+		const float negativeTwoDivHeight = -2.0f / static_cast<float>(m_windowHeightPhysical);
+
+		DrawQuadVertexConstants constantsData;
+		constantsData.m_ndcOriginX = -1.0f;
+		constantsData.m_ndcOriginY = 1.0f;
+		constantsData.m_ndcWidth = static_cast<float>(m_windowWidthPhysical) * twoDivWidth;
+		constantsData.m_ndcHeight = static_cast<float>(m_windowHeightPhysical) * negativeTwoDivHeight;
+
+		constantsData.m_surfaceDimensionX = static_cast<float>(m_windowWidthVirtual);
+		constantsData.m_surfaceDimensionY = static_cast<float>(m_windowHeightVirtual);
+
+		D3D11_MAPPED_SUBRESOURCE mappedConstants;
+		if (m_deviceContext->Map(m_drawQuadVertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedConstants) == S_OK)
+		{
+			memcpy(mappedConstants.pData, &constantsData, sizeof(constantsData));
+			m_deviceContext->Unmap(m_drawQuadVertexConstantBuffer, 0);
+		}
+	}
+
+	m_deviceContext->IASetVertexBuffers(0, 1, &vbPtr, &vbStride, &zero);
+	m_deviceContext->IASetIndexBuffer(m_quadIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+	m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_deviceContext->IASetInputLayout(m_drawQuadInputLayout);
+
+	ID3D11Buffer *vsConstants = m_drawQuadVertexConstantBuffer;
+	m_deviceContext->VSSetShader(m_drawQuadVertexShader, nullptr, 0);
+	m_deviceContext->VSSetConstantBuffers(0, 1, &vsConstants);
+
+	ID3D11SamplerState *samplerStates[] =
+	{
+		m_nearestNeighborSamplerState,
+	};
+	m_deviceContext->PSSetSamplers(0, sizeof(samplerStates) / sizeof(samplerStates[0]), samplerStates);
+
+
+	ID3D11ShaderResourceView *psResourceViews[] =
+	{
+		m_virtualScreenTextureSRV,
+	};
+
+	m_deviceContext->PSSetShader(m_scaleQuadPixelShader, nullptr, 0);
+	m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
+
+	m_deviceContext->DrawIndexed(6, 0, 0);
+
+	ID3D11ShaderResourceView *unbindPSResourceViews[] =
+	{
+		0,
+	};
+	m_deviceContext->PSSetShaderResources(0, sizeof(unbindPSResourceViews) / sizeof(unbindPSResourceViews[0]), unbindPSResourceViews);
 }
 
 void GpDisplayDriverD3D11::SynchronizeCursors()
@@ -745,7 +874,7 @@ void GpDisplayDriverD3D11::Run()
 
 	StartD3DForWindow(m_osGlobals->m_hwnd, m_swapChain, m_device, m_deviceContext);
 
-	InitResources();
+	InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
 
 	LARGE_INTEGER lastTimestamp;
 	memset(&lastTimestamp, 0, sizeof(lastTimestamp));
@@ -809,7 +938,7 @@ void GpDisplayDriverD3D11::Run()
 					bool resizedOK = ResizeD3DWindow(m_osGlobals->m_hwnd, m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, windowStyle, menus);
 					resizedOK = resizedOK && DetachSwapChain();
 					resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidthPhysical, m_windowHeightPhysical);
-					resizedOK = resizedOK && InitBackBuffer();
+					resizedOK = resizedOK && InitBackBuffer(virtualWidth, virtualHeight);
 
 					if (!resizedOK)
 						break;	// Critical video driver error, exit

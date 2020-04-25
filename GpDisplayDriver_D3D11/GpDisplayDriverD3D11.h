@@ -75,9 +75,10 @@ private:
 	~GpDisplayDriverD3D11();
 
 	bool DetachSwapChain();
-	bool InitBackBuffer();
-	bool InitResources();
+	bool InitBackBuffer(uint32_t virtualWidth, uint32_t virtualHeight);
+	bool InitResources(uint32_t virtualWidth, uint32_t virtualHeight);
 	GpDisplayDriverTickStatus_t PresentFrameAndSync();
+	void ScaleVirtualScreen();
 
 	void SynchronizeCursors();
 	void ChangeToCursor(HCURSOR cursor);
@@ -96,6 +97,7 @@ private:
 	GpComPtr<ID3D11PixelShader> m_drawQuadPalettePixelShader;
 	GpComPtr<ID3D11PixelShader> m_drawQuad15BitPixelShader;
 	GpComPtr<ID3D11PixelShader> m_drawQuadRGBPixelShader;
+	GpComPtr<ID3D11PixelShader> m_scaleQuadPixelShader;
 	GpComPtr<ID3D11Buffer> m_drawQuadVertexConstantBuffer;
 	GpComPtr<ID3D11DepthStencilState> m_drawQuadDepthStencilState;
 	GpComPtr<ID3D11SamplerState> m_nearestNeighborSamplerState;
@@ -104,6 +106,10 @@ private:
 
 	GpComPtr<ID3D11Texture2D> m_backBufferTexture;
 	GpComPtr<ID3D11RenderTargetView> m_backBufferRTV;
+
+	GpComPtr<ID3D11Texture2D> m_virtualScreenTexture;
+	GpComPtr<ID3D11RenderTargetView> m_virtualScreenTextureRTV;
+	GpComPtr<ID3D11ShaderResourceView> m_virtualScreenTextureSRV;
 
 	GpRingBuffer<CompactedPresentHistoryItem, 60> m_presentHistory;
 	GpDisplayDriverProperties m_properties;
