@@ -21,6 +21,7 @@ XInput gamepads are supported.  Other gamepads may be supported via third-party 
 Some shortcuts:
 - While in-game, Ctrl-S saves the game.  You can then reload the game from the main menu.
 - Ctrl-Q quits the game.
+- Alt-Enter toggles full screen.
 
 
 Aerofoil uses the following third-party software:
