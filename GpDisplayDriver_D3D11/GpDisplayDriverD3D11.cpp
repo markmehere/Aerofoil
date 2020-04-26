@@ -631,11 +631,15 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
 		const float negativeTwoDivHeight = -2.0f / static_cast<float>(m_windowHeightPhysical);
 
+		// Use the scaled virtual width instead of the physical width to correctly handle cases where the window boundary is in the middle of a pixel
+		float fWidth = static_cast<float>(m_windowWidthVirtual) * m_pixelScaleX;
+		float fHeight = static_cast<float>(m_windowHeightVirtual) * m_pixelScaleY;
+
 		DrawQuadVertexConstants vConstantsData;
-		vConstantsData.m_ndcOriginX = -1.0f;
-		vConstantsData.m_ndcOriginY = 1.0f;
-		vConstantsData.m_ndcWidth = 2.0f;
-		vConstantsData.m_ndcHeight = -2.0f;
+		vConstantsData.m_ndcOriginX = twoDivWidth - 1.0f;
+		vConstantsData.m_ndcOriginY = negativeTwoDivHeight + 1.0f;
+		vConstantsData.m_ndcWidth = fWidth * twoDivWidth;
+		vConstantsData.m_ndcHeight = fHeight * negativeTwoDivHeight;
 
 		vConstantsData.m_surfaceDimensionX = static_cast<float>(m_windowWidthVirtual);
 		vConstantsData.m_surfaceDimensionY = static_cast<float>(m_windowHeightVirtual);
