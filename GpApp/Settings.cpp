@@ -888,6 +888,8 @@ void FrameDisplayIcon (Dialog *theDialog, const PortabilityLayer::RGBAColor &col
 	surface->FrameRect(theRect);
 	InsetRect(&theRect, 1, 1);
 	surface->FrameRect(theRect);
+
+	surface->SetForeColor(StdColors::Black());
 }
 
 //--------------------------------------------------------------  DisplayUpdate
@@ -898,9 +900,7 @@ void DisplayUpdate (Dialog *theDialog)
 	
 	SetDialogItemValue(theDialog, kDoColorFadeItem, (short)wasFade);
 	
-	ForeColor(redColor);
 	FrameDisplayIcon(theDialog, StdColors::Red());
-	ForeColor(blackColor);
 	FrameDialogItemC(theDialog, kBorder1Item, kRedOrangeColor8);
 	FrameDialogItemC(theDialog, kBorder2Item, kRedOrangeColor8);
 	FrameDialogItemC(theDialog, kBorder3Item, kRedOrangeColor8);
@@ -1055,7 +1055,6 @@ void DoDisplayPrefs (void)
 			
 			case kDispDefault:
 			FrameDisplayIcon(prefDlg, StdColors::White());
-			ForeColor(blackColor);
 			DisplayDefaults();
 			DisplayUpdate(prefDlg);
 			break;

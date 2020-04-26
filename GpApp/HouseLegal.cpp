@@ -8,8 +8,10 @@
 
 #include "PLNumberFormatting.h"
 #include "PLStringCompare.h"
+#include "PLStandardColors.h"
 #include "Externs.h"
 #include "ObjectEdit.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
 
 
@@ -739,9 +741,8 @@ void LopOffExtraRooms (void)
 		newSize = sizeof(houseType) + (sizeof(roomType) * (long)r);
 		if (SetHandleSize(thisHouse.StaticCast<void>(), newSize) != PLErrors::kNone)	// resize house handle (shrink)
 		{
-			ForeColor(redColor);
 			GetLocalizedString(16, message);
-			SetMessageWindowMessage(message);
+			SetMessageWindowMessage(message, StdColors::Red());
 		}
 		(*thisHouse)->nRooms -= count;
 		numberRooms = (*thisHouse)->nRooms;
@@ -772,21 +773,17 @@ void ValidateRoomNumbers (void)
 					((*thisHouse)->rooms[i].floor < -7))
 			{
 				(*thisHouse)->rooms[i].suite = kRoomIsEmpty;
-				ForeColor(redColor);
 				GetLocalizedString(17, message);
-				SetMessageWindowMessage(message);
+				SetMessageWindowMessage(message, StdColors::Red());
 				houseErrors++;
-				ForeColor(blackColor);
 			}
 			if (((*thisHouse)->rooms[i].suite >= 128) || 
 					((*thisHouse)->rooms[i].suite < 0))
 			{
 				(*thisHouse)->rooms[i].suite = kRoomIsEmpty;
-				ForeColor(redColor);
 				GetLocalizedString(18, message);
-				SetMessageWindowMessage(message);
+				SetMessageWindowMessage(message, StdColors::Red());
 				houseErrors++;
-				ForeColor(blackColor);
 			}
 		}
 	}
@@ -885,11 +882,9 @@ void KeepAllObjectsLegal (void)
 				{
 					if (!KeepObjectLegal())
 					{
-						ForeColor(redColor);
 						GetLocalizedString(19, message);
-						SetMessageWindowMessage(message);
+						SetMessageWindowMessage(message, StdColors::Red());
 						houseErrors++;
-						ForeColor(blackColor);
 						DelayTicks(60);
 					}
 				}
@@ -923,10 +918,8 @@ void CheckForStaircasePairs (void)
 					neighbor = GetNeighborRoomNumber(kNorthRoom);
 					if (neighbor == kRoomIsEmpty)
 					{
-						ForeColor(redColor);
 						GetLocalizedString(20, message);
-						SetMessageWindowMessage(message);
-						ForeColor(blackColor);
+						SetMessageWindowMessage(message, StdColors::Red());
 						DelayTicks(60);
 					}
 					else
@@ -940,10 +933,8 @@ void CheckForStaircasePairs (void)
 						}
 						if (!hasStairs)
 						{
-							ForeColor(redColor);
 							GetLocalizedString(21, message);
-							SetMessageWindowMessage(message);
-							ForeColor(blackColor);
+							SetMessageWindowMessage(message, StdColors::Red());
 							DelayTicks(60);
 						}
 					}
@@ -954,10 +945,8 @@ void CheckForStaircasePairs (void)
 					neighbor = GetNeighborRoomNumber(kSouthRoom);
 					if (neighbor == kRoomIsEmpty)
 					{
-						ForeColor(redColor);
 						GetLocalizedString(22, message);
-						SetMessageWindowMessage(message);
-						ForeColor(blackColor);
+						SetMessageWindowMessage(message, StdColors::Red());
 						DelayTicks(60);
 					}
 					else
@@ -971,10 +960,8 @@ void CheckForStaircasePairs (void)
 						}
 						if (!hasStairs)
 						{
-							ForeColor(redColor);
 							GetLocalizedString(23, message);
-							SetMessageWindowMessage(message);
-							ForeColor(blackColor);
+							SetMessageWindowMessage(message, StdColors::Red());
 							DelayTicks(60);
 						}
 					}
@@ -1004,19 +991,19 @@ void CheckHouseForProblems (void)
 	
 	SpinCursor(3);
 	GetLocalizedString(25, message);
-	SetMessageWindowMessage(message);
+	SetMessageWindowMessage(message, StdColors::Black());
 	WrapBannerAndTrailer();
 	
 	if (isHouseChecks)
 	{
 		SpinCursor(3);
 		GetLocalizedString(26, message);
-		SetMessageWindowMessage(message);
+		SetMessageWindowMessage(message, StdColors::Black());
 		ValidateNumberOfRooms();
 		if (houseErrors != 0)
 		{
 			GetLocalizedString(27, message);
-			SetMessageWindowMessage(message);
+			SetMessageWindowMessage(message, StdColors::Black());
 			DelayTicks(60);
 			houseErrors = 0;
 		}
@@ -1032,9 +1019,7 @@ void CheckHouseForProblems (void)
 			NumToString((long)houseErrors, message);
 			GetLocalizedString(28, message2);
 			PasStringConcat(message, message2);
-			ForeColor(redColor);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Red());
 			DelayTicks(45);
 		}
 	}
@@ -1053,9 +1038,7 @@ void CheckHouseForProblems (void)
 			NumToString((long)houseErrors, message);
 			GetLocalizedString(29, message2);
 			PasStringConcat(message, message2);
-			ForeColor(redColor);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Red());
 			DelayTicks(60);
 		}
 	}
@@ -1070,9 +1053,7 @@ void CheckHouseForProblems (void)
 			NumToString((long)houseErrors, message);
 			GetLocalizedString(30, message2);
 			PasStringConcat(message, message2);
-			ForeColor(blueColor);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Blue());
 			DelayTicks(45);
 		}
 	}
@@ -1087,9 +1068,7 @@ void CheckHouseForProblems (void)
 			NumToString((long)houseErrors, message);
 			GetLocalizedString(31, message2);
 			PasStringConcat(message, message2);
-			ForeColor(blueColor);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Blue());
 			DelayTicks(45);
 		}
 	}
@@ -1104,9 +1083,7 @@ void CheckHouseForProblems (void)
 			NumToString((long)houseErrors, message);
 			GetLocalizedString(32, message2);
 			PasStringConcat(message, message2);
-			ForeColor(redColor);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Red());
 			DelayTicks(60);
 		}
 	}
@@ -1116,16 +1093,14 @@ void CheckHouseForProblems (void)
 		SpinCursor(3);
 		houseErrors = 0;
 		GetLocalizedString(33, message);
-		SetMessageWindowMessage(message);
+		SetMessageWindowMessage(message, StdColors::Black());
 		KeepAllObjectsLegal();
 		if (houseErrors != 0)
 		{
 			NumToString((long)houseErrors, message);
 			GetLocalizedString(34, message2);
 			PasStringConcat(message, message2);
-			ForeColor(redColor);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Red());
 			DelayTicks(60);
 		}
 	}
@@ -1142,10 +1117,8 @@ void CheckHouseForProblems (void)
 		SpinCursor(3);
 		if (CountStarsInHouse() < 1)
 		{
-			ForeColor(redColor);
 			GetLocalizedString(35, message);
-			SetMessageWindowMessage(message);
-			ForeColor(blackColor);
+			SetMessageWindowMessage(message, StdColors::Red());
 			DelayTicks(60);
 		}
 	}

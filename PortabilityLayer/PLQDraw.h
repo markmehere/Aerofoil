@@ -11,35 +11,6 @@ namespace PortabilityLayer
 
 struct Dialog;
 
-
-enum IconSuiteFlags
-{
-	svAllLargeData = 1,
-};
-
-enum TextFlags
-{
-	bold = 1,
-};
-
-enum SystemFontID
-{
-	systemFont = 0,	// System font
-	applFont = 1,	// Application font
-};
-
-enum SystemColorID
-{
-	whiteColor = 1,
-	blackColor,
-	yellowColor,
-	magentaColor,
-	redColor,
-	cyanColor,
-	greenColor,
-	blueColor,
-};
-
 enum CopyBitsMode
 {
 	srcCopy,
@@ -99,14 +70,9 @@ void SetPortDialogPort(Dialog *dialog);
 
 void EndUpdate(WindowPtr graf);
 
-PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags);
-PLError_t PlotIconSuite(Rect *rect, Handle iconSuite);
-
 void SetRect(Rect *rect, short left, short top, short right, short bottom);
 
 int TextWidth(const PLPasStr &str, int firstChar1Based, int length);
-void ForeColor(SystemColorID color);
-void BackColor(SystemColorID color);
 void GetForeColor(RGBColor *color);
 
 void ClipRect(const Rect *rect);

@@ -54,18 +54,6 @@ void EndUpdate(WindowPtr graf)
 	graf->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-PLError_t GetIconSuite(Handle *suite, short resID, IconSuiteFlags flags)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
-PLError_t PlotIconSuite(Rect *rect, Handle iconSuite)
-{
-	PL_NotYetImplemented();
-	return PLErrors::kNone;
-}
-
 void SetRect(Rect *rect, short left, short top, short right, short bottom)
 {
 	rect->left = left;
@@ -216,71 +204,6 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 	}
 
 	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
-}
-
-namespace
-{
-	static bool SystemColorToRGBAColor(SystemColorID color, PortabilityLayer::RGBAColor &rgbaColor)
-	{
-		switch (color)
-		{
-		default:
-			return false;
-		case whiteColor:
-			rgbaColor.r = rgbaColor.g = rgbaColor.b = 255;
-			break;
-		case blackColor:
-			rgbaColor.r = rgbaColor.g = rgbaColor.b = 0;
-			break;
-		case yellowColor:
-			rgbaColor.r = rgbaColor.g = 255;
-			rgbaColor.b = 0;
-			break;
-		case magentaColor:
-			rgbaColor.r = rgbaColor.b = 255;
-			rgbaColor.g = 0;
-			break;
-		case redColor:
-			rgbaColor.r = 255;
-			rgbaColor.g = rgbaColor.b = 0;
-			break;
-		case cyanColor:
-			rgbaColor.g = rgbaColor.b = 255;
-			rgbaColor.r = 0;
-			break;
-		case greenColor:
-			rgbaColor.g = 255;
-			rgbaColor.r = rgbaColor.b = 0;
-			break;
-		case blueColor:
-			rgbaColor.b = 255;
-			rgbaColor.r = rgbaColor.g = 0;
-			break;
-		}
-		rgbaColor.a = 255;
-
-		return true;
-	}
-}
-
-void ForeColor(SystemColorID color)
-{
-	PortabilityLayer::RGBAColor rgbaColor;
-	if (SystemColorToRGBAColor(color, rgbaColor))
-	{
-		PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-		qdState->SetForeColor(rgbaColor);
-	}
-}
-
-void BackColor(SystemColorID color)
-{
-	PortabilityLayer::RGBAColor rgbaColor;
-	if (SystemColorToRGBAColor(color, rgbaColor))
-	{
-		PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-		qdState->SetBackColor(rgbaColor);
-	}
 }
 
 void GetForeColor(RGBColor *color)

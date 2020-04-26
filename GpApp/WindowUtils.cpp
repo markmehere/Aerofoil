@@ -136,7 +136,7 @@ void OpenMessageWindow (const PLPasStr &title)
 // For the above message window, this function displays a string of textÉ
 // in the center of the window.
 
-void SetMessageWindowMessage (StringPtr message)
+void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBAColor &color)
 {
 	Rect		mssgWindowRect;
 	
@@ -150,7 +150,7 @@ void SetMessageWindowMessage (StringPtr message)
 		surface->FillRect(mssgWindowRect);
 
 		const Point textPoint = Point::Create(mssgWindowRect.left, mssgWindowRect.bottom - 6);
-		surface->SetForeColor(StdColors::Black());
+		surface->SetForeColor(color);
 		surface->DrawString(textPoint, message, true);
 	}
 }

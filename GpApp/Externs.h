@@ -16,6 +16,7 @@ namespace PortabilityLayer
 	class ResourceArchive;
 	class ScanlineMask;
 	class ResTypeID;
+	struct RGBAColor;
 }
 
 #define kPreferredDepth				8
@@ -222,7 +223,7 @@ void GetLocalWindowRect (WindowPtr, Rect *);
 //void FlagWindowFloating (WindowPtr);
 //Boolean	IsWindowFloating (WindowPtr);
 void OpenMessageWindow (const PLPasStr&);
-void SetMessageWindowMessage (StringPtr);
+void SetMessageWindowMessage (StringPtr msg, const PortabilityLayer::RGBAColor &color);
 void CloseMessageWindow (void);
 void CloseThisWindow (WindowPtr *);
 

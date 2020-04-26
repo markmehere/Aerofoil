@@ -17,6 +17,7 @@
 #include "ObjectEdit.h"
 #include "Objects.h"
 #include "Play.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
 #include "ResourceManager.h"
 #include "Room.h"
@@ -812,10 +813,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(46, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -843,10 +842,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(46, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -874,10 +871,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(47, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -905,10 +900,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(47, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -936,10 +929,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(48, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -967,10 +958,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(48, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -998,10 +987,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(49, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -1029,10 +1016,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(49, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -1061,10 +1046,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(50, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}
@@ -1093,10 +1076,8 @@ void AddObjectPairing (void)
 				
 				GetLocalizedString(45, message);
 				OpenMessageWindow(message);
-				ForeColor(blueColor);
 				GetLocalizedString(51, message);
-				SetMessageWindowMessage(message);
-				ForeColor(blackColor);
+				SetMessageWindowMessage(message, StdColors::Blue());
 				DelayTicks(60);
 				CloseMessageWindow();
 			}

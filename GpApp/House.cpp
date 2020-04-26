@@ -17,6 +17,7 @@
 #include "FileManager.h"
 #include "HostFileSystem.h"
 #include "House.h"
+#include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
 #include "ResourceManager.h"
@@ -730,7 +731,7 @@ void ConvertHouseVer1To2 (void)
 			NumToString((long)i, roomStr);
 			GetLocalizedString(14, message);
 			PasStringConcat(message, roomStr);
-			SetMessageWindowMessage(message);
+			SetMessageWindowMessage(message, StdColors::Black());
 			SpinCursor(1);
 			
 			ForceThisRoom(i);

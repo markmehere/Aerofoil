@@ -135,7 +135,7 @@ void FrameSelectedTool (DrawSurface *surface)
 	InsetRect(&theRect, 1, 1);
 	surface->FrameRect(theRect);
 
-	ForeColor(blackColor);
+	surface->SetForeColor(StdColors::Black());
 }
 #endif
 
