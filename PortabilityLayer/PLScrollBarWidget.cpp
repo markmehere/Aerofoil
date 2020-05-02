@@ -213,6 +213,30 @@ namespace PortabilityLayer
 		DrawControl(m_window->GetDrawSurface());
 	}
 
+	void ScrollBarWidget::SetMin(int32_t v)
+	{
+		m_min = v;
+		if (m_state < m_min)
+			SetState(m_min);
+		else
+		{
+			RefreshGrip();
+			DrawControl(m_window->GetDrawSurface());
+		}
+	}
+
+	void ScrollBarWidget::SetMax(int32_t v)
+	{
+		m_max = v;
+		if (m_state > m_max)
+			SetState(m_max);
+		else
+		{
+			RefreshGrip();
+			DrawControl(m_window->GetDrawSurface());
+		}
+	}
+
 	int16_t ScrollBarWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
 	{
 		int part = ResolvePart(pos);

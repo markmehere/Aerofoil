@@ -21,6 +21,9 @@ namespace PortabilityLayer
 		void SetState(int16_t state) override;
 		void OnStateChanged() override;
 
+		void SetMin(int32_t v) override;
+		void SetMax(int32_t v) override;
+
 		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
 
 		int ResolvePart(const Point &point) const override;
