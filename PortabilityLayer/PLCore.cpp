@@ -110,8 +110,9 @@ short FindWindow(Point point, WindowPtr *window)
 
 bool TrackGoAway(WindowPtr window, Point point)
 {
-	PL_NotYetImplemented();
-	return false;
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
+
+	return wm->HandleCloseBoxClick(window, point);
 }
 
 PortabilityLayer::Vec2i TrackResize(WindowPtr window, Point start, uint16_t minWidth, uint16_t minHeight, Rect *size)

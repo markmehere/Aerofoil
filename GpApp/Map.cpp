@@ -391,7 +391,7 @@ void OpenMapWindow (void)
 				mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 1, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 1);
 
-		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kResizable | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;;
+		const uint16_t windowStyle = PortabilityLayer::WindowStyleFlags::kTitleBar | PortabilityLayer::WindowStyleFlags::kResizable | PortabilityLayer::WindowStyleFlags::kMiniBar | PortabilityLayer::WindowStyleFlags::kCloseBox;
 
 		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(mapWindowRect, windowStyle, false, 0, 0, PSTR("Map"));
 		

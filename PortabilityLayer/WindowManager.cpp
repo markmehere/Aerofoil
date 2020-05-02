@@ -32,6 +32,8 @@ namespace PortabilityLayer
 		virtual void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const = 0;
 		virtual void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const = 0;
 		virtual bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const = 0;
+		virtual bool GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const = 0;
+		virtual void UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const = 0;
 	};
 
 	template<class T>
@@ -50,6 +52,8 @@ namespace PortabilityLayer
 		void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const override;
 		void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const override;
 		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const override;
+		bool GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const override;
+		void UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const override;
 	};
 
 	class GenericWindowChromeTheme final : public WindowChromeThemeSingleton<GenericWindowChromeTheme>
@@ -58,6 +62,8 @@ namespace PortabilityLayer
 		void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const override;
 		void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const override;
 		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const override;
+		bool GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const override;
+		void UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const override;
 
 	private:
 		void RenderChromeTop(WindowImpl *window, DrawSurface *surface) const;
@@ -70,6 +76,10 @@ namespace PortabilityLayer
 		void RenderChromeBottomMini(WindowImpl *window, DrawSurface *surface) const;
 		void RenderChromeRightMini(WindowImpl *window, DrawSurface *surface) const;
 
+		static Rect GetCloseBoxRectInTopChrome();
+		static Rect GetCloseBoxRectInTopChromeMini();
+
+		void RenderChromeCloseBox(DrawSurface *surface, const Rect &windowRect, bool isClicked) const;
 
 		static const int kDarkGray = 85;
 		static const int kMidGray = 187;
@@ -97,6 +107,8 @@ namespace PortabilityLayer
 		void GetChromePadding(uint16_t padding[WindowChromeSides::kCount]) const;
 		void GetChromeDimensions(int width, int height, Rect dimensions[WindowChromeSides::kCount]) const;
 		bool GetChromeInteractionZone(const Vec2i &point, RegionID_t &outRegion) const;
+		bool GetChromeRegionRect(RegionID_t region, Rect2i &outRect) const;
+		void UpdateRegionChromeState(RegionID_t region, const void *data) const;
 
 		bool IsBorderless() const;
 		uint16_t GetStyleFlags() const;
@@ -130,6 +142,7 @@ namespace PortabilityLayer
 		void FindWindow(const Point &point, Window **outWindow, short *outRegion) const override;
 		void DestroyWindow(Window *window) override;
 		void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) override;
+		bool HandleCloseBoxClick(Window *window, const Point &startPoint) override;
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 		Rect2i GetWindowFullRect(Window *window) const override;
 
@@ -188,6 +201,15 @@ namespace PortabilityLayer
 		return false;
 	}
 
+	bool SimpleBoxChromeTheme::GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const
+	{
+		return false;
+	}
+
+	void SimpleBoxChromeTheme::UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const
+	{
+	}
+
 	void SimpleBoxChromeTheme::RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const
 	{
 		surface->SetForeColor(StdColors::Black());
@@ -237,6 +259,21 @@ namespace PortabilityLayer
 		{
 			if (point.m_x >= 0 && point.m_x < w && point.m_y < 0 && point.m_y >= -13)
 			{
+				if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
+				{
+					uint16_t padding[WindowChromeSides::kCount];
+					GetChromePadding(window, padding);
+
+					const Rect closeBoxRect = GetCloseBoxRectInTopChromeMini();
+					const Vec2i topChromePos = Vec2i(point.m_x + padding[WindowChromeSides::kLeft], point.m_y + padding[WindowChromeSides::kTop]);
+
+					if (closeBoxRect.Contains(Point::Create(topChromePos.m_x, topChromePos.m_y)))
+					{
+						outRegion = RegionIDs::kClose;
+						return true;
+					}
+				}
+
 				outRegion = RegionIDs::kTitleBar;
 				return true;
 			}
@@ -260,6 +297,45 @@ namespace PortabilityLayer
 		}
 
 		return false;
+	}
+
+	bool GenericWindowChromeTheme::GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const
+	{
+		if (region == RegionIDs::kClose)
+		{
+			if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
+			{
+				if (window->GetStyleFlags() & WindowStyleFlags::kMiniBar)
+				{
+					uint16_t padding[WindowChromeSides::kCount];
+					GetChromePadding(window, padding);
+
+					const Rect closeBoxRect = GetCloseBoxRectInTopChromeMini();
+					outRect = Rect2i(closeBoxRect.top - padding[WindowChromeSides::kTop], closeBoxRect.left - padding[WindowChromeSides::kLeft],
+						closeBoxRect.bottom - padding[WindowChromeSides::kTop], closeBoxRect.right - padding[WindowChromeSides::kLeft]);
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	void GenericWindowChromeTheme::UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const
+	{
+		if (region == RegionIDs::kClose)
+		{
+			const bool state = *static_cast<const bool*>(data);
+
+			if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
+			{
+				if (window->GetStyleFlags() & WindowStyleFlags::kMiniBar)
+				{
+					DrawSurface *topChromeSurface = window->GetChromeSurface(WindowChromeSides::kTop);
+					RenderChromeCloseBox(topChromeSurface, GetCloseBoxRectInTopChromeMini(), state);
+				}
+			}
+		}
 	}
 
 	void GenericWindowChromeTheme::RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const
@@ -328,6 +404,9 @@ namespace PortabilityLayer
 		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom, rect.left + 2));
 		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
 		surface->FillRect(Rect::Create(rect.bottom - 1, rect.right - 5, rect.bottom, rect.right - 4));
+
+		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
+			RenderChromeCloseBox(surface, rect, false);
 
 		surface->SetForeColor(StdColors::Black());
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold);
@@ -427,6 +506,9 @@ namespace PortabilityLayer
 		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom - 2, rect.left + 2));
 		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
 
+		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
+			RenderChromeCloseBox(surface, rect, false);
+
 		surface->SetForeColor(StdColors::Black());
 		surface->SetApplicationFont(10, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold);
 		int32_t ascender = surface->MeasureFontAscender();
@@ -462,6 +544,45 @@ namespace PortabilityLayer
 
 		surface->SetForeColor(StdColors::Black());
 		surface->FillRect(rect);
+	}
+
+	Rect GenericWindowChromeTheme::GetCloseBoxRectInTopChrome()
+	{
+		return GetCloseBoxRectInTopChromeMini();	// Temp, maybe... I don't think this is ever actually used
+	}
+
+	Rect GenericWindowChromeTheme::GetCloseBoxRectInTopChromeMini()
+	{
+		int boxDimensions = 8;
+		return Rect::Create(2, 2, 2 + boxDimensions, 2 + boxDimensions);
+	}
+
+	void GenericWindowChromeTheme::RenderChromeCloseBox(DrawSurface *surface, const Rect &chromeRect, bool isClicked) const
+	{
+		const Rect closeBoxRect = GetCloseBoxRectInTopChromeMini();
+
+		if (isClicked)
+		{
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRect(closeBoxRect);
+
+			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 1, closeBoxRect.left + 1, closeBoxRect.bottom - 1, closeBoxRect.right - 1));
+		}
+		else
+		{
+			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillRect(closeBoxRect);
+
+			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 1, closeBoxRect.left + 1, closeBoxRect.bottom, closeBoxRect.right));
+
+			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 2, closeBoxRect.left + 2, closeBoxRect.bottom - 1, closeBoxRect.right - 1));
+
+			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 2, closeBoxRect.left + 2, closeBoxRect.bottom - 2, closeBoxRect.right - 2));
+		}
 	}
 
 	//---------------------------------------------------------------------------
@@ -611,6 +732,22 @@ namespace PortabilityLayer
 			return false;
 
 		return m_chromeTheme->GetChromeInteractionZone(this, point, outRegion);
+	}
+
+	bool WindowImpl::GetChromeRegionRect(RegionID_t region, Rect2i &outRect) const
+	{
+		if (!m_chromeTheme)
+			return false;
+
+		return m_chromeTheme->GetChromeRegionRect(this, region, outRect);
+	}
+
+	void WindowImpl::UpdateRegionChromeState(RegionID_t region, const void *data) const
+	{
+		if (!m_chromeTheme)
+			return;
+
+		m_chromeTheme->UpdateRegionChromeState(this, region, data);
 	}
 
 	bool WindowImpl::IsBorderless() const
@@ -821,6 +958,64 @@ namespace PortabilityLayer
 				}
 			}
 		}
+	}
+
+	bool WindowManagerImpl::HandleCloseBoxClick(Window *window, const Point &startPoint)
+	{
+		bool isInBounds = false;
+
+		const Vec2i windowCoord = Vec2i(window->m_wmX, window->m_wmY);
+
+		Rect2i closeBoxRect;
+		if (!static_cast<WindowImpl*>(window)->GetChromeRegionRect(RegionIDs::kClose, closeBoxRect))
+			return false;
+
+		{
+			const Vec2i relativeCoord = Vec2i(startPoint.h, startPoint.v) - windowCoord;
+			const bool coordIsInBounds = closeBoxRect.Contains(relativeCoord);
+
+			if (coordIsInBounds != isInBounds)
+			{
+				const bool state = coordIsInBounds;
+				isInBounds = coordIsInBounds;
+
+				static_cast<WindowImpl*>(window)->UpdateRegionChromeState(RegionIDs::kClose, &state);
+			}
+		}
+
+		for (;;)
+		{
+			TimeTaggedVOSEvent evt;
+			if (WaitForEvent(&evt, 1))
+			{
+				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+				{
+					const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+					const Vec2i relativeCoord = Vec2i(mouseEvent.m_x, mouseEvent.m_y) - windowCoord;
+					const bool coordIsInBounds = closeBoxRect.Contains(relativeCoord);
+
+					if (coordIsInBounds != isInBounds)
+					{
+						const bool state = coordIsInBounds;
+						isInBounds = coordIsInBounds;
+
+						static_cast<WindowImpl*>(window)->UpdateRegionChromeState(RegionIDs::kClose, &state);
+					}
+
+					if (mouseEvent.m_eventType == GpMouseEventTypes::kUp)
+						break;
+				}
+			}
+		}
+
+		if (isInBounds)
+		{
+			const bool state = false;
+			static_cast<WindowImpl*>(window)->UpdateRegionChromeState(RegionIDs::kClose, &state);
+		}
+
+		return isInBounds;
 	}
 
 	void WindowManagerImpl::SetWindowTitle(Window *window, const PLPasStr &title)
