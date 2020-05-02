@@ -15,6 +15,7 @@ namespace PortabilityLayer
 {
 	struct WindowDef;
 	struct Rect2i;
+	struct Vec2i;
 
 	class WindowManager
 	{
@@ -31,6 +32,9 @@ namespace PortabilityLayer
 		virtual void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) = 0;
 		virtual void SetWindowTitle(Window *window, const PLPasStr &title) = 0;
 		virtual Rect2i GetWindowFullRect(Window *window) const = 0;
+
+		virtual void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) = 0;
+		virtual void ClearResizeInProgress() = 0;
 
 		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;
 

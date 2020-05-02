@@ -35,8 +35,8 @@
 
 void LoadGraphicPlus (DrawSurface *, short, const Rect &);
 void RedrawMapContents (void);
-void LiveHScrollAction (ControlHandle, short);
-void LiveVScrollAction (ControlHandle, short);
+void LiveHScrollAction (PortabilityLayer::Widget *theControl, int thePart);
+void LiveVScrollAction (PortabilityLayer::Widget *theControl, int thePart);
 Boolean QueryNewRoom (void);
 void CreateNailOffscreen (void);
 void KillNailOffscreen (void);
@@ -295,6 +295,29 @@ void RedrawMapContents (void)
 }
 #endif
 
+
+//--------------------------------------------------------------  UpdateMapWindow
+void DrawMapResizeBox(void)
+{
+	DrawSurface *surface = &mapWindow->m_surface;
+
+	const Rect windowRect = surface->m_port.GetRect();
+	Rect growBoxRect = Rect::Create(windowRect.bottom - 14, windowRect.right - 14, windowRect.bottom, windowRect.right);
+
+	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(204, 204, 204, 255));
+	surface->FillRect(growBoxRect);
+
+	surface->SetForeColor(StdColors::Black());
+	surface->FillRect(Rect::Create(growBoxRect.top + 2, growBoxRect.left + 2, growBoxRect.top + 3, growBoxRect.left + 6));
+	surface->FillRect(Rect::Create(growBoxRect.top + 3, growBoxRect.left + 2, growBoxRect.top + 6, growBoxRect.left + 3));
+
+	surface->FillRect(Rect::Create(growBoxRect.top + 8, growBoxRect.left + 11, growBoxRect.top + 12, growBoxRect.left + 12));
+	surface->FillRect(Rect::Create(growBoxRect.top + 11, growBoxRect.left + 8, growBoxRect.top + 12, growBoxRect.left + 11));
+
+	for (int i = 0; i < 7; i++)
+		surface->FillRect(Rect::Create(growBoxRect.top + 3 + i, growBoxRect.left + 3 + i, growBoxRect.top + 5 + i, growBoxRect.left + 5 + i));
+}
+
 //--------------------------------------------------------------  UpdateMapWindow
 
 void UpdateMapWindow (void)
@@ -311,6 +334,8 @@ void UpdateMapWindow (void)
 	SetPortWindowPort(mapWindow);
 	// PL_NotYetImplemented_TODO("Resize")
 	RedrawMapContents();
+
+	DrawMapResizeBox();
 	#endif
 }
 
@@ -339,12 +364,12 @@ void ResizeMapWindow (short newH, short newV)
 	SizeWindow(mapWindow, mapWindowRect.right, mapWindowRect.bottom, true);
 	
 	mapHScroll->SetMax(kMaxNumRoomsH - mapRoomsWide);
-	mapHScroll->SetPosition(Point::Create(0, mapWindowRect.bottom - kMapScrollBarWidth + 1));
+	mapHScroll->SetPosition(Point::Create(-1, mapWindowRect.bottom - kMapScrollBarWidth + 1));
 	mapHScroll->Resize(mapWindowRect.right - kMapScrollBarWidth + 3, kMapScrollBarWidth);
 	mapLeftRoom = mapHScroll->GetState();
 	
 	mapVScroll->SetMax(kMaxNumRoomsV - mapRoomsHigh);
-	mapVScroll->SetPosition(Point::Create(mapWindowRect.right - kMapScrollBarWidth + 1, 0));
+	mapVScroll->SetPosition(Point::Create(mapWindowRect.right - kMapScrollBarWidth + 1, -1));
 	mapVScroll->Resize(kMapScrollBarWidth, mapWindowRect.bottom - kMapScrollBarWidth + 3);
 	mapTopRoom = mapVScroll->GetState();
 

@@ -68,7 +68,7 @@ short BitchAboutColorDepth (void)
 void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 {
 	WindowPtr	whichWindow;
-	long		menuChoice, newSize;
+	long		menuChoice;
 	short		thePart, hDelta, vDelta;
 	Boolean		isDoubleClick;
 	Point		evtPoint = Point::Create(theEvent.m_x, theEvent.m_y);
@@ -110,11 +110,11 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 		}
 		break;
 		
-	case RegionIDs::kExpand:
+	case RegionIDs::kResize:
 		if (whichWindow == mapWindow)
 		{
-			newSize = GrowWindow(mapWindow, evtPoint, &thisMac.gray);
-			ResizeMapWindow(LoWord(newSize), HiWord(newSize));
+			PortabilityLayer::Vec2i newSize = TrackResize(mapWindow, evtPoint, 47, 35, &thisMac.gray);
+			ResizeMapWindow(newSize.m_x, newSize.m_y);
 		}
 		break;
 		

@@ -26,6 +26,7 @@ namespace PortabilityLayer
 	struct MMHandleBlock;
 	class IOStream;
 	class Widget;
+	struct Vec2i;
 }
 
 typedef uint8_t Boolean;
@@ -208,7 +209,7 @@ namespace RegionIDs
 		kContent,
 		kTitleBar,
 		kClose,
-		kExpand,
+		kResize,
 	};
 }
 
@@ -235,8 +236,7 @@ void Delay(int ticks, UInt32 *endTickCount);
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
 bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close box was actually clicked (?)
-Int32 GrowWindow(WindowPtr window, Point start, Rect *size);
-bool TrackBox(WindowPtr window, Point point, int part);	// Returns true if grow/shrink box was clicked (part corresponds to type)
+PortabilityLayer::Vec2i TrackResize(WindowPtr window, Point start, uint16_t minWidth, uint16_t minHeight, Rect *size);
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind);
 void SizeWindow(WindowPtr window, int width, int height, Boolean addToUpdateRegion);

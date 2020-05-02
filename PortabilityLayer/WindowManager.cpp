@@ -119,6 +119,7 @@ namespace PortabilityLayer
 	{
 	public:
 		WindowManagerImpl();
+		~WindowManagerImpl();
 
 		Window *CreateWindow(const WindowDef &windowDef) override;
 		void ResizeWindow(Window *window, int width, int height) override;
@@ -132,6 +133,9 @@ namespace PortabilityLayer
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 		Rect2i GetWindowFullRect(Window *window) const override;
 
+		void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) override;
+		void ClearResizeInProgress() override;
+
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
 		void HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) override;
@@ -144,8 +148,15 @@ namespace PortabilityLayer
 		void RenderWindow(WindowImpl *window, IGpDisplayDriver *displayDriver);
 		void DetachWindow(Window *window);
 
+		void ResetResizeInProgressSurfaces();
+
 		WindowImpl *m_windowStackTop;
 		WindowImpl *m_windowStackBottom;
+
+		Rect2i m_resizeInProgressRect;
+		DrawSurface m_resizeInProgressHorizontalBar;
+		DrawSurface m_resizeInProgressVerticalBar;
+		bool m_isResizeInProgress;
 
 		static WindowManagerImpl ms_instance;
 
@@ -219,9 +230,12 @@ namespace PortabilityLayer
 		const DrawSurface *surface = window->GetDrawSurface();
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
+		const int32_t w = rect.Width();
+		const int32_t h = rect.Height();
+
 		if (window->GetStyleFlags() & WindowStyleFlags::kMiniBar)
 		{
-			if (point.m_x >= 0 && point.m_x < rect.Width() && point.m_y < 0 && point.m_y >= -13)
+			if (point.m_x >= 0 && point.m_x < w && point.m_y < 0 && point.m_y >= -13)
 			{
 				outRegion = RegionIDs::kTitleBar;
 				return true;
@@ -229,9 +243,18 @@ namespace PortabilityLayer
 		}
 		else
 		{
-			if (point.m_x >= 0 && point.m_x < rect.Width() && point.m_y < 0 && point.m_y >= -17)
+			if (point.m_x >= 0 && point.m_x < w && point.m_y < 0 && point.m_y >= -17)
 			{
 				outRegion = RegionIDs::kTitleBar;
+				return true;
+			}
+		}
+
+		if (window->GetStyleFlags() & WindowStyleFlags::kResizable)
+		{
+			if (point.m_x >= w - 14 && point.m_x < w && point.m_y >= h - 14 && point.m_y < h)
+			{
+				outRegion = RegionIDs::kResize;
 				return true;
 			}
 		}
@@ -614,6 +637,12 @@ namespace PortabilityLayer
 	WindowManagerImpl::WindowManagerImpl()
 		: m_windowStackTop(nullptr)
 		, m_windowStackBottom(nullptr)
+		, m_resizeInProgressRect(Rect2i(0, 0, 0, 0))
+		, m_isResizeInProgress(false)
+	{
+	}
+
+	WindowManagerImpl::~WindowManagerImpl()
 	{
 	}
 
@@ -811,6 +840,48 @@ namespace PortabilityLayer
 		return Rect2i(window->m_wmY - padding[WindowChromeSides::kTop], window->m_wmX - padding[WindowChromeSides::kLeft], window->m_wmY + portRect.Height() + padding[WindowChromeSides::kBottom], window->m_wmX + portRect.Width() + padding[WindowChromeSides::kRight]);
 	}
 
+	void WindowManagerImpl::SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size)
+	{
+		ResetResizeInProgressSurfaces();
+
+		m_isResizeInProgress = true;
+		if (!m_resizeInProgressHorizontalBar.Init(Rect::Create(0, 0, 3, size.m_x + 4), GpPixelFormats::k8BitStandard))
+		{
+			m_resizeInProgressHorizontalBar.SetForeColor(StdColors::Black());
+			m_resizeInProgressHorizontalBar.FillRect(Rect::Create(0, 0, 3, size.m_x + 4));
+			m_resizeInProgressHorizontalBar.SetForeColor(StdColors::White());
+			m_resizeInProgressHorizontalBar.FillRect(Rect::Create(1, 1, 2, size.m_x + 3));
+		}
+		else
+		{
+			m_isResizeInProgress = false;
+			return;
+		}
+
+		if (!m_resizeInProgressVerticalBar.Init(Rect::Create(0, 0, size.m_y, 3), GpPixelFormats::k8BitStandard))
+		{
+			m_resizeInProgressVerticalBar.SetForeColor(StdColors::Black());
+			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 0, size.m_y, 1));
+			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 2, size.m_y, 3));
+			m_resizeInProgressVerticalBar.SetForeColor(StdColors::White());
+			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 1, size.m_y, 2));
+		}
+		else
+		{
+			m_isResizeInProgress = false;
+			return;
+		}
+
+		const PortabilityLayer::Vec2i topLeft = PortabilityLayer::Vec2i(window->m_wmX, window->m_wmY);
+		m_resizeInProgressRect = PortabilityLayer::Rect2i(topLeft, topLeft + size);
+	}
+
+	void WindowManagerImpl::ClearResizeInProgress()
+	{
+		ResetResizeInProgressSurfaces();
+		m_isResizeInProgress = false;
+	}
+
 	void WindowManagerImpl::RenderFrame(IGpDisplayDriver *displayDriver)
 	{
 		PortabilityLayer::DisplayDeviceManager *dd = PortabilityLayer::DisplayDeviceManager::GetInstance();
@@ -822,6 +893,17 @@ namespace PortabilityLayer
 		{
 			RenderWindow(window, displayDriver);
 			window = window->GetWindowAbove();
+		}
+
+		if (m_isResizeInProgress)
+		{
+			m_resizeInProgressHorizontalBar.PushToDDSurface(displayDriver);
+			m_resizeInProgressVerticalBar.PushToDDSurface(displayDriver);
+
+			displayDriver->DrawSurface(m_resizeInProgressHorizontalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_topLeft.m_y - 2, m_resizeInProgressRect.Right() - m_resizeInProgressRect.Left() + 4, 3);
+			displayDriver->DrawSurface(m_resizeInProgressHorizontalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_bottomRight.m_y - 1, m_resizeInProgressRect.Right() - m_resizeInProgressRect.Left() + 4, 3);
+			displayDriver->DrawSurface(m_resizeInProgressVerticalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_topLeft.m_y, 3, m_resizeInProgressRect.Bottom() - m_resizeInProgressRect.Top());
+			displayDriver->DrawSurface(m_resizeInProgressVerticalBar.m_ddSurface, m_resizeInProgressRect.m_bottomRight.m_x - 1, m_resizeInProgressRect.m_topLeft.m_y, 3, m_resizeInProgressRect.Bottom() - m_resizeInProgressRect.Top());
 		}
 	}
 
@@ -900,6 +982,15 @@ namespace PortabilityLayer
 
 		impl->SetWindowAbove(nullptr);
 		impl->SetWindowBelow(nullptr);
+	}
+
+	void WindowManagerImpl::ResetResizeInProgressSurfaces()
+	{
+		m_resizeInProgressHorizontalBar.~DrawSurface();
+		m_resizeInProgressVerticalBar.~DrawSurface();
+
+		new (&m_resizeInProgressHorizontalBar) DrawSurface();
+		new (&m_resizeInProgressVerticalBar) DrawSurface();
 	}
 
 	Window *WindowManagerImpl::GetPutInFrontSentinel() const

@@ -114,16 +114,52 @@ bool TrackGoAway(WindowPtr window, Point point)
 	return false;
 }
 
-Int32 GrowWindow(WindowPtr window, Point start, Rect *size)
+PortabilityLayer::Vec2i TrackResize(WindowPtr window, Point start, uint16_t minWidth, uint16_t minHeight, Rect *size)
 {
-	PL_NotYetImplemented();
-	return 0;
-}
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-bool TrackBox(WindowPtr window, Point point, int part)
-{
-	PL_NotYetImplemented();
-	return false;
+	const Rect baseRect = window->m_surface.m_port.GetRect();
+
+	const PortabilityLayer::Vec2i baseSize = PortabilityLayer::Vec2i(baseRect.Width(), baseRect.Height());
+	const PortabilityLayer::Vec2i basePoint = PortabilityLayer::Vec2i(start.h, start.v);
+	PortabilityLayer::Vec2i currentTarget = baseSize;
+
+	wm->SetResizeInProgress(window, baseSize);
+
+	for (;;)
+	{
+		TimeTaggedVOSEvent evt;
+		if (WaitForEvent(&evt, 1))
+		{
+			if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+			{
+				const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+				const PortabilityLayer::Vec2i nextPoint = PortabilityLayer::Vec2i(mouseEvt.m_x, mouseEvt.m_y);
+				PortabilityLayer::Vec2i requestedSize = baseSize + nextPoint - basePoint;
+
+				if (requestedSize.m_x < static_cast<int32_t>(minWidth))
+					requestedSize.m_x = minWidth;
+
+				if (requestedSize.m_y < static_cast<int32_t>(minHeight))
+					requestedSize.m_y = minHeight;
+
+				if (requestedSize != currentTarget)
+				{
+					currentTarget = requestedSize;
+					wm->SetResizeInProgress(window, currentTarget);
+				}
+
+				if (mouseEvt.m_button == GpMouseButtons::kLeft && mouseEvt.m_eventType == GpMouseEventTypes::kUp)
+				{
+					wm->ClearResizeInProgress();
+					return requestedSize;
+				}
+			}
+		}
+	}
+
+	return PortabilityLayer::Vec2i(0, 0);
 }
 
 WindowPtr GetNewCWindow(int resID, void *storage, WindowPtr behind)
