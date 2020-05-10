@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "MacBinary2.h"
 #include "MacFileMem.h"
 #include "CFileStream.h"
@@ -8,24 +7,56 @@
 
 #include <stdio.h>
 
+uint8_t *ReadEntireFile(const char *path, uint32_t &szOut)
+{
+	FILE *f = fopen(path, "rb");
+	if (!f)
+	{
+		fprintf(stderr, "Could not open input file '%s'", path);
+		return nullptr;
+	}
+
+	PortabilityLayer::CFileStream stream(f, true, false, true);
+
+	PortabilityLayer::UFilePos_t sz = stream.Size();
+	uint8_t *buffer = new uint8_t[sz];
+	stream.Read(buffer, sz);
+
+	stream.Close();
+
+	szOut = static_cast<uint32_t>(sz);
+	return buffer;
+}
+
 int main(int argc, const char **argv)
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
-		fprintf(stderr, "Usage: flattenmov <input.bin> <output.mov>");
+		fprintf(stderr, "Usage: flattenmov <input.gpd> <input.gpr> <output.mov>");
 		return -1;
 	}
 
-	FILE *f = fopen(argv[1], "rb");
-	PortabilityLayer::CFileStream inStream(f, true, false, true);
+	uint32_t dataSize, resSize;
+	uint8_t *dataFork = ReadEntireFile(argv[1], dataSize);
+	uint8_t *resFork = ReadEntireFile(argv[2], resSize);
 
-	PortabilityLayer::MacFileMem *memFile = PortabilityLayer::MacBinary2::ReadBin(&inStream);
-	inStream.Close();
+	if (!dataFork || !resFork)
+		return -1;
 
-	const uint8_t *dataBytes = memFile->DataFork();
+	PortabilityLayer::MacFileInfo mfi;
+	mfi.m_dataForkSize = dataSize;
+	mfi.m_resourceForkSize = resSize;
+	mfi.m_commentSize = 0;
+
+	PortabilityLayer::MacFileMem memFile(dataFork, resFork, nullptr, mfi);
+
+	delete[] dataFork;
+	delete[] resFork;
+
+	const uint8_t *dataBytes = memFile.DataFork();
 	if (dataBytes[0] == 0 && dataBytes[1] == 0 && dataBytes[2] == 0 && dataBytes[3] == 0)
 	{
-		uint32_t mdatSize = memFile->FileInfo().m_dataForkSize;
+		uint32_t mdatSize = memFile.FileInfo().m_dataForkSize;
 		uint8_t mdatSizeEncoded[4];
 		mdatSizeEncoded[0] = ((mdatSize >> 24) & 0xff);
 		mdatSizeEncoded[1] = ((mdatSize >> 16) & 0xff);
@@ -34,7 +65,7 @@ int main(int argc, const char **argv)
 
 		PortabilityLayer::ResourceFile *rf = PortabilityLayer::ResourceFile::Create();
 
-		PortabilityLayer::MemReaderStream resStream(memFile->ResourceFork(), memFile->FileInfo().m_resourceForkSize);
+		PortabilityLayer::MemReaderStream resStream(memFile.ResourceFork(), memFile.FileInfo().m_resourceForkSize);
 		rf->Load(&resStream);
 
 		const PortabilityLayer::ResourceCompiledTypeList *typeList = rf->GetResourceTypeList(PortabilityLayer::ResTypeID('moov'));
@@ -48,7 +79,12 @@ int main(int argc, const char **argv)
 			break;
 		}
 
-		FILE *outF = fopen(argv[2], "wb");
+		FILE *outF = fopen(argv[3], "wb");
+		if (!outF)
+		{
+			fprintf(stderr, "Could not open output file '%s'", argv[3]);
+			return -1;
+		}
 
 		fwrite(mdatSizeEncoded, 1, 4, outF);
 		fwrite(dataBytes + 4, 1, mdatSize - 4, outF);
@@ -59,8 +95,14 @@ int main(int argc, const char **argv)
 	}
 	else
 	{
-		FILE *outF = fopen(argv[2], "wb");
-		fwrite(dataBytes, 1, memFile->FileInfo().m_dataForkSize, outF);
+		FILE *outF = fopen(argv[3], "wb");
+		if (!outF)
+		{
+			fprintf(stderr, "Could not open output file '%s'", argv[3]);
+			return -1;
+		}
+
+		fwrite(dataBytes, 1, memFile.FileInfo().m_dataForkSize, outF);
 		fclose(outF);
 	}
 

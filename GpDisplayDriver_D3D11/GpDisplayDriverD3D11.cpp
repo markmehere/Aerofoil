@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "GpApplicationName.h"
 #include "GpDisplayDriverD3D11.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
