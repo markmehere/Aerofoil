@@ -53,7 +53,7 @@ bool CompactProRLEDecompressor::EmitOneByte(uint8_t &b)
 	if (halfescaped)
 	{
 		byte = 0x81;
-		halfescaped = true;
+		halfescaped = false;
 	}
 	else
 	{
