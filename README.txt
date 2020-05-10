@@ -16,6 +16,8 @@ Other parts:
 - ApplicationResourcePatches: Modified resources (used to change config dialogs).
 - hqx2bin: Converts BinHex to MacBinary (not really used any more)
 - hqx2gp: Converts BinHex to .gpr, .gpd, and .gpf (resource fork data, data fork data, and Finder data, respectively)
+- gpr2gpa: Converts Macintosh resource files to a .gpa (a ZIP archive containing the resources in more common formats)
 - FTagData: Copies a data-only file to a .gpd and creates a .gpf for it
 - PictChecker: Experimental app that extracts all of the PICT resources from all of the houses and dumps them to PNG.  Used to verify that the PICT loader works.
 - MacRomanConverter: Micro-library that converts the Mac Roman character set to Unicode.
+- unpacktool: A utility for extracting vintage StuffIt and Compact Pro archives.

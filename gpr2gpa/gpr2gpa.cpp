@@ -1,5 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include "BMPFormat.h"
 #include "CFileStream.h"
 #include "CombinedTimestamp.h"

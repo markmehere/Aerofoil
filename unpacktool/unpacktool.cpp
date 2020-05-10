@@ -1,0 +1,566 @@
+#include <stdio.h>
+
+#include "IArchiveParser.h"
+#include "IFileReader.h"
+#include "StuffItParser.h"
+#include "StuffIt5Parser.h"
+#include "CompactProParser.h"
+
+#include "UTF8.h"
+#include "UTF16.h"
+
+#include "ArchiveDescription.h"
+#include "IDecompressor.h"
+
+#include "NullDecompressor.h"
+#include "RLE90Decompressor.h"
+#include "LZWDecompressor.h"
+#include "StuffIt13Decompressor.h"
+#include "StuffItHuffmanDecompressor.h"
+#include "StuffItArsenicDecompressor.h"
+#include "CompactProRLEDecompressor.h"
+#include "CompactProLZHRLEDecompressor.h"
+
+#include "CSInputBuffer.h"
+
+#include <string.h>
+
+#include <Windows.h>
+#include <shellapi.h>
+
+#include <string>
+#include <vector>
+
+class CFileReader final : public IFileReader
+{
+public:
+	explicit CFileReader(FILE *f);
+
+	size_t Read(void *buffer, size_t sz);
+	size_t FileSize() const override;
+
+	bool SeekStart(FilePos_t pos) override;
+	bool SeekCurrent(FilePos_t pos) override;
+	bool SeekEnd(FilePos_t pos) override;
+	FilePos_t GetPosition() const override;
+
+private:
+	FILE *m_file;
+	long m_size;
+};
+
+
+CFileReader::CFileReader(FILE *f)
+	: m_file(f)
+{
+	fseek(f, 0, SEEK_END);
+	m_size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+}
+
+size_t CFileReader::Read(void *buffer, size_t sz)
+{
+	return fread(buffer, 1, sz, m_file);
+}
+
+size_t CFileReader::FileSize() const
+{
+	return static_cast<size_t>(m_size);
+}
+
+bool CFileReader::SeekStart(FilePos_t pos)
+{
+	return !_fseeki64(m_file, pos, SEEK_SET);
+}
+
+bool CFileReader::SeekCurrent(FilePos_t pos)
+{
+	return !_fseeki64(m_file, pos, SEEK_CUR);
+}
+
+bool CFileReader::SeekEnd(FilePos_t pos)
+{
+	return !_fseeki64(m_file, pos, SEEK_END);
+}
+
+IFileReader::FilePos_t CFileReader::GetPosition() const
+{
+	return _ftelli64(m_file);
+}
+
+StuffItParser g_stuffItParser;
+StuffIt5Parser g_stuffIt5Parser;
+CompactProParser g_compactProParser;
+
+std::string ConvertWStringToUTF8(const wchar_t *str)
+{
+	size_t strLength = wcslen(str);
+
+	std::string result;
+
+	for (size_t i = 0; i < strLength; )
+	{
+		size_t charsDigested = 0;
+		uint32_t codePoint = 0;
+		uint8_t asUTF8[4];
+		if (!PortabilityLayer::UTF16Processor::DecodeCodePoint(reinterpret_cast<const uint16_t*>(str) + i, strLength - i, charsDigested, codePoint))
+			return "";
+
+		i += charsDigested;
+
+		size_t bytesEmitted = 0;
+		PortabilityLayer::UTF8Processor::EncodeCodePoint(asUTF8, bytesEmitted, codePoint);
+
+		result.append(reinterpret_cast<const char*>(asUTF8), bytesEmitted);
+	}
+
+	return result;
+}
+
+std::wstring ConvertUTF8ToWString(const char *str)
+{
+	size_t strLength = strlen(str);
+
+	std::wstring result;
+
+	for (size_t i = 0; i < strLength; )
+	{
+		size_t charsDigested = 0;
+		uint32_t codePoint = 0;
+		uint16_t asUTF16[4];
+		if (!PortabilityLayer::UTF8Processor::DecodeCodePoint(reinterpret_cast<const uint8_t*>(str) + i, strLength - i, charsDigested, codePoint))
+			return L"";
+
+		i += charsDigested;
+
+		size_t codePointsEmitted = 0;
+		PortabilityLayer::UTF16Processor::EncodeCodePoint(asUTF16, codePointsEmitted, codePoint);
+
+		result.append(reinterpret_cast<const wchar_t*>(asUTF16), codePointsEmitted);
+	}
+
+	return result;
+}
+
+FILE *fopen_utf8(const char *path, const char *options)
+{
+	std::wstring pathUTF16 = ConvertUTF8ToWString(path);
+	std::wstring optionsUTF16 = ConvertUTF8ToWString(options);
+
+	return _wfopen(pathUTF16.c_str(), optionsUTF16.c_str());
+}
+
+int mkdir_utf8(const char *path)
+{
+	std::wstring pathUTF16 = ConvertUTF8ToWString(path);
+	return _wmkdir(pathUTF16.c_str());
+}
+
+void TerminateDirectoryPath(std::string &path)
+{
+	const size_t length = path.length();
+
+	if (length == 0)
+		path.append("\\");
+	else
+	{
+		const char lastChar = path[path.length() - 1];
+		if (lastChar != '\\' && lastChar != '/')
+			path.append("\\");
+	}
+}
+
+std::string LegalizeWindowsFileName(const std::string &path)
+{
+	const size_t length = path.length();
+
+	std::string legalizedPath;
+
+	for (size_t i = 0; i < length; i++)
+	{
+		const char c = path[i];
+		bool isLegalChar = true;
+		if (c >= '\0' && c <= 31)
+			isLegalChar = false;
+		else if (c == '<' || c == '>' || c == ':' || c == '\"' || c == '/' || c == '\\' || c == '|' || c == '?' || c == '*')
+			isLegalChar = false;
+		else if (c == ' ' || c == '.')
+		{
+			if (i == length - 1)
+				isLegalChar = false;
+		}
+
+		if (isLegalChar)
+			legalizedPath.append(&c, 1);
+		else
+		{
+			const char *hexChars = "0123456789abcdef";
+			char legalizedCharacter[3];
+			legalizedCharacter[0] = '$';
+			legalizedCharacter[1] = hexChars[(c >> 4) & 0xf];
+			legalizedCharacter[2] = hexChars[c & 0xf];
+
+			legalizedPath.append(legalizedCharacter, 3);
+		}
+	}
+
+	const char *bannedNames[] =
+	{
+		"CON",
+		"PRN",
+		"AUX",
+		"NUL",
+		"COM1",
+		"COM2",
+		"COM3",
+		"COM4",
+		"COM5",
+		"COM6",
+		"COM7",
+		"COM8",
+		"COM9",
+		"LPT1",
+		"LPT2",
+		"LPT3",
+		"LPT4",
+		"LPT5",
+		"LPT6",
+		"LPT7",
+		"LPT8",
+		"LPT9"
+	};
+
+	const size_t numBannedNames = sizeof(bannedNames) / sizeof(bannedNames[0]);
+
+	for (size_t i = 0; i < numBannedNames; i++)
+	{
+		const size_t banLength = strlen(bannedNames[i]);
+		const size_t legalizedPathLength = legalizedPath.length();
+
+		bool isThisBannedName = false;
+		if (legalizedPathLength >= banLength)
+		{
+			bool startsWithBannedName = true;
+			for (size_t ci = 0; ci < banLength; ci++)
+			{
+				int charDelta = bannedNames[i][ci] - legalizedPath[ci];
+				if (charDelta != 0 && charDelta != ('A' - 'a'))
+				{
+					startsWithBannedName = false;
+					break;
+				}
+			}
+
+			if (startsWithBannedName)
+			{
+				if (legalizedPathLength == banLength)
+				{
+					legalizedPath.append("$");
+					break;
+				}
+				else if (legalizedPath[banLength] == '.')
+				{
+					legalizedPath = legalizedPath.substr(0, banLength) + "$" + legalizedPath.substr(banLength);
+					break;
+				}
+			}
+		}
+	}
+
+	if (legalizedPath.length() == 0)
+		legalizedPath = "$";
+
+	return legalizedPath;
+}
+
+void MakeIntermediateDirectories(const std::string &path)
+{
+	size_t l = path.length();
+
+	for (size_t i = 0; i < l; i++)
+	{
+		if (path[i] == '/' || path[i] == '\\')
+			mkdir_utf8(path.substr(0, i).c_str());
+	}
+}
+
+int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader);
+
+int ExtractSingleFork(const ArchiveCompressedChunkDesc &chunkDesc, const std::string &path, IFileReader &reader)
+{
+	if (chunkDesc.m_uncompressedSize == 0)
+		return 0;
+
+	if (!reader.SeekStart(chunkDesc.m_filePosition))
+	{
+		fprintf(stderr, "Could not seek to input position\n");
+		return -1;
+	}
+
+	FILE *metadataF = fopen_utf8(path.c_str(), "wb");
+	if (!metadataF)
+	{
+		fprintf(stderr, "Could not open output file %s\n", path.c_str());
+		return -1;
+	}
+
+	IDecompressor *decompressor = nullptr;
+	switch (chunkDesc.m_compressionMethod)
+	{
+	case CompressionMethods::kNone:
+		decompressor = new NullDecompressor();
+		break;
+	case CompressionMethods::kStuffItRLE90:
+		decompressor = new RLE90Decompressor();
+		break;
+	case CompressionMethods::kStuffItLZW:
+		decompressor = new LZWDecompressor(0x8e);
+		break;
+	case CompressionMethods::kStuffItHuffman:
+		decompressor = new StuffItHuffmanDecompressor();
+		break;
+	case CompressionMethods::kStuffIt13:
+		decompressor = new StuffIt13Decompressor();
+		break;
+	case CompressionMethods::kStuffItArsenic:
+		decompressor = new StuffItArsenicDecompressor();
+		break;
+	case CompressionMethods::kCompactProRLE:
+		decompressor = new CompactProRLEDecompressor();
+		break;
+	case CompressionMethods::kCompactProLZHRLE:
+		decompressor = new CompactProLZHRLEDecompressor(0x1fff0);
+		break;
+	default:
+		break;
+	}
+
+	if (!decompressor)
+	{
+		fprintf(stderr, "Could not decompress file %s, compression method %i is not implemented\n", path.c_str(), static_cast<int>(chunkDesc.m_compressionMethod));
+		fclose(metadataF);
+		return -1;
+	}
+
+	CSInputBuffer *input = CSInputBufferAlloc(&reader, 2048);
+
+	if (!input)
+	{
+		fprintf(stderr, "Could not decompress file %s, buffer init failed\n", path.c_str());
+		delete decompressor;
+		fclose(metadataF);
+		return -1;
+	}
+
+	if (!decompressor->Reset(input, chunkDesc.m_compressedSize, chunkDesc.m_uncompressedSize))
+	{
+		fprintf(stderr, "Could not decompress file %s, decompression init failed\n", path.c_str());
+		CSInputBufferFree(input);
+		delete decompressor;
+		fclose(metadataF);
+		return -1;
+	}
+
+	const size_t kDecompressionBufferSize = 4096;
+	uint8_t decompressionBuffer[kDecompressionBufferSize];
+	size_t decompressedBytesRemaining = chunkDesc.m_uncompressedSize;
+
+	while (decompressedBytesRemaining > 0)
+	{
+		size_t decompressAmount = decompressedBytesRemaining;
+		if (decompressAmount > kDecompressionBufferSize)
+			decompressAmount = kDecompressionBufferSize;
+
+		if (!decompressor->ReadBytes(decompressionBuffer, decompressAmount))
+		{
+			fprintf(stderr, "Could not decompress file %s, byte read failed\n", path.c_str());
+			CSInputBufferFree(input);
+			delete decompressor;
+			fclose(metadataF);
+			return -1;
+		}
+
+		if (fwrite(decompressionBuffer, 1, decompressAmount, metadataF) != decompressAmount)
+		{
+			fprintf(stderr, "Could not decompress file %s, write failed\n", path.c_str());
+			CSInputBufferFree(input);
+			delete decompressor;
+			fclose(metadataF);
+			return -1;
+		}
+
+		decompressedBytesRemaining -= decompressAmount;
+	}
+
+	delete decompressor;
+	CSInputBufferFree(input);
+	fclose(metadataF);
+	return 0;
+}
+
+int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &reader)
+{
+	PortabilityLayer::MacFilePropertiesSerialized mfps;
+	mfps.Serialize(item.m_macProperties);
+
+	std::string metadataPath = (path + ".gpf");
+	std::string dataPath = (path + ".gpd");
+	std::string resPath = (path + ".gpr");
+
+	FILE *metadataF = fopen_utf8(metadataPath.c_str(), "wb");
+	if (!metadataF)
+	{
+		fprintf(stderr, "Could not open metadata output file %s", metadataPath.c_str());
+		return -1;
+	}
+
+	if (fwrite(mfps.m_data, 1, PortabilityLayer::MacFilePropertiesSerialized::kSize, metadataF) != PortabilityLayer::MacFilePropertiesSerialized::kSize)
+	{
+		fprintf(stderr, "A problem occurred writing metadata");
+		fclose(metadataF);
+		return -1;
+	}
+
+	fclose(metadataF);
+
+	int returnCode = ExtractSingleFork(item.m_dataForkDesc, dataPath, reader);
+	if (returnCode)
+		return returnCode;
+
+	returnCode = ExtractSingleFork(item.m_resourceForkDesc, resPath, reader);
+	if (returnCode)
+		return returnCode;
+
+	return 0;
+}
+
+int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, IFileReader &reader)
+{
+	std::string path(reinterpret_cast<const char*>(item.m_fileNameUTF8.data()), item.m_fileNameUTF8.size());
+
+	for (int i = 0; i < depth; i++)
+		printf("  ");
+
+	fputws(ConvertUTF8ToWString(path.data()).c_str(), stdout);
+	printf("\n");
+
+	path = LegalizeWindowsFileName(path);
+
+	path = dirPath + path;
+
+	if (item.m_isDirectory)
+	{
+		mkdir_utf8(path.c_str());
+
+		path.append("\\");
+
+		int returnCode = RecursiveExtractFiles(depth + 1, item.m_children, path, reader);
+		if (returnCode)
+			return returnCode;
+
+		return 0;
+	}
+	else
+		return ExtractFile(item, path, reader);
+}
+
+int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader)
+{
+	const std::vector<ArchiveItem> &items = itemList->m_items;
+
+	const size_t numChildren = items.size();
+	for (size_t i = 0; i < numChildren; i++)
+	{
+		int returnCode = ExtractItem(depth, items[i], path, reader);
+		if (returnCode)
+			return returnCode;
+	}
+
+	return 0;
+}
+
+int unpackMain(int argc, const char **argv)
+{
+	if (argc != 3)
+	{
+		fprintf(stderr, "Usage: unpacktool <archive file> <destination>");
+		return -1;
+	}
+
+	FILE *inputArchive = fopen_utf8(argv[1], "rb");
+
+	if (!inputArchive)
+	{
+		fprintf(stderr, "Could not open input archive");
+		return -1;
+	}
+
+	CFileReader reader(inputArchive);
+
+	IArchiveParser *parsers[] =
+	{
+		&g_compactProParser,
+		&g_stuffItParser,
+		&g_stuffIt5Parser
+	};
+
+	ArchiveItemList *archiveItemList = nullptr;
+
+	printf("Reading archive...\n");
+
+	for (IArchiveParser *parser : parsers)
+	{
+		if (parser->Check(reader))
+		{
+			archiveItemList = parser->Parse(reader);
+			break;
+		}
+	}
+
+	if (!archiveItemList)
+	{
+		fprintf(stderr, "Failed to open archive");
+		return -1;
+	}
+
+	printf("Decompressing files...\n");
+
+	std::string currentPath = argv[2];
+	TerminateDirectoryPath(currentPath);
+
+	MakeIntermediateDirectories(currentPath);
+
+	int returnCode = RecursiveExtractFiles(0, archiveItemList, currentPath, reader);
+
+	delete archiveItemList;
+
+	return returnCode;
+}
+
+int main(int argc, const char **argv)
+{
+	LPWSTR *szArglist;
+	int nArgs;
+	int i;
+
+	szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+
+	std::vector<std::string> utf8ArgStrings;
+	std::vector<const char *> utf8Args;
+
+	utf8ArgStrings.resize(nArgs);
+	utf8Args.resize(nArgs);
+
+	for (int i = 0; i < nArgs; i++)
+	{
+		utf8ArgStrings[i] = ConvertWStringToUTF8(szArglist[i]);
+		utf8Args[i] = utf8ArgStrings[i].c_str();
+	}
+
+	const char **args = nullptr;
+	if (nArgs)
+		args = &utf8Args[0];
+
+	return unpackMain(nArgs, args);
+}
+

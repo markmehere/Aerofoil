@@ -1,16 +1,26 @@
 If you want to import an existing third-party Glider PRO house to Aerofoil, a few steps are required.
 
-First, you need to generate a timestamp file.  Use the "MakeTimestamp" utility to dump the current time to a timestamp file.
+You need to convert the file into Aerofoil's "triplet" format, which consists of a metadata file (extension .gpf), and file forks (.gpd for data, .gpr for resources).  How you get these depends on the input format:
+- For MacBinary files (.bin), use the "bin2gp" utility
+- For BinHex files (.hqx), use the "hqx2gp" utility
+- For StuffIt (.sit) and Compact Pro (.cpt) archives, use the "unpacktool" utility to extract the contents in triplet format.  The "unpacktool" utility should support any most vintage StuffIt archives made with StuffIt Deluxe 6 or lower.
 
-Second, you need to extract the house data from the original archive.  Most existing Glider PRO houses are in StuffIt! archives (.sit extension), which can be difficult to extract.  There is a utility called The Unarchiver for macOS which appears to support it.  An alternative is to extract the file on an actual vintage Mac.
+(NOTE: ".sea" files are self-extracting archives, typically StuffIt or Compact Pro archives with the self-extractor program in the resources.  These will always be distributed in a fork-grouping container like MacBinary or BinHex.  For cases like these, you need to split the self-extracting archive using "bin2gp" or "hqx2gp" and then pass the ".sea.gpd" file (which contains the archive data) to "unpacktool" to decompress it.)
 
-The next step depends on whether or not the house has custom resources.  If the house doesn't have custom resources, then add a ".gpd" extension to the house and use the FTagData utility to generate a corresponding ".gpf" metadata file, using the timestamp you generated in the first step.  You need to specify "gliH" as the file type ID and "ozm5" as the file creator ID.
-
-If the house does have custom resources, then you need to get the resource data somehow, and you still need to generate the metadata.  There are a few options there:
-- If extracting the file generated a separate file containing the resource data, which I think is what happens when extracting files on macOS, then you can use the resource file directly, and handle the other steps the same as you would if it didn't have custom resources.
-- If you can get the house into MacBinary format, then you can use the "bin2gp" utility to convert it to .gpf, .gpd, and .gpr files.
-- If you can get the house into BinHex4 (.hqx) format, then you can use the "hqx2gp" utility to convert it to .gpf, .gpd, and .gpr files.
-
-Once you have a .gpr file of the raw Mac-format resource data, you need to convert it to Aerofoil's ZIP-based resource archive format and convert the internal resources out of Mac-specific formats.  Use the "gpr2gpa" utility to do this.
+Once you've done that, if the house has custom resources (i.e. a .gpr file), you need to convert it to an Aerofoil resource archive, which you can do using the "gpr2gpa" tool.
 
 gpr2gpa's PICT converter may not support all PICT encodings.  If you find a house with custom PICT resources that isn't supported, please submit a sample to Aerofoil's issue tracker.
+
+
+Converting QuickTime movies for displaying on in-game TVs is a bit more complex.  First, you need to convert the movie to a sequence of BMP images, which you can do with third-party tools such as FFMPEG.  Second, you need to create a JSON file containing the movie metadata, which looks like this, for example:
+
+{
+	"frameRateNumerator" : 8,
+	"frameRateDenominator" : 1
+}
+
+Once you've done that, create a ZIP archive where the path of the JSON file is "muvi\0.json" and the frames are "PICT\<frame number>.bmp", where <frame number> is the frame number, starting with 1 as the first frame, and name that the same as the house name, but with a ".mov.gpa" extension.
+
+Next, you need to create a metadata file for the movie, which should have a ".mov.gpf" extension.  You can create the metadata file using the "FTagData" utility, using a timestamp file created with the "MakeTimestamp" utility.
+
+Some old QuickTime movies contain movie tracking information in the movie resources, in which case you need to merge them into the data for modern utilities to read them.  You can use the "flattenmov" tool to do this if it's in MacBinary format.  There isn't currently an option for flattening a movie in triplet format - This will probably change in the future by changing "flattenmov" to load triplet-format files.

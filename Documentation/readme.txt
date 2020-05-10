@@ -81,3 +81,12 @@ FreeType:
 Portions of this software are copyright (c)2020 The FreeType Project (www.freetype.org).  All rights reserved.
 
 Distributed under the GPLv2 license (see license_gplv2.txt)
+
+
+-------------------------------------------------------------------------------
+The Unarchiver:
+
+The "unpacktool" utility is heavily based on code from The Unarchiver.
+Copyright (C) 2006-2013 Dag Ågren
+
+Distributed under the LGPLv2 license (See license_lgplv2.txt)

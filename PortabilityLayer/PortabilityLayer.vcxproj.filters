@@ -486,6 +486,9 @@
     <ClInclude Include="AppEventHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UTF16.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -763,6 +766,9 @@
     </ClCompile>
     <ClCompile Include="AppEventHandler.cpp">
       <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UTF16.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
