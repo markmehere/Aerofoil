@@ -23,4 +23,4 @@ Once you've done that, create a ZIP archive where the path of the JSON file is "
 
 Next, you need to create a metadata file for the movie, which should have a ".mov.gpf" extension.  You can create the metadata file using the "FTagData" utility, using a timestamp file created with the "MakeTimestamp" utility.
 
-Some old QuickTime movies contain movie tracking information in the movie resources, in which case you need to merge them into the data for modern utilities to read them.  You can use the "flattenmov" tool to do this if it's in MacBinary format.  There isn't currently an option for flattening a movie in triplet format - This will probably change in the future by changing "flattenmov" to load triplet-format files.
+Some old QuickTime movies contain movie tracking information in the movie resource fork, in which case you need to merge them into the data for modern utilities to read them.  You can use the "flattenmov" tool to do this: Pass it the data (.gpd) and resource (.gpr) data files for a movie, and it will merge them into a single .mov file.
