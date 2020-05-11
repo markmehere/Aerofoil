@@ -1,5 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include "MemReaderStream.h"
 #include "MMHandleBlock.h"
 #include "ResourceCompiledTypeList.h"
