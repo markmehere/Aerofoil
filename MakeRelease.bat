@@ -23,4 +23,23 @@ xcopy /I /E /Y /K Packaged ReleasePkg\Aerofoil\Packaged
 xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
 xcopy /I /E /Y /K Documentation ReleasePkg\Aerofoil\Documentation
 
+attrib +R Packaged\Houses\*
+
+mkdir InstallerPackages
+mkdir InstallerPackages\DefaultHouses
+mkdir InstallerPackages\HousePack1
+mkdir InstallerPackages\LooseDocumentation
+
+copy /Y Packaged\Houses\* InstallerPackages\HousePack1\
+del /Q InstallerPackages\HousePack1\Slumberland.*
+del /Q "InstallerPackages\HousePack1\Demo House.*"
+copy /Y Packaged\Houses\Slumberland.* InstallerPackages\DefaultHouses
+copy /Y "Packaged\Houses\Demo House.*" InstallerPackages\DefaultHouses
+
+attrib +R InstallerPackages\DefaultHouses\*
+attrib +R InstallerPackages\HousePack1\*
+
+copy /Y Documentation\* InstallerPackages\LooseDocumentation\
+del /Q InstallerPackages\LooseDocumentation\readme.txt
+
 pause
