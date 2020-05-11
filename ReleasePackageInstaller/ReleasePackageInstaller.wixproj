@@ -6,17 +6,17 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>d26bd501-28a7-4849-8130-fb5ea0a2b82f</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>ReleasePackageInstaller</OutputName>
+    <OutputName>Aerofoil-installpkg</OutputName>
     <OutputType>Package</OutputType>
     <InstallerPlatform>x64</InstallerPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputPath>$(SolutionDir)ReleasePkg\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputPath>$(SolutionDir)ReleasePkg\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
