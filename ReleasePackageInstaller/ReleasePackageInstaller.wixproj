@@ -152,9 +152,6 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent />
-  </PropertyGroup>
-  <PropertyGroup>
     <DefineConstants>
 ResourcesDataDir=$(SolutionDir)\Resources;
 DocumentationDataDir=$(SolutionDir)\Documentation;
@@ -212,6 +209,11 @@ PackagedDataDir=$(SolutionDir)\Packaged;
       </HarvestDirectory>
     </ItemGroup>
   </Target>
+  <PropertyGroup>
+    <PreBuildEvent>cd "$(SolutionDir)"
+call ConvertResources.bat
+call MakeRelease.bat</PreBuildEvent>
+  </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.
