@@ -31,9 +31,10 @@
       </Directory>
     </Directory>
 
+
     <DirectoryRef Id="AEROFOILPRODUCTDIR">
       <Component Id="Aerofoil.exe" Guid="*">
-        <File Id="Aerofoil.exe" Source="$(var.Aerofoil.TargetPath)" KeyPath="yes" Checksum="yes"/>
+        <File Id="Aerofoil.exe" Source="$(var.Aerofoil.TargetPath)" KeyPath="yes" Checksum="yes" />
       </Component>
       <Component Id="FreeType.dll" Guid="*">
         <File Id="FreeType.dll" Source="$(var.FreeType.TargetPath)" KeyPath="yes" Checksum="yes"/>
@@ -108,7 +109,7 @@
       </Component>
     </DirectoryRef>
 
-    <Feature Id="AerofoilApplication" Title="Glider PRO Game Data" Level="1" Display="expand">
+    <Feature Id="AerofoilApplication" Title="Glider PRO Game Data" Level="1" Display="expand" ConfigurableDirectory="AEROFOILPRODUCTDIR">
       <ComponentRef Id="Aerofoil.exe" />
       <ComponentRef Id="FreeType.dll" />
       <ComponentRef Id="GpApp.dll" />
@@ -140,7 +141,6 @@
       <Feature Id="HousePack1Feature" Title="Additional Houses" Level="1">
         <ComponentGroupRef Id="HousePack1ComponentGroup" />
       </Feature>
-
     </Feature>
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\LICENSE.rtf"/>
@@ -152,8 +152,6 @@
     <Feature Id="VCRedist" Title="Microsoft Visual C++ 2017 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
       <MergeRef Id="VCRedist" />
     </Feature>
-
-    <Property Id="WIXUI_INSTALLDIR" Value="AEROFOILPRODUCTDIR" />
 
     <UI>
       <UIRef Id="WixUI_Mondo" />

@@ -188,6 +188,7 @@ PackagedDataDir=$(SolutionDir)\Packaged;
         <ComponentGroupName>DefaultHousesComponentGroup</ComponentGroupName>
         <AutogenerateGuids>true</AutogenerateGuids>
         <PreprocessorVariable>var.HousesDataDir</PreprocessorVariable>
+        <Transforms>AddReadOnlyFlag.xslt</Transforms>
       </HarvestDirectory>
       <HarvestDirectory Include="$(SolutionDir)\InstallerPackages\HousePack1">
         <DirectoryRefId>AEROFOILHOUSESDIR</DirectoryRefId>
@@ -197,6 +198,7 @@ PackagedDataDir=$(SolutionDir)\Packaged;
         <ComponentGroupName>HousePack1ComponentGroup</ComponentGroupName>
         <AutogenerateGuids>true</AutogenerateGuids>
         <PreprocessorVariable>var.HousesDataDir</PreprocessorVariable>
+        <Transforms>AddReadOnlyFlag.xslt</Transforms>
       </HarvestDirectory>
       <HarvestDirectory Include="$(SolutionDir)\InstallerPackages\LooseDocumentation">
         <DirectoryRefId>AEROFOILDOCUMENTATIONDIR</DirectoryRefId>
