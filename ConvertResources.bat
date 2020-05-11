@@ -79,4 +79,18 @@ copy /Y GliderProData\ConvertedMovies\*.mov.gpa Packaged\Houses\
 
 attrib +R Packaged\Houses\*
 
+mkdir InstallerPackages
+mkdir InstallerPackages\DefaultHouses
+mkdir InstallerPackages\HousePack1
+mkdir InstallerPackages\LooseDocumentation
+
+copy /Y Packaged\Houses\* InstallerPackages\HousePack1\
+del /Q InstallerPackages\HousePack1\Slumberland.*
+del /Q "InstallerPackages\HousePack1\Demo House.*"
+copy /Y Packaged\Houses\Slumberland.* InstallerPackages\DefaultHouses
+copy /Y "Packaged\Houses\Demo House.*" InstallerPackages\DefaultHouses
+
+copy /Y Documentation\* InstallerPackages\LooseDocumentation\
+del /Q InstallerPackages\LooseDocumentation\readme.txt
+
 pause

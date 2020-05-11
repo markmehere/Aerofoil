@@ -24,3 +24,9 @@
 Packaged/*
 DebugData/*
 ReleasePkg/*
+InstallerPackages/*
+*.msi
+*.wixpdb
+*.wixobj
+ReleasePackageInstaller/obj/*
+ReleasePackageInstaller/bin/*

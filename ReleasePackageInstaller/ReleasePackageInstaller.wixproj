@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" InitialTargets="EnsureWixToolsetInstalled" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProductVersion>3.10</ProductVersion>
+    <ProjectGuid>d26bd501-28a7-4849-8130-fb5ea0a2b82f</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>ReleasePackageInstaller</OutputName>
+    <OutputType>Package</OutputType>
+    <InstallerPlatform>x64</InstallerPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Aerofoil\Aerofoil.vcxproj">
+      <Name>Aerofoil</Name>
+      <Project>{0e383ef0-cef7-4733-87c6-5ac9844aa1ef}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\bin2gp\bin2gp.vcxproj">
+      <Name>bin2gp</Name>
+      <Project>{d7bfe702-0667-4155-9b0b-2a54df9ae60b}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\flattenmov\flattenmov.vcxproj">
+      <Name>flattenmov</Name>
+      <Project>{89f8d13e-f216-4b67-8de9-7f842d349e94}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\FreeType\FreeType.vcxproj">
+      <Name>FreeType</Name>
+      <Project>{487216d8-16ba-4b4c-b5bf-43feedfee03a}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\FTagData\FTagData.vcxproj">
+      <Name>FTagData</Name>
+      <Project>{a8fcdc5e-729c-4a80-bf9f-b669c52b2ae3}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\GpApp\GpApp.vcxproj">
+      <Name>GpApp</Name>
+      <Project>{6233c3f2-5781-488e-b190-4fa8836f5a77}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\GpAudioDriver_XAudio2\GpAudioDriver_XAudio2.vcxproj">
+      <Name>GpAudioDriver_XAudio2</Name>
+      <Project>{e3bdc783-8646-433e-adf0-8b6390d36669}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\GpDisplayDriver_D3D11\GpDisplayDriver_D3D11.vcxproj">
+      <Name>GpDisplayDriver_D3D11</Name>
+      <Project>{ffc961ac-55b4-4a38-a83e-06ae98f59acc}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\GpInputDriver_XInput\GpInputDriver_XInput.vcxproj">
+      <Name>GpInputDriver_XInput</Name>
+      <Project>{17b96f07-ef92-47cd-95a5-8e6ee38ab564}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\gpr2gpa\gpr2gpa.vcxproj">
+      <Name>gpr2gpa</Name>
+      <Project>{27b7ca46-ed23-45c2-bf5f-0c126d81aebf}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\hqx2bin\hqx2bin.vcxproj">
+      <Name>hqx2bin</Name>
+      <Project>{45b1b18c-c846-4044-9206-74f58dfc5e88}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\hqx2gp\hqx2gp.vcxproj">
+      <Name>hqx2gp</Name>
+      <Project>{5fde4822-c771-46a5-b6b2-fd12bace86bf}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\MakeTimestamp\MakeTimestamp.vcxproj">
+      <Name>MakeTimestamp</Name>
+      <Project>{9023df2f-a33d-485a-b13d-0973348b2f9b}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\unpacktool\unpacktool.vcxproj">
+      <Name>unpacktool</Name>
+      <Project>{a778d062-de76-49f6-8d05-eb26852dd605}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
+  <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
+    <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
+  </Target>
+  <PropertyGroup>
+    <PreBuildEvent />
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>
+ResourcesDataDir=$(SolutionDir)\Resources;
+DocumentationDataDir=$(SolutionDir)\Documentation;
+WinCursorsDataDir=$(SolutionDir)\Packaged\WinCursors;
+HousesDataDir=$(SolutionDir)\Packaged\Houses;
+PackagedDataDir=$(SolutionDir)\Packaged;
+	</DefineConstants>
+  </PropertyGroup>
+  <Target Name="BeforeBuild">
+    <ItemGroup>
+      <HarvestDirectory Include="$(SolutionDir)\Packaged\WinCursors">
+        <DirectoryRefId>AEROFOILWINCURSORSDIR</DirectoryRefId>
+        <SuppressRootDirectory>true</SuppressRootDirectory>
+        <SuppressCom>true</SuppressCom>
+        <SuppressRegistry>true</SuppressRegistry>
+        <ComponentGroupName>WinCursorsComponentGroup</ComponentGroupName>
+        <AutogenerateGuids>true</AutogenerateGuids>
+        <PreprocessorVariable>var.WinCursorsDataDir</PreprocessorVariable>
+      </HarvestDirectory>
+      <HarvestDirectory Include="$(SolutionDir)\Resources">
+        <DirectoryRefId>AEROFOILRESOURCESDIR</DirectoryRefId>
+        <SuppressRootDirectory>true</SuppressRootDirectory>
+        <SuppressCom>true</SuppressCom>
+        <SuppressRegistry>true</SuppressRegistry>
+        <ComponentGroupName>ResourcesComponentGroup</ComponentGroupName>
+        <AutogenerateGuids>true</AutogenerateGuids>
+        <PreprocessorVariable>var.ResourcesDataDir</PreprocessorVariable>
+      </HarvestDirectory>
+      <HarvestDirectory Include="$(SolutionDir)\InstallerPackages\DefaultHouses">
+        <DirectoryRefId>AEROFOILHOUSESDIR</DirectoryRefId>
+        <SuppressRootDirectory>true</SuppressRootDirectory>
+        <SuppressCom>true</SuppressCom>
+        <SuppressRegistry>true</SuppressRegistry>
+        <ComponentGroupName>DefaultHousesComponentGroup</ComponentGroupName>
+        <AutogenerateGuids>true</AutogenerateGuids>
+        <PreprocessorVariable>var.HousesDataDir</PreprocessorVariable>
+      </HarvestDirectory>
+      <HarvestDirectory Include="$(SolutionDir)\InstallerPackages\HousePack1">
+        <DirectoryRefId>AEROFOILHOUSESDIR</DirectoryRefId>
+        <SuppressRootDirectory>true</SuppressRootDirectory>
+        <SuppressCom>true</SuppressCom>
+        <SuppressRegistry>true</SuppressRegistry>
+        <ComponentGroupName>HousePack1ComponentGroup</ComponentGroupName>
+        <AutogenerateGuids>true</AutogenerateGuids>
+        <PreprocessorVariable>var.HousesDataDir</PreprocessorVariable>
+      </HarvestDirectory>
+      <HarvestDirectory Include="$(SolutionDir)\InstallerPackages\LooseDocumentation">
+        <DirectoryRefId>AEROFOILDOCUMENTATIONDIR</DirectoryRefId>
+        <SuppressRootDirectory>true</SuppressRootDirectory>
+        <SuppressCom>true</SuppressCom>
+        <SuppressRegistry>true</SuppressRegistry>
+        <ComponentGroupName>LooseDocumentationComponentGroup</ComponentGroupName>
+        <AutogenerateGuids>true</AutogenerateGuids>
+        <PreprocessorVariable>var.DocumentationDataDir</PreprocessorVariable>
+      </HarvestDirectory>
+    </ItemGroup>
+  </Target>
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

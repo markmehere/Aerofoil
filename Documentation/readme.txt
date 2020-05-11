@@ -1,56 +1,57 @@
-Aerofoil is a third-party port of Glider PRO
+Thank you for trying Aerofoil!
 
-Aerofoil is (c)2019-2020 Eric Lasota
-Glider PRO is (c)1994-2000 Casady & Greene, Inc., written by John Calhoun
-
-
-Aerofoil is not maintained by, supported by, endorsed by, or otherwise associated with the authors and publishers of Glider PRO.
+IMPORTANT: Aerofoil is not maintained by, supported by, endorsed by, or
+otherwise associated with the authors and publishers of Glider PRO.
 Please do not contact any of them regarding issues related to Aerofoil.
 
-
-If you have an issue with Aerofoil, please post an issue to the Aerofoil issue tracker on GitHub:
+If you have an issue with Aerofoil, please post an issue to the Aerofoil
+issue tracker on GitHub:
 https://github.com/elasota/Aerofoil/issues
 
 
-Requires Windows 8 and the Visual Studio 2017 redistributable runtime.
-Please see this page for more info:
-https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
-
-XInput gamepads are supported.  Other gamepads may be supported via third-party software that maps them to XInput (i.e. PS4 gamepads are supported via DS4Windows)
-
-Some shortcuts:
-- While in-game, Ctrl-S saves the game.  You can then reload the game from the main menu.
+IN-GAME SHORTCUT COMMANDS
+-------------------------------------------------------------------------------
+- Ctrl-S saves the game.  You can reload a saved game from the main menu.
 - Ctrl-Q quits the game.
 - Alt-Enter toggles full screen.
 
 
-Aerofoil uses the following third-party software:
+GAMEPAD SUPPORT
 -------------------------------------------------------------------------------
+XInput gamepads are supported.  Other gamepads may be supported via third-party
+software that maps them to XInput (i.e. PS4 gamepads are supported via DS4Windows)
+
+
+LEGAL NOTICES
+-------------------------------------------------------------------------------
+Aerofoil is (c)2019-2020 Eric Lasota
+Based on Glider PRO (c)1994-2000 Casady & Greene, Inc., written by John Calhoun
+Distributed under the terms of the GNU General Public License version 2 (see license_gplv2.txt)
+
+
+Aerofoil uses the following third-party software:
+
 Open Sans font:
 (c)2011 Google
 Distributed under the Apache License (see license_apache.txt)
 
 
--------------------------------------------------------------------------------
 stb_image_write:
 Created by Sean Barrett
 
 
--------------------------------------------------------------------------------
 LIBICONV:
 Copyright (C) 1999-2001, 2016 Free Software Foundation, Inc.
 
 Distributed under the LGPLv2 license (See license_lgplv2.txt)
 
 
--------------------------------------------------------------------------------
 RapidJSON:
 Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.  All rights reserved.
 
 Distributed under the MIT license (See license_rapidjson.txt)
 
 
--------------------------------------------------------------------------------
 zlib:
 
  (C) 1995-2017 Jean-loup Gailly and Mark Adler
@@ -75,15 +76,14 @@ zlib:
   jloup@gzip.org          madler@alumni.caltech.edu
 
 
--------------------------------------------------------------------------------
 FreeType:
 
-Portions of this software are copyright (c)2020 The FreeType Project (www.freetype.org).  All rights reserved.
+Portions of this software are copyright (c)2020 The FreeType Project (www.freetype.org).
+All rights reserved.
 
 Distributed under the GPLv2 license (see license_gplv2.txt)
 
 
--------------------------------------------------------------------------------
 The Unarchiver:
 
 The "unpacktool" utility is heavily based on code from The Unarchiver.
