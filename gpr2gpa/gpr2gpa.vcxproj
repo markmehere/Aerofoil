@@ -64,6 +64,7 @@
     <Import Project="..\GpCommon.props" />
     <Import Project="..\MacRomanConversion.props" />
     <Import Project="..\RapidJSON.props" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -73,6 +74,7 @@
     <Import Project="..\GpCommon.props" />
     <Import Project="..\MacRomanConversion.props" />
     <Import Project="..\RapidJSON.props" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -82,6 +84,7 @@
     <Import Project="..\GpCommon.props" />
     <Import Project="..\MacRomanConversion.props" />
     <Import Project="..\RapidJSON.props" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -91,6 +94,7 @@
     <Import Project="..\GpCommon.props" />
     <Import Project="..\MacRomanConversion.props" />
     <Import Project="..\RapidJSON.props" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -141,6 +145,9 @@
   <ItemGroup>
     <ProjectReference Include="..\PortabilityLayer\PortabilityLayer.vcxproj">
       <Project>{6ec62b0f-9353-40a4-a510-3788f1368b33}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\WindowsUnicodeToolShim\WindowsUnicodeToolShim.vcxproj">
+      <Project>{15009625-1120-405e-8bba-69a16cd6713d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{6ae5c85e-6631-4a12-97a0-a05f812fe9ca}</Project>

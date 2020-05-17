@@ -1,0 +1,27 @@
+Many Glider PRO houses, including the bundled ones, contain images in QuickDraw
+PICT format in the game resource data.
+
+Additionally, some PICT features are impossible to support because they
+require copyrighted pattern sets and fonts that are bundled with the
+operating system.
+
+My goal is to support as many community houses as possible, but there is a
+point where supporting the format is more work than just manually converting
+the resources on a Macintosh machine or emulator.
+
+All of the remaining known unsupported features necessary to decode the
+remaining cases are only used by one house that I'm aware of each.
+
+Known error codes:
+
+Code 5 subcode 25: Strange image channel layout
+Code 8 subcode 145: Unsupported BitsRgn opcode.
+Code 8 subcode 40960: Undocumented opcode, possibly a format parsing error.
+
+Code 8 subcode 34: Unsupported ShortLine opcode. (PICT contains vector graphics.)
+Code 8 subcode 35: Unsupported ShortLineFrom opcode. (PICT contains vector graphics.)
+Code 8 subcode 49: Unsupported PaintRect opcode. (PICT contains vector graphics.)
+Code 8 subcode 51: Unsupported PaintOval opcode. (PICT contains vector graphics.)
+Code 8 subcode 129: paintRgn opcode. (PICT contains vector graphics.)
+Code 8 subcode 33280: Unsupported CompressedQuickTime opcode.  (PICT contains a QuickTime frame.)
+Code 8 subcode 33281: Unsupported UncompressedQuickTime opcode.  (PICT contains a QuickTime frame.)

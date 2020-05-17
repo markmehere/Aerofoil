@@ -1018,6 +1018,11 @@ public:
 		m_outputIndexStart = firstRow * m_width + firstCol;
 	}
 
+	bool EmitQTContent(IOStream *stream, uint32_t dataSize, bool isCompressed) override
+	{
+		return false;
+	}
+
 	void BlitScanlineAndAdvance(const void *data) override
 	{
 		const int32_t crRight = m_params.m_constrainedRegionRight;

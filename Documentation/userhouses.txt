@@ -56,3 +56,29 @@ resource fork, in which case you need to merge them into the data for modern
 utilities to read them.  You can use the "flattenmov" tool to do this: Pass
 it the data (.gpd) and resource (.gpr) data files for a movie, and it will
 merge them into a single .mov file.
+
+
+BATCH CONVERSION
+------------------------------------------------------------------------------
+To batch-convert house resource files, use gpr2gpa with a path that ends
+with an asterisk (*) and omit the output filename.
+
+
+SECURITY CONSIDERATIONS
+------------------------------------------------------------------------------
+Glider PRO didn't really do any validation of houses.  Currently, Aerofoil
+doesn't do any additional validation either, and it's possible that invalid
+house data may lead to crashes or even remote code execution.
+
+I will be doing a hardening pass on the loader for the 1.1 release.  Until
+then, please only load houses from trusted sources.
+
+Also, Glider PRO houses were able to take advantage of a resource overlaying
+feature of the Macintosh operating system, where a resource being present in
+the house file with the same ID as an application resource would cause the
+resource to override the application resource.
+
+Aerofoil's resource loader is much more restrictive: Currently, only
+backgrounds, audio triggers, and icons may load from the house data.  This
+restriction will be loosened in the 1.1 release to allow resources to be
+overrided if I can confirm that it's safe to override them.

@@ -20,6 +20,8 @@
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 
+#include "WindowsUnicodeToolShim.h"
+
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
@@ -205,8 +207,8 @@ void ConvertToMSDOSTimestamp(const PortabilityLayer::CombinedTimestamp &ts, uint
 
 void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, const PortabilityLayer::CombinedTimestamp &ts)
 {
-	FILE *outF = nullptr;
-	if (fopen_s(&outF, path, "wb"))
+	FILE *outF = fopen_utf8(path, "wb");
+	if (!outF)
 	{
 		fprintf(stderr, "Error opening output path");
 		return;
@@ -322,7 +324,13 @@ public:
 	Rect ConstrainRegion(const Rect &rect) const override;
 	void Start(PortabilityLayer::QDPictBlitSourceType sourceType, const PortabilityLayer::QDPictEmitScanlineParameters &params) override;
 	void BlitScanlineAndAdvance(const void *) override;
+	bool EmitQTContent(PortabilityLayer::IOStream *stream, uint32_t dataSize, bool isCompressed) override;
 	bool AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size) override;
+
+	void ReportError(int errorCode, int subCode) override
+	{
+		fprintf(stderr, "PICT import failed, error code %i, subcode %i\n", errorCode, subCode);
+	}
 
 	bool Export(std::vector<uint8_t> &outData) const;
 
@@ -460,6 +468,17 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 		}
 		break;
 	}
+}
+
+bool BMPDumperContext::EmitQTContent(PortabilityLayer::IOStream *stream, uint32_t dataSize, bool isCompressed)
+{
+	// Only one known house ("Magic" seems to use uncompressed, which is partly documented here:
+	// https://github.com/gco/xee/blob/master/XeePhotoshopPICTLoader.m
+
+	// Known compressed cases and codecs:
+	// "Egypt" res 10011: JPEG
+	// "The Meadows" res 3000: Apple Video (a.k.a. Apple RPZA)
+	return false;
 }
 
 bool BMPDumperContext::AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size)
@@ -1078,7 +1097,7 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 				entry = &archive.back();
 			}
 
-			FILE *f = fopen(itemValue.GetString(), "rb");
+			FILE *f = fopen_utf8(itemValue.GetString(), "rb");
 			if (!f)
 			{
 				fprintf(stderr, "Could not find source file %s for patch", static_cast<const char*>(itemValue.GetString()));
@@ -1125,46 +1144,18 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 	return true;
 }
 
-int main(int argc, const char **argv)
+int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimestamp &ts, FILE *patchF, const char *outPath)
 {
-	if (argc != 4 && argc != 5)
-	{
-		fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]");
-		return -1;
-	}
 
-	std::string base = argv[1];
-
-	FILE *inF = nullptr;
-	if (fopen_s(&inF, argv[1], "rb"))
+	FILE *inF = fopen_utf8(resPath, "rb");
+	if (!inF)
 	{
 		fprintf(stderr, "Error opening input file");
 		return -1;
 	}
 
-	FILE *timestampF = nullptr;
-	if (fopen_s(&timestampF, argv[2], "rb"))
-	{
-		fprintf(stderr, "Error opening metadata file");
-		return -1;
-	}
-
-	PortabilityLayer::CombinedTimestamp ts;
-	if (fread(&ts, 1, sizeof(ts), timestampF) != sizeof(ts))
-	{
-		fprintf(stderr, "Error reading timestamp");
-		return -1;
-	}
-
 	bool havePatchFile = false;
 	std::vector<uint8_t> patchFileContents;
-
-	FILE *patchF = nullptr;
-	if (argc == 5 && fopen_s(&patchF, argv[4], "rb"))
-	{
-		fprintf(stderr, "Error reading patch file");
-		return -1;
-	}
 
 	if (patchF)
 	{
@@ -1226,6 +1217,8 @@ int main(int argc, const char **argv)
 
 				if (ImportPICT(entry.m_contents, resData, resSize))
 					contents.push_back(entry);
+				else
+					fprintf(stderr, "Failed to import PICT res %i\n", static_cast<int>(res.m_resID));
 			}
 			else if (typeList.m_resType == sndTypeID)
 			{
@@ -1285,9 +1278,123 @@ int main(int argc, const char **argv)
 
 	std::sort(contents.begin(), contents.end(), EntryAlphaSortPredicate);
 
-	ExportZipFile(argv[3], contents, ts);
+	ExportZipFile(outPath, contents, ts);
 
 	resFile->Destroy();
 
 	return 0;
+}
+
+int ConvertDirectory(const std::string &basePath, const PortabilityLayer::CombinedTimestamp &ts)
+{
+	std::vector<std::string> paths;
+	ScanDirectoryForExtension(paths, basePath.c_str(), ".gpr", true);
+
+	for (std::vector<std::string>::const_iterator it = paths.begin(), itEnd = paths.end(); it != itEnd; ++it)
+	{
+		const std::string &resPath = *it;
+		std::string housePathBase = resPath.substr(0, resPath.length() - 4);
+
+		std::string metaPath = housePathBase + ".gpf";
+
+		FILE *metaF = fopen_utf8(metaPath.c_str(), "rb");
+		if (!metaF)
+		{
+			fprintf(stderr, "Failed to open metadata file ");
+			fputs_utf8(metaPath.c_str(), stderr);
+			fprintf(stderr, "\n");
+		}
+
+		PortabilityLayer::MacFilePropertiesSerialized mfps;
+		if (fread(mfps.m_data, 1, PortabilityLayer::MacFilePropertiesSerialized::kSize, metaF) != PortabilityLayer::MacFilePropertiesSerialized::kSize)
+		{
+			fclose(metaF);
+			fprintf(stderr, "Failed to load metadata file ");
+			fputs_utf8(metaPath.c_str(), stderr);
+			fprintf(stderr, "\n");
+			return -1;
+		}
+		fclose(metaF);
+
+		PortabilityLayer::MacFileProperties mfp;
+		mfps.Deserialize(mfp);
+
+		if (mfp.m_fileType[0] == 'g' && mfp.m_fileType[1] == 'l' && mfp.m_fileType[2] == 'i' && mfp.m_fileType[3] == 'H')
+		{
+			std::string houseArchivePath = (housePathBase + ".gpa");
+			fprintf(stdout, "Importing ");
+			fputs_utf8(houseArchivePath.c_str(), stdout);
+			fprintf(stdout, "\n");
+
+			int returnCode = ConvertSingleFile(resPath.c_str(), ts, nullptr, houseArchivePath.c_str());
+			if (returnCode)
+			{
+				fprintf(stderr, "An error occurred while converting\n");
+				fputs_utf8(resPath.c_str(), stderr);
+				fprintf(stderr, "\n");
+				return returnCode;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int PrintUsage()
+{
+	fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]");
+	fprintf(stderr, "       gpr2gpa <input dir>\* <input.ts>");
+	fprintf(stderr, "       gpr2gpa <input dir>/* <input.ts>");
+	fprintf(stderr, "       gpr2gpa * <input.ts>");
+	return -1;
+}
+
+int toolMain(int argc, const char **argv)
+{
+	if (argc < 3)
+		return PrintUsage();
+
+	FILE *timestampF = fopen_utf8(argv[2], "rb");
+	if (!timestampF)
+	{
+		fprintf(stderr, "Error opening timestamp file");
+		return -1;
+	}
+
+	PortabilityLayer::CombinedTimestamp ts;
+	if (fread(&ts, 1, sizeof(ts), timestampF) != sizeof(ts))
+	{
+		fprintf(stderr, "Error reading timestamp");
+		return -1;
+	}
+
+	fclose(timestampF);
+
+	std::string base = argv[1];
+
+	if (base == "*")
+		return ConvertDirectory(".", ts);
+
+	if (base.length() >= 2)
+	{
+		std::string baseEnding = base.substr(base.length() - 2, 2);
+		if (baseEnding == "\\*" || baseEnding == "/*")
+			return ConvertDirectory(base.substr(0, base.length() - 2), ts);
+	}
+
+	if (argc != 4 && argc != 5)
+		return PrintUsage();
+
+	FILE *patchF = nullptr;
+	if (argc == 5)
+	{
+		patchF = fopen_utf8(argv[4], "rb");
+		if (!patchF)
+		{
+			fprintf(stderr, "Error reading patch file");
+			return -1;
+		}
+	}
+
+	return ConvertSingleFile(argv[1], ts, patchF, argv[3]);
 }

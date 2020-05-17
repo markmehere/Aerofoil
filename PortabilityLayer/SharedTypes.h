@@ -66,6 +66,14 @@ struct BERect
 	Rect ToRect() const;
 };
 
+struct BEPoint
+{
+	BEInt16_t v;
+	BEInt16_t h;
+
+	Point ToPoint() const;
+};
+
 struct BERegion
 {
 	BEUInt16_t recordSize;

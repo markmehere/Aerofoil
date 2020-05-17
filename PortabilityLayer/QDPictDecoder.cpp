@@ -12,6 +12,28 @@
 #include <vector>
 #include <assert.h>
 
+struct QDPictDecodeState
+{
+	PortabilityLayer::RGBAColor m_foreColor;
+	PortabilityLayer::RGBAColor m_backColor;
+	Point m_penPos;
+	Point m_penSize;
+	Point m_origin;
+	uint16_t m_penMode;
+	uint8_t m_penPattern[8];
+
+	QDPictDecodeState()
+	{
+		m_foreColor = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
+		m_backColor = PortabilityLayer::RGBAColor::Create(255, 255, 255, 255);
+		m_penPos = Point::Create(0, 0);
+		m_origin = Point::Create(0, 0);
+		m_penSize = Point::Create(1, 1);
+		for (int i = 0; i < 8; i++)
+			m_penPattern[i] = 0xff;
+		m_penMode = 0;
+	}
+};
 
 namespace PortabilityLayer
 {
@@ -23,9 +45,13 @@ namespace PortabilityLayer
 	bool QDPictDecoder::DecodePict(IOStream *stream, QDPictEmitContext *emitContext)
 	{
 		QDPictHeader header;
+		QDPictDecodeState decodeState;
 
 		if (!header.Load(stream))
+		{
+			emitContext->ReportError(QDPictEmitContext::kMissingHeader, 0);
 			return false;
+		}
 
 		emitContext->SpecifyFrame(header.GetFrame());
 
@@ -64,7 +90,10 @@ namespace PortabilityLayer
 				break;
 			case QDOpcodes::kClipRegion:
 				if (stream->Read(scratchBytes, 10) != 10 || scratchBytes[0] != 0 || scratchBytes[1] != 10)
-					return false;	// Unknown format region
+				{
+					emitContext->ReportError(QDPictEmitContext::kUnsupportedClipRegionFormat, 0);
+					return false;
+				}
 
 				GP_STATIC_ASSERT(sizeof(scratchBERect) == 8);
 
@@ -72,17 +101,26 @@ namespace PortabilityLayer
 				scratchRect = scratchBERect.ToRect();
 
 				if (!scratchRect.IsValid())
+				{
+					emitContext->ReportError(QDPictEmitContext::kInvalidRegionRect, 0);
 					return false;
+				}
 
 				break;
 			case QDOpcodes::kShortComment:
 				if (!stream->SeekCurrent(2))
+				{
+					emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kLongComment:
 				{
 					if (stream->Read(scratchBytes, 4) != 4)
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
 						return false;
+					}
 
 					const uint16_t commentKind = (scratchBytes[0] << 8) | scratchBytes[1];
 					const uint16_t commentSize = (scratchBytes[2] << 8) | scratchBytes[3];
@@ -92,41 +130,156 @@ namespace PortabilityLayer
 				}
 				break;
 			case QDOpcodes::kBitsRect:
-				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), false, false, false, activeFrame, emitContext);
+				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), false, false, false, activeFrame, decodeState.m_origin, emitContext);
 				if (rasterOpErrorCode)
+				{
+					emitContext->ReportError(QDPictEmitContext::kRasterOpFailure, rasterOpErrorCode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kPackBitsRect:
-				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, false, false, activeFrame, emitContext);
+				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, false, false, activeFrame, decodeState.m_origin, emitContext);
 				if (rasterOpErrorCode)
+				{
+					emitContext->ReportError(QDPictEmitContext::kRasterOpFailure, rasterOpErrorCode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kPackBitsRgn:
-				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, true, false, activeFrame, emitContext);
+				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, true, false, activeFrame, decodeState.m_origin, emitContext);
 				if (rasterOpErrorCode)
+				{
+					emitContext->ReportError(QDPictEmitContext::kRasterOpFailure, rasterOpErrorCode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kDirectBitsRect:
-				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, false, true, activeFrame, emitContext);
+				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, false, true, activeFrame, decodeState.m_origin, emitContext);
 				if (rasterOpErrorCode)
+				{
+					emitContext->ReportError(QDPictEmitContext::kRasterOpFailure, rasterOpErrorCode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kDirectBitsRgn:
-				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, true, true, activeFrame, emitContext);
+				rasterOpErrorCode = ProcessRasterOp(stream, header.GetVersion(), true, true, true, activeFrame, decodeState.m_origin, emitContext);
 				if (rasterOpErrorCode)
+				{
+					emitContext->ReportError(QDPictEmitContext::kRasterOpFailure, rasterOpErrorCode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kDefaultHilite:
 				break;
-			case QDOpcodes::kOpColor:
 				if (!stream->SeekCurrent(6))
+				{
+					emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
 					return false;
+				}
 				break;
 			case QDOpcodes::kEndOfPicture:
 				finished = true;
 				break;
+			case QDOpcodes::kPenSize:
+				{
+					BEPoint point;
+
+					if (!stream->Read(&point, 4))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+
+					decodeState.m_penSize = point.ToPoint();
+				}
+				break;
+			case QDOpcodes::kPenPattern:
+				{
+					if (!stream->Read(decodeState.m_penPattern, 8))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+				}
+				break;
+			case QDOpcodes::kPenMode:
+				{
+					BEUInt16_t penMode;
+
+					if (!stream->Read(&penMode, 2))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+
+					decodeState.m_penMode = penMode;
+				}
+				break;
+			case QDOpcodes::kOrigin:
+				{
+					// NOTE: This is intentionally not the same order as Point
+					BEInt16_t dxdy[2];
+
+					if (!stream->Read(&dxdy, 4))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+
+					decodeState.m_origin.h += dxdy[0];
+					decodeState.m_origin.v += dxdy[1];
+				}
+				break;
+			case QDOpcodes::kOpColor:			// ??? Not sure what the difference between these two is
+			case QDOpcodes::kRGBForeColor:
+				{
+					uint8_t rgbBytes[6];
+
+					if (!stream->Read(rgbBytes, 6))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+
+					decodeState.m_foreColor = RGBAColor::Create(rgbBytes[0], rgbBytes[2], rgbBytes[4], 255);
+				}
+				break;
+			case QDOpcodes::kRGBBackColor:
+				{
+					uint8_t rgbBytes[6];
+
+					if (!stream->Read(rgbBytes, 6))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+
+					decodeState.m_backColor = RGBAColor::Create(rgbBytes[0], rgbBytes[2], rgbBytes[4], 255);
+				}
+				break;
+
+			case QDOpcodes::kCompressedQT:
+			case QDOpcodes::kUncompressedQT:
+				{
+					BEUInt32_t dataSize;
+
+					if (!stream->Read(&dataSize, 4))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+
+					if (!emitContext->EmitQTContent(stream, dataSize, opcode == QDOpcodes::kCompressedQT))
+					{
+						emitContext->ReportError(QDPictEmitContext::kMalformedArguments, opcode);
+						return false;
+					}
+				}
+				break;
+
 			default:
 				// Unknown opcode
+				emitContext->ReportError(QDPictEmitContext::kUnsupportedOpcode, opcode);
 				return false;
 			}
 
@@ -135,7 +288,7 @@ namespace PortabilityLayer
 		}
 	}
 
-	int QDPictDecoder::ProcessRasterOp(IOStream *stream, int pictVersion, bool isPackedFlag, bool hasRegion, bool isDirect, const Rect &constraintRect, QDPictEmitContext *context)
+	int QDPictDecoder::ProcessRasterOp(IOStream *stream, int pictVersion, bool isPackedFlag, bool hasRegion, bool isDirect, const Rect &constraintRect, const Point &origin, QDPictEmitContext *context)
 	{
 		uint16_t rowSizeBytes = 0;
 
@@ -415,6 +568,12 @@ namespace PortabilityLayer
 		if (srcRect.bottom - srcRect.top != destRect.bottom - destRect.top)
 			return 39;
 
+		// Offset by origin
+		destRect.left -= origin.h;
+		destRect.right -= origin.v;
+		destRect.top -= origin.v;
+		destRect.bottom -= origin.v;
+
 		const Rect pixMapBounds = pixMapBE.m_bounds.ToRect();
 		if (!pixMapBounds.IsValid())
 			return 40;
@@ -574,6 +733,13 @@ namespace PortabilityLayer
 			}
 			else if (packType == 1)
 			{
+				if (!isLineValid)
+				{
+					if (!stream->SeekCurrent(rowSizeBytes))
+						return 59;
+					continue;
+				}
+
 				if (stream->Read(decompressedScanlineBuffer, rowSizeBytes) != rowSizeBytes)
 					return 51;
 

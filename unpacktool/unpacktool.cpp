@@ -22,6 +22,7 @@
 #include "CompactProLZHRLEDecompressor.h"
 
 #include "CSInputBuffer.h"
+#include "WindowsUnicodeToolShim.h"
 
 #include <string.h>
 
@@ -91,84 +92,6 @@ IFileReader::FilePos_t CFileReader::GetPosition() const
 StuffItParser g_stuffItParser;
 StuffIt5Parser g_stuffIt5Parser;
 CompactProParser g_compactProParser;
-
-std::string ConvertWStringToUTF8(const wchar_t *str)
-{
-	size_t strLength = wcslen(str);
-
-	std::string result;
-
-	for (size_t i = 0; i < strLength; )
-	{
-		size_t charsDigested = 0;
-		uint32_t codePoint = 0;
-		uint8_t asUTF8[4];
-		if (!PortabilityLayer::UTF16Processor::DecodeCodePoint(reinterpret_cast<const uint16_t*>(str) + i, strLength - i, charsDigested, codePoint))
-			return "";
-
-		i += charsDigested;
-
-		size_t bytesEmitted = 0;
-		PortabilityLayer::UTF8Processor::EncodeCodePoint(asUTF8, bytesEmitted, codePoint);
-
-		result.append(reinterpret_cast<const char*>(asUTF8), bytesEmitted);
-	}
-
-	return result;
-}
-
-std::wstring ConvertUTF8ToWString(const char *str)
-{
-	size_t strLength = strlen(str);
-
-	std::wstring result;
-
-	for (size_t i = 0; i < strLength; )
-	{
-		size_t charsDigested = 0;
-		uint32_t codePoint = 0;
-		uint16_t asUTF16[4];
-		if (!PortabilityLayer::UTF8Processor::DecodeCodePoint(reinterpret_cast<const uint8_t*>(str) + i, strLength - i, charsDigested, codePoint))
-			return L"";
-
-		i += charsDigested;
-
-		size_t codePointsEmitted = 0;
-		PortabilityLayer::UTF16Processor::EncodeCodePoint(asUTF16, codePointsEmitted, codePoint);
-
-		result.append(reinterpret_cast<const wchar_t*>(asUTF16), codePointsEmitted);
-	}
-
-	return result;
-}
-
-FILE *fopen_utf8(const char *path, const char *options)
-{
-	std::wstring pathUTF16 = ConvertUTF8ToWString(path);
-	std::wstring optionsUTF16 = ConvertUTF8ToWString(options);
-
-	return _wfopen(pathUTF16.c_str(), optionsUTF16.c_str());
-}
-
-int mkdir_utf8(const char *path)
-{
-	std::wstring pathUTF16 = ConvertUTF8ToWString(path);
-	return _wmkdir(pathUTF16.c_str());
-}
-
-void TerminateDirectoryPath(std::string &path)
-{
-	const size_t length = path.length();
-
-	if (length == 0)
-		path.append("\\");
-	else
-	{
-		const char lastChar = path[path.length() - 1];
-		if (lastChar != '\\' && lastChar != '/')
-			path.append("\\");
-	}
-}
 
 std::string LegalizeWindowsFileName(const std::string &path)
 {
@@ -441,7 +364,7 @@ int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, 
 	for (int i = 0; i < depth; i++)
 		printf("  ");
 
-	fputws(ConvertUTF8ToWString(path.data()).c_str(), stdout);
+	fputs_utf8(path.c_str(), stdout);
 	printf("\n");
 
 	path = LegalizeWindowsFileName(path);
@@ -479,7 +402,7 @@ int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::strin
 	return 0;
 }
 
-int unpackMain(int argc, const char **argv)
+int toolMain(int argc, const char **argv)
 {
 	if (argc != 3)
 	{
@@ -535,32 +458,5 @@ int unpackMain(int argc, const char **argv)
 	delete archiveItemList;
 
 	return returnCode;
-}
-
-int main(int argc, const char **argv)
-{
-	LPWSTR *szArglist;
-	int nArgs;
-	int i;
-
-	szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
-
-	std::vector<std::string> utf8ArgStrings;
-	std::vector<const char *> utf8Args;
-
-	utf8ArgStrings.resize(nArgs);
-	utf8Args.resize(nArgs);
-
-	for (int i = 0; i < nArgs; i++)
-	{
-		utf8ArgStrings[i] = ConvertWStringToUTF8(szArglist[i]);
-		utf8Args[i] = utf8ArgStrings[i].c_str();
-	}
-
-	const char **args = nullptr;
-	if (nArgs)
-		args = &utf8Args[0];
-
-	return unpackMain(nArgs, args);
 }
 

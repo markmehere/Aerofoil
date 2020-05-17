@@ -20,32 +20,32 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{A778D062-DE76-49F6-8D05-EB26852DD605}</ProjectGuid>
-    <RootNamespace>unpacktool</RootNamespace>
+    <ProjectGuid>{15009625-1120-405E-8BBA-69A16CD6713D}</ProjectGuid>
+    <RootNamespace>WindowsUnicodeToolShim</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -58,31 +58,27 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
-    <Import Project="..\MacRomanConversion.props" />
-    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
-    <Import Project="..\MacRomanConversion.props" />
-    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
-    <Import Project="..\MacRomanConversion.props" />
-    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\WindowsUnicodeToolShim.props" />
     <Import Project="..\PortabilityLayer.props" />
     <Import Project="..\Common.props" />
-    <Import Project="..\MacRomanConversion.props" />
-    <Import Project="..\WindowsUnicodeToolShim.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -131,68 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ArchiveDescription.cpp" />
-    <ClCompile Include="BWT.cpp" />
-    <ClCompile Include="CompactProLZHDecompressor.cpp" />
-    <ClCompile Include="CompactProLZHRLEDecompressor.cpp" />
-    <ClCompile Include="CompactProParser.cpp" />
-    <ClCompile Include="CompactProRLEDecompressor.cpp" />
-    <ClCompile Include="CRC.cpp" />
-    <ClCompile Include="CSInputBuffer.cpp" />
-    <ClCompile Include="DecompressorProxyReader.cpp" />
-    <ClCompile Include="LZSSDecompressor.cpp" />
-    <ClCompile Include="LZW.cpp" />
-    <ClCompile Include="LZWDecompressor.cpp" />
-    <ClCompile Include="NullDecompressor.cpp" />
-    <ClCompile Include="PrefixCode.cpp" />
-    <ClCompile Include="RLE90Decompressor.cpp" />
-    <ClCompile Include="StringCommon.cpp" />
-    <ClCompile Include="StuffIt13Decompressor.cpp" />
-    <ClCompile Include="StuffIt5Parser.cpp" />
-    <ClCompile Include="StuffItArsenicDecompressor.cpp" />
-    <ClCompile Include="StuffItCommon.cpp" />
-    <ClCompile Include="StuffItHuffmanDecompressor.cpp" />
-    <ClCompile Include="StuffItParser.cpp" />
-    <ClCompile Include="unpacktool.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ArchiveDescription.h" />
-    <ClInclude Include="BWT.h" />
-    <ClInclude Include="CompactProLZHDecompressor.h" />
-    <ClInclude Include="CompactProLZHRLEDecompressor.h" />
-    <ClInclude Include="CompactProParser.h" />
-    <ClInclude Include="CompactProRLEDecompressor.h" />
-    <ClInclude Include="DecompressorProxyReader.h" />
-    <ClInclude Include="LZSSDecompressor.h" />
-    <ClInclude Include="LZW.h" />
-    <ClInclude Include="LZWDecompressor.h" />
-    <ClInclude Include="NullDecompressor.h" />
-    <ClInclude Include="PrefixCode.h" />
-    <ClInclude Include="RLE90Decompressor.h" />
-    <ClInclude Include="StringCommon.h" />
-    <ClInclude Include="StuffIt13Decompressor.h" />
-    <ClInclude Include="StuffItCommon.h" />
-    <ClInclude Include="StuffItHuffmanDecompressor.h" />
-    <ClInclude Include="UPByteSwap.h" />
-    <ClInclude Include="CRC.h" />
-    <ClInclude Include="CSInputBuffer.h" />
-    <ClInclude Include="IArchiveParser.h" />
-    <ClInclude Include="IDecompressor.h" />
-    <ClInclude Include="IFileReader.h" />
-    <ClInclude Include="StuffIt5Parser.h" />
-    <ClInclude Include="StuffItArsenicDecompressor.h" />
-    <ClInclude Include="StuffItParser.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MacRomanConversion\MacRomanConversion.vcxproj">
-      <Project>{07351a8e-1f79-42c9-bbab-31f071eaa99e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\PortabilityLayer\PortabilityLayer.vcxproj">
-      <Project>{6ec62b0f-9353-40a4-a510-3788f1368b33}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\WindowsUnicodeToolShim\WindowsUnicodeToolShim.vcxproj">
-      <Project>{15009625-1120-405e-8bba-69a16cd6713d}</Project>
-    </ProjectReference>
+    <ClCompile Include="WindowsUnicodeToolShim.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

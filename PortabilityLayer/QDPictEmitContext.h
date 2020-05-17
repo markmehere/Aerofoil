@@ -8,6 +8,7 @@ namespace PortabilityLayer
 {
 	struct RGBAColor;
 	struct QDPictEmitScanlineParameters;
+	class IOStream;
 
 	enum QDPictBlitSourceType
 	{
@@ -26,10 +27,26 @@ namespace PortabilityLayer
 	class QDPictEmitContext
 	{
 	public:
+		enum ErrorCode
+		{
+			kMissingHeader,
+			kInvalidRegionRect,
+			kMalformedArguments,
+			kUnusedError1,
+			kUnusedError2,
+			kRasterOpFailure,
+			kUnsupportedClipRegionFormat,
+			kMalformedOpcode,
+			kUnsupportedOpcode,
+		};
+
 		virtual bool SpecifyFrame(const Rect &rect) = 0;
 		virtual Rect ConstrainRegion(const Rect &rect) const = 0;
 		virtual void Start(QDPictBlitSourceType sourceType, const QDPictEmitScanlineParameters &params) = 0;
 		virtual void BlitScanlineAndAdvance(const void *) = 0;
+		virtual bool EmitQTContent(IOStream *stream, uint32_t dataSize, bool isCompressed) = 0;
 		virtual bool AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size) = 0;
+
+		virtual void ReportError(int errorType, int errorSubtype) { }
 	};
 }

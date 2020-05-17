@@ -87,6 +87,15 @@ Rect BERect::ToRect() const
 	return rect;
 }
 
+Point BEPoint::ToPoint() const
+{
+	Point point;
+	point.h = this->h;
+	point.v = this->v;
+
+	return point;
+}
+
 void HideCursor()
 {
 	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kHidden);
