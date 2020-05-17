@@ -14,8 +14,8 @@ namespace PortabilityLayer
 		const RGBAColor *m_pixelData;
 		const uint8_t *m_standardPaletteData;
 
-		void DrawToPixMap(PixMap **pixMap, int16_t x, int16_t y);
-		void DrawToPixMapWithMask(PixMap **pixMap, const uint8_t *maskData, int16_t x, int16_t y);
+		void DrawToPixMap(PixMap **pixMap, int16_t x, int16_t y) const;
+		void DrawToPixMapWithMask(PixMap **pixMap, const uint8_t *maskData, int16_t x, int16_t y) const;
 
 	protected:
 		SimpleGraphic(unsigned int width, unsigned int height, const RGBAColor *pixelData, uint8_t *standardPaletteData);

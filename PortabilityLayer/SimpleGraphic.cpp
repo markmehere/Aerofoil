@@ -29,12 +29,12 @@ namespace PortabilityLayer
 			pixelData[i] = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[standardPaletteData[i]];
 	}
 
-	void SimpleGraphic::DrawToPixMap(PixMap **pixMapH, int16_t x, int16_t y)
+	void SimpleGraphic::DrawToPixMap(PixMap **pixMapH, int16_t x, int16_t y) const
 	{
 		DrawToPixMapWithMask(pixMapH, nullptr, x, y);
 	}
 
-	void SimpleGraphic::DrawToPixMapWithMask(PixMap **pixMapH, const uint8_t *maskData, int16_t x, int16_t y)
+	void SimpleGraphic::DrawToPixMapWithMask(PixMap **pixMapH, const uint8_t *maskData, int16_t x, int16_t y) const
 	{
 		if (!pixMapH)
 			return;

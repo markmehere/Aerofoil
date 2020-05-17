@@ -371,7 +371,7 @@ void DrawDefaultButton (Dialog *theDialog)
 		for (int yOffset = -1; yOffset <= 1; yOffset++)
 		{
 			const Rect offsetRect = itemRect + Point::Create(xOffset, yOffset);
-			surface->FrameRoundRect(offsetRect, 8, 8);
+			surface->FrameRect(offsetRect);
 		}
 	}
 }
