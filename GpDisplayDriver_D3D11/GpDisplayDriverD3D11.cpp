@@ -959,8 +959,10 @@ void GpDisplayDriverD3D11::Run()
 			unsigned int desiredHeight = clientRect.bottom - clientRect.top;
 			if (clientRect.right - clientRect.left != m_windowWidthPhysical || clientRect.bottom - clientRect.top != m_windowHeightPhysical)
 			{
-				uint32_t prevWidth = m_windowWidthPhysical;
-				uint32_t prevHeight = m_windowHeightPhysical;
+				uint32_t prevWidthPhysical = m_windowWidthPhysical;
+				uint32_t prevHeightPhysical = m_windowHeightPhysical;
+				uint32_t prevWidthVirtual = m_windowWidthVirtual;
+				uint32_t prevHeightVirtual = m_windowHeightVirtual;
 				uint32_t virtualWidth = m_windowWidthVirtual;
 				uint32_t virtualHeight = m_windowHeightVirtual;
 				float pixelScaleX = 1.0f;
@@ -984,8 +986,8 @@ void GpDisplayDriverD3D11::Run()
 					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
 					{
 						resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidth;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeight;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidthVirtual;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeightVirtual;
 						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidthVirtual;
 						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
 					}
