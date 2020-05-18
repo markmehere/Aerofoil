@@ -90,9 +90,6 @@
     <ClInclude Include="PLMovies.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLMacTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLResources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -427,12 +424,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PLPopupMenuWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PLCheckboxWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PLRadioButtonWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ZipFile.h">

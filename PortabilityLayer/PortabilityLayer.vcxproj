@@ -210,7 +210,6 @@
     <ClInclude Include="PLArrayViewIterator.h" />
     <ClInclude Include="PLBigEndian.h" />
     <ClInclude Include="PLButtonWidget.h" />
-    <ClInclude Include="PLCheckboxWidget.h" />
     <ClInclude Include="PLControlDefinitions.h" />
     <ClInclude Include="PLCore.h" />
     <ClInclude Include="PLCTabReducer.h" />
@@ -226,7 +225,6 @@
     <ClInclude Include="PLLabelWidget.h" />
     <ClInclude Include="PLLittleEndian.h" />
     <ClInclude Include="PLPopupMenuWidget.h" />
-    <ClInclude Include="PLRadioButtonWidget.h" />
     <ClInclude Include="PLRegions.h" />
     <ClInclude Include="PLScrollBarWidget.h" />
     <ClInclude Include="PLUnalignedPtr.h" />
@@ -237,7 +235,6 @@
     <ClInclude Include="ZipFileProxy.h" />
     <ClInclude Include="SimpleImage.h" />
     <ClInclude Include="PLKeyEncoding.h" />
-    <ClInclude Include="PLMacTypes.h" />
     <ClInclude Include="MenuManager.h" />
     <ClInclude Include="PlotDirection.h" />
     <ClInclude Include="PLStandardColors.h" />
