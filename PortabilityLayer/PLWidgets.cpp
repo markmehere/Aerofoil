@@ -85,7 +85,7 @@ namespace PortabilityLayer
 		return m_visible;
 	}
 
-	void Widget::SetHighlightStyle(int16_t style)
+	void Widget::SetHighlightStyle(int16_t style, bool enabled)
 	{
 		(void)style;
 	}

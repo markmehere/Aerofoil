@@ -1,5 +1,6 @@
 #include "PLButtonWidget.h"
 #include "PLCore.h"
+#include "PLControlDefinitions.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLStandardColors.h"
 #include "FontFamily.h"
@@ -97,6 +98,43 @@ static const PortabilityLayer::RGBAColor gs_buttonDisabledBottomRightCornerGraph
 	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }
 };
 
+// Default boundary
+
+static const PortabilityLayer::RGBAColor gs_buttonDefaultTopLeftCornerGraphicPixels[] =
+{
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
+	{ 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 },
+};
+
+static const PortabilityLayer::RGBAColor gs_buttonDefaultTopRightCornerGraphicPixels[] =
+{
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ 255, 255, 255, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 },
+};
+
+static const PortabilityLayer::RGBAColor gs_buttonDefaultBottomLeftCornerGraphicPixels[] =
+{
+	{ 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+};
+
+static const PortabilityLayer::RGBAColor gs_buttonDefaultBottomRightCornerGraphicPixels[] =
+{
+	{ 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 },
+	{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+};
 
 
 static PortabilityLayer::SimpleGraphicInstanceRGBA<3, 3> gs_buttonCornerGraphics[4] =
@@ -123,10 +161,23 @@ static PortabilityLayer::SimpleGraphicInstanceRGBA<3, 3> gs_buttonDisabledCorner
 	PortabilityLayer::SimpleGraphicInstanceRGBA<3, 3>(gs_buttonDisabledBottomRightCornerGraphicPixels),
 };
 
+static PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5> gs_buttonDefaultCornerGraphics[4] =
+{
+	PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5>(gs_buttonDefaultTopLeftCornerGraphicPixels),
+	PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5>(gs_buttonDefaultTopRightCornerGraphicPixels),
+	PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5>(gs_buttonDefaultBottomLeftCornerGraphicPixels),
+	PortabilityLayer::SimpleGraphicInstanceRGBA<5, 5>(gs_buttonDefaultBottomRightCornerGraphicPixels),
+};
+
 static const uint8_t gs_buttonTopLeftGraphicMask[] = { 0x2f, 0xff };
 static const uint8_t gs_buttonTopRightGraphicMask[] = { 0x9b, 0xff };
 static const uint8_t gs_buttonBottomLeftGraphicMask[] = { 0xec, 0xff };
 static const uint8_t gs_buttonBottomRightGraphicMask[] = { 0xfa, 0x7f };
+
+static const uint8_t gs_buttonDefaultTopLeftGraphicMask[] = { 0x08, 0xCE, 0xFF, 0xFF };
+static const uint8_t gs_buttonDefaultTopRightGraphicMask[] = { 0x86, 0x39, 0xEF, 0xFF };
+static const uint8_t gs_buttonDefaultBottomLeftGraphicMask[] = { 0xFB, 0xCE, 0x30, 0xFF };
+static const uint8_t gs_buttonDefaultBottomRightGraphicMask[] = { 0xFF, 0xB9, 0x88, 0x7F };
 
 
 namespace PortabilityLayer
@@ -134,6 +185,7 @@ namespace PortabilityLayer
 	ButtonWidget::ButtonWidget(const WidgetBasicState &state)
 		: WidgetSpec<ButtonWidget>(state)
 		, m_text(state.m_text)
+		, m_haveHighlightOverride(false)
 	{
 	}
 
@@ -244,7 +296,7 @@ namespace PortabilityLayer
 			textColor = PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
 			borderColor = PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
 		}
-		else if (inverted)
+		else if (inverted || m_haveHighlightOverride)
 		{
 			cornerGraphics = gs_buttonPressedCornerGraphics;
 			topStripeColors[0] = PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
@@ -310,29 +362,63 @@ namespace PortabilityLayer
 		surface->SetForeColor(centerColor);
 		surface->FillRect(rect.Inset(3, 3));
 
-
-		/*
-		surface->SetForeColor(inverted ? StdColors::Black() : StdColors::White());
-		surface->FillRect(this->m_rect.Inset(1, 1));
-
-		if (m_enabled)
-			surface->SetForeColor(StdColors::Black());
-		else
-			surface->SetForeColor(RGBAColor::Create(136, 136, 136, 255));
-
-		surface->FrameRect(this->m_rect);
-
-		if (m_enabled)
-			surface->SetForeColor(inverted ? StdColors::White() : StdColors::Black());
-		else
-			surface->SetForeColor(RGBAColor::Create(136, 136, 136, 255));
-			*/
-
 		surface->SetForeColor(textColor);
 
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;
 		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(surface->MeasureFontAscender())) / 2;
 		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), true);
+	}
+
+	void ButtonWidget::DrawDefaultButtonChrome(const Rect &rectRef, DrawSurface *surface)
+	{
+		const Rect rect = rectRef;
+		PixMap **pixMap = surface->m_port.GetPixMap();
+
+		gs_buttonDefaultCornerGraphics[0].DrawToPixMapWithMask(pixMap, gs_buttonDefaultTopLeftGraphicMask, rect.left - 3, rect.top - 3);
+		gs_buttonDefaultCornerGraphics[1].DrawToPixMapWithMask(pixMap, gs_buttonDefaultTopRightGraphicMask, rect.right - 2, rect.top - 3);
+		gs_buttonDefaultCornerGraphics[2].DrawToPixMapWithMask(pixMap, gs_buttonDefaultBottomLeftGraphicMask, rect.left - 3, rect.bottom - 2);
+		gs_buttonDefaultCornerGraphics[3].DrawToPixMapWithMask(pixMap, gs_buttonDefaultBottomRightGraphicMask, rect.right - 2, rect.bottom - 2);
+
+		RGBAColor upperLeftStripeColors[3] =
+		{
+			RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255),
+			StdColors::White(),
+			StdColors::Black(),
+		};
+
+		RGBAColor bottomRightStripeColors[3] =
+		{
+			RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255),
+			RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255),
+			StdColors::Black(),
+		};
+
+
+		for (int i = 0; i < 3; i++)
+		{
+			surface->SetForeColor(upperLeftStripeColors[i]);
+			surface->FillRect(Rect::Create(rect.top - 1 - i, rect.left + 2, rect.top - i, rect.right - 2));
+			surface->FillRect(Rect::Create(rect.top + 2, rect.left - 1 - i, rect.bottom - 2, rect.left - i));
+		}
+
+		for (int i = 0; i < 3; i++)
+		{
+			surface->SetForeColor(bottomRightStripeColors[i]);
+			surface->FillRect(Rect::Create(rect.bottom + i, rect.left + 2, rect.bottom + i + 1, rect.right - 2));
+			surface->FillRect(Rect::Create(rect.top + 2, rect.right + i, rect.bottom - 2, rect.right + i + 1));
+		}
+	}
+
+	void ButtonWidget::SetHighlightStyle(int16_t style, bool enabled)
+	{
+		if (style == kControlButtonPart)
+		{
+			if (m_haveHighlightOverride != enabled)
+			{
+				m_haveHighlightOverride = enabled;
+				DrawControl(&m_window->m_surface);
+			}
+		}
 	}
 }

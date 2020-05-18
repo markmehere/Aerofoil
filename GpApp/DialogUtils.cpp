@@ -6,6 +6,7 @@
 
 #include "DialogManager.h"
 #include "PLArrayView.h"
+#include "PLButtonWidget.h"
 #include "PLControlDefinitions.h"
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
@@ -347,9 +348,9 @@ void FlashDialogButton (Dialog *theDialog, short itemNumber)
 
 	PortabilityLayer::Widget *widget = theDialog->GetItems()[itemNumber - 1].GetWidget();
 
-	widget->SetHighlightStyle(kControlButtonPart);
+	widget->SetHighlightStyle(kControlButtonPart, true);
 	Delay(8, &dummyLong);
-	widget->SetHighlightStyle(0);
+	widget->SetHighlightStyle(kControlButtonPart, false);
 }
 
 //--------------------------------------------------------------  DrawDefaultButton
@@ -362,18 +363,7 @@ void DrawDefaultButton (Dialog *theDialog)
 	Rect								itemRect = firstItem.GetWidget()->GetRect();
 	DrawSurface							*surface = theDialog->GetWindow()->GetDrawSurface();
 
-	InsetRect(&itemRect, -4, -4);
-
-	surface->SetForeColor(StdColors::Black());
-
-	for (int xOffset = -1; xOffset <= 1; xOffset++)
-	{
-		for (int yOffset = -1; yOffset <= 1; yOffset++)
-		{
-			const Rect offsetRect = itemRect + Point::Create(xOffset, yOffset);
-			surface->FrameRect(offsetRect);
-		}
-	}
+	PortabilityLayer::ButtonWidget::DrawDefaultButtonChrome(itemRect, surface);
 }
 
 //--------------------------------------------------------------  GetDialogString

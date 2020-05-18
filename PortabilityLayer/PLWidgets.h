@@ -69,7 +69,7 @@ namespace PortabilityLayer
 
 		uint32_t GetReferenceConstant() const;
 
-		virtual void SetHighlightStyle(int16_t style);
+		virtual void SetHighlightStyle(int16_t style, bool enabled);
 
 		virtual bool HandlesTickEvents() const;
 		virtual Rect GetExpandedRect() const;

@@ -20,9 +20,14 @@ namespace PortabilityLayer
 
 		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
 
+		void SetHighlightStyle(int16_t style, bool enabled) override;
+
+		static void DrawDefaultButtonChrome(const Rect &rect, DrawSurface *surface);
+
 	private:
 		void DrawControlInternal(DrawSurface *surface, bool inverted);
 
 		PascalStr<255> m_text;
+		bool m_haveHighlightOverride;
 	};
 }
