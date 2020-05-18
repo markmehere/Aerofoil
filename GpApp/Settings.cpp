@@ -726,6 +726,8 @@ void DoSoundPrefs (void)
 	PLError_t		theErr;
 	short			itemHit;
 	Boolean			leaving;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	BringUpDialog(&prefDlg, kSoundPrefsDialID, nullptr);
 
@@ -740,6 +742,9 @@ void DoSoundPrefs (void)
 	SetDialogItemValue(prefDlg, kIdleMusicItem, (short)wasIdle);
 	SetDialogItemValue(prefDlg, kPlayMusicItem, (short)wasPlay);
 	leaving = false;
+
+	Window *exclStack = prefDlg->GetWindow();
+	wm->SwapExclusiveWindow(exclStack);	// Push exclusive window
 
 	while (!leaving)
 	{
@@ -843,6 +848,8 @@ void DoSoundPrefs (void)
 			break;
 		}
 	}
+
+	wm->SwapExclusiveWindow(exclStack);	// Pop exclusive window
 
 	prefDlg->Destroy();
 }
