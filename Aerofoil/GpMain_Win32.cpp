@@ -15,6 +15,8 @@
 
 #include "GpWindows.h"
 
+#include "resource.h"
+
 #include <stdio.h>
 #include <windowsx.h>
 
@@ -401,6 +403,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpWindowsGlobals.m_nCmdShow = nCmdShow;
 	g_gpWindowsGlobals.m_baseDir = GpFileSystem_Win32::GetInstance()->GetBasePath();
 	g_gpWindowsGlobals.m_hwnd = nullptr;
+	g_gpWindowsGlobals.m_hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
+	g_gpWindowsGlobals.m_hIconSm = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON2));
 
 	g_gpWindowsGlobals.m_createFiberFunc = GpFiber_Win32::Create;
 	g_gpWindowsGlobals.m_loadCursorFunc = GpCursor_Win32::Load;

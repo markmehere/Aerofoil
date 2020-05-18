@@ -22,6 +22,8 @@ struct GpWindowsGlobals
 	LPCSTR m_cmdLine;
 	LPCWSTR m_baseDir;
 	HWND m_hwnd;
+	HICON m_hIcon;
+	HICON m_hIconSm;
 	int m_nCmdShow;
 
 	IGpFiber *(*m_createFiberFunc)(LPVOID fiber);

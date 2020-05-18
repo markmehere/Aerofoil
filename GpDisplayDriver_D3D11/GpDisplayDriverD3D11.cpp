@@ -905,6 +905,8 @@ void GpDisplayDriverD3D11::Run()
 	wc.lpfnWndProc = WinProc;
 	wc.hInstance = m_osGlobals->m_hInstance;
 	wc.hCursor = m_arrowCursor;
+	wc.hIcon = m_osGlobals->m_hIcon;
+	wc.hIconSm = m_osGlobals->m_hIconSm;
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	wc.lpszClassName = "GPD3D11WindowClass";
 
