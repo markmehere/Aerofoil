@@ -21,6 +21,7 @@
 #include "ResourceManager.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "VirtualDirectory.h"
+#include "WindowManager.h"
 
 
 #define kLoadHouseDialogID		1000
@@ -343,6 +344,8 @@ void DoLoadHouse (void)
 	Dialog			*theDial;
 	short			i, wasIndex, screenCount;
 	Boolean			leaving, whoCares;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	BringUpDialog(&theDial, kLoadHouseDialogID, nullptr);
 
@@ -388,6 +391,9 @@ void DoLoadHouse (void)
 	}
 	
 	leaving = false;
+
+	Window *exclWindow = theDial->GetWindow();
+	wm->SwapExclusiveWindow(exclWindow);	// Push exclusive window
 
 	UpdateLoadDialog(theDial);
 	
@@ -495,6 +501,8 @@ void DoLoadHouse (void)
 		if (requiresRedraw)
 			UpdateLoadDialog(theDial);
 	}
+
+	wm->SwapExclusiveWindow(exclWindow);	// Pop exclusive window
 
 	theDial->Destroy();
 }
