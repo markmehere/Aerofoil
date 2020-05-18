@@ -1,3 +1,5 @@
+rmdir /S /Q ReleasePkg
+
 mkdir ReleasePkg\Aerofoil
 mkdir ReleasePkg\Aerofoil\Packaged
 mkdir ReleasePkg\Aerofoil\Resources
@@ -24,6 +26,8 @@ xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
 xcopy /I /E /Y /K Documentation ReleasePkg\Aerofoil\Documentation
 
 attrib +R Packaged\Houses\*
+
+rmdir /S /Q InstallerPackages
 
 mkdir InstallerPackages
 mkdir InstallerPackages\DefaultHouses

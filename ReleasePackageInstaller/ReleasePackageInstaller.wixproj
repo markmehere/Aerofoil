@@ -18,6 +18,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>$(SolutionDir)ReleasePkg\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <Cultures>en-us</Cultures>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Product.wxs" />
@@ -146,6 +147,9 @@
       <Name>WixUIExtension</Name>
     </WixExtension>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings-en-us.wxl" />
+  </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
   <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
@@ -216,12 +220,4 @@ PackagedDataDir=$(SolutionDir)\Packaged;
 call ConvertResources.bat
 call MakeRelease.bat</PreBuildEvent>
   </PropertyGroup>
-  <!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
 </Project>

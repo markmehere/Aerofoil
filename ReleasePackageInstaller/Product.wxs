@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Aerofoil" Language="1033" Version="0.2.2.0" Manufacturer="The Aerofoil Project" UpgradeCode="2ae0587c-2a5f-4299-b5a8-e6cfed7cd84c">
+	<Product Id="*" Name="Aerofoil" Language="1033" Version="0.2.3.0" Manufacturer="The Aerofoil Project" UpgradeCode="2ae0587c-2a5f-4299-b5a8-e6cfed7cd84c">
     <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine">
     </Package>
 
@@ -30,7 +30,6 @@
         <Directory Id="ApplicationProgramsFolder" Name="Aerofoil"/>
       </Directory>
     </Directory>
-
 
     <DirectoryRef Id="AEROFOILPRODUCTDIR">
       <Component Id="Aerofoil.exe" Guid="*">
@@ -109,22 +108,13 @@
       </Component>
     </DirectoryRef>
 
-    <Feature Id="AerofoilApplication" Title="Glider PRO Game Data" Level="1" Display="expand" ConfigurableDirectory="AEROFOILPRODUCTDIR">
+    <Feature Id="AerofoilApplicationFeature" Title="Glider PRO Game Data" Level="1" Display="expand" ConfigurableDirectory="AEROFOILPRODUCTDIR" Description="!(loc.AerofoilApplicationFeatureDescription)">
       <ComponentRef Id="Aerofoil.exe" />
       <ComponentRef Id="FreeType.dll" />
       <ComponentRef Id="GpApp.dll" />
       <ComponentRef Id="GpAudioDriver_XAudio2.dll" />
       <ComponentRef Id="GpDisplayDriver_D3D11.dll" />
       <ComponentRef Id="GpInputDriver_XInput.dll" />
-
-      <ComponentRef Id="bin2gp.exe" />
-      <ComponentRef Id="flattenmov.exe" />
-      <ComponentRef Id="FTagData.exe" />
-      <ComponentRef Id="gpr2gpa.exe" />
-      <ComponentRef Id="hqx2bin.exe" />
-      <ComponentRef Id="hqx2gp.exe" />
-      <ComponentRef Id="MakeTimestamp.exe" />
-      <ComponentRef Id="unpacktool.exe" />
       
       <ComponentRef Id="ApplicationResources" />
 
@@ -138,12 +128,25 @@
 
       <ComponentRef Id="StartMenuShortcuts" />
 
-      <Feature Id="HousePack1Feature" Title="Additional Houses" Level="1">
+      <Feature Id="HousePack1Feature" Title="Additional Houses" Level="1" Description="!(loc.HousePack1FeatureDescription)">
         <ComponentGroupRef Id="HousePack1ComponentGroup" />
+      </Feature>
+
+      <Feature Id="ImportToolsFeature" Title="Data Import Utilities" Level="2" Description="!(loc.ImportToolsFeatureDescription)">
+        <ComponentRef Id="bin2gp.exe" />
+        <ComponentRef Id="flattenmov.exe" />
+        <ComponentRef Id="FTagData.exe" />
+        <ComponentRef Id="gpr2gpa.exe" />
+        <ComponentRef Id="hqx2bin.exe" />
+        <ComponentRef Id="hqx2gp.exe" />
+        <ComponentRef Id="MakeTimestamp.exe" />
+        <ComponentRef Id="unpacktool.exe" />
       </Feature>
     </Feature>
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\LICENSE.rtf"/>
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\DialogBanner.png"/>
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\TopBanner.bmp"/>
 
     <DirectoryRef Id="TARGETDIR">
       <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC140_CRT_x64.msm" DiskId="1" Language="0" />
