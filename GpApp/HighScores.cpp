@@ -525,8 +525,8 @@ void GetHighScoreName (short place)
 
 	UpdateNameDialog(theDial);
 
-	//Window *exclStack = theDial->GetWindow();
-	//wm->SwapExclusiveWindow(exclStack);	// Push exclusive window for zooms
+	Window *exclStack = theDial->GetWindow();
+	wm->SwapExclusiveWindow(exclStack);	// Push exclusive window for zooms
 
 	if (doZooms)
 		wm->FlickerWindowIn(theDial->GetWindow(), 64);
@@ -545,6 +545,8 @@ void GetHighScoreName (short place)
 
 	if (doZooms)
 		wm->FlickerWindowOut(theDial->GetWindow(), 64);
+
+	wm->SwapExclusiveWindow(exclStack);	// Pop exclusive window
 	
 	theDial->Destroy();
 }
@@ -633,6 +635,9 @@ void GetHighScoreBanner (void)
 
 	UpdateBannerDialog(theDial);
 
+	Window *exclStack = theDial->GetWindow();
+	wm->SwapExclusiveWindow(exclStack);	// Push exclusive window for zooms
+
 	if (doZooms)
 		wm->FlickerWindowIn(theDial->GetWindow(), 64);
 
@@ -650,6 +655,8 @@ void GetHighScoreBanner (void)
 
 	if (doZooms)
 		wm->FlickerWindowOut(theDial->GetWindow(), 64);
+
+	wm->SwapExclusiveWindow(exclStack);	// Pop exclusive window
 	
 	theDial->Destroy();
 }
