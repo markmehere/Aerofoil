@@ -174,14 +174,10 @@
     <ClInclude Include="..\GpCommon\GpInputDriverProperties.h" />
     <ClInclude Include="..\GpCommon\IGpCursor.h" />
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
-    <ClInclude Include="..\GpCommon\GpColorCursor_Win32.h" />
     <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />
     <ClInclude Include="GpAppEnvironment.h" />
     <ClInclude Include="GpAudioDriverFactory.h" />
-    <ClInclude Include="GpComPtr.h" />
-    <ClInclude Include="GpCoreDefs.h" />
     <ClInclude Include="GpDisplayDriverFactory.h" />
-    <ClInclude Include="GpFiber.h" />
     <ClInclude Include="GpFiber_Win32.h" />
     <ClInclude Include="GpFileStream_Win32.h" />
     <ClInclude Include="GpFileSystem_Win32.h" />
@@ -192,15 +188,10 @@
     <ClInclude Include="GpMain.h" />
     <ClInclude Include="GpMemoryBuffer.h" />
     <ClInclude Include="GpMutex_Win32.h" />
-    <ClInclude Include="GpRingBuffer.h" />
     <ClInclude Include="GpSystemServices_Win32.h" />
     <ClInclude Include="GpFiberStarter.h" />
     <ClInclude Include="GpThreadEvent_Win32.h" />
     <ClInclude Include="GpVOSEventQueue.h" />
-    <ClInclude Include="GpWindows.h" />
-    <ClInclude Include="IGpAudioChannel.h" />
-    <ClInclude Include="IGpAudioDriver.h" />
-    <ClInclude Include="IGpDisplayDriver.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
