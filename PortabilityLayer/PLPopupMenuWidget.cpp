@@ -95,7 +95,7 @@ namespace PortabilityLayer
 
 
 		Rect textRect = innerRect;
-		textRect.right -= 9;
+		textRect.right -= 11;
 
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		Point basePoint = Point::Create(textRect.left + 2, (textRect.top + textRect.bottom + surface->MeasureFontAscender() + 1) / 2 - 1);
@@ -105,14 +105,15 @@ namespace PortabilityLayer
 
 		Point arrowMidPoint = Point::Create(textRect.right + 5, (textRect.top + textRect.bottom + 1) / 2);
 
-		const Rect arrowRects[3] =
+		const Rect arrowRects[4] =
 		{
+			Rect::Create(arrowMidPoint.v - 2, arrowMidPoint.h - 3, arrowMidPoint.v - 1, arrowMidPoint.h + 4),
 			Rect::Create(arrowMidPoint.v - 1, arrowMidPoint.h - 2, arrowMidPoint.v, arrowMidPoint.h + 3),
 			Rect::Create(arrowMidPoint.v, arrowMidPoint.h - 1, arrowMidPoint.v + 1, arrowMidPoint.h + 2),
 			Rect::Create(arrowMidPoint.v + 1, arrowMidPoint.h, arrowMidPoint.v + 2, arrowMidPoint.h + 1)
 		};
 
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			const Rect constrainedRect = innerRect.Intersect(arrowRects[i]);
 			surface->FillRect(constrainedRect);
