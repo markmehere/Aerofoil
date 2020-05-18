@@ -30,3 +30,4 @@ InstallerPackages/*
 *.wixobj
 ReleasePackageInstaller/obj/*
 ReleasePackageInstaller/bin/*
+ReleasePackageInstaller/AerofoilPackageDefs.wxi

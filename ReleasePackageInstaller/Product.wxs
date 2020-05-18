@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?include AerofoilPackageDefs.wxi ?>
+<!--
+    You're probably getting a build failure on this line ^^^
+    This is because the Aerofoil upgrade code is not included in this project, to prevent collision with Aerofoil's upgrade GUID.
+    To fix this, create the AerofoilPackageDefs.wxi file in the ReleasePackageInstaller project dir.  It should look like this:
+
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define AerofoilUpgradeCode="PUT A GUID HERE" ?>
+  <?define AerofoilReleaseVersion="1.0.0.0" ?>
+</Include>
+
+    DO NOT USE AEROFOIL'S UPGRADE CODE GUID FOR YOUR OWN PROJECTS, it will cause your project to be considered a version of
+    Aerofoil, causing it to either fail to install, or uninstall Aerofoil itself.
+
+    If for some reason you need to do this or insist on doing it anyway, Aerofoil's upgrade code GUID is 2ae0587c-2a5f-4299-b5a8-e6cfed7cd84c
+-->
+
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Aerofoil" Language="1033" Version="0.2.3.0" Manufacturer="The Aerofoil Project" UpgradeCode="2ae0587c-2a5f-4299-b5a8-e6cfed7cd84c">
+  <Product Id="*" Name="Aerofoil" Language="1033" Version="$(var.AerofoilReleaseVersion)" Manufacturer="The Aerofoil Project" UpgradeCode="$(var.AerofoilUpgradeCode)">
     <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine">
     </Package>
 
