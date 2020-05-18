@@ -28,7 +28,7 @@ namespace PortabilityLayer
 		DrawControl(m_window->GetDrawSurface());
 	}
 
-	bool ScrollBarWidget::Init(const WidgetBasicState &state)
+	bool ScrollBarWidget::Init(const WidgetBasicState &state, const void *additionalData)
 	{
 		m_min = state.m_min;
 		m_max = state.m_max;

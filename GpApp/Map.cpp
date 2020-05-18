@@ -430,7 +430,7 @@ void OpenMapWindow (void)
 			state.m_window = mapWindow;
 			state.m_max = kMaxNumRoomsH - mapRoomsWide;
 			state.m_state = mapLeftRoom;
-			mapHScroll = PortabilityLayer::ScrollBarWidget::Create(state);
+			mapHScroll = PortabilityLayer::ScrollBarWidget::Create(state, nullptr);
 		}
 
 		if (mapHScroll == nil)
@@ -443,7 +443,7 @@ void OpenMapWindow (void)
 			state.m_window = mapWindow;
 			state.m_max = kMaxNumRoomsV - mapRoomsHigh;
 			state.m_state = mapTopRoom;
-			mapVScroll = PortabilityLayer::ScrollBarWidget::Create(state);
+			mapVScroll = PortabilityLayer::ScrollBarWidget::Create(state, nullptr);
 		}
 
 		if (mapVScroll == nil)

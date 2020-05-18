@@ -10,7 +10,7 @@ namespace PortabilityLayer
 	public:
 		LabelWidget(const WidgetBasicState &state);
 
-		bool Init(const WidgetBasicState &state) override;
+		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
 		void SetString(const PLPasStr &str) override;
 		PLPasStr GetString() const override;

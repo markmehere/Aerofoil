@@ -474,7 +474,7 @@ void DoRoomInfo(void)
 		state.m_resID = kBackgroundsMenuID;
 		state.m_enabled = true;
 
-		PortabilityLayer::PopupMenuWidget *roomPopupWidget = PortabilityLayer::PopupMenuWidget::Create(state);
+		PortabilityLayer::PopupMenuWidget *roomPopupWidget = PortabilityLayer::PopupMenuWidget::Create(state, nullptr);
 		roomInfoDialog->ReplaceWidget(kRoomPopupItem - 1, roomPopupWidget);
 
 		if (HouseHasOriginalPicts())

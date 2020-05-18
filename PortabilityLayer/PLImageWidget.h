@@ -13,7 +13,7 @@ namespace PortabilityLayer
 		ImageWidget(const WidgetBasicState &state);
 		~ImageWidget();
 
-		bool Init(const WidgetBasicState &state) override;
+		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 		void DrawControl(DrawSurface *surface) override;
 
 	private:

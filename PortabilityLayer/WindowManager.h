@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "PLRegions.h"
+
 struct Window;
 struct DrawSurface;
 struct GDevice;
@@ -33,6 +35,8 @@ namespace PortabilityLayer
 		virtual bool HandleCloseBoxClick(Window *window, const Point &startPoint) = 0;
 		virtual void SetWindowTitle(Window *window, const PLPasStr &title) = 0;
 		virtual Rect2i GetWindowFullRect(Window *window) const = 0;
+		virtual bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const = 0;
+		virtual void SwapExclusiveWindow(Window *& windowRef) = 0;
 
 		virtual void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) = 0;
 		virtual void ClearResizeInProgress() = 0;

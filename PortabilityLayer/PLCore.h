@@ -199,22 +199,6 @@ typedef WindowPtr WindowRef;	// wtf?
 
 struct KeyDownStates;
 
-namespace RegionIDs
-{
-	enum RegionID
-	{
-		kNone,
-
-		kMenuBar = 1,
-		kContent,
-		kTitleBar,
-		kClose,
-		kResize,
-	};
-}
-
-typedef RegionIDs::RegionID RegionID_t;
-
 static const int everyEvent = -1;
 
 static const int iBeamCursor = 1;

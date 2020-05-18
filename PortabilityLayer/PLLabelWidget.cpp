@@ -13,7 +13,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool LabelWidget::Init(const WidgetBasicState &state)
+	bool LabelWidget::Init(const WidgetBasicState &state, const void *additionalData)
 	{
 		(void)state;
 		return true;

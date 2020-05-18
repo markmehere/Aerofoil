@@ -12,7 +12,7 @@ namespace PortabilityLayer
 	public:
 		explicit ScrollBarWidget(const WidgetBasicState &state);
 
-		bool Init(const WidgetBasicState &state) override;
+		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
 		void OnEnabledChanged() override;
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;

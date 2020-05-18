@@ -86,6 +86,26 @@ namespace PortabilityLayer
 		static const int kLightGray = 221;
 	};
 
+	class AlertWindowChromeTheme final : public WindowChromeThemeSingleton<AlertWindowChromeTheme>
+	{
+	public:
+		void GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const override;
+		void RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const override;
+		bool GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const override;
+		bool GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const override;
+		void UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const override;
+
+	private:
+		void RenderChromeTop(WindowImpl *window, DrawSurface *surface) const;
+		void RenderChromeLeft(WindowImpl *window, DrawSurface *surface) const;
+		void RenderChromeBottom(WindowImpl *window, DrawSurface *surface) const;
+		void RenderChromeRight(WindowImpl *window, DrawSurface *surface) const;
+
+		static const RGBAColor kDarkColor;
+		static const RGBAColor kMidColor;
+		static const RGBAColor kLightColor;
+	};
+
 	class WindowImpl final : public Window
 	{
 	public:
@@ -145,6 +165,8 @@ namespace PortabilityLayer
 		bool HandleCloseBoxClick(Window *window, const Point &startPoint) override;
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 		Rect2i GetWindowFullRect(Window *window) const override;
+		bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const override;
+		void SwapExclusiveWindow(Window *& windowRef) override;
 
 		void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) override;
 		void ClearResizeInProgress() override;
@@ -165,6 +187,8 @@ namespace PortabilityLayer
 
 		WindowImpl *m_windowStackTop;
 		WindowImpl *m_windowStackBottom;
+
+		WindowImpl *m_exclusiveWindow;
 
 		Rect2i m_resizeInProgressRect;
 		DrawSurface m_resizeInProgressHorizontalBar;
@@ -586,6 +610,144 @@ namespace PortabilityLayer
 	}
 
 	//---------------------------------------------------------------------------
+	// Alert chrome theme
+	const RGBAColor AlertWindowChromeTheme::kDarkColor = RGBAColor::Create(255, 51, 51, 255);
+	const RGBAColor AlertWindowChromeTheme::kMidColor = RGBAColor::Create(255, 153, 51, 255);
+	const RGBAColor AlertWindowChromeTheme::kLightColor = RGBAColor::Create(255, 204, 51, 255);
+
+
+	void AlertWindowChromeTheme::GetChromePadding(const WindowImpl *window, uint16_t padding[WindowChromeSides::kCount]) const
+	{
+		padding[WindowChromeSides::kTop] = 6;
+		padding[WindowChromeSides::kBottom] = 6;
+		padding[WindowChromeSides::kLeft] = 6;
+		padding[WindowChromeSides::kRight] = 6;
+	}
+
+	bool AlertWindowChromeTheme::GetChromeInteractionZone(const WindowImpl *window, const Vec2i &point, RegionID_t &outRegion) const
+	{
+		return false;
+	}
+
+	bool AlertWindowChromeTheme::GetChromeRegionRect(const WindowImpl *window, RegionID_t region, Rect2i &outRect) const
+	{
+		return false;
+	}
+
+	void AlertWindowChromeTheme::UpdateRegionChromeState(const WindowImpl *window, RegionID_t region, const void *data) const
+	{
+	}
+
+	void AlertWindowChromeTheme::RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const
+	{
+		switch (chromeSide)
+		{
+		case WindowChromeSides::kTop:
+			RenderChromeTop(window, surface);
+			break;
+		case WindowChromeSides::kLeft:
+			RenderChromeLeft(window, surface);
+			break;
+		case WindowChromeSides::kBottom:
+			RenderChromeBottom(window, surface);
+			break;
+		case WindowChromeSides::kRight:
+			RenderChromeRight(window, surface);
+			break;
+		default:
+			break;
+		}
+	}
+
+	void AlertWindowChromeTheme::RenderChromeTop(WindowImpl *window, DrawSurface *surface) const
+	{
+		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
+
+		surface->SetForeColor(kMidColor);
+		surface->FillRect(rect);
+
+		surface->SetForeColor(StdColors::Black());
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 5, rect.bottom, rect.right - 5));
+
+		surface->SetForeColor(kDarkColor);
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom - 1, rect.right - 5));
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom, rect.left + 5));
+		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom, rect.right - 1));
+
+		surface->SetForeColor(kLightColor);
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom, rect.left + 2));
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.right - 5, rect.bottom, rect.right - 4));
+	}
+
+	void AlertWindowChromeTheme::RenderChromeLeft(WindowImpl *window, DrawSurface *surface) const
+	{
+		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
+
+		surface->SetForeColor(StdColors::Black());
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+
+		surface->SetForeColor(kLightColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4));
+
+		surface->SetForeColor(kDarkColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1));
+
+		surface->SetForeColor(kMidColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2));
+	}
+
+	void AlertWindowChromeTheme::RenderChromeBottom(WindowImpl *window, DrawSurface *surface) const
+	{
+		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
+
+		surface->SetForeColor(kMidColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 1, rect.left + 5));
+		surface->FillRect(Rect::Create(rect.bottom - 4, rect.left + 5, rect.bottom - 2, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom - 2, rect.right - 2));
+
+		surface->SetForeColor(StdColors::Black());
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, rect.left + 1));
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.left + 5, rect.bottom - 5, rect.left + 6));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom - 5, rect.right - 5));
+		surface->FillRect(Rect::Create(rect.bottom - 6, rect.left + 6, rect.bottom - 5, rect.right - 6));
+
+		surface->SetForeColor(kLightColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom - 5, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 2, rect.left + 2));
+		surface->FillRect(Rect::Create(rect.bottom - 5, rect.left + 5, rect.bottom - 4, rect.right - 4));
+
+		surface->SetForeColor(kDarkColor);
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.left + 4, rect.bottom - 5, rect.left + 5));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom - 1, rect.right - 1));
+	}
+
+	void AlertWindowChromeTheme::RenderChromeRight(WindowImpl *window, DrawSurface *surface) const
+	{
+		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
+
+		surface->SetForeColor(StdColors::Black());
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+
+		surface->SetForeColor(kLightColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4));
+
+		surface->SetForeColor(kDarkColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1));
+
+		surface->SetForeColor(kMidColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2));
+	}
+
+	//---------------------------------------------------------------------------
 	WindowImpl::WindowImpl()
 		: m_windowAbove(nullptr)
 		, m_windowBelow(nullptr)
@@ -627,6 +789,8 @@ namespace PortabilityLayer
 
 			if (m_styleFlags & WindowStyleFlags::kTitleBar)
 				m_chromeTheme = GenericWindowChromeTheme::GetInstance();
+			else if (m_styleFlags & WindowStyleFlags::kAlert)
+				m_chromeTheme = AlertWindowChromeTheme::GetInstance();
 
 			Rect chromeBounds[WindowChromeSides::kCount];
 			GetChromeDimensions(bounds.Width(), bounds.Height(), chromeBounds);
@@ -776,6 +940,7 @@ namespace PortabilityLayer
 		, m_windowStackBottom(nullptr)
 		, m_resizeInProgressRect(Rect2i(0, 0, 0, 0))
 		, m_isResizeInProgress(false)
+		, m_exclusiveWindow(nullptr)
 	{
 	}
 
@@ -913,6 +1078,8 @@ namespace PortabilityLayer
 	{
 		WindowImpl *windowImpl = static_cast<WindowImpl*>(window);
 
+		assert(windowImpl != m_exclusiveWindow);
+
 		DetachWindow(window);
 
 		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == &windowImpl->m_surface.m_port)
@@ -1035,6 +1202,18 @@ namespace PortabilityLayer
 		return Rect2i(window->m_wmY - padding[WindowChromeSides::kTop], window->m_wmX - padding[WindowChromeSides::kLeft], window->m_wmY + portRect.Height() + padding[WindowChromeSides::kBottom], window->m_wmX + portRect.Width() + padding[WindowChromeSides::kRight]);
 	}
 
+	bool WindowManagerImpl::GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const
+	{
+		return static_cast<WindowImpl*>(window)->GetChromeInteractionZone(point, outRegion);
+	}
+
+	void WindowManagerImpl::SwapExclusiveWindow(Window *& windowRef)
+	{
+		Window *temp = m_exclusiveWindow;
+		m_exclusiveWindow = static_cast<WindowImpl*>(windowRef);
+		windowRef = temp;
+	}
+
 	void WindowManagerImpl::SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size)
 	{
 		ResetResizeInProgressSurfaces();
@@ -1095,10 +1274,10 @@ namespace PortabilityLayer
 			m_resizeInProgressHorizontalBar.PushToDDSurface(displayDriver);
 			m_resizeInProgressVerticalBar.PushToDDSurface(displayDriver);
 
-			displayDriver->DrawSurface(m_resizeInProgressHorizontalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_topLeft.m_y - 2, m_resizeInProgressRect.Right() - m_resizeInProgressRect.Left() + 4, 3);
-			displayDriver->DrawSurface(m_resizeInProgressHorizontalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_bottomRight.m_y - 1, m_resizeInProgressRect.Right() - m_resizeInProgressRect.Left() + 4, 3);
-			displayDriver->DrawSurface(m_resizeInProgressVerticalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_topLeft.m_y, 3, m_resizeInProgressRect.Bottom() - m_resizeInProgressRect.Top());
-			displayDriver->DrawSurface(m_resizeInProgressVerticalBar.m_ddSurface, m_resizeInProgressRect.m_bottomRight.m_x - 1, m_resizeInProgressRect.m_topLeft.m_y, 3, m_resizeInProgressRect.Bottom() - m_resizeInProgressRect.Top());
+			displayDriver->DrawSurface(m_resizeInProgressHorizontalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_topLeft.m_y - 2, m_resizeInProgressRect.Right() - m_resizeInProgressRect.Left() + 4, 3, nullptr);
+			displayDriver->DrawSurface(m_resizeInProgressHorizontalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_bottomRight.m_y - 1, m_resizeInProgressRect.Right() - m_resizeInProgressRect.Left() + 4, 3, nullptr);
+			displayDriver->DrawSurface(m_resizeInProgressVerticalBar.m_ddSurface, m_resizeInProgressRect.m_topLeft.m_x - 2, m_resizeInProgressRect.m_topLeft.m_y, 3, m_resizeInProgressRect.Bottom() - m_resizeInProgressRect.Top(), nullptr);
+			displayDriver->DrawSurface(m_resizeInProgressVerticalBar.m_ddSurface, m_resizeInProgressRect.m_bottomRight.m_x - 1, m_resizeInProgressRect.m_topLeft.m_y, 3, m_resizeInProgressRect.Bottom() - m_resizeInProgressRect.Top(), nullptr);
 		}
 	}
 
@@ -1198,6 +1377,11 @@ namespace PortabilityLayer
 		if (!window->IsVisible())
 			return;
 
+		GpDisplayDriverSurfaceEffects effects;
+
+		if (m_exclusiveWindow != nullptr && m_exclusiveWindow != window)
+			effects.m_darken = true;
+
 		DrawSurface &graf = window->m_surface;
 
 		graf.PushToDDSurface(displayDriver);
@@ -1205,8 +1389,7 @@ namespace PortabilityLayer
 		const PixMap *pixMap = *graf.m_port.GetPixMap();
 		const uint16_t width = pixMap->m_rect.Width();
 		const uint16_t height = pixMap->m_rect.Height();
-		displayDriver->DrawSurface(graf.m_ddSurface, window->m_wmX, window->m_wmY, width, height);
-
+		displayDriver->DrawSurface(graf.m_ddSurface, window->m_wmX, window->m_wmY, width, height, &effects);
 
 		if (!window->IsBorderless())
 		{
@@ -1231,7 +1414,7 @@ namespace PortabilityLayer
 
 				chromeSurface->PushToDDSurface(displayDriver);
 
-				displayDriver->DrawSurface(chromeSurface->m_ddSurface, chromeOrigins[i].m_x, chromeOrigins[i].m_y, chromeDimensions[i].m_x, chromeDimensions[i].m_y);
+				displayDriver->DrawSurface(chromeSurface->m_ddSurface, chromeOrigins[i].m_x, chromeOrigins[i].m_y, chromeDimensions[i].m_x, chromeDimensions[i].m_y, &effects);
 			}
 		}
 	}

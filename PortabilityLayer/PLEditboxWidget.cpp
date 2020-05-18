@@ -42,7 +42,7 @@ namespace PortabilityLayer
 			mm->Release(m_chars);
 	}
 
-	bool EditboxWidget::Init(const WidgetBasicState &state)
+	bool EditboxWidget::Init(const WidgetBasicState &state, const void *additionalData)
 	{
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 		m_capacity = 255;

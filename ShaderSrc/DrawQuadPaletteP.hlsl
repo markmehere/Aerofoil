@@ -1,4 +1,5 @@
 #include "DrawQuad.h"
+#include "DrawQuadPixelConstants.h"
 
 SamplerState nearestNeighborSampler : register(s0);
 Texture2D<uint> surfaceTexture : register(t0);
@@ -18,7 +19,7 @@ float3 SamplePixel(int2 texCoord)
 SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 {
 	SDrawQuadPixelOutput result;
-	result.color = float4(SamplePixel(int2(floor(input.texCoord.xy))), 1.0);
+	result.color = float4(SamplePixel(int2(floor(input.texCoord.xy))), 1.0) * constants_Modulation;
 
 	return result;
 }

@@ -244,12 +244,12 @@ void OpenLinkWindow (void)
 		basicState.m_text.Set(4, "Link");
 		basicState.m_window = linkWindow;
 
-		linkControl = PortabilityLayer::ButtonWidget::Create(basicState);
+		linkControl = PortabilityLayer::ButtonWidget::Create(basicState, nullptr);
 
 		basicState.m_rect = Rect::Create(5, 5, 25, 59);
 		basicState.m_text.Set(6, "Unlink");
 		basicState.m_window = linkWindow;
-		unlinkControl = PortabilityLayer::ButtonWidget::Create(basicState);
+		unlinkControl = PortabilityLayer::ButtonWidget::Create(basicState, nullptr);
 
 		linkWindow->DrawControls();
 		

@@ -10,7 +10,7 @@ namespace PortabilityLayer
 		explicit InvisibleWidget(const WidgetBasicState &state);
 		~InvisibleWidget();
 
-		bool Init(const WidgetBasicState &state) override;
+		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
 

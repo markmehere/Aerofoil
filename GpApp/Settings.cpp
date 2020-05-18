@@ -17,6 +17,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "WindowManager.h"
 
 
 #define kMainPrefsDialID		1012
@@ -1237,6 +1238,10 @@ void DoSettingsMain (void)
 	
 	leaving = false;
 	nextRestartChange = false;
+
+	Window* exclWindow = prefDlg->GetWindow();
+
+	PortabilityLayer::WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);	// Push exclusive window
 	
 	while (!leaving)
 	{
@@ -1284,7 +1289,9 @@ void DoSettingsMain (void)
 			break;
 		}
 	}
-	
+
+	PortabilityLayer::WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);	// Pop exclusive window
+
 	prefDlg->Destroy();
 	
 	if (nextRestartChange)

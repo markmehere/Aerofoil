@@ -963,7 +963,7 @@ namespace PortabilityLayer
 				const PixMap *pixMap = *m_menuBarGraf->m_port.GetPixMap();
 				const size_t width = pixMap->m_rect.right - pixMap->m_rect.left;
 				const size_t height = pixMap->m_rect.bottom - pixMap->m_rect.top;
-				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, 0, width, height);
+				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, 0, width, height, nullptr);
 			}
 		}
 
@@ -988,7 +988,7 @@ namespace PortabilityLayer
 				yCoordinate = popupPosition.m_y;
 			}
 
-			displayDriver->DrawSurface(renderedMenu->m_ddSurface, xCoordinate, yCoordinate, pixMap->m_rect.right, pixMap->m_rect.bottom);
+			displayDriver->DrawSurface(renderedMenu->m_ddSurface, xCoordinate, yCoordinate, pixMap->m_rect.right, pixMap->m_rect.bottom, nullptr);
 		}
 	}
 
@@ -1263,6 +1263,18 @@ namespace PortabilityLayer
 			{
 				assert(initialItem < menu->numMenuItems);
 				m_popupPosition.m_y -= static_cast<int32_t>(menu->menuItems[initialItem].layoutYOffset);
+
+				if (m_popupPosition.m_y < static_cast<int32_t>(kMenuBarHeight))
+					m_popupPosition.m_y = kMenuBarHeight;
+				else
+				{
+					int32_t popupBottom = m_popupPosition.m_y + menu->layoutFinalHeight;
+
+					unsigned int displayHeight = 0;
+					PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight, nullptr);
+					if (popupBottom > static_cast<int32_t>(displayHeight))
+						m_popupPosition.m_y -= popupBottom - static_cast<int32_t>(displayHeight);
+				}
 			}
 
 			RenderMenu(menu);

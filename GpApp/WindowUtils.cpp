@@ -18,6 +18,7 @@
 
 
 WindowPtr	mssgWindow;
+WindowPtr	mssgWindowExclusiveStack;
 
 
 //==============================================================  Functions
@@ -129,6 +130,10 @@ void OpenMessageWindow (const PLPasStr &title)
 		
 		surface->SetSystemFont(12, 0);
 	}
+
+	mssgWindowExclusiveStack = mssgWindow;
+
+	wm->SwapExclusiveWindow(mssgWindowExclusiveStack);	// Push exclusive window
 }
 
 //--------------------------------------------------------------  SetMessageWindowMessage
@@ -161,6 +166,11 @@ void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBACol
 
 void CloseMessageWindow (void)
 {
+	PortabilityLayer::WindowManager::GetInstance()->SwapExclusiveWindow(mssgWindowExclusiveStack);	// Pop exclusive window
+	assert(mssgWindowExclusiveStack == mssgWindow);
+
+	mssgWindowExclusiveStack = nullptr;
+
 	CloseThisWindow(&mssgWindow);
 }
 

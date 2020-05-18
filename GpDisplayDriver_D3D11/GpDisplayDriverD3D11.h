@@ -29,6 +29,7 @@ struct ID3D11Texture1D;
 struct ID3D11Texture2D;
 struct ID3D11VertexShader;
 
+
 class GpDisplayDriverD3D11 : public IGpDisplayDriver
 {
 public:
@@ -38,7 +39,7 @@ public:
 	void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) override;
 
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) override;
-	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height) override;
+	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
 
 	IGpCursor *LoadCursor(bool isColor, int cursorID) override;
 	void SetCursor(IGpCursor *cursor) override;
@@ -62,7 +63,13 @@ private:
 
 		float m_surfaceDimensionX;
 		float m_surfaceDimensionY;
+
 		float m_unused[2];
+	};
+
+	struct DrawQuadPixelConstants
+	{
+		float m_modulation[4];
 	};
 
 	struct ScaleQuadPixelConstants
@@ -106,6 +113,7 @@ private:
 	GpComPtr<ID3D11PixelShader> m_drawQuadRGBPixelShader;
 	GpComPtr<ID3D11PixelShader> m_scaleQuadPixelShader;
 	GpComPtr<ID3D11Buffer> m_drawQuadVertexConstantBuffer;
+	GpComPtr<ID3D11Buffer> m_drawQuadPixelConstantBuffer;
 	GpComPtr<ID3D11Buffer> m_scaleQuadPixelConstantBuffer;
 	GpComPtr<ID3D11DepthStencilState> m_drawQuadDepthStencilState;
 	GpComPtr<ID3D11SamplerState> m_nearestNeighborSamplerState;

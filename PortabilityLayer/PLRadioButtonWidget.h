@@ -11,7 +11,7 @@ namespace PortabilityLayer
 		RadioButtonWidget(const WidgetBasicState &state);
 		~RadioButtonWidget();
 
-		bool Init(const WidgetBasicState &state) override;
+		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
 		void DrawControl(DrawSurface *surface) override;
 		void SetString(const PLPasStr &str) override;

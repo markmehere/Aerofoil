@@ -14,7 +14,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool InvisibleWidget::Init(const WidgetBasicState &state)
+	bool InvisibleWidget::Init(const WidgetBasicState &state, const void *additionalData)
 	{
 		(void)state;
 

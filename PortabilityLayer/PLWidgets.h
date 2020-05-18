@@ -45,7 +45,7 @@ namespace PortabilityLayer
 	class Widget
 	{
 	public:
-		virtual bool Init(const WidgetBasicState &state) = 0;
+		virtual bool Init(const WidgetBasicState &state, const void *additionalData) = 0;
 		virtual void Destroy() = 0;
 		virtual WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
 		virtual int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);
@@ -125,7 +125,7 @@ namespace PortabilityLayer
 			Widget::BaseRelease(static_cast<T*>(this));
 		}
 
-		static T *Create(const WidgetBasicState &state)
+		static T *Create(const WidgetBasicState &state, const void *additionalData)
 		{
 			void *storage = Widget::BaseAlloc(sizeof(T));
 			if (!storage)
@@ -138,7 +138,7 @@ namespace PortabilityLayer
 			(void)downcastWidget;
 
 			Widget *widget = widgetT;
-			if (!widget->Init(state))
+			if (!widget->Init(state, additionalData))
 			{
 				widget->Destroy();
 				return nullptr;

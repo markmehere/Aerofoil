@@ -12,7 +12,7 @@ namespace PortabilityLayer
 	public:
 		explicit PopupMenuWidget(const WidgetBasicState &state);
 
-		bool Init(const WidgetBasicState &state) override;
+		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
 		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
 		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);

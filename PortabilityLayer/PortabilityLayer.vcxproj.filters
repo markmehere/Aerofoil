@@ -411,9 +411,6 @@
     <ClInclude Include="PLWidgets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLButtonWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLIconWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -487,6 +484,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UTF16.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLButtonWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PLRegions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -707,9 +710,6 @@
     <ClCompile Include="PLCTabReducer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PLButtonWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PLIconWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -729,12 +729,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLPopupMenuWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PLCheckboxWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PLRadioButtonWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLKeyEncoding.cpp">
@@ -768,6 +762,9 @@
       <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="UTF16.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PLButtonWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

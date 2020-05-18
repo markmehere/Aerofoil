@@ -227,6 +227,7 @@
     <ClInclude Include="PLLittleEndian.h" />
     <ClInclude Include="PLPopupMenuWidget.h" />
     <ClInclude Include="PLRadioButtonWidget.h" />
+    <ClInclude Include="PLRegions.h" />
     <ClInclude Include="PLScrollBarWidget.h" />
     <ClInclude Include="PLUnalignedPtr.h" />
     <ClInclude Include="PLWidgets.h" />
@@ -340,7 +341,6 @@
     <ClCompile Include="PLAppleEvents.cpp" />
     <ClCompile Include="PLApplication.cpp" />
     <ClCompile Include="PLButtonWidget.cpp" />
-    <ClCompile Include="PLCheckboxWidget.cpp" />
     <ClCompile Include="PLControlDefinitions.cpp" />
     <ClCompile Include="PLCore.cpp" />
     <ClCompile Include="PLCTabReducer.cpp" />
@@ -360,7 +360,6 @@
     <ClCompile Include="PLPopupMenuWidget.cpp" />
     <ClCompile Include="PLQDOffscreen.cpp" />
     <ClCompile Include="PLQDraw.cpp" />
-    <ClCompile Include="PLRadioButtonWidget.cpp" />
     <ClCompile Include="PLResourceManager.cpp" />
     <ClCompile Include="PLResources.cpp" />
     <ClCompile Include="PLScrollBarWidget.cpp" />

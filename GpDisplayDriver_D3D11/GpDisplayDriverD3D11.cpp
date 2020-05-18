@@ -17,6 +17,8 @@
 
 #pragma comment (lib, "d3d11.lib")
 
+static GpDisplayDriverSurfaceEffects gs_defaultEffects;
+
 namespace GpBinarizedShaders
 {
 	extern const unsigned char *g_drawQuadV_D3D11[2];
@@ -281,6 +283,20 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		bufferDesc.StructureByteStride = 0;
 
 		if (m_device->CreateBuffer(&bufferDesc, nullptr, m_drawQuadVertexConstantBuffer.GetMutablePtr()) != S_OK)
+			return false;
+	}
+
+	// Quad pixel constant buffer
+	{
+		D3D11_BUFFER_DESC bufferDesc;
+		bufferDesc.ByteWidth = sizeof(DrawQuadPixelConstants);
+		bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		bufferDesc.MiscFlags = 0;
+		bufferDesc.StructureByteStride = 0;
+
+		if (m_device->CreateBuffer(&bufferDesc, nullptr, m_drawQuadPixelConstantBuffer.GetMutablePtr()) != S_OK)
 			return false;
 	}
 
@@ -1025,8 +1041,11 @@ IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_
 	return GpDisplayDriverSurfaceD3D11::Create(m_device, m_deviceContext, width, height, pixelFormat);
 }
 
-void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height)
+void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects)
 {
+	if (!effects)
+		effects = &gs_defaultEffects;
+
 	ID3D11Buffer *vbPtr = m_quadVertexBuffer;
 	UINT vbStride = sizeof(float) * 2;
 	UINT zero = 0;
@@ -1039,20 +1058,35 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthVirtual);
 		const float negativeTwoDivHeight = -2.0f / static_cast<float>(m_windowHeightVirtual);
 
-		DrawQuadVertexConstants constantsData;
-		constantsData.m_ndcOriginX = static_cast<float>(x) * twoDivWidth - 1.0f;
-		constantsData.m_ndcOriginY = static_cast<float>(y) * negativeTwoDivHeight + 1.0f;
-		constantsData.m_ndcWidth = static_cast<float>(width) * twoDivWidth;
-		constantsData.m_ndcHeight = static_cast<float>(height) * negativeTwoDivHeight;
+		DrawQuadVertexConstants vConstantsData;
+		vConstantsData.m_ndcOriginX = static_cast<float>(x) * twoDivWidth - 1.0f;
+		vConstantsData.m_ndcOriginY = static_cast<float>(y) * negativeTwoDivHeight + 1.0f;
+		vConstantsData.m_ndcWidth = static_cast<float>(width) * twoDivWidth;
+		vConstantsData.m_ndcHeight = static_cast<float>(height) * negativeTwoDivHeight;
 
-		constantsData.m_surfaceDimensionX = static_cast<float>(d3d11Surface->GetWidth());
-		constantsData.m_surfaceDimensionY = static_cast<float>(d3d11Surface->GetHeight());
+		vConstantsData.m_surfaceDimensionX = static_cast<float>(d3d11Surface->GetWidth());
+		vConstantsData.m_surfaceDimensionY = static_cast<float>(d3d11Surface->GetHeight());
 
-		D3D11_MAPPED_SUBRESOURCE mappedConstants;
-		if (m_deviceContext->Map(m_drawQuadVertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedConstants) == S_OK)
+		D3D11_MAPPED_SUBRESOURCE vMappedConstants;
+		if (m_deviceContext->Map(m_drawQuadVertexConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &vMappedConstants) == S_OK)
 		{
-			memcpy(mappedConstants.pData, &constantsData, sizeof(constantsData));
+			memcpy(vMappedConstants.pData, &vConstantsData, sizeof(vConstantsData));
 			m_deviceContext->Unmap(m_drawQuadVertexConstantBuffer, 0);
+		}
+
+		DrawQuadPixelConstants pConstantsData;
+		for (int i = 0; i < 4; i++)
+			pConstantsData.m_modulation[i] = 1.0f;
+
+		if (effects->m_darken)
+			for (int i = 0; i < 3; i++)
+				pConstantsData.m_modulation[i] = 0.5f;
+
+		D3D11_MAPPED_SUBRESOURCE pMappedConstants;
+		if (m_deviceContext->Map(m_drawQuadPixelConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &pMappedConstants) == S_OK)
+		{
+			memcpy(pMappedConstants.pData, &pConstantsData, sizeof(pConstantsData));
+			m_deviceContext->Unmap(m_drawQuadPixelConstantBuffer, 0);
 		}
 	}
 
@@ -1070,6 +1104,9 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 		m_nearestNeighborSamplerState,
 	};
 	m_deviceContext->PSSetSamplers(0, sizeof(samplerStates) / sizeof(samplerStates[0]), samplerStates);
+
+	ID3D11Buffer *psConstants = m_drawQuadPixelConstantBuffer;
+	m_deviceContext->PSSetConstantBuffers(0, 1, &psConstants);
 
 	GpPixelFormat_t pixelFormat = d3d11Surface->GetPixelFormat();
 	if (pixelFormat == GpPixelFormats::k8BitStandard || pixelFormat == GpPixelFormats::k8BitCustom)

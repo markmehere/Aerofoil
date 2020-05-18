@@ -21,6 +21,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
 #include "QDPixMap.h"
+#include "Rect2i.h"
 #include "ResTypeID.h"
 #include "SharedTypes.h"
 #include "UTF8.h"
@@ -106,6 +107,8 @@ namespace PortabilityLayer
 		~DialogImpl();
 
 		static void MakeStringSubstitutions(uint8_t *outStr, const uint8_t *inStr, const DialogTextSubstitutions *substitutions);
+
+		int16_t ExecuteModalInDarkenStack(DialogFilterFunc_t filterFunc);
 
 		Window *m_window;
 		DialogItem *m_items;
@@ -335,6 +338,19 @@ namespace PortabilityLayer
 
 	int16_t DialogImpl::ExecuteModal(DialogFilterFunc_t filterFunc)
 	{
+		Window *exclWindow = this->GetWindow();
+
+		WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);
+
+		int16_t result = ExecuteModalInDarkenStack(filterFunc);
+
+		WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);
+
+		return result;
+	}
+
+	int16_t DialogImpl::ExecuteModalInDarkenStack(DialogFilterFunc_t filterFunc)
+	{
 		Window *window = this->GetWindow();
 		Widget *capturingWidget = nullptr;
 		size_t capturingWidgetIndex = 0;
@@ -367,6 +383,18 @@ namespace PortabilityLayer
 				}
 				else
 				{
+					if (evt.IsLMouseDownEvent())
+					{
+						const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+						Rect2i windowFullRect = WindowManager::GetInstance()->GetWindowFullRect(window);
+						if (!windowFullRect.Contains(Vec2i(mouseEvent.m_x, mouseEvent.m_y)))
+						{
+							PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+							continue;
+						}
+					}
+
 					const size_t numItems = this->m_numItems;
 					for (size_t i = 0; i < numItems; i++)
 					{
@@ -432,28 +460,40 @@ namespace PortabilityLayer
 			switch (templateItem.m_serializedType)
 			{
 			case SerializedDialogItemTypeCodes::kButton:
-				widget = ButtonWidget::Create(basicState);
+				{
+					ButtonWidget::AdditionalData addlData;
+					addlData.m_buttonStyle = ButtonWidget::kButtonStyle_Button;
+					widget = ButtonWidget::Create(basicState, &addlData);
+				}
 				break;
 			case SerializedDialogItemTypeCodes::kLabel:
-				widget = LabelWidget::Create(basicState);
+				widget = LabelWidget::Create(basicState, nullptr);
 				break;
 			case SerializedDialogItemTypeCodes::kIcon:
-				widget = IconWidget::Create(basicState);
+				widget = IconWidget::Create(basicState, nullptr);
 				break;
 			case SerializedDialogItemTypeCodes::kImage:
-				widget = ImageWidget::Create(basicState);
+				widget = ImageWidget::Create(basicState, nullptr);
 				break;
 			case SerializedDialogItemTypeCodes::kCheckBox:
-				widget = CheckboxWidget::Create(basicState);
+				{
+					ButtonWidget::AdditionalData addlData;
+					addlData.m_buttonStyle = ButtonWidget::kButtonStyle_CheckBox;
+					widget = ButtonWidget::Create(basicState, &addlData);
+				}
 				break;
 			case SerializedDialogItemTypeCodes::kRadioButton:
-				widget = RadioButtonWidget::Create(basicState);
+				{
+					ButtonWidget::AdditionalData addlData;
+					addlData.m_buttonStyle = ButtonWidget::kButtonStyle_Radio;
+					widget = ButtonWidget::Create(basicState, &addlData);
+				}
 				break;
 			case SerializedDialogItemTypeCodes::kEditBox:
-				widget = EditboxWidget::Create(basicState);
+				widget = EditboxWidget::Create(basicState, nullptr);
 				break;
 			default:
-				widget = InvisibleWidget::Create(basicState);
+				widget = InvisibleWidget::Create(basicState, nullptr);
 				break;
 			}
 
@@ -613,9 +653,11 @@ namespace PortabilityLayer
 		const Rect rect = header.m_rect.ToRect();
 		const int16_t style = header.m_style;
 
+		Dialog *dialog = LoadDialogFromTemplate(header.m_itemsResID, rect, header.m_visible != 0, header.m_hasCloseBox != 0, header.m_referenceConstant, positionSpec, behindWindow, PLPasStr(titlePStr), substitutions);
+
 		dlogH.Dispose();
 
-		return LoadDialogFromTemplate(header.m_itemsResID, rect, header.m_visible != 0, header.m_hasCloseBox != 0, header.m_referenceConstant, positionSpec, behindWindow, PLPasStr(titlePStr), substitutions);
+		return dialog;
 	}
 
 	Dialog *DialogManagerImpl::LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions)

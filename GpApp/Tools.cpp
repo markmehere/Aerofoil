@@ -330,7 +330,7 @@ void OpenToolsWindow (void)
 			state.m_resID = 141;
 			state.m_window = toolsWindow;
 
-			classPopUp = PortabilityLayer::PopupMenuWidget::Create(state);
+			classPopUp = PortabilityLayer::PopupMenuWidget::Create(state, nullptr);
 		}
 
 		toolsWindow->DrawControls();

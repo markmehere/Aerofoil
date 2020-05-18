@@ -21,7 +21,7 @@ namespace PortabilityLayer
 			PixMapImpl::Destroy(m_iconMask);
 	}
 
-	bool IconWidget::Init(const WidgetBasicState &state)
+	bool IconWidget::Init(const WidgetBasicState &state, const void *additionalData)
 	{
 		PL_DEAD(str);
 

@@ -1,139 +1,165 @@
 #include "PLButtonWidget.h"
 #include "PLCore.h"
 #include "PLControlDefinitions.h"
+#include "PLRegions.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLStandardColors.h"
 #include "FontFamily.h"
 #include "SimpleGraphic.h"
 
+#include <algorithm>
+
 static const int kLightGray = 238;
 static const int kMidGray = 221;
+static const int kMidDarkGray = 170;
 static const int kDarkGray = 102;
+
+#ifdef CLR
+#undef CLR
+#endif
+
+#define CLR(n) { n, n, n, 255}
 
 static const PortabilityLayer::RGBAColor gs_buttonTopLeftCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
-	{ 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 255, 255, 255, 255 }
+	CLR(0), CLR(0), CLR(0),
+	CLR(0), CLR(0), CLR(kMidGray),
+	CLR(0), CLR(kMidGray), CLR(255)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonTopRightCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 }
+	CLR(0), CLR(0), CLR(0),
+	CLR(kMidGray), CLR(0), CLR(0),
+	CLR(255), CLR(kMidGray), CLR(0)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonBottomLeftCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 255, 255, 255, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }
+	CLR(0), CLR(kMidGray), CLR(255),
+	CLR(0), CLR(0), CLR(kMidGray),
+	CLR(0), CLR(0), CLR(0)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonBottomRightCornerGraphicPixels[] =
 {
-	{ kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }
+	CLR(kMidGray), CLR(kDarkGray), CLR(0),
+	CLR(kDarkGray), CLR(0), CLR(0),
+	CLR(0), CLR(0), CLR(0)
 };
 
 // Pressed
 
 static const PortabilityLayer::RGBAColor gs_buttonPressedTopLeftCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ 0, 0, 0, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }
+	CLR(0), CLR(0), CLR(0),
+	CLR(0), CLR(0), CLR(kDarkGray),
+	CLR(0), CLR(kDarkGray), CLR(kDarkGray)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonPressedTopRightCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }
+	CLR(0), CLR(0), CLR(0),
+	CLR(kDarkGray), CLR(0), CLR(0),
+	CLR(kDarkGray), CLR(kDarkGray), CLR(0)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonPressedBottomLeftCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }
+	CLR(0), CLR(kDarkGray), CLR(kDarkGray),
+	CLR(0), CLR(0), CLR(kDarkGray),
+	CLR(0), CLR(0), CLR(0)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonPressedBottomRightCornerGraphicPixels[] =
 {
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }
+	CLR(kDarkGray), CLR(kDarkGray), CLR(0),
+	CLR(kDarkGray), CLR(0), CLR(0),
+	CLR(0), CLR(0), CLR(0)
 };
 
 // Disabled
 
 static const PortabilityLayer::RGBAColor gs_buttonDisabledTopLeftCornerGraphicPixels[] =
 {
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 }
+	CLR(kDarkGray), CLR(kDarkGray), CLR(kDarkGray),
+	CLR(kDarkGray), CLR(kDarkGray), CLR(kLightGray),
+	CLR(kDarkGray), CLR(kLightGray), CLR(kLightGray)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonDisabledTopRightCornerGraphicPixels[] =
 {
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ kLightGray, kLightGray, kLightGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ kLightGray, kLightGray, kLightGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }
+	CLR(kDarkGray), CLR(kDarkGray), CLR(kDarkGray),
+	CLR(kLightGray), CLR(kDarkGray), CLR(kDarkGray),
+	CLR(kLightGray), CLR(kLightGray), CLR(kDarkGray)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonDisabledBottomLeftCornerGraphicPixels[] =
 {
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }
+	CLR(kDarkGray), CLR(kLightGray), CLR(kLightGray),
+	CLR(kDarkGray), CLR(kDarkGray), CLR(kLightGray),
+	CLR(kDarkGray), CLR(kDarkGray), CLR(kDarkGray)
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonDisabledBottomRightCornerGraphicPixels[] =
 {
-	{ kLightGray, kLightGray, kLightGray, 255 }, { kLightGray, kLightGray, kLightGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ kLightGray, kLightGray, kLightGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }
+	CLR(kLightGray), CLR(kLightGray), CLR(kDarkGray),
+	CLR(kLightGray), CLR(kDarkGray), CLR(kDarkGray),
+	CLR(kDarkGray), CLR(kDarkGray), CLR(kDarkGray)
 };
 
 // Default boundary
 
 static const PortabilityLayer::RGBAColor gs_buttonDefaultTopLeftCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
-	{ 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 },
+	CLR(0), CLR(0), CLR(0), CLR(0), CLR(0),
+	CLR(0), CLR(0), CLR(0), CLR(0), CLR(255),
+	CLR(0), CLR(0), CLR(0), CLR(255), CLR(kMidGray),
+	CLR(0), CLR(0), CLR(255), CLR(kMidGray), CLR(kMidGray),
+	CLR(0), CLR(255), CLR(kMidGray), CLR(kMidGray), CLR(0),
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonDefaultTopRightCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 255, 255, 255, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 },
+	CLR(0), CLR(0), CLR(0), CLR(0), CLR(0),
+	CLR(255), CLR(0), CLR(0), CLR(0), CLR(0),
+	CLR(kMidGray), CLR(kMidGray), CLR(0), CLR(0), CLR(0),
+	CLR(kMidGray), CLR(kMidGray), CLR(kMidGray), CLR(0), CLR(0),
+	CLR(0), CLR(kMidGray), CLR(kMidGray), CLR(kDarkGray), CLR(0),
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonDefaultBottomLeftCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { 255, 255, 255, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	CLR(0), CLR(255), CLR(kMidGray), CLR(kMidGray), CLR(0),
+	CLR(0), CLR(0), CLR(kMidGray), CLR(kMidGray), CLR(kMidGray),
+	CLR(0), CLR(0), CLR(0), CLR(kMidGray), CLR(kMidGray),
+	CLR(0), CLR(0), CLR(0), CLR(0), CLR(kDarkGray),
+	CLR(0), CLR(0), CLR(0), CLR(0), CLR(0),
 };
 
 static const PortabilityLayer::RGBAColor gs_buttonDefaultBottomRightCornerGraphicPixels[] =
 {
-	{ 0, 0, 0, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 },
-	{ kMidGray, kMidGray, kMidGray, 255 }, { kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kMidGray, kMidGray, kMidGray, 255 }, { kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ kDarkGray, kDarkGray, kDarkGray, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
-	{ 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 }, { 0, 0, 0, 255 },
+	CLR(0), CLR(kMidGray), CLR(kMidGray), CLR(kDarkGray), CLR(0),
+	CLR(kMidGray), CLR(kMidGray), CLR(kDarkGray), CLR(0), CLR(0),
+	CLR(kMidGray), CLR(kDarkGray), CLR(0), CLR(0), CLR(0),
+	CLR(kDarkGray), CLR(0), CLR(0), CLR(0), CLR(0),
+	CLR(0), CLR(0), CLR(0), CLR(0), CLR(0),
+};
+
+static const PortabilityLayer::RGBAColor gs_buttonRadioGraphicPixels[] =
+{
+	CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),
+	CLR(0),CLR(0),CLR(0),CLR(255),CLR(255),CLR(255),CLR(255),CLR(255),CLR(255),CLR(0),CLR(0),CLR(0),
+	CLR(0),CLR(0),CLR(255),CLR(255),CLR(kLightGray),CLR(kLightGray),CLR(kLightGray),CLR(kLightGray),CLR(kMidGray),CLR(kMidGray),CLR(0),CLR(0),
+	CLR(0),CLR(255),CLR(255),CLR(kLightGray),CLR(kLightGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kDarkGray),CLR(0),
+	CLR(0),CLR(255),CLR(kLightGray),CLR(kLightGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidDarkGray),CLR(kDarkGray),CLR(0),
+	CLR(0),CLR(255),CLR(kLightGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidDarkGray),CLR(kDarkGray),CLR(0),
+	CLR(0),CLR(255),CLR(kLightGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidDarkGray),CLR(kDarkGray),CLR(0),
+	CLR(0),CLR(255),CLR(kLightGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidDarkGray),CLR(kMidDarkGray),CLR(kDarkGray),CLR(0),
+	CLR(0),CLR(255),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidGray),CLR(kMidDarkGray),CLR(kMidDarkGray),CLR(kDarkGray),CLR(kDarkGray),CLR(0),
+	CLR(0),CLR(0),CLR(kMidGray),CLR(kMidGray),CLR(kMidDarkGray),CLR(kMidDarkGray),CLR(kMidDarkGray),CLR(kMidDarkGray),CLR(kDarkGray),CLR(kDarkGray),CLR(0),CLR(0),
+	CLR(0),CLR(0),CLR(0),CLR(kDarkGray),CLR(kDarkGray),CLR(kDarkGray),CLR(kDarkGray),CLR(kDarkGray),CLR(kDarkGray),CLR(0),CLR(0),CLR(0),
+	CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),CLR(0),
 };
 
 
@@ -179,13 +205,23 @@ static const uint8_t gs_buttonDefaultTopRightGraphicMask[] = { 0x86, 0x39, 0xEF,
 static const uint8_t gs_buttonDefaultBottomLeftGraphicMask[] = { 0xFB, 0xCE, 0x30, 0xFF };
 static const uint8_t gs_buttonDefaultBottomRightGraphicMask[] = { 0xFF, 0xB9, 0x88, 0x7F };
 
+static const uint8_t gs_buttonRadioGraphicMask[] = { 0x1f, 0x83, 0xFC, 0x7F, 0xEF, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xF7, 0xFE, 0x3F, 0xC1, 0xF8 };
+static PortabilityLayer::SimpleGraphicInstanceRGBA<12, 12> gs_buttonRadioGraphic(gs_buttonRadioGraphicPixels);
+
 
 namespace PortabilityLayer
 {
+
+	ButtonWidget::AdditionalData::AdditionalData()
+		: m_buttonStyle(kButtonStyle_Button)
+	{
+	}
+
 	ButtonWidget::ButtonWidget(const WidgetBasicState &state)
 		: WidgetSpec<ButtonWidget>(state)
 		, m_text(state.m_text)
 		, m_haveHighlightOverride(false)
+		, m_buttonStyle(kButtonStyle_Button)
 	{
 	}
 
@@ -214,7 +250,14 @@ namespace PortabilityLayer
 
 	void ButtonWidget::OnEnabledChanged()
 	{
-		DrawControl(m_window->GetDrawSurface());
+		if (m_window)
+			DrawControl(m_window->GetDrawSurface());
+	}
+
+	void ButtonWidget::OnStateChanged()
+	{
+		if (m_window)
+			DrawControl(m_window->GetDrawSurface());
 	}
 
 	int16_t ButtonWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
@@ -254,9 +297,12 @@ namespace PortabilityLayer
 		}
 	}
 
-	bool ButtonWidget::Init(const WidgetBasicState &state)
+	bool ButtonWidget::Init(const WidgetBasicState &state, const void *additionalDataPtr)
 	{
-		(void)state;
+		const AdditionalData &additionalData = *static_cast<const AdditionalData *>(additionalDataPtr);
+
+		m_buttonStyle = additionalData.m_buttonStyle;
+
 		return true;
 	}
 
@@ -265,7 +311,36 @@ namespace PortabilityLayer
 		DrawControlInternal(surface, false);
 	}
 
+
+	void ButtonWidget::SetString(const PLPasStr &str)
+	{
+		m_text = PascalStr<255>(str);
+	}
+
+	PLPasStr ButtonWidget::GetString() const
+	{
+		return m_text.ToShortStr();
+	}
+
 	void ButtonWidget::DrawControlInternal(DrawSurface *surface, bool inverted)
+	{
+		switch (m_buttonStyle)
+		{
+		case kButtonStyle_Button:
+			DrawAsButton(surface, inverted);
+			break;
+		case kButtonStyle_CheckBox:
+			DrawAsCheck(surface, inverted);
+			break;
+		case kButtonStyle_Radio:
+			DrawAsRadio(surface, inverted);
+			break;
+		default:
+			break;
+		}
+	}
+
+	void ButtonWidget::DrawAsButton(DrawSurface *surface, bool inverted)
 	{
 		const Rect rect = m_rect;
 
@@ -368,6 +443,163 @@ namespace PortabilityLayer
 		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;
 		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(surface->MeasureFontAscender())) / 2;
 		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), true);
+	}
+
+	void ButtonWidget::DrawAsCheck(DrawSurface *surface, bool inverted)
+	{
+		if (!m_rect.IsValid())
+			return;
+
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(m_rect);
+
+		uint16_t checkFrameSize = std::min<uint16_t>(12, std::min(m_rect.Width(), m_rect.Height()));
+		int16_t top = (m_rect.top + m_rect.bottom - static_cast<int16_t>(checkFrameSize)) / 2;
+
+		const Rect checkRect = Rect::Create(top, m_rect.left, top + static_cast<int16_t>(checkFrameSize), m_rect.left + static_cast<int16_t>(checkFrameSize));
+
+		RGBAColor checkColor;
+		RGBAColor checkEraseColor;
+		RGBAColor textColor;
+		if (!m_enabled)
+		{
+			surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
+			surface->FillRect(checkRect);
+			surface->SetForeColor(RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
+			surface->FillRect(checkRect.Inset(1, 1));
+
+			checkColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+			checkEraseColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
+			textColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		}
+		else if (inverted)
+		{
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRect(checkRect);
+			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillRect(checkRect.Inset(1, 1));
+
+			checkColor = StdColors::White();
+			checkEraseColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+			textColor = StdColors::Black();
+		}
+		else
+		{
+			surface->SetForeColor(StdColors::Black());
+			surface->FillRect(checkRect);
+			surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
+			surface->FillRect(checkRect.Inset(1, 1));
+
+			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillRect(Rect::Create(checkRect.top + 2, checkRect.right - 2, checkRect.bottom - 2, checkRect.right - 1));
+			surface->FillRect(Rect::Create(checkRect.bottom - 2, checkRect.left + 2, checkRect.bottom - 1, checkRect.right - 1));
+
+			surface->SetForeColor(StdColors::White());
+			surface->FillRect(Rect::Create(checkRect.top + 1, checkRect.left + 1, checkRect.top + 2, checkRect.right - 2));
+			surface->FillRect(Rect::Create(checkRect.top + 2, checkRect.left + 1, checkRect.bottom - 2, checkRect.left + 2));
+
+			checkColor = StdColors::Black();
+			checkEraseColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+			textColor = StdColors::Black();
+		}
+
+		if (m_state)
+		{
+			const Rect checkmarkRect = checkRect.Inset(3, 3);
+
+			if (checkmarkRect.IsValid())
+			{
+				surface->SetForeColor(checkColor);
+				surface->FillRect(checkmarkRect);
+
+				if (checkmarkRect.Width() >= 5)
+				{
+					int32_t eraseSpan = checkmarkRect.Width() - 4;
+					int16_t coordinateOffset = 0;
+
+					surface->SetForeColor(checkEraseColor);
+
+					while (eraseSpan > 0)
+					{
+						surface->FillRect(Rect::Create(checkmarkRect.top + coordinateOffset, checkmarkRect.left + 2 + coordinateOffset, checkmarkRect.top + 1 + coordinateOffset, checkmarkRect.right - 2 - coordinateOffset));
+						surface->FillRect(Rect::Create(checkmarkRect.top + 2 + coordinateOffset, checkmarkRect.left + coordinateOffset, checkmarkRect.bottom - 2 - coordinateOffset, checkmarkRect.left + 1 + coordinateOffset));
+						surface->FillRect(Rect::Create(checkmarkRect.bottom - 1 - coordinateOffset, checkmarkRect.left + 2 + coordinateOffset, checkmarkRect.bottom - coordinateOffset, checkmarkRect.right - 2 - coordinateOffset));
+						surface->FillRect(Rect::Create(checkmarkRect.top + 2 + coordinateOffset, checkmarkRect.right - 1 - coordinateOffset, checkmarkRect.bottom - 2 - coordinateOffset, checkmarkRect.right - coordinateOffset));
+
+						eraseSpan -= 2;
+						coordinateOffset++;
+					}
+				}
+			}
+		}
+
+		surface->SetForeColor(textColor);
+
+		surface->SetSystemFont(12, FontFamilyFlag_Bold);
+		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
+		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true);
+	}
+
+
+	void ButtonWidget::DrawAsRadio(DrawSurface *surface, bool inverted)
+	{
+		if (!m_rect.IsValid())
+			return;
+
+		surface->SetForeColor(StdColors::White());
+		surface->FillRect(m_rect);
+
+		uint16_t checkFrameSize = std::min<uint16_t>(12, std::min(m_rect.Width(), m_rect.Height()));
+		int16_t top = (m_rect.top + m_rect.bottom - static_cast<int16_t>(checkFrameSize)) / 2;
+
+		const Rect checkRect = Rect::Create(top, m_rect.left, top + static_cast<int16_t>(checkFrameSize), m_rect.left + static_cast<int16_t>(checkFrameSize));
+
+		RGBAColor radioColor;
+		RGBAColor textColor;
+		if (!m_enabled)
+		{
+			surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
+			surface->FillEllipse(checkRect);
+			surface->SetForeColor(RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
+			surface->FillEllipse(checkRect.Inset(1, 1));
+
+			radioColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+			textColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		}
+		else if (inverted)
+		{
+			surface->SetForeColor(StdColors::Black());
+			surface->FillEllipse(checkRect);
+			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
+			surface->FillEllipse(checkRect.Inset(1, 1));
+
+			radioColor = StdColors::Black();
+			textColor = StdColors::Black();
+		}
+		else
+		{
+			gs_buttonRadioGraphic.DrawToPixMapWithMask(surface->m_port.GetPixMap(), gs_buttonRadioGraphicMask, checkRect.left, checkRect.top);
+
+			radioColor = StdColors::Black();
+			textColor = StdColors::Black();
+		}
+
+		if (m_state)
+		{
+			const Rect checkmarkRect = checkRect.Inset(3, 3);
+
+			if (checkmarkRect.IsValid())
+			{
+				surface->SetForeColor(radioColor);
+				surface->FillEllipse(checkmarkRect);
+			}
+		}
+
+		surface->SetForeColor(textColor);
+
+		surface->SetSystemFont(12, FontFamilyFlag_Bold);
+		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
+		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true);
 	}
 
 	void ButtonWidget::DrawDefaultButtonChrome(const Rect &rectRef, DrawSurface *surface)
