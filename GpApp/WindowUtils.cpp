@@ -134,6 +134,9 @@ void OpenMessageWindow (const PLPasStr &title)
 	mssgWindowExclusiveStack = mssgWindow;
 
 	wm->SwapExclusiveWindow(mssgWindowExclusiveStack);	// Push exclusive window
+
+	if (doZooms)
+		wm->FlickerWindowIn(mssgWindow, 32);
 }
 
 //--------------------------------------------------------------  SetMessageWindowMessage
@@ -166,7 +169,12 @@ void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBACol
 
 void CloseMessageWindow (void)
 {
-	PortabilityLayer::WindowManager::GetInstance()->SwapExclusiveWindow(mssgWindowExclusiveStack);	// Pop exclusive window
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
+
+	if (doZooms)
+		wm->FlickerWindowOut(mssgWindow, 32);
+
+	wm->SwapExclusiveWindow(mssgWindowExclusiveStack);	// Pop exclusive window
 	assert(mssgWindowExclusiveStack == mssgWindow);
 
 	mssgWindowExclusiveStack = nullptr;

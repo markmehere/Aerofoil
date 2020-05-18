@@ -7,6 +7,7 @@
 #include "PLCore.h"
 #include "PLEventQueue.h"
 #include "PLStandardColors.h"
+#include "PLSysCalls.h"
 #include "FontFamily.h"
 #include "MemoryManager.h"
 #include "MenuManager.h"
@@ -168,6 +169,9 @@ namespace PortabilityLayer
 		bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const override;
 		void SwapExclusiveWindow(Window *& windowRef) override;
 
+		void FlickerWindowIn(Window *window, int32_t velocity) override;
+		void FlickerWindowOut(Window *window, int32_t velocity) override;
+
 		void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) override;
 		void ClearResizeInProgress() override;
 
@@ -185,10 +189,19 @@ namespace PortabilityLayer
 
 		void ResetResizeInProgressSurfaces();
 
+		void ComputeFlickerEffects(const Vec2i &windowUpperLeft, int32_t offset, GpDisplayDriverSurfaceEffects &effects) const;
+
 		WindowImpl *m_windowStackTop;
 		WindowImpl *m_windowStackBottom;
 
 		WindowImpl *m_exclusiveWindow;
+
+		WindowImpl *m_flickerWindow;
+		Vec2i m_flickerBasisCoordinate;
+		Vec2i m_flickerAxis;
+		int32_t m_flickerZoneSize;
+		int32_t m_flickerBasisCoordinateDistance;
+		int32_t m_flickerChromeDistanceOffset;
 
 		Rect2i m_resizeInProgressRect;
 		DrawSurface m_resizeInProgressHorizontalBar;
@@ -941,6 +954,12 @@ namespace PortabilityLayer
 		, m_resizeInProgressRect(Rect2i(0, 0, 0, 0))
 		, m_isResizeInProgress(false)
 		, m_exclusiveWindow(nullptr)
+		, m_flickerWindow(nullptr)
+		, m_flickerBasisCoordinate(0, 0)
+		, m_flickerAxis(0, 0)
+		, m_flickerZoneSize(0)
+		, m_flickerBasisCoordinateDistance(0)
+		, m_flickerChromeDistanceOffset(0)
 	{
 	}
 
@@ -1214,6 +1233,64 @@ namespace PortabilityLayer
 		windowRef = temp;
 	}
 
+	void WindowManagerImpl::FlickerWindowIn(Window *window, int32_t velocity)
+	{
+		m_flickerWindow = static_cast<WindowImpl*>(window);
+
+		int32_t chromeLead = 64;
+		int32_t flickerZoneSize = 128;
+
+		const Rect windowRect = window->GetDrawSurface()->m_port.GetRect();
+
+		Vec2i topLeft = Vec2i(m_flickerWindow->m_wmX, m_flickerWindow->m_wmY);
+		Vec2i dimensions = Vec2i(windowRect.Width(), windowRect.Height());
+
+		m_flickerAxis = Vec2i(1, 1);
+		m_flickerZoneSize = flickerZoneSize;
+		m_flickerBasisCoordinate = topLeft + dimensions;
+		m_flickerBasisCoordinateDistance = -chromeLead;
+		m_flickerChromeDistanceOffset = chromeLead;
+
+		int32_t axisLength = m_flickerAxis.m_x * dimensions.m_x + m_flickerAxis.m_y * dimensions.m_y;
+
+		for (int32_t i = 0; i < axisLength + chromeLead + flickerZoneSize; i += velocity)
+		{
+			m_flickerBasisCoordinateDistance += velocity;
+			PLSysCalls::Sleep(1);
+		}
+
+		m_flickerWindow = nullptr;
+	}
+
+	void WindowManagerImpl::FlickerWindowOut(Window *window, int32_t velocity)
+	{
+		m_flickerWindow = static_cast<WindowImpl*>(window);
+
+		int32_t chromeLead = 64;
+		int32_t flickerZoneSize = 128;
+
+		const Rect windowRect = window->GetDrawSurface()->m_port.GetRect();
+
+		Vec2i topLeft = Vec2i(m_flickerWindow->m_wmX, m_flickerWindow->m_wmY);
+		Vec2i dimensions = Vec2i(windowRect.Width(), windowRect.Height());
+
+		m_flickerAxis = Vec2i(-1, -1);
+		m_flickerZoneSize = 128;
+		m_flickerBasisCoordinate = topLeft + dimensions;
+		m_flickerBasisCoordinateDistance = flickerZoneSize;
+		m_flickerChromeDistanceOffset = chromeLead;
+
+		int32_t axisLength = -(m_flickerAxis.m_x * dimensions.m_x + m_flickerAxis.m_y * dimensions.m_y);
+
+		for (int32_t i = 0; i < axisLength + chromeLead + flickerZoneSize; i += velocity)
+		{
+			m_flickerBasisCoordinateDistance -= velocity;
+			PLSysCalls::Sleep(1);
+		}
+
+		m_flickerWindow = nullptr;
+	}
+
 	void WindowManagerImpl::SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size)
 	{
 		ResetResizeInProgressSurfaces();
@@ -1367,6 +1444,22 @@ namespace PortabilityLayer
 		new (&m_resizeInProgressVerticalBar) DrawSurface();
 	}
 
+	void WindowManagerImpl::ComputeFlickerEffects(const Vec2i &windowUpperLeft, int32_t offset, GpDisplayDriverSurfaceEffects &effects) const
+	{
+		int32_t upperLeftCoord = windowUpperLeft.m_x * m_flickerAxis.m_x + windowUpperLeft.m_y * m_flickerAxis.m_y;
+		int32_t baselineDist = m_flickerBasisCoordinate.m_x * m_flickerAxis.m_x + m_flickerBasisCoordinate.m_y * m_flickerAxis.m_y;
+		int32_t distanceFromBaseline = upperLeftCoord - baselineDist;
+
+		int32_t startThreshold = -(m_flickerBasisCoordinateDistance + offset + distanceFromBaseline);
+		int32_t endThreshold = startThreshold + m_flickerZoneSize;
+
+		effects.m_flicker = true;
+		effects.m_flickerAxisX = m_flickerAxis.m_x;
+		effects.m_flickerAxisY = m_flickerAxis.m_y;
+		effects.m_flickerStartThreshold = startThreshold;
+		effects.m_flickerEndThreshold = endThreshold;
+	}
+
 	Window *WindowManagerImpl::GetPutInFrontSentinel() const
 	{
 		return reinterpret_cast<Window*>(&ms_putInFrontSentinel);
@@ -1382,6 +1475,8 @@ namespace PortabilityLayer
 		if (m_exclusiveWindow != nullptr && m_exclusiveWindow != window)
 			effects.m_darken = true;
 
+		bool hasFlicker = (m_flickerWindow == window);
+
 		DrawSurface &graf = window->m_surface;
 
 		graf.PushToDDSurface(displayDriver);
@@ -1389,6 +1484,10 @@ namespace PortabilityLayer
 		const PixMap *pixMap = *graf.m_port.GetPixMap();
 		const uint16_t width = pixMap->m_rect.Width();
 		const uint16_t height = pixMap->m_rect.Height();
+
+		if (hasFlicker)
+			ComputeFlickerEffects(Vec2i(window->m_wmX, window->m_wmY), 0, effects);
+
 		displayDriver->DrawSurface(graf.m_ddSurface, window->m_wmX, window->m_wmY, width, height, &effects);
 
 		if (!window->IsBorderless())
@@ -1413,6 +1512,9 @@ namespace PortabilityLayer
 				DrawSurface *chromeSurface = window->GetChromeSurface(static_cast<WindowChromeSide_t>(i));
 
 				chromeSurface->PushToDDSurface(displayDriver);
+
+				if (hasFlicker)
+					ComputeFlickerEffects(Vec2i(chromeOrigins[i].m_x, chromeOrigins[i].m_y), m_flickerChromeDistanceOffset, effects);
 
 				displayDriver->DrawSurface(chromeSurface->m_ddSurface, chromeOrigins[i].m_x, chromeOrigins[i].m_y, chromeDimensions[i].m_x, chromeDimensions[i].m_y, &effects);
 			}

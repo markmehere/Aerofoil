@@ -16,6 +16,8 @@
 #include "RectUtils.h"
 #include "Room.h"
 #include "Utilities.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 
 #define kBannerPageTopPICT		1993
@@ -196,23 +198,32 @@ void BringUpBanner (void)
 // in a house.  It comes up when the player gets a star (the game is pausedÉ
 // and the user informed as to how many remain).
 
-void DisplayStarsRemaining (void)
+void DisplayStarsRemaining(void)
 {
 	Rect		src, bounds;
 	Str255		theStr;
-	DrawSurface *surface = mainWindow->GetDrawSurface();
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
 	QSetRect(&bounds, 0, 0, 256, 64);
 	CenterRectInRect(&bounds, &thisMac.fullScreen);
 	QOffsetRect(&bounds, -thisMac.fullScreen.left, -thisMac.fullScreen.top);
-	src = bounds;
-	InsetRect(&src, 64, 32);
+	QOffsetRect(&bounds, 0, -20);
+
+	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(bounds, 0, true, 0, 0, PSTR(""));
+
+	// Zero out
+	QOffsetRect(&bounds, -bounds.left, -bounds.top);
+
+	Window *starsWindow = wm->CreateWindow(wdef);
+	wm->PutWindowBehind(starsWindow, wm->GetPutInFrontSentinel());
+
+	DrawSurface *surface = starsWindow->GetDrawSurface();
 
 	surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 
 	NumToString((long)numStarsRemaining, theStr);
-	
-	QOffsetRect(&bounds, 0, -20);
+
 	if (numStarsRemaining < 2)
 		LoadScaledGraphic(surface, kStarRemainingPICT, &bounds);
 	else
@@ -221,10 +232,16 @@ void DisplayStarsRemaining (void)
 		const Point textPoint = Point::Create(bounds.left + 102 - (surface->MeasureString(theStr) / 2), bounds.top + 23);
 		ColorText(surface, textPoint, theStr, 4L);
 	}
-	
+
+	if (doZooms)
+		wm->FlickerWindowIn(starsWindow, 32);
+
 	DelayTicks(60);
-	if (WaitForInputEvent(30))
-		RestoreEntireGameScreen();
-	CopyRectWorkToMain(&bounds);
+	WaitForInputEvent(30);
+
+	if (doZooms)
+		wm->FlickerWindowOut(starsWindow, 32);
+
+	wm->DestroyWindow(starsWindow);
 }
 

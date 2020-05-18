@@ -1078,6 +1078,20 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 		for (int i = 0; i < 4; i++)
 			pConstantsData.m_modulation[i] = 1.0f;
 
+		if (effects->m_flicker)
+		{
+			pConstantsData.m_flickerAxis[0] = effects->m_flickerAxisX;
+			pConstantsData.m_flickerAxis[1] = effects->m_flickerAxisY;
+			pConstantsData.m_flickerStart = effects->m_flickerStartThreshold;
+			pConstantsData.m_flickerEnd = effects->m_flickerEndThreshold;
+		}
+		else
+		{
+			pConstantsData.m_flickerAxis[0] = pConstantsData.m_flickerAxis[1] = 0;
+			pConstantsData.m_flickerEnd = -1;
+			pConstantsData.m_flickerStart = -2;
+		}
+
 		if (effects->m_darken)
 			for (int i = 0; i < 3; i++)
 				pConstantsData.m_modulation[i] = 0.5f;

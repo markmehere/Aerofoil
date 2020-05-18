@@ -70,6 +70,10 @@ private:
 	struct DrawQuadPixelConstants
 	{
 		float m_modulation[4];
+
+		int32_t m_flickerAxis[2];
+		int32_t m_flickerStart;
+		int32_t m_flickerEnd;
 	};
 
 	struct ScaleQuadPixelConstants

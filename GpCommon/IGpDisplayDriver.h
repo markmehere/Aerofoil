@@ -11,6 +11,11 @@ struct GpDisplayDriverSurfaceEffects
 	GpDisplayDriverSurfaceEffects();
 
 	bool m_darken;
+	bool m_flicker;
+	int32_t m_flickerAxisX;
+	int32_t m_flickerAxisY;
+	int32_t m_flickerStartThreshold;
+	int32_t m_flickerEndThreshold;
 };
 
 // Display drivers are responsible for timing and calling the game tick function.
@@ -38,5 +43,10 @@ public:
 
 inline GpDisplayDriverSurfaceEffects::GpDisplayDriverSurfaceEffects()
 	: m_darken(false)
+	, m_flicker(false)
+	, m_flickerAxisX(0)
+	, m_flickerAxisY(0)
+	, m_flickerStartThreshold(0)
+	, m_flickerEndThreshold(0)
 {
 }

@@ -19,7 +19,11 @@ float3 SamplePixel(int2 texCoord)
 SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 {
 	SDrawQuadPixelOutput result;
-	result.color = float4(SamplePixel(int2(floor(input.texCoord.xy))), 1.0) * constants_Modulation;
+	int2 pixelCoordinate = int2(floor(input.texCoord.xy));
+	result.color = ApplyFlicker(pixelCoordinate, float4(SamplePixel(int2(floor(input.texCoord.xy))), 1.0) * constants_Modulation);
+	
+	if (result.color.a <= 0.0)
+		discard;
 
 	return result;
 }

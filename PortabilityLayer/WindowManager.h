@@ -38,6 +38,9 @@ namespace PortabilityLayer
 		virtual bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const = 0;
 		virtual void SwapExclusiveWindow(Window *& windowRef) = 0;
 
+		virtual void FlickerWindowIn(Window *window, int32_t velocity) = 0;
+		virtual void FlickerWindowOut(Window *window, int32_t velocity) = 0;
+
 		virtual void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) = 0;
 		virtual void ClearResizeInProgress() = 0;
 

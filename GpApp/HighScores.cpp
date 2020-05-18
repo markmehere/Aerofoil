@@ -26,6 +26,7 @@
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "Utilities.h"
+#include "WindowManager.h"
 
 namespace PortabilityLayer
 {
@@ -506,6 +507,8 @@ void GetHighScoreName (short place)
 	Str255			scoreStr, placeStr, tempStr;
 	short			item;
 	Boolean			leaving;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	InitCursor();
 	NumToString(theScore, scoreStr);
@@ -522,6 +525,12 @@ void GetHighScoreName (short place)
 
 	UpdateNameDialog(theDial);
 
+	//Window *exclStack = theDial->GetWindow();
+	//wm->SwapExclusiveWindow(exclStack);	// Push exclusive window for zooms
+
+	if (doZooms)
+		wm->FlickerWindowIn(theDial->GetWindow(), 64);
+
 	while (!leaving)
 	{
 		item = theDial->ExecuteModal(NameFilter);
@@ -533,6 +542,9 @@ void GetHighScoreName (short place)
 			leaving = true;
 		}
 	}
+
+	if (doZooms)
+		wm->FlickerWindowOut(theDial->GetWindow(), 64);
 	
 	theDial->Destroy();
 }
@@ -610,6 +622,8 @@ void GetHighScoreBanner (void)
 	Str255			tempStr;
 	short			item;
 	Boolean			leaving;
+
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
 	PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 	BringUpDialog(&theDial, kHighBannerDialogID, nullptr);
@@ -618,7 +632,10 @@ void GetHighScoreBanner (void)
 	leaving = false;
 
 	UpdateBannerDialog(theDial);
-	
+
+	if (doZooms)
+		wm->FlickerWindowIn(theDial->GetWindow(), 64);
+
 	while (!leaving)
 	{
 		item = theDial->ExecuteModal(BannerFilter);
@@ -630,6 +647,9 @@ void GetHighScoreBanner (void)
 			leaving = true;
 		}
 	}
+
+	if (doZooms)
+		wm->FlickerWindowOut(theDial->GetWindow(), 64);
 	
 	theDial->Destroy();
 }
