@@ -210,10 +210,13 @@ void DisplayStarsRemaining(void)
 	QOffsetRect(&bounds, -thisMac.fullScreen.left, -thisMac.fullScreen.top);
 	QOffsetRect(&bounds, 0, -20);
 
-	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(bounds, 0, true, 0, 0, PSTR(""));
+	// Inset by 1 because the original graphic is bordered, and we want to use the window chrome for the border because it will apply the flicker effect
+	Rect windowBounds = bounds.Inset(1, 1);
+
+	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowBounds, 0, true, 0, 0, PSTR(""));
 
 	// Zero out
-	QOffsetRect(&bounds, -bounds.left, -bounds.top);
+	QOffsetRect(&bounds, -bounds.left - 1, -bounds.top - 1);
 
 	Window *starsWindow = wm->CreateWindow(wdef);
 	wm->PutWindowBehind(starsWindow, wm->GetPutInFrontSentinel());
