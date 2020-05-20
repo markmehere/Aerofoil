@@ -182,7 +182,7 @@ void DrawToolTiles (DrawSurface *surface)
 		QOffsetRect(&destRect, toolRects[i + 1].left + 2, toolRects[i + 1].top + 2);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(toolSrcMap), 
-				GetPortBitMapForCopyBits(GetWindowPort(toolsWindow)), 
+				GetPortBitMapForCopyBits(toolsWindow->GetDrawSurface()), 
 				&srcRect, &destRect, srcCopy);
 	}
 }
@@ -472,7 +472,7 @@ void HandleToolsClick (Point wherePt)
 		return;
 	
 	SetPortWindowPort(toolsWindow);
-	wherePt -= toolsWindow->TopLeftCoord();
+	wherePt -= toolsWindow->GetTopLeftCoord();
 	
 	part = FindControl(wherePt, toolsWindow, &theControl);
 	if ((theControl != nil) && (part != 0))

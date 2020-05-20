@@ -173,7 +173,7 @@ int16_t HouseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 			if (mouseEvt.m_eventType == GpMouseEventTypes::kMove)
 			{
 				mouseIs = Point::Create(mouseEvt.m_x, mouseEvt.m_y);
-				mouseIs -= dial->GetWindow()->TopLeftCoord();
+				mouseIs -= dial->GetWindow()->GetTopLeftCoord();
 				if ((houseEditText1.Contains(mouseIs)) ||
 					(houseEditText2.Contains(mouseIs)))
 				{

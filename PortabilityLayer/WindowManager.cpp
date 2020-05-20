@@ -1059,10 +1059,11 @@ namespace PortabilityLayer
 		WindowImpl *window = m_windowStackTop;
 		while (window)
 		{
-			const Rect windowRect = window->m_surface.m_port.GetRect();
+			const Rect windowRect = window->GetSurfaceRect();
+			const Vec2i windowPos = window->GetPosition();
 
-			const int32_t localX = point.h - window->m_wmX;
-			const int32_t localY = point.v - window->m_wmY;
+			const int32_t localX = point.h - windowPos.m_x;
+			const int32_t localY = point.v - windowPos.m_y;
 
 			RegionID_t chromeInteractionZone = RegionIDs::kContent;
 			if (window->GetChromeInteractionZone(Vec2i(localX, localY), chromeInteractionZone))
@@ -1101,7 +1102,7 @@ namespace PortabilityLayer
 
 		DetachWindow(window);
 
-		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == &windowImpl->m_surface.m_port)
+		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == &windowImpl->GetDrawSurface()->m_port)
 			PortabilityLayer::QDManager::GetInstance()->SetPort(nullptr);
 
 		windowImpl->~WindowImpl();
@@ -1133,8 +1134,7 @@ namespace PortabilityLayer
 					if (y >= constraintRect.bottom)
 						y = constraintRect.bottom - 1;
 
-					window->m_wmX += x - baseX;
-					window->m_wmY += y - baseY;
+					window->SetPosition(window->GetPosition() + Vec2i(x - baseX, y - baseY));
 
 					baseX = x;
 					baseY = y;
@@ -1150,7 +1150,7 @@ namespace PortabilityLayer
 	{
 		bool isInBounds = false;
 
-		const Vec2i windowCoord = Vec2i(window->m_wmX, window->m_wmY);
+		const Vec2i windowCoord = window->GetPosition();
 
 		Rect2i closeBoxRect;
 		if (!static_cast<WindowImpl*>(window)->GetChromeRegionRect(RegionIDs::kClose, closeBoxRect))
@@ -1216,9 +1216,10 @@ namespace PortabilityLayer
 		uint16_t padding[WindowChromeSides::kCount];
 		windowImpl->GetChromePadding(padding);
 
-		const Rect portRect = windowImpl->m_surface.m_port.GetRect();
+		const Rect portRect = windowImpl->GetSurfaceRect();
+		const Vec2i windowPos = windowImpl->GetPosition();
 
-		return Rect2i(window->m_wmY - padding[WindowChromeSides::kTop], window->m_wmX - padding[WindowChromeSides::kLeft], window->m_wmY + portRect.Height() + padding[WindowChromeSides::kBottom], window->m_wmX + portRect.Width() + padding[WindowChromeSides::kRight]);
+		return Rect2i(windowPos.m_y - padding[WindowChromeSides::kTop], windowPos.m_x - padding[WindowChromeSides::kLeft], windowPos.m_y + portRect.Height() + padding[WindowChromeSides::kBottom], windowPos.m_x + portRect.Width() + padding[WindowChromeSides::kRight]);
 	}
 
 	bool WindowManagerImpl::GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const
@@ -1242,7 +1243,7 @@ namespace PortabilityLayer
 
 		const Rect windowRect = window->GetDrawSurface()->m_port.GetRect();
 
-		Vec2i topLeft = Vec2i(m_flickerWindow->m_wmX, m_flickerWindow->m_wmY);
+		Vec2i topLeft = m_flickerWindow->GetPosition();
 		Vec2i dimensions = Vec2i(windowRect.Width(), windowRect.Height());
 
 		m_flickerAxis = Vec2i(1, 1);
@@ -1269,9 +1270,9 @@ namespace PortabilityLayer
 		int32_t chromeLead = 64;
 		int32_t flickerZoneSize = 128;
 
-		const Rect windowRect = window->GetDrawSurface()->m_port.GetRect();
+		const Rect windowRect = window->GetSurfaceRect();
 
-		Vec2i topLeft = Vec2i(m_flickerWindow->m_wmX, m_flickerWindow->m_wmY);
+		Vec2i topLeft = m_flickerWindow->GetPosition();
 		Vec2i dimensions = Vec2i(windowRect.Width(), windowRect.Height());
 
 		m_flickerAxis = Vec2i(-1, -1);
@@ -1323,7 +1324,7 @@ namespace PortabilityLayer
 			return;
 		}
 
-		const PortabilityLayer::Vec2i topLeft = PortabilityLayer::Vec2i(window->m_wmX, window->m_wmY);
+		const PortabilityLayer::Vec2i topLeft = window->GetPosition();
 		m_resizeInProgressRect = PortabilityLayer::Rect2i(topLeft, topLeft + size);
 	}
 
@@ -1379,12 +1380,13 @@ namespace PortabilityLayer
 			{
 				uint32_t prevClearanceX = prevWidth - paddedWidth;
 				uint32_t newClearanceX = newWidth - paddedWidth;
-				newX = static_cast<int64_t>(window->m_wmX) * static_cast<int64_t>(newClearanceX) / static_cast<int64_t>(prevClearanceX);
+				newX = static_cast<int64_t>(window->GetPosition().m_x) * static_cast<int64_t>(newClearanceX) / static_cast<int64_t>(prevClearanceX);
 			}
 
 			int64_t newY = 0;
-			if (window->m_wmY < static_cast<int32_t>(menuBarHeight))
-				newY = window->m_wmY;
+			int32_t currentY = window->GetPosition().m_y;
+			if (currentY < static_cast<int32_t>(menuBarHeight))
+				newY = currentY;
 			else
 			{
 				if (newHeight <= (paddedHeight + menuBarHeight) || prevHeight <= paddedHeight + menuBarHeight)
@@ -1393,15 +1395,14 @@ namespace PortabilityLayer
 				{
 					uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
 					uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
-					newY = (static_cast<int64_t>(window->m_wmY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + menuBarHeight + chromePadding[WindowChromeSides::kTop];
+					newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + menuBarHeight + chromePadding[WindowChromeSides::kTop];
 				}
 			}
 
 			newX = std::max<int64_t>(0, std::min<int64_t>(newX, newWidth - 1));
 			newY = std::max<int64_t>(0, std::min<int64_t>(newY, newHeight - 1));
 
-			window->m_wmX = static_cast<int32_t>(newX);
-			window->m_wmY = static_cast<int32_t>(newY);
+			window->SetPosition(Vec2i(newX, newY));
 		}
 	}
 
@@ -1412,8 +1413,7 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::MoveWindow(Window *window, int x, int y)
 	{
-		window->m_wmX = x;
-		window->m_wmY = y;
+		window->SetPosition(Vec2i(x, y));
 	}
 
 	void WindowManagerImpl::DetachWindow(Window *window)
@@ -1477,7 +1477,7 @@ namespace PortabilityLayer
 
 		bool hasFlicker = (m_flickerWindow == window);
 
-		DrawSurface &graf = window->m_surface;
+		DrawSurface &graf = *window->GetDrawSurface();
 
 		graf.PushToDDSurface(displayDriver);
 
@@ -1485,10 +1485,12 @@ namespace PortabilityLayer
 		const uint16_t width = pixMap->m_rect.Width();
 		const uint16_t height = pixMap->m_rect.Height();
 
-		if (hasFlicker)
-			ComputeFlickerEffects(Vec2i(window->m_wmX, window->m_wmY), 0, effects);
+		const Vec2i windowPos = window->GetPosition();
 
-		displayDriver->DrawSurface(graf.m_ddSurface, window->m_wmX, window->m_wmY, width, height, &effects);
+		if (hasFlicker)
+			ComputeFlickerEffects(windowPos, 0, effects);
+
+		displayDriver->DrawSurface(graf.m_ddSurface, windowPos.m_x, windowPos.m_y, width, height, &effects);
 
 		if (!window->IsBorderless())
 		{
@@ -1496,10 +1498,10 @@ namespace PortabilityLayer
 			window->GetChromePadding(chromePadding);
 
 			Vec2i chromeOrigins[WindowChromeSides::kCount];
-			chromeOrigins[WindowChromeSides::kTop] = Vec2i(window->m_wmX - chromePadding[WindowChromeSides::kLeft], window->m_wmY - chromePadding[WindowChromeSides::kTop]);
-			chromeOrigins[WindowChromeSides::kLeft] = Vec2i(window->m_wmX - chromePadding[WindowChromeSides::kLeft], window->m_wmY);
-			chromeOrigins[WindowChromeSides::kRight] = Vec2i(window->m_wmX + width, window->m_wmY);
-			chromeOrigins[WindowChromeSides::kBottom] = Vec2i(window->m_wmX - chromePadding[WindowChromeSides::kLeft], window->m_wmY + height);
+			chromeOrigins[WindowChromeSides::kTop] = Vec2i(windowPos.m_x - chromePadding[WindowChromeSides::kLeft], windowPos.m_y - chromePadding[WindowChromeSides::kTop]);
+			chromeOrigins[WindowChromeSides::kLeft] = Vec2i(windowPos.m_x - chromePadding[WindowChromeSides::kLeft], windowPos.m_y);
+			chromeOrigins[WindowChromeSides::kRight] = Vec2i(windowPos.m_x + width, windowPos.m_y);
+			chromeOrigins[WindowChromeSides::kBottom] = Vec2i(windowPos.m_x - chromePadding[WindowChromeSides::kLeft], windowPos.m_y + height);
 
 			Vec2i chromeDimensions[WindowChromeSides::kCount];
 			chromeDimensions[WindowChromeSides::kTop] = Vec2i(chromePadding[WindowChromeSides::kLeft] + chromePadding[WindowChromeSides::kRight] + width, chromePadding[WindowChromeSides::kTop]);

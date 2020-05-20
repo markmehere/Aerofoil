@@ -99,10 +99,6 @@ void ImageInvert(const PixMap *invertMask, PixMap *targetBitmap, const Rect &src
 bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMask);
 
 PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr);
-DrawSurface *GetWindowPort(WindowPtr window);
-
-// Subtracts srcPoint from destPoint (reverse of DeltaPoint)
-void SubPt(Point srcPoint, Point *destPoint);
 
 Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection);
 

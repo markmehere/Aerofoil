@@ -391,7 +391,7 @@ int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 		if (evt->IsLMouseDownEvent())
 		{
 			mouseIs = Point::Create(mouseEvent.m_x, mouseEvent.m_y);
-			mouseIs -= dial->GetWindow()->TopLeftCoord();
+			mouseIs -= dial->GetWindow()->GetTopLeftCoord();
 			if (tileSrc.Contains(mouseIs))
 			{
 				if (StillDown())
@@ -681,7 +681,7 @@ int16_t OriginalArtFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 		const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
 
 		mouseIs = Point::Create(mouseEvt.m_x, mouseEvt.m_y);
-		mouseIs -= dial->GetWindow()->TopLeftCoord();
+		mouseIs -= dial->GetWindow()->GetTopLeftCoord();
 		if (leftBound.Contains(mouseIs))
 			return 7;
 		else if (topBound.Contains(mouseIs))

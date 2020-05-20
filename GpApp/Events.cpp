@@ -454,8 +454,7 @@ void KeepWindowInBounds(Window *window)
 	int32_t leftNudge = std::max<int32_t>(-windowRect.Left(), 0);
 	int32_t rightNudge = std::min<int32_t>(thisMac.fullScreen.right - windowRect.Right(), 0);
 
-	window->m_wmX += leftNudge + rightNudge;
-	window->m_wmY += topNudge + bottomNudge;
+	window->SetPosition(window->GetPosition() + PortabilityLayer::Vec2i(leftNudge + rightNudge, topNudge + bottomNudge));
 }
 
 void HandleEditorResolutionChange(void)

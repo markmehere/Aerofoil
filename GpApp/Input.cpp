@@ -119,7 +119,7 @@ void DoPause (void)
 	}
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+			GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 			&bounds, &bounds, srcCopy);
 	
 	do

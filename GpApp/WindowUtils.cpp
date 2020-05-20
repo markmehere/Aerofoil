@@ -36,8 +36,9 @@ void GetWindowLeftTop (WindowPtr theWindow, short *left, short *top)
 	}
 	else
 	{
-		*left = static_cast<short>(theWindow->m_wmX);
-		*top = static_cast<short>(theWindow->m_wmY);
+		const Point windowPos = theWindow->GetTopLeftCoord();
+		*left = windowPos.h;
+		*top = windowPos.v;
 	}
 }
 
@@ -51,7 +52,7 @@ void GetWindowRect (WindowPtr theWindow, Rect *bounds)
 	{
 		Point upperLeft;
 		GetWindowLeftTop(theWindow, &upperLeft.h, &upperLeft.v);
-		*bounds = theWindow->m_surface.m_port.GetRect() + upperLeft;
+		*bounds = theWindow->GetSurfaceRect() + upperLeft;
 	}
 }
 

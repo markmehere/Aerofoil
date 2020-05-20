@@ -143,7 +143,7 @@ void NewGame (short mode)
 #ifdef COMPILEQT
 	if ((thisMac.hasQT) && (hasMovie))
 	{
-		theMovie.m_surface = &mainWindow->m_surface;
+		theMovie.m_surface = mainWindow->GetDrawSurface();
 	}
 #endif
 	
@@ -374,7 +374,7 @@ void HandleGameResolutionChange(void)
 	OpenMainWindow();
 
 	if (hasMovie)
-		theMovie.m_surface = &mainWindow->m_surface;
+		theMovie.m_surface = mainWindow->GetDrawSurface();
 
 	ResetLocale(true);
 	InitScoreboardMap();

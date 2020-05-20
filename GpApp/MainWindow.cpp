@@ -117,7 +117,7 @@ void RedrawSplashScreen (void)
 	SetPortWindowPort(mainWindow);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
-		GetPortBitMapForCopyBits(GetWindowPort(mainWindow)),
+		GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 		&workSrcRect, &workSrcRect, srcCopy);
 
 //	if (quickerTransitions)
@@ -126,7 +126,7 @@ void RedrawSplashScreen (void)
 //		DissBits(&workSrcRect);
 	CopyRectMainToWork(&workSrcRect);
 
-	mainWindow->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
 }
 
@@ -144,7 +144,7 @@ void UpdateMainWindow (void)
 	{
 		PauseMarquee();
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
-				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+				GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()), 
 				&mainWindowRect, &mainWindowRect, srcCopy);
 		ResumeMarquee();
 	}
@@ -155,14 +155,14 @@ void UpdateMainWindow (void)
 		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
 		LoadScaledGraphic(workSrcMap, kSplash8BitPICT, &tempRect);
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+				GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()), 
 				&workSrcRect, &mainWindowRect, srcCopy);
 		SetPortWindowPort(mainWindow);
 		
 		DrawOnSplash(mainWindow->GetDrawSurface());
 	}
 
-	mainWindow->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	
 	splashDrawn = true;
 }
@@ -279,10 +279,10 @@ void OpenMainWindow (void)
 	}
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
-		GetPortBitMapForCopyBits(GetWindowPort(mainWindow)),
+		GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 		&mainWindowRect, &mainWindowRect, srcCopy);
 
-	mainWindow->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 //--------------------------------------------------------------  CloseMainWindow
@@ -373,7 +373,7 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 		return;
 	
 	SetPortWindowPort(mainWindow);
-	wherePt -= mainWindow->TopLeftCoord();
+	wherePt -= mainWindow->GetTopLeftCoord();
 
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 	

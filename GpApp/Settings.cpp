@@ -494,7 +494,7 @@ void DoControlPrefs (void)
 	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront, nullptr);
 	if (prefDlg == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
+	SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 	for (i = 0; i < 4; i++)
 	{
 		GetDialogItemRect(prefDlg, i + kRightControl, &controlRects[i]);
@@ -1204,7 +1204,7 @@ int16_t PrefsFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 		const Window *window = dial->GetWindow();
 		const GpMouseInputEvent &mouseEvent = evt->m_vosEvent.m_event.m_mouseInputEvent;
 
-		const Point testPt = Point::Create(mouseEvent.m_x - window->m_wmX, mouseEvent.m_y - window->m_wmY);
+		const Point testPt = window->MouseToLocal(evt->m_vosEvent.m_event.m_mouseInputEvent);
 
 		int16_t hitCode = -1;
 
@@ -1263,20 +1263,20 @@ void DoSettingsMain (void)
 			case kDisplayButton:
 			FlashSettingsButton(surface, 0);
 			DoDisplayPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
+			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			break;
 			
 			case kSoundButton:
 			FlashSettingsButton(surface, 1);
 			DoSoundPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
+			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			FlushEvents(everyEvent, 0);
 			break;
 			
 			case kControlsButton:
 			FlashSettingsButton(surface, 2);
 			DoControlPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
+			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			break;
 			
 			case kBrainsButton:
@@ -1288,7 +1288,7 @@ void DoSettingsMain (void)
 			}
 			FlashSettingsButton(surface, 3);
 			DoBrainsPrefs();
-			SetGraphicsPort(&prefDlg->GetWindow()->m_surface);
+			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			break;
 			
 			case kAllDefaultsButton:

@@ -41,7 +41,7 @@ namespace PortabilityLayer
 		{
 			const GpMouseInputEvent &mouseEvent = evt.m_vosEvent.m_event.m_mouseInputEvent;
 			const Vec2i globalPoint = Vec2i(mouseEvent.m_x, mouseEvent.m_y);
-			const Vec2i localPoint = globalPoint - Vec2i(m_window->m_wmX, m_window->m_wmY);
+			const Vec2i localPoint = globalPoint - m_window->GetPosition();
 
 			if (this->m_rect.Contains(Point::Create(localPoint.m_x, localPoint.m_y)))
 			{
@@ -60,8 +60,8 @@ namespace PortabilityLayer
 	{
 		MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
 
-		const Vec2i popupMenuPos = Vec2i(m_window->m_wmX, m_window->m_wmY) + Vec2i(m_rect.left, m_rect.top);
-		const Vec2i globalPos = Vec2i(pos.h, pos.v) + Vec2i(m_window->m_wmX, m_window->m_wmY);
+		const Vec2i popupMenuPos = m_window->GetPosition() + Vec2i(m_rect.left, m_rect.top);
+		const Vec2i globalPos = Vec2i(pos.h, pos.v) + m_window->GetPosition();
 
 		uint16_t item = 0;
 		mm->PopupMenuSelect(m_menu, popupMenuPos, globalPos, m_state - 1, &item);

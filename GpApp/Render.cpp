@@ -612,7 +612,7 @@ void CopyRectsQD (void)
 {
 	short		i;
 
-	DrawSurface *mainWindowGraf = GetWindowPort(mainWindow);
+	DrawSurface *mainWindowGraf = mainWindow->GetDrawSurface();
 	
 	for (i = 0; i < numWork2Main; i++)
 	{
@@ -713,7 +713,7 @@ void CopyRectWorkToBack (Rect *theRect)
 void CopyRectWorkToMain (Rect *theRect)
 {
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-			GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+			GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 			theRect, theRect, srcCopy);
 }
 
@@ -721,7 +721,7 @@ void CopyRectWorkToMain (Rect *theRect)
 
 void CopyRectMainToWork (Rect *theRect)
 {
-	CopyBits(GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+	CopyBits(GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 			(BitMap *)*GetGWorldPixMap(workSrcMap), 
 			theRect, theRect, srcCopy);
 }
@@ -730,7 +730,7 @@ void CopyRectMainToWork (Rect *theRect)
 
 void CopyRectMainToBack (Rect *theRect)
 {
-	CopyBits(GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+	CopyBits(GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			theRect, theRect, srcCopy);
 }

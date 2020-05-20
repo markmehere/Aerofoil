@@ -511,11 +511,7 @@ namespace PortabilityLayer
 
 	Point DialogImpl::MouseToDialog(const GpMouseInputEvent &evt)
 	{
-		const Window *window = m_window;
-		const int32_t x = evt.m_x - window->m_wmX;
-		const int32_t y = evt.m_y - window->m_wmY;
-
-		return Point::Create(x, y);
+		return Point::Create(evt.m_x, evt.m_y) - m_window->GetTopLeftCoord();
 	}
 
 	void DialogImpl::MakeStringSubstitutions(uint8_t *outStr, const uint8_t *inStr, const DialogTextSubstitutions *substitutions)
@@ -843,7 +839,9 @@ namespace PortabilityLayer
 		const uint16_t dialogWidth = rect.Width();
 		const uint16_t dialogHeight = rect.Height();
 
-		window->m_wmX = (static_cast<int32_t>(displayWidth) - static_cast<int32_t>(dialogWidth)) / 2;
+		Vec2i newPosition;
+
+		newPosition.m_x = (static_cast<int32_t>(displayWidth) - static_cast<int32_t>(dialogWidth)) / 2;
 
 		// We center dialogs vertically in one of 3 ways in this priority:
 		// - Centered at 1/3 until the top edge is at the 1/4 mark
@@ -853,13 +851,15 @@ namespace PortabilityLayer
 		//if (displayHeight / 3 - dialogHeight / 2 >= displayHeight / 4)
 		if (static_cast<int32_t>(displayHeight * 4) - static_cast<int32_t>(dialogHeight * 6) >= static_cast<int32_t>(displayHeight * 3))
 		{
-			//window->m_wmY = displayHeight / 3 - dialogHeight / 2;
-			window->m_wmY = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
+			//newPosition.m_y = displayHeight / 3 - dialogHeight / 2;
+			newPosition.m_y = (static_cast<int32_t>(displayHeight * 2) - static_cast<int32_t>(dialogHeight * 3)) / 6;
 		}
 		else if (dialogHeight * 2U <= displayHeight)
-			window->m_wmY = displayHeight / 4;
+			newPosition.m_y = displayHeight / 4;
 		else
-			window->m_wmY = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;
+			newPosition.m_y = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;
+
+		window->SetPosition(newPosition);
 	}
 
 	DialogManagerImpl *DialogManagerImpl::GetInstance()

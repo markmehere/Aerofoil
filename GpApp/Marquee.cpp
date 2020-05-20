@@ -432,7 +432,7 @@ Boolean PtInMarqueeHandle (Point where)
 
 void DrawGliderMarquee (void)
 {
-	DrawSurface *surface = GetWindowPort(mainWindow);
+	DrawSurface *surface = mainWindow->GetDrawSurface();
 	ImageInvert(*GetGWorldPixMap(blowerMaskMap), GetPortBitMapForCopyBits(surface), leftStartGliderSrc, marqueeGliderRect);
 	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }

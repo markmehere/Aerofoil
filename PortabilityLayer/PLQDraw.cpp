@@ -51,7 +51,7 @@ void SetPort(GrafPtr graf)
 
 void EndUpdate(WindowPtr graf)
 {
-	graf->m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	graf->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 void SetRect(Rect *rect, short left, short top, short right, short bottom)
@@ -65,7 +65,7 @@ void SetRect(Rect *rect, short left, short top, short right, short bottom)
 void SetPortWindowPort(WindowPtr window)
 {
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
-	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->m_surface.m_port);
+	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->GetDrawSurface()->m_port);
 }
 
 void SetPortDialogPort(Dialog *dialog)
@@ -1707,17 +1707,6 @@ PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr)
 {
 	return *grafPtr->m_port.GetPixMap();
 }
-
-DrawSurface *GetWindowPort(WindowPtr window)
-{
-	return &window->m_surface;
-}
-
-void SubPt(Point srcPoint, Point *destPoint)
-{
-	PL_NotYetImplemented();
-}
-
 
 Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection)
 {

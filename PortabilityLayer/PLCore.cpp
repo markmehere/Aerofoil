@@ -128,7 +128,7 @@ PortabilityLayer::Vec2i TrackResize(WindowPtr window, Point start, uint16_t minW
 {
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-	const Rect baseRect = window->m_surface.m_port.GetRect();
+	const Rect baseRect = window->GetSurfaceRect();
 
 	const PortabilityLayer::Vec2i baseSize = PortabilityLayer::Vec2i(baseRect.Width(), baseRect.Height());
 	const PortabilityLayer::Vec2i basePoint = PortabilityLayer::Vec2i(start.h, start.v);
@@ -498,8 +498,9 @@ void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL)
 void GetMouse(Window *window, Point *point)
 {
 	const PortabilityLayer::Vec2i mousePos = PortabilityLayer::InputManager::GetInstance()->GetMousePosition();
-	point->h = mousePos.m_x - window->m_wmX;
-	point->v = mousePos.m_y - window->m_wmY;
+	const PortabilityLayer::Vec2i relativePos = mousePos - window->GetPosition();
+	point->h = relativePos.m_x;
+	point->v = relativePos.m_y;
 }
 
 Boolean Button()
@@ -691,9 +692,26 @@ Point Window::MouseToLocal(const GpMouseInputEvent &evt) const
 	return Point::Create(evt.m_x - m_wmX, evt.m_y - m_wmY);
 }
 
-Point Window::TopLeftCoord() const
+Point Window::GetTopLeftCoord() const
 {
-	return Point::Create(m_wmX, m_wmY);
+	const PortabilityLayer::Vec2i position = GetPosition();
+	return Point::Create(position.m_x, position.m_y);
+}
+
+Rect Window::GetSurfaceRect() const
+{
+	return m_surface.m_port.GetRect();
+}
+
+void Window::SetPosition(const PortabilityLayer::Vec2i &pos)
+{
+	m_wmX = pos.m_x;
+	m_wmY = pos.m_y;
+}
+
+PortabilityLayer::Vec2i Window::GetPosition() const
+{
+	return PortabilityLayer::Vec2i(m_wmX, m_wmY);
 }
 
 bool Window::AddWidget(PortabilityLayer::Widget *widget)

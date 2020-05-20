@@ -379,7 +379,7 @@ void HandleLinkClick (Point wherePt)
 		return;
 	
 	SetPortWindowPort(linkWindow);
-	wherePt -= linkWindow->TopLeftCoord();
+	wherePt -= linkWindow->GetTopLeftCoord();
 	
 	part = FindControl(wherePt, linkWindow, &theControl);
 	if ((theControl != nil) && (part != 0))

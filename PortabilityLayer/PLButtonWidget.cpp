@@ -649,7 +649,7 @@ namespace PortabilityLayer
 			if (m_haveHighlightOverride != enabled)
 			{
 				m_haveHighlightOverride = enabled;
-				DrawControl(&m_window->m_surface);
+				DrawControl(m_window->GetDrawSurface());
 			}
 		}
 	}

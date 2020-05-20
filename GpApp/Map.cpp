@@ -237,7 +237,7 @@ void RedrawMapContents (void)
 					QSetRect(&src, 0, 0, kMapRoomWidth, kMapRoomHeight);
 					QOffsetRect(&src, 0, type * kMapRoomHeight);
 					CopyBits((BitMap *)*GetGWorldPixMap(nailSrcMap), 
-							GetPortBitMapForCopyBits(GetWindowPort(mapWindow)), 
+							GetPortBitMapForCopyBits(mapWindow->GetDrawSurface()),
 							&src, &aRoom, srcCopy);
 				}
 				
@@ -299,7 +299,7 @@ void RedrawMapContents (void)
 //--------------------------------------------------------------  UpdateMapWindow
 void DrawMapResizeBox(void)
 {
-	DrawSurface *surface = &mapWindow->m_surface;
+	DrawSurface *surface = mapWindow->GetDrawSurface();
 
 	const Rect windowRect = surface->m_port.GetRect();
 	Rect growBoxRect = Rect::Create(windowRect.bottom - 14, windowRect.right - 14, windowRect.bottom, windowRect.right);
@@ -625,7 +625,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 	
 	SetPortWindowPort(mapWindow);
 	globalWhere = wherePt;
-	wherePt -= mapWindow->TopLeftCoord();
+	wherePt -= mapWindow->GetTopLeftCoord();
 	wherePt.h -= 1;
 	wherePt.v -= 1;
 	

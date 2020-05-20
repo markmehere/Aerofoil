@@ -57,7 +57,7 @@ void PourScreenOn (Rect *theRect)
 			columnRects[i].bottom = theRect->bottom;
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+				GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()), 
 				&columnRects[i], &columnRects[i], srcCopy);
 				
 		QOffsetRect(&columnRects[i], 0, kChipHigh);
@@ -115,7 +115,7 @@ void WipeScreenOn (short direction, Rect *theRect)
 	for (i = 0; i < count; i++)
 	{
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
-				GetPortBitMapForCopyBits(GetWindowPort(mainWindow)), 
+				GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()), 
 				&wipeRect, &wipeRect, srcCopy);
 		
 		QOffsetRect(&wipeRect, hOffset, vOffset);
@@ -135,7 +135,7 @@ void WipeScreenOn (short direction, Rect *theRect)
 
 void DumpScreenOn (Rect *theRect)
 {
-	DrawSurface *graf = GetWindowPort(mainWindow);
+	DrawSurface *graf = mainWindow->GetDrawSurface();
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 			GetPortBitMapForCopyBits(graf),

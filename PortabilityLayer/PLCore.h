@@ -91,13 +91,17 @@ struct Window
 {
 	Window();
 
-	DrawSurface *GetDrawSurface() const;
+	void SetPosition(const PortabilityLayer::Vec2i &pos);
+	PortabilityLayer::Vec2i GetPosition() const;
 
 	// Convenience method to convert a mouse event to local point
 	Point MouseToLocal(const GpMouseInputEvent &evt) const;
 
 	// Convenience method that returns a 16-bit precision X/Y
-	Point TopLeftCoord() const;
+	Point GetTopLeftCoord() const;
+
+	// Returns the bounds rect of the draw surface (which is always 0,0 based
+	Rect GetSurfaceRect() const;
 
 	bool AddWidget(PortabilityLayer::Widget *widget);
 	ArrayView<PortabilityLayer::Widget*> GetWidgets() const;
@@ -112,14 +116,8 @@ struct Window
 
 	void OnTick();
 
+	DrawSurface *GetDrawSurface() const;
 	DrawSurface *GetChromeSurface(WindowChromeSide_t aChromeSide) const;
-
-	DrawSurface m_surface;	// Must be the first item until the immediate mode draw API is completely removed
-
-	// The port is always at 0,0
-	// These are the WM coordinates
-	int32_t m_wmX;
-	int32_t m_wmY;
 
 protected:
 	~Window();
@@ -129,6 +127,13 @@ protected:
 	PortabilityLayer::Widget **m_widgets;
 	size_t m_numWidgets;
 	size_t m_numTickReceivingWidgets;
+
+	DrawSurface m_surface;
+
+	// The surface is always at 0,0
+	// These are the WM coordinates
+	int32_t m_wmX;
+	int32_t m_wmY;
 
 	PortabilityLayer::Widget *m_widgetWithFocus;
 };

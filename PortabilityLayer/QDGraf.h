@@ -24,7 +24,7 @@ struct IGpDisplayDriver;
 struct IGpDisplayDriverSurface;
 class PLPasStr;
 
-struct DrawSurface final
+struct DrawSurface
 {
 	DrawSurface()
 		: m_port(PortabilityLayer::QDPortType_DrawSurface)
