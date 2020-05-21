@@ -614,20 +614,6 @@ Boolean ReadHouse (void)
 		YellowAlert(kYellowUnaccounted, 2);
 		return (false);
 	}
-	
-	if (gameDirty || fileDirty)
-	{
-		if (houseIsReadOnly)
-		{
-			if (!WriteScoresToDisk())
-			{
-				YellowAlert(kYellowFailedWrite, 0);
-				return(false);
-			}
-		}
-		else if (!WriteHouse(false))
-			return(false);
-	}
 
 	byteCount = houseStream->Size();
 	

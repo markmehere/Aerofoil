@@ -715,6 +715,8 @@ Boolean WriteScoresToDisk (void)
 
 	scoresStream->Close();
 
+	gameDirty = false;
+
 	return (true);
 }
 
