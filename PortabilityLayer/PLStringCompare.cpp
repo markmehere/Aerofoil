@@ -24,7 +24,7 @@ namespace StrCmp
 		const uint8_t *chars2 = string2.UChars();
 
 		const size_t len1 = string1.Length();
-		const size_t len2 = string1.Length();
+		const size_t len2 = string2.Length();
 
 		const size_t shorterLen = std::min(len1, len2);
 
