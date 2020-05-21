@@ -1102,7 +1102,7 @@ namespace PortabilityLayer
 
 		DetachWindow(window);
 
-		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == &windowImpl->GetDrawSurface()->m_port)
+		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == windowImpl->GetDrawSurface())
 			PortabilityLayer::QDManager::GetInstance()->SetPort(nullptr);
 
 		windowImpl->~WindowImpl();

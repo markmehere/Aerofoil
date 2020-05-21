@@ -315,115 +315,6 @@ void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent 
 	}
 }
 
-//--------------------------------------------------------------  HandleUpdateEvent
-// Handle an update event.
-
-#if 0
-void HandleUpdateEvent (EventRecord *theEvent)
-{	
-	if ((WindowPtr)theEvent->message == mainWindow)
-	{
-		SetPort((GrafPtr)mainWindow);
-		UpdateMainWindow();
-		EndUpdate(mainWindow);
-	}
-	else if ((WindowPtr)theEvent->message == mapWindow)
-	{
-		SetPort((GrafPtr)mapWindow);
-		UpdateMapWindow();
-		EndUpdate(mapWindow);
-	}
-	else if ((WindowPtr)theEvent->message == toolsWindow)
-	{
-		SetPort((GrafPtr)toolsWindow);
-		UpdateToolsWindow();
-		EndUpdate(toolsWindow);
-	}
-	else if ((WindowPtr)theEvent->message == linkWindow)
-	{
-		SetPort((GrafPtr)linkWindow);
-		UpdateLinkWindow();
-		EndUpdate(linkWindow);
-	}
-	else if ((WindowPtr)theEvent->message == coordWindow)
-	{
-		SetPort((GrafPtr)coordWindow);
-		UpdateCoordWindow();
-		EndUpdate(coordWindow);
-	}
-}
-
-//--------------------------------------------------------------  HandleOSEvent
-// Handle an OS Event (MultiFinder - user has switched in or out of app).
-
-void HandleOSEvent (EventRecord *theEvent)
-{
-	PLError_t		theErr;
-	short		buttonHit;
-	
-	if (theEvent->message & 0x01000000)		// suspend or resume event
-	{
-		if (theEvent->message & 0x00000001)	// resume event
-		{
-			if (WhatsOurDepth() != thisMac.isDepth)
-			{
-				buttonHit = BitchAboutColorDepth();
-				if (buttonHit == 1)			// player wants to Quit
-				{
-#ifndef COMPILEDEMO
-					if (QuerySaveChanges())
-						quitting = true;
-#else
-					quitting = true;
-#endif
-				}
-				else
-				{
-					SwitchToDepth(thisMac.isDepth, thisMac.wasColorOrGray);
-				}
-			}
-			switchedOut = false;
-			InitCursor();
-			if ((isPlayMusicIdle) && (theMode != kEditMode))
-			{
-				theErr = StartMusic();
-				if (theErr != PLErrors::kNone)
-				{
-					YellowAlert(kYellowNoMusic, theErr);
-					failedMusic = true;
-				}
-			}
-			incrementModeTime = TickCount() + kIdleSplashTicks;
-			
-#ifndef COMPILEDEMO
-//			if (theMode == kEditMode)
-//				SeeIfValidScrapAvailable(true);
-#endif
-		}
-		else								// suspend event
-		{
-			switchedOut = true;
-			InitCursor();
-			if ((isMusicOn) && (theMode != kEditMode))
-				StopTheMusic();
-		}
-	}
-}
-
-//--------------------------------------------------------------  HandleHighLevelEvent
-// Handle an AppleEvent (Open Document, Quit Application, etc.).
-
-void HandleHighLevelEvent (EventRecord *theEvent)
-{
-	PLError_t		theErr;
-	
-	theErr = AEProcessAppleEvent(theEvent);
-	if ((theErr != PLErrors::kNone) && (theErr != errAEEventNotHandled))
-		YellowAlert(kYellowAppleEventErr, theErr);
-}
-#endif
-
-
 //--------------------------------------------------------------  HandleSplashResolutionChange
 void HandleSplashResolutionChange(void)
 {
@@ -496,7 +387,7 @@ void HandleIdleTask (void)
 			HandleEditorResolutionChange();
 		}
 
-		SetPort(&mainWindow->GetDrawSurface()->m_port);
+		SetPort(mainWindow->GetDrawSurface());
 		DoMarquee();
 		
 		if ((autoRoomEdit) && (newRoomNow))

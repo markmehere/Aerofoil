@@ -58,16 +58,13 @@ private:
 typedef CIcon *CIconPtr;
 typedef CIconPtr *CIconHandle;
 
-typedef PortabilityLayer::QDPort GrafPort;
-typedef GrafPort *GrafPtr;
-
 typedef Byte Pattern[8];
 
-void GetPort(GrafPtr *graf);
-void SetPort(GrafPtr graf);
 void SetPortWindowPort(WindowPtr window);
 void SetPortDialogPort(Dialog *dialog);
 
+
+void SetPort(DrawSurface *graf);
 void EndUpdate(WindowPtr graf);
 
 void SetRect(Rect *rect, short left, short top, short right, short bottom);

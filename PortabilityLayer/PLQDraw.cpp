@@ -38,13 +38,7 @@ static inline void InvertPixel8(uint8_t &pixel)
 	pixel = 255 ^ pixel;
 }
 
-
-void GetPort(GrafPtr *graf)
-{
-	PL_NotYetImplemented();
-}
-
-void SetPort(GrafPtr graf)
+void SetPort(DrawSurface *graf)
 {
 	PortabilityLayer::QDManager::GetInstance()->SetPort(graf);
 }
@@ -65,7 +59,7 @@ void SetRect(Rect *rect, short left, short top, short right, short bottom)
 void SetPortWindowPort(WindowPtr window)
 {
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
-	PortabilityLayer::QDManager::GetInstance()->SetPort(&window->GetDrawSurface()->m_port);
+	PortabilityLayer::QDManager::GetInstance()->SetPort(window->GetDrawSurface());
 }
 
 void SetPortDialogPort(Dialog *dialog)

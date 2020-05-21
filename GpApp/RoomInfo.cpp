@@ -465,7 +465,7 @@ void DoRoomInfo(void)
 	roomInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kRoomInfoDialogID, kPutInFront, &substitutions);
 	if (roomInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort(&roomInfoDialog->GetWindow()->GetDrawSurface()->m_port);
+	SetPort(roomInfoDialog->GetWindow()->GetDrawSurface());
 
 	{
 		PortabilityLayer::WidgetBasicState state;

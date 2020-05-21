@@ -66,7 +66,6 @@ void UpdateCoordWindow (void)
 {
 #ifndef COMPILEDEMO
 	Str255		tempStr, numStr;
-	GrafPtr		wasPort;
 	
 	if (coordWindow == nil)
 		return;

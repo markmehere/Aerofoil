@@ -98,11 +98,10 @@ struct DrawSurface
 
 	PortabilityLayer::RenderedFont *ResolveFont(bool aa) const;
 
-	// Must be the first item
-	PortabilityLayer::QDPort m_port;
-
 	IGpDisplayDriverSurface *m_ddSurface;
 
 	PortabilityLayer::AntiAliasTable *m_cachedAATable;
 	PortabilityLayer::RGBAColor m_cachedAAColor;
+
+	PortabilityLayer::QDPort m_port;
 };

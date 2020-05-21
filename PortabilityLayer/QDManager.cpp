@@ -16,8 +16,8 @@ namespace PortabilityLayer
 		QDManagerImpl();
 
 		void Init() override;
-		QDPort *GetPort() const override;
-		void SetPort(QDPort *gw) override;
+		DrawSurface *GetPort() const override;
+		void SetPort(DrawSurface *gw) override;
 		PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) override;
 		void DisposeGWorld(DrawSurface *gw) override;
 		QDState *GetState() override;
@@ -25,7 +25,7 @@ namespace PortabilityLayer
 		static QDManagerImpl *GetInstance();
 
 	private:
-		QDPort *m_port;
+		DrawSurface *m_port;
 
 		static QDManagerImpl ms_instance;
 	};
@@ -39,16 +39,16 @@ namespace PortabilityLayer
 	{
 	}
 
-	QDPort *QDManagerImpl::GetPort() const
+	DrawSurface *QDManagerImpl::GetPort() const
 	{
 		return m_port;
 	}
 
-	void QDManagerImpl::SetPort(QDPort *gw)
+	void QDManagerImpl::SetPort(DrawSurface *gw)
 	{
 #if GP_DEBUG_CONFIG
 		if (gw)
-			gw->CheckPortSentinel();
+			gw->m_port.CheckPortSentinel();
 #endif
 
 		m_port = gw;
@@ -83,7 +83,7 @@ namespace PortabilityLayer
 
 	QDState *QDManagerImpl::GetState()
 	{
-		return m_port->GetState();
+		return m_port->m_port.GetState();
 	}
 
 	QDManagerImpl *QDManagerImpl::GetInstance()

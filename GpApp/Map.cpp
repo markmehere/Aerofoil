@@ -415,7 +415,7 @@ void OpenMapWindow (void)
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(mapWindow);
 //		FlagWindowFloating(mapWindow);	TEMP - use flaoting windows
 		
-		SetPort(&mapWindow->GetDrawSurface()->m_port);
+		SetPort(mapWindow->GetDrawSurface());
 		QSetRect(&mapHScrollRect, -1, mapRoomsHigh * kMapRoomHeight, 
 				mapRoomsWide * kMapRoomWidth + 1, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth);

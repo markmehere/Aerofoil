@@ -71,7 +71,7 @@ void DoHighScores (void)
 	Rect		tempRect;
 	
 	SpinCursor(3);
-	SetPort(&workSrcMap->m_port);
+	SetPort(workSrcMap);
 	workSrcMap->SetForeColor(StdColors::Black());
 	workSrcMap->FillRect(workSrcRect);
 	QSetRect(&tempRect, 0, 0, 640, 480);

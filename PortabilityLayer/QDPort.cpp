@@ -35,7 +35,7 @@ namespace PortabilityLayer
 	{
 #if GP_DEBUG_CONFIG
 		// Detach the port BEFORE destroying it!!
-		assert(PortabilityLayer::QDManager::GetInstance()->GetPort() != this);
+		assert(&PortabilityLayer::QDManager::GetInstance()->GetPort()->m_port != this);
 #endif
 
 		DisposePixMap();

@@ -200,7 +200,7 @@ void EraseSelectedTool (void)
 	if (toolsWindow == nil)
 		return;
 	
-	SetPort(&toolsWindow->GetDrawSurface()->m_port);
+	SetPort(toolsWindow->GetDrawSurface());
 	
 	toolIcon = toolSelected;
 	if ((toolMode == kBlowerMode) && (toolIcon >= 7))

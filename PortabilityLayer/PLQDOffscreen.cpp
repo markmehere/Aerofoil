@@ -46,15 +46,10 @@ void OffsetRect(Rect *rect, int right, int down)
 
 DrawSurface *GetGraphicsPort()
 {
-	PortabilityLayer::QDPort *port = PortabilityLayer::QDManager::GetInstance()->GetPort();
-
-	DrawSurface *grafPtr = reinterpret_cast<DrawSurface *>(port);
-	assert(&grafPtr->m_port == port);
-
-	return grafPtr;
+	return PortabilityLayer::QDManager::GetInstance()->GetPort();
 }
 
 void SetGraphicsPort(DrawSurface *gw)
 {
-	PortabilityLayer::QDManager::GetInstance()->SetPort(&gw->m_port);
+	PortabilityLayer::QDManager::GetInstance()->SetPort(gw);
 }
