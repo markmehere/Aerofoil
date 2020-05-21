@@ -204,8 +204,6 @@ void OpenMainWindow (void)
 		ShowWindow(mainWindow);
 
 		DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
-
-		mainWindowSurface->SetClipRect(mainWindowRect);
 		
 		whichRoom = GetFirstRoomNumber();
 		CopyRoomToThisRoom(whichRoom);
@@ -252,7 +250,6 @@ void OpenMainWindow (void)
 
 		DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 
-		mainWindowSurface->SetClipRect(mainWindowRect);
 //		CopyRgn(mainWindow->clipRgn, mainWindow->visRgn);
 
 		mainWindowSurface->FillRect(mainWindowRect, blackColor);

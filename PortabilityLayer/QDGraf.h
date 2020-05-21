@@ -88,9 +88,6 @@ struct DrawSurface
 
 	void DrawPicture(THandle<BitmapImage> pictHandle, const Rect &rect);
 
-	Rect GetClipRect() const;
-	void SetClipRect(const Rect &rect);
-
 	PortabilityLayer::RenderedFont *ResolveFont(bool aa) const;
 
 	IGpDisplayDriverSurface *m_ddSurface;

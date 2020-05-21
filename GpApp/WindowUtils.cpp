@@ -126,7 +126,6 @@ void OpenMessageWindow (const PLPasStr &title)
 
 		DrawSurface *surface = mssgWindow->GetDrawSurface();
 
-		surface->SetClipRect(mssgWindowRect);
 		surface->SetSystemFont(12, 0);
 	}
 

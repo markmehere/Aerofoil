@@ -732,16 +732,6 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-Rect DrawSurface::GetClipRect() const
-{
-	return m_port.GetState()->m_clipRect;
-}
-
-void DrawSurface::SetClipRect(const Rect &rect)
-{
-	m_port.GetState()->m_clipRect = rect;;
-}
-
 PortabilityLayer::RenderedFont *DrawSurface::ResolveFont(bool aa) const
 {
 	const PortabilityLayer::QDState *qdState = m_port.GetState();

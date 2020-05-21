@@ -206,9 +206,6 @@ void RedrawMapContents (void)
 	newClip.bottom = mapWindowRect.bottom + 2 - kMapScrollBarWidth;
 
 	DrawSurface *surface = mapWindow->GetDrawSurface();
-
-	const Rect wasClip = surface->GetClipRect();
-	surface->SetClipRect(newClip);
 	
 	for (i = 0; i < mapRoomsHigh; i++)
 	{
@@ -291,8 +288,6 @@ void RedrawMapContents (void)
 		surface->FrameRect(activeRoomRect, redColor);
 		InsetRect(&activeRoomRect, -1, -1);
 	}
-	
-	surface->SetClipRect(wasClip);
 }
 #endif
 
