@@ -4,7 +4,6 @@
 #include "GpPixelFormat.h"
 #include "PLErrorCodes.h"
 #include "PLHandle.h"
-#include "QDState.h"
 
 struct PixMap;
 struct Rect;
@@ -37,8 +36,6 @@ namespace PortabilityLayer
 		QDPortType GetPortType() const;
 
 		THandle<PixMap> GetPixMap() const;
-		const QDState *GetState() const;
-		QDState *GetState();
 		GpPixelFormat_t GetPixelFormat() const;
 		Rect GetRect() const;
 
@@ -61,7 +58,6 @@ namespace PortabilityLayer
 
 		QDPortType m_portType;
 
-		QDState m_state;
 		THandle<PixMapImpl> m_pixMap;
 
 		int16_t m_left;

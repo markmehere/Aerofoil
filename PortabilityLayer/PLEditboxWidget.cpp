@@ -8,6 +8,7 @@
 #include "RenderedFont.h"
 #include "RenderedFontMetrics.h"
 #include "PLKeyEncoding.h"
+#include "PLQDraw.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "ResolveCachingColor.h"
@@ -70,9 +71,9 @@ namespace PortabilityLayer
 		surface->FillRect(outerRect, blackColor);
 		surface->FillRect(innerRect, whiteColor);
 
-		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_None);
-		int32_t ascender = surface->MeasureFontAscender();
-		int32_t lineGap = surface->MeasureFontLineGap();
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_None, true);
+		int32_t ascender = sysFont->GetMetrics().m_ascent;
+		int32_t lineGap = sysFont->GetMetrics().m_linegap;
 
 		const PLPasStr str = this->GetString();
 
@@ -85,20 +86,20 @@ namespace PortabilityLayer
 		Vec2i basePoint = ResolveBasePoint();
 
 		if (m_hasFocus && m_selStartChar != m_selEndChar)
-			DrawSelection(surface, basePoint);
+			DrawSelection(surface, basePoint, sysFont);
 
 		int32_t verticalOffset = (ascender + lineGap + 1) / 2;
 
 		const Point stringBasePoint = Point::Create(basePoint.m_x, basePoint.m_y + verticalOffset);
 
 		if (m_isMultiLine)
-			surface->DrawStringWrap(stringBasePoint, m_rect, this->GetString(), true, blackColor);
+			surface->DrawStringWrap(stringBasePoint, m_rect, this->GetString(), blackColor, sysFont);
 		else
-			surface->DrawStringConstrained(stringBasePoint, this->GetString(), true, m_rect, blackColor);
+			surface->DrawStringConstrained(stringBasePoint, this->GetString(), m_rect, blackColor, sysFont);
 
 		if (m_hasFocus && m_selEndChar == m_selStartChar && m_caratTimer < kCaratBlinkRate)
 		{
-			PortabilityLayer::Vec2i caratPos = ResolveCaratPos(basePoint, surface->ResolveFont(true));
+			PortabilityLayer::Vec2i caratPos = ResolveCaratPos(basePoint, sysFont);
 
 			int32_t caratTop = caratPos.m_y;
 			int32_t caratBottom = caratTop + lineGap;
@@ -654,9 +655,8 @@ namespace PortabilityLayer
 		return WidgetHandleStates::kCaptured;
 	}
 
-	void EditboxWidget::DrawSelection(DrawSurface *surface, const Vec2i &basePoint) const
+	void EditboxWidget::DrawSelection(DrawSurface *surface, const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const
 	{
-		PortabilityLayer::RenderedFont *rfont = surface->ResolveFont(true);
 		PortabilityLayer::TextPlacer placer(basePoint, m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
 
 #if 0

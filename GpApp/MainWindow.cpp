@@ -70,20 +70,20 @@ void DrawOnSplash(DrawSurface *surface)
 	if ((thisMac.hasQT) && (hasMovie))
 		PasStringConcat(houseLoadedStr, PSTR(" (TV)"));
 
-	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	const Point textPoint = Point::Create(splashOriginH + 436, splashOriginV + 314);
 	if (thisMac.isDepth == 4)
 	{
 		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
-		surface->DrawString(textPoint, houseLoadedStr, true, whiteColor);
+		surface->DrawString(textPoint, houseLoadedStr, whiteColor, appFont);
 	}
 	else
 	{
 		if (houseIsReadOnly)
-			ColorText(surface, textPoint, houseLoadedStr, 5L);
+			ColorText(surface, textPoint, houseLoadedStr, 5L, appFont);
 		else
-			ColorText(surface, textPoint, houseLoadedStr, 28L);
+			ColorText(surface, textPoint, houseLoadedStr, 28L, appFont);
 	}
 	
 	#if defined(powerc) || defined(__powerc)

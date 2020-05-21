@@ -14,6 +14,8 @@
 #include "FontManager.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "Room.h"
 #include "Utilities.h"
@@ -120,16 +122,15 @@ void DrawBannerMessage (Point topLeft)
 
 	PasStringCopy((*thisHouse)->banner, bannerStr);
 
-	workSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
-
 
 	count = 0;
 	do
 	{
 		GetLineOfText(bannerStr, count, subStr);
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr, true, blackColor);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr, blackColor, appFont);
 		count++;
 	}
 	while (subStr[0] > 0);
@@ -151,10 +152,10 @@ void DrawBannerMessage (Point topLeft)
 		PasStringConcat(bannerStr, subStr);
 
 		PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr, true, redColor);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr, redColor, appFont);
 
 		GetLocalizedString(5, subStr);
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr, true, redColor);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr, redColor, appFont);
 	}
 
 	SetGraphicsPort(wasGWorld);
@@ -226,7 +227,7 @@ void DisplayStarsRemaining(void)
 
 	DrawSurface *surface = starsWindow->GetDrawSurface();
 
-	surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	NumToString((long)numStarsRemaining, theStr);
 
@@ -235,8 +236,8 @@ void DisplayStarsRemaining(void)
 	else
 	{
 		LoadScaledGraphic(surface, kStarsRemainingPICT, &bounds);
-		const Point textPoint = Point::Create(bounds.left + 102 - (surface->MeasureString(theStr) / 2), bounds.top + 23);
-		ColorText(surface, textPoint, theStr, 4L);
+		const Point textPoint = Point::Create(bounds.left + 102 - (appFont->MeasurePStr(theStr) / 2), bounds.top + 23);
+		ColorText(surface, textPoint, theStr, 4L, appFont);
 	}
 
 	if (doZooms)

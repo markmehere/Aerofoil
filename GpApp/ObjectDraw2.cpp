@@ -15,6 +15,7 @@
 #include "Environ.h"
 #include "Objects.h"
 #include "RectUtils.h"
+#include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "ResourceManager.h"
 #include "Room.h"
@@ -1061,13 +1062,13 @@ void DrawCalendar (Rect *theRect)
 	backSrcMap->DrawPicture(thePicture, bounds);
 	thePicture.Dispose();
 
-	backSrcMap->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	GetTime(&timeRec);
 	GetIndString(monthStr, kMonthStringID, timeRec.month);
 
-	const Point textPos = Point::Create(theRect->left + ((64 - backSrcMap->MeasureString(monthStr)) / 2), theRect->top + 55);
-	ColorText(backSrcMap, textPos, monthStr, kDarkFleshColor);
+	const Point textPos = Point::Create(theRect->left + ((64 - appFont->MeasurePStr(monthStr)) / 2), theRect->top + 55);
+	ColorText(backSrcMap, textPos, monthStr, kDarkFleshColor, appFont);
 }
 
 //--------------------------------------------------------------  DrawBulletin

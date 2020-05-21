@@ -7,6 +7,7 @@
 
 #include "PLPasStr.h"
 #include "Externs.h"
+#include "RenderedFont.h"
 
 #include <string.h>
 
@@ -275,17 +276,17 @@ void GetFirstWordOfString (StringPtr stringIn, StringPtr stringOut)
 // font.  If the text would exceed our width limit, charactersÉ
 // are dropped off the end of the string and "É" appended.
 
-void CollapseStringToWidth (DrawSurface *surface, StringPtr theStr, short wide)
+void CollapseStringToWidth (PortabilityLayer::RenderedFont *font, StringPtr theStr, short wide)
 {
 	short		dotsWide;
 	Boolean 	tooWide;
 	
-	dotsWide = surface->MeasureString(PSTR("É"));
-	tooWide = surface->MeasureString(theStr) > wide;
-	while (tooWide)
+	dotsWide = font->MeasurePStr(PSTR("É"));
+	tooWide = font->MeasurePStr(theStr) > wide;
+	while (tooWide && theStr[0] > 0)
 	{
 		theStr[0]--;
-		tooWide = ((surface->MeasureString(theStr) + dotsWide) > wide);
+		tooWide = ((font->MeasurePStr(theStr) + dotsWide) > wide);
 		if (!tooWide)
 			PasStringConcat(theStr, PSTR("É"));
 	}

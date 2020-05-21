@@ -59,7 +59,7 @@ namespace PortabilityLayer
 
 		WidgetHandleState_t HandleDragSelection(const TimeTaggedVOSEvent &evt);
 
-		void DrawSelection(DrawSurface *surface, const Vec2i &basePoint) const;
+		void DrawSelection(DrawSurface *surface, const Vec2i &basePoint, PortabilityLayer::RenderedFont *font) const;
 
 		Vec2i ResolveCaratPos(const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const;
 		Vec2i ResolveBasePoint() const;

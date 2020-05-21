@@ -243,9 +243,6 @@
     <ClInclude Include="QDRegion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="QDState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ResourceCompiledTypeList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -603,9 +600,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QDPictHeader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="QDState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QDPictDecoder.cpp">

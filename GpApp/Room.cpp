@@ -252,13 +252,13 @@ void ReadyBackground (short theID, short *theTiles)
 
 		workSrcMap->FillRect(workSrcRect, ltGrayColor);
 
-		workSrcMap->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
+		PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
 
 		const Point textPoint = Point::Create(10, 20);
 		if (houseUnlocked)
-			workSrcMap->DrawString(textPoint, PSTR("No rooms"), true, blackColor);
+			workSrcMap->DrawString(textPoint, PSTR("No rooms"), blackColor, appFont);
 		else
-			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"), true, blackColor);
+			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"), blackColor, appFont);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 

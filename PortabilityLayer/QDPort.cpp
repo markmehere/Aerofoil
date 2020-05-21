@@ -102,16 +102,6 @@ namespace PortabilityLayer
 		return m_pixMap.ImplicitCast<PixMap>();
 	}
 
-	const QDState *QDPort::GetState() const
-	{
-		return &m_state;
-	}
-
-	QDState *QDPort::GetState()
-	{
-		return &m_state;
-	}
-
 	GpPixelFormat_t QDPort::GetPixelFormat() const
 	{
 		return m_pixelFormat;

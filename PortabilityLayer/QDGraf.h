@@ -4,8 +4,8 @@
 
 #include "GpPixelFormat.h"
 #include "PLHandle.h"
-#include "QDState.h"
 #include "QDPort.h"
+#include "RGBAColor.h"
 
 namespace PortabilityLayer
 {
@@ -15,6 +15,7 @@ namespace PortabilityLayer
 	class RenderedFont;
 	class ResolveCachingColor;
 	class ScanlineMask;
+	class FontSpec;
 }
 
 struct PixMap;
@@ -76,19 +77,11 @@ struct DrawSurface
 
 	void DrawLine(const Point &a, const Point &b, PortabilityLayer::ResolveCachingColor &cacheColor);
 
-	void SetApplicationFont(int size, int variationFlags);
-	void SetSystemFont(int size, int variationFlags);
-	void DrawString(const Point &point, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor);
-	void DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor);
-	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor);
-
-	size_t MeasureString(const PLPasStr &str);
-	int32_t MeasureFontAscender();
-	int32_t MeasureFontLineGap();
+	void DrawString(const Point &point, const PLPasStr &str, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *font);
+	void DrawStringConstrained(const Point &point, const PLPasStr &str, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *font);
+	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *font);
 
 	void DrawPicture(THandle<BitmapImage> pictHandle, const Rect &rect);
-
-	PortabilityLayer::RenderedFont *ResolveFont(bool aa) const;
 
 	IGpDisplayDriverSurface *m_ddSurface;
 

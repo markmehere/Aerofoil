@@ -19,6 +19,7 @@
 #include "Objects.h"
 #include "PLStandardColors.h"
 #include "RectUtils.h"
+#include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "Utilities.h"
 
@@ -108,16 +109,16 @@ void SetUpFinalScreen (void)
 	{
 		GetLineOfText(tempStr, count, subStr);
 
-		surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+		PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
 		offset = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) -
-				surface->MeasureString(subStr)) / 2;
+				appFont->MeasurePStr(subStr)) / 2;
 
 		const Point textShadowPos = Point::Create(offset + 1, textDown + 33 + (count * 20));
 
-		surface->DrawString(textShadowPos, subStr, true, blackColor);
+		surface->DrawString(textShadowPos, subStr, blackColor, appFont);
 
 		const Point textPos = Point::Create(offset, textDown + 32 + (count * 20));
-		surface->DrawString(textPos, subStr, true, whiteColor);
+		surface->DrawString(textPos, subStr, whiteColor, appFont);
 		count++;
 	}
 	while (subStr[0] > 0);

@@ -10,11 +10,13 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontFamily.h"
 #include "MenuManager.h"
 #include "PLStandardColors.h"
 #include "QDPixMap.h"
 #include "QDStandardPalette.h"
 #include "RectUtils.h"
+#include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 
 
@@ -164,33 +166,35 @@ void RefreshRoomTitle (short mode)
 	const Point strShadowPoint = Point::Create(1, 10);
 	const Point strPoint = Point::Create(0, 9);
 
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
 	switch (mode)
 	{
 		case kEscapedTitleMode:
-		surface->DrawString(strShadowPoint, PSTR("Hit Delete key if unable to Follow"), true, blackColor);
+		surface->DrawString(strShadowPoint, PSTR("Hit Delete key if unable to Follow"), blackColor, appFont);
 		break;
 		
 		case kSavingTitleMode:
-		surface->DrawString(strShadowPoint, PSTR("Saving GameÉ"), true, blackColor);
+		surface->DrawString(strShadowPoint, PSTR("Saving GameÉ"), blackColor, appFont);
 		break;
 		
 		default:
-		surface->DrawString(strShadowPoint, thisRoom->name, true, blackColor);
+		surface->DrawString(strShadowPoint, thisRoom->name, blackColor, appFont);
 		break;
 	}
 
 	switch (mode)
 	{
 		case kEscapedTitleMode:
-		surface->DrawString(strPoint, PSTR("Hit Delete key if unable to Follow"), true, whiteColor);
+		surface->DrawString(strPoint, PSTR("Hit Delete key if unable to Follow"), whiteColor, appFont);
 		break;
 		
 		case kSavingTitleMode:
-		surface->DrawString(strPoint, PSTR("Saving GameÉ"), true, whiteColor);
+		surface->DrawString(strPoint, PSTR("Saving GameÉ"), whiteColor, appFont);
 		break;
 		
 		default:
-		surface->DrawString(strPoint, thisRoom->name, true, whiteColor);
+		surface->DrawString(strPoint, thisRoom->name, whiteColor, appFont);
 		break;
 	}
 	
@@ -207,6 +211,8 @@ void RefreshNumGliders (void)
 	long		displayMortals;
 	DrawSurface	*surface = boardGSrcMap;
 
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
 	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
@@ -221,8 +227,8 @@ void RefreshNumGliders (void)
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->DrawString(shadowPoint, nGlidersStr, true, blackColor);
-	surface->DrawString(textPoint, nGlidersStr, true, whiteColor);
+	surface->DrawString(shadowPoint, nGlidersStr, blackColor, appFont);
+	surface->DrawString(textPoint, nGlidersStr, whiteColor, appFont);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -240,6 +246,8 @@ void RefreshPoints (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
 	surface->FillRect(boardPSrcRect, theRGBColor);
 	
 	NumToString(theScore, scoreStr);
@@ -247,8 +255,8 @@ void RefreshPoints (void)
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->DrawString(shadowPoint, scoreStr, true, blackColor);
-	surface->DrawString(textPoint, scoreStr, true, whiteColor);
+	surface->DrawString(shadowPoint, scoreStr, blackColor, appFont);
+	surface->DrawString(textPoint, scoreStr, whiteColor, appFont);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -268,6 +276,8 @@ void QuickGlidersRefresh (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
 	surface->FillRect(boardGSrcRect, theRGBColor);
 	
 	NumToString((long)mortals, nGlidersStr);
@@ -275,8 +285,8 @@ void QuickGlidersRefresh (void)
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->DrawString(shadowPoint, nGlidersStr, true, blackColor);
-	surface->DrawString(textPoint, nGlidersStr, true, whiteColor);
+	surface->DrawString(shadowPoint, nGlidersStr, blackColor, appFont);
+	surface->DrawString(textPoint, nGlidersStr, whiteColor, appFont);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			GetPortBitMapForCopyBits(boardWindow->GetDrawSurface()),
@@ -296,6 +306,8 @@ void QuickScoreRefresh (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
 	surface->FillRect(boardPSrcRect, theRGBColor);
 	
 	NumToString(displayedScore, scoreStr);
@@ -303,8 +315,8 @@ void QuickScoreRefresh (void)
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->DrawString(shadowPoint, scoreStr, true, blackColor);
-	surface->DrawString(textPoint, scoreStr, true, whiteColor);
+	surface->DrawString(shadowPoint, scoreStr, blackColor, appFont);
+	surface->DrawString(textPoint, scoreStr, whiteColor, appFont);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			GetPortBitMapForCopyBits(boardWindow->GetDrawSurface()),

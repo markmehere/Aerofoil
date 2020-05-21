@@ -18,6 +18,7 @@ namespace PortabilityLayer
 	class ScanlineMask;
 	class ResTypeID;
 	struct RGBAColor;
+	class RenderedFont;
 }
 
 #define kPreferredDepth				8
@@ -134,7 +135,7 @@ void DecrementCursor (void);
 void SpinCursor (short);
 void BackSpinCursor (short);
 
-void ColorText (DrawSurface *surface, const Point &, StringPtr, long);						// --- ColorUtils.c
+void ColorText (DrawSurface *surface, const Point &, StringPtr, long, PortabilityLayer::RenderedFont *font);						// --- ColorUtils.c
 void ColorRect (DrawSurface *surface, const Rect &, long);
 void ColorOval (DrawSurface *surface, const Rect &, long);
 void ColorOvalMaskPattern (DrawSurface *surface, const Rect &, long, const uint8_t *);
@@ -189,7 +190,7 @@ void PasStringConcat (StringPtr, const PLPasStr &);
 void GetLineOfText (StringPtr, short, StringPtr);
 void WrapText (StringPtr, short);
 void GetFirstWordOfString (StringPtr, StringPtr);
-void CollapseStringToWidth (DrawSurface *, StringPtr, short);
+void CollapseStringToWidth (PortabilityLayer::RenderedFont *, StringPtr, short);
 void GetChooserName (StringPtr);
 StringPtr GetLocalizedString (short, StringPtr);
 

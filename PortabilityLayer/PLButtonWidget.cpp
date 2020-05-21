@@ -4,7 +4,10 @@
 #include "PLRegions.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLStandardColors.h"
+#include "PLQDraw.h"
 #include "FontFamily.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "SimpleGraphic.h"
 
@@ -442,10 +445,11 @@ namespace PortabilityLayer
 
 		ResolveCachingColor textCacheColor = textColor;
 
-		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
-		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;
-		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(surface->MeasureFontAscender())) / 2;
-		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), true, textCacheColor);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
+		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(sysFont->MeasureString(reinterpret_cast<const uint8_t*>(m_text.UnsafeCharPtr()), m_text.Length()))) / 2;
+		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(sysFont->GetMetrics().m_ascent)) / 2;
+		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), textCacheColor, sysFont);
 	}
 
 	void ButtonWidget::DrawAsCheck(DrawSurface *surface, bool inverted)
@@ -531,9 +535,9 @@ namespace PortabilityLayer
 			}
 		}
 
-		surface->SetSystemFont(12, FontFamilyFlag_Bold);
-		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
-		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true, *textColor);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, FontFamilyFlag_Bold, true);
+		int32_t textV = (m_rect.top + m_rect.bottom + sysFont->GetMetrics().m_ascent) / 2;
+		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), *textColor, sysFont);
 	}
 
 
@@ -592,9 +596,9 @@ namespace PortabilityLayer
 			}
 		}
 
-		surface->SetSystemFont(12, FontFamilyFlag_Bold);
-		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
-		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true, *textColor);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, FontFamilyFlag_Bold, true);
+		int32_t textV = (m_rect.top + m_rect.bottom + sysFont->GetMetrics().m_ascent) / 2;
+		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), *textColor, sysFont);
 	}
 
 	void ButtonWidget::DrawDefaultButtonChrome(const Rect &rectRef, DrawSurface *surface)

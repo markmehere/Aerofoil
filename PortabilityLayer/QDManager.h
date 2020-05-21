@@ -10,7 +10,6 @@ struct Rect;
 namespace PortabilityLayer
 {
 	class QDPort;
-	struct QDState;
 
 	class QDManager
 	{
@@ -20,8 +19,6 @@ namespace PortabilityLayer
 		virtual void SetPort(DrawSurface *gw) = 0;
 		virtual PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) = 0;
 		virtual void DisposeGWorld(DrawSurface *gw) = 0;
-
-		virtual QDState *GetState() = 0;
 
 		static QDManager *GetInstance();
 	};

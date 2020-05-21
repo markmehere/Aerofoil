@@ -71,10 +71,11 @@ void UpdateCoordWindow (void)
 	if (coordWindow == nil)
 		return;
 
-
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	PortabilityLayer::ResolveCachingColor blueColor = StdColors::Blue();
+
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, 0, true);
 
 	DrawSurface *surface = coordWindow->GetDrawSurface();
 
@@ -89,7 +90,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(5, 12), tempStr, true, blackColor);
+	surface->DrawString(Point::Create(5, 12), tempStr, blackColor, appFont);
 	
 	PasStringCopy(PSTR("v: "), tempStr);
 	if (coordV != -1)
@@ -100,7 +101,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(4, 22), tempStr, true, blackColor);
+	surface->DrawString(Point::Create(4, 22), tempStr, blackColor, appFont);
 	
 	PasStringCopy(PSTR("d: "), tempStr);
 	if (coordD != -1)
@@ -111,7 +112,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(5, 32), tempStr, true, blueColor);
+	surface->DrawString(Point::Create(5, 32), tempStr, blueColor, appFont);
 #endif
 }
 
@@ -157,8 +158,6 @@ void OpenCoordWindow (void)
 		coordV = -1;
 		coordD = -1;
 
-		coordWindow->GetDrawSurface()->SetApplicationFont(9, 0);
-		
 		if (objActive != kNoObjectSelected)
 		{
 			if (ObjectHasHandle(&direction, &dist))

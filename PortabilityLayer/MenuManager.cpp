@@ -811,8 +811,6 @@ namespace PortabilityLayer
 
 		SetGraphicsPort(m_menuBarGraf);
 
-		PortabilityLayer::QDState *qdState = qdManager->GetState();
-
 		ResolveCachingColor barMidColor = gs_barMidColor;
 
 		graf->FillRect(menuRect, barMidColor);
@@ -894,7 +892,7 @@ namespace PortabilityLayer
 
 		// Text items
 		ResolveCachingColor barNormalTextColor = gs_barNormalTextColor;
-		m_menuBarGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 		{
 			Menu **menuHdl = m_firstMenu;
@@ -916,7 +914,7 @@ namespace PortabilityLayer
 						if (menuHdl != selectedMenuHdl)
 						{
 							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
-							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true, barNormalTextColor);
+							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barNormalTextColor, sysFont);
 						}
 					}
 				}
@@ -936,7 +934,7 @@ namespace PortabilityLayer
 				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
 
 				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
-				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true, barHighlightTextColor);
+				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barHighlightTextColor, sysFont);
 			}
 		}
 
@@ -1375,8 +1373,6 @@ namespace PortabilityLayer
 
 		SetGraphicsPort(m_menuGraf);
 
-		QDState *qdState = qdManager->GetState();
-
 		ResolveCachingColor barMidColor = gs_barMidColor;
 
 		{
@@ -1394,7 +1390,7 @@ namespace PortabilityLayer
 			surface->FillRect(Rect::Create(menu->layoutFinalHeight - 1, 1, menu->layoutFinalHeight, menu->layoutWidth - 1), darkGrayColor);
 		}
 
-		m_menuGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
 
@@ -1425,7 +1421,7 @@ namespace PortabilityLayer
 				else
 					itemTextAndCheckColor = gs_barDisabledTextColor;
 
-				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true, itemTextAndCheckColor);
+				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), itemTextAndCheckColor, sysFont);
 
 				if (item.key)
 				{
@@ -1433,7 +1429,7 @@ namespace PortabilityLayer
 
 					uint8_t hintText[kHintTextCapacity];
 					const size_t hintLength = FormatHintText(hintText, item.key);
-					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true, itemTextAndCheckColor);
+					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), itemTextAndCheckColor, sysFont);
 				}
 
 				if (item.checked)
@@ -1465,7 +1461,7 @@ namespace PortabilityLayer
 
 			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true, barHighlightTextColor);
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), barHighlightTextColor, sysFont);
 
 			if (item.key)
 			{
@@ -1473,7 +1469,7 @@ namespace PortabilityLayer
 
 				uint8_t hintText[kHintTextCapacity];
 				const size_t hintLength = FormatHintText(hintText, item.key);
-				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true, barHighlightTextColor);
+				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), barHighlightTextColor, sysFont);
 
 				if (item.checked)
 					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset), barHighlightTextColor);

@@ -3,8 +3,11 @@
 #include "MenuManager.h"
 #include "PLMenus.h"
 #include "PLPasStr.h"
+#include "PLQDraw.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "FontFamily.h"
 #include "Vec2i.h"
@@ -100,10 +103,10 @@ namespace PortabilityLayer
 		Rect textRect = innerRect;
 		textRect.right -= 11;
 
-		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
-		Point basePoint = Point::Create(textRect.left + 2, (textRect.top + textRect.bottom + surface->MeasureFontAscender() + 1) / 2 - 1);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+		Point basePoint = Point::Create(textRect.left + 2, (textRect.top + textRect.bottom + sysFont->GetMetrics().m_ascent + 1) / 2 - 1);
 
-		surface->DrawStringConstrained(basePoint, GetString(), true, textRect, blackColor);
+		surface->DrawStringConstrained(basePoint, GetString(), textRect, blackColor, sysFont);
 
 		Point arrowMidPoint = Point::Create(textRect.right + 5, (textRect.top + textRect.bottom + 1) / 2);
 

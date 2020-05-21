@@ -16,6 +16,8 @@
 #include "QDPixMap.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "Rect2i.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
@@ -447,16 +449,16 @@ namespace PortabilityLayer
 		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
 			RenderChromeCloseBox(surface, rect, false);
 
-		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold);
-		int32_t ascender = surface->MeasureFontAscender();
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
+		int32_t ascender = sysFont->GetMetrics().m_ascent;
 
 		const PLPasStr titlePStr = window->GetTitle().ToShortStr();
-		size_t titleWidth = surface->MeasureString(titlePStr);
+		size_t titleWidth = sysFont->MeasureString(titlePStr.UChars(), titlePStr.Length());
 
 		int32_t titleH = (rect.left + rect.right - static_cast<int32_t>(titleWidth) + 1) / 2;
 		int32_t titleV = (rect.top + rect.bottom + ascender + 1) / 2;
 
-		surface->DrawString(Point::Create(titleH, titleV), titlePStr, true, blackColor);
+		surface->DrawString(Point::Create(titleH, titleV), titlePStr, blackColor, sysFont);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeLeft(WindowImpl *window, DrawSurface *surface) const
@@ -551,16 +553,16 @@ namespace PortabilityLayer
 		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
 			RenderChromeCloseBox(surface, rect, false);
 
-		surface->SetApplicationFont(10, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold);
-		int32_t ascender = surface->MeasureFontAscender();
+		PortabilityLayer::RenderedFont *appFont = GetApplicationFont(10, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
+		int32_t ascender = appFont->GetMetrics().m_ascent;
 
 		const PLPasStr titlePStr = window->GetTitle().ToShortStr();
-		size_t titleWidth = surface->MeasureString(titlePStr);
+		size_t titleWidth = appFont->MeasureString(titlePStr.UChars(), titlePStr.Length());
 
 		int32_t titleH = (rect.left + rect.right - static_cast<int32_t>(titleWidth) + 1) / 2;
 		int32_t titleV = (rect.top + rect.bottom + ascender + 1) / 2;
 
-		surface->DrawString(Point::Create(titleH, titleV), titlePStr, true, blackColor);
+		surface->DrawString(Point::Create(titleH, titleV), titlePStr, blackColor, appFont);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeLeftMini(WindowImpl *window, DrawSurface *surface) const

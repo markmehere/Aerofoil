@@ -4,7 +4,6 @@
 #include "PLCore.h"
 #include "PLQDOffscreen.h"
 #include "QDGraf.h"
-#include "QDState.h"
 
 #include <assert.h>
 
@@ -20,7 +19,6 @@ namespace PortabilityLayer
 		void SetPort(DrawSurface *gw) override;
 		PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) override;
 		void DisposeGWorld(DrawSurface *gw) override;
-		QDState *GetState() override;
 
 		static QDManagerImpl *GetInstance();
 
@@ -79,11 +77,6 @@ namespace PortabilityLayer
 	{
 		gw->~DrawSurface();
 		MemoryManager::GetInstance()->Release(gw);
-	}
-
-	QDState *QDManagerImpl::GetState()
-	{
-		return m_port->m_port.GetState();
 	}
 
 	QDManagerImpl *QDManagerImpl::GetInstance()

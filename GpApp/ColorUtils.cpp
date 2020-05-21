@@ -20,11 +20,11 @@
 // this function draws text in that color.  It assumes the current port,É
 // the current font, the current pen location, etc.
 
-void ColorText (DrawSurface *surface, const Point &point, StringPtr theStr, long color)
+void ColorText (DrawSurface *surface, const Point &point, StringPtr theStr, long color, PortabilityLayer::RenderedFont *font)
 {
 	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	surface->DrawString(point, theStr, true, rColor);
+	surface->DrawString(point, theStr, rColor, font);
 }
 
 //--------------------------------------------------------------  ColorRect

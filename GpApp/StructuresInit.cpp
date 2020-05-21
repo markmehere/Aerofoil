@@ -105,7 +105,6 @@ void InitScoreboardMap(void)
 	if (!boardTSrcMap)
 	{
 		theErr = CreateOffScreenGWorld(&boardTSrcMap, &boardTSrcRect, kPreferredPixelFormat);
-		boardTSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 	}
 	boardTDestRect = boardTSrcRect;
 	QOffsetRect(&boardTDestRect, 137 + hOffset, 5);
@@ -114,7 +113,6 @@ void InitScoreboardMap(void)
 	if (!boardGSrcMap)
 	{
 		theErr = CreateOffScreenGWorld(&boardGSrcMap, &boardGSrcRect, kPreferredPixelFormat);
-		boardGSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 	}
 	boardGDestRect = boardGSrcRect;
 	QOffsetRect(&boardGDestRect, 526 + hOffset, 5);
@@ -124,7 +122,6 @@ void InitScoreboardMap(void)
 	if (!boardPSrcMap)
 	{
 		theErr = CreateOffScreenGWorld(&boardPSrcMap, &boardPSrcRect, kPreferredPixelFormat);
-		boardPSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 	}
 	boardPDestRect = boardPSrcRect;
 	QOffsetRect(&boardPDestRect, 570 + hOffset, 5);		// total = 6396 pixels

@@ -7,6 +7,7 @@
 namespace PortabilityLayer
 {
 	class ScanlineMask;
+	class RenderedFont;
 }
 
 struct Dialog;
@@ -94,7 +95,8 @@ PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr);
 
 Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection);
 
-void RestoreDeviceClut(void *unknown);
+PortabilityLayer::RenderedFont *GetApplicationFont(int size, int variationFlags, bool aa);
+PortabilityLayer::RenderedFont *GetSystemFont(int size, int variationFlags, bool aa);
 
 
 inline RGBColor::RGBColor(uint8_t r, uint8_t g, uint8_t b)

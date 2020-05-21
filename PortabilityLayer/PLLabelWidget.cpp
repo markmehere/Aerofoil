@@ -2,6 +2,8 @@
 #include "PLQDraw.h"
 #include "FontFamily.h"
 #include "PLStandardColors.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 
 #include <algorithm>
@@ -37,11 +39,11 @@ namespace PortabilityLayer
 
 		surface->FillRect(m_rect, whiteColor);
 
-		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 		const Point topLeftCorner = Point::Create(m_rect.left, m_rect.top);
-		const Point textStartPoint = topLeftCorner + Point::Create(0, surface->MeasureFontAscender());
+		const Point textStartPoint = topLeftCorner + Point::Create(0, sysFont->GetMetrics().m_ascent);
 
-		surface->DrawStringWrap(textStartPoint, m_rect, m_text.ToShortStr(), true, blackColor);
+		surface->DrawStringWrap(textStartPoint, m_rect, m_text.ToShortStr(), blackColor, sysFont);
 	}
 }

@@ -18,6 +18,8 @@
 #include "FontFamily.h"
 #include "ResourceManager.h"
 #include "ResolveCachingColor.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
 
 #include <algorithm>
 
@@ -573,26 +575,26 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 
-	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
 	
 	PasStringCopy(text, stringCopy);
 
 	Rect iRect = dial->GetItems()[item - 1].GetWidget()->GetRect();
 
-	if ((surface->MeasureString(stringCopy) + 2) > (iRect.right - iRect.left))
-		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
+	if ((appFont->MeasurePStr(stringCopy) + 2) > (iRect.right - iRect.left))
+		CollapseStringToWidth(appFont, stringCopy, iRect.right - iRect.left - 2);
 	
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	surface->FillRect(iRect, whiteColor);
 
-	short strWidth = surface->MeasureString(stringCopy);
+	short strWidth = appFont->MeasurePStr(stringCopy);
 	inset = ((iRect.right - iRect.left) - (strWidth + 2)) / 2;
 	iRect.left += inset;
 	iRect.right -= inset;
 
 	// Draw centered
 
-	const int32_t ascender = surface->MeasureFontAscender();
+	const int32_t ascender = appFont->GetMetrics().m_ascent;
 
 	PortabilityLayer::ResolveCachingColor backgroundColor;
 	PortabilityLayer::ResolveCachingColor textColor;
@@ -611,7 +613,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 	surface->FillRect(iRect, backgroundColor);
 
 	const Point centeredDrawPoint = Point::Create((iRect.left + iRect.right - strWidth) / 2, (iRect.top + iRect.bottom + ascender) / 2);
-	surface->DrawString(centeredDrawPoint, stringCopy, true, textColor);
+	surface->DrawString(centeredDrawPoint, stringCopy, textColor, appFont);
 }
 
 //--------------------------------------------------------------  DrawDialogUserText
@@ -626,16 +628,16 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 	short			iType;
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
-	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
+	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
 	
 	PasStringCopy(text, stringCopy);
 	const Rect iRect = dial->GetItems()[item - 1].GetWidget()->GetRect();
 
-	if ((surface->MeasureString(stringCopy) + 2) > (iRect.right - iRect.left))
-		CollapseStringToWidth(surface, stringCopy, iRect.right - iRect.left - 2);
+	if ((appFont->MeasurePStr(stringCopy) + 2) > (iRect.right - iRect.left))
+		CollapseStringToWidth(appFont, stringCopy, iRect.right - iRect.left - 2);
 
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
-	surface->DrawString(Point::Create(iRect.left, iRect.bottom), stringCopy, true, blackColor);
+	surface->DrawString(Point::Create(iRect.left, iRect.bottom), stringCopy, blackColor, appFont);
 }
 
 //--------------------------------------------------------------  LoadDialogPICT

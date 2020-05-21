@@ -25,6 +25,7 @@
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
+#include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "Utilities.h"
 #include "WindowManager.h"
@@ -148,29 +149,29 @@ void DrawHighScores (DrawSurface *surface)
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
 
-	surface->SetApplicationFont(14, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont14 = GetApplicationFont(14, PortabilityLayer::FontFamilyFlag_Bold, true);
 	
 	PasStringCopy(PSTR("¥ "), tempStr);
 	PasStringConcat(tempStr, thisHouseName);
 	PasStringConcat(tempStr, PSTR(" ¥"));
 
-	const Point scoreShadowPoint = Point::Create(scoreLeft + ((kScoreWide - surface->MeasureString(tempStr)) / 2) - 1, dropIt - 66);
-	surface->DrawString(scoreShadowPoint, tempStr, true, blackColor);
+	const Point scoreShadowPoint = Point::Create(scoreLeft + ((kScoreWide - appFont14->MeasurePStr(tempStr)) / 2) - 1, dropIt - 66);
+	surface->DrawString(scoreShadowPoint, tempStr, blackColor, appFont14);
 
-	const Point scoreTextPoint = Point::Create(scoreLeft + ((kScoreWide - surface->MeasureString(tempStr)) / 2), dropIt - 65);
-	surface->DrawString(scoreTextPoint, tempStr, true, cyanColor);
+	const Point scoreTextPoint = Point::Create(scoreLeft + ((kScoreWide - appFont14->MeasurePStr(tempStr)) / 2), dropIt - 65);
+	surface->DrawString(scoreTextPoint, tempStr, cyanColor, appFont14);
 
-	surface->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont12 = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	thisHousePtr = *thisHouse;
 													// message for score #1
 	PasStringCopy(thisHousePtr->highScores.banner, tempStr);
-	bannerWidth = surface->MeasureString(tempStr);
+	bannerWidth = appFont12->MeasurePStr(tempStr);
 	const Point topScoreShadowPoint = Point::Create(scoreLeft + (kScoreWide - bannerWidth) / 2, dropIt - kKimsLifted);
-	surface->DrawString(topScoreShadowPoint, tempStr, true, blackColor);
+	surface->DrawString(topScoreShadowPoint, tempStr, blackColor, appFont12);
 
 	const Point topScoreTextPoint = Point::Create(scoreLeft + (kScoreWide - bannerWidth) / 2, dropIt - kKimsLifted - 1);
-	surface->DrawString(topScoreTextPoint, tempStr, true, yellowColor);
+	surface->DrawString(topScoreTextPoint, tempStr, yellowColor, appFont12);
 	
 	QSetRect(&tempRect, 0, 0, bannerWidth + 8, kScoreSpacing);
 	QOffsetRect(&tempRect, scoreLeft - 3 + (kScoreWide - bannerWidth) / 2, 
@@ -192,7 +193,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 1, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 1, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, blackColor);
+			surface->DrawString(strPos, tempStr, blackColor, appFont12);
 
 			PortabilityLayer::ResolveCachingColor *scoreColor = (i == lastHighScore) ? &whiteColor : &cyanColor;
 
@@ -200,7 +201,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 0, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 0, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, *scoreColor);
+			surface->DrawString(strPos, tempStr, *scoreColor, appFont12);
 													// draw high score name
 			PasStringCopy(thisHousePtr->highScores.names[i], tempStr);
 
@@ -208,7 +209,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 31, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 31, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, blackColor);
+			surface->DrawString(strPos, tempStr, blackColor, appFont12);
 
 
 			PortabilityLayer::ResolveCachingColor *nameColor = (i == lastHighScore) ? &whiteColor : &yellowColor;
@@ -217,7 +218,7 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 30, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 30, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, *nameColor);
+			surface->DrawString(strPos, tempStr, *nameColor, appFont12);
 													// draw level number
 			NumToString(thisHousePtr->highScores.levels[i], tempStr);
 
@@ -225,14 +226,14 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 161, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 161, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, blackColor);
+			surface->DrawString(strPos, tempStr, blackColor, appFont12);
 
 			PortabilityLayer::ResolveCachingColor *levelColor = (i == lastHighScore) ? &whiteColor : &yellowColor;
 			if (i == 0)
 				strPos = Point::Create(scoreLeft + 160, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 160, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, *levelColor);
+			surface->DrawString(strPos, tempStr, *levelColor, appFont12);
 													// draw word "rooms"
 			if (thisHousePtr->highScores.levels[i] == 1)
 				GetLocalizedString(6, tempStr);
@@ -243,19 +244,19 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 193, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 193, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, blackColor);
+			surface->DrawString(strPos, tempStr, blackColor, appFont12);
 			if (i == 0)
 				strPos = Point::Create(scoreLeft + 192, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 192, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, cyanColor);
+			surface->DrawString(strPos, tempStr, cyanColor, appFont12);
 													// draw high score points
 			NumToString(thisHousePtr->highScores.scores[i], tempStr);
 			if (i == 0)
 				strPos = Point::Create(scoreLeft + 291, dropIt - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 291, dropIt + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, blackColor);
+			surface->DrawString(strPos, tempStr, blackColor, appFont12);
 
 			PortabilityLayer::ResolveCachingColor *pointsColor = (i == lastHighScore) ? &whiteColor : &yellowColor;
 
@@ -263,15 +264,15 @@ void DrawHighScores (DrawSurface *surface)
 				strPos = Point::Create(scoreLeft + 290, dropIt - 1 - kScoreSpacing - kKimsLifted);
 			else
 				strPos = Point::Create(scoreLeft + 290, dropIt - 1 + (i * kScoreSpacing));
-			surface->DrawString(strPos, tempStr, true, *pointsColor);
+			surface->DrawString(strPos, tempStr, *pointsColor, appFont12);
 		}
 	}
 
-	surface->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold);
+	PortabilityLayer::RenderedFont *appFont9 = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	const Point textPos = Point::Create(scoreLeft + 80, dropIt - 1 + (10 * kScoreSpacing));
 	GetLocalizedString(8, tempStr);
-	surface->DrawString(textPos, tempStr, true, blueColor);
+	surface->DrawString(textPos, tempStr, blueColor, appFont9);
 }
 
 //--------------------------------------------------------------  SortHighScores

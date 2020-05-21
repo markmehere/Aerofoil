@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+class PLPasStr;
+
 namespace PortabilityLayer
 {
 	struct RenderedFontMetrics;
@@ -17,5 +19,20 @@ namespace PortabilityLayer
 		virtual bool IsAntiAliased() const = 0;
 
 		virtual void Destroy() = 0;
+
+		size_t MeasureCharStr(const char *str, size_t len) const;
+		size_t MeasurePStr(const PLPasStr &pstr) const;
 	};
+}
+
+#include "PLPasStr.h"
+
+inline size_t PortabilityLayer::RenderedFont::MeasurePStr(const PLPasStr &pstr) const
+{
+	return this->MeasureString(pstr.UChars(), pstr.Length());
+}
+
+inline size_t PortabilityLayer::RenderedFont::MeasureCharStr(const char *str, size_t len) const
+{
+	return this->MeasureString(reinterpret_cast<const uint8_t*>(str), len);
 }

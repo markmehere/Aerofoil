@@ -8,6 +8,7 @@
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontFamily.h"
 #include "PLStandardColors.h"
 #include "RectUtils.h"
 #include "ResolveCachingColor.h"
@@ -125,8 +126,6 @@ void OpenMessageWindow (const PLPasStr &title)
 		ShowWindow(mssgWindow);
 
 		DrawSurface *surface = mssgWindow->GetDrawSurface();
-
-		surface->SetSystemFont(12, 0);
 	}
 
 	mssgWindowExclusiveStack = mssgWindow;
@@ -150,6 +149,8 @@ void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBACol
 	{
 		DrawSurface *surface = mssgWindow->GetDrawSurface();
 
+		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_None, true);
+
 		SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 		InsetRect(&mssgWindowRect, 16, 16);
 
@@ -159,7 +160,7 @@ void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBACol
 		const Point textPoint = Point::Create(mssgWindowRect.left, mssgWindowRect.bottom - 6);
 
 		PortabilityLayer::ResolveCachingColor specifiedColor = color;
-		surface->DrawString(textPoint, message, true, specifiedColor);
+		surface->DrawString(textPoint, message, specifiedColor, sysFont);
 	}
 }
 

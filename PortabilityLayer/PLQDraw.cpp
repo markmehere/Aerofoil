@@ -1,6 +1,5 @@
 #include "PLQDraw.h"
 #include "QDManager.h"
-#include "QDState.h"
 #include "BitmapImage.h"
 #include "DisplayDeviceManager.h"
 #include "EllipsePlotter.h"
@@ -63,7 +62,7 @@ void SetPortWindowPort(WindowPtr window)
 	PortabilityLayer::QDManager::GetInstance()->SetPort(window->GetDrawSurface());
 }
 
-static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB, PortabilityLayer::ResolveCachingColor &foreColor)
+static void PlotLine(DrawSurface *surface, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB, PortabilityLayer::ResolveCachingColor &foreColor)
 {
 	const Rect lineRect = Rect::Create(
 		std::min(pointA.m_y, pointB.m_y),
@@ -84,7 +83,6 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 
 	Rect constrainedRect = port->GetRect();
 
-	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(lineRect);
 
 	if (!constrainedRect.IsValid())
@@ -182,7 +180,7 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, const Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
+static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
 	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	assert(rect.IsValid());
@@ -288,35 +286,28 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 	}
 }
 
-static void DrawText(PortabilityLayer::TextPlacer &placer, PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, const PortabilityLayer::RenderedFont *rfont,
+static void DrawText(PortabilityLayer::TextPlacer &placer, PixMap *pixMap, const Rect &rect, const PortabilityLayer::RenderedFont *rfont,
 	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	PortabilityLayer::GlyphPlacementCharacteristics characteristics;
 	while (placer.PlaceGlyph(characteristics))
 	{
 		if (characteristics.m_haveGlyph)
-			DrawGlyph(qdState, pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cachedAATable, cachedAATableColor, cacheColor);
+			DrawGlyph(pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cachedAATable, cachedAATableColor, cacheColor);
 	}
 }
 
-void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor)
+void DrawSurface::DrawString(const Point &point, const PLPasStr &str, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *font)
 {
-	DrawStringConstrained(point, str, aa, Rect::CreateLargest(), cacheColor);
+	DrawStringConstrained(point, str,  Rect::CreateLargest(), cacheColor, font);
 }
 
-void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor)
+void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *rfont)
 {
 	PortabilityLayer::QDPort *port = &m_port;
 
-	PortabilityLayer::QDState *qdState = m_port.GetState();
-
 	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-	const int fontSize = qdState->m_fontSize;
-	const int fontVariationFlags = qdState->m_fontVariationFlags;
-	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
-
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
 	PixMap *pixMap = *port->GetPixMap();
 
 	const Rect rect = pixMap->m_rect.Intersect(constraintRect);
@@ -326,24 +317,16 @@ void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str,
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), -1, rfont, str);
 
-	DrawText(placer, qdState, pixMap, rect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
+	DrawText(placer, pixMap, rect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor)
+void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *rfont)
 {
 	PortabilityLayer::QDPort *port = &m_port;
 
-	PortabilityLayer::QDState *qdState = m_port.GetState();
-
 	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
-
-	const int fontSize = qdState->m_fontSize;
-	const int fontVariationFlags = qdState->m_fontVariationFlags;
-	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
-
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
 
 	Point penPos = point;
 	const size_t len = str.Length();
@@ -359,70 +342,11 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), areaRect.Width(), rfont, str);
 
-	DrawText(placer, qdState, pixMap, limitRect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
+	DrawText(placer, pixMap, limitRect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-size_t DrawSurface::MeasureString(const PLPasStr &str)
-{
-	const PortabilityLayer::QDState *qdState = m_port.GetState();
-	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
-
-	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
-
-	if (!fontFamily)
-		return 0;
-
-	const int variationFlags = qdState->m_fontVariationFlags;
-	const int fontSize = qdState->m_fontSize;
-
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, false, variationFlags);
-	if (!rfont)
-		return 0;
-
-	return rfont->MeasureString(str.UChars(), str.Length());
-}
-
-int32_t DrawSurface::MeasureFontAscender()
-{
-	const PortabilityLayer::QDState *qdState = m_port.GetState();
-	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
-
-	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
-
-	if (!fontFamily)
-		return 0;
-
-	const int variationFlags = qdState->m_fontVariationFlags;
-	const int fontSize = qdState->m_fontSize;
-
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, false, variationFlags);
-	if (!rfont)
-		return 0;
-
-	return rfont->GetMetrics().m_ascent;
-}
-
-int32_t DrawSurface::MeasureFontLineGap()
-{
-	const PortabilityLayer::QDState *qdState = m_port.GetState();
-	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
-
-	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
-
-	if (!fontFamily)
-		return 0;
-
-	const int variationFlags = qdState->m_fontVariationFlags;
-	const int fontSize = qdState->m_fontSize;
-
-	PortabilityLayer::RenderedFont *rfont = fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, false, variationFlags);
-	if (!rfont)
-		return 0;
-
-	return rfont->GetMetrics().m_linegap;
-}
 
 void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 {
@@ -732,19 +656,6 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-PortabilityLayer::RenderedFont *DrawSurface::ResolveFont(bool aa) const
-{
-	const PortabilityLayer::QDState *qdState = m_port.GetState();
-
-	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
-
-	const int fontSize = qdState->m_fontSize;
-	const int fontVariationFlags = qdState->m_fontVariationFlags;
-	PortabilityLayer::FontFamily *fontFamily = qdState->m_fontFamily;
-
-	return fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
-}
-
 void DrawSurface::FillRect(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid())
@@ -756,8 +667,6 @@ void DrawSurface::FillRect(const Rect &rect, PortabilityLayer::ResolveCachingCol
 
 	Rect constrainedRect = rect;
 
-	PortabilityLayer::QDState *qdState = qdPort->GetState();
-	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(qdPort->GetRect());
 
 	if (!constrainedRect.IsValid())
@@ -805,8 +714,6 @@ void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pa
 	Rect constrainedRect = rect;
 	const Rect portRect = qdPort->GetRect();
 
-	PortabilityLayer::QDState *qdState = qdPort->GetState();
-	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(qdPort->GetRect());
 
 	if (!constrainedRect.IsValid())
@@ -852,32 +759,6 @@ void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pa
 	}
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
-}
-
-void DrawSurface::SetApplicationFont(int size, int variationFlags)
-{
-	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetApplicationFont(size, variationFlags);
-	if (!fontFamily)
-		return;
-
-	PortabilityLayer::QDState *qdState = m_port.GetState();
-
-	qdState->m_fontFamily = fontFamily;
-	qdState->m_fontSize = size;
-	qdState->m_fontVariationFlags = variationFlags;
-}
-
-void DrawSurface::SetSystemFont(int size, int variationFlags)
-{
-	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(size, variationFlags);
-	if (!fontFamily)
-		return;
-
-	PortabilityLayer::QDState *qdState = m_port.GetState();
-
-	qdState->m_fontFamily = fontFamily;
-	qdState->m_fontSize = size;
-	qdState->m_fontVariationFlags = variationFlags;
 }
 
 void DrawSurface::FillEllipse(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
@@ -935,8 +816,6 @@ void DrawSurface::FrameEllipse(const Rect &rect, PortabilityLayer::ResolveCachin
 
 	const Rect portRect = qdPort->GetRect();
 
-	PortabilityLayer::QDState *qdState = qdPort->GetState();
-	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(portRect);
 
 	if (!constrainedRect.IsValid())
@@ -1013,7 +892,6 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 		return;
 
 	PortabilityLayer::QDPort *port = &m_port;
-	PortabilityLayer::QDState *qdState = port->GetState();
 
 	PixMap *pixMap = *port->GetPixMap();
 	const Rect portRect = port->GetRect();
@@ -1157,22 +1035,7 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 
 void DrawSurface::DrawLine(const Point &a, const Point &b, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
-	PlotLine(m_port.GetState(), this, PortabilityLayer::Vec2i(a.h, a.v), PortabilityLayer::Vec2i(b.h, b.v), cacheColor);
-}
-
-void GetClip(Rect *rect)
-{
-	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	*rect = qdState->m_clipRect;
-}
-
-void ClipRect(const Rect *rect)
-{
-	if (!rect->IsValid())
-		return;
-
-	PortabilityLayer::QDState *qdState = PortabilityLayer::QDManager::GetInstance()->GetState();
-	qdState->m_clipRect = *rect;
+	PlotLine(this, PortabilityLayer::Vec2i(a.h, a.v), PortabilityLayer::Vec2i(b.h, b.v), cacheColor);
 }
 
 void DrawSurface::FrameRect(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
@@ -1247,8 +1110,6 @@ void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 	Rect constrainedRect = rect;
 	const Rect portRect = qdPort->GetRect();
 
-	PortabilityLayer::QDState *qdState = qdPort->GetState();
-	constrainedRect = constrainedRect.Intersect(qdState->m_clipRect);
 	constrainedRect = constrainedRect.Intersect(qdPort->GetRect());
 
 	if (!constrainedRect.IsValid())
@@ -1628,17 +1489,31 @@ Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection)
 }
 
 
-void RestoreDeviceClut(void *unknown)
-{
-	PL_NotYetImplemented();
-}
-
 void BitMap::Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, void *dataPtr)
 {
 	m_rect = rect;
 	m_pixelFormat = pixelFormat;
 	m_pitch = pitch;
 	m_data = dataPtr;
+}
+
+
+PortabilityLayer::RenderedFont *GetApplicationFont(int size, int variationFlags, bool aa)
+{
+	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetApplicationFont(size, variationFlags);
+	if (!fontFamily)
+		return nullptr;
+
+	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
+}
+
+PortabilityLayer::RenderedFont *GetSystemFont(int size, int variationFlags, bool aa)
+{
+	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(size, variationFlags);
+	if (!fontFamily)
+		return nullptr;
+
+	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
 }
 
 #include "stb_image_write.h"
@@ -1652,3 +1527,4 @@ void DebugPixMap(PixMap **pixMapH, const char *outName)
 
 	stbi_write_png(outPath, pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, 1, pixMap->m_data, pixMap->m_pitch);
 }
+
