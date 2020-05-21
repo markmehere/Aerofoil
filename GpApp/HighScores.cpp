@@ -268,7 +268,7 @@ void DrawHighScores (DrawSurface *surface)
 		}
 	}
 
-	PortabilityLayer::RenderedFont *appFont9 = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont9 = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
 
 	const Point textPos = Point::Create(scoreLeft + 80, dropIt - 1 + (10 * kScoreSpacing));
 	GetLocalizedString(8, tempStr);
