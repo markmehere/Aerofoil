@@ -20,6 +20,7 @@
 #include "RectUtils.h"
 #include "PLKeyEncoding.h"
 #include "PLStandardColors.h"
+#include "ResolveCachingColor.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
 
@@ -74,8 +75,8 @@ void DrawOnSplash(DrawSurface *surface)
 	const Point textPoint = Point::Create(splashOriginH + 436, splashOriginV + 314);
 	if (thisMac.isDepth == 4)
 	{
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-		surface->DrawString(textPoint, houseLoadedStr, true);
+		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+		surface->DrawString(textPoint, houseLoadedStr, true, whiteColor);
 	}
 	else
 	{
@@ -106,8 +107,8 @@ void RedrawSplashScreen (void)
 	Rect		tempRect;
 	DrawSurface	*surface = workSrcMap;
 
-	surface->SetForeColor(StdColors::Black());
-	surface->FillRect(workSrcRect);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	surface->FillRect(workSrcRect, blackColor);
 
 	QSetRect(&tempRect, 0, 0, 640, 460);
 	QOffsetRect(&tempRect, splashOriginH, splashOriginV);
@@ -150,7 +151,9 @@ void UpdateMainWindow (void)
 	}
 	else if ((theMode == kSplashMode) || (theMode == kPlayMode))
 	{
-		workSrcMap->FillRect(workSrcRect);
+		PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+		workSrcMap->FillRect(workSrcRect, blackColor);
+
 		QSetRect(&tempRect, 0, 0, 640, 460);
 		QOffsetRect(&tempRect, splashOriginH, splashOriginV);
 		LoadScaledGraphic(workSrcMap, kSplash8BitPICT, &tempRect);
@@ -174,7 +177,9 @@ void OpenMainWindow (void)
 {
 //	long		wasSeed;
 	short		whichRoom;
-	
+
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+
 	if (mainWindow != nil)
 	{
 		YellowAlert(kYellowUnaccounted, 6);
@@ -201,7 +206,6 @@ void OpenMainWindow (void)
 		DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 
 		mainWindowSurface->SetClipRect(mainWindowRect);
-		mainWindowSurface->SetForeColor(StdColors::Black());
 		
 		whichRoom = GetFirstRoomNumber();
 		CopyRoomToThisRoom(whichRoom);
@@ -250,8 +254,8 @@ void OpenMainWindow (void)
 
 		mainWindowSurface->SetClipRect(mainWindowRect);
 //		CopyRgn(mainWindow->clipRgn, mainWindow->visRgn);
-		mainWindowSurface->SetForeColor(StdColors::Black());
-		mainWindowSurface->FillRect(mainWindowRect);
+
+		mainWindowSurface->FillRect(mainWindowRect, blackColor);
 		
 		splashOriginH = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) - 640) / 2;
 		if (splashOriginH < 0)
@@ -260,7 +264,7 @@ void OpenMainWindow (void)
 		if (splashOriginV < 0)
 			splashOriginV = 0;
 		
-		workSrcMap->FillRect(workSrcRect);
+		workSrcMap->FillRect(workSrcRect, blackColor);
 		
 //		if ((fadeGraysOut) && (isDoColorFade))
 //		{

@@ -5,6 +5,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLStandardColors.h"
 #include "FontFamily.h"
+#include "ResolveCachingColor.h"
 #include "SimpleGraphic.h"
 
 #include <algorithm>
@@ -410,39 +411,41 @@ namespace PortabilityLayer
 
 		for (int i = 0; i < 3; i++)
 		{
+			ResolveCachingColor color;
+
 			if (i == 0)
-				surface->SetForeColor(borderColor);
+				color = borderColor;
 
 			if (i != 0)
-				surface->SetForeColor(leftStripeColors[i - 1]);
+				color = leftStripeColors[i - 1];
 
-			surface->FillRect(Rect::Create(rect.top + 3, rect.left + i, rect.bottom - 3, rect.left + i + 1));
-
-			if (i != 0)
-				surface->SetForeColor(rightStripeColors[i - 1]);
-
-			surface->FillRect(Rect::Create(rect.top + 3, rect.right - 1 - i, rect.bottom - 3, rect.right - i));
+			surface->FillRect(Rect::Create(rect.top + 3, rect.left + i, rect.bottom - 3, rect.left + i + 1), color);
 
 			if (i != 0)
-				surface->SetForeColor(topStripeColors[i - 1]);
+				color = rightStripeColors[i - 1];
 
-			surface->FillRect(Rect::Create(rect.top + i, rect.left + 3, rect.top + i + 1, rect.right - 3));
+			surface->FillRect(Rect::Create(rect.top + 3, rect.right - 1 - i, rect.bottom - 3, rect.right - i), color);
 
 			if (i != 0)
-				surface->SetForeColor(bottomStripeColors[i - 1]);
+				color = topStripeColors[i - 1];
 
-			surface->FillRect(Rect::Create(rect.bottom - 1 - i, rect.left + 3, rect.bottom - i, rect.right - 3));
+			surface->FillRect(Rect::Create(rect.top + i, rect.left + 3, rect.top + i + 1, rect.right - 3), color);
+
+			if (i != 0)
+				color = bottomStripeColors[i - 1];
+
+			surface->FillRect(Rect::Create(rect.bottom - 1 - i, rect.left + 3, rect.bottom - i, rect.right - 3), color);
 		}
 
-		surface->SetForeColor(centerColor);
-		surface->FillRect(rect.Inset(3, 3));
+		ResolveCachingColor centerCacheColor = centerColor;
+		surface->FillRect(rect.Inset(3, 3), centerCacheColor);
 
-		surface->SetForeColor(textColor);
+		ResolveCachingColor textCacheColor = textColor;
 
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(surface->MeasureString(m_text.ToShortStr()))) / 2;
 		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(surface->MeasureFontAscender())) / 2;
-		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), true);
+		surface->DrawString(Point::Create(x, y), m_text.ToShortStr(), true, textCacheColor);
 	}
 
 	void ButtonWidget::DrawAsCheck(DrawSurface *surface, bool inverted)
@@ -450,57 +453,55 @@ namespace PortabilityLayer
 		if (!m_rect.IsValid())
 			return;
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(m_rect);
+		ResolveCachingColor whiteColor = StdColors::White();
+		surface->FillRect(m_rect, whiteColor);
 
 		uint16_t checkFrameSize = std::min<uint16_t>(12, std::min(m_rect.Width(), m_rect.Height()));
 		int16_t top = (m_rect.top + m_rect.bottom - static_cast<int16_t>(checkFrameSize)) / 2;
 
 		const Rect checkRect = Rect::Create(top, m_rect.left, top + static_cast<int16_t>(checkFrameSize), m_rect.left + static_cast<int16_t>(checkFrameSize));
 
-		RGBAColor checkColor;
-		RGBAColor checkEraseColor;
-		RGBAColor textColor;
+		ResolveCachingColor *checkColor = nullptr;
+		ResolveCachingColor *checkEraseColor = nullptr;
+		ResolveCachingColor *textColor = nullptr;
+
+		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+		ResolveCachingColor blackColor = StdColors::Black();
+
 		if (!m_enabled)
 		{
-			surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-			surface->FillRect(checkRect);
-			surface->SetForeColor(RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
-			surface->FillRect(checkRect.Inset(1, 1));
+			surface->FillRect(checkRect, midGrayColor);
+			surface->FillRect(checkRect.Inset(1, 1), lightGrayColor);
 
-			checkColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
-			checkEraseColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
-			textColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+			checkColor = &midGrayColor;
+			checkEraseColor = &lightGrayColor;
+			textColor = &midGrayColor;
 		}
 		else if (inverted)
 		{
-			surface->SetForeColor(StdColors::Black());
-			surface->FillRect(checkRect);
-			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(checkRect.Inset(1, 1));
+			surface->FillRect(checkRect, blackColor);
+			surface->FillRect(checkRect.Inset(1, 1), darkGrayColor);
 
-			checkColor = StdColors::White();
-			checkEraseColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
-			textColor = StdColors::Black();
+			checkColor = &whiteColor;
+			checkEraseColor = &darkGrayColor;
+			textColor = &blackColor;
 		}
 		else
 		{
-			surface->SetForeColor(StdColors::Black());
-			surface->FillRect(checkRect);
-			surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-			surface->FillRect(checkRect.Inset(1, 1));
+			surface->FillRect(checkRect, blackColor);
+			surface->FillRect(checkRect.Inset(1, 1), midGrayColor);
 
-			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(Rect::Create(checkRect.top + 2, checkRect.right - 2, checkRect.bottom - 2, checkRect.right - 1));
-			surface->FillRect(Rect::Create(checkRect.bottom - 2, checkRect.left + 2, checkRect.bottom - 1, checkRect.right - 1));
+			surface->FillRect(Rect::Create(checkRect.top + 2, checkRect.right - 2, checkRect.bottom - 2, checkRect.right - 1), darkGrayColor);
+			surface->FillRect(Rect::Create(checkRect.bottom - 2, checkRect.left + 2, checkRect.bottom - 1, checkRect.right - 1), darkGrayColor);
 
-			surface->SetForeColor(StdColors::White());
-			surface->FillRect(Rect::Create(checkRect.top + 1, checkRect.left + 1, checkRect.top + 2, checkRect.right - 2));
-			surface->FillRect(Rect::Create(checkRect.top + 2, checkRect.left + 1, checkRect.bottom - 2, checkRect.left + 2));
+			surface->FillRect(Rect::Create(checkRect.top + 1, checkRect.left + 1, checkRect.top + 2, checkRect.right - 2), whiteColor);
+			surface->FillRect(Rect::Create(checkRect.top + 2, checkRect.left + 1, checkRect.bottom - 2, checkRect.left + 2), whiteColor);
 
-			checkColor = StdColors::Black();
-			checkEraseColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
-			textColor = StdColors::Black();
+			checkColor = &blackColor;
+			checkEraseColor = &midGrayColor;
+			textColor = &blackColor;
 		}
 
 		if (m_state)
@@ -509,22 +510,19 @@ namespace PortabilityLayer
 
 			if (checkmarkRect.IsValid())
 			{
-				surface->SetForeColor(checkColor);
-				surface->FillRect(checkmarkRect);
+				surface->FillRect(checkmarkRect, *checkColor);
 
 				if (checkmarkRect.Width() >= 5)
 				{
 					int32_t eraseSpan = checkmarkRect.Width() - 4;
 					int16_t coordinateOffset = 0;
 
-					surface->SetForeColor(checkEraseColor);
-
 					while (eraseSpan > 0)
 					{
-						surface->FillRect(Rect::Create(checkmarkRect.top + coordinateOffset, checkmarkRect.left + 2 + coordinateOffset, checkmarkRect.top + 1 + coordinateOffset, checkmarkRect.right - 2 - coordinateOffset));
-						surface->FillRect(Rect::Create(checkmarkRect.top + 2 + coordinateOffset, checkmarkRect.left + coordinateOffset, checkmarkRect.bottom - 2 - coordinateOffset, checkmarkRect.left + 1 + coordinateOffset));
-						surface->FillRect(Rect::Create(checkmarkRect.bottom - 1 - coordinateOffset, checkmarkRect.left + 2 + coordinateOffset, checkmarkRect.bottom - coordinateOffset, checkmarkRect.right - 2 - coordinateOffset));
-						surface->FillRect(Rect::Create(checkmarkRect.top + 2 + coordinateOffset, checkmarkRect.right - 1 - coordinateOffset, checkmarkRect.bottom - 2 - coordinateOffset, checkmarkRect.right - coordinateOffset));
+						surface->FillRect(Rect::Create(checkmarkRect.top + coordinateOffset, checkmarkRect.left + 2 + coordinateOffset, checkmarkRect.top + 1 + coordinateOffset, checkmarkRect.right - 2 - coordinateOffset), *checkEraseColor);
+						surface->FillRect(Rect::Create(checkmarkRect.top + 2 + coordinateOffset, checkmarkRect.left + coordinateOffset, checkmarkRect.bottom - 2 - coordinateOffset, checkmarkRect.left + 1 + coordinateOffset), *checkEraseColor);
+						surface->FillRect(Rect::Create(checkmarkRect.bottom - 1 - coordinateOffset, checkmarkRect.left + 2 + coordinateOffset, checkmarkRect.bottom - coordinateOffset, checkmarkRect.right - 2 - coordinateOffset), *checkEraseColor);
+						surface->FillRect(Rect::Create(checkmarkRect.top + 2 + coordinateOffset, checkmarkRect.right - 1 - coordinateOffset, checkmarkRect.bottom - 2 - coordinateOffset, checkmarkRect.right - coordinateOffset), *checkEraseColor);
 
 						eraseSpan -= 2;
 						coordinateOffset++;
@@ -533,11 +531,9 @@ namespace PortabilityLayer
 			}
 		}
 
-		surface->SetForeColor(textColor);
-
 		surface->SetSystemFont(12, FontFamilyFlag_Bold);
 		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
-		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true);
+		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true, *textColor);
 	}
 
 
@@ -546,42 +542,44 @@ namespace PortabilityLayer
 		if (!m_rect.IsValid())
 			return;
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(m_rect);
+		ResolveCachingColor whiteColor = StdColors::White();
+		ResolveCachingColor blackColor = StdColors::Black();
+		surface->FillRect(m_rect, whiteColor);
 
 		uint16_t checkFrameSize = std::min<uint16_t>(12, std::min(m_rect.Width(), m_rect.Height()));
 		int16_t top = (m_rect.top + m_rect.bottom - static_cast<int16_t>(checkFrameSize)) / 2;
 
 		const Rect checkRect = Rect::Create(top, m_rect.left, top + static_cast<int16_t>(checkFrameSize), m_rect.left + static_cast<int16_t>(checkFrameSize));
 
-		RGBAColor radioColor;
-		RGBAColor textColor;
+		ResolveCachingColor *radioColor = nullptr;
+		ResolveCachingColor *textColor = nullptr;
+
+		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+
 		if (!m_enabled)
 		{
-			surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-			surface->FillEllipse(checkRect);
-			surface->SetForeColor(RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
-			surface->FillEllipse(checkRect.Inset(1, 1));
+			surface->FillEllipse(checkRect, midGrayColor);
+			surface->FillEllipse(checkRect.Inset(1, 1), lightGrayColor);
 
-			radioColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
-			textColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+			radioColor = &midGrayColor;
+			textColor = &midGrayColor;
 		}
 		else if (inverted)
 		{
-			surface->SetForeColor(StdColors::Black());
-			surface->FillEllipse(checkRect);
-			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillEllipse(checkRect.Inset(1, 1));
+			surface->FillEllipse(checkRect, blackColor);
+			surface->FillEllipse(checkRect.Inset(1, 1), darkGrayColor);
 
-			radioColor = StdColors::Black();
-			textColor = StdColors::Black();
+			radioColor = &blackColor;
+			textColor = &blackColor;
 		}
 		else
 		{
 			gs_buttonRadioGraphic.DrawToPixMapWithMask(surface->m_port.GetPixMap(), gs_buttonRadioGraphicMask, checkRect.left, checkRect.top);
 
-			radioColor = StdColors::Black();
-			textColor = StdColors::Black();
+			radioColor = &blackColor;
+			textColor = &blackColor;
 		}
 
 		if (m_state)
@@ -590,16 +588,13 @@ namespace PortabilityLayer
 
 			if (checkmarkRect.IsValid())
 			{
-				surface->SetForeColor(radioColor);
-				surface->FillEllipse(checkmarkRect);
+				surface->FillEllipse(checkmarkRect, *radioColor);
 			}
 		}
 
-		surface->SetForeColor(textColor);
-
 		surface->SetSystemFont(12, FontFamilyFlag_Bold);
 		int32_t textV = (m_rect.top + m_rect.bottom + surface->MeasureFontAscender()) / 2;
-		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true);
+		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), true, *textColor);
 	}
 
 	void ButtonWidget::DrawDefaultButtonChrome(const Rect &rectRef, DrawSurface *surface)
@@ -629,16 +624,16 @@ namespace PortabilityLayer
 
 		for (int i = 0; i < 3; i++)
 		{
-			surface->SetForeColor(upperLeftStripeColors[i]);
-			surface->FillRect(Rect::Create(rect.top - 1 - i, rect.left + 2, rect.top - i, rect.right - 2));
-			surface->FillRect(Rect::Create(rect.top + 2, rect.left - 1 - i, rect.bottom - 2, rect.left - i));
+			ResolveCachingColor color = upperLeftStripeColors[i];
+			surface->FillRect(Rect::Create(rect.top - 1 - i, rect.left + 2, rect.top - i, rect.right - 2), color);
+			surface->FillRect(Rect::Create(rect.top + 2, rect.left - 1 - i, rect.bottom - 2, rect.left - i), color);
 		}
 
 		for (int i = 0; i < 3; i++)
 		{
-			surface->SetForeColor(bottomRightStripeColors[i]);
-			surface->FillRect(Rect::Create(rect.bottom + i, rect.left + 2, rect.bottom + i + 1, rect.right - 2));
-			surface->FillRect(Rect::Create(rect.top + 2, rect.right + i, rect.bottom - 2, rect.right + i + 1));
+			ResolveCachingColor color = bottomRightStripeColors[i];
+			surface->FillRect(Rect::Create(rect.bottom + i, rect.left + 2, rect.bottom + i + 1, rect.right - 2), color);
+			surface->FillRect(Rect::Create(rect.top + 2, rect.right + i, rect.bottom - 2, rect.right + i + 1), color);
 		}
 	}
 

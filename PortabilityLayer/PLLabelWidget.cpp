@@ -2,6 +2,7 @@
 #include "PLQDraw.h"
 #include "FontFamily.h"
 #include "PLStandardColors.h"
+#include "ResolveCachingColor.h"
 
 #include <algorithm>
 
@@ -31,15 +32,16 @@ namespace PortabilityLayer
 
 	void LabelWidget::DrawControl(DrawSurface *surface)
 	{
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(m_rect);
+		ResolveCachingColor whiteColor = StdColors::White();
+		ResolveCachingColor blackColor  = StdColors::Black();
+
+		surface->FillRect(m_rect, whiteColor);
 
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
-		surface->SetForeColor(StdColors::Black());
 
 		const Point topLeftCorner = Point::Create(m_rect.left, m_rect.top);
 		const Point textStartPoint = topLeftCorner + Point::Create(0, surface->MeasureFontAscender());
 
-		surface->DrawStringWrap(textStartPoint, m_rect, m_text.ToShortStr(), true);
+		surface->DrawStringWrap(textStartPoint, m_rect, m_text.ToShortStr(), true, blackColor);
 	}
 }

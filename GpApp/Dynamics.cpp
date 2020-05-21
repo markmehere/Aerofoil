@@ -11,8 +11,10 @@
 #include "MainWindow.h"
 #include "Objects.h"
 #include "PLHacks.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
 #include "Room.h"
+#include "ResolveCachingColor.h"
 
 
 #define kShoveVelocity		8
@@ -578,7 +580,8 @@ void HandleOutlet (short who)
 		}
 		else
 		{
-			workSrcMap->FillRect(dinahs[who].dest);
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+			workSrcMap->FillRect(dinahs[who].dest, blackColor);
 		}
 		AddRectToWorkRects(&dinahs[who].dest);
 	}

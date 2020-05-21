@@ -18,6 +18,7 @@
 #include "MainWindow.h"
 #include "MemoryManager.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 
 
 #define kDeleteRoomAlert		1005
@@ -246,16 +247,18 @@ void ReadyBackground (short theID, short *theTiles)
 	
 	if ((noRoomAtAll) || (!houseUnlocked))
 	{
-		LtGrayForeColor(workSrcMap);
-		workSrcMap->FillRect(workSrcRect);
-		workSrcMap->SetForeColor(StdColors::Black());
+		PortabilityLayer::ResolveCachingColor ltGrayColor = LtGrayForeColor();
+		PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+
+		workSrcMap->FillRect(workSrcRect, ltGrayColor);
+
 		workSrcMap->SetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None);
 
 		const Point textPoint = Point::Create(10, 20);
 		if (houseUnlocked)
-			workSrcMap->DrawString(textPoint, PSTR("No rooms"), true);
+			workSrcMap->DrawString(textPoint, PSTR("No rooms"), true, blackColor);
 		else
-			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"), true);
+			workSrcMap->DrawString(textPoint, PSTR("Nothing to show"), true, blackColor);
 		
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				(BitMap *)*GetGWorldPixMap(backSrcMap), 

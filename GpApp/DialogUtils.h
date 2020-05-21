@@ -7,6 +7,11 @@
 
 #include "PLDialogs.h"
 
+namespace PortabilityLayer
+{
+	class ResolveCachingColor;
+}
+
 struct DialogTextSubstitutions;
 
 void BringUpDialog (Dialog **theDialog, short dialogID, const DialogTextSubstitutions *);
@@ -40,9 +45,9 @@ void MyDisableControl(Dialog *, short);
 void DrawDialogUserText (Dialog *, short, StringPtr, Boolean);
 void DrawDialogUserText2 (Dialog *, short, StringPtr);
 void LoadDialogPICT (Dialog *, short, short);
-void FrameDialogItem (Dialog *, short);
+void FrameDialogItem (Dialog *, short, PortabilityLayer::ResolveCachingColor &color);
 void FrameDialogItemC (Dialog *, short, long);
-void FrameOvalDialogItem (Dialog *, short);
+void FrameOvalDialogItem (Dialog *, short, PortabilityLayer::ResolveCachingColor &color);
 void BorderDialogItem (Dialog *theDialog, short item, short sides, short thickness, const uint8_t *pattern);
 void ShadowDialogItem (Dialog *, short, short);
 void EraseDialogItem (Dialog *, short);

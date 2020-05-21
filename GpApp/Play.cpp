@@ -14,6 +14,7 @@
 #include "House.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Scoreboard.h"
 
 
@@ -136,9 +137,11 @@ void NewGame (short mode)
 
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 
+	PortabilityLayer::ResolveCachingColor blackColorMain = StdColors::Black();
+
 	tempRect = thisMac.constrainedScreen;
 	tempRect.top = tempRect.bottom - 20;	// thisMac.menuHigh
-	mainWindowSurface->FillRect(tempRect);
+	mainWindowSurface->FillRect(tempRect, blackColorMain);
 	
 #ifdef COMPILEQT
 	if ((thisMac.hasQT) && (hasMovie))
@@ -146,9 +149,9 @@ void NewGame (short mode)
 		theMovie.m_surface = mainWindow->GetDrawSurface();
 	}
 #endif
-	
-	workSrcMap->SetForeColor(StdColors::Black());
-	workSrcMap->FillRect(workSrcRect);
+
+	PortabilityLayer::ResolveCachingColor blackColorWork = StdColors::Black();
+	workSrcMap->FillRect(workSrcRect, blackColorWork);
 //	if (quickerTransitions)
 //		DissBitsChunky(&workSrcRect);
 //	else
@@ -752,8 +755,8 @@ void RestoreEntireGameScreen (void)
 	DrawSurface *surface = mainWindow->GetDrawSurface();
 	tempRect = thisMac.constrainedScreen;
 
-	surface->SetForeColor(StdColors::Black());
-	surface->FillRect(tempRect);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	surface->FillRect(tempRect, blackColor);
 	
 	ResetLocale(false);
 	RefreshScoreboard(kNormalTitleMode);

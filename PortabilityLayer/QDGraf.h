@@ -13,6 +13,7 @@ namespace PortabilityLayer
 	class FontFamily;
 	struct RGBAColor;
 	class RenderedFont;
+	class ResolveCachingColor;
 	class ScanlineMask;
 }
 
@@ -59,30 +60,27 @@ struct DrawSurface
 
 	void PushToDDSurface(IGpDisplayDriver *displayDriver);
 
-	void FillRect(const Rect &rect);
-	void FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pattern);
-	void FrameRect(const Rect &rect);
-	void FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight);
+	void FillRect(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pattern, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void FrameRect(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight, PortabilityLayer::ResolveCachingColor &cacheColor);
 	void InvertFrameRect(const Rect &rect, const uint8_t *pattern);
 	void InvertFillRect(const Rect &rect, const uint8_t *pattern);
 
-	void FillEllipse(const Rect &rect);
-	void FillEllipseWithMaskPattern(const Rect &rect, const uint8_t *pattern);
-	void FrameEllipse(const Rect &rect);
+	void FillEllipse(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void FillEllipseWithMaskPattern(const Rect &rect, const uint8_t *pattern, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void FrameEllipse(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor);
 
-	void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask);
-	void FillScanlineMaskWithMaskPattern(const PortabilityLayer::ScanlineMask *scanlineMask, const uint8_t *pattern);
+	void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void FillScanlineMaskWithMaskPattern(const PortabilityLayer::ScanlineMask *scanlineMask, const uint8_t *pattern, PortabilityLayer::ResolveCachingColor &cacheColor);
 
-	void DrawLine(const Point &a, const Point &b);
-
-	void SetForeColor(const PortabilityLayer::RGBAColor &color);
-	const PortabilityLayer::RGBAColor &GetForeColor() const;
+	void DrawLine(const Point &a, const Point &b, PortabilityLayer::ResolveCachingColor &cacheColor);
 
 	void SetApplicationFont(int size, int variationFlags);
 	void SetSystemFont(int size, int variationFlags);
-	void DrawString(const Point &point, const PLPasStr &str, bool aa);
-	void DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect);
-	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa);
+	void DrawString(const Point &point, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor);
+	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor);
 
 	size_t MeasureString(const PLPasStr &str);
 	int32_t MeasureFontAscender();

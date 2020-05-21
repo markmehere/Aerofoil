@@ -20,6 +20,7 @@
 #include "PLPopupMenuWidget.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
+#include "ResolveCachingColor.h"
 #include "ResourceCompiledRef.h"
 #include "ResourceManager.h"
 #include "Utilities.h"
@@ -117,11 +118,13 @@ void UpdateRoomInfoDialog (Dialog *theDialog)
 		SetDialogString(theDialog, kLitUnlitText, PSTR("(Room Is Dark)"));
 	else
 		SetDialogString(theDialog, kLitUnlitText, PSTR("(Room Is Lit)"));
+
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	
 	FrameDialogItemC(theDialog, kRoomLocationBox, kRedOrangeColor8);
-	FrameDialogItem(theDialog, kRoomTilesBox);
+	FrameDialogItem(theDialog, kRoomTilesBox, blackColor);
 	FrameDialogItemC(theDialog, kRoomDividerLine, kRedOrangeColor8);
-	FrameDialogItem(theDialog, kRoomTilesBox2);
+	FrameDialogItem(theDialog, kRoomTilesBox2, blackColor);
 }
 #endif
 
@@ -134,6 +137,9 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 	Point		mouseWas;
 	short		wasTileOver;
 	Pattern		dummyPattern;
+
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	PortabilityLayer::ResolveCachingColor blueColor = StdColors::Blue();
 	
 	tileOver = (mouseIs.h - tileSrc.left) / kMiniTileWide;
 	wasTileOver = -1;
@@ -161,14 +167,13 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 				*newTileOver = (mouseIs.h - tileDest.left) / kMiniTileWide;
 				if (*newTileOver != wasTileOver)
 				{
-					surface->SetForeColor(StdColors::Blue());
 
 					for (int offset = 0; offset < 2; offset++)
 					{
 						Point pointA = Point::Create(tileDest.left + (*newTileOver * kMiniTileWide), tileDest.top - 3 + offset);
 						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-						surface->DrawLine(pointA, pointB);
+						surface->DrawLine(pointA, pointB, blueColor);
 					}
 
 					for (int offset = 0; offset < 2; offset++)
@@ -176,19 +181,17 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 						Point pointA = Point::Create(tileDest.left + (*newTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
 						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-						surface->DrawLine(pointA, pointB);
+						surface->DrawLine(pointA, pointB, blueColor);
 					}
 					
 					if (wasTileOver != -1)
 					{
-						surface->SetForeColor(StdColors::White());
-
 						for (int offset = 0; offset < 2; offset++)
 						{
 							Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3 + offset);
 							Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-							surface->DrawLine(pointA, pointB);
+							surface->DrawLine(pointA, pointB, whiteColor);
 						}
 
 						for (int offset = 0; offset < 2; offset++)
@@ -196,7 +199,7 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 							Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
 							Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-							surface->DrawLine(pointA, pointB);
+							surface->DrawLine(pointA, pointB, whiteColor);
 						}
 					}
 
@@ -208,14 +211,12 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 				*newTileOver = -1;					// we're not in the drop zone
 				if (wasTileOver != -1)
 				{
-					surface->SetForeColor(StdColors::White());
-
 					for (int offset = 0; offset < 2; offset++)
 					{
 						Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3 + offset);
 						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-						surface->DrawLine(pointA, pointB);
+						surface->DrawLine(pointA, pointB, whiteColor);
 					}
 
 					for (int offset = 0; offset < 2; offset++)
@@ -223,7 +224,7 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 						Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
 						Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-						surface->DrawLine(pointA, pointB);
+						surface->DrawLine(pointA, pointB, whiteColor);
 					}
 
 					wasTileOver = -1;
@@ -235,14 +236,12 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 	}
 	if (wasTileOver != -1)
 	{
-		surface->SetForeColor(StdColors::White());
-
 		for (int offset = 0; offset < 2; offset++)
 		{
 			Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.top - 3 + offset);
 			Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-			surface->DrawLine(pointA, pointB);
+			surface->DrawLine(pointA, pointB, whiteColor);
 		}
 
 		for (int offset = 0; offset < 2; offset++)
@@ -250,7 +249,7 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 			Point pointA = Point::Create(tileDest.left + (wasTileOver * kMiniTileWide), tileDest.bottom + 1 + offset);
 			Point pointB = Point::Create(pointA.h + kMiniTileWide, pointA.v);
 
-			surface->DrawLine(pointA, pointB);
+			surface->DrawLine(pointA, pointB, whiteColor);
 		}
 
 		wasTileOver = -1;
@@ -265,6 +264,8 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 {
 	short		newTileOver;
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
 	
 	if (tileSrc.Contains(mouseIs))
 	{
@@ -277,33 +278,27 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 		newTileOver = (mouseIs.h - tileSrc.left) / kMiniTileWide;
 		if (newTileOver != tileOver)
 		{
-			surface->SetForeColor(StdColors::Red());
-
 			{
 				const Point tileLineTopLeft = Point::Create(tileSrc.left + (newTileOver * kMiniTileWide), tileSrc.top - 3);
 				const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
-				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h), redColor);
 			}
 			
 			if (tileOver != -1)
 			{
-				surface->SetForeColor(StdColors::White());
-
 				{
 					const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.top - 3);
 					const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
-					surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+					surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h), whiteColor);
 				}
 
 				{
 					const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.bottom + 1);
 					const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
-					surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+					surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h), whiteColor);
 				}
 			}
 
-			surface->SetForeColor(StdColors::Black());
-			
 			tileOver = newTileOver;
 		}
 	}
@@ -311,21 +306,18 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 	{
 		if (tileOver != -1)
 		{
-			surface->SetForeColor(StdColors::White());
-
 			{
 				const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.top - 3);
 				const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
-				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h), whiteColor);
 			}
 
 			{
 				const Point tileLineTopLeft = Point::Create(tileSrc.left + (tileOver * kMiniTileWide), tileSrc.bottom + 1);
 				const Point tileLineBottomRight = Point::Create(tileLineTopLeft.h + kMiniTileWide + 1, tileLineTopLeft.v + 2);
-				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h));
+				surface->FillRect(Rect::Create(tileLineTopLeft.v, tileLineTopLeft.h, tileLineBottomRight.v, tileLineBottomRight.h), whiteColor);
 			}
 
-			surface->SetForeColor(StdColors::Black());
 			tileOver = -1;
 		}
 		

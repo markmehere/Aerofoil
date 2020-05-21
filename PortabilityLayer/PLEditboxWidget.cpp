@@ -10,6 +10,7 @@
 #include "PLKeyEncoding.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "ResolveCachingColor.h"
 #include "TextPlacer.h"
 
 #include <algorithm>
@@ -59,14 +60,15 @@ namespace PortabilityLayer
 		if (!m_visible)
 			return;
 
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		const Rect textRect = m_rect;
 		const Rect innerRect = textRect.Inset(-2, -2);
 		const Rect outerRect = innerRect.Inset(-1, -1);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(outerRect);
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(innerRect);
+		surface->FillRect(outerRect, blackColor);
+		surface->FillRect(innerRect, whiteColor);
 
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_None);
 		int32_t ascender = surface->MeasureFontAscender();
@@ -87,14 +89,12 @@ namespace PortabilityLayer
 
 		int32_t verticalOffset = (ascender + lineGap + 1) / 2;
 
-		surface->SetForeColor(StdColors::Black());
-
 		const Point stringBasePoint = Point::Create(basePoint.m_x, basePoint.m_y + verticalOffset);
 
 		if (m_isMultiLine)
-			surface->DrawStringWrap(stringBasePoint, m_rect, this->GetString(), true);
+			surface->DrawStringWrap(stringBasePoint, m_rect, this->GetString(), true, blackColor);
 		else
-			surface->DrawStringConstrained(stringBasePoint, this->GetString(), true, m_rect);
+			surface->DrawStringConstrained(stringBasePoint, this->GetString(), true, m_rect, blackColor);
 
 		if (m_hasFocus && m_selEndChar == m_selStartChar && m_caratTimer < kCaratBlinkRate)
 		{
@@ -107,7 +107,7 @@ namespace PortabilityLayer
 			caratRect = caratRect.Intersect(m_rect);
 
 			if (caratRect.IsValid())
-				surface->FillRect(caratRect);
+				surface->FillRect(caratRect, blackColor);
 		}
 	}
 
@@ -725,8 +725,7 @@ namespace PortabilityLayer
 			return;
 		}
 
-		PortabilityLayer::RGBAColor focusColor = PortabilityLayer::RGBAColor::Create(153, 153, 255, 255);
-		surface->SetForeColor(focusColor);
+		ResolveCachingColor focusColor = RGBAColor::Create(153, 153, 255, 255);
 
 		int32_t lineGap = rfont->GetMetrics().m_linegap;
 		int32_t ascender = rfont->GetMetrics().m_ascent;
@@ -738,21 +737,21 @@ namespace PortabilityLayer
 			if (endIsLineBreak || (m_isMultiLine == false && m_selEndChar == m_length))
 				selRect.right = m_rect.right;
 
-			surface->FillRect(selRect);
+			surface->FillRect(selRect, focusColor);
 		}
 		else
 		{
 			const Rect firstLineRect = Rect::Create(globalSelStart.m_y, globalSelStart.m_x, globalSelStart.m_y + lineGap, m_rect.right).Intersect(m_rect);
-			surface->FillRect(firstLineRect);
+			surface->FillRect(firstLineRect, focusColor);
 
 			const Rect midLinesRect = Rect::Create(globalSelStart.m_y + lineGap, m_rect.left, globalSelEnd.m_y, m_rect.right).Intersect(m_rect);
-			surface->FillRect(midLinesRect);
+			surface->FillRect(midLinesRect, focusColor);
 
 			Rect lastLineRect = Rect::Create(globalSelEnd.m_y, m_rect.left, globalSelEnd.m_y + lineGap, globalSelEnd.m_x);
 			if (endIsLineBreak || (m_isMultiLine == false && m_selEndChar == m_length))
 				lastLineRect.right = m_rect.right;
 
-			surface->FillRect(lastLineRect);
+			surface->FillRect(lastLineRect, focusColor);
 		}
 	}
 

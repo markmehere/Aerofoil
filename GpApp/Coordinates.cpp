@@ -13,6 +13,7 @@
 #include "Marquee.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
 
@@ -70,12 +71,14 @@ void UpdateCoordWindow (void)
 	if (coordWindow == nil)
 		return;
 
+
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	PortabilityLayer::ResolveCachingColor blueColor = StdColors::Blue();
+
 	DrawSurface *surface = coordWindow->GetDrawSurface();
 
-	surface->SetForeColor(StdColors::White());
-	surface->FillRect(coordWindowRect);
-	
-	surface->SetForeColor(StdColors::Black());
+	surface->FillRect(coordWindowRect, whiteColor);
 
 	PasStringCopy(PSTR("h: "), tempStr);
 	if (coordH != -1)
@@ -86,7 +89,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(5, 12), tempStr, true);
+	surface->DrawString(Point::Create(5, 12), tempStr, true, blackColor);
 	
 	PasStringCopy(PSTR("v: "), tempStr);
 	if (coordV != -1)
@@ -97,9 +100,8 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(4, 22), tempStr, true);
+	surface->DrawString(Point::Create(4, 22), tempStr, true, blackColor);
 	
-	surface->SetForeColor(StdColors::Blue());
 	PasStringCopy(PSTR("d: "), tempStr);
 	if (coordD != -1)
 	{
@@ -109,8 +111,7 @@ void UpdateCoordWindow (void)
 	else
 		PasStringConcat(tempStr, PSTR("-"));
 
-	surface->DrawString(Point::Create(5, 32), tempStr, true);
-	surface->SetForeColor(StdColors::Black());
+	surface->DrawString(Point::Create(5, 32), tempStr, true, blueColor);
 #endif
 }
 

@@ -11,9 +11,11 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "MenuManager.h"
+#include "PLStandardColors.h"
 #include "QDPixMap.h"
 #include "QDStandardPalette.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 
 
 #define kGrayBackgroundColor	251
@@ -153,48 +155,42 @@ void RefreshRoomTitle (short mode)
 {
 	DrawSurface *surface = boardTSrcMap;
 
-	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
+	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	
-	wasColor = surface->GetForeColor();
-	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
-	surface->SetForeColor(theRGBColor);
-	surface->FillRect(boardTSrcRect);
-	surface->SetForeColor(wasColor);
+	surface->FillRect(boardTSrcRect, theRGBColor);
 	
 	const Point strShadowPoint = Point::Create(1, 10);
 	const Point strPoint = Point::Create(0, 9);
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-
 	switch (mode)
 	{
 		case kEscapedTitleMode:
-		surface->DrawString(strShadowPoint, PSTR("Hit Delete key if unable to Follow"), true);
+		surface->DrawString(strShadowPoint, PSTR("Hit Delete key if unable to Follow"), true, blackColor);
 		break;
 		
 		case kSavingTitleMode:
-		surface->DrawString(strShadowPoint, PSTR("Saving GameÉ"), true);
+		surface->DrawString(strShadowPoint, PSTR("Saving GameÉ"), true, blackColor);
 		break;
 		
 		default:
-		surface->DrawString(strShadowPoint, thisRoom->name, true);
+		surface->DrawString(strShadowPoint, thisRoom->name, true, blackColor);
 		break;
 	}
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-
 	switch (mode)
 	{
 		case kEscapedTitleMode:
-		surface->DrawString(strPoint, PSTR("Hit Delete key if unable to Follow"), true);
+		surface->DrawString(strPoint, PSTR("Hit Delete key if unable to Follow"), true, whiteColor);
 		break;
 		
 		case kSavingTitleMode:
-		surface->DrawString(strPoint, PSTR("Saving GameÉ"), true);
+		surface->DrawString(strPoint, PSTR("Saving GameÉ"), true, whiteColor);
 		break;
 		
 		default:
-		surface->DrawString(strPoint, thisRoom->name, true);
+		surface->DrawString(strPoint, thisRoom->name, true, whiteColor);
 		break;
 	}
 	
@@ -207,16 +203,15 @@ void RefreshRoomTitle (short mode)
 
 void RefreshNumGliders (void)
 {
-	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		nGlidersStr;
 	long		displayMortals;
 	DrawSurface	*surface = boardGSrcMap;
 
-	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
-	wasColor = surface->GetForeColor();
-	surface->SetForeColor(theRGBColor);
-	surface->FillRect(boardGSrcRect);
+	surface->FillRect(boardGSrcRect, theRGBColor);
 	
 	displayMortals = mortals;
 	if (displayMortals < 0)
@@ -226,11 +221,8 @@ void RefreshNumGliders (void)
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-	surface->DrawString(shadowPoint, nGlidersStr, true);
-	
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-	surface->DrawString(textPoint, nGlidersStr, true);
+	surface->DrawString(shadowPoint, nGlidersStr, true, blackColor);
+	surface->DrawString(textPoint, nGlidersStr, true, whiteColor);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -241,25 +233,22 @@ void RefreshNumGliders (void)
 
 void RefreshPoints (void)
 {
-	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		scoreStr;
 	DrawSurface	*surface = boardPSrcMap;
 
-	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
-	surface->SetForeColor(theRGBColor);
-	surface->FillRect(boardPSrcRect);
+	surface->FillRect(boardPSrcRect, theRGBColor);
 	
 	NumToString(theScore, scoreStr);
 
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-	surface->DrawString(shadowPoint, scoreStr, true);
-	
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-	surface->DrawString(textPoint, scoreStr, true);
+	surface->DrawString(shadowPoint, scoreStr, true, blackColor);
+	surface->DrawString(textPoint, scoreStr, true, whiteColor);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			(BitMap *)*GetGWorldPixMap(boardSrcMap), 
@@ -272,25 +261,22 @@ void RefreshPoints (void)
 
 void QuickGlidersRefresh (void)
 {
-	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		nGlidersStr;
 	DrawSurface	*surface = boardGSrcMap;
 
-	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
+	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
-	surface->SetForeColor(theRGBColor);
-	surface->FillRect(boardGSrcRect);
+	surface->FillRect(boardGSrcRect, theRGBColor);
 	
 	NumToString((long)mortals, nGlidersStr);
 
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-	surface->DrawString(shadowPoint, nGlidersStr, true);
-	
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-	surface->DrawString(textPoint, nGlidersStr, true);
+	surface->DrawString(shadowPoint, nGlidersStr, true, blackColor);
+	surface->DrawString(textPoint, nGlidersStr, true, whiteColor);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(boardGSrcMap), 
 			GetPortBitMapForCopyBits(boardWindow->GetDrawSurface()),
@@ -303,24 +289,22 @@ void QuickGlidersRefresh (void)
 
 void QuickScoreRefresh (void)
 {
-	PortabilityLayer::RGBAColor	theRGBColor, wasColor;
 	Str255		scoreStr;
 	DrawSurface	*surface = boardPSrcMap;
 
-	theRGBColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[kGrayBackgroundColor];
-	surface->SetForeColor(theRGBColor);
-	surface->FillRect(boardPSrcRect);
+	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+
+	surface->FillRect(boardPSrcRect, theRGBColor);
 	
 	NumToString(displayedScore, scoreStr);
 
 	const Point shadowPoint = Point::Create(1, 10);
 	const Point textPoint = Point::Create(0, 9);
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-	surface->DrawString(shadowPoint, scoreStr, true);
-
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
-	surface->DrawString(textPoint, scoreStr, true);
+	surface->DrawString(shadowPoint, scoreStr, true, blackColor);
+	surface->DrawString(textPoint, scoreStr, true, whiteColor);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(boardPSrcMap), 
 			GetPortBitMapForCopyBits(boardWindow->GetDrawSurface()),

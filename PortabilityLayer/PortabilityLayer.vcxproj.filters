@@ -752,13 +752,16 @@
     <ClCompile Include="TextPlacer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AppEventHandler.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="UTF16.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLButtonWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AppEventHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ResolveCachingColor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -10,6 +10,7 @@
 #include "Environ.h"
 #include "PLStandardColors.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
 
@@ -126,8 +127,6 @@ void OpenMessageWindow (const PLPasStr &title)
 		DrawSurface *surface = mssgWindow->GetDrawSurface();
 
 		surface->SetClipRect(mssgWindowRect);
-		surface->SetForeColor(StdColors::Black());
-		
 		surface->SetSystemFont(12, 0);
 	}
 
@@ -154,12 +153,14 @@ void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBACol
 
 		SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 		InsetRect(&mssgWindowRect, 16, 16);
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(mssgWindowRect);
+
+		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+		surface->FillRect(mssgWindowRect, whiteColor);
 
 		const Point textPoint = Point::Create(mssgWindowRect.left, mssgWindowRect.bottom - 6);
-		surface->SetForeColor(color);
-		surface->DrawString(textPoint, message, true);
+
+		PortabilityLayer::ResolveCachingColor specifiedColor = color;
+		surface->DrawString(textPoint, message, true, specifiedColor);
 	}
 }
 

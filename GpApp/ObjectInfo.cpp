@@ -18,6 +18,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 
 
 #define kBlowerInfoDialogID			1007
@@ -126,11 +127,12 @@ void UpdateBlowerInfo (Dialog *theDialog)
 {
 	#define		kArrowheadLength	4
 	Rect		bounds;
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
 	Window *window = theDialog->GetWindow();
 	DrawSurface *surface = window->GetDrawSurface();
-	surface->SetForeColor(StdColors::White());
-	surface->FillRect((*surface->m_port.GetPixMap())->m_rect);
+
+	surface->FillRect((*surface->m_port.GetPixMap())->m_rect, whiteColor);
 
 	window->DrawControls();
 	
@@ -140,19 +142,20 @@ void UpdateBlowerInfo (Dialog *theDialog)
 	if ((thisRoom->objects[objActive].what != kLeftFan) && 
 			(thisRoom->objects[objActive].what != kRightFan))
 	{
+		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+
 		GetDialogItemRect(theDialog, 8, &bounds);
 		bounds.right += 2;
 		bounds.bottom += 2;
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(bounds);
+		surface->FillRect(bounds, whiteColor);
 		bounds.right -= 2;
 		bounds.bottom -= 2;
 
-		surface->SetForeColor(StdColors::Black());
-
 		for (int16_t offsetChunk = 0; offsetChunk < 4; offsetChunk++)
 		{
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+
 			const int16_t xOffset = offsetChunk & 1;
 			const int16_t yOffset = (offsetChunk >> 1) & 1;
 
@@ -163,36 +166,36 @@ void UpdateBlowerInfo (Dialog *theDialog)
 				case 1:		// up
 				{
 					const Point basePoint = offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.top);
-					surface->DrawLine(basePoint, basePoint + Point::Create(0, RectTall(&bounds)));
-					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, kArrowheadLength));
-					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(0, RectTall(&bounds)), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, kArrowheadLength), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, kArrowheadLength), blackColor);
 				}
 				break;
 			
 				case 2:		// right
 				{
 					const Point basePoint = offset + Point::Create(bounds.right, bounds.top + HalfRectTall(&bounds));
-					surface->DrawLine(basePoint, basePoint + Point::Create(-RectWide(&bounds), 0));
-					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, kArrowheadLength));
-					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, -kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(-RectWide(&bounds), 0), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, kArrowheadLength), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, -kArrowheadLength), blackColor);
 				}
 				break;
 			
 				case 4:		// down
 				{
 					const Point basePoint = offset + Point::Create(bounds.left + HalfRectWide(&bounds), bounds.bottom);
-					surface->DrawLine(basePoint, basePoint + Point::Create(0, -RectTall(&bounds)));
-					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, -kArrowheadLength));
-					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, -kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(0, -RectTall(&bounds)), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, -kArrowheadLength), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(-kArrowheadLength, -kArrowheadLength), blackColor);
 				}
 				break;
 			
 				case 8:		// left
 				{
 					const Point basePoint = offset + Point::Create(bounds.left, bounds.top + HalfRectTall(&bounds));
-					surface->DrawLine(basePoint, basePoint + Point::Create(RectWide(&bounds), 0));
-					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, -kArrowheadLength));
-					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, kArrowheadLength));
+					surface->DrawLine(basePoint, basePoint + Point::Create(RectWide(&bounds), 0), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, -kArrowheadLength), blackColor);
+					surface->DrawLine(basePoint, basePoint + Point::Create(kArrowheadLength, kArrowheadLength), blackColor);
 				}
 				break;
 			
@@ -204,33 +207,35 @@ void UpdateBlowerInfo (Dialog *theDialog)
 		if ((thisRoom->objects[objActive].what == kInvisBlower) || 
 				(thisRoom->objects[objActive].what == kLiftArea))
 		{
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+
 			switch (newDirection)
 			{
 				case 1:		// up
 				EraseDialogItem(theDialog, 11);
-				FrameOvalDialogItem(theDialog, 12);
-				FrameOvalDialogItem(theDialog, 13);
-				FrameOvalDialogItem(theDialog, 14);
+				FrameOvalDialogItem(theDialog, 12, blackColor);
+				FrameOvalDialogItem(theDialog, 13, blackColor);
+				FrameOvalDialogItem(theDialog, 14, blackColor);
 				break;
 				
 				case 2:		// right
-				FrameOvalDialogItem(theDialog, 11);
+				FrameOvalDialogItem(theDialog, 11, blackColor);
 				EraseDialogItem(theDialog, 12);
-				FrameOvalDialogItem(theDialog, 13);
-				FrameOvalDialogItem(theDialog, 14);
+				FrameOvalDialogItem(theDialog, 13, blackColor);
+				FrameOvalDialogItem(theDialog, 14, blackColor);
 				break;
 				
 				case 4:		// down
-				FrameOvalDialogItem(theDialog, 11);
-				FrameOvalDialogItem(theDialog, 12);
+				FrameOvalDialogItem(theDialog, 11, blackColor);
+				FrameOvalDialogItem(theDialog, 12, blackColor);
 				EraseDialogItem(theDialog, 13);
-				FrameOvalDialogItem(theDialog, 14);
+				FrameOvalDialogItem(theDialog, 14, blackColor);
 				break;
 				
 				case 8:		// left
-				FrameOvalDialogItem(theDialog, 11);
-				FrameOvalDialogItem(theDialog, 12);
-				FrameOvalDialogItem(theDialog, 13);
+				FrameOvalDialogItem(theDialog, 11, blackColor);
+				FrameOvalDialogItem(theDialog, 12, blackColor);
+				FrameOvalDialogItem(theDialog, 13, blackColor);
 				EraseDialogItem(theDialog, 14);
 				break;
 			}

@@ -17,6 +17,7 @@
 #include "FileManager.h"
 #include "House.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "ResourceFile.h"
 #include "ResourceManager.h"
 #include "PLTimeTaggedVOSEvent.h"
@@ -157,9 +158,8 @@ void PageUpHouses (Dialog *theDial)
 	
 	QSetRect(&tempRect, 8, 39, 421, 223);
 
-	surface->SetForeColor(StdColors::White());
-	surface->FillRect(tempRect);
-	surface->SetForeColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	surface->FillRect(tempRect, whiteColor);
 
 	UpdateLoadDialog(theDial);
 }
@@ -191,9 +191,8 @@ void PageDownHouses (Dialog *theDial)
 	}
 	
 	QSetRect(&tempRect, 8, 39, 421, 223);
-	surface->SetForeColor(StdColors::White());
-	surface->FillRect(tempRect);
-	surface->SetForeColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	surface->FillRect(tempRect, whiteColor);
 
 	UpdateLoadDialog(theDial);
 }

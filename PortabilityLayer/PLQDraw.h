@@ -61,7 +61,6 @@ typedef CIconPtr *CIconHandle;
 typedef Byte Pattern[8];
 
 void SetPortWindowPort(WindowPtr window);
-void SetPortDialogPort(Dialog *dialog);
 
 
 void SetPort(DrawSurface *graf);
@@ -69,13 +68,9 @@ void EndUpdate(WindowPtr graf);
 
 void SetRect(Rect *rect, short left, short top, short right, short bottom);
 
-int TextWidth(const PLPasStr &str, int firstChar1Based, int length);
-void GetForeColor(RGBColor *color);
-
 void ClipRect(const Rect *rect);
 void GetClip(Rect *rect);
 
-void PenSize(int w, int h);
 void InsetRect(Rect *rect, int x, int y);
 Pattern *GetQDGlobalsGray(Pattern *pattern);
 Pattern *GetQDGlobalsBlack(Pattern *pattern);

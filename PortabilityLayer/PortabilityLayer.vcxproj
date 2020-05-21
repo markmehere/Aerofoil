@@ -367,6 +367,7 @@
     <ClCompile Include="PLSysCalls.cpp" />
     <ClCompile Include="PLTimeTaggedVOSEvent.cpp" />
     <ClCompile Include="PLWidgets.cpp" />
+    <ClCompile Include="ResolveCachingColor.cpp" />
     <ClCompile Include="ScanlineMask.cpp" />
     <ClCompile Include="ScanlineMaskBuilder.cpp" />
     <ClCompile Include="ScanlineMaskConverter.cpp" />

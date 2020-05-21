@@ -19,6 +19,7 @@
 #include "Play.h"
 #include "PLStandardColors.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "ResourceManager.h"
 #include "Room.h"
 
@@ -2251,7 +2252,8 @@ void DrawThisRoomsObjects (void)
 	{
 		if (GetNumberOfLights(thisRoomNumber) <= 0)
 		{
-			surface->FillRectWithMaskPattern8x8(backSrcRect, *GetQDGlobalsGray(&dummyPattern));
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+			surface->FillRectWithMaskPattern8x8(backSrcRect, *GetQDGlobalsGray(&dummyPattern), blackColor);
 		}
 		
 		for (i = 0; i < kMaxRoomObs; i++)

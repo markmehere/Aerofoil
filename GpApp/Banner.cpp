@@ -14,6 +14,7 @@
 #include "FontManager.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Room.h"
 #include "Utilities.h"
 #include "WindowDef.h"
@@ -120,12 +121,15 @@ void DrawBannerMessage (Point topLeft)
 	PasStringCopy((*thisHouse)->banner, bannerStr);
 
 	workSrcMap->SetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold);
-	workSrcMap->SetForeColor(StdColors::Black());
+
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+
+
 	count = 0;
 	do
 	{
 		GetLineOfText(bannerStr, count, subStr);
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr, true);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 32 + (count * 20)), subStr, true, blackColor);
 		count++;
 	}
 	while (subStr[0] > 0);
@@ -146,13 +150,12 @@ void DrawBannerMessage (Point topLeft)
 			GetLocalizedString(4, subStr);
 		PasStringConcat(bannerStr, subStr);
 
-		workSrcMap->SetForeColor(StdColors::Red());
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr, true);
+		PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 164), bannerStr, true, redColor);
 
 		GetLocalizedString(5, subStr);
-		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr, true);
+		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr, true, redColor);
 	}
-	workSrcMap->SetForeColor(StdColors::Black());
 
 	SetGraphicsPort(wasGWorld);
 }

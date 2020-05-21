@@ -5,6 +5,7 @@
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "ResolveCachingColor.h"
 #include "FontFamily.h"
 #include "Vec2i.h"
 
@@ -75,23 +76,25 @@ namespace PortabilityLayer
 
 	void PopupMenuWidget::DrawControl(DrawSurface *surface)
 	{
+
+		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+		PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+		PortabilityLayer::ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		PortabilityLayer::ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+
 		const Rect rect = m_rect;
 		const Rect innerRect = rect.Inset(2, 2);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(rect);
+		surface->FillRect(rect, blackColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(rect.Inset(1, 1));
+		surface->FillRect(rect.Inset(1, 1), whiteColor);
 
-		surface->SetForeColor(RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-		surface->FillRect(rect.Inset(2, 2));
+		surface->FillRect(rect.Inset(2, 2), midGrayColor);
 
 		const Rect inset2Rect = rect.Inset(2, 2);
 
-		surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-		surface->FillRect(Rect::Create(inset2Rect.bottom, inset2Rect.left, inset2Rect.bottom + 1, inset2Rect.right + 1));
-		surface->FillRect(Rect::Create(inset2Rect.top, inset2Rect.right, inset2Rect.bottom + 1, inset2Rect.right + 1));
+		surface->FillRect(Rect::Create(inset2Rect.bottom, inset2Rect.left, inset2Rect.bottom + 1, inset2Rect.right + 1), darkGrayColor);
+		surface->FillRect(Rect::Create(inset2Rect.top, inset2Rect.right, inset2Rect.bottom + 1, inset2Rect.right + 1), darkGrayColor);
 
 
 		Rect textRect = innerRect;
@@ -100,8 +103,7 @@ namespace PortabilityLayer
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold);
 		Point basePoint = Point::Create(textRect.left + 2, (textRect.top + textRect.bottom + surface->MeasureFontAscender() + 1) / 2 - 1);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->DrawStringConstrained(basePoint, GetString(), true, textRect);
+		surface->DrawStringConstrained(basePoint, GetString(), true, textRect, blackColor);
 
 		Point arrowMidPoint = Point::Create(textRect.right + 5, (textRect.top + textRect.bottom + 1) / 2);
 
@@ -116,7 +118,7 @@ namespace PortabilityLayer
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect constrainedRect = innerRect.Intersect(arrowRects[i]);
-			surface->FillRect(constrainedRect);
+			surface->FillRect(constrainedRect, blackColor);
 		}
 	}
 

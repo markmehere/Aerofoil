@@ -20,6 +20,7 @@
 #include "QDManager.h"
 #include "QDPixMap.h"
 #include "RGBAColor.h"
+#include "ResolveCachingColor.h"
 #include "Vec2i.h"
 
 #include <stdint.h>
@@ -812,42 +813,44 @@ namespace PortabilityLayer
 
 		PortabilityLayer::QDState *qdState = qdManager->GetState();
 
-		graf->SetForeColor(gs_barMidColor);
-		graf->FillRect(menuRect);
-		graf->SetForeColor(gs_barBrightColor);
+		ResolveCachingColor barMidColor = gs_barMidColor;
+
+		graf->FillRect(menuRect, barMidColor);
+
+		ResolveCachingColor barBrightColor = gs_barBrightColor;
 
 		// Top stripe
 		{
 			const Rect rect = Rect::Create(0, 0, 1, static_cast<int16_t>(width) - 1);
-			m_menuBarGraf->FillRect(rect);
+			m_menuBarGraf->FillRect(rect, barBrightColor);
 		}
 
 		// Left stripe
 		{
 			const Rect rect = Rect::Create(0, 0, kMenuBarHeight - 1, 1);
-			m_menuBarGraf->FillRect(rect);
+			m_menuBarGraf->FillRect(rect, barBrightColor);
 		}
 
-		qdState->SetForeColor(gs_barDarkColor);
+		ResolveCachingColor barDarkColor = gs_barDarkColor;
 
 		// Bottom stripe
 		{
 			const Rect rect = Rect::Create(kMenuBarHeight - 2, 1, kMenuBarHeight - 1, width);
-			m_menuBarGraf->FillRect(rect);
+			m_menuBarGraf->FillRect(rect, barDarkColor);
 		}
 
 		// Right stripe
 		{
 			const Rect rect = Rect::Create(0, width - 1, kMenuBarHeight - 1, width);
-			m_menuBarGraf->FillRect(rect);
+			m_menuBarGraf->FillRect(rect, barDarkColor);
 		}
 
-		qdState->SetForeColor(gs_barBottomEdgeColor);
+		ResolveCachingColor barBottomEdgeColor = gs_barBottomEdgeColor;
 
 		// Bottom edge
 		{
 			const Rect rect = Rect::Create(kMenuBarHeight - 1, 0, kMenuBarHeight, width);
-			m_menuBarGraf->FillRect(rect);
+			m_menuBarGraf->FillRect(rect, barBottomEdgeColor);
 		}
 
 		PixMapHandle pixMap = m_menuBarGraf->m_port.GetPixMap();
@@ -869,28 +872,28 @@ namespace PortabilityLayer
 			const int16_t right = static_cast<int16_t>(xCoordinate + width);
 
 			// Top edge
-			qdState->SetForeColor(gs_barHighlightBrightColor);
 			{
+				ResolveCachingColor barHighlightBrightColor = gs_barHighlightBrightColor;
 				const Rect rect = Rect::Create(0, left, 1, right);
-				m_menuBarGraf->FillRect(rect);
+				m_menuBarGraf->FillRect(rect, barHighlightBrightColor);
 			}
 
 			// Middle
-			qdState->SetForeColor(gs_barHighlightMidColor);
 			{
+				ResolveCachingColor barHighlightMidColor = gs_barHighlightMidColor;
 				const Rect rect = Rect::Create(1, left, kMenuBarHeight - 2, right);
-				m_menuBarGraf->FillRect(rect);
+				m_menuBarGraf->FillRect(rect, barHighlightMidColor);
 			}
 
-			qdState->SetForeColor(gs_barHighlightDarkColor);
 			{
+				ResolveCachingColor barHighlightDarkColor = gs_barHighlightDarkColor;
 				const Rect rect = Rect::Create(kMenuBarHeight - 2, left, kMenuBarHeight - 1, right);
-				m_menuBarGraf->FillRect(rect);
+				m_menuBarGraf->FillRect(rect, barHighlightDarkColor);
 			}
 		}
 
 		// Text items
-		qdState->SetForeColor(gs_barNormalTextColor);
+		ResolveCachingColor barNormalTextColor = gs_barNormalTextColor;
 		m_menuBarGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
 
 		{
@@ -913,7 +916,7 @@ namespace PortabilityLayer
 						if (menuHdl != selectedMenuHdl)
 						{
 							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
-							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true);
+							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true, barNormalTextColor);
 						}
 					}
 				}
@@ -928,11 +931,12 @@ namespace PortabilityLayer
 
 			if (menu->stringBlobHandle && !menu->isIcon)
 			{
-				qdState->SetForeColor(gs_barHighlightTextColor);
+				ResolveCachingColor barHighlightTextColor = gs_barHighlightTextColor;
+
 				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
 
 				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
-				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true);
+				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), true, barHighlightTextColor);
 			}
 		}
 
@@ -1373,19 +1377,21 @@ namespace PortabilityLayer
 
 		QDState *qdState = qdManager->GetState();
 
-		qdState->SetForeColor(gs_barMidColor);
+		ResolveCachingColor barMidColor = gs_barMidColor;
 
 		{
 			const Rect rect = Rect::Create(0, 0, menu->layoutFinalHeight, menu->layoutWidth);
-			surface->FillRect(rect);
+			surface->FillRect(rect, barMidColor);
 
-			surface->SetForeColor(StdColors::White());
-			surface->FillRect(Rect::Create(0, 0, 1, menu->layoutWidth - 1));
-			surface->FillRect(Rect::Create(1, 0, menu->layoutFinalHeight - 1, 1));
+			ResolveCachingColor whiteColor = StdColors::White();
 
-			surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(Rect::Create(1, menu->layoutWidth - 1, menu->layoutFinalHeight, menu->layoutWidth));
-			surface->FillRect(Rect::Create(menu->layoutFinalHeight - 1, 1, menu->layoutFinalHeight, menu->layoutWidth - 1));
+			surface->FillRect(Rect::Create(0, 0, 1, menu->layoutWidth - 1), whiteColor);
+			surface->FillRect(Rect::Create(1, 0, menu->layoutFinalHeight - 1, 1), whiteColor);
+
+			ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+
+			surface->FillRect(Rect::Create(1, menu->layoutWidth - 1, menu->layoutFinalHeight, menu->layoutWidth), darkGrayColor);
+			surface->FillRect(Rect::Create(menu->layoutFinalHeight - 1, 1, menu->layoutFinalHeight, menu->layoutWidth - 1), darkGrayColor);
 		}
 
 		m_menuGraf->SetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold);
@@ -1403,21 +1409,23 @@ namespace PortabilityLayer
 
 			if (ItemIsSeparator(*menu, item))
 			{
-				surface->SetForeColor(RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-				surface->FillRect(Rect::Create(item.layoutYOffset + 2, 0, item.layoutYOffset + 3, menu->layoutWidth));
-				surface->SetForeColor(StdColors::White());
-				surface->FillRect(Rect::Create(item.layoutYOffset + 3, 0, item.layoutYOffset + 4, menu->layoutWidth));
+				ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+				surface->FillRect(Rect::Create(item.layoutYOffset + 2, 0, item.layoutYOffset + 3, menu->layoutWidth), darkGrayColor);
+				ResolveCachingColor whiteColor = StdColors::White();
+				surface->FillRect(Rect::Create(item.layoutYOffset + 3, 0, item.layoutYOffset + 4, menu->layoutWidth), whiteColor);
 			}
 			else
 			{
 				itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-				if (item.enabled)
-					qdState->SetForeColor(gs_barNormalTextColor);
-				else
-					qdState->SetForeColor(gs_barDisabledTextColor);
+				ResolveCachingColor itemTextAndCheckColor;
 
-				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
+				if (item.enabled)
+					itemTextAndCheckColor = gs_barNormalTextColor;
+				else
+					itemTextAndCheckColor = gs_barDisabledTextColor;
+
+				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true, itemTextAndCheckColor);
 
 				if (item.key)
 				{
@@ -1425,38 +1433,39 @@ namespace PortabilityLayer
 
 					uint8_t hintText[kHintTextCapacity];
 					const size_t hintLength = FormatHintText(hintText, item.key);
-					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true);
+					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true, itemTextAndCheckColor);
 				}
 
 				if (item.checked)
-					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset));
+					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset), itemTextAndCheckColor);
 			}
 		}
 
 		if (m_haveItem)
 		{
 			const MenuItem &selectedItem = menu->menuItems[m_itemIndex];
-			qdState->SetForeColor(gs_barHighlightMidColor);
 			const Rect itemRect = Rect::Create(selectedItem.layoutYOffset, 0, selectedItem.layoutYOffset + selectedItem.layoutHeight, menu->layoutWidth);
-			surface->FillRect(itemRect);
 
-			qdState->SetForeColor(gs_barHighlightBrightColor);
-			surface->FillRect(Rect::Create(itemRect.top, 0, itemRect.bottom, 1));
+			PortabilityLayer::ResolveCachingColor barHighlightMidColor = gs_barHighlightMidColor;
+			surface->FillRect(itemRect, barHighlightMidColor);
+
+			ResolveCachingColor barHighlightBrightColor = gs_barHighlightBrightColor;
+			surface->FillRect(Rect::Create(itemRect.top, 0, itemRect.bottom, 1), barHighlightBrightColor);
 			if (m_itemIndex == 0)
-				surface->FillRect(Rect::Create(0, 1, 1, itemRect.right - 1));
+				surface->FillRect(Rect::Create(0, 1, 1, itemRect.right - 1), barHighlightBrightColor);
 
-			qdState->SetForeColor(gs_barHighlightDarkColor);
-			surface->FillRect(Rect::Create(itemRect.top, itemRect.right - 1, itemRect.bottom, itemRect.right));
+			ResolveCachingColor barHighlightDarkColor = gs_barHighlightDarkColor;
+			surface->FillRect(Rect::Create(itemRect.top, itemRect.right - 1, itemRect.bottom, itemRect.right), barHighlightDarkColor);
 			if (m_itemIndex == menu->numMenuItems - 1)
-				surface->FillRect(Rect::Create(itemRect.bottom - 1, 1, itemRect.bottom, itemRect.right - 1));
+				surface->FillRect(Rect::Create(itemRect.bottom - 1, 1, itemRect.bottom, itemRect.right - 1), barHighlightDarkColor);
 
-			qdState->SetForeColor(gs_barHighlightTextColor);
+			ResolveCachingColor barHighlightTextColor = gs_barHighlightTextColor;
 
 			const MenuItem &item = menu->menuItems[m_itemIndex];
 
 			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true);
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), true, barHighlightTextColor);
 
 			if (item.key)
 			{
@@ -1464,10 +1473,10 @@ namespace PortabilityLayer
 
 				uint8_t hintText[kHintTextCapacity];
 				const size_t hintLength = FormatHintText(hintText, item.key);
-				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true);
+				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), true, barHighlightTextColor);
 
 				if (item.checked)
-					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset));
+					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset), barHighlightTextColor);
 			}
 		}
 

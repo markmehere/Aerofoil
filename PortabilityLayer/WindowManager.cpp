@@ -16,6 +16,7 @@
 #include "QDPixMap.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "Rect2i.h"
+#include "ResolveCachingColor.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
 
@@ -249,8 +250,8 @@ namespace PortabilityLayer
 
 	void SimpleBoxChromeTheme::RenderChrome(WindowImpl *window, DrawSurface *surface, WindowChromeSide_t chromeSide) const
 	{
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect((*surface->m_port.GetPixMap())->m_rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		surface->FillRect((*surface->m_port.GetPixMap())->m_rect, blackColor);
 	}
 
 	//---------------------------------------------------------------------------
@@ -421,31 +422,31 @@ namespace PortabilityLayer
 
 	void GenericWindowChromeTheme::RenderChromeTop(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-		surface->FillRect(rect);
+		surface->FillRect(rect, midGrayColor);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 5, rect.bottom, rect.right - 5));
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 5, rect.bottom, rect.right - 5), blackColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom - 1, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom, rect.left + 5));
-		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom - 1, rect.right - 5), darkGrayColor);
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom, rect.left + 5), darkGrayColor);
+		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom, rect.right - 1), darkGrayColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom, rect.left + 2));
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.right - 5, rect.bottom, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom, rect.left + 2), whiteColor);
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2), whiteColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.right - 5, rect.bottom, rect.right - 4), whiteColor);
 
 		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
 			RenderChromeCloseBox(surface, rect, false);
 
-		surface->SetForeColor(StdColors::Black());
 		surface->SetSystemFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold);
 		int32_t ascender = surface->MeasureFontAscender();
 
@@ -455,98 +456,101 @@ namespace PortabilityLayer
 		int32_t titleH = (rect.left + rect.right - static_cast<int32_t>(titleWidth) + 1) / 2;
 		int32_t titleV = (rect.top + rect.bottom + ascender + 1) / 2;
 
-		surface->DrawString(Point::Create(titleH, titleV), titlePStr, true);
+		surface->DrawString(Point::Create(titleH, titleV), titlePStr, true, blackColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeLeft(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4), whiteColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1), darkGrayColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2), midGrayColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeBottom(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 1, rect.left + 5));
-		surface->FillRect(Rect::Create(rect.bottom - 4, rect.left + 5, rect.bottom - 2, rect.right - 4));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom - 2, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 1, rect.left + 5), midGrayColor);
+		surface->FillRect(Rect::Create(rect.bottom - 4, rect.left + 5, rect.bottom - 2, rect.right - 4), midGrayColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom - 2, rect.right - 2), midGrayColor);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, rect.left + 1));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 5, rect.bottom - 5, rect.left + 6));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom - 5, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.bottom - 6, rect.left + 6, rect.bottom - 5, rect.right - 6));
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, rect.left + 1), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 5, rect.bottom - 5, rect.left + 6), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom - 5, rect.right - 5), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 6, rect.left + 6, rect.bottom - 5, rect.right - 6), blackColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom - 5, rect.right - 4));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 2, rect.left + 2));
-		surface->FillRect(Rect::Create(rect.bottom - 5, rect.left + 5, rect.bottom - 4, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom - 5, rect.right - 4), whiteColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 2, rect.left + 2), whiteColor);
+		surface->FillRect(Rect::Create(rect.bottom - 5, rect.left + 5, rect.bottom - 4, rect.right - 4), whiteColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 4, rect.bottom - 5, rect.left + 5));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom - 1, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2), darkGrayColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 4, rect.bottom - 5, rect.left + 5), darkGrayColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom - 1, rect.right - 1), darkGrayColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeRight(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4), whiteColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1), darkGrayColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2), midGrayColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeTopMini(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
-		surface->FillRect(rect);
+		surface->FillRect(rect, lightGrayColor);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 1, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 1, rect.bottom, rect.right - 1), blackColor);
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2));
-		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom - 1, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2), darkGrayColor);
+		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom - 1, rect.right - 1), darkGrayColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom - 2, rect.left + 2));
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom - 2, rect.left + 2), whiteColor);
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2), whiteColor);
 
 		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
 			RenderChromeCloseBox(surface, rect, false);
 
-		surface->SetForeColor(StdColors::Black());
 		surface->SetApplicationFont(10, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold);
 		int32_t ascender = surface->MeasureFontAscender();
 
@@ -556,31 +560,31 @@ namespace PortabilityLayer
 		int32_t titleH = (rect.left + rect.right - static_cast<int32_t>(titleWidth) + 1) / 2;
 		int32_t titleV = (rect.top + rect.bottom + ascender + 1) / 2;
 
-		surface->DrawString(Point::Create(titleH, titleV), titlePStr, true);
+		surface->DrawString(Point::Create(titleH, titleV), titlePStr, true, blackColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeLeftMini(WindowImpl *window, DrawSurface *surface) const
 	{
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		surface->FillRect(rect, blackColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeBottomMini(WindowImpl *window, DrawSurface *surface) const
 	{
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		surface->FillRect(rect, blackColor);
 	}
 
 	void GenericWindowChromeTheme::RenderChromeRightMini(WindowImpl *window, DrawSurface *surface) const
 	{
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		surface->FillRect(rect, blackColor);
 	}
 
 	Rect GenericWindowChromeTheme::GetCloseBoxRectInTopChrome()
@@ -600,25 +604,25 @@ namespace PortabilityLayer
 
 		if (isClicked)
 		{
-			surface->SetForeColor(StdColors::Black());
-			surface->FillRect(closeBoxRect);
+			ResolveCachingColor blackColor = StdColors::Black();
+			ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
 
-			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(Rect::Create(closeBoxRect.top + 1, closeBoxRect.left + 1, closeBoxRect.bottom - 1, closeBoxRect.right - 1));
+			surface->FillRect(closeBoxRect, blackColor);
+
+			surface->FillRect(Rect::Create(closeBoxRect.top + 1, closeBoxRect.left + 1, closeBoxRect.bottom - 1, closeBoxRect.right - 1), darkGrayColor);
 		}
 		else
 		{
-			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(closeBoxRect);
+			ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
+			ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+			ResolveCachingColor lightGrayColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
+			surface->FillRect(closeBoxRect, darkGrayColor);
 
-			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255));
-			surface->FillRect(Rect::Create(closeBoxRect.top + 1, closeBoxRect.left + 1, closeBoxRect.bottom, closeBoxRect.right));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 1, closeBoxRect.left + 1, closeBoxRect.bottom, closeBoxRect.right), midGrayColor);
 
-			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255));
-			surface->FillRect(Rect::Create(closeBoxRect.top + 2, closeBoxRect.left + 2, closeBoxRect.bottom - 1, closeBoxRect.right - 1));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 2, closeBoxRect.left + 2, closeBoxRect.bottom - 1, closeBoxRect.right - 1), darkGrayColor);
 
-			surface->SetForeColor(PortabilityLayer::RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255));
-			surface->FillRect(Rect::Create(closeBoxRect.top + 2, closeBoxRect.left + 2, closeBoxRect.bottom - 2, closeBoxRect.right - 2));
+			surface->FillRect(Rect::Create(closeBoxRect.top + 2, closeBoxRect.left + 2, closeBoxRect.bottom - 2, closeBoxRect.right - 2), lightGrayColor);
 		}
 	}
 
@@ -674,90 +678,94 @@ namespace PortabilityLayer
 
 	void AlertWindowChromeTheme::RenderChromeTop(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor darkColor = kDarkColor;
+		ResolveCachingColor midColor = kMidColor;
+		ResolveCachingColor lightColor = kLightColor;
+		ResolveCachingColor blackColor = StdColors::Black();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(kMidColor);
-		surface->FillRect(rect);
+		surface->FillRect(rect, midColor);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 5, rect.bottom, rect.right - 5));
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.top + 1, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, 1), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left + 5, rect.bottom, rect.right - 5), blackColor);
 
-		surface->SetForeColor(kDarkColor);
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom - 1, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom, rect.left + 5));
-		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom - 1, rect.right - 5), darkColor);
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 4, rect.bottom, rect.left + 5), darkColor);
+		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom, rect.right - 1), darkColor);
 
-		surface->SetForeColor(kLightColor);
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom, rect.left + 2));
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.right - 5, rect.bottom, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.bottom, rect.left + 2), lightColor);
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2), lightColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.right - 5, rect.bottom, rect.right - 4), lightColor);
 	}
 
 	void AlertWindowChromeTheme::RenderChromeLeft(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor darkColor = kDarkColor;
+		ResolveCachingColor midColor = kMidColor;
+		ResolveCachingColor lightColor = kLightColor;
+		ResolveCachingColor blackColor = StdColors::Black();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
 
-		surface->SetForeColor(kLightColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4), lightColor);
 
-		surface->SetForeColor(kDarkColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1), darkColor);
 
-		surface->SetForeColor(kMidColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2), midColor);
 	}
 
 	void AlertWindowChromeTheme::RenderChromeBottom(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor darkColor = kDarkColor;
+		ResolveCachingColor midColor = kMidColor;
+		ResolveCachingColor lightColor = kLightColor;
+		ResolveCachingColor blackColor = StdColors::Black();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(kMidColor);
-		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 1, rect.left + 5));
-		surface->FillRect(Rect::Create(rect.bottom - 4, rect.left + 5, rect.bottom - 2, rect.right - 4));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom - 2, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 1, rect.left + 5), midColor);
+		surface->FillRect(Rect::Create(rect.bottom - 4, rect.left + 5, rect.bottom - 2, rect.right - 4), midColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom - 2, rect.right - 2), midColor);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, rect.left + 1));
-		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 5, rect.bottom - 5, rect.left + 6));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom - 5, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.bottom - 6, rect.left + 6, rect.bottom - 5, rect.right - 6));
+		surface->FillRect(Rect::Create(rect.top, rect.left, rect.bottom, rect.left + 1), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 1, rect.left, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 5, rect.bottom - 5, rect.left + 6), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom - 5, rect.right - 5), blackColor);
+		surface->FillRect(Rect::Create(rect.bottom - 6, rect.left + 6, rect.bottom - 5, rect.right - 6), blackColor);
 
-		surface->SetForeColor(kLightColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom - 5, rect.right - 4));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 2, rect.left + 2));
-		surface->FillRect(Rect::Create(rect.bottom - 5, rect.left + 5, rect.bottom - 4, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom - 5, rect.right - 4), lightColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 1, rect.bottom - 2, rect.left + 2), lightColor);
+		surface->FillRect(Rect::Create(rect.bottom - 5, rect.left + 5, rect.bottom - 4, rect.right - 4), lightColor);
 
-		surface->SetForeColor(kDarkColor);
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2));
-		surface->FillRect(Rect::Create(rect.top, rect.left + 4, rect.bottom - 5, rect.left + 5));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom - 1, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 2), darkColor);
+		surface->FillRect(Rect::Create(rect.top, rect.left + 4, rect.bottom - 5, rect.left + 5), darkColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom - 1, rect.right - 1), darkColor);
 	}
 
 	void AlertWindowChromeTheme::RenderChromeRight(WindowImpl *window, DrawSurface *surface) const
 	{
+		ResolveCachingColor darkColor = kDarkColor;
+		ResolveCachingColor midColor = kMidColor;
+		ResolveCachingColor lightColor = kLightColor;
+		ResolveCachingColor blackColor = StdColors::Black();
+
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5));
-		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 6, rect.bottom, rect.right - 5), blackColor);
+		surface->FillRect(Rect::Create(rect.top, rect.right - 1, rect.bottom, rect.right), blackColor);
 
-		surface->SetForeColor(kLightColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 5, rect.bottom, rect.right - 4), lightColor);
 
-		surface->SetForeColor(kDarkColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 2, rect.bottom, rect.right - 1), darkColor);
 
-		surface->SetForeColor(kMidColor);
-		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2));
+		surface->FillRect(Rect::Create(rect.top, rect.right - 4, rect.bottom, rect.right - 2), midColor);
 	}
 
 	//---------------------------------------------------------------------------
@@ -1294,15 +1302,16 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size)
 	{
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor whiteColor = StdColors::White();
+
 		ResetResizeInProgressSurfaces();
 
 		m_isResizeInProgress = true;
 		if (!m_resizeInProgressHorizontalBar.Init(Rect::Create(0, 0, 3, size.m_x + 4), GpPixelFormats::k8BitStandard))
 		{
-			m_resizeInProgressHorizontalBar.SetForeColor(StdColors::Black());
-			m_resizeInProgressHorizontalBar.FillRect(Rect::Create(0, 0, 3, size.m_x + 4));
-			m_resizeInProgressHorizontalBar.SetForeColor(StdColors::White());
-			m_resizeInProgressHorizontalBar.FillRect(Rect::Create(1, 1, 2, size.m_x + 3));
+			m_resizeInProgressHorizontalBar.FillRect(Rect::Create(0, 0, 3, size.m_x + 4), blackColor);
+			m_resizeInProgressHorizontalBar.FillRect(Rect::Create(1, 1, 2, size.m_x + 3), whiteColor);
 		}
 		else
 		{
@@ -1312,11 +1321,9 @@ namespace PortabilityLayer
 
 		if (!m_resizeInProgressVerticalBar.Init(Rect::Create(0, 0, size.m_y, 3), GpPixelFormats::k8BitStandard))
 		{
-			m_resizeInProgressVerticalBar.SetForeColor(StdColors::Black());
-			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 0, size.m_y, 1));
-			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 2, size.m_y, 3));
-			m_resizeInProgressVerticalBar.SetForeColor(StdColors::White());
-			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 1, size.m_y, 2));
+			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 0, size.m_y, 1), blackColor);
+			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 2, size.m_y, 3), blackColor);
+			m_resizeInProgressVerticalBar.FillRect(Rect::Create(0, 1, size.m_y, 2), whiteColor);
 		}
 		else
 		{

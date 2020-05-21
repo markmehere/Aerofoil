@@ -16,6 +16,7 @@
 #include "PLPopupMenuWidget.h"
 #include "QDPixMap.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Utilities.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
@@ -129,13 +130,12 @@ void FrameSelectedTool (DrawSurface *surface)
 	}
 	
 	theRect = toolRects[toolIcon];
-	surface->SetForeColor(StdColors::Red());
 
-	surface->FrameRect(theRect);
+	PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
+
+	surface->FrameRect(theRect, redColor);
 	InsetRect(&theRect, 1, 1);
-	surface->FrameRect(theRect);
-
-	surface->SetForeColor(StdColors::Black());
+	surface->FrameRect(theRect, redColor);
 }
 #endif
 
@@ -152,9 +152,8 @@ void DrawToolName (DrawSurface *surface)
 		GetIndString(theString, kObjectNameStrings, 
 				toolSelected + ((toolMode - 1) * 0x0010));
 
-	surface->SetForeColor(StdColors::White());
-	surface->FillRect(toolTextRect);
-	surface->SetForeColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	surface->FillRect(toolTextRect, whiteColor);
 
 	const Point textPoint = Point::Create(toolTextRect.left + 3, toolTextRect.bottom - 6);
 
@@ -216,10 +215,11 @@ void EraseSelectedTool (void)
 	}
 	
 	theRect = toolRects[toolIcon];
-	surface->SetForeColor(StdColors::White());
-	surface->FrameRect(theRect);
+
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	surface->FrameRect(theRect, whiteColor);
 	InsetRect(&theRect, 1, 1);
-	surface->FrameRect(theRect);
+	surface->FrameRect(theRect, whiteColor);
 #endif
 }
 
@@ -250,11 +250,12 @@ void SelectTool (short which)
 	}
 	
 	theRect = toolRects[toolIcon];
-	surface->SetForeColor(StdColors::Red());
 
-	surface->FrameRect(theRect);
+	PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
+
+	surface->FrameRect(theRect, redColor);
 	InsetRect(&theRect, 1, 1);
-	surface->FrameRect(theRect);
+	surface->FrameRect(theRect, redColor);
 
 	toolSelected = which;
 	DrawToolName(surface);
@@ -271,9 +272,8 @@ void UpdateToolsWindow (void)
 
 	DrawSurface *surface = toolsWindow->GetDrawSurface();
 	
-	DkGrayForeColor(surface);
-	surface->DrawLine(Point::Create(4, 25), Point::Create(112, 25));
-	surface->SetForeColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor lineColor = DkGrayForeColor();
+	surface->DrawLine(Point::Create(4, 25), Point::Create(112, 25), lineColor);
 	
 	DrawToolTiles(surface);
 	FrameSelectedTool(surface);

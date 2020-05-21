@@ -14,6 +14,7 @@
 #include "Room.h"
 #include "Vec2i.h"
 #include "PLStandardColors.h"
+#include "ResolveCachingColor.h"
 #include "ScanlineMask.h"
 #include "ScanlineMaskConverter.h"
 
@@ -445,7 +446,8 @@ void DrawCabinet (Rect *cabinet)
 			(BitMap *)*GetGWorldPixMap(backSrcMap), 
 			&handleSrc, &handleSrc, &tempRect);
 
-	backSrcMap->FrameRect(*cabinet);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	backSrcMap->FrameRect(*cabinet, blackColor);
 }
 
 //--------------------------------------------------------------  DrawSimpleFurniture
@@ -982,7 +984,7 @@ void DrawClockHands (Point where, short bigHand, short littleHand)
 {
 	DrawSurface	*surface = backSrcMap;
 
-	surface->SetForeColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	const Point midPoint = Point::Create(where.h, where.v);
 	Point otherPoint = midPoint;
 
@@ -1037,7 +1039,7 @@ void DrawClockHands (Point where, short bigHand, short littleHand)
 		break;
 	}
 
-	surface->DrawLine(midPoint, otherPoint);
+	surface->DrawLine(midPoint, otherPoint, blackColor);
 	
 	switch (littleHand)
 	{
@@ -1090,7 +1092,7 @@ void DrawClockHands (Point where, short bigHand, short littleHand)
 		break;
 	}
 
-	surface->DrawLine(midPoint, otherPoint);
+	surface->DrawLine(midPoint, otherPoint, blackColor);
 }
 
 //--------------------------------------------------------------  DrawClockHands
@@ -1099,7 +1101,7 @@ void DrawLargeClockHands (Point where, short bigHand, short littleHand)
 {
 	DrawSurface	*surface = backSrcMap;
 
-	surface->SetForeColor(StdColors::White());
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	
 	const Point midPoint = Point::Create(where.h, where.v);
 	Point otherPoint = midPoint;
@@ -1155,7 +1157,7 @@ void DrawLargeClockHands (Point where, short bigHand, short littleHand)
 		break;
 	}
 
-	surface->DrawLine(midPoint, otherPoint);
+	surface->DrawLine(midPoint, otherPoint, whiteColor);
 	
 	switch (littleHand)
 	{
@@ -1208,8 +1210,7 @@ void DrawLargeClockHands (Point where, short bigHand, short littleHand)
 		break;
 	}
 
-	surface->DrawLine(midPoint, otherPoint);
-	surface->SetForeColor(StdColors::Black());
+	surface->DrawLine(midPoint, otherPoint, whiteColor);
 }
 
 //--------------------------------------------------------------  DrawSimplePrizes
@@ -1249,8 +1250,8 @@ void DrawGreaseRt (Rect *theRect, short distance, Boolean state, Boolean drawSpi
 			QSetRect(&spill, 0, -2, distance - 5, 0);
 			QOffsetRect(&spill, dest.right - 1, dest.bottom);
 
-			backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
-			backSrcMap->FillRect(spill);
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+			backSrcMap->FillRect(spill, blackColor);
 		}
 	}
 }
@@ -1280,11 +1281,11 @@ void DrawGreaseLf (Rect *theRect, short distance, Boolean state, Boolean drawSpi
 
 		if (drawSpill)
 		{
-			backSrcMap->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 
 			QSetRect(&spill, -distance + 5, -2, 0, 0);
 			QOffsetRect(&spill, dest.left + 1, dest.bottom);
-			backSrcMap->FillRect(spill);
+			backSrcMap->FillRect(spill, blackColor);
 		}
 	}
 }
@@ -1312,6 +1313,7 @@ void DrawInvisBonus (Rect *theRect)
 
 void DrawSlider (Rect *theRect)
 {
-	backSrcMap->FrameRect(*theRect);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	backSrcMap->FrameRect(*theRect, blackColor);
 }
 

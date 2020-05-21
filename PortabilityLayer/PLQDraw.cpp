@@ -24,6 +24,7 @@
 #include "ScanlineMaskIterator.h"
 #include "QDGraf.h"
 #include "QDStandardPalette.h"
+#include "ResolveCachingColor.h"
 #include "TextPlacer.h"
 #include "WindowManager.h"
 #include "QDGraf.h"
@@ -62,26 +63,7 @@ void SetPortWindowPort(WindowPtr window)
 	PortabilityLayer::QDManager::GetInstance()->SetPort(window->GetDrawSurface());
 }
 
-void SetPortDialogPort(Dialog *dialog)
-{
-	PL_NotYetImplemented();
-}
-
-int TextWidth(const PLPasStr &str, int firstChar1Based, int length)
-{
-	PL_NotYetImplemented();
-	return 0;
-}
-
-void MoveTo(int x, int y)
-{
-	Point &penPos = PortabilityLayer::QDManager::GetInstance()->GetState()->m_penPos;
-
-	penPos.h = x;
-	penPos.v = y;
-}
-
-static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB)
+static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB, PortabilityLayer::ResolveCachingColor &foreColor)
 {
 	const Rect lineRect = Rect::Create(
 		std::min(pointA.m_y, pointB.m_y),
@@ -92,7 +74,7 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 	// If the points are a straight line, paint as a rect
 	if (pointA.m_y == pointB.m_y || pointA.m_x == pointB.m_x)
 	{
-		surface->FillRect(lineRect);
+		surface->FillRect(lineRect, foreColor);
 		return;
 	}
 
@@ -141,7 +123,7 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 	case GpPixelFormats::k8BitStandard:
 		{
 			const size_t pixelSize = 1;
-			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+			const uint8_t color = foreColor.Resolve8(nullptr, 0);
 
 			while (currentPoint.m_x >= constrainedRect.left && currentPoint.m_x < constrainedRect.right && currentPoint.m_y < constrainedRect.bottom)
 			{
@@ -200,14 +182,8 @@ static void PlotLine(PortabilityLayer::QDState *qdState, DrawSurface *surface, c
 	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void GetForeColor(RGBColor *color)
-{
-	const PortabilityLayer::RGBAColor foreColor = PortabilityLayer::QDManager::GetInstance()->GetState()->GetForeColor();
-	*color = RGBColor(foreColor.r, foreColor.g, foreColor.b);
-}
-
 static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, const Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
-	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor)
+	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	assert(rect.IsValid());
 
@@ -254,12 +230,11 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 
 			if (isAA)
 			{
-				const PortabilityLayer::RGBAColor foreColor = qdState->GetForeColor();
-				if (foreColor == PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
+				if (cacheColor.GetRGBAColor() == PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
 					aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetBlackAATable();
-				else if (foreColor == PortabilityLayer::RGBAColor::Create(255, 255, 255, 255))
+				else if (cacheColor.GetRGBAColor() == PortabilityLayer::RGBAColor::Create(255, 255, 255, 255))
 					aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetWhiteAATable();
-				else if (cachedAATable != nullptr && foreColor == cachedAATableColor)
+				else if (cachedAATable != nullptr && cacheColor.GetRGBAColor() == cachedAATableColor)
 					aaTable = cachedAATable;
 				else
 				{
@@ -270,14 +245,14 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 							return;
 					}
 
-					cachedAATableColor = foreColor;
-					cachedAATable->GenerateForPalette(foreColor, PortabilityLayer::StandardPalette::GetInstance()->GetColors(), 256);
+					cachedAATableColor = cacheColor.GetRGBAColor();
+					cachedAATable->GenerateForPalette(cacheColor.GetRGBAColor(), PortabilityLayer::StandardPalette::GetInstance()->GetColors(), 256);
 
 					aaTable = cachedAATable;
 				}
 			}
 
-			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+			const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 			for (uint32_t row = 0; row < numRows; row++)
 			{
 				const uint8_t *inputRowData = firstInputRowData + row * inputPitch;
@@ -314,22 +289,22 @@ static void DrawGlyph(PortabilityLayer::QDState *qdState, PixMap *pixMap, const 
 }
 
 static void DrawText(PortabilityLayer::TextPlacer &placer, PortabilityLayer::QDState *qdState, PixMap *pixMap, const Rect &rect, const PortabilityLayer::RenderedFont *rfont,
-	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor)
+	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	PortabilityLayer::GlyphPlacementCharacteristics characteristics;
 	while (placer.PlaceGlyph(characteristics))
 	{
 		if (characteristics.m_haveGlyph)
-			DrawGlyph(qdState, pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cachedAATable, cachedAATableColor);
+			DrawGlyph(qdState, pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cachedAATable, cachedAATableColor, cacheColor);
 	}
 }
 
-void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa)
+void DrawSurface::DrawString(const Point &point, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
-	DrawStringConstrained(point, str, aa, Rect::CreateLargest());
+	DrawStringConstrained(point, str, aa, Rect::CreateLargest(), cacheColor);
 }
 
-void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect)
+void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str, bool aa, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	PortabilityLayer::QDPort *port = &m_port;
 
@@ -351,12 +326,12 @@ void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str,
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), -1, rfont, str);
 
-	DrawText(placer, qdState, pixMap, rect, rfont, m_cachedAATable, m_cachedAAColor);
+	DrawText(placer, qdState, pixMap, rect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa)
+void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, bool aa, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	PortabilityLayer::QDPort *port = &m_port;
 
@@ -384,7 +359,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), areaRect.Width(), rfont, str);
 
-	DrawText(placer, qdState, pixMap, limitRect, rfont, m_cachedAATable, m_cachedAAColor);
+	DrawText(placer, qdState, pixMap, limitRect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
@@ -780,7 +755,7 @@ PortabilityLayer::RenderedFont *DrawSurface::ResolveFont(bool aa) const
 	return fontManager->GetRenderedFontFromFamily(fontFamily, fontSize, aa, fontVariationFlags);
 }
 
-void DrawSurface::FillRect(const Rect &rect)
+void DrawSurface::FillRect(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid())
 		return;
@@ -809,7 +784,7 @@ void DrawSurface::FillRect(const Rect &rect)
 	{
 	case GpPixelFormats::k8BitStandard:
 		{
-			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+			const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 
 			size_t scanlineIndex = 0;
 			for (size_t ln = 0; ln < numLines; ln++)
@@ -828,7 +803,7 @@ void DrawSurface::FillRect(const Rect &rect)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pattern)
+void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pattern, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid())
 		return;
@@ -863,7 +838,7 @@ void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pa
 	{
 	case GpPixelFormats::k8BitStandard:
 	{
-		const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+		const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 		uint8_t backColor = 0;
 
 		size_t scanlineIndex = 0;
@@ -915,52 +890,52 @@ void DrawSurface::SetSystemFont(int size, int variationFlags)
 	qdState->m_fontVariationFlags = variationFlags;
 }
 
-void DrawSurface::FillEllipse(const Rect &rect)
+void DrawSurface::FillEllipse(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid() || rect.Width() < 1 || rect.Height() < 1)
 		return;
 
 	if (rect.Width() <= 2 || rect.Height() <= 2)
 	{
-		FillRect(rect);
+		FillRect(rect, cacheColor);
 		return;
 	}
 
 	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
 	if (mask)
 	{
-		FillScanlineMask(mask);
+		FillScanlineMask(mask, cacheColor);
 		mask->Destroy();
 	}
 }
 
-void DrawSurface::FillEllipseWithMaskPattern(const Rect &rect, const uint8_t *pattern)
+void DrawSurface::FillEllipseWithMaskPattern(const Rect &rect, const uint8_t *pattern, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid() || rect.Width() < 1 || rect.Height() < 1)
 		return;
 
 	if (rect.Width() <= 2 || rect.Height() <= 2)
 	{
-		FillRectWithMaskPattern8x8(rect, pattern);
+		FillRectWithMaskPattern8x8(rect, pattern, cacheColor);
 		return;
 	}
 
 	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
 	if (mask)
 	{
-		FillScanlineMaskWithMaskPattern(mask, pattern);
+		FillScanlineMaskWithMaskPattern(mask, pattern, cacheColor);
 		mask->Destroy();
 	}
 }
 
-void DrawSurface::FrameEllipse(const Rect &rect)
+void DrawSurface::FrameEllipse(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid())
 		return;
 
 	if (rect.Width() <= 2 || rect.Height() <= 2)
 	{
-		FillRect(rect);
+		FillRect(rect, cacheColor);
 		return;
 	}
 
@@ -995,7 +970,7 @@ void DrawSurface::FrameEllipse(const Rect &rect)
 	{
 	case GpPixelFormats::k8BitStandard:
 		{
-			const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
+			const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 
 			for (;;)
 			{
@@ -1037,12 +1012,12 @@ static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, 
 	}
 }
 
-void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
+void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
-	FillScanlineMaskWithMaskPattern(scanlineMask, nullptr);
+	FillScanlineMaskWithMaskPattern(scanlineMask, nullptr, cacheColor);
 }
 
-void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::ScanlineMask *scanlineMask, const uint8_t *pattern)
+void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::ScanlineMask *scanlineMask, const uint8_t *pattern, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!scanlineMask)
 		return;
@@ -1082,7 +1057,7 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 	switch (pixMap->m_pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
-		foreColor8 = qdState->ResolveForeColor8(nullptr, 256);
+		foreColor8 = cacheColor.Resolve8(nullptr, 256);
 		break;
 	default:
 		PL_NotYetImplemented();
@@ -1190,9 +1165,9 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 }
 
 
-void DrawSurface::DrawLine(const Point &a, const Point &b)
+void DrawSurface::DrawLine(const Point &a, const Point &b, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
-	PlotLine(m_port.GetState(), this, PortabilityLayer::Vec2i(a.h, a.v), PortabilityLayer::Vec2i(b.h, b.v));
+	PlotLine(m_port.GetState(), this, PortabilityLayer::Vec2i(a.h, a.v), PortabilityLayer::Vec2i(b.h, b.v), cacheColor);
 }
 
 void GetClip(Rect *rect)
@@ -1210,7 +1185,7 @@ void ClipRect(const Rect *rect)
 	qdState->m_clipRect = *rect;
 }
 
-void DrawSurface::FrameRect(const Rect &rect)
+void DrawSurface::FrameRect(const Rect &rect, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	if (!rect.IsValid())
 		return;
@@ -1219,7 +1194,7 @@ void DrawSurface::FrameRect(const Rect &rect)
 	uint16_t height = rect.bottom - rect.top;
 
 	if (width <= 2 || height <= 2)
-		FillRect(rect);
+		FillRect(rect, cacheColor);
 	else
 	{
 		// This is stupid, especially in the vertical case, but oh well
@@ -1227,28 +1202,28 @@ void DrawSurface::FrameRect(const Rect &rect)
 
 		edgeRect = rect;
 		edgeRect.right = edgeRect.left + 1;
-		FillRect(edgeRect);
+		FillRect(edgeRect, cacheColor);
 
 		edgeRect = rect;
 		edgeRect.left = edgeRect.right - 1;
-		FillRect(edgeRect);
+		FillRect(edgeRect, cacheColor);
 
 		edgeRect = rect;
 		edgeRect.bottom = edgeRect.top + 1;
-		FillRect(edgeRect);
+		FillRect(edgeRect, cacheColor);
 
 		edgeRect = rect;
 		edgeRect.top = edgeRect.bottom - 1;
-		FillRect(edgeRect);
+		FillRect(edgeRect, cacheColor);
 	}
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight)
+void DrawSurface::FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	PL_NotYetImplemented_TODO("RoundRect");
-	this->FrameRect(rect);
+	this->FrameRect(rect, cacheColor);
 }
 
 void DrawSurface::InvertFrameRect(const Rect &rect, const uint8_t *pattern)
@@ -1305,8 +1280,6 @@ void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 	{
 	case GpPixelFormats::k8BitStandard:
 	{
-		const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
-
 		size_t scanlineIndex = 0;
 		for (size_t ln = 0; ln < numLines; ln++)
 		{
@@ -1328,21 +1301,6 @@ void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 	}
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
-}
-
-void DrawSurface::SetForeColor(const PortabilityLayer::RGBAColor &color)
-{
-	m_port.GetState()->SetForeColor(color);
-}
-
-const PortabilityLayer::RGBAColor &DrawSurface::GetForeColor() const
-{
-	return m_port.GetState()->GetForeColor();
-}
-
-void PenSize(int w, int h)
-{
-	PL_NotYetImplemented();
 }
 
 void InsetRect(Rect *rect, int x, int y)

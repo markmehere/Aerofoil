@@ -10,7 +10,9 @@
 #include "Environ.h"
 #include "MainWindow.h"
 #include "Objects.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Room.h"
 
 
@@ -102,9 +104,11 @@ void HandleGrease (void)
 			}
 			
 			{
-				backSrcMap->FillRect(src);
-				
-				workSrcMap->FillRect(src);
+				PortabilityLayer::ResolveCachingColor blackColorBack = StdColors::Black();
+				backSrcMap->FillRect(src, blackColorBack);
+
+				PortabilityLayer::ResolveCachingColor blackColorWork = StdColors::Black();
+				workSrcMap->FillRect(src, blackColorWork);
 				AddRectToWorkRects(&src);
 			}
 			
@@ -282,13 +286,16 @@ void RedrawAllGrease (void)
 		if ((grease[i].where == thisRoomNumber) && 
 				((src.bottom - src.top) == 2))
 		{
+			PortabilityLayer::ResolveCachingColor blackColorBack = StdColors::Black();
+			PortabilityLayer::ResolveCachingColor blackColorWork = StdColors::Black();
+
 			QOffsetRect(&src, playOriginH, playOriginV);
 			
 			wasCPort = GetGraphicsPort();
 			
-			backSrcMap->FillRect(src);
+			backSrcMap->FillRect(src, blackColorBack);
 			
-			workSrcMap->FillRect(src);
+			workSrcMap->FillRect(src, blackColorWork);
 			AddRectToWorkRects(&src);
 			
 			SetGraphicsPort(wasCPort);

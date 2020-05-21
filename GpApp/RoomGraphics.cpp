@@ -11,6 +11,7 @@
 #include "Environ.h"
 #include "MainWindow.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Room.h"
 #include "BitmapImage.h"
 
@@ -82,8 +83,8 @@ void ResetLocale (Boolean soft)
 	DrawSurface	*wasCPort = GetGraphicsPort();
 	const short roomV = (*thisHouse)->rooms[thisRoomNumber].floor;
 
-	backSrcMap->SetForeColor(StdColors::Black());
-	backSrcMap->FillRect(backSrcRect);
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	backSrcMap->FillRect(backSrcRect, blackColor);
 	
 	if (numNeighbors > 3)
 	{
@@ -185,8 +186,8 @@ void DrawRoomBackground (short who, short where, short elevation)
 	
 	if ((numLights == 0) && (who != kRoomIsEmpty))
 	{
-		backSrcMap->SetForeColor(StdColors::Black());
-		backSrcMap->FillRect(localRoomsDest[where]);
+		PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+		backSrcMap->FillRect(localRoomsDest[where], blackColor);
 		
 		return;
 	}
@@ -195,8 +196,8 @@ void DrawRoomBackground (short who, short where, short elevation)
 	{
 		if (wardBitSet)
 		{
-			backSrcMap->SetForeColor(StdColors::Black());
-			backSrcMap->FillRect(localRoomsDest[where]);
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+			backSrcMap->FillRect(localRoomsDest[where], blackColor);
 			return;
 		}
 		

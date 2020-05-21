@@ -5,6 +5,7 @@
 #include "PLPasStr.h"
 #include "PLEditboxWidget.h"
 #include "PLStandardColors.h"
+#include "ResolveCachingColor.h"
 
 
 DialogTextSubstitutions::DialogTextSubstitutions()
@@ -117,7 +118,8 @@ void HideDialogItem(Dialog *dialog, int item)
 		widget->SetVisible(false);
 
 		DrawSurface *surface = dialog->GetWindow()->GetDrawSurface();
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(widget->GetExpandedRect());
+
+		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+		surface->FillRect(widget->GetExpandedRect(), whiteColor);
 	}
 }

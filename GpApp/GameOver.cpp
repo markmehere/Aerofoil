@@ -17,7 +17,9 @@
 #include "InputManager.h"
 #include "MainWindow.h"
 #include "Objects.h"
+#include "PLStandardColors.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Utilities.h"
 
 
@@ -87,6 +89,9 @@ void SetUpFinalScreen (void)
 	short		count, offset, i, textDown;
 	char		wasState;
 	DrawSurface	*surface = workSrcMap;
+
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	
 	ColorRect(surface, workSrcRect, 244);
 	QSetRect(&tempRect, 0, 0, 640, 460);
@@ -107,14 +112,12 @@ void SetUpFinalScreen (void)
 		offset = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) -
 				surface->MeasureString(subStr)) / 2;
 
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
 		const Point textShadowPos = Point::Create(offset + 1, textDown + 33 + (count * 20));
 
-		surface->DrawString(textShadowPos, subStr, true);
-		surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
+		surface->DrawString(textShadowPos, subStr, true, blackColor);
 
 		const Point textPos = Point::Create(offset, textDown + 32 + (count * 20));
-		surface->DrawString(textPos, subStr, true);
+		surface->DrawString(textPos, subStr, true, whiteColor);
 		count++;
 	}
 	while (subStr[0] > 0);

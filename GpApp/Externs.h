@@ -13,6 +13,7 @@
 
 namespace PortabilityLayer
 {
+	class ResolveCachingColor;
 	class ResourceArchive;
 	class ScanlineMask;
 	class ResTypeID;
@@ -143,10 +144,9 @@ void HiliteRect (DrawSurface *surface, const Rect &rect, short, short);
 void ColorFrameRect (DrawSurface *surface, const Rect &theRect, long colorIndex);
 void ColorFrameWHRect (DrawSurface *surface, short, short, short, short, long);
 void ColorFrameOval (DrawSurface *surface, const Rect &, long);
-void LtGrayForeColor (DrawSurface *surface);
-void GrayForeColor (DrawSurface *surface);
-void DkGrayForeColor (DrawSurface *surface);
-void RestoreColorsSlam (DrawSurface *surface);
+PortabilityLayer::ResolveCachingColor LtGrayForeColor ();
+PortabilityLayer::ResolveCachingColor GrayForeColor ();
+PortabilityLayer::ResolveCachingColor DkGrayForeColor ();
 
 void MonitorWait (void);								// --- DebugUtils.c
 void DisplayRect (Rect *);

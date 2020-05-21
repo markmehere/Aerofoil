@@ -19,6 +19,7 @@
 #include "WindowManager.h"
 #include "QDPixMap.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "Utilities.h"
 
 
@@ -227,7 +228,6 @@ void RedrawMapContents (void)
 						type = kNumBackgrounds;	// Draw "?" thumbnail.
 				}
 
-				surface->SetForeColor(StdColors::Black());
 				if (type > kNumBackgrounds)		// Do a "pretty" thumbnail.
 				{
 					LoadGraphicPlus(surface, type + kBaseBackgroundID, aRoom);
@@ -249,45 +249,46 @@ void RedrawMapContents (void)
 			}
 			else
 			{
-				surface->SetForeColor(StdColors::White());
-				surface->FillRect(aRoom);
+				PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+				surface->FillRect(aRoom, whiteColor);
 
+				PortabilityLayer::ResolveCachingColor overlayColor;
 				if (i >= groundLevel)
-					surface->SetForeColor(StdColors::Green());
+					overlayColor = StdColors::Green();
 				else
-					surface->SetForeColor(StdColors::Blue());
+					overlayColor = StdColors::Blue();
 
 				Pattern dummyPat;
-				surface->FillRectWithMaskPattern8x8(aRoom, *GetQDGlobalsGray(&dummyPat));
+				surface->FillRectWithMaskPattern8x8(aRoom, *GetQDGlobalsGray(&dummyPat), overlayColor);
 			}
 		}
 	}
 
-	surface->SetForeColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	
 	for (i = 1; i < mapRoomsWide; i++)
 	{
 		const Point upperPoint = Point::Create(i * kMapRoomWidth, 0);
 		const Point lowerPoint = Point::Create(upperPoint.h, upperPoint.v + mapRoomsHigh * kMapRoomHeight);
-		surface->DrawLine(upperPoint, lowerPoint);
+		surface->DrawLine(upperPoint, lowerPoint, blackColor);
 	}
 	
 	for (i = 1; i < mapRoomsHigh; i++)
 	{
 		const Point leftPoint = Point::Create(0, i * kMapRoomHeight);
 		const Point rightPoint = leftPoint + Point::Create(mapRoomsWide * kMapRoomWidth, 0);
-		surface->DrawLine(leftPoint, rightPoint);
+		surface->DrawLine(leftPoint, rightPoint, blackColor);
 	}
 	
 	if (activeRoomVisible)
 	{
-		surface->SetForeColor(StdColors::Red());
+		PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
+
 		activeRoomRect.right++;
 		activeRoomRect.bottom++;
-		surface->FrameRect(activeRoomRect);
+		surface->FrameRect(activeRoomRect, redColor);
 		InsetRect(&activeRoomRect, 1, 1);
-		surface->FrameRect(activeRoomRect);
-		surface->SetForeColor(StdColors::Black());
+		surface->FrameRect(activeRoomRect, redColor);
 		InsetRect(&activeRoomRect, -1, -1);
 	}
 	
@@ -304,18 +305,18 @@ void DrawMapResizeBox(void)
 	const Rect windowRect = surface->m_port.GetRect();
 	Rect growBoxRect = Rect::Create(windowRect.bottom - 14, windowRect.right - 14, windowRect.bottom, windowRect.right);
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(204, 204, 204, 255));
-	surface->FillRect(growBoxRect);
+	PortabilityLayer::ResolveCachingColor backgroundColor = PortabilityLayer::RGBAColor::Create(204, 204, 204, 255);
+	surface->FillRect(growBoxRect, backgroundColor);
 
-	surface->SetForeColor(StdColors::Black());
-	surface->FillRect(Rect::Create(growBoxRect.top + 2, growBoxRect.left + 2, growBoxRect.top + 3, growBoxRect.left + 6));
-	surface->FillRect(Rect::Create(growBoxRect.top + 3, growBoxRect.left + 2, growBoxRect.top + 6, growBoxRect.left + 3));
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	surface->FillRect(Rect::Create(growBoxRect.top + 2, growBoxRect.left + 2, growBoxRect.top + 3, growBoxRect.left + 6), blackColor);
+	surface->FillRect(Rect::Create(growBoxRect.top + 3, growBoxRect.left + 2, growBoxRect.top + 6, growBoxRect.left + 3), blackColor);
 
-	surface->FillRect(Rect::Create(growBoxRect.top + 8, growBoxRect.left + 11, growBoxRect.top + 12, growBoxRect.left + 12));
-	surface->FillRect(Rect::Create(growBoxRect.top + 11, growBoxRect.left + 8, growBoxRect.top + 12, growBoxRect.left + 11));
+	surface->FillRect(Rect::Create(growBoxRect.top + 8, growBoxRect.left + 11, growBoxRect.top + 12, growBoxRect.left + 12), blackColor);
+	surface->FillRect(Rect::Create(growBoxRect.top + 11, growBoxRect.left + 8, growBoxRect.top + 12, growBoxRect.left + 11), blackColor);
 
 	for (int i = 0; i < 7; i++)
-		surface->FillRect(Rect::Create(growBoxRect.top + 3 + i, growBoxRect.left + 3 + i, growBoxRect.top + 5 + i, growBoxRect.left + 5 + i));
+		surface->FillRect(Rect::Create(growBoxRect.top + 3 + i, growBoxRect.left + 3 + i, growBoxRect.top + 5 + i, growBoxRect.left + 5 + i), blackColor);
 }
 
 //--------------------------------------------------------------  UpdateMapWindow
@@ -359,8 +360,8 @@ void ResizeMapWindow (short newH, short newV)
 			mapRoomsWide * kMapRoomWidth + kMapScrollBarWidth - 1, 
 			mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth - 1);
 
-	surface->SetForeColor(StdColors::White());
-	surface->FillRect(mapWindowRect);
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+	surface->FillRect(mapWindowRect, whiteColor);
 	SizeWindow(mapWindow, mapWindowRect.right, mapWindowRect.bottom, true);
 	
 	mapHScroll->SetMax(kMaxNumRoomsH - mapRoomsWide);

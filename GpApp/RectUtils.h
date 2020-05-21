@@ -10,8 +10,13 @@
 
 #include "PLQDraw.h"
 
+namespace PortabilityLayer
+{
+	class ResolveCachingColor;
+}
 
-void FrameWHRect (short, short, short, short);
+
+void FrameWHRect (short, short, short, short, PortabilityLayer::ResolveCachingColor &color);
 void NormalizeRect (Rect *);
 void ZeroRectCorner (Rect *);
 void CenterRectOnPoint (Rect *, Point);

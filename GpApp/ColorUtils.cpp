@@ -10,6 +10,7 @@
 #include "PLPalettes.h"
 #include "PLPasStr.h"
 #include "QDStandardPalette.h"
+#include "ResolveCachingColor.h"
 
 
 //==============================================================  Functions
@@ -21,12 +22,9 @@
 
 void ColorText (DrawSurface *surface, const Point &point, StringPtr theStr, long color)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->DrawString(point, theStr, true);
-	surface->SetForeColor(wasColor);
+	surface->DrawString(point, theStr, true, rColor);
 }
 
 //--------------------------------------------------------------  ColorRect
@@ -36,12 +34,9 @@ void ColorText (DrawSurface *surface, const Point &point, StringPtr theStr, long
 
 void ColorRect (DrawSurface *surface, const Rect &theRect, long color)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->FillRect(theRect);
-	surface->SetForeColor(wasColor);
+	surface->FillRect(theRect, rColor);
 }
 
 //--------------------------------------------------------------  ColorOval
@@ -51,22 +46,16 @@ void ColorRect (DrawSurface *surface, const Rect &theRect, long color)
 
 void ColorOval (DrawSurface *surface, const Rect &theRect, long color)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->FillEllipse(theRect);
-	surface->SetForeColor(wasColor);
+	surface->FillEllipse(theRect, rColor);
 }
 
 void ColorOvalMaskPattern(DrawSurface *surface, const Rect &theRect, long color, const uint8_t *pattern)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->FillEllipseWithMaskPattern(theRect, pattern);
-	surface->SetForeColor(wasColor);
+	surface->FillEllipseWithMaskPattern(theRect, pattern, rColor);
 }
 
 //--------------------------------------------------------------  ColorRegionMaskPattern
@@ -76,12 +65,8 @@ void ColorOvalMaskPattern(DrawSurface *surface, const Rect &theRect, long color,
 
 void ColorRegionMaskPattern (DrawSurface *surface, PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex, const uint8_t *pattern)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[colorIndex];
-
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->FillScanlineMaskWithMaskPattern(scanlineMask, pattern);
-	surface->SetForeColor(wasColor);
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(colorIndex);
+	surface->FillScanlineMaskWithMaskPattern(scanlineMask, pattern, rColor);
 }
 
 //--------------------------------------------------------------  ColorLine
@@ -91,12 +76,9 @@ void ColorRegionMaskPattern (DrawSurface *surface, PortabilityLayer::ScanlineMas
 
 void ColorLine (DrawSurface *surface, short h0, short v0, short h1, short v1, long color)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor cacheColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->DrawLine(Point::Create(h0, v0), Point::Create(h1, v1));
-	surface->SetForeColor(wasColor);
+	surface->DrawLine(Point::Create(h0, v0), Point::Create(h1, v1), cacheColor);
 }
 
 //--------------------------------------------------------------  HiliteRect
@@ -125,12 +107,9 @@ void HiliteRect (DrawSurface *surface, const Rect &theRect, short color1, short 
 
 void ColorFrameRect (DrawSurface *surface, const Rect &theRect, long color)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->FrameRect(theRect);
-	surface->SetForeColor(wasColor);
+	surface->FrameRect(theRect, rColor);
 }
 
 //--------------------------------------------------------------  ColorFrameWHRect
@@ -157,12 +136,9 @@ void ColorFrameWHRect (DrawSurface *surface, short left, short top, short wide, 
 
 void ColorFrameOval (DrawSurface *surface, const Rect &theRect, long color)
 {
-	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
+	PortabilityLayer::ResolveCachingColor rColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(color);
 
-	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
-	surface->SetForeColor(rgbaColor);
-	surface->FrameEllipse(theRect);
-	surface->SetForeColor(wasColor);
+	surface->FrameEllipse(theRect, rColor);
 }
 
 //--------------------------------------------------------------  LtGrayForeColor
@@ -170,9 +146,9 @@ void ColorFrameOval (DrawSurface *surface, const Rect &theRect, long color)
 // This function finds the closest match to a "light gray" in theÉ
 // current palette and sets the pen color to that.
 
-void LtGrayForeColor (DrawSurface *surface)
+PortabilityLayer::ResolveCachingColor LtGrayForeColor ()
 {
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(191, 191, 191, 255));
+	return PortabilityLayer::RGBAColor::Create(191, 191, 191, 255);
 }
 
 //--------------------------------------------------------------  GrayForeColor
@@ -180,9 +156,9 @@ void LtGrayForeColor (DrawSurface *surface)
 // This function finds the closest match to a "medium gray" in theÉ
 // current palette and sets the pen color to that.
 
-void GrayForeColor (DrawSurface *surface)
+PortabilityLayer::ResolveCachingColor GrayForeColor ()
 {
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(127, 127, 127, 255));
+	return PortabilityLayer::RGBAColor::Create(127, 127, 127, 255);
 }
 
 //--------------------------------------------------------------  DkGrayForeColor
@@ -190,7 +166,7 @@ void GrayForeColor (DrawSurface *surface)
 // This function finds the closest match to a "dark gray" in theÉ
 // current palette and sets the pen color to that.
 
-void DkGrayForeColor (DrawSurface *surface)
+PortabilityLayer::ResolveCachingColor DkGrayForeColor ()
 {
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(63, 63, 63, 255));
+	return PortabilityLayer::RGBAColor::Create(63, 63, 63, 255);
 }

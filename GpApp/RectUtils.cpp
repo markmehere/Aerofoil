@@ -16,7 +16,7 @@
 // Given the top left corner and a width and height, this functionÉ
 // simply creates the necessary rectangle and frames it.
 
-void FrameWHRect (DrawSurface *surface, short left, short top, short wide, short high)
+void FrameWHRect (DrawSurface *surface, short left, short top, short wide, short high, PortabilityLayer::ResolveCachingColor &color)
 {
 	Rect		theRect;
 	
@@ -24,7 +24,7 @@ void FrameWHRect (DrawSurface *surface, short left, short top, short wide, short
 	theRect.top = top;
 	theRect.right = left + wide;
 	theRect.bottom = top + high;
-	surface->FrameRect(theRect);
+	surface->FrameRect(theRect, color);
 }
 
 //--------------------------------------------------------------  NormalizeRect

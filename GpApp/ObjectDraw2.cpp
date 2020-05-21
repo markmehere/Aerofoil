@@ -15,6 +15,7 @@
 #include "Environ.h"
 #include "Objects.h"
 #include "RectUtils.h"
+#include "ResolveCachingColor.h"
 #include "ResourceManager.h"
 #include "Room.h"
 #include "Utilities.h"
@@ -578,8 +579,7 @@ void DrawMacPlus (Rect *theRect, Boolean isOn, Boolean isLit)
 
 	if (IsMacPlusGraphicBanned())
 	{
-		const PortabilityLayer::RGBAColor beigeColor = PortabilityLayer::RGBAColor::Create(255, 255, 204, 255);
-		const PortabilityLayer::RGBAColor wasColor = backSrcMap->GetForeColor();
+		PortabilityLayer::ResolveCachingColor beigeColor = PortabilityLayer::RGBAColor::Create(255, 255, 204, 255);
 
 		Rect paintOverRect = *theRect;
 		paintOverRect.left += 8;
@@ -587,9 +587,7 @@ void DrawMacPlus (Rect *theRect, Boolean isOn, Boolean isLit)
 		paintOverRect.right = paintOverRect.left + 17;
 		paintOverRect.bottom = paintOverRect.top + 6;
 
-		backSrcMap->SetForeColor(beigeColor);
-		backSrcMap->FillRect(paintOverRect);
-		backSrcMap->SetForeColor(wasColor);
+		backSrcMap->FillRect(paintOverRect, beigeColor);
 	}
 }
 

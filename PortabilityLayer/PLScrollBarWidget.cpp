@@ -2,6 +2,7 @@
 #include "PLControlDefinitions.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "ResolveCachingColor.h"
 
 namespace PortabilityLayer
 {
@@ -40,8 +41,8 @@ namespace PortabilityLayer
 
 	void ScrollBarWidget::DrawControl(DrawSurface *surface)
 	{
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(this->m_rect.Inset(1, 1));
+		ResolveCachingColor whiteColor = StdColors::White();
+		surface->FillRect(this->m_rect.Inset(1, 1), whiteColor);
 
 		if (m_rect.Width() < 16 || m_rect.Height() < 16)
 			return;
@@ -54,43 +55,41 @@ namespace PortabilityLayer
 
 	void ScrollBarWidget::DrawControlHorizontal(DrawSurface *surface)
 	{
-		surface->SetForeColor(StdColors::Black());
-		surface->FrameRect(m_rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor whiteColor = StdColors::White();
+		ResolveCachingColor midGrayColor = RGBAColor::Create(136, 136, 136, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(187, 187, 187, 255);
+
+		surface->FrameRect(m_rect, blackColor);
 
 		const Rect leftArrowRect = Rect::Create(m_rect.top, m_rect.left, m_rect.bottom, m_rect.left + 16);
 		DrawBeveledBox(surface, leftArrowRect);
 
-		surface->SetForeColor(StdColors::Black());
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(7 - i + leftArrowRect.top, 6 + i + leftArrowRect.left, 9 + i + leftArrowRect.top, 7 + i + leftArrowRect.left);
-			surface->FillRect(arrowSegRect);
+			surface->FillRect(arrowSegRect, blackColor);
 		}
 
 		const Rect rightArrowRect = Rect::Create(m_rect.top, m_rect.right - 16, m_rect.bottom, m_rect.right);
 		DrawBeveledBox(surface, rightArrowRect);
 
-		surface->SetForeColor(StdColors::Black());
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(4 + i + rightArrowRect.top, 6 + i + rightArrowRect.left, 12 - i + rightArrowRect.top, 7 + i + rightArrowRect.left);
-			surface->FillRect(arrowSegRect);
+			surface->FillRect(arrowSegRect, blackColor);
 		}
 
 		const Rect laneRect = Rect::Create(m_rect.top, leftArrowRect.right, m_rect.bottom, rightArrowRect.left);
 
-		surface->SetForeColor(RGBAColor::Create(136, 136, 136, 255));
-		surface->FillRect(Rect::Create(laneRect.top + 1, laneRect.left, laneRect.top + 2, laneRect.right));
+		surface->FillRect(Rect::Create(laneRect.top + 1, laneRect.left, laneRect.top + 2, laneRect.right), midGrayColor);
 
-		surface->SetForeColor(RGBAColor::Create(187, 187, 187, 255));
-		surface->FillRect(Rect::Create(laneRect.top + 2, laneRect.left, laneRect.bottom - 2, laneRect.right));
+		surface->FillRect(Rect::Create(laneRect.top + 2, laneRect.left, laneRect.bottom - 2, laneRect.right), lightGrayColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(laneRect.bottom - 2, laneRect.left, laneRect.bottom - 1, laneRect.right));
+		surface->FillRect(Rect::Create(laneRect.bottom - 2, laneRect.left, laneRect.bottom - 1, laneRect.right), whiteColor);
 
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.top + 1, laneRect.right));
-		surface->FillRect(Rect::Create(laneRect.bottom - 1, laneRect.left, laneRect.bottom, laneRect.right));
+		surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.top + 1, laneRect.right), blackColor);
+		surface->FillRect(Rect::Create(laneRect.bottom - 1, laneRect.left, laneRect.bottom, laneRect.right), blackColor);
 
 
 		if (m_laneCapacity > 0)
@@ -99,43 +98,38 @@ namespace PortabilityLayer
 
 	void ScrollBarWidget::DrawControlVertical(DrawSurface *surface)
 	{
-		surface->SetForeColor(StdColors::Black());
-		surface->FrameRect(m_rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor whiteColor = StdColors::White();
+		ResolveCachingColor midGrayColor = RGBAColor::Create(136, 136, 136, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(187, 187, 187, 255);
+
+		surface->FrameRect(m_rect, blackColor);
 
 		const Rect topArrowRect = Rect::Create(m_rect.top, m_rect.left, m_rect.top + 16, m_rect.right);
 		DrawBeveledBox(surface, topArrowRect);
 
-		surface->SetForeColor(StdColors::Black());
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(6 + i + topArrowRect.top, 7 - i + topArrowRect.left, 7 + i + topArrowRect.top, 9 + i + topArrowRect.left);
-			surface->FillRect(arrowSegRect);
+			surface->FillRect(arrowSegRect, blackColor);
 		}
 
 		const Rect bottomArrowRect = Rect::Create(m_rect.bottom - 16, m_rect.left, m_rect.bottom, m_rect.right);
 		DrawBeveledBox(surface, bottomArrowRect);
 
-		surface->SetForeColor(StdColors::Black());
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(6 + i + bottomArrowRect.top, 4 + i + bottomArrowRect.left, 7 + i + bottomArrowRect.top, 12 - i + bottomArrowRect.left);
-			surface->FillRect(arrowSegRect);
+			surface->FillRect(arrowSegRect, blackColor);
 		}
 
 		const Rect laneRect = Rect::Create(topArrowRect.bottom, m_rect.left, bottomArrowRect.top, m_rect.right);
 
-		surface->SetForeColor(RGBAColor::Create(136, 136, 136, 255));
-		surface->FillRect(Rect::Create(laneRect.top, laneRect.left + 1, laneRect.bottom, laneRect.left + 2));
-
-		surface->SetForeColor(RGBAColor::Create(187, 187, 187, 255));
-		surface->FillRect(Rect::Create(laneRect.top, laneRect.left + 2, laneRect.bottom, laneRect.right - 2));
-
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(laneRect.bottom, laneRect.right - 2, laneRect.bottom, laneRect.right - 1));
-
-		surface->SetForeColor(StdColors::Black());
-		surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.bottom, laneRect.left + 1));
-		surface->FillRect(Rect::Create(laneRect.top, laneRect.right - 1, laneRect.bottom, laneRect.right));
+		surface->FillRect(Rect::Create(laneRect.top, laneRect.left + 1, laneRect.bottom, laneRect.left + 2), midGrayColor);
+		surface->FillRect(Rect::Create(laneRect.top, laneRect.left + 2, laneRect.bottom, laneRect.right - 2), lightGrayColor);
+		surface->FillRect(Rect::Create(laneRect.bottom, laneRect.right - 2, laneRect.bottom, laneRect.right - 1), whiteColor);
+		surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.bottom, laneRect.left + 1), blackColor);
+		surface->FillRect(Rect::Create(laneRect.top, laneRect.right - 1, laneRect.bottom, laneRect.right), blackColor);
 
 		if (m_laneCapacity > 0)
 			DrawBeveledBox(surface, Rect::Create(laneRect.top + m_gripPos, laneRect.left, laneRect.top + m_gripPos + m_gripSize, laneRect.right));
@@ -143,19 +137,19 @@ namespace PortabilityLayer
 
 	void ScrollBarWidget::DrawBeveledBox(DrawSurface *surface, const Rect &rect)
 	{
-		surface->SetForeColor(StdColors::Black());
-		surface->FrameRect(rect);
+		ResolveCachingColor blackColor = StdColors::Black();
+		ResolveCachingColor whiteColor = StdColors::White();
+		ResolveCachingColor midGrayColor = RGBAColor::Create(136, 136, 136, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(187, 187, 187, 255);
 
-		surface->SetForeColor(RGBAColor::Create(187, 187, 187, 187));
-		surface->FillRect(rect.Inset(1, 1));
+		surface->FrameRect(rect, blackColor);
 
-		surface->SetForeColor(StdColors::White());
-		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2));
-		surface->FillRect(Rect::Create(rect.top + 2, rect.left + 1, rect.bottom - 2, rect.left + 2));
+		surface->FillRect(rect.Inset(1, 1), lightGrayColor);
 
-		surface->SetForeColor(RGBAColor::Create(136, 136, 136, 136));
-		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 1));
-		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom - 2, rect.right - 1));
+		surface->FillRect(Rect::Create(rect.top + 1, rect.left + 1, rect.top + 2, rect.right - 2), whiteColor);
+		surface->FillRect(Rect::Create(rect.top + 2, rect.left + 1, rect.bottom - 2, rect.left + 2), whiteColor);
+		surface->FillRect(Rect::Create(rect.bottom - 2, rect.left + 2, rect.bottom - 1, rect.right - 1), midGrayColor);
+		surface->FillRect(Rect::Create(rect.top + 2, rect.right - 2, rect.bottom - 2, rect.right - 1), midGrayColor);
 	}
 
 	bool ScrollBarWidget::IsHorizontal() const

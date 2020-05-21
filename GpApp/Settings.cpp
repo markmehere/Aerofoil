@@ -12,6 +12,7 @@
 #include "PLTextUtils.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
+#include "ResolveCachingColor.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
@@ -348,26 +349,25 @@ void UpdateSettingsControl (Dialog *theDialog)
 {
 	short		i;
 	DrawSurface	*surface = theDialog->GetWindow()->GetDrawSurface();
+
+	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 255, 255, 255));
 	for (i = 0; i < 4; i++)
 	{
 		Rect rect = controlRects[i];
-		surface->FrameRect(rect);
+		surface->FrameRect(rect, whiteColor);
 		InsetRect(&rect, 1, 1);
-		surface->FrameRect(rect);
+		surface->FrameRect(rect, whiteColor);
 	}
 
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(255, 0, 0, 255));
+	PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
 
 	{
 		Rect rect = controlRects[whichCtrl];
-		surface->FrameRect(rect);
+		surface->FrameRect(rect, redColor);
 		InsetRect(&rect, 1, 1);
-		surface->FrameRect(rect);
+		surface->FrameRect(rect, redColor);
 	}
-
-	surface->SetForeColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255));
 
 	UpdateControlKeyName(theDialog);
 	FrameDialogItemC(theDialog, 3, kRedOrangeColor8);
@@ -555,18 +555,20 @@ void DoControlPrefs (void)
 			{
 				Rect ctrlRect = controlRects[whichCtrl];
 
-				surface->SetForeColor(StdColors::White());
-				surface->FrameRect(ctrlRect);
+				PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+				surface->FrameRect(ctrlRect, whiteColor);
 				InsetRect(&ctrlRect, 1, 1);
-				surface->FrameRect(ctrlRect);
+				surface->FrameRect(ctrlRect, whiteColor);
 
 				whichCtrl = itemHit - kRightControl;
 
 				ctrlRect = controlRects[whichCtrl];
-				surface->SetForeColor(StdColors::Red());
-				surface->FrameRect(ctrlRect);
+
+
+				PortabilityLayer::ResolveCachingColor redColor = StdColors::Red();
+				surface->FrameRect(ctrlRect, redColor);
 				InsetRect(&ctrlRect, 1, 1);
-				surface->FrameRect(ctrlRect);
+				surface->FrameRect(ctrlRect, redColor);
 			}
 
 			UpdateControlKeyName(prefDlg);
@@ -887,17 +889,15 @@ void FrameDisplayIcon (Dialog *theDialog, const PortabilityLayer::RGBAColor &col
 
 	DrawSurface *surface = theDialog->GetWindow()->GetDrawSurface();
 
-	surface->SetForeColor(color);
+	PortabilityLayer::ResolveCachingColor cacheColor = color;
 	
 	theRect.left -= 3;
 	theRect.top += 0;
 	theRect.right += 3;
 	theRect.bottom -= 1;
-	surface->FrameRect(theRect);
+	surface->FrameRect(theRect, cacheColor);
 	InsetRect(&theRect, 1, 1);
-	surface->FrameRect(theRect);
-
-	surface->SetForeColor(StdColors::Black());
+	surface->FrameRect(theRect, cacheColor);
 }
 
 //--------------------------------------------------------------  DisplayUpdate
