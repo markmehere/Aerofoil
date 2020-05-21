@@ -2251,7 +2251,7 @@ void DrawThisRoomsObjects (void)
 	{
 		if (GetNumberOfLights(thisRoomNumber) <= 0)
 		{
-			surface->FillRectWithPattern8x8(backSrcRect, true, *GetQDGlobalsGray(&dummyPattern));
+			surface->FillRectWithMaskPattern8x8(backSrcRect, *GetQDGlobalsGray(&dummyPattern));
 		}
 		
 		for (i = 0; i < kMaxRoomObs; i++)

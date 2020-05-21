@@ -483,6 +483,9 @@
     <ClInclude Include="PLRegions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ResolveCachingColor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">

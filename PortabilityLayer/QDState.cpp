@@ -32,31 +32,14 @@ namespace PortabilityLayer
 		m_isForeResolved8 = false;
 	}
 
-	void QDState::SetBackColor(const RGBAColor &color)
-	{
-		m_backUnresolvedColor = color;
-		m_isBackResolved16 = false;
-		m_isBackResolved8 = false;
-	}
-
 	const RGBAColor &QDState::GetForeColor() const
 	{
 		return m_foreUnresolvedColor;
 	}
 
-	const RGBAColor &QDState::GetBackColor() const
-	{
-		return m_backUnresolvedColor;
-	}
-
 	uint8_t QDState::ResolveForeColor8(const RGBAColor *palette, unsigned int numColors)
 	{
 		return ResolveColor8(m_foreUnresolvedColor, m_foreResolvedColor8, m_isForeResolved8, palette, numColors);
-	}
-
-	uint8_t QDState::ResolveBackColor8(const RGBAColor *palette, unsigned int numColors)
-	{
-		return ResolveColor8(m_backUnresolvedColor, m_backResolvedColor8, m_isBackResolved8, palette, numColors);
 	}
 
 	uint8_t QDState::ResolveColor8(const RGBAColor &color, uint8_t &cached, bool &isCached, const RGBAColor *palette, unsigned int numColors)

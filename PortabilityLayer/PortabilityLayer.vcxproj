@@ -229,6 +229,7 @@
     <ClInclude Include="PLScrollBarWidget.h" />
     <ClInclude Include="PLUnalignedPtr.h" />
     <ClInclude Include="PLWidgets.h" />
+    <ClInclude Include="ResolveCachingColor.h" />
     <ClInclude Include="TextPlacer.h" />
     <ClInclude Include="UTF16.h" />
     <ClInclude Include="UTF8.h" />

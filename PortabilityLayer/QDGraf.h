@@ -60,26 +60,23 @@ struct DrawSurface
 	void PushToDDSurface(IGpDisplayDriver *displayDriver);
 
 	void FillRect(const Rect &rect);
-	void FillRectWithPattern8x8(const Rect &rect, bool isMask, const uint8_t *pattern);
+	void FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pattern);
 	void FrameRect(const Rect &rect);
 	void FrameRoundRect(const Rect &rect, int quadrantWidth, int quadrantHeight);
 	void InvertFrameRect(const Rect &rect, const uint8_t *pattern);
 	void InvertFillRect(const Rect &rect, const uint8_t *pattern);
 
 	void FillEllipse(const Rect &rect);
-	void FillEllipseWithPattern(const Rect &rect, bool isMask, const uint8_t *pattern);
+	void FillEllipseWithMaskPattern(const Rect &rect, const uint8_t *pattern);
 	void FrameEllipse(const Rect &rect);
 
 	void FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask);
-	void FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMask *scanlineMask, bool isMask, const uint8_t *pattern);
+	void FillScanlineMaskWithMaskPattern(const PortabilityLayer::ScanlineMask *scanlineMask, const uint8_t *pattern);
 
 	void DrawLine(const Point &a, const Point &b);
 
 	void SetForeColor(const PortabilityLayer::RGBAColor &color);
 	const PortabilityLayer::RGBAColor &GetForeColor() const;
-
-	void SetBackColor(const PortabilityLayer::RGBAColor &color);
-	const PortabilityLayer::RGBAColor &GetBackColor() const;
 
 	void SetApplicationFont(int size, int variationFlags);
 	void SetSystemFont(int size, int variationFlags);

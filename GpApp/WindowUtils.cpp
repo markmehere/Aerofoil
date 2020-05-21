@@ -127,7 +127,6 @@ void OpenMessageWindow (const PLPasStr &title)
 
 		surface->SetClipRect(mssgWindowRect);
 		surface->SetForeColor(StdColors::Black());
-		surface->SetBackColor(StdColors::White());
 		
 		surface->SetSystemFont(12, 0);
 	}

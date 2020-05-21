@@ -258,7 +258,7 @@ void RedrawMapContents (void)
 					surface->SetForeColor(StdColors::Blue());
 
 				Pattern dummyPat;
-				surface->FillRectWithPattern8x8(aRoom, true, *GetQDGlobalsGray(&dummyPat));
+				surface->FillRectWithMaskPattern8x8(aRoom, *GetQDGlobalsGray(&dummyPat));
 			}
 		}
 	}

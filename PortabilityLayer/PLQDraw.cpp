@@ -828,7 +828,7 @@ void DrawSurface::FillRect(const Rect &rect)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-void DrawSurface::FillRectWithPattern8x8(const Rect &rect, bool isMask, const uint8_t *pattern)
+void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pattern)
 {
 	if (!rect.IsValid())
 		return;
@@ -866,9 +866,6 @@ void DrawSurface::FillRectWithPattern8x8(const Rect &rect, bool isMask, const ui
 		const uint8_t color = qdState->ResolveForeColor8(nullptr, 0);
 		uint8_t backColor = 0;
 
-		if (!isMask)
-			backColor = qdState->ResolveBackColor8(nullptr, 0);
-
 		size_t scanlineIndex = 0;
 		for (size_t ln = 0; ln < numLines; ln++)
 		{
@@ -880,8 +877,6 @@ void DrawSurface::FillRectWithPattern8x8(const Rect &rect, bool isMask, const ui
 				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
 				if ((pattern[patternRow] >> patternCol) & 1)
 					pixData[firstLineIndex + col] = color;
-				else if (!isMask)
-					pixData[firstLineIndex + col] = backColor;
 			}
 		}
 	}
@@ -939,21 +934,21 @@ void DrawSurface::FillEllipse(const Rect &rect)
 	}
 }
 
-void DrawSurface::FillEllipseWithPattern(const Rect &rect, bool isMask, const uint8_t *pattern)
+void DrawSurface::FillEllipseWithMaskPattern(const Rect &rect, const uint8_t *pattern)
 {
 	if (!rect.IsValid() || rect.Width() < 1 || rect.Height() < 1)
 		return;
 
 	if (rect.Width() <= 2 || rect.Height() <= 2)
 	{
-		FillRectWithPattern8x8(rect, isMask, pattern);
+		FillRectWithMaskPattern8x8(rect, pattern);
 		return;
 	}
 
 	PortabilityLayer::ScanlineMask *mask = PortabilityLayer::ScanlineMaskConverter::CompileEllipse(PortabilityLayer::Rect2i(rect.top, rect.left, rect.bottom, rect.right));
 	if (mask)
 	{
-		FillScanlineMaskWithPattern(mask, isMask, pattern);
+		FillScanlineMaskWithMaskPattern(mask, pattern);
 		mask->Destroy();
 	}
 }
@@ -1025,7 +1020,7 @@ void DrawSurface::FrameEllipse(const Rect &rect)
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor, uint8_t bgColor, bool mask)
+static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor)
 {
 	if (patternByte == 0xff)
 	{
@@ -1034,33 +1029,20 @@ static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, 
 	}
 	else
 	{
-		if (mask)
+		for (size_t col = startCol; col < endCol; col++)
 		{
-			for (size_t col = startCol; col < endCol; col++)
-			{
-				if (patternByte & (0x80 >> (col & 7)))
-					rowStart[col] = foreColor;
-			}
-		}
-		else
-		{
-			for (size_t col = startCol; col < endCol; col++)
-			{
-				if (patternByte & (0x80 >> (col & 7)))
-					rowStart[col] = foreColor;
-				else
-					rowStart[col] = bgColor;
-			}
+			if (patternByte & (0x80 >> (col & 7)))
+				rowStart[col] = foreColor;
 		}
 	}
 }
 
 void DrawSurface::FillScanlineMask(const PortabilityLayer::ScanlineMask *scanlineMask)
 {
-	FillScanlineMaskWithPattern(scanlineMask, false, nullptr);
+	FillScanlineMaskWithMaskPattern(scanlineMask, nullptr);
 }
 
-void DrawSurface::FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMask *scanlineMask, bool isMask, const uint8_t *pattern)
+void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::ScanlineMask *scanlineMask, const uint8_t *pattern)
 {
 	if (!scanlineMask)
 		return;
@@ -1093,7 +1075,6 @@ void DrawSurface::FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMa
 	}
 
 	uint8_t foreColor8 = 0;
-	uint8_t backColor8 = 0;
 
 	const GpPixelFormat_t pixelFormat = pixMap->m_pixelFormat;
 
@@ -1102,7 +1083,6 @@ void DrawSurface::FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMa
 	{
 	case GpPixelFormats::k8BitStandard:
 		foreColor8 = qdState->ResolveForeColor8(nullptr, 256);
-		backColor8 = qdState->ResolveBackColor8(nullptr, 256);
 		break;
 	default:
 		PL_NotYetImplemented();
@@ -1172,7 +1152,7 @@ void DrawSurface::FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMa
 			{
 				const size_t spanEndCol = spanStartCol + currentSpan;
 				if (spanState)
-					FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8, backColor8, isMask);
+					FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8);
 
 				spanStartCol = spanEndCol;
 				paintColsRemaining -= currentSpan;
@@ -1185,7 +1165,7 @@ void DrawSurface::FillScanlineMaskWithPattern(const PortabilityLayer::ScanlineMa
 		if (spanState)
 		{
 			const size_t spanEndCol = firstPortCol + constrainedRectWidth;
-			FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8, backColor8, isMask);
+			FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8);
 		}
 
 		if (row != numRows - 1)
@@ -1358,16 +1338,6 @@ void DrawSurface::SetForeColor(const PortabilityLayer::RGBAColor &color)
 const PortabilityLayer::RGBAColor &DrawSurface::GetForeColor() const
 {
 	return m_port.GetState()->GetForeColor();
-}
-
-void DrawSurface::SetBackColor(const PortabilityLayer::RGBAColor &color)
-{
-	m_port.GetState()->SetBackColor(color);
-}
-
-const PortabilityLayer::RGBAColor &DrawSurface::GetBackColor() const
-{
-	return m_port.GetState()->GetBackColor();
 }
 
 void PenSize(int w, int h)

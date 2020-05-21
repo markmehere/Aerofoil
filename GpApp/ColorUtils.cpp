@@ -59,13 +59,13 @@ void ColorOval (DrawSurface *surface, const Rect &theRect, long color)
 	surface->SetForeColor(wasColor);
 }
 
-void ColorOvalMaskPattern(DrawSurface *surface, const Rect &theRect, long color, bool isMask, const uint8_t *pattern)
+void ColorOvalMaskPattern(DrawSurface *surface, const Rect &theRect, long color, const uint8_t *pattern)
 {
 	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[color];
 
 	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
 	surface->SetForeColor(rgbaColor);
-	surface->FillEllipseWithPattern(theRect, isMask, pattern);
+	surface->FillEllipseWithMaskPattern(theRect, pattern);
 	surface->SetForeColor(wasColor);
 }
 
@@ -74,13 +74,13 @@ void ColorOvalMaskPattern(DrawSurface *surface, const Rect &theRect, long color,
 // Given a region and color index, this function draws a solidÉ
 // region in that color.  Current port, pen mode, etc. assumed.
 
-void ColorRegionMaskPattern (DrawSurface *surface, PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex, bool isMask, const uint8_t *pattern)
+void ColorRegionMaskPattern (DrawSurface *surface, PortabilityLayer::ScanlineMask *scanlineMask, long colorIndex, const uint8_t *pattern)
 {
 	const PortabilityLayer::RGBAColor &rgbaColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[colorIndex];
 
 	const PortabilityLayer::RGBAColor wasColor = surface->GetForeColor();
 	surface->SetForeColor(rgbaColor);
-	surface->FillScanlineMaskWithPattern(scanlineMask, isMask, pattern);
+	surface->FillScanlineMaskWithMaskPattern(scanlineMask, pattern);
 	surface->SetForeColor(wasColor);
 }
 

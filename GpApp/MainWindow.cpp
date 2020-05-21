@@ -202,7 +202,6 @@ void OpenMainWindow (void)
 
 		mainWindowSurface->SetClipRect(mainWindowRect);
 		mainWindowSurface->SetForeColor(StdColors::Black());
-		mainWindowSurface->SetBackColor(StdColors::White());
 		
 		whichRoom = GetFirstRoomNumber();
 		CopyRoomToThisRoom(whichRoom);
@@ -252,7 +251,6 @@ void OpenMainWindow (void)
 		mainWindowSurface->SetClipRect(mainWindowRect);
 //		CopyRgn(mainWindow->clipRgn, mainWindow->visRgn);
 		mainWindowSurface->SetForeColor(StdColors::Black());
-		mainWindowSurface->SetBackColor(StdColors::White());
 		mainWindowSurface->FillRect(mainWindowRect);
 		
 		splashOriginH = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) - 640) / 2;

@@ -164,9 +164,9 @@ void DrawTable (Rect *tableTop, short down)
 	GetQDGlobalsGray(&dummyPattern);
 
 	if (thisMac.isDepth == 4)
-		ColorOvalMaskPattern(backSrcMap, tempRect, 15, true, dummyPattern);
+		ColorOvalMaskPattern(backSrcMap, tempRect, 15, dummyPattern);
 	else
-		ColorOvalMaskPattern(backSrcMap, tempRect, k8DkstGrayColor, true, dummyPattern);
+		ColorOvalMaskPattern(backSrcMap, tempRect, k8DkstGrayColor, dummyPattern);
 	
 	InsetRect(tableTop, 0, 1);
 	ColorRect(backSrcMap, *tableTop, brownC);
@@ -279,9 +279,9 @@ void DrawShelf (Rect *shelfTop)
 	{
 		GetQDGlobalsGray(&dummyPattern);
 		if (thisMac.isDepth == 4)
-			ColorRegionMaskPattern(backSrcMap, mask, 15, true, dummyPattern);
+			ColorRegionMaskPattern(backSrcMap, mask, 15, dummyPattern);
 		else
-			ColorRegionMaskPattern(backSrcMap, mask, k8DkstGrayColor, true, dummyPattern);
+			ColorRegionMaskPattern(backSrcMap, mask, k8DkstGrayColor, dummyPattern);
 		mask->Destroy();
 	}
 
@@ -367,9 +367,9 @@ void DrawCabinet (Rect *cabinet)
 		{
 			GetQDGlobalsGray(&dummyPattern);
 			if (thisMac.isDepth == 4)
-				ColorRegionMaskPattern(backSrcMap, mask, 15, true, dummyPattern);
+				ColorRegionMaskPattern(backSrcMap, mask, 15, dummyPattern);
 			else
-				ColorRegionMaskPattern(backSrcMap, mask, dkGrayC, true, dummyPattern);
+				ColorRegionMaskPattern(backSrcMap, mask, dkGrayC, dummyPattern);
 
 			mask->Destroy();
 		}
@@ -504,9 +504,9 @@ void DrawCounter(Rect *counter)
 		{
 			GetQDGlobalsGray(&dummyPattern);
 			if (thisMac.isDepth == 4)
-				ColorRegionMaskPattern(backSrcMap, mask, 15, true, dummyPattern);
+				ColorRegionMaskPattern(backSrcMap, mask, 15, dummyPattern);
 			else
-				ColorRegionMaskPattern(backSrcMap, mask, dkGrayC, true, dummyPattern);
+				ColorRegionMaskPattern(backSrcMap, mask, dkGrayC, dummyPattern);
 
 			mask->Destroy();
 		}
@@ -747,7 +747,7 @@ void DrawDeckTable (Rect *tableTop, short down)
 			-HalfRectTall(&tempRect) + kTableShadowTop + down);
 	QOffsetRect(&tempRect, kTableShadowOffset, -kTableShadowOffset);
 	GetQDGlobalsGray(&dummyPattern);
-	ColorOvalMaskPattern(backSrcMap, tempRect, dkGrayC, true, dummyPattern);
+	ColorOvalMaskPattern(backSrcMap, tempRect, dkGrayC, dummyPattern);
 	
 	InsetRect(tableTop, 0, 1);
 	ColorRect(backSrcMap, *tableTop, kGoldColor);

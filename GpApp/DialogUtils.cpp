@@ -719,7 +719,7 @@ void BorderDialogItem(Dialog *theDialog, short item, short sides, short thicknes
 			surface->SetForeColor(StdColors::White());
 			surface->FillRect(rect);
 			surface->SetForeColor(StdColors::Black());
-			surface->FillRectWithPattern8x8(rect, true, pattern);
+			surface->FillRectWithMaskPattern8x8(rect, pattern);
 		}
 		else
 			surface->FillRect(rect);
@@ -735,7 +735,7 @@ void BorderDialogItem(Dialog *theDialog, short item, short sides, short thicknes
 			surface->SetForeColor(StdColors::White());
 			surface->FillRect(rect);
 			surface->SetForeColor(StdColors::Black());
-			surface->FillRectWithPattern8x8(rect, true, pattern);
+			surface->FillRectWithMaskPattern8x8(rect, pattern);
 		}
 		else
 			surface->FillRect(rect);
@@ -751,7 +751,7 @@ void BorderDialogItem(Dialog *theDialog, short item, short sides, short thicknes
 			surface->SetForeColor(StdColors::White());
 			surface->FillRect(rect);
 			surface->SetForeColor(StdColors::Black());
-			surface->FillRectWithPattern8x8(rect, true, pattern);
+			surface->FillRectWithMaskPattern8x8(rect, pattern);
 		}
 		else
 			surface->FillRect(rect);
@@ -767,7 +767,7 @@ void BorderDialogItem(Dialog *theDialog, short item, short sides, short thicknes
 			surface->SetForeColor(StdColors::White());
 			surface->FillRect(rect);
 			surface->SetForeColor(StdColors::Black());
-			surface->FillRectWithPattern8x8(rect, true, pattern);
+			surface->FillRectWithMaskPattern8x8(rect, pattern);
 		}
 		else
 			surface->FillRect(rect);

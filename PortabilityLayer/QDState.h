@@ -18,13 +18,10 @@ namespace PortabilityLayer
 		Point m_penPos;
 
 		void SetForeColor(const RGBAColor &color);
-		void SetBackColor(const RGBAColor &color);
 
 		const RGBAColor &GetForeColor() const;
-		const RGBAColor &GetBackColor() const;
 
 		uint8_t ResolveForeColor8(const RGBAColor *palette, unsigned int numColors);
-		uint8_t ResolveBackColor8(const RGBAColor *palette, unsigned int numColors);
 
 	private:
 		static uint8_t ResolveColor8(const RGBAColor &color, uint8_t &cached, bool &isCached, const RGBAColor *palette, unsigned int numColors);
