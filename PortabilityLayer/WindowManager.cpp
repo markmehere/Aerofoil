@@ -427,6 +427,7 @@ namespace PortabilityLayer
 		ResolveCachingColor blackColor = StdColors::Black();
 		ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
 		ResolveCachingColor midGrayColor = RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
+		ResolveCachingColor lightGrayColor = RGBAColor::Create(kLightGray, kLightGray, kLightGray, 255);
 		ResolveCachingColor whiteColor = StdColors::White();
 
 		const Rect rect = (*surface->m_port.GetPixMap())->m_rect;
@@ -459,6 +460,21 @@ namespace PortabilityLayer
 		int32_t titleV = (rect.top + rect.bottom + ascender + 1) / 2;
 
 		surface->DrawString(Point::Create(titleH, titleV), titlePStr, blackColor, sysFont);
+
+		Rect leftStripesRect = Rect::Create(rect.top + 5, rect.left + 5, rect.bottom - 5, (rect.left + rect.right - static_cast<int16_t>(titleWidth) - 10) / 2);
+		Rect rightStripesRect = Rect::Create(rect.top + 5, (rect.left + rect.right + static_cast<int16_t>(titleWidth) + 10) / 2, rect.bottom - 5, rect.right - 5);
+
+		if (leftStripesRect.IsValid() && rightStripesRect.IsValid())
+		{
+			for (int i = leftStripesRect.top; i < leftStripesRect.bottom; i += 3)
+			{
+				surface->FillRect(Rect::Create(i, leftStripesRect.left, i + 2, leftStripesRect.right), lightGrayColor);
+				surface->FillRect(Rect::Create(i, rightStripesRect.left, i + 2, rightStripesRect.right), lightGrayColor);
+
+				surface->FillRect(Rect::Create(i + 1, leftStripesRect.left + 1, i + 2, leftStripesRect.right), darkGrayColor);
+				surface->FillRect(Rect::Create(i + 1, rightStripesRect.left + 1, i + 2, rightStripesRect.right), darkGrayColor);
+			}
+		}
 	}
 
 	void GenericWindowChromeTheme::RenderChromeLeft(WindowImpl *window, DrawSurface *surface) const
