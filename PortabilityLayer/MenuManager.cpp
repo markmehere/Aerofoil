@@ -13,6 +13,7 @@
 #include "PLPasStr.h"
 #include "PLResources.h"
 #include "PLStandardColors.h"
+#include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLQDOffscreen.h"
 #include "RenderedFont.h"
@@ -180,8 +181,15 @@ namespace PortabilityLayer
 			void SelectItem(size_t item);
 			void ClearSelection();
 
+			void AnimateItemSelection();
+
 		private:
 			void RenderMenu(Menu *menu);
+
+			RGBAColor FlickerAnimateColor(const RGBAColor &color) const;
+
+			static const unsigned int kNumSelectionFlickerFrames = 16;
+			unsigned int m_menuSelectionFlickerFrame;
 
 			THandle<Menu> m_currentMenu;
 			DrawSurface *m_menuGraf;
@@ -684,6 +692,8 @@ namespace PortabilityLayer
 		{
 			if (const unsigned int *selectedItem = m_menuSelectionState.GetSelectedItem())
 			{
+				m_menuSelectionState.AnimateItemSelection();
+
 				if (outMenu)
 					*outMenu = (*menuHdl)->menuID;
 
@@ -739,6 +749,8 @@ namespace PortabilityLayer
 
 		if (const unsigned int *selectedItem = m_menuSelectionState.GetSelectedItem())
 		{
+			m_menuSelectionState.AnimateItemSelection();
+
 			if (outItem)
 				*outItem = (*selectedItem) + 1;
 		}
@@ -1231,6 +1243,7 @@ namespace PortabilityLayer
 		, m_haveItem(false)
 		, m_isPopup(false)
 		, m_itemIndex(0)
+		, m_menuSelectionFlickerFrame(0)
 	{
 	}
 
@@ -1352,6 +1365,20 @@ namespace PortabilityLayer
 			RenderMenu(*m_currentMenu);
 	}
 
+	void MenuManagerImpl::MenuSelectionState::AnimateItemSelection()
+	{
+		Menu *menu = *m_currentMenu;
+
+		for (int i = 0; i < kNumSelectionFlickerFrames; i++)
+		{
+			m_menuSelectionFlickerFrame++;
+			RenderMenu(menu);
+
+			PLSysCalls::Sleep(1);
+		}
+		m_menuSelectionFlickerFrame = 0;
+	}
+
 	void MenuManagerImpl::MenuSelectionState::RenderMenu(Menu *menu)
 	{
 		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
@@ -1442,15 +1469,15 @@ namespace PortabilityLayer
 			const MenuItem &selectedItem = menu->menuItems[m_itemIndex];
 			const Rect itemRect = Rect::Create(selectedItem.layoutYOffset, 0, selectedItem.layoutYOffset + selectedItem.layoutHeight, menu->layoutWidth);
 
-			PortabilityLayer::ResolveCachingColor barHighlightMidColor = gs_barHighlightMidColor;
+			PortabilityLayer::ResolveCachingColor barHighlightMidColor = FlickerAnimateColor(gs_barHighlightMidColor);
 			surface->FillRect(itemRect, barHighlightMidColor);
 
-			ResolveCachingColor barHighlightBrightColor = gs_barHighlightBrightColor;
+			ResolveCachingColor barHighlightBrightColor = FlickerAnimateColor(gs_barHighlightBrightColor);
 			surface->FillRect(Rect::Create(itemRect.top, 0, itemRect.bottom, 1), barHighlightBrightColor);
 			if (m_itemIndex == 0)
 				surface->FillRect(Rect::Create(0, 1, 1, itemRect.right - 1), barHighlightBrightColor);
 
-			ResolveCachingColor barHighlightDarkColor = gs_barHighlightDarkColor;
+			ResolveCachingColor barHighlightDarkColor = FlickerAnimateColor(gs_barHighlightDarkColor);
 			surface->FillRect(Rect::Create(itemRect.top, itemRect.right - 1, itemRect.bottom, itemRect.right), barHighlightDarkColor);
 			if (m_itemIndex == menu->numMenuItems - 1)
 				surface->FillRect(Rect::Create(itemRect.bottom - 1, 1, itemRect.bottom, itemRect.right - 1), barHighlightDarkColor);
@@ -1479,6 +1506,16 @@ namespace PortabilityLayer
 		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
 
 		SetGraphicsPort(oldGraf);
+	}
+
+	RGBAColor MenuManagerImpl::MenuSelectionState::FlickerAnimateColor(const RGBAColor &color) const
+	{
+		const unsigned int frame = m_menuSelectionFlickerFrame;
+
+		if (frame % 8 < 4)
+			return color;
+		else
+			return RGBAColor::Create(kMidGray, kMidGray, kMidGray, 255);
 	}
 
 	MenuManager *MenuManager::GetInstance()
