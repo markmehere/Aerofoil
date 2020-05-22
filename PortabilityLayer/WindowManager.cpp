@@ -86,7 +86,7 @@ namespace PortabilityLayer
 		void RenderChromeCloseBox(DrawSurface *surface, const Rect &windowRect, bool isClicked) const;
 
 		static const int kDarkGray = 85;
-		static const int kMidGray = 187;
+		static const int kMidGray = 204;
 		static const int kLightGray = 221;
 	};
 
