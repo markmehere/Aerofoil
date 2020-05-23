@@ -48,5 +48,8 @@ namespace PortabilityLayer
 		int32_t m_gripSize;
 		int32_t m_gripPos;
 		int32_t m_laneCapacity;
+
+		bool m_isActive;
+		int m_activePart;
 	};
 }

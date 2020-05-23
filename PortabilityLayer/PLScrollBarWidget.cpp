@@ -13,6 +13,8 @@ namespace PortabilityLayer
 		, m_gripSize(0)
 		, m_gripPos(0)
 		, m_laneCapacity(0)
+		, m_isActive(false)
+		, m_activePart(0)
 	{
 	}
 
@@ -59,20 +61,36 @@ namespace PortabilityLayer
 		ResolveCachingColor whiteColor = StdColors::White();
 		ResolveCachingColor midGrayColor = RGBAColor::Create(136, 136, 136, 255);
 		ResolveCachingColor lightGrayColor = RGBAColor::Create(187, 187, 187, 255);
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(85, 85, 85, 255);
+
+		ResolveCachingColor *leftArrowColor = &blackColor;
+		ResolveCachingColor *rightArrowColor = &blackColor;
 
 		surface->FrameRect(m_rect, blackColor);
 
 		const Rect leftArrowRect = Rect::Create(m_rect.top, m_rect.left, m_rect.bottom, m_rect.left + 16);
 		DrawBeveledBox(surface, leftArrowRect);
 
+		if (m_isActive && m_activePart == kControlUpButtonPart)
+		{
+			surface->FillRect(leftArrowRect.Inset(1, 1), darkGrayColor);
+			leftArrowColor = &whiteColor;
+		}
+
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(7 - i + leftArrowRect.top, 6 + i + leftArrowRect.left, 9 + i + leftArrowRect.top, 7 + i + leftArrowRect.left);
-			surface->FillRect(arrowSegRect, blackColor);
+			surface->FillRect(arrowSegRect, *leftArrowColor);
 		}
 
 		const Rect rightArrowRect = Rect::Create(m_rect.top, m_rect.right - 16, m_rect.bottom, m_rect.right);
 		DrawBeveledBox(surface, rightArrowRect);
+
+		if (m_isActive && m_activePart == kControlDownButtonPart)
+		{
+			surface->FillRect(rightArrowRect.Inset(1, 1), darkGrayColor);
+			rightArrowColor = &whiteColor;
+		}
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -88,6 +106,12 @@ namespace PortabilityLayer
 
 		surface->FillRect(Rect::Create(laneRect.bottom - 2, laneRect.left, laneRect.bottom - 1, laneRect.right), whiteColor);
 
+		if (m_isActive && m_activePart == kControlPageUpPart)
+			surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.bottom, laneRect.left + m_gripPos), darkGrayColor);
+
+		if (m_isActive && m_activePart == kControlPageDownPart)
+			surface->FillRect(Rect::Create(laneRect.top, laneRect.left + m_gripPos, laneRect.bottom, laneRect.right), darkGrayColor);
+
 		surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.top + 1, laneRect.right), blackColor);
 		surface->FillRect(Rect::Create(laneRect.bottom - 1, laneRect.left, laneRect.bottom, laneRect.right), blackColor);
 
@@ -102,25 +126,42 @@ namespace PortabilityLayer
 		ResolveCachingColor whiteColor = StdColors::White();
 		ResolveCachingColor midGrayColor = RGBAColor::Create(136, 136, 136, 255);
 		ResolveCachingColor lightGrayColor = RGBAColor::Create(187, 187, 187, 255);
+		ResolveCachingColor darkGrayColor = RGBAColor::Create(85, 85, 85, 255);
 
 		surface->FrameRect(m_rect, blackColor);
+
+
+		ResolveCachingColor *topArrowColor = &blackColor;
+		ResolveCachingColor *bottomArrowColor = &blackColor;
 
 		const Rect topArrowRect = Rect::Create(m_rect.top, m_rect.left, m_rect.top + 16, m_rect.right);
 		DrawBeveledBox(surface, topArrowRect);
 
+		if (m_isActive && m_activePart == kControlUpButtonPart)
+		{
+			surface->FillRect(topArrowRect.Inset(1, 1), darkGrayColor);
+			topArrowColor = &whiteColor;
+		}
+
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(6 + i + topArrowRect.top, 7 - i + topArrowRect.left, 7 + i + topArrowRect.top, 9 + i + topArrowRect.left);
-			surface->FillRect(arrowSegRect, blackColor);
+			surface->FillRect(arrowSegRect, *topArrowColor);
 		}
 
 		const Rect bottomArrowRect = Rect::Create(m_rect.bottom - 16, m_rect.left, m_rect.bottom, m_rect.right);
 		DrawBeveledBox(surface, bottomArrowRect);
 
+		if (m_isActive && m_activePart == kControlDownButtonPart)
+		{
+			surface->FillRect(bottomArrowRect.Inset(1, 1), darkGrayColor);
+			bottomArrowColor = &whiteColor;
+		}
+
 		for (int i = 0; i < 4; i++)
 		{
 			const Rect arrowSegRect = Rect::Create(6 + i + bottomArrowRect.top, 4 + i + bottomArrowRect.left, 7 + i + bottomArrowRect.top, 12 - i + bottomArrowRect.left);
-			surface->FillRect(arrowSegRect, blackColor);
+			surface->FillRect(arrowSegRect, *bottomArrowColor);
 		}
 
 		const Rect laneRect = Rect::Create(topArrowRect.bottom, m_rect.left, bottomArrowRect.top, m_rect.right);
@@ -128,6 +169,13 @@ namespace PortabilityLayer
 		surface->FillRect(Rect::Create(laneRect.top, laneRect.left + 1, laneRect.bottom, laneRect.left + 2), midGrayColor);
 		surface->FillRect(Rect::Create(laneRect.top, laneRect.left + 2, laneRect.bottom, laneRect.right - 2), lightGrayColor);
 		surface->FillRect(Rect::Create(laneRect.bottom, laneRect.right - 2, laneRect.bottom, laneRect.right - 1), whiteColor);
+
+		if (m_isActive && m_activePart == kControlPageUpPart)
+			surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.top + m_gripPos, laneRect.right), darkGrayColor);
+
+		if (m_isActive && m_activePart == kControlPageDownPart)
+			surface->FillRect(Rect::Create(laneRect.top + m_gripPos, laneRect.left, laneRect.bottom, laneRect.right), darkGrayColor);
+
 		surface->FillRect(Rect::Create(laneRect.top, laneRect.left, laneRect.bottom, laneRect.left + 1), blackColor);
 		surface->FillRect(Rect::Create(laneRect.top, laneRect.right - 1, laneRect.bottom, laneRect.right), blackColor);
 
@@ -248,21 +296,29 @@ namespace PortabilityLayer
 		int tickDelay = 15;
 
 		Point currentPos = pos;
-		bool wasInBounds = false;
-		bool isInBounds = (ResolvePart(pos) == part);
+		bool wasActive = false;
+
+		m_activePart = part;
 
 		int ticksUntilIterate = 0;
 		for (;;)
 		{
+			m_isActive = (ResolvePart(currentPos) == part);	// Update in-bounds since the scroll may invalidate it
+
 			if (ticksUntilIterate == 0)
 			{
-				if (isInBounds)
-				{
+				if (m_isActive)
 					IterateScrollSegment(part, callback);
-					isInBounds = (ResolvePart(currentPos) == part);	// Update in-bounds since the scroll may invalidate it
-				}
 
 				ticksUntilIterate = tickDelay;
+			}
+
+			if (m_isActive != wasActive)
+			{
+				wasActive = m_isActive;
+				ticksUntilIterate = tickDelay;
+
+				DrawControl(m_window->GetDrawSurface());
 			}
 
 			TimeTaggedVOSEvent evt;
@@ -272,11 +328,19 @@ namespace PortabilityLayer
 				{
 					const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
 					if (mouseEvt.m_button == GpMouseButtons::kLeft && mouseEvt.m_eventType == GpMouseEventTypes::kUp)
+					{
+						if (m_isActive)
+						{
+							m_isActive = false;
+							DrawControl(m_window->GetDrawSurface());
+						}
+
 						return part;
+					}
 					else
 					{
 						currentPos = m_window->MouseToLocal(mouseEvt);
-						isInBounds = (ResolvePart(currentPos) == part);
+						m_isActive = (ResolvePart(currentPos) == part);
 					}
 				}
 			}
