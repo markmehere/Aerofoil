@@ -1,5 +1,6 @@
 #include "DrawQuad.h"
 #include "DrawQuadPixelConstants.h"
+#include "Functions.h"
 
 SamplerState nearestNeighborSampler : register(s0);
 Texture2D<uint> surfaceTexture : register(t0);
@@ -20,7 +21,10 @@ SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 {
 	SDrawQuadPixelOutput result;
 	int2 pixelCoordinate = int2(floor(input.texCoord.xy));
-	result.color = ApplyFlicker(pixelCoordinate, float4(SamplePixel(int2(floor(input.texCoord.xy))), 1.0) * constants_Modulation);
+	result.color = float4(SamplePixel(int2(floor(input.texCoord.xy))), 1.0);
+	result.color *= constants_Modulation;
+	result.color = ApplyFlicker(pixelCoordinate, constants_FlickerStartThreshold, constants_FlickerEndThreshold, result.color * constants_Modulation);
+	result.color = ApplyDesaturation(constants_Desaturation, result.color);
 	
 	if (result.color.a <= 0.0)
 		discard;

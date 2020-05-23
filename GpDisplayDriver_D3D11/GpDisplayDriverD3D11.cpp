@@ -1094,6 +1094,8 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 			pConstantsData.m_flickerStart = -2;
 		}
 
+		pConstantsData.m_desaturation = effects->m_desaturation;
+
 		if (effects->m_darken)
 			for (int i = 0; i < 3; i++)
 				pConstantsData.m_modulation[i] = 0.5f;

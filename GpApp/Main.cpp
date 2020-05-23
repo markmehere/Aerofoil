@@ -12,6 +12,7 @@
 #include "Environ.h"
 #include "IOStream.h"
 #include "House.h"
+#include "WindowManager.h"
 
 
 #define kPrefsVersion			0x0035
@@ -352,6 +353,10 @@ int gpAppMain()
 	InitSrcRects();
 	CreateOffscreens();					SpinCursor(2);
 	OpenMainWindow();
+
+	if (isDoColorFade)
+		PortabilityLayer::WindowManager::GetInstance()->SetWindowDesaturation(mainWindow, 1.0);
+
 	InitSound();						SpinCursor(2);
 	InitMusic();						SpinCursor(2);
 	BuildHouseList();
@@ -366,17 +371,8 @@ int gpAppMain()
 //	HideMenuBarOld();
 #endif
 	
-//	if ((isDoColorFade) && (thisMac.isDepth == 8))
-//	{
-//		wasSeed = ExtractCTSeed((CGrafPtr)mainWindow);
-//		WashColorIn();
-//		ForceCTSeed((CGrafPtr)mainWindow, wasSeed);
-//	}
-//	if ((!thisMac.hasSM3) && (numSMWarnings < 3))
-//	{
-//		numSMWarnings++;
-//		BitchAboutSM3();
-//	}
+	if (isDoColorFade)
+		WashColorIn();
 
 	UpdateMainWindow();
 	

@@ -579,54 +579,20 @@ void HardDrawMainWindow (void)
 //--------------------------------------------------------------  WashColorIn
 // Slowly walks the palette from its gray luminance state to the full color…
 // palette.  In this way, color appears to slowly wash in.
-/*
 void WashColorIn (void)
 {
 	#define		kGray2ColorSteps	180
-	GDHandle	theDevice;
 	long		longDelta;
 	short		i, c;
-	
-	theDevice = GetGDevice();
-	SetGDevice(thisGDevice);
-	
+
 	for (i = 0; i < kGray2ColorSteps; i++)
 	{
-		for (c = 0; c < 256; c++)
-		{
-			if (c != 5)
-			{
-				longDelta = (((long)wasColors[c].rgb.red - 
-						(long)newColors[c].rgb.red) / 
-						(long)(kGray2ColorSteps - i)) + (long)newColors[c].rgb.red;
-				newColors[c].rgb.red = (unsigned short)longDelta;
-				
-				longDelta = (((long)wasColors[c].rgb.green - 
-						(long)newColors[c].rgb.green) / 
-						(long)(kGray2ColorSteps - i)) + 
-						(long)newColors[c].rgb.green;
-				newColors[c].rgb.green = (unsigned short)longDelta;
-				
-				longDelta = (((long)wasColors[c].rgb.blue - 
-						(long)newColors[c].rgb.blue) / 
-						(long)(kGray2ColorSteps - i)) + 
-						(long)newColors[c].rgb.blue;
-				newColors[c].rgb.blue = (unsigned short)longDelta;
-			}
-		}
-		SetEntries(0, 255, newColors);
-		if (Button())
+		PortabilityLayer::WindowManager::GetInstance()->SetWindowDesaturation(mainWindow, static_cast<float>(kGray2ColorSteps - i) / static_cast<float>(kGray2ColorSteps));
+
+		Delay(1, nullptr);
+		if (PortabilityLayer::InputManager::GetInstance()->GetKeys()->m_mouse.Get(GpMouseButtons::kLeft))
 			break;
 	}
-	
-	SetEntries(0, 255, wasColors);
-	SetGDevice(theDevice);
-	
-	RestoreColorsSlam();
-	
-	if (wasColors != nil)
-		DisposePtr((Ptr)wasColors);
-	if (newColors != nil)
-		DisposePtr((Ptr)newColors);
+
+	PortabilityLayer::WindowManager::GetInstance()->SetWindowDesaturation(mainWindow, 0.0f);
 }
-*/

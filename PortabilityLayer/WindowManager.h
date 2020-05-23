@@ -41,6 +41,8 @@ namespace PortabilityLayer
 		virtual void FlickerWindowIn(Window *window, int32_t velocity) = 0;
 		virtual void FlickerWindowOut(Window *window, int32_t velocity) = 0;
 
+		virtual void SetWindowDesaturation(Window *window, float desaturationLevel) = 0;
+
 		virtual void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) = 0;
 		virtual void ClearResizeInProgress() = 0;
 

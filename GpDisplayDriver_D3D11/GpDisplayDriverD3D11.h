@@ -74,6 +74,9 @@ private:
 		int32_t m_flickerAxis[2];
 		int32_t m_flickerStart;
 		int32_t m_flickerEnd;
+
+		float m_desaturation;
+		float m_unused[3];
 	};
 
 	struct ScaleQuadPixelConstants

@@ -503,12 +503,6 @@ void GetMouse(Window *window, Point *point)
 	point->v = relativePos.m_y;
 }
 
-Boolean Button()
-{
-	PL_NotYetImplemented();
-	return false;
-}
-
 Boolean StillDown()
 {
 	return PortabilityLayer::InputManager::GetInstance()->GetKeys()->m_mouse.Get(GpMouseButtons::kLeft);

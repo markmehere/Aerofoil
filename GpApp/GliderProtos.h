@@ -156,10 +156,9 @@ void RedrawSplashScreen (void);							// --- MainWindow.c
 void UpdateMainWindow (void);
 void OpenMainWindow (void);
 void CloseMainWindow (void);
-void ZoomBetweenWindows (void);
 void UpdateEditWindowTitle (void);
 void HandleMainClick (Point, Boolean);
-//void WashColorIn (void);
+void WashColorIn (void);
 
 void CenterMapOnRoom (SInt16, SInt16);					// --- Map.c
 Boolean ThisRoomVisibleOnMap (void);

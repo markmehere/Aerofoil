@@ -110,6 +110,13 @@ namespace PortabilityLayer
 		static const RGBAColor kLightColor;
 	};
 
+	struct WindowEffects
+	{
+		WindowEffects();
+
+		float m_desaturationLevel;
+	};
+
 	class WindowImpl final : public Window
 	{
 	public:
@@ -140,7 +147,12 @@ namespace PortabilityLayer
 		void SetTitle(const PLPasStr &str);
 		const PascalStr<255> &GetTitle() const;
 
+		WindowEffects &GetEffects();
+		const WindowEffects &GetEffects() const;
+
 	private:
+		WindowEffects m_effects;
+
 		WindowImpl *m_windowAbove;
 		WindowImpl *m_windowBelow;
 
@@ -174,6 +186,8 @@ namespace PortabilityLayer
 
 		void FlickerWindowIn(Window *window, int32_t velocity) override;
 		void FlickerWindowOut(Window *window, int32_t velocity) override;
+
+		void SetWindowDesaturation(Window *window, float desaturationLevel) override;
 
 		void SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size) override;
 		void ClearResizeInProgress() override;
@@ -787,6 +801,12 @@ namespace PortabilityLayer
 	}
 
 	//---------------------------------------------------------------------------
+	WindowEffects::WindowEffects()
+		: m_desaturationLevel(0.0f)
+	{
+	}
+
+	//---------------------------------------------------------------------------
 	WindowImpl::WindowImpl()
 		: m_windowAbove(nullptr)
 		, m_windowBelow(nullptr)
@@ -973,6 +993,18 @@ namespace PortabilityLayer
 	{
 		return m_title;
 	}
+
+	WindowEffects &WindowImpl::GetEffects()
+	{
+		return m_effects;
+	}
+
+	const WindowEffects &WindowImpl::GetEffects() const
+	{
+		return m_effects;
+	}
+
+
 
 	WindowManagerImpl::WindowManagerImpl()
 		: m_windowStackTop(nullptr)
@@ -1318,6 +1350,12 @@ namespace PortabilityLayer
 		m_flickerWindow = nullptr;
 	}
 
+
+	void WindowManagerImpl::SetWindowDesaturation(Window *window, float desaturationLevel)
+	{
+		static_cast<WindowImpl*>(window)->GetEffects().m_desaturationLevel = desaturationLevel;
+	}
+
 	void WindowManagerImpl::SetResizeInProgress(Window *window, const PortabilityLayer::Vec2i &size)
 	{
 		ResolveCachingColor blackColor = StdColors::Black();
@@ -1499,6 +1537,8 @@ namespace PortabilityLayer
 
 		if (m_exclusiveWindow != nullptr && m_exclusiveWindow != window)
 			effects.m_darken = true;
+
+		effects.m_desaturation = window->GetEffects().m_desaturationLevel;
 
 		bool hasFlicker = (m_flickerWindow == window);
 
