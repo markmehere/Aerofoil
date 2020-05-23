@@ -919,7 +919,7 @@ void GpDisplayDriverD3D11::Run()
 	RECT wr = { 0, 0, m_windowWidthPhysical, m_windowHeightPhysical };
 	AdjustWindowRect(&wr, windowStyle, menus != NULL);
 
-	m_osGlobals->m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", GP_APPLICATION_NAME_W L" (Direct3D 11)", WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
+	m_osGlobals->m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", GP_APPLICATION_NAME_W, WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
 
 	ShowWindow(m_osGlobals->m_hwnd, m_osGlobals->m_nCmdShow);
 
