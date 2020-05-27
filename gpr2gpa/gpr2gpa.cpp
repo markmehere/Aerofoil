@@ -1342,10 +1342,10 @@ int ConvertDirectory(const std::string &basePath, const PortabilityLayer::Combin
 
 int PrintUsage()
 {
-	fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]");
-	fprintf(stderr, "       gpr2gpa <input dir>\* <input.ts>");
-	fprintf(stderr, "       gpr2gpa <input dir>/* <input.ts>");
-	fprintf(stderr, "       gpr2gpa * <input.ts>");
+	fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]\n");
+	fprintf(stderr, "       gpr2gpa <input dir>\* <input.ts>\n");
+	fprintf(stderr, "       gpr2gpa <input dir>/* <input.ts>\n");
+	fprintf(stderr, "       gpr2gpa * <input.ts>\n");
 	return -1;
 }
 
