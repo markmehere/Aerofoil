@@ -1,5 +1,7 @@
 rmdir /S /Q ReleasePkg
 
+mkdir ReleasePkg\PDBs
+
 mkdir ReleasePkg\Aerofoil
 mkdir ReleasePkg\Aerofoil\Packaged
 mkdir ReleasePkg\Aerofoil\Resources
@@ -20,6 +22,9 @@ copy /Y x64\Release\MakeTimestamp.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\FTagData.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\gpr2gpa.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\unpacktool.exe ReleasePkg\Aerofoil\Tools
+
+
+copy /Y x64\Release\*.pdb ReleasePkg\PDBs
 
 xcopy /I /E /Y /K Packaged ReleasePkg\Aerofoil\Packaged
 xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
