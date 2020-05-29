@@ -134,7 +134,7 @@ void ToggleMusicWhilePlaying (void)
 
 void SetMusicalMode (short newMode)
 {	
-	if (dontLoadMusic)
+	if (dontLoadMusic || failedMusic)
 		return;
 
 	musicMutex->Lock();
@@ -302,6 +302,12 @@ void InitMusic (void)
 		return;
 	}
 	theErr = OpenMusicChannel();
+	if (theErr != PLErrors::kNone)
+	{
+		YellowAlert(kYellowNoMusic, theErr);
+		failedMusic = true;
+		return;
+	}
 	
 	musicScore[0] = 0;
 	musicScore[1] = 1;

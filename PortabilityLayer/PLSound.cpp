@@ -353,12 +353,15 @@ namespace PortabilityLayer
 
 	AudioChannel *SoundSystemImpl::CreateChannel()
 	{
+		IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
+		if (!audioDriver)
+			return nullptr;
+
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 		void *storage = mm->Alloc(sizeof(PortabilityLayer::AudioChannelImpl));
 		if (!storage)
 			return nullptr;
 
-		IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
 		IGpAudioChannel *audioChannel = audioDriver->CreateChannel();
 		if (!audioChannel)
 		{
@@ -388,7 +391,12 @@ namespace PortabilityLayer
 
 	void SoundSystemImpl::SetVolume(uint8_t vol)
 	{
-		PortabilityLayer::HostAudioDriver::GetInstance()->SetMasterVolume(vol, 255);
+		IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
+
+		if (!audioDriver)
+			return;
+
+		audioDriver->SetMasterVolume(vol, 255);
 		m_volume = vol;
 	}
 
