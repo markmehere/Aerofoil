@@ -1239,7 +1239,7 @@ void GpDisplayDriverD3D11::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, u
 
 void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 {
-	// Alt-Enter gets re-sent after a full-screen toggle, so we ignore toggle requests until half a second has  seconds have elapsed
+	// Alt-Enter gets re-sent after a full-screen toggle, so we ignore toggle requests until half a second has elapsed
 	if (timestamp > m_lastFullScreenToggleTimeStamp + 30)
 	{
 		m_isFullScreenDesired = !m_isFullScreenDesired;
