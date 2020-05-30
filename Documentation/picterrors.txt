@@ -1,7 +1,8 @@
 Many Glider PRO houses, including the bundled ones, contain images in QuickDraw
 PICT format in the game resource data.
 
-Additionally, some PICT features are impossible to support because they
+PICT is a very complex format, many of its features are not completely
+documented, and some PICT features are impossible to support because they
 require copyrighted pattern sets and fonts that are bundled with the
 operating system.
 
