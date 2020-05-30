@@ -4,6 +4,8 @@
 #include "EGpAudioDriverType.h"
 #include "EGpInputDriverType.h"
 
+struct IGpLogDriver;
+
 struct GpGlobalConfig
 {
 	EGpDisplayDriverType m_displayDriverType;
@@ -11,6 +13,7 @@ struct GpGlobalConfig
 	const EGpInputDriverType *m_inputDriverTypes;
 	size_t m_numInputDrivers;
 
+	IGpLogDriver *m_logger;
 	void *m_osGlobals;
 };
 

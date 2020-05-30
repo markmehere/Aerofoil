@@ -107,4 +107,8 @@ namespace PortabilityLayer
 	void MemReaderStream::Close()
 	{
 	}
+
+	void MemReaderStream::Flush()
+	{
+	}
 }

@@ -58,6 +58,9 @@
     <ClCompile Include="GpThreadEvent_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GpLogDriver_Win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\GpCommon\EGpInputDriverType.h">
@@ -141,6 +144,10 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\GpCommon\IGpLogDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpLogDriver_Win32.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="ConvertedResources\Large128.ico">

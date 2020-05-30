@@ -1,19 +1,30 @@
 #include "GpAudioChannelXAudio2.h"
 #include "GpAudioDriverXAudio2.h"
 #include "IGpAudioChannelCallbacks.h"
+#include "IGpLogDriver.h"
 
 #include <stdlib.h>
 #include <new>
 
 GpAudioChannelXAudio2 *GpAudioChannelXAudio2::Create(GpAudioDriverXAudio2 *driver)
 {
+	IGpLogDriver *logger = driver->GetProperties().m_logger;
+
 	void *storage = malloc(sizeof(GpAudioChannelXAudio2));
 	if (!storage)
+	{
+		if (!logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpAudioChannelXAudio2::Create failed, malloc failed");
+
 		return nullptr;
+	}
 
 	GpAudioChannelXAudio2 *channel = new (storage) GpAudioChannelXAudio2(driver);
 	if (!channel->Init())
 	{
+		if (!logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpAudioChannelXAudio2::Init failed");
+
 		channel->Destroy();
 		return nullptr;
 	}
@@ -23,6 +34,8 @@ GpAudioChannelXAudio2 *GpAudioChannelXAudio2::Create(GpAudioDriverXAudio2 *drive
 
 bool GpAudioChannelXAudio2::Init()
 {
+	IGpLogDriver *logger = m_driver->GetProperties().m_logger;
+
 	const unsigned int sampleRate = m_driver->GetRealSampleRate();
 	IXAudio2 *const xa2 = m_driver->GetXA2();
 
@@ -49,7 +62,12 @@ bool GpAudioChannelXAudio2::Init()
 
 	HRESULT hr = xa2->CreateSourceVoice(&m_sourceVoice, &format, XAUDIO2_VOICE_NOPITCH | XAUDIO2_VOICE_NOSRC, 1.0f, &m_xAudioCallbacks, nullptr, nullptr);
 	if (hr != S_OK)
+	{
+		if (!logger)
+			logger->Printf(IGpLogDriver::Category_Error, "CreateSourceVoice failed with code %lx", hr);
+
 		return false;
+	}
 
 	return true;
 }

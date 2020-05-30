@@ -176,6 +176,7 @@
     <ClInclude Include="HostFontHandler.h" />
     <ClInclude Include="HostFontRenderedGlyph.h" />
     <ClInclude Include="HostInputDriver.h" />
+    <ClInclude Include="HostLogDriver.h" />
     <ClInclude Include="HostMutex.h" />
     <ClInclude Include="HostSuspendCallArgument.h" />
     <ClInclude Include="HostSuspendCallID.h" />
@@ -321,6 +322,7 @@
     <ClCompile Include="HostDisplayDriver.cpp" />
     <ClCompile Include="HostFileSystem.cpp" />
     <ClCompile Include="HostFontHandler.cpp" />
+    <ClCompile Include="HostLogDriver.cpp" />
     <ClCompile Include="HostSuspendHook.cpp" />
     <ClCompile Include="HostSystemServices.cpp" />
     <ClCompile Include="HostVOSEventQueue.cpp" />

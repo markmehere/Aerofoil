@@ -142,3 +142,8 @@ void GpFileStream_Win32::Close()
 {
 	CloseHandle(m_handle);
 }
+
+void GpFileStream_Win32::Flush()
+{
+	FlushFileBuffers(m_handle);
+}

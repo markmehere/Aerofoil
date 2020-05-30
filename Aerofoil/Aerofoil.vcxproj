@@ -156,6 +156,7 @@
     <ClCompile Include="GpFontHandler_FreeType2.cpp" />
     <ClCompile Include="GpGlobalConfig.cpp" />
     <ClCompile Include="GpInputDriverFactory.cpp" />
+    <ClCompile Include="GpLogDriver_Win32.cpp" />
     <ClCompile Include="GpMain.cpp" />
     <ClCompile Include="GpMain_Win32.cpp" />
     <ClCompile Include="GpMemoryBuffer.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="..\GpCommon\IGpCursor.h" />
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
     <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />
+    <ClInclude Include="..\GpCommon\IGpLogDriver.h" />
     <ClInclude Include="GpAppEnvironment.h" />
     <ClInclude Include="GpAudioDriverFactory.h" />
     <ClInclude Include="GpDisplayDriverFactory.h" />
@@ -185,6 +187,7 @@
     <ClInclude Include="GpFontHandlerFactory.h" />
     <ClInclude Include="GpGlobalConfig.h" />
     <ClInclude Include="GpInputDriverFactory.h" />
+    <ClInclude Include="GpLogDriver_Win32.h" />
     <ClInclude Include="GpMain.h" />
     <ClInclude Include="GpMemoryBuffer.h" />
     <ClInclude Include="GpMutex_Win32.h" />

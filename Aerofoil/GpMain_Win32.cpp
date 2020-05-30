@@ -5,6 +5,7 @@
 #include "GpGlobalConfig.h"
 #include "GpFiber_Win32.h"
 #include "GpFileSystem_Win32.h"
+#include "GpLogDriver_Win32.h"
 #include "GpInputDriverFactory.h"
 #include "GpAppInterface.h"
 #include "GpSystemServices_Win32.h"
@@ -17,6 +18,7 @@
 
 #include "resource.h"
 
+#include <shellapi.h>
 #include <stdio.h>
 #include <windowsx.h>
 
@@ -394,12 +396,28 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	LPWSTR cmdLine = GetCommandLineW();
+
+	int nArgs;
+	LPWSTR *cmdLineArgs = CommandLineToArgvW(cmdLine, &nArgs);
+
+	for (int i = 1; i < nArgs; i++)
+	{
+		if (!wcscmp(cmdLineArgs[i], L"-diagnostics"))
+			GpLogDriver_Win32::Init();
+	}
+
+	IGpLogDriver *logger = GpLogDriver_Win32::GetInstance();
+
 	GpAppInterface_Get()->PL_HostFileSystem_SetInstance(GpFileSystem_Win32::GetInstance());
 	GpAppInterface_Get()->PL_HostSystemServices_SetInstance(GpSystemServices_Win32::GetInstance());
+	GpAppInterface_Get()->PL_HostLogDriver_SetInstance(GpLogDriver_Win32::GetInstance());
 
 	g_gpWindowsGlobals.m_hInstance = hInstance;
 	g_gpWindowsGlobals.m_hPrevInstance = hPrevInstance;
-	g_gpWindowsGlobals.m_cmdLine = lpCmdLine;
+	g_gpWindowsGlobals.m_cmdLine = cmdLine;
+	g_gpWindowsGlobals.m_cmdLineArgc = nArgs;
+	g_gpWindowsGlobals.m_cmdLineArgv = cmdLineArgs;
 	g_gpWindowsGlobals.m_nCmdShow = nCmdShow;
 	g_gpWindowsGlobals.m_baseDir = GpFileSystem_Win32::GetInstance()->GetBasePath();
 	g_gpWindowsGlobals.m_hwnd = nullptr;
@@ -422,10 +440,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpGlobalConfig.m_numInputDrivers = sizeof(inputDrivers) / sizeof(inputDrivers[0]);
 
 	g_gpGlobalConfig.m_osGlobals = &g_gpWindowsGlobals;
+	g_gpGlobalConfig.m_logger = logger;
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_D3D11, GpDriver_CreateDisplayDriver_D3D11);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);
 	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_XInput, GpDriver_CreateInputDriver_XInput);
 
-	return GpMain::Run();
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "Windows environment configured, starting up");
+
+	int returnCode = GpMain::Run();
+
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "Windows environment exited with code %i, cleaning up", returnCode);
+
+	LocalFree(cmdLineArgs);
+
+	return returnCode;
 }

@@ -7,6 +7,8 @@
 #include "IGpFiber.h"
 #include "IGpVOSEventQueue.h"
 
+#include "IGpLogDriver.h"
+
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <float.h>
@@ -125,7 +127,7 @@ bool ResizeSwapChain(IDXGISwapChain1 *swapChain, UINT width, UINT height)
 	return true;
 }
 
-void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpComPtr<ID3D11Device>& outDevice, GpComPtr<ID3D11DeviceContext>& outContext)
+void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpComPtr<ID3D11Device>& outDevice, GpComPtr<ID3D11DeviceContext>& outContext, IGpLogDriver *logger)
 {
 	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullscreenDesc;
 
@@ -153,6 +155,14 @@ void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpCom
 	HRESULT result = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, flags, featureLevels, sizeof(featureLevels) / sizeof(featureLevels[0]),
 		D3D11_SDK_VERSION, &device, &selectedFeatureLevel, &context);
 
+	if (logger)
+	{
+		if (result == S_OK)
+			logger->Printf(IGpLogDriver::Category_Information, "StartD3DForWindow: D3D11CreateDevice succeeded.  Selected feature level is %i", static_cast<int>(selectedFeatureLevel));
+		else
+			logger->Printf(IGpLogDriver::Category_Error, "StartD3DForWindow: D3D11CreateDevice failed with code %lx", result);
+	}
+
 	InitSwapChainForWindow(hWnd, device, outSwapChain);
 
 	// GP TODO: Fix the error handling here, it's bad...
@@ -160,8 +170,11 @@ void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpCom
 	outContext = context;
 }
 
-bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG desiredWidth, LONG desiredHeight, DWORD windowStyle, HMENU menus)
+bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG desiredWidth, LONG desiredHeight, DWORD windowStyle, HMENU menus, IGpLogDriver *logger)
 {
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "ResizeD3DWindow: %i x %i", static_cast<int>(desiredWidth), static_cast<int>(desiredHeight));
+
 	if (desiredWidth < 640)
 		desiredWidth = 640;
 	else if (desiredWidth > MAXDWORD)
@@ -172,6 +185,9 @@ bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG de
 	else if (desiredHeight > MAXDWORD)
 		desiredHeight = MAXDWORD;
 
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "ResizeD3DWindow: Adjusted dimensions: %i x %i", static_cast<int>(desiredWidth), static_cast<int>(desiredHeight));
+
 	RECT windowRect;
 	GetClientRect(hWnd, &windowRect);
 	windowRect.right = windowRect.left + desiredWidth;
@@ -180,9 +196,20 @@ bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG de
 	LONG_PTR style = GetWindowLongPtrA(hWnd, GWL_STYLE);
 
 	if (!AdjustWindowRect(&windowRect, static_cast<DWORD>(style), menus != nullptr))
-		return false;
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "ResizeD3DWindow: AdjustWindowRect failed");
 
-	SetWindowPos(hWnd, HWND_TOP, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOMOVE);
+		return false;
+	}
+
+	if (!SetWindowPos(hWnd, HWND_TOP, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOMOVE))
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "ResizeD3DWindow: SetWindowPos failed");
+
+		return false;
+	}
 
 	windowWidth = desiredWidth;
 	windowHeight = desiredHeight;
@@ -192,6 +219,11 @@ bool ResizeD3DWindow(HWND hWnd, DWORD &windowWidth, DWORD &windowHeight, LONG de
 
 bool GpDisplayDriverD3D11::DetachSwapChain()
 {
+	IGpLogDriver *logger = m_properties.m_logger;
+
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriverD3D11::DetachSwapChain");
+
 	m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 	m_backBufferRTV = nullptr;
 	m_backBufferTexture = nullptr;
@@ -204,6 +236,11 @@ bool GpDisplayDriverD3D11::DetachSwapChain()
 
 bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtualHeight)
 {
+	IGpLogDriver *logger = m_properties.m_logger;
+
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriverD3D11::InitBackBuffer");
+
 	m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(m_backBufferTexture.GetMutablePtr()));
 
 	{
@@ -216,8 +253,14 @@ bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtua
 		rtvDesc.Texture2D.MipSlice = 0;
 
 		m_backBufferRTV = nullptr;
-		if (m_device->CreateRenderTargetView(m_backBufferTexture, &rtvDesc, m_backBufferRTV.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateRenderTargetView(m_backBufferTexture, &rtvDesc, m_backBufferRTV.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitBackBuffer: CreateRenderTargetView for back buffer failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	DXGI_FORMAT vbbFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -237,8 +280,14 @@ bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtua
 		vbbTextureDesc.MiscFlags = 0;
 
 		m_virtualScreenTexture = nullptr;
-		if (m_device->CreateTexture2D(&vbbTextureDesc, nullptr, m_virtualScreenTexture.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateTexture2D(&vbbTextureDesc, nullptr, m_virtualScreenTexture.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitBackBuffer: CreateTexture2D for virtual screen texture failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	{
@@ -248,8 +297,14 @@ bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtua
 		rtvDesc.Texture2D.MipSlice = 0;
 
 		m_virtualScreenTextureRTV = nullptr;
-		if (m_device->CreateRenderTargetView(m_virtualScreenTexture, &rtvDesc, m_virtualScreenTextureRTV.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateRenderTargetView(m_virtualScreenTexture, &rtvDesc, m_virtualScreenTextureRTV.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitBackBuffer: CreateRenderTargetView for virtual screen texture failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	{
@@ -260,8 +315,14 @@ bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtua
 		srvDesc.Texture2D.MostDetailedMip = 0;
 
 		m_virtualScreenTextureSRV = nullptr;
-		if (m_device->CreateShaderResourceView(m_virtualScreenTexture, &srvDesc, m_virtualScreenTextureSRV.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateShaderResourceView(m_virtualScreenTexture, &srvDesc, m_virtualScreenTextureSRV.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitBackBuffer: CreateRenderTargetView for virtual screen texture failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	return true;
@@ -269,6 +330,11 @@ bool GpDisplayDriverD3D11::InitBackBuffer(uint32_t virtualWidth, uint32_t virtua
 
 bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtualHeight)
 {
+	IGpLogDriver *logger = m_properties.m_logger;
+
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriverD3D11::InitResources");
+
 	if (!InitBackBuffer(virtualWidth, virtualHeight))
 		return false;
 
@@ -282,8 +348,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		bufferDesc.MiscFlags = 0;
 		bufferDesc.StructureByteStride = 0;
 
-		if (m_device->CreateBuffer(&bufferDesc, nullptr, m_drawQuadVertexConstantBuffer.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateBuffer(&bufferDesc, nullptr, m_drawQuadVertexConstantBuffer.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateBuffer for draw quad vertex constant buffer failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	// Quad pixel constant buffer
@@ -296,8 +368,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		bufferDesc.MiscFlags = 0;
 		bufferDesc.StructureByteStride = 0;
 
-		if (m_device->CreateBuffer(&bufferDesc, nullptr, m_drawQuadPixelConstantBuffer.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateBuffer(&bufferDesc, nullptr, m_drawQuadPixelConstantBuffer.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateBuffer for draw quad pixel constant buffer failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	// Quad index buffer
@@ -317,8 +395,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		initialData.SysMemPitch = 0;
 		initialData.SysMemSlicePitch = 0;
 
-		if (m_device->CreateBuffer(&bufferDesc, &initialData, m_quadIndexBuffer.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateBuffer(&bufferDesc, &initialData, m_quadIndexBuffer.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateBuffer for draw quad index buffer failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	// Quad vertex buffer
@@ -344,8 +428,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		initialData.SysMemPitch = 0;
 		initialData.SysMemSlicePitch = 0;
 
-		if (m_device->CreateBuffer(&bufferDesc, &initialData, m_quadVertexBuffer.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateBuffer(&bufferDesc, &initialData, m_quadVertexBuffer.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateBuffer for draw quad vertex buffer failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	{
@@ -357,8 +447,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		bufferDesc.MiscFlags = 0;
 		bufferDesc.StructureByteStride = 0;
 
-		if (m_device->CreateBuffer(&bufferDesc, nullptr, m_scaleQuadPixelConstantBuffer.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateBuffer(&bufferDesc, nullptr, m_scaleQuadPixelConstantBuffer.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateBuffer for scale quad pixel constant buffer failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	const GpShaderCodeBlob drawQuadVBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadV_D3D11);
@@ -386,7 +482,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 			0								// Instance data step rate
 		};
 
-		m_device->CreateInputLayout(descs, sizeof(descs) / sizeof(descs[0]), drawQuadVBlob.m_data, drawQuadVBlob.m_size, m_drawQuadInputLayout.GetMutablePtr());
+		HRESULT result = m_device->CreateInputLayout(descs, sizeof(descs) / sizeof(descs[0]), drawQuadVBlob.m_data, drawQuadVBlob.m_size, m_drawQuadInputLayout.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateInputLayout for draw quad input failed with code %lx", result);
+
+			return false;
+		}
 	}
 
 	// Quad depth stencil state
@@ -407,8 +510,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-		if (m_device->CreateDepthStencilState(&desc, m_drawQuadDepthStencilState.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateDepthStencilState(&desc, m_drawQuadDepthStencilState.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateDepthStencilState for draw quad with code %lx", result);
+
 			return false;
+		}
 	}
 
 	// Nearest neighbor sampler desc
@@ -425,8 +534,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		samplerDesc.MinLOD = -FLT_MAX;
 		samplerDesc.MaxLOD = FLT_MAX;
 
-		if (m_device->CreateSamplerState(&samplerDesc, m_nearestNeighborSamplerState.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateSamplerState(&samplerDesc, m_nearestNeighborSamplerState.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateSamplerState for nearest neighbor failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	DXGI_FORMAT paletteTextureFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -455,8 +570,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		initialData.SysMemPitch = 256 * 4;
 		initialData.SysMemSlicePitch = 256 * 4;
 
-		if (m_device->CreateTexture1D(&desc, &initialData, m_paletteTexture.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateTexture1D(&desc, &initialData, m_paletteTexture.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateTexture1D for palette failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	// Palette texture SRV
@@ -467,8 +588,14 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		desc.Texture1D.MostDetailedMip = 0;
 		desc.Texture1D.MipLevels = 1;
 
-		if (m_device->CreateShaderResourceView(m_paletteTexture, &desc, m_paletteTextureSRV.GetMutablePtr()) != S_OK)
+		HRESULT result = m_device->CreateShaderResourceView(m_paletteTexture, &desc, m_paletteTextureSRV.GetMutablePtr());
+		if (result != S_OK)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::InitResources: CreateShaderResourceView for palette failed with code %lx", result);
+
 			return false;
+		}
 	}
 
 	return true;
@@ -791,11 +918,21 @@ void GpDisplayDriverD3D11::ChangeToStandardCursor(EGpStandardCursor_t cursor)
 
 void GpDisplayDriverD3D11::BecomeFullScreen(LONG &windowStyle)
 {
+	IGpLogDriver *logger = m_properties.m_logger;
+
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriverD3D11::BecomeFullScreen");
+
 	assert(!m_isFullScreen);
 
 	RECT windowRect;
 	if (!GetWindowRect(m_osGlobals->m_hwnd, &windowRect))
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeFullScreen: GetWindowRect failed");
+
 		return;	// ???
+	}
 
 	HMONITOR monitor = MonitorFromRect(&windowRect, MONITOR_DEFAULTTONULL);
 	if (!monitor)
@@ -810,17 +947,31 @@ void GpDisplayDriverD3D11::BecomeFullScreen(LONG &windowStyle)
 	}
 
 	if (!monitor)
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeFullScreen: Couldn't find any monitors");
+
 		return;	// No monitor?
+	}
 
 	MONITORINFO monitorInfo;
 	monitorInfo.cbSize = sizeof(monitorInfo);
 	if (!GetMonitorInfoA(monitor, &monitorInfo))
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeFullScreen: GetMonitorInfoA failed");
+
 		return;
+	}
 
 	m_windowModeRevertRect = windowRect;
 	SetWindowLongPtr(m_osGlobals->m_hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
 
-	SetWindowPos(m_osGlobals->m_hwnd, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top, SWP_FRAMECHANGED);
+	if (!SetWindowPos(m_osGlobals->m_hwnd, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top, SWP_FRAMECHANGED))
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeFullScreen: SetWindowPos failed");
+	}
 
 	m_isFullScreen = true;
 	windowStyle = (WS_VISIBLE | WS_POPUP);
@@ -828,6 +979,11 @@ void GpDisplayDriverD3D11::BecomeFullScreen(LONG &windowStyle)
 
 void GpDisplayDriverD3D11::BecomeWindowed(LONG &windowStyle)
 {
+	IGpLogDriver *logger = m_properties.m_logger;
+
+	if (logger)
+		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriverD3D11::BecomeWindowed");
+
 	assert(m_isFullScreen);
 
 	RECT revertRect = m_windowModeRevertRect;
@@ -838,12 +994,22 @@ void GpDisplayDriverD3D11::BecomeWindowed(LONG &windowStyle)
 		// If the window is off-screen, use the primary monitor
 		monitor = MonitorFromRect(&revertRect, MONITOR_DEFAULTTOPRIMARY);
 		if (!monitor)
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeWindowed: MonitorFromRect fallback failed");
+
 			return;
+		}
 
 		MONITORINFO monitorInfo;
 		monitorInfo.cbSize = sizeof(monitorInfo);
 		if (!GetMonitorInfoA(monitor, &monitorInfo))
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeWindowed: GetMonitorInfoA failed");
+
 			return;
+		}
 
 		RECT monitorRect = monitorInfo.rcWork;
 		LONG monitorWidth = monitorRect.right - monitorRect.left;
@@ -880,9 +1046,13 @@ void GpDisplayDriverD3D11::BecomeWindowed(LONG &windowStyle)
 		revertRect.right = revertRect.right + revertWidth;
 	}
 
-	SetWindowLongPtr(m_osGlobals->m_hwnd, GWL_STYLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW);
+	SetWindowLongPtrW(m_osGlobals->m_hwnd, GWL_STYLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW);
 
-	SetWindowPos(m_osGlobals->m_hwnd, HWND_TOP, revertRect.left, revertRect.top, revertRect.right - revertRect.left, revertRect.bottom - revertRect.top, SWP_FRAMECHANGED);
+	if (!SetWindowPos(m_osGlobals->m_hwnd, HWND_TOP, revertRect.left, revertRect.top, revertRect.right - revertRect.left, revertRect.bottom - revertRect.top, SWP_FRAMECHANGED))
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriverD3D11::BecomeWindowed: SetWindowPos failed");
+	}
 
 	m_isFullScreen = false;
 	windowStyle = (WS_VISIBLE | WS_OVERLAPPEDWINDOW);
@@ -890,11 +1060,18 @@ void GpDisplayDriverD3D11::BecomeWindowed(LONG &windowStyle)
 
 void GpDisplayDriverD3D11::Run()
 {
+	IGpLogDriver *logger = m_properties.m_logger;
+
 	WNDCLASSEX wc;
 
 	LPVOID fiber = ConvertThreadToFiberEx(this, 0);
 	if (!fiber)
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "ConvertThreadToFiberEx failed");
+
 		return;	// ???
+	}
 
 	m_vosFiber = m_osGlobals->m_createFiberFunc(fiber);
 
@@ -923,7 +1100,7 @@ void GpDisplayDriverD3D11::Run()
 
 	ShowWindow(m_osGlobals->m_hwnd, m_osGlobals->m_nCmdShow);
 
-	StartD3DForWindow(m_osGlobals->m_hwnd, m_swapChain, m_device, m_deviceContext);
+	StartD3DForWindow(m_osGlobals->m_hwnd, m_swapChain, m_device, m_deviceContext, logger);
 
 	InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
 
@@ -988,7 +1165,7 @@ void GpDisplayDriverD3D11::Run()
 
 				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
 				{
-					bool resizedOK = ResizeD3DWindow(m_osGlobals->m_hwnd, m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, windowStyle, menus);
+					bool resizedOK = ResizeD3DWindow(m_osGlobals->m_hwnd, m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, windowStyle, menus, logger);
 					resizedOK = resizedOK && DetachSwapChain();
 					resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidthPhysical, m_windowHeightPhysical);
 					resizedOK = resizedOK && InitBackBuffer(virtualWidth, virtualHeight);

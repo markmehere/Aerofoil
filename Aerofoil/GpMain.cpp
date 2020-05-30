@@ -63,6 +63,7 @@ int GpMain::Run()
 	ddProps.m_type = g_gpGlobalConfig.m_displayDriverType;
 	ddProps.m_osGlobals = g_gpGlobalConfig.m_osGlobals;
 	ddProps.m_eventQueue = eventQueue;
+	ddProps.m_logger = g_gpGlobalConfig.m_logger;
 
 	GpAudioDriverProperties adProps;
 	memset(&adProps, 0, sizeof(adProps));
@@ -72,10 +73,11 @@ int GpMain::Run()
 	adProps.m_type = g_gpGlobalConfig.m_audioDriverType;
 	adProps.m_sampleRate = (244800 * 2 + 11) / (11 * 2);
 #ifdef NDEBUG
-	adProps.m_debug = true;
-#else
 	adProps.m_debug = false;
+#else
+	adProps.m_debug = true;
 #endif
+	adProps.m_logger = g_gpGlobalConfig.m_logger;
 
 	IGpInputDriver **inputDrivers = static_cast<IGpInputDriver**>(malloc(sizeof(IGpInputDriver*) * g_gpGlobalConfig.m_numInputDrivers));
 

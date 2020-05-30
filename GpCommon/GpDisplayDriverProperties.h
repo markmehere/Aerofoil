@@ -8,6 +8,7 @@
 struct IGpDisplayDriver;
 struct IGpFiber;
 struct IGpVOSEventQueue;
+struct IGpLogDriver;
 
 struct GpDisplayDriverProperties
 {
@@ -39,4 +40,5 @@ struct GpDisplayDriverProperties
 	void *m_adjustRequestedResolutionFuncContext;
 
 	IGpVOSEventQueue *m_eventQueue;
+	IGpLogDriver *m_logger;
 };

@@ -3,6 +3,7 @@
 #include "EGpAudioDriverType.h"
 
 struct IGpAudioDriver;
+struct IGpLogDriver;
 
 struct GpAudioDriverProperties
 {
@@ -10,4 +11,6 @@ struct GpAudioDriverProperties
 
 	unsigned int m_sampleRate;
 	bool m_debug;
+
+	IGpLogDriver *m_logger;
 };

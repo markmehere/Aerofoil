@@ -483,6 +483,9 @@
     <ClInclude Include="ResolveCachingColor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HostLogDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -756,6 +759,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ResolveCachingColor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HostLogDriver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -34,6 +34,7 @@ private:
 	std::wstring m_scoresDir;
 	std::wstring m_packagedDir;
 	std::wstring m_housesDir;
+	std::wstring m_logsDir;
 	std::wstring m_userHousesDir;
 	std::wstring m_userSavesDir;
 	std::wstring m_resourcesDir;

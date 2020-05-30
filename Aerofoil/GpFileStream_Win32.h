@@ -21,6 +21,7 @@ public:
 	PortabilityLayer::UFilePos_t Size() const override;
 	PortabilityLayer::UFilePos_t Tell() const override;
 	void Close() override;
+	void Flush() override;
 
 private:
 	HANDLE m_handle;

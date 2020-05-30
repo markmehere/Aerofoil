@@ -122,16 +122,19 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 		m_userHousesDir = m_prefsDir + L"\\Houses";
 		m_userSavesDir = m_prefsDir + L"\\SavedGames";
 		m_scoresDir = m_prefsDir + L"\\Scores";
+		m_logsDir = m_prefsDir + L"\\Logs";
 
 		CreateDirectoryW(m_prefsDir.c_str(), nullptr);
 		CreateDirectoryW(m_scoresDir.c_str(), nullptr);
 		CreateDirectoryW(m_userHousesDir.c_str(), nullptr);
 		CreateDirectoryW(m_userSavesDir.c_str(), nullptr);
+		CreateDirectoryW(m_logsDir.c_str(), nullptr);
 
 		m_prefsDir.append(L"\\");
 		m_scoresDir.append(L"\\");
 		m_userHousesDir.append(L"\\");
 		m_userSavesDir.append(L"\\");
+		m_logsDir.append(L"\\");
 	}
 
 	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
@@ -513,6 +516,9 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 		break;
 	case PortabilityLayer::VirtualDirectories::kHighScores:
 		baseDir = m_scoresDir.c_str();
+		break;
+	case PortabilityLayer::VirtualDirectories::kLogs:
+		baseDir = m_logsDir.c_str();
 		break;
 	default:
 		return false;

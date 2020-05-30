@@ -28,6 +28,7 @@ namespace PortabilityLayer
 		UFilePos_t Size() const override;
 		UFilePos_t Tell() const override;
 		void Close() override;
+		void Flush() override;
 
 	private:
 		CFileStream(const CFileStream &other) GP_DELETED;

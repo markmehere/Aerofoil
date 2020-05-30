@@ -19,7 +19,9 @@ struct GpWindowsGlobals
 {
 	HINSTANCE m_hInstance;
 	HINSTANCE m_hPrevInstance;
-	LPCSTR m_cmdLine;
+	LPCWSTR m_cmdLine;
+	int m_cmdLineArgc;
+	LPWSTR *m_cmdLineArgv;
 	LPCWSTR m_baseDir;
 	HWND m_hwnd;
 	HICON m_hIcon;

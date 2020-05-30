@@ -23,6 +23,7 @@ namespace PortabilityLayer
 		virtual UFilePos_t Size() const = 0;
 		virtual UFilePos_t Tell() const = 0;
 		virtual void Close() = 0;
+		virtual void Flush() = 0;
 	};
 }
 

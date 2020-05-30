@@ -95,6 +95,13 @@ namespace PortabilityLayer
 		}
 	}
 
+	void CFileStream::Flush()
+	{
+		if (m_file)
+			fflush(m_file);
+	}
+
+
 	UFilePos_t CFileStream::Size() const
 	{
 		if (!m_file || !m_seekable)
