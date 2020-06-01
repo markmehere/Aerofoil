@@ -36,8 +36,6 @@ typedef int16_t SInt16;
 typedef int32_t Int32;
 typedef uint32_t UInt32;
 
-typedef size_t Size;
-
 typedef unsigned char Str15[16];
 typedef unsigned char Str31[32];
 typedef unsigned char Str63[64];
@@ -256,13 +254,13 @@ void GetTime(DateTimeRec *dateTime);
 
 void FlushEvents();
 
-Handle NewHandle(Size size);
+Handle NewHandle(size_t size);
 long GetHandleSize(Handle handle);
 
-PLError_t SetHandleSize(Handle hdl, Size newSize);
+PLError_t SetHandleSize(Handle hdl, size_t newSize);
 
-void *NewPtr(Size size);
-void *NewPtrClear(Size size);
+void *NewPtr(size_t size);
+void *NewPtrClear(size_t size);
 void DisposePtr(void *ptr);
 
 

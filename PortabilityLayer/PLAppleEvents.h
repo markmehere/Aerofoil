@@ -22,8 +22,8 @@ typedef AEEventHandler AEEventHandlerUPP;
 PLError_t AEGetParamDesc(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, AEDescList *descList);
 PLError_t AEDisposeDesc(AEDescList *descList);
 PLError_t AECountItems(AEDescList *descList, long *count);
-PLError_t AEGetNthPtr(AEDescList *descList, long index, DescType desiredType, AEKeyword *keyword, DescType *type, void *data, Size maxSize, Size *actualSize);
-PLError_t AEGetAttributePtr(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, DescType *type, void *data, Size maxSize, Size *actualSize);
+PLError_t AEGetNthPtr(AEDescList *descList, long index, DescType desiredType, AEKeyword *keyword, DescType *type, void *data, size_t maxSize, size_t *actualSize);
+PLError_t AEGetAttributePtr(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, DescType *type, void *data, size_t maxSize, size_t *actualSize);
 PLError_t AEInstallEventHandler(AEEventClass eventClass, AEEventID eventID, AEEventHandlerUPP handler, UInt32 ref, bool isSysHandler);
 PLError_t AESetInteractionAllowed(AEInteractAllowed level);
 

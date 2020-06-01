@@ -561,7 +561,7 @@ void ExitToShell()
 	PL_NotYetImplemented();
 }
 
-Handle NewHandle(Size size)
+Handle NewHandle(size_t size)
 {
 	PortabilityLayer::MMHandleBlock *hBlock = PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(size);
 	if (!hBlock)
@@ -578,7 +578,7 @@ long GetHandleSize(Handle handle)
 	return handle.MMBlock()->m_size;
 }
 
-PLError_t SetHandleSize(Handle hdl, Size newSize)
+PLError_t SetHandleSize(Handle hdl, size_t newSize)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 	if (!mm->ResizeHandle(hdl.MMBlock(), newSize))
@@ -587,12 +587,12 @@ PLError_t SetHandleSize(Handle hdl, Size newSize)
 	return PLErrors::kNone;
 }
 
-void *NewPtr(Size size)
+void *NewPtr(size_t size)
 {
 	return PortabilityLayer::MemoryManager::GetInstance()->Alloc(size);
 }
 
-void *NewPtrClear(Size size)
+void *NewPtrClear(size_t size)
 {
 	void *data = NewPtr(size);
 	if (data != nullptr && size != 0)

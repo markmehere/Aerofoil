@@ -58,7 +58,7 @@ Boolean CreateNewHouse (void)
 {
 	AEKeyword			theKeyword;
 	DescType			actualType;
-	Size				actualSize;
+	size_t				actualSize;
 	VFileSpec			tempSpec;
 	VFileSpec			theSpec;
 	PLError_t			theErr;

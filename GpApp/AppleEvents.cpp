@@ -52,7 +52,7 @@ PLError_t DoOpenDocAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 	VFileInfo		finderInfo;
 	AEDescList		docList;
 	long			itemsInList;
-	Size			actualSize;
+	size_t			actualSize;
 	AEKeyword		keywd;
 	DescType		returnedType;
 	PLError_t			theErr, whoCares;
@@ -162,7 +162,7 @@ PLError_t DoQuitAE (const AppleEvent *theAE, AppleEvent *reply, UInt32 ref)
 PLError_t MyGotRequiredParams (const AppleEvent *theAE)
 {
 	DescType		returnedType;
-	Size			actualSize;
+	size_t			actualSize;
 	
 	return (AEGetAttributePtr(theAE, keyMissedKeywordAttr, typeWildCard,
 			&returnedType, 0L, 0, &actualSize) == errAEDescNotFound) ? PLErrors::kNone :

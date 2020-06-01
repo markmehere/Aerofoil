@@ -19,13 +19,13 @@ PLError_t AECountItems(AEDescList *descList, long *count)
 	return PLErrors::kNone;
 }
 
-PLError_t AEGetNthPtr(AEDescList *descList, long index, DescType desiredType, AEKeyword *keyword, DescType *type, void *data, Size maxSize, Size *actualSize)
+PLError_t AEGetNthPtr(AEDescList *descList, long index, DescType desiredType, AEKeyword *keyword, DescType *type, void *data, size_t maxSize, size_t *actualSize)
 {
 	PL_NotYetImplemented();
 	return PLErrors::kNone;
 }
 
-PLError_t AEGetAttributePtr(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, DescType *type, void *data, Size maxSize, Size *actualSize)
+PLError_t AEGetAttributePtr(const AppleEvent *evt, AEKeyword keyword, DescType desiredType, DescType *type, void *data, size_t maxSize, size_t *actualSize)
 {
 	PL_NotYetImplemented();
 	return PLErrors::kNone;

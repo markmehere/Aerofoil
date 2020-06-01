@@ -42,7 +42,7 @@ void SaveGame2 (void)
 	PortabilityLayer::InputManager::GetInstance()->ClearState();
 
 	Str255				gameNameStr;
-	Size				byteCount;
+	size_t				byteCount;
 	houseType			*thisHousePtr;
 	roomType			*srcRoom;
 	savedRoom			*destRoom;
