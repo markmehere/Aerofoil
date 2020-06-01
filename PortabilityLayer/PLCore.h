@@ -204,19 +204,12 @@ typedef WindowPtr WindowRef;	// wtf?
 
 struct KeyDownStates;
 
-static const int everyEvent = -1;
-
-static const int iBeamCursor = 1;
-static const int watchCursor = 4;
-
 static const Boolean TRUE = 1;
 static const Boolean FALSE = 0;
 
 #define nil nullptr
 
 static const int nullEvent = 0;
-
-//void FlushEvents(int eventMask, int stopMask);
 
 void InitCursor();
 void HideCursor();
@@ -261,7 +254,7 @@ Boolean WaitMouseUp();
 short Random();
 void GetTime(DateTimeRec *dateTime);
 
-void FlushEvents(int mask, int unknown);
+void FlushEvents();
 
 Handle NewHandle(Size size);
 long GetHandleSize(Handle handle);

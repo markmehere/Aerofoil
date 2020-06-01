@@ -1270,7 +1270,7 @@ void DoSettingsMain (void)
 			FlashSettingsButton(surface, 1);
 			DoSoundPrefs();
 			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
-			FlushEvents(everyEvent, 0);
+			FlushEvents();
 			break;
 			
 			case kControlsButton:

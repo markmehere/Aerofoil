@@ -424,7 +424,7 @@ Boolean WaitForInputEvent (short seconds)
 	Boolean				waiting, didResume;
 	
 	timeToBail = TickCount() + 60L * (long)seconds;
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 	waiting = true;
 	didResume = false;
 
@@ -446,7 +446,7 @@ Boolean WaitForInputEvent (short seconds)
 
 		Delay(1, nullptr);
 	}
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 	return (didResume);
 }
 
@@ -469,7 +469,7 @@ void WaitCommandQReleased (void)
 
 		Delay(1, nullptr);
 	}
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 }
 
 //--------------------------------------------------------------  KeyMapOffsetFromRawKey

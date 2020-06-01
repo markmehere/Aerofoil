@@ -547,7 +547,7 @@ void GetTime(DateTimeRec *dateTime)
 	dateTime->minute = minute;
 }
 
-void FlushEvents(int mask, int unknown)
+void FlushEvents()
 {
 	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
 

@@ -397,7 +397,7 @@ Boolean TestHighScore (void)
 		else if (scoreTimestamp > 0xffffffff)
 			scoreTimestamp = 0xffffffff;
 
-		FlushEvents(everyEvent, 0);
+		FlushEvents();
 		GetHighScoreName(placing + 1);
 		PasStringCopy(highName, thisHousePtr->highScores.names[kMaxScores - 1]);
 		if (placing == 0)
@@ -503,7 +503,7 @@ void GetHighScoreName (short place)
 
 	PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 	BringUpDialog(&theDial, kHighNameDialogID, &substitutions);
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 	SetDialogString(theDial, kHighNameItem, highName);
 	SelectDialogItemText(theDial, kHighNameItem, 0, 1024);
 	leaving = false;

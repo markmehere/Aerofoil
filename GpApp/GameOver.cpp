@@ -163,7 +163,7 @@ void DoGameOverStarAnimation (void)
 	nextLoop = TickCount() + 2;
 	count = 0;
 	pass = 0;
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 
 	if (workSrcRect.bottom - angelDest.bottom > kMaxFramesAlive * starFallSpeed)
 		starFallSpeed = (workSrcRect.bottom - angelDest.bottom + kMaxFramesAlive - 1) / kMaxFramesAlive;
@@ -465,7 +465,7 @@ void DoDiedGameOver (void)
 	InitDiedGameOver();
 	CopyRectMainToWork(&workSrcRect);
 	CopyRectMainToBack(&workSrcRect);
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 	
 	nextLoop = TickCount() + 2;
 	while (pagesStuck < 8)

@@ -54,7 +54,7 @@ void SaveGame2 (void)
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 	
-	FlushEvents(everyEvent, 0);
+	FlushEvents();
 	
 	thisHousePtr = *thisHouse;
 	
