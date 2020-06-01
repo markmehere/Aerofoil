@@ -28,6 +28,8 @@ InstallerPackages/*
 *.msi
 *.wixpdb
 *.wixobj
+*.CopyComplete
 ReleasePackageInstaller/obj/*
 ReleasePackageInstaller/bin/*
 ReleasePackageInstaller/AerofoilPackageDefs.wxi
+packages/*

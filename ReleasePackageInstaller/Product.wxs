@@ -63,6 +63,9 @@
       <Component Id="GpAudioDriver_XAudio2.dll" Guid="*">
         <File Id="GpAudioDriver_XAudio2.dll" Source="$(var.GpAudioDriver_XAudio2.TargetPath)" KeyPath="yes" Checksum="yes"/>
       </Component>
+      <Component Id="xaudio2_9redist.dll" Guid="*">
+        <File Id="xaudio2_9redist.dll" Source="$(var.GpAudioDriver_XAudio2.TargetDir)xaudio2_9redist.dll" KeyPath="yes" Checksum="yes"/>
+      </Component>
       <Component Id="GpDisplayDriver_D3D11.dll" Guid="*">
         <File Id="GpDisplayDriver_D3D11.dll" Source="$(var.GpDisplayDriver_D3D11.TargetPath)" KeyPath="yes" Checksum="yes"/>
       </Component>
@@ -132,6 +135,7 @@
       <ComponentRef Id="FreeType.dll" />
       <ComponentRef Id="GpApp.dll" />
       <ComponentRef Id="GpAudioDriver_XAudio2.dll" />
+      <ComponentRef Id="xaudio2_9redist.dll" />
       <ComponentRef Id="GpDisplayDriver_D3D11.dll" />
       <ComponentRef Id="GpInputDriver_XInput.dll" />
       
