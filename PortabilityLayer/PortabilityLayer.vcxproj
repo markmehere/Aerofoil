@@ -143,8 +143,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\GpCommon\GpBitfield.h" />
-    <ClInclude Include="AEHandlerDesc.h" />
-    <ClInclude Include="AEManager.h" />
     <ClInclude Include="AntiAliasTable.h" />
     <ClInclude Include="AppEventHandler.h" />
     <ClInclude Include="ArrayTools.h" />
@@ -204,8 +202,6 @@
     <ClInclude Include="PascalStrLiteral.h" />
     <ClInclude Include="HostMemoryBuffer.h" />
     <ClInclude Include="HostFileSystem.h" />
-    <ClInclude Include="PLAppleEvents.h" />
-    <ClInclude Include="PLAppleEventsCommonTypes.h" />
     <ClInclude Include="PLApplication.h" />
     <ClInclude Include="PLArrayView.h" />
     <ClInclude Include="PLArrayViewIterator.h" />
@@ -265,7 +261,6 @@
     <ClInclude Include="ResourceCompiledTypeList.h" />
     <ClInclude Include="ResourceFile.h" />
     <ClInclude Include="PLMenus.h" />
-    <ClInclude Include="PLNavigation.h" />
     <ClInclude Include="PLNumberFormatting.h" />
     <ClInclude Include="PLPalettes.h" />
     <ClInclude Include="PLPasStr.h" />
@@ -302,7 +297,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\stb\stb_image_write.c" />
-    <ClCompile Include="AEManager.cpp" />
     <ClCompile Include="AntiAliasTable.cpp" />
     <ClCompile Include="AppEventHandler.cpp" />
     <ClCompile Include="BinHex4.cpp" />
@@ -337,7 +331,6 @@
     <ClCompile Include="MenuManager.cpp" />
     <ClCompile Include="MMBlock.cpp" />
     <ClCompile Include="MMHandleBlock.cpp" />
-    <ClCompile Include="PLAppleEvents.cpp" />
     <ClCompile Include="PLApplication.cpp" />
     <ClCompile Include="PLButtonWidget.cpp" />
     <ClCompile Include="PLControlDefinitions.cpp" />
@@ -354,7 +347,6 @@
     <ClCompile Include="PLLabelWidget.cpp" />
     <ClCompile Include="PLMenus.cpp" />
     <ClCompile Include="PLMovies.cpp" />
-    <ClCompile Include="PLNavigation.cpp" />
     <ClCompile Include="PLNumberFormatting.cpp" />
     <ClCompile Include="PLPopupMenuWidget.cpp" />
     <ClCompile Include="PLQDOffscreen.cpp" />

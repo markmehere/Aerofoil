@@ -6,7 +6,6 @@
 //============================================================================
 
 
-#include "PLAppleEvents.h"
 #include "PLKeyEncoding.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLToolUtils.h"

@@ -93,9 +93,6 @@
     <ClInclude Include="PLResources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLAppleEvents.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLToolUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -103,9 +100,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PLSound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PLNavigation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PLNumberFormatting.h">
@@ -163,15 +157,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HostDisplayDriver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PLAppleEventsCommonTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AEManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AEHandlerDesc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ByteSwap.h">
@@ -521,9 +506,6 @@
     <ClCompile Include="PLQDOffscreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PLAppleEvents.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PLStringCompare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -531,9 +513,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLDialogs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PLNavigation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLNumberFormatting.cpp">
@@ -567,9 +546,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HostDisplayDriver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AEManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ByteSwap.cpp">

@@ -6,7 +6,6 @@
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
 
-#include "AEManager.h"
 #include "DisplayDeviceManager.h"
 #include "FileManager.h"
 #include "FilePermission.h"
@@ -644,7 +643,6 @@ void PL_Init()
 	PortabilityLayer::MemoryManager::GetInstance()->Init();
 	PortabilityLayer::ResourceManager::GetInstance()->Init();
 	PortabilityLayer::DisplayDeviceManager::GetInstance()->Init();
-	PortabilityLayer::AEManager::GetInstance()->Init();
 	PortabilityLayer::QDManager::GetInstance()->Init();
 	PortabilityLayer::MenuManager::GetInstance()->Init();
 }

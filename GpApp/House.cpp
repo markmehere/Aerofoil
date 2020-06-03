@@ -4,9 +4,7 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-#include "PLAppleEvents.h"
 #include "PLKeyEncoding.h"
-#include "PLNavigation.h"
 #include "PLNumberFormatting.h"
 #include "PLPasStr.h"
 #include "PLResources.h"
@@ -56,8 +54,6 @@ extern	Boolean		twoPlayerGame, wardBitSet, phoneBitSet;
 #ifndef COMPILEDEMO
 Boolean CreateNewHouse (void)
 {
-	AEKeyword			theKeyword;
-	DescType			actualType;
 	size_t				actualSize;
 	VFileSpec			tempSpec;
 	VFileSpec			theSpec;

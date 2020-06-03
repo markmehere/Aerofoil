@@ -6,7 +6,6 @@
 //============================================================================
 
 
-#include "PLAppleEvents.h"
 #include "AppEventHandler.h"
 #include "DialogManager.h"
 #include "Externs.h"
@@ -15,6 +14,9 @@
 
 #define kNoPrintingAlert			1031
 
+extern	Boolean		quitting;
+
+#if 0
 
 PLError_t DoOpenAppAE (const AppleEvent *, AppleEvent *, UInt32);
 PLError_t DoOpenDocAE (const AppleEvent *, AppleEvent *, UInt32);
@@ -28,7 +30,6 @@ AEEventHandlerUPP	openAppAEUPP, openDocAEUPP, printDocAEUPP, quitAEUPP;
 extern	VFileSpec	*theHousesSpecs;
 extern	long		incrementModeTime;
 extern	short		thisHouseIndex, splashOriginH, splashOriginV;
-extern	Boolean		quitting;
 
 
 //==============================================================  Functions
@@ -168,6 +169,7 @@ PLError_t MyGotRequiredParams (const AppleEvent *theAE)
 			&returnedType, 0L, 0, &actualSize) == errAEDescNotFound) ? PLErrors::kNone :
 			PLErrors::kInvalidParameter;
 }
+#endif
 
 class SystemEventHandlerImpl : public PortabilityLayer::IAppEventHandler
 {
@@ -201,34 +203,5 @@ void SetUpAppleEvents (void)
 	PLError_t		theErr;
 
 	PortabilityLayer::AppEventHandler::SetInstance(SystemEventHandlerImpl::GetInstance());
-	
-	openAppAEUPP = NewAEEventHandlerProc(DoOpenAppAE);
-	openDocAEUPP = NewAEEventHandlerProc(DoOpenDocAE);
-	printDocAEUPP = NewAEEventHandlerProc(DoPrintDocAE);
-	quitAEUPP = NewAEEventHandlerProc(DoQuitAE);
-	
-	theErr = AEInstallEventHandler(kCoreEventClass,		// install oapp 
-			kAEOpenApplication, openAppAEUPP, 0, false);
-	if (theErr != PLErrors::kNone)
-		YellowAlert(kYellowAppleEventErr, theErr);
-	
-	theErr = AEInstallEventHandler(kCoreEventClass, 	// install odoc 
-			kAEOpenDocuments, openDocAEUPP, 0, false);
-	if (theErr != PLErrors::kNone)
-		YellowAlert(kYellowAppleEventErr, theErr);
-	
-	theErr = AEInstallEventHandler(kCoreEventClass, 	// install pdoc 
-			kAEPrintDocuments, printDocAEUPP, 0, false);
-	if (theErr != PLErrors::kNone)
-		YellowAlert(kYellowAppleEventErr, theErr);
-	
-	theErr = AEInstallEventHandler(kCoreEventClass, 	// install quit 
-			kAEQuitApplication, quitAEUPP, 0, false);
-	if (theErr != PLErrors::kNone)
-		YellowAlert(kYellowAppleEventErr, theErr);
-	
-	theErr = AESetInteractionAllowed(kAEInteractWithAll);
-	if (theErr != PLErrors::kNone)
-		YellowAlert(kYellowAppleEventErr, theErr);
 }
 
