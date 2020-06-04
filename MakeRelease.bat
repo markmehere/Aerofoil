@@ -1,5 +1,7 @@
 rmdir /S /Q ReleasePkg
 
+mkdir ReleasePkg
+
 mkdir ReleasePkg\PDBs
 
 mkdir ReleasePkg\Aerofoil
