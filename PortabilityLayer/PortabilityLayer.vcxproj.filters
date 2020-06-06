@@ -165,9 +165,6 @@
     <ClInclude Include="PLBigEndian.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MacFileWriteableMem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FileManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>

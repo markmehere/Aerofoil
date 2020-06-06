@@ -191,7 +191,6 @@
     <ClInclude Include="MacBinary2.h" />
     <ClInclude Include="MacFileMem.h" />
     <ClInclude Include="MacFileInfo.h" />
-    <ClInclude Include="MacFileWriteableMem.h" />
     <ClInclude Include="MacRsrcHeader.h" />
     <ClInclude Include="MacRsrcMap.h" />
     <ClInclude Include="MemoryManager.h" />
