@@ -611,15 +611,15 @@ namespace PortabilityLayer
 	{
 	public:
 		Dialog *LoadDialog(int16_t resID, Window *behindWindow, const DialogTextSubstitutions *substitutions) override;
+		Dialog *LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions) override;
 		int16_t DisplayAlert(int16_t alertResID, const DialogTextSubstitutions *substitutions) override;
+		void PositionWindow(Window *window, const Rect &rect) const override;
 
 		DialogTemplate *LoadDialogTemplate(int16_t resID);
 
 		static DialogManagerImpl *GetInstance();
 
 	private:
-		void PositionWindow(Window *window, const Rect &rect);
-		Dialog *LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions);
 
 		static int16_t AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
@@ -827,7 +827,7 @@ namespace PortabilityLayer
 		return dtemplate;
 	}
 
-	void DialogManagerImpl::PositionWindow(Window *window, const Rect &rect)
+	void DialogManagerImpl::PositionWindow(Window *window, const Rect &rect) const
 	{
 		unsigned int displayWidth, displayHeight;
 		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight, nullptr);

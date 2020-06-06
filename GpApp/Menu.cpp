@@ -293,6 +293,10 @@ void DoAppleMenu (short theItem)
 		DoAbout();
 		break;
 		
+		case iAboutAerofoil:
+		DoAboutFramework();
+		break;
+		
 		default:
 //		GetMenuItemText(appleMenu, theItem, daName);
 //		GetPort(&wasPort);

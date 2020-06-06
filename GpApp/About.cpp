@@ -7,10 +7,14 @@
 #include "PLArrayView.h"
 #include "PLKeyEncoding.h"
 #include "PLControlDefinitions.h"
+#include "FontFamily.h"
+#include "PLButtonWidget.h"
+#include "PLLabelWidget.h"
 #include "PLNumberFormatting.h"
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
@@ -19,15 +23,23 @@
 #include "DialogUtils.h"
 #include "Environ.h"
 #include "Externs.h"
+#include "GpApplicationName.h"
+#include "GpBuildVersion.h"
 #include "HostSystemServices.h"
+#include "RenderedFont.h"
+#include "RenderedFontMetrics.h"
+#include "ResolveCachingColor.h"
 #include "ResourceManager.h"
 #include "ScanlineMask.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 
 static void HiLiteOkayButton (DrawSurface *surface);
 static void UnHiLiteOkayButton (DrawSurface *surface);
 static void UpdateMainPict (Dialog *);
 static int16_t AboutFilter(Dialog *, const TimeTaggedVOSEvent *evt);
+static int16_t AboutFrameworkFilter(Dialog *, const TimeTaggedVOSEvent *evt);
 
 
 static Point			okayButtLowerV, okayButtUpperV;
@@ -84,6 +96,66 @@ void DoAbout (void)
 	while (hit != kOkayButton);
 
 	aboutDialog->Destroy();
+}
+
+void DoAboutFramework (void)
+{
+#define			kAboutFrameworkDialogTemplateID			2000
+
+	const Rect windowRect = Rect::Create(0, 0, 272, 450);
+
+	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
+
+	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+	PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *fontLight = GetApplicationFont(8, PortabilityLayer::FontFamilyFlag_None, true);
+
+	int16_t verticalPoint = 16 + font->GetMetrics().m_ascent;
+	int16_t horizontalOffset = 16;
+	const int16_t spacing = 12;
+
+	PortabilityLayer::DialogManager *dialogManager = PortabilityLayer::DialogManager::GetInstance();
+	Dialog *dialog = dialogManager->LoadDialogFromTemplate(kAboutFrameworkDialogTemplateID, windowRect, true, false, 0, 0, PL_GetPutInFrontWindowPtr(), PSTR(""), nullptr);
+
+#ifdef NDEBUG
+	#define ABOUT_DIALOG_CONFIGURATION_TAG "Release"
+#else
+	#define ABOUT_DIALOG_CONFIGURATION_TAG "Debug"
+#endif
+
+	Window *window = dialog->GetWindow();
+
+	DrawSurface *surface = window->GetDrawSurface();
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 0), PSTR(GP_APPLICATION_NAME " " GP_APPLICATION_VERSION_STRING "   \xa9" GP_APPLICATION_COPYRIGHT_STRING), blackColor, font);
+	
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 2), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO\xaa."), blackColor, font);
+
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 4), PSTR("This software is not maintained by, supported by, endorsed by, or"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 5), PSTR("otherwise associated with the authors and publishers of Glider PRO\xaa."), blackColor, font);
+
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 7), PSTR("Please do not contact any of them regarding issues that you have"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 8), PSTR("with " GP_APPLICATION_NAME "."), blackColor, font);
+
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 10), PSTR("If you would like to contribute to this project, visit:"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 11), PSTR(GP_APPLICATION_WEBSITE_STRING), blackColor, font);
+
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 13), PSTR("To report a problem or request support, submit an issue via"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 14), PSTR("the website above."), blackColor, font);
+
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 16), PSTR("For more information, please see the accompanying documentation."), blackColor, font);
+
+	surface->DrawString(Point::Create(horizontalOffset, windowRect.bottom - 16), PSTR("Build: " __TIMESTAMP__ " " ABOUT_DIALOG_CONFIGURATION_TAG), blackColor, fontLight);
+
+	DrawDefaultButton(dialog);
+
+	int16_t hit = 0;
+
+	do
+	{
+		hit = dialog->ExecuteModal(AboutFrameworkFilter);
+	} while (hit != kOkayButton);
+
+	dialog->Destroy();
 }
 
 //==============================================================  Static Functions
@@ -244,6 +316,47 @@ static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
 				else
 					UnHiLiteOkayButton(surface);
 			}
+		}
+	}
+
+	if (!handledIt)
+		return -1;
+
+	return hit;
+}
+
+
+
+//--------------------------------------------------------------  AboutFrameworkFilter
+// Dialog filter for the About Framework dialog.
+
+static int16_t AboutFrameworkFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
+{
+	bool		handledIt = false;
+	int16_t		hit = -1;
+
+	if (!evt)
+		return -1;
+
+	Window *window = dialog->GetWindow();
+	DrawSurface *surface = window->GetDrawSurface();
+
+	if (evt->IsKeyDownEvent())
+	{
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
+		{
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
+			dialog->GetItems()[kOkayButton - 1].GetWidget()->SetHighlightStyle(kControlButtonPart, true);
+			PLSysCalls::Sleep(8);
+			dialog->GetItems()[kOkayButton - 1].GetWidget()->SetHighlightStyle(kControlButtonPart, false);
+			hit = kOkayButton;
+			handledIt = true;
+			break;
+
+		default:
+			handledIt = false;
+			break;
 		}
 	}
 

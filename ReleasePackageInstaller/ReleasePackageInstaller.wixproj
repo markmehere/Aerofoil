@@ -220,6 +220,7 @@ PackagedDataDir=$(SolutionDir)\Packaged;
   </Target>
   <PropertyGroup>
     <PreBuildEvent>cd "$(SolutionDir)"
+"$(PlatformName)\$(ConfigurationName)\EmitWiXVersion.exe" "$(ProjectDir)\AerofoilPackageVersion.wxi"
 call ConvertResources.bat
 call MakeRelease.bat</PreBuildEvent>
   </PropertyGroup>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?include AerofoilPackageDefs.wxi ?>
+<?include AerofoilPackageVersion.wxi ?>
 <!--
     You're probably getting a build failure on this line ^^^
     This is because the Aerofoil upgrade code is not included in this project, to prevent collision with Aerofoil's upgrade GUID.
@@ -9,7 +10,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
   <?define AerofoilUpgradeCode="PUT A GUID HERE" ?>
-  <?define AerofoilReleaseVersion="1.0.0.0" ?>
 </Include>
 
     DO NOT USE AEROFOIL'S UPGRADE CODE GUID FOR YOUR OWN PROJECTS, it will cause your project to be considered a version of

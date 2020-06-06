@@ -1,7 +1,8 @@
 {
 	"add" :
 	{
-		"DITL/1017.json" : "ApplicationResourcePatches/DITL/1017.json"
+		"DITL/1017.json" : "ApplicationResourcePatches/DITL/1017.json",
+		"DITL/2000.json" : "ApplicationResourcePatches/DITL/2000.json"
 	},
 	"delete" :
 	[

@@ -128,6 +128,8 @@ namespace PortabilityLayer
 		THandle<Menu> DeserializeMenu(const void *resData) const override;
 		THandle<Menu> GetMenuByID(int id) const override;
 
+		PLError_t AppendMenuItem(const THandle<Menu> &menu, int8_t iconResID, uint8_t key, uint8_t submenuID, uint8_t textStyle, bool enabled, bool checked, const PLPasStr &text) const override;
+
 		void InsertMenuBefore(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu) override;
 		void InsertMenuAfter(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu) override;
 		void InsertMenuAtEnd(const THandle<Menu> &insertingMenu) override;
@@ -389,6 +391,41 @@ namespace PortabilityLayer
 		}
 
 		return THandle<Menu>();
+	}
+
+	PLError_t MenuManagerImpl::AppendMenuItem(const THandle<Menu> &menuHdl, int8_t iconResID, uint8_t key, uint8_t submenuID, uint8_t textStyle, bool enabled, bool checked, const PLPasStr &text) const
+	{
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+		Menu *menu = *menuHdl;
+
+		// This doesn't need a +1 because 1 is implicit
+		if (!mm->ResizeHandle(menuHdl.MMBlock(), sizeof(Menu) + menu->numMenuItems * sizeof(MenuItem)))
+			return PLErrors::kOutOfMemory;
+
+		menu = *menuHdl;
+		size_t oldStringBlobSize = menu->stringBlobHandle->m_size;
+
+		if (!mm->ResizeHandle(menu->stringBlobHandle, oldStringBlobSize + text.Length() + 1))
+			return PLErrors::kOutOfMemory;
+
+		MenuItem *lastItem = menu->menuItems + menu->numMenuItems;
+		menu->numMenuItems++;
+		menu->haveMenuLayout = false;
+
+		uint8_t *stringBlob = static_cast<uint8_t*>(menu->stringBlobHandle->m_contents);
+		stringBlob[oldStringBlobSize] = text.Length();
+		memcpy(stringBlob + oldStringBlobSize + 1, text.UChars(), text.Length());
+
+		lastItem->iconResID = iconResID;
+		lastItem->key = key;
+		lastItem->submenuID = submenuID;
+		lastItem->textStyle = textStyle;
+		lastItem->enabled = enabled;
+		lastItem->checked = checked;
+		lastItem->nameOffsetInStringBlob = oldStringBlobSize;
+
+		return PLErrors::kNone;
 	}
 
 	void MenuManagerImpl::InsertMenuBefore(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu)

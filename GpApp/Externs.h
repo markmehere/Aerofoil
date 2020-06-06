@@ -51,6 +51,7 @@ namespace PortabilityLayer
 #define kErrNeed16Or256Colors		13
 
 #define iAbout					1
+#define iAboutAerofoil			3
 #define iNewGame				1
 #define iTwoPlayer				2
 #define iOpenSavedGame			3
@@ -127,6 +128,7 @@ typedef struct
 //--------------------------------------------------------------  Prototypes
 
 void DoAbout (void);									// --- About.c
+void DoAboutFramework (void);
 
 void LoadCursors (void);								// --- AnimCursor.c
 void DisposCursors (void);

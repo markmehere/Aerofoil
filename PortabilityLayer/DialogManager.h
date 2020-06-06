@@ -4,8 +4,10 @@
 
 struct Dialog;
 struct DialogTextSubstitutions;
+struct Rect;
 struct Window;
 struct TimeTaggedVOSEvent;
+class PLPasStr;
 
 namespace PortabilityLayer
 {
@@ -16,7 +18,9 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual Dialog *LoadDialog(int16_t resID, Window *behindWindow, const DialogTextSubstitutions *substitutions) = 0;
+		virtual Dialog *LoadDialogFromTemplate(int16_t templateResID, const Rect &rect, bool visible, bool hasCloseBox, uint32_t referenceConstant, uint16_t positionSpec, Window *behindWindow, const PLPasStr &title, const DialogTextSubstitutions *substitutions) = 0;
 		virtual int16_t DisplayAlert(int16_t alertResID, const DialogTextSubstitutions *substitutions) = 0;
+		virtual void PositionWindow(Window *window, const Rect &rect) const = 0;
 
 		static DialogManager *GetInstance();
 	};

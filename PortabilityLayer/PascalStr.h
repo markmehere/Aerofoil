@@ -13,6 +13,7 @@ namespace PortabilityLayer
 		PascalStr();
 		PascalStr(size_t size, const char *str);
 		explicit PascalStr(const PLPasStr &pstr);
+		explicit PascalStr(const char *str);
 	};
 }
 
@@ -36,6 +37,12 @@ namespace PortabilityLayer
 	template<size_t TSize>
 	PascalStr<TSize>::PascalStr(const PLPasStr &pstr)
 		: UnsafePascalStr<TSize, true>(pstr.Length(), pstr.Chars())
+	{
+	}
+
+	template<size_t TSize>
+	PascalStr<TSize>::PascalStr(const char *str)
+		: UnsafePascalStr<TSize, true>((str == nullptr) ? 0 : strlen(str), str)
 	{
 	}
 }

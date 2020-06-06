@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "PLErrorCodes.h"
 
 template<class T>
 class THandle;
@@ -21,6 +22,8 @@ namespace PortabilityLayer
 
 		virtual THandle<Menu> DeserializeMenu(const void *resData) const = 0;
 		virtual THandle<Menu> GetMenuByID(int id) const = 0;
+
+		virtual PLError_t AppendMenuItem(const THandle<Menu> &menu, int8_t iconResID, uint8_t key, uint8_t submenuID, uint8_t textStyle, bool enabled, bool checked, const PLPasStr &text) const = 0;
 
 		virtual void InsertMenuBefore(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu) = 0;
 		virtual void InsertMenuAfter(const THandle<Menu> &insertingMenu, const THandle<Menu> &existingMenu) = 0;

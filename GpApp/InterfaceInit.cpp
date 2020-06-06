@@ -10,9 +10,11 @@
 #include "Environ.h"
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
+#include "GpApplicationName.h"
 #include "Map.h"
 #include "MenuManager.h"
 #include "PLKeyEncoding.h"
+#include "PLPasStr.h"
 #include "RectUtils.h"
 #include "Tools.h"
 
@@ -46,11 +48,12 @@ extern	Boolean			twoPlayerGame, paused, hasMirror, splashDrawn;
 // The menus are loaded from disk and the menu bar set up and drawn.
 
 void InitializeMenus (void)
-{	
+{
 	appleMenu = GetMenu(kAppleMenuID);
 	if (appleMenu == nil)
 		RedAlert(kErrFailedResourceLoad);
 	//AppendResMenu(appleMenu, 'DRVR');	// GP: We don't support this
+	AppendMenuItem(appleMenu, 0, 0, 0, 0, true, false, PSTR("About " GP_APPLICATION_NAME "\xc9"));
 	InsertMenu(appleMenu, 0);
 	
 	gameMenu = GetMenu(kGameMenuID);

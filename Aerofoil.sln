@@ -46,8 +46,13 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unpacktool", "unpacktool\unpacktool.vcxproj", "{A778D062-DE76-49F6-8D05-EB26852DD605}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "ReleasePackageInstaller", "ReleasePackageInstaller\ReleasePackageInstaller.wixproj", "{D26BD501-28A7-4849-8130-FB5EA0A2B82F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B} = {7EFF1E21-C375-45EA-A069-4E2232C8A72B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WindowsUnicodeToolShim", "WindowsUnicodeToolShim\WindowsUnicodeToolShim.vcxproj", "{15009625-1120-405E-8BBA-69A16CD6713D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EmitWiXVersion", "EmitWiXVersion\EmitWiXVersion.vcxproj", "{7EFF1E21-C375-45EA-A069-4E2232C8A72B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -237,6 +242,14 @@ Global
 		{15009625-1120-405E-8BBA-69A16CD6713D}.Release|x64.Build.0 = Release|x64
 		{15009625-1120-405E-8BBA-69A16CD6713D}.Release|x86.ActiveCfg = Release|Win32
 		{15009625-1120-405E-8BBA-69A16CD6713D}.Release|x86.Build.0 = Release|Win32
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Debug|x64.ActiveCfg = Debug|x64
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Debug|x64.Build.0 = Debug|x64
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Debug|x86.ActiveCfg = Debug|Win32
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Debug|x86.Build.0 = Debug|Win32
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Release|x64.ActiveCfg = Release|x64
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Release|x64.Build.0 = Release|x64
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Release|x86.ActiveCfg = Release|Win32
+		{7EFF1E21-C375-45EA-A069-4E2232C8A72B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

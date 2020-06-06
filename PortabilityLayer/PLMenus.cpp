@@ -73,6 +73,13 @@ void CheckMenuItem(MenuHandle menu, int index, Boolean checked)
 	mm->SetItemChecked(menu, index - 1, checked != 0);
 }
 
+
+void AppendMenuItem(MenuHandle menu, int8_t iconResID, uint8_t key, uint8_t submenuID, uint8_t textStyle, bool enabled, bool checked, const PLPasStr &text)
+{
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+	mm->AppendMenuItem(menu, iconResID, key, submenuID, textStyle, enabled, checked, text);
+}
+
 void SetMenuItemText(MenuHandle menu, int index, const PLPasStr &text)
 {
 	PL_NotYetImplemented();

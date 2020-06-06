@@ -32,4 +32,5 @@ InstallerPackages/*
 ReleasePackageInstaller/obj/*
 ReleasePackageInstaller/bin/*
 ReleasePackageInstaller/AerofoilPackageDefs.wxi
+ReleasePackageInstaller/AerofoilPackageVersion.wxi
 packages/*
