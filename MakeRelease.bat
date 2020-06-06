@@ -2,8 +2,6 @@ rmdir /S /Q ReleasePkg
 
 mkdir ReleasePkg
 
-mkdir ReleasePkg\PDBs
-
 mkdir ReleasePkg\Aerofoil
 mkdir ReleasePkg\Aerofoil\Packaged
 mkdir ReleasePkg\Aerofoil\Resources
@@ -26,8 +24,23 @@ copy /Y x64\Release\FTagData.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\gpr2gpa.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\unpacktool.exe ReleasePkg\Aerofoil\Tools
 
+mkdir ReleasePkg\PDBs
 
-copy /Y x64\Release\*.pdb ReleasePkg\PDBs
+copy /Y x64\Release\Aerofoil.pdb ReleasePkg\PDBs
+copy /Y x64\Release\GpAudioDriver_XAudio2.pdb ReleasePkg\PDBs
+copy /Y x64\Release\GpDisplayDriver_D3D11.pdb ReleasePkg\PDBs
+copy /Y x64\Release\GpInputDriver_XInput.pdb ReleasePkg\PDBs
+copy /Y x64\Release\FreeType.pdb ReleasePkg\PDBs
+copy /Y x64\Release\GpApp.pdb ReleasePkg\PDBs
+
+copy /Y x64\Release\flattenmov.pdb ReleasePkg\PDBs
+copy /Y x64\Release\bin2gp.pdb ReleasePkg\PDBs
+copy /Y x64\Release\hqx2bin.pdb ReleasePkg\PDBs
+copy /Y x64\Release\hqx2gp.pdb ReleasePkg\PDBs
+copy /Y x64\Release\MakeTimestamp.pdb ReleasePkg\PDBs
+copy /Y x64\Release\FTagData.pdb ReleasePkg\PDBs
+copy /Y x64\Release\gpr2gpa.pdb ReleasePkg\PDBs
+copy /Y x64\Release\unpacktool.pdb ReleasePkg\PDBs
 
 xcopy /I /E /Y /K Packaged ReleasePkg\Aerofoil\Packaged
 xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
