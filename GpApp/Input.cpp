@@ -5,7 +5,6 @@
 //============================================================================
 
 
-#include "PLToolUtils.h"
 #include "PLDialogs.h"
 #include "PLKeyEncoding.h"
 #include "DialogManager.h"

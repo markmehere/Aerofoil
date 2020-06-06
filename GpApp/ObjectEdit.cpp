@@ -6,7 +6,6 @@
 
 #include "PLKeyEncoding.h"
 #include "PLSound.h"
-#include "PLToolUtils.h"
 #include "PLPasStr.h"
 #include "BitmapImage.h"
 #include "Externs.h"

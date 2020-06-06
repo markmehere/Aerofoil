@@ -12,7 +12,6 @@
 #include "PLHacks.h"
 #include "PLMenus.h"
 #include "PLPasStr.h"
-#include "PLToolUtils.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"

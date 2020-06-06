@@ -93,9 +93,6 @@
     <ClInclude Include="PLResources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PLToolUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLPasStr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -109,12 +106,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PLStringCompare.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PLTextUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PLScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PLControlDefinitions.h">

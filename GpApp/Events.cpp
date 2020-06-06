@@ -8,7 +8,6 @@
 
 #include "PLKeyEncoding.h"
 #include "PLTimeTaggedVOSEvent.h"
-#include "PLToolUtils.h"
 #include "PLQDraw.h"
 #include "DialogManager.h"
 #include "Externs.h"

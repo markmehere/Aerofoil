@@ -269,11 +269,8 @@
     <ClInclude Include="PLQDraw.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="PLResources.h" />
-    <ClInclude Include="PLScript.h" />
     <ClInclude Include="PLSound.h" />
     <ClInclude Include="PLStringCompare.h" />
-    <ClInclude Include="PLTextUtils.h" />
-    <ClInclude Include="PLToolUtils.h" />
     <ClInclude Include="ResTypeID.h" />
     <ClInclude Include="ResTypeIDCodec.h" />
     <ClInclude Include="RGBAColor.h" />
