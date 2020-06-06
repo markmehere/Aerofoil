@@ -147,7 +147,9 @@
     <ClInclude Include="..\GpCommon\IGpLogDriver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GpLogDriver_Win32.h" />
+    <ClInclude Include="GpLogDriver_Win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ConvertedResources\Large128.ico">
