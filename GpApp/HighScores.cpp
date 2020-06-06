@@ -9,7 +9,6 @@
 #include "PLHacks.h"
 #include "PLKeyEncoding.h"
 #include "PLNumberFormatting.h"
-#include "PLScript.h"
 #include "PLSound.h"
 #include "PLStringCompare.h"
 #include "DialogUtils.h"
