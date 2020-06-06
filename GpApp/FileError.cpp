@@ -7,7 +7,6 @@
 
 #include "PLDialogs.h"
 #include "PLNumberFormatting.h"
-#include "PLTextUtils.h"
 #include "PLPasStr.h"
 #include "DialogManager.h"
 #include "Externs.h"

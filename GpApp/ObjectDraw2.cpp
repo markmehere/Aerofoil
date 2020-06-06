@@ -7,7 +7,6 @@
 
 #include "BitmapImage.h"
 #include "PLResources.h"
-#include "PLTextUtils.h"
 #include "PLPasStr.h"
 #include "Externs.h"
 #include "FontFamily.h"

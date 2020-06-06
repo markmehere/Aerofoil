@@ -9,7 +9,6 @@
 #include "PLKeyEncoding.h"
 #include "PLSound.h"
 #include "PLStandardColors.h"
-#include "PLTextUtils.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
 #include "ResolveCachingColor.h"

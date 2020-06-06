@@ -9,7 +9,6 @@
 #include "PLMovies.h"
 #include "PLResources.h"
 #include "PLStringCompare.h"
-#include "PLTextUtils.h"
 #include "PLPasStr.h"
 #include "BitmapImage.h"
 #include "DialogManager.h"
