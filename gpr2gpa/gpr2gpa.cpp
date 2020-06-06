@@ -1095,6 +1095,7 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 			{
 				archive.push_back(PlannedEntry());
 				entry = &archive.back();
+				entry->m_name = itemName.GetString();
 			}
 
 			FILE *f = fopen_utf8(itemValue.GetString(), "rb");
