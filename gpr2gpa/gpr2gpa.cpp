@@ -642,7 +642,8 @@ bool BMPDumperContext::Export(std::vector<uint8_t> &outData) const
 
 	VectorAppend(outData, reinterpret_cast<const uint8_t*>(&infoHeader), sizeof(infoHeader));
 
-	VectorAppend(outData, reinterpret_cast<const uint8_t*>(colorTable), sizeof(PortabilityLayer::BitmapColorTableEntry) * numColors);
+	if (bpp < 16)
+		VectorAppend(outData, reinterpret_cast<const uint8_t*>(colorTable), sizeof(PortabilityLayer::BitmapColorTableEntry) * numColors);
 
 	for (size_t i = 0; i < postCTabPaddingSize; i++)
 		outData.push_back(0);
@@ -1326,7 +1327,6 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 
 int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimestamp &ts, FILE *patchF, const char *outPath)
 {
-
 	FILE *inF = fopen_utf8(resPath, "rb");
 	if (!inF)
 	{
