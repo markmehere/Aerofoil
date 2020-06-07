@@ -88,9 +88,9 @@ void DoPause (void)
 	QSetRect(&bounds, 0, 0, 214, 54);
 	CenterRectInRect(&bounds, &houseRect);
 	if (isEscPauseKey)
-		LoadScaledGraphic(surface, kEscPausePictID, &bounds);
+		LoadScaledGraphicCustom(surface, kEscPausePictID, &bounds);
 	else
-		LoadScaledGraphic(surface, kTabPausePictID, &bounds);
+		LoadScaledGraphicCustom(surface, kTabPausePictID, &bounds);
 
 	const KeyDownStates *theKeys = nullptr;
 

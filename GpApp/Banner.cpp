@@ -62,17 +62,17 @@ void DrawBanner (Point *topLeft)
 	topLeft->v = wholePage.top;
 	partPage = wholePage;
 	partPage.bottom = partPage.top + 190;	
-	LoadScaledGraphic(workSrcMap, kBannerPageTopPICT, &partPage);
+	LoadScaledGraphicCustom(workSrcMap, kBannerPageTopPICT, &partPage);
 	
 	partPage = wholePage;
 	partPage.top = partPage.bottom - 30;
 	mapBounds = partPage;
 	ZeroRectCorner(&mapBounds);
 	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds, kPreferredPixelFormat);
-	LoadGraphic(tempMap, kBannerPageBottomPICT);
+	LoadGraphicCustom(tempMap, kBannerPageBottomPICT);
 	
 	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, GpPixelFormats::kBW1);	
-	LoadGraphic(tempMask, kBannerPageBottomMask);
+	LoadGraphicCustom(tempMask, kBannerPageBottomMask);
 
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
 			(BitMap *)*GetGWorldPixMap(tempMask), 
@@ -232,10 +232,10 @@ void DisplayStarsRemaining(void)
 	NumToString((long)numStarsRemaining, theStr);
 
 	if (numStarsRemaining < 2)
-		LoadScaledGraphic(surface, kStarRemainingPICT, &bounds);
+		LoadScaledGraphicCustom(surface, kStarRemainingPICT, &bounds);
 	else
 	{
-		LoadScaledGraphic(surface, kStarsRemainingPICT, &bounds);
+		LoadScaledGraphicCustom(surface, kStarsRemainingPICT, &bounds);
 		const Point textPoint = Point::Create(bounds.left + 102 - (appFont->MeasurePStr(theStr) / 2), bounds.top + 23);
 		ColorText(surface, textPoint, theStr, 4L, appFont);
 	}
