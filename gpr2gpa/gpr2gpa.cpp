@@ -22,14 +22,29 @@
 
 #include "WindowsUnicodeToolShim.h"
 
+#include "macedec.h"
+
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
 #include <Windows.h>
 
+enum AudioCompressionCodecID
+{
+	AudioCompressionCodecID_VariableRate = -2,
+	AudioCompressionCodecID_FixedRate = -1,
+	AudioCompressionCodecID_Uncompressed = 0,
+	AudioCompressionCodecID_TwoToOne = 1,
+	AudioCompressionCodecID_EightToOne = 2,
+	AudioCompressionCodecID_ThreeToOne = 3,
+	AudioCompressionCodecID_SixToOne = 4,
+};
+
 struct PlannedEntry
 {
-	std::vector<uint8_t> m_contents;
+	std::vector<uint8_t> m_uncompressedContents;
+	std::vector<uint8_t> m_compressedContents;
+
 	std::string m_name;
 	bool m_isDirectory;
 
@@ -205,7 +220,7 @@ void ConvertToMSDOSTimestamp(const PortabilityLayer::CombinedTimestamp &ts, uint
 	msdosDate = day | (month << 5) | (yearsSince1980 << 9);
 }
 
-void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, const PortabilityLayer::CombinedTimestamp &ts)
+void ExportZipFile(const char *path, std::vector<PlannedEntry> &entries, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	FILE *outF = fopen_utf8(path, "wb");
 	if (!outF)
@@ -221,20 +236,27 @@ void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, c
 
 	std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> cdirRecords;
 
+	// Why does OMP require signed indexes?  When do I ever want negative iterations?  Uggghh.
+	int numEntries = entries.size();
+
+#pragma omp parallel for
+	for (int i = 0; i < numEntries; i++)
+	{
+		PlannedEntry &entry = entries[i];
+
+		if (entry.m_uncompressedContents.size() > 0)
+		{
+			if (!TryDeflate(entry.m_uncompressedContents, entry.m_compressedContents))
+				entry.m_compressedContents.resize(0);
+
+			if (entry.m_compressedContents.size() >= entry.m_uncompressedContents.size())
+				entry.m_compressedContents.resize(0);
+		}
+	}
+
 	for (const PlannedEntry &entry : entries)
 	{
-		std::vector<uint8_t> compressed;
-
-		if (entry.m_contents.size() != 0)
-		{
-			if (!TryDeflate(entry.m_contents, compressed))
-				compressed.resize(0);
-
-			if (compressed.size() >= entry.m_contents.size())
-				compressed.resize(0);
-		}
-
-		bool isCompressed = compressed.size() != 0;
+		bool isCompressed = entry.m_compressedContents.size() != 0;
 
 		PortabilityLayer::ZipCentralDirectoryFileHeader cdirHeader;
 
@@ -252,11 +274,11 @@ void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, c
 		else if (isCompressed)
 			cdirHeader.m_versionRequired = PortabilityLayer::ZipConstants::kCompressedRequiredVersion;
 
-		if (entry.m_contents.size() > 0)
-			cdirHeader.m_crc = crc32(0, &entry.m_contents[0], static_cast<uint32_t>(entry.m_contents.size()));
+		if (entry.m_uncompressedContents.size() > 0)
+			cdirHeader.m_crc = crc32(0, &entry.m_uncompressedContents[0], static_cast<uint32_t>(entry.m_uncompressedContents.size()));
 
-		cdirHeader.m_compressedSize = static_cast<uint32_t>(isCompressed ? compressed.size() : entry.m_contents.size());
-		cdirHeader.m_uncompressedSize = static_cast<uint32_t>(entry.m_contents.size());
+		cdirHeader.m_compressedSize = static_cast<uint32_t>(isCompressed ? entry.m_compressedContents.size() : entry.m_uncompressedContents.size());
+		cdirHeader.m_uncompressedSize = static_cast<uint32_t>(entry.m_uncompressedContents.size());
 		cdirHeader.m_fileNameLength = static_cast<uint32_t>(entry.m_name.size());
 		cdirHeader.m_extraFieldLength = 0;
 		cdirHeader.m_commentLength = 0;
@@ -286,9 +308,9 @@ void ExportZipFile(const char *path, const std::vector<PlannedEntry> &entries, c
 		fwrite(entry.m_name.c_str(), 1, entry.m_name.size(), outF);
 
 		if (isCompressed)
-			fwrite(&compressed[0], 1, compressed.size(), outF);
-		else if (entry.m_contents.size() > 0)
-			fwrite(&entry.m_contents[0], 1, entry.m_contents.size(), outF);
+			fwrite(&entry.m_compressedContents[0], 1, entry.m_compressedContents.size(), outF);
+		else if (entry.m_uncompressedContents.size() > 0)
+			fwrite(&entry.m_uncompressedContents[0], 1, entry.m_uncompressedContents.size(), outF);
 	}
 
 	long cdirPos = ftell(outF);
@@ -715,6 +737,49 @@ void PadAlignWave(std::vector<uint8_t> &outWAV)
 		outWAV.push_back(0);
 }
 
+bool DecompressSound(int compressionID, int channelCount, const void *sndData, size_t numFrames, std::vector<uint8_t> &decompressed)
+{
+	if (compressionID == AudioCompressionCodecID_ThreeToOne)
+	{
+		if (channelCount != 1)
+		{
+			fprintf(stderr, "Unsupported MACE decode channel layout\n");
+			return false;
+		}
+
+		fprintf(stderr, "Unimplemented audio codec\n");
+		return false;
+	}
+	else if (compressionID = AudioCompressionCodecID_SixToOne)
+	{
+		if (channelCount != 1)
+		{
+			fprintf(stderr, "Unsupported MACE decode channel layout\n");
+			return false;
+		}
+
+		MaceChannelDecState state;
+		memset(&state, 0, sizeof(state));
+
+		const uint8_t *packets = static_cast<const uint8_t*>(sndData);
+		for (size_t i = 0; i < numFrames; i++)
+		{
+			uint8_t samples[6];
+			DecodeMACE6(&state, packets[i], samples);
+
+			for (int s = 0; s < 6; s++)
+				decompressed.push_back(samples[s]);
+		}
+	}
+	else
+	{
+		fprintf(stderr, "Unknown audio compression format\n");
+		return false;
+	}
+
+	return true;
+}
+
 bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize)
 {
 	// Glider PRO has a hard-coded expectation that the sound will have exactly 20 bytes of prefix.
@@ -732,6 +797,56 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 		uint8_t m_baseFrequency;
 	};
 
+	struct ExtHeader
+	{
+		BEUInt32_t m_samplePtr;
+		BEUInt32_t m_channelCount;
+		BEFixed32_t m_sampleRate;
+		BEUInt32_t m_loopStart;
+		BEUInt32_t m_loopEnd;
+		uint8_t m_encoding;
+		uint8_t m_baseFrequency;
+		BEUInt32_t m_numSamples;
+		BEUInt16_t m_sampleRateExponentAndSign;
+		BEUInt32_t m_sampleRateFractionHigh;
+		BEUInt32_t m_sampleRateFractionLow;
+		BEUInt32_t m_markerPtr;
+		BEUInt32_t m_instrumentPtr;
+		BEUInt32_t m_recordingDevicesPtr;
+		BEUInt16_t m_sampleSize;
+		uint8_t m_reserved[14];
+	};
+
+	struct CmpHeader
+	{
+		BEUInt32_t m_samplePtr;
+		BEUInt32_t m_channelCount;
+		BEFixed32_t m_sampleRate;
+		BEUInt32_t m_loopStart;
+		BEUInt32_t m_loopEnd;
+		uint8_t m_encoding;
+		uint8_t m_baseFrequency;
+		BEUInt32_t m_numFrames;
+		BEUInt16_t m_sampleRateExponentAndSign;
+		BEUInt32_t m_sampleRateFractionHigh;
+		BEUInt32_t m_sampleRateFractionLow;
+		BEUInt32_t m_markerPtr;
+		BEUInt32_t m_format;
+		uint8_t m_reserved1[4];
+
+		BEUInt32_t m_stateVars;
+		BEUInt32_t m_leftOverSamples;
+		BEInt16_t m_compressionID;
+		BEUInt16_t m_packetSize;
+		BEUInt16_t m_synthesizerID;
+		BEUInt16_t m_sampleSize;
+	};
+
+	const int hs = sizeof(CmpHeader);
+
+	GP_STATIC_ASSERT(sizeof(ExtHeader) == 64);
+	GP_STATIC_ASSERT(sizeof(CmpHeader) == 64);
+
 	if (inSize < hardCodedPrefixSize)
 		return false;
 
@@ -744,12 +859,76 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	BufferHeader header;
 	memcpy(&header, sndBufferData, sizeof(header));
 
-	sndBufferData += sizeof(header);
-	inSize -= sizeof(header);
+	std::vector<uint8_t> decompressedSound;
 
-	uint32_t dataLength = header.m_length;
-	if (dataLength > inSize)
-		return false;
+	uint32_t dataLength = 0;
+	if (header.m_encoding == 0xfe)
+	{
+		if (inSize < sizeof(CmpHeader))
+			return false;
+
+		CmpHeader cmpHeader;
+		memcpy(&cmpHeader, sndBufferData, sizeof(cmpHeader));
+
+		sndBufferData += sizeof(ExtHeader);
+		inSize -= sizeof(ExtHeader);
+
+		if (!DecompressSound(cmpHeader.m_compressionID, cmpHeader.m_channelCount, sndBufferData, cmpHeader.m_numFrames, decompressedSound))
+			return false;
+
+		dataLength = decompressedSound.size();
+		if (decompressedSound.size() > 0)
+			sndBufferData = &decompressedSound[0];
+	}
+	else if (header.m_encoding == 0xff)
+	{
+		if (inSize < sizeof(ExtHeader))
+			return false;
+
+		ExtHeader extHeader;
+		memcpy(&extHeader, sndBufferData, sizeof(extHeader));
+
+#if 0
+		uint64_t sampleRateFraction = (static_cast<uint64_t>(static_cast<uint32_t>(extHeader.m_sampleRateFractionHigh)) << 32) | static_cast<uint32_t>(extHeader.m_sampleRateFractionLow);
+		uint16_t sampleRateExponentAndSign = extHeader.m_sampleRateExponentAndSign;
+
+		int32_t sampleRateExponent = static_cast<int32_t>(sampleRateExponentAndSign & 0x7fff) - 16447;
+
+		double sampleRate = static_cast<double>(sampleRateFraction) * pow(2.0, sampleRateExponent);
+#endif
+
+		uint16_t bitsPerSample = extHeader.m_sampleSize;
+
+		if (bitsPerSample != 8)
+		{
+			fprintf(stderr, "Sound had unexpected bit rate\n");
+			return false;
+		}
+
+		if (extHeader.m_channelCount != 1)
+		{
+			fprintf(stderr, "Sound had unexpected channel count\n");
+			return false;
+		}
+
+		dataLength = extHeader.m_numSamples * extHeader.m_channelCount * bitsPerSample / 8;
+
+		sndBufferData += sizeof(ExtHeader);
+		inSize -= sizeof(ExtHeader);
+
+		if (dataLength > inSize)
+			return false;
+	}
+	else
+	{
+		dataLength = header.m_length;
+
+		sndBufferData += sizeof(header);
+		inSize -= sizeof(header);
+
+		if (dataLength > inSize)
+			return false;
+	}
 
 	uint32_t sampleRate = header.m_sampleRate.m_intPart;
 	if (static_cast<int>(header.m_sampleRate.m_fracPart) >= 0x8000)
@@ -1106,8 +1285,8 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 			}
 
 			entry->m_isDirectory = false;
-			entry->m_contents.clear();
-			ReadFileToVector(f, entry->m_contents);
+			entry->m_uncompressedContents.clear();
+			ReadFileToVector(f, entry->m_uncompressedContents);
 			fclose(f);
 		}
 	}
@@ -1216,7 +1395,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				entry.m_name = resName;
 
-				if (ImportPICT(entry.m_contents, resData, resSize))
+				if (ImportPICT(entry.m_uncompressedContents, resData, resSize))
 					contents.push_back(entry);
 				else
 					fprintf(stderr, "Failed to import PICT res %i\n", static_cast<int>(res.m_resID));
@@ -1229,7 +1408,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				entry.m_name = resName;
 
-				if (ImportSound(entry.m_contents, resData, resSize))
+				if (ImportSound(entry.m_uncompressedContents, resData, resSize))
 					contents.push_back(entry);
 			}
 			else if (typeList.m_resType == indexStringTypeID)
@@ -1240,7 +1419,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				entry.m_name = resName;
 
-				if (ImportIndexedString(entry.m_contents, resData, resSize))
+				if (ImportIndexedString(entry.m_uncompressedContents, resData, resSize))
 					contents.push_back(entry);
 			}
 			else if (typeList.m_resType == ditlTypeID)
@@ -1251,7 +1430,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				entry.m_name = resName;
 
-				if (ImportDialogItemTemplate(entry.m_contents, resData, resSize))
+				if (ImportDialogItemTemplate(entry.m_uncompressedContents, resData, resSize))
 					contents.push_back(entry);
 			}
 			else
@@ -1262,9 +1441,9 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 				sprintf_s(resName, "%s/%i.bin", resTag.m_id, static_cast<int>(res.m_resID));
 
 				entry.m_name = resName;
-				entry.m_contents.resize(res.GetSize());
+				entry.m_uncompressedContents.resize(res.GetSize());
 
-				memcpy(&entry.m_contents[0], resData, resSize);
+				memcpy(&entry.m_uncompressedContents[0], resData, resSize);
 
 				contents.push_back(entry);
 			}
@@ -1344,7 +1523,7 @@ int ConvertDirectory(const std::string &basePath, const PortabilityLayer::Combin
 int PrintUsage()
 {
 	fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]\n");
-	fprintf(stderr, "       gpr2gpa <input dir>\* <input.ts>\n");
+	fprintf(stderr, "       gpr2gpa <input dir>\\* <input.ts>\n");
 	fprintf(stderr, "       gpr2gpa <input dir>/* <input.ts>\n");
 	fprintf(stderr, "       gpr2gpa * <input.ts>\n");
 	return -1;

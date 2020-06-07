@@ -90,3 +90,11 @@ The "unpacktool" utility is heavily based on code from The Unarchiver.
 Copyright (C) 2006-2013 Dag Ågren
 
 Distributed under the LGPLv2 license (See license_lgplv2.txt)
+
+
+FFmpeg:
+
+The "gpr2gpa" tool uses MACE decompression code from FFmpeg.
+Copyright (c) 2002 Laszlo Torok <torokl@alpha.dfmk.hu>
+
+Distributed under the LGPLv2 license (See license_lgplv2.txt)

@@ -28,3 +28,9 @@ The Unarchiver:
 Copyright (C) 2006-2013 Dag Ågren
 
 Distributed under the LGPLv2 license (See unpacktool/LICENSE.txt)
+
+
+MACE Audio decoder:
+Copyright (c) 2002 Laszlo Torok <torokl@alpha.dfmk.hu>
+
+Distributed under the LGPLv2 license (See macedec.cpp comments)
