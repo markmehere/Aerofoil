@@ -1,3 +1,5 @@
+rmdir /S /Q Packaged
+
 mkdir Packaged
 mkdir Packaged\Houses
 mkdir Packaged\WinCursors
