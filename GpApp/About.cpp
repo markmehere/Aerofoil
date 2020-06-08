@@ -144,7 +144,7 @@ void DoAboutFramework (void)
 
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 16), PSTR("For more information, please see the accompanying documentation."), blackColor, font);
 
-	surface->DrawString(Point::Create(horizontalOffset, windowRect.bottom - 16), PSTR("Build: " __TIMESTAMP__ " " ABOUT_DIALOG_CONFIGURATION_TAG), blackColor, fontLight);
+	surface->DrawString(Point::Create(horizontalOffset, windowRect.bottom - 16), PSTR("Build: " __DATE__ " " __TIME__ " " ABOUT_DIALOG_CONFIGURATION_TAG), blackColor, fontLight);
 
 	DrawDefaultButton(dialog);
 
