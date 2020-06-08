@@ -544,7 +544,7 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 		}
 	}
 
-	DXGI_FORMAT paletteTextureFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	DXGI_FORMAT paletteTextureFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	// Palette texture
 	{

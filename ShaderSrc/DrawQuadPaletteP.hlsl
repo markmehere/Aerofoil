@@ -29,5 +29,7 @@ SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 	if (result.color.a <= 0.0)
 		discard;
 
+	result.color.rgb = AppleRGBToSRGBLinear(result.color.rgb);
+
 	return result;
 }

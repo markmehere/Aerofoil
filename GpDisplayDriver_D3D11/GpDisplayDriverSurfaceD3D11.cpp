@@ -93,7 +93,7 @@ GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *d
 		dxgiFormat = DXGI_FORMAT_R16_UINT;
 		break;
 	case GpPixelFormats::kRGB32:
-		dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 		break;
 	case GpPixelFormats::kRGB24:	// RGB24 is not supported as a surface format (PL must convert it)
 	default:

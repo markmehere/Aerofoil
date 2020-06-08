@@ -47,13 +47,24 @@ float4 ApplyFlicker(int2 coordinate, int startThreshold, int endThreshold, float
 
 float4 ApplyDesaturation(float desaturation, float4 color)
 {
+	// This is intentionally done in gamma space
 	if (desaturation == 0.0)
 		return color;
 	
-	float3 srgbColor = LinearToSRGB(color.rgb);
-	float grayLevel = dot(srgbColor, float3(3.0, 6.0, 1.0) / 10.0);
+	float grayLevel = dot(color.rgb, float3(3.0, 6.0, 1.0) / 10.0);
 
-	srgbColor = srgbColor * (1.0 - desaturation) + float3(grayLevel, grayLevel, grayLevel) * desaturation;
-	
-	return float4(SRGBToLinear(srgbColor), color.a);
+	color.rgb = color.rgb * (1.0 - desaturation) + float3(grayLevel, grayLevel, grayLevel) * desaturation;
+	return color;
+}
+
+float3 AppleRGBToSRGBLinear(float3 color)
+{
+	color = pow(saturate(color), 1.8);
+
+	float3 result;
+	result = color.r * float3(1.06870538834699, 0.024110476735, 0.00173499822713);
+	result += color.g * float3(-0.07859532843279, 0.96007030899244, 0.02974755969275);
+	result += color.b * float3(0.00988984558395, 0.01581936633364, 0.96851741859153);
+
+	return result;
 }
