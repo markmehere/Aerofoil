@@ -11,6 +11,7 @@
 #include "MemReaderStream.h"
 #include "HostFontHandler.h"
 #include "PLPasStr.h"
+#include "PLStandardColors.h"
 #include "RenderedFont.h"
 #include "RenderedFontMetrics.h"
 #include "RenderedGlyphMetrics.h"
@@ -33,9 +34,18 @@
 #include <algorithm>
 #include <assert.h>
 
+const uint32_t kInvertPixelAlphaMask = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255).AsUInt32();
+
 static inline void InvertPixel8(uint8_t &pixel)
 {
 	pixel = 255 ^ pixel;
+}
+
+static inline void InvertPixel32(uint8_t *pixel)
+{
+	uint32_t &pixel32 = *reinterpret_cast<uint32_t*>(pixel);
+	pixel32 = ~pixel32;
+	pixel[3] = 255;
 }
 
 void SetPort(DrawSurface *graf)
@@ -113,20 +123,21 @@ static void PlotLine(DrawSurface *surface, const PortabilityLayer::Vec2i &pointA
 
 	assert(currentPoint.m_y < constrainedRect.bottom);
 
-	size_t plotIndex = static_cast<size_t>(currentPoint.m_y) * pitch + static_cast<size_t>(currentPoint.m_x);
+	const size_t plotRowStartOffset = static_cast<size_t>(currentPoint.m_y) * pitch;
 	const size_t plotLimit = pixMap->GetPitch() * (pixMap->m_rect.bottom - pixMap->m_rect.top);
 
 	switch (pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
 		{
+			size_t plotOffset = plotRowStartOffset + static_cast<size_t>(currentPoint.m_x);
 			const size_t pixelSize = 1;
 			const uint8_t color = foreColor.Resolve8(nullptr, 0);
 
 			while (currentPoint.m_x >= constrainedRect.left && currentPoint.m_x < constrainedRect.right && currentPoint.m_y < constrainedRect.bottom)
 			{
-				assert(plotIndex < plotLimit);
-				pixData[plotIndex] = color;
+				assert(plotOffset < plotLimit);
+				pixData[plotOffset] = color;
 
 				PortabilityLayer::PlotDirection plotDir = plotter.PlotNext();
 				if (plotDir == PortabilityLayer::PlotDirection_Exhausted)
@@ -148,25 +159,80 @@ static void PlotLine(DrawSurface *surface, const PortabilityLayer::Vec2i &pointA
 				case PortabilityLayer::PlotDirection_NegX_PosY:
 					currentPoint.m_x--;
 					currentPoint.m_y++;
-					plotIndex = plotIndex + pitch - pixelSize;
+					plotOffset = plotOffset + pitch - pixelSize;
 					break;
 				case PortabilityLayer::PlotDirection_0X_PosY:
 					currentPoint.m_y++;
-					plotIndex = plotIndex + pitch;
+					plotOffset = plotOffset + pitch;
 					break;
 				case PortabilityLayer::PlotDirection_PosX_PosY:
 					currentPoint.m_x++;
 					currentPoint.m_y++;
-					plotIndex = plotIndex + pitch + pixelSize;
+					plotOffset = plotOffset + pitch + pixelSize;
 					break;
 
 				case PortabilityLayer::PlotDirection_NegX_0Y:
 					currentPoint.m_x--;
-					plotIndex = plotIndex - pixelSize;
+					plotOffset = plotOffset - pixelSize;
 					break;
 				case PortabilityLayer::PlotDirection_PosX_0Y:
 					currentPoint.m_x++;
-					plotIndex = plotIndex + pixelSize;
+					plotOffset = plotOffset + pixelSize;
+					break;
+				}
+			}
+		}
+		break;
+	case GpPixelFormats::kRGB32:
+		{
+			size_t plotOffset = plotRowStartOffset + static_cast<size_t>(currentPoint.m_x) * 4;
+			const size_t pixelSize = 4;
+			const uint32_t color = foreColor.GetRGBAColor().AsUInt32();
+
+			while (currentPoint.m_x >= constrainedRect.left && currentPoint.m_x < constrainedRect.right && currentPoint.m_y < constrainedRect.bottom)
+			{
+				assert(plotOffset < plotLimit);
+				reinterpret_cast<uint32_t&>(pixData[plotOffset]) = color;
+
+				PortabilityLayer::PlotDirection plotDir = plotter.PlotNext();
+				if (plotDir == PortabilityLayer::PlotDirection_Exhausted)
+					return;
+
+				switch (plotDir)
+				{
+				default:
+				case PortabilityLayer::PlotDirection_Exhausted:
+					return;
+
+				case PortabilityLayer::PlotDirection_NegX_NegY:
+				case PortabilityLayer::PlotDirection_0X_NegY:
+				case PortabilityLayer::PlotDirection_PosX_NegY:
+					// These should never happen, the point order is swapped so that Y is always 0 or positive
+					assert(false);
+					return;
+
+				case PortabilityLayer::PlotDirection_NegX_PosY:
+					currentPoint.m_x--;
+					currentPoint.m_y++;
+					plotOffset = plotOffset + pitch - pixelSize;
+					break;
+				case PortabilityLayer::PlotDirection_0X_PosY:
+					currentPoint.m_y++;
+					plotOffset = plotOffset + pitch;
+					break;
+				case PortabilityLayer::PlotDirection_PosX_PosY:
+					currentPoint.m_x++;
+					currentPoint.m_y++;
+					plotOffset = plotOffset + pitch + pixelSize;
+					break;
+
+				case PortabilityLayer::PlotDirection_NegX_0Y:
+					currentPoint.m_x--;
+					plotOffset = plotOffset - pixelSize;
+					break;
+				case PortabilityLayer::PlotDirection_PosX_0Y:
+					currentPoint.m_x++;
+					plotOffset = plotOffset + pixelSize;
 					break;
 				}
 			}
@@ -281,6 +347,91 @@ static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, con
 			}
 		}
 		break;
+	case GpPixelFormats::kRGB32:
+		{
+			uint8_t *firstOutputRowData = static_cast<uint8_t*>(pixMap->m_data) + firstOutputRow * outputPitch;
+
+			const PortabilityLayer::RGBAColor color = cacheColor.GetRGBAColor();
+			uint8_t colorRGB[3] = { color.r, color.g, color.b };
+
+			const PortabilityLayer::AntiAliasTable *aaTables[3] = { nullptr, nullptr, nullptr };
+
+			if (isAA)
+			{
+				PortabilityLayer::RGBAColor rgbaColor = cacheColor.GetRGBAColor();
+				uint8_t rgbColor[3] = { rgbaColor.r, rgbaColor.g, rgbaColor.b };
+				uint8_t cacheRGBColor[3] = { cachedAATableColor.r, cachedAATableColor.g, cachedAATableColor.b };
+
+				for (int ch = 0; ch < 3; ch++)
+				{
+					if (rgbColor[ch] == 0)
+						aaTables[ch] = &PortabilityLayer::StandardPalette::GetInstance()->GetBlackToneAATable();
+					else if (rgbColor[ch] == 255)
+						aaTables[ch] = &PortabilityLayer::StandardPalette::GetInstance()->GetWhiteToneAATable();
+					else if (cachedAATable != nullptr && rgbColor[ch] == cacheRGBColor[ch])
+						aaTables[ch] = &cachedAATable[ch];
+					else
+					{
+						if (!cachedAATable)
+						{
+							cachedAATable = static_cast<PortabilityLayer::AntiAliasTable*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::AntiAliasTable) * 3));
+							if (!cachedAATable)
+								return;
+
+							cachedAATableColor = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
+							cachedAATable[0] = cachedAATable[1] = cachedAATable[2] = PortabilityLayer::StandardPalette::GetInstance()->GetBlackToneAATable();
+						}
+
+						cacheRGBColor[ch] = rgbColor[ch];
+
+						cachedAATableColor = PortabilityLayer::RGBAColor::Create(cacheRGBColor[0], cacheRGBColor[1], cacheRGBColor[2], 255);
+						cachedAATable[ch].GenerateForSimpleScale(rgbColor[ch]);
+
+						aaTables[ch] = &cachedAATable[ch];
+					}
+				}
+			}
+
+			for (uint32_t row = 0; row < numRows; row++)
+			{
+				const uint8_t *inputRowData = firstInputRowData + row * inputPitch;
+				uint8_t *outputRowData = firstOutputRowData + row * outputPitch;
+
+				// It should be possible to speed this up, if needed.  The input is guaranteed to be well-aligned and not mutable within this loop.
+				if (isAA)
+				{
+					for (uint32_t col = 0; col < numCols; col++)
+					{
+						const size_t inputOffset = firstInputCol + col;
+
+						const unsigned int grayLevel = (inputRowData[inputOffset / 2] >> ((inputOffset & 1) * 4)) & 0xf;
+						uint8_t *targetPixel = outputRowData + (firstOutputCol + col) * 4;
+
+						if (grayLevel > 0)
+						{
+							for (int ch = 0; ch < 3; ch++)
+								targetPixel[ch] = aaTables[ch]->m_aaTranslate[targetPixel[ch]][grayLevel];
+						}
+					}
+				}
+				else
+				{
+					for (uint32_t col = 0; col < numCols; col++)
+					{
+						uint8_t *targetPixel = outputRowData + (firstOutputCol + col) * 4;
+
+						const size_t inputOffset = firstInputCol + col;
+						if (inputRowData[inputOffset / 8] & (1 << (inputOffset & 0x7)))
+						{
+							targetPixel[0] = color.r;
+							targetPixel[1] = color.g;
+							targetPixel[2] = color.b;
+						}
+					}
+				}
+			}
+		}
+		break;
 	default:
 		PL_NotYetImplemented();
 	}
@@ -317,7 +468,7 @@ void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str,
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), -1, rfont, str);
 
-	DrawText(placer, pixMap, rect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
+	DrawText(placer, pixMap, rect, rfont, m_cachedAATables, m_cachedAAColor, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
@@ -342,7 +493,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), areaRect.Width(), rfont, str);
 
-	DrawText(placer, pixMap, limitRect, rfont, m_cachedAATable, m_cachedAAColor, cacheColor);
+	DrawText(placer, pixMap, limitRect, rfont, m_cachedAATables, m_cachedAAColor, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
@@ -527,7 +678,7 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 				const PortabilityLayer::RGBAColor &resultColor = PortabilityLayer::StandardPalette::GetInstance()->GetColors()[paletteMapping[i]];
 			}
 		}
-		else
+		else if (pixMap->GetPixelFormat() == GpPixelFormats::k8BitCustom)
 		{
 			PL_NotYetImplemented();
 		}
@@ -574,93 +725,229 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 	{
 	case GpPixelFormats::kBW1:
 	case GpPixelFormats::k8BitStandard:
-	{
-		const uint8_t *currentSourceRow = firstSourceRow;
-		uint8_t *currentDestRow = firstDestRow;
-
-		int16_t *errorDiffusionBuffer = nullptr;
-		int16_t *errorDiffusionNextRow = nullptr;
-		int16_t *errorDiffusionCurrentRow = nullptr;
-
-		if (bpp == 16 || bpp == 24)
 		{
-			errorDiffusionBuffer = static_cast<int16_t*>(memManager->Alloc(sizeof(int16_t) * numCopyCols * 2 * 3));
-			if (!errorDiffusionBuffer)
-				return;
+			const uint8_t *currentSourceRow = firstSourceRow;
+			uint8_t *currentDestRow = firstDestRow;
 
-			errorDiffusionNextRow = errorDiffusionBuffer;
-			errorDiffusionCurrentRow = errorDiffusionBuffer + numCopyCols * 3;
+			int16_t *errorDiffusionBuffer = nullptr;
+			int16_t *errorDiffusionNextRow = nullptr;
+			int16_t *errorDiffusionCurrentRow = nullptr;
 
-			memset(errorDiffusionNextRow, 0, sizeof(int16_t) * numCopyCols * 3);
-		}
-
-		for (uint32_t row = 0; row < numCopyRows; row++)
-		{
-			if (errorDiffusionBuffer)
+			if (bpp == 16 || bpp == 24)
 			{
-				std::swap(errorDiffusionCurrentRow, errorDiffusionNextRow);
+				errorDiffusionBuffer = static_cast<int16_t*>(memManager->Alloc(sizeof(int16_t) * numCopyCols * 2 * 3));
+				if (!errorDiffusionBuffer)
+					return;
+
+				errorDiffusionNextRow = errorDiffusionBuffer;
+				errorDiffusionCurrentRow = errorDiffusionBuffer + numCopyCols * 3;
+
 				memset(errorDiffusionNextRow, 0, sizeof(int16_t) * numCopyCols * 3);
 			}
 
-			assert(currentSourceRow >= imageDataStart && currentSourceRow <= imageDataStart + inDataSize);
-
-			if (bpp == 1)
+			for (uint32_t row = 0; row < numCopyRows; row++)
 			{
-				for (size_t col = 0; col < numCopyCols; col++)
+				if (errorDiffusionBuffer)
 				{
-					const size_t srcColIndex = col + firstSourceCol;
-					const size_t destColIndex = col + firstDestCol;
-
-					const unsigned int srcIndex = (currentSourceRow[srcColIndex / 8] >> (8 - ((srcColIndex & 7) + 1))) & 0x01;
-					currentDestRow[destColIndex] = paletteMapping[srcIndex];
+					std::swap(errorDiffusionCurrentRow, errorDiffusionNextRow);
+					memset(errorDiffusionNextRow, 0, sizeof(int16_t) * numCopyCols * 3);
 				}
-			}
-			else if (bpp == 4)
-			{
-				for (size_t col = 0; col < numCopyCols; col++)
-				{
-					const size_t srcColIndex = col + firstSourceCol;
-					const size_t destColIndex = col + firstDestCol;
 
-					const unsigned int srcIndex = (currentSourceRow[srcColIndex / 2] >> (8 - ((srcColIndex & 1) + 1) * 4)) & 0x0f;
-					currentDestRow[destColIndex] = paletteMapping[srcIndex];
-				}
-			}
-			else if (bpp == 8)
-			{
-				for (size_t col = 0; col < numCopyCols; col++)
-				{
-					const size_t srcColIndex = col + firstSourceCol;
-					const size_t destColIndex = col + firstDestCol;
+				assert(currentSourceRow >= imageDataStart && currentSourceRow <= imageDataStart + inDataSize);
 
-					const unsigned int srcIndex = currentSourceRow[srcColIndex];
-					currentDestRow[destColIndex] = paletteMapping[srcIndex];
-				}
-			}
-			else if (bpp == 16)
-			{
-				if (destFormat == GpPixelFormats::kBW1)
+				if (bpp == 1)
 				{
 					for (size_t col = 0; col < numCopyCols; col++)
 					{
 						const size_t srcColIndex = col + firstSourceCol;
 						const size_t destColIndex = col + firstDestCol;
 
-						const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
-						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
-
-						const unsigned int combinedValue = srcLow | (srcHigh << 8);
-						const unsigned int b = (combinedValue & 0x1f);
-						const unsigned int g = ((combinedValue >> 5) & 0x1f);
-						const unsigned int r = ((combinedValue >> 10) & 0x1f);
-
-						if (r + g + b > 46)
-							currentDestRow[destColIndex] = 0;
-						else
-							currentDestRow[destColIndex] = 1;
+						const unsigned int srcIndex = (currentSourceRow[srcColIndex / 8] >> (8 - ((srcColIndex & 7) + 1))) & 0x01;
+						currentDestRow[destColIndex] = paletteMapping[srcIndex];
 					}
 				}
-				else
+				else if (bpp == 4)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const unsigned int srcIndex = (currentSourceRow[srcColIndex / 2] >> (8 - ((srcColIndex & 1) + 1) * 4)) & 0x0f;
+						currentDestRow[destColIndex] = paletteMapping[srcIndex];
+					}
+				}
+				else if (bpp == 8)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const unsigned int srcIndex = currentSourceRow[srcColIndex];
+						currentDestRow[destColIndex] = paletteMapping[srcIndex];
+					}
+				}
+				else if (bpp == 16)
+				{
+					if (destFormat == GpPixelFormats::kBW1)
+					{
+						for (size_t col = 0; col < numCopyCols; col++)
+						{
+							const size_t srcColIndex = col + firstSourceCol;
+							const size_t destColIndex = col + firstDestCol;
+
+							const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
+							const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+
+							const unsigned int combinedValue = srcLow | (srcHigh << 8);
+							const unsigned int b = (combinedValue & 0x1f);
+							const unsigned int g = ((combinedValue >> 5) & 0x1f);
+							const unsigned int r = ((combinedValue >> 10) & 0x1f);
+
+							if (r + g + b > 46)
+								currentDestRow[destColIndex] = 0;
+							else
+								currentDestRow[destColIndex] = 1;
+						}
+					}
+					else
+					{
+						for (size_t col = 0; col < numCopyCols; col++)
+						{
+							const size_t srcColIndex = col + firstSourceCol;
+							const size_t destColIndex = col + firstDestCol;
+
+							const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
+							const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+
+							const unsigned int combinedValue = srcLow | (srcHigh << 8);
+							const unsigned int b = (combinedValue & 0x1f);
+							const unsigned int g = ((combinedValue >> 5) & 0x1f);
+							const unsigned int r = ((combinedValue >> 10) & 0x1f);
+
+							const unsigned int xr = (r << 5) | (r >> 2);
+							const unsigned int xg = (g << 5) | (g >> 2);
+							const unsigned int xb = (b << 5) | (b >> 2);
+
+							ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, xr, xg, xb, col, numCopyCols);
+
+							uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
+							PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
+
+							RedistributeError(errorDiffusionNextRow, errorDiffusionCurrentRow, wp.m_16[0], wp.m_16[1], wp.m_16[2], resultColor.r, resultColor.g, resultColor.b, col, numCopyCols);
+
+							currentDestRow[destColIndex] = colorIndex;
+						}
+					}
+				}
+				else if (bpp == 24)
+				{
+					if (destFormat == GpPixelFormats::kBW1)
+					{
+						for (size_t col = 0; col < numCopyCols; col++)
+						{
+							const size_t srcColIndex = col + firstSourceCol;
+							const size_t destColIndex = col + firstDestCol;
+
+							const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
+							const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+
+							const unsigned int combinedValue = srcLow | (srcHigh << 8);
+							const unsigned int b = (combinedValue & 0x1f);
+							const unsigned int g = ((combinedValue >> 5) & 0x1f);
+							const unsigned int r = ((combinedValue >> 10) & 0x1f);
+
+							if (r + g + b > 46)
+								currentDestRow[destColIndex] = 0;
+							else
+								currentDestRow[destColIndex] = 1;
+						}
+					}
+					else
+					{
+						for (size_t col = 0; col < numCopyCols; col++)
+						{
+							const size_t srcColIndex = col + firstSourceCol;
+							const size_t destColIndex = col + firstDestCol;
+
+							ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, currentSourceRow[srcColIndex * 3 + 2], currentSourceRow[srcColIndex * 3 + 1], currentSourceRow[srcColIndex * 3 + 0], col, numCopyCols);
+
+							uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
+							PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
+
+							RedistributeError(errorDiffusionNextRow, errorDiffusionCurrentRow, wp.m_16[0], wp.m_16[1], wp.m_16[2], resultColor.r, resultColor.g, resultColor.b, col, numCopyCols);
+
+							currentDestRow[destColIndex] = colorIndex;
+						}
+					}
+				}
+
+				currentSourceRow -= sourcePitch;
+				currentDestRow += destPitch;
+			}
+
+			if (errorDiffusionBuffer)
+				memManager->Release(errorDiffusionBuffer);
+		}
+		break;
+	case GpPixelFormats::kRGB32:
+		{
+			const uint8_t *currentSourceRow = firstSourceRow;
+			uint8_t *currentDestRowBytes = firstDestRow;
+
+			uint32_t blackColor32 = StdColors::Black().AsUInt32();
+			uint32_t whiteColor32 = StdColors::White().AsUInt32();
+
+			uint32_t unpackedColors[256];
+
+			const PortabilityLayer::BitmapColorTableEntry *ctab = reinterpret_cast<const PortabilityLayer::BitmapColorTableEntry*>(ctabLoc);
+			for (size_t i = 0; i < numColors; i++)
+				unpackedColors[i] = PortabilityLayer::RGBAColor::Create(ctab[i].m_r, ctab[i].m_g, ctab[i].m_b, 255).AsUInt32();
+
+			for (size_t i = numColors; i < 256; i++)
+				unpackedColors[i] = StdColors::Black().AsUInt32();
+
+			for (uint32_t row = 0; row < numCopyRows; row++)
+			{
+				uint32_t *currentDestRow32 = reinterpret_cast<uint32_t*>(currentDestRowBytes);
+
+				assert(currentSourceRow >= imageDataStart && currentSourceRow <= imageDataStart + inDataSize);
+
+				if (bpp == 1)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const unsigned int srcIndex = (currentSourceRow[srcColIndex / 8] >> (8 - ((srcColIndex & 7) + 1))) & 0x01;
+						currentDestRow32[destColIndex] = srcIndex ? blackColor32 : whiteColor32;
+					}
+				}
+				else if (bpp == 4)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const unsigned int srcIndex = (currentSourceRow[srcColIndex / 2] >> (8 - ((srcColIndex & 1) + 1) * 4)) & 0x0f;
+						currentDestRow32[destColIndex] = unpackedColors[srcIndex];
+					}
+				}
+				else if (bpp == 8)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						const unsigned int srcIndex = currentSourceRow[srcColIndex];
+						currentDestRow32[destColIndex] = unpackedColors[srcIndex];
+					}
+				}
+				else if (bpp == 16)
 				{
 					for (size_t col = 0; col < numCopyCols; col++)
 					{
@@ -679,67 +966,31 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds)
 						const unsigned int xg = (g << 5) | (g >> 2);
 						const unsigned int xb = (b << 5) | (b >> 2);
 
-						ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, xr, xg, xb, col, numCopyCols);
-
-						uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
-						PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
-
-						RedistributeError(errorDiffusionNextRow, errorDiffusionCurrentRow, wp.m_16[0], wp.m_16[1], wp.m_16[2], resultColor.r, resultColor.g, resultColor.b, col, numCopyCols);
-
-						currentDestRow[destColIndex] = colorIndex;
+						currentDestRowBytes[destColIndex * 4 + 0] = xr;
+						currentDestRowBytes[destColIndex * 4 + 1] = xg;
+						currentDestRowBytes[destColIndex * 4 + 2] = xb;
+						currentDestRowBytes[destColIndex * 4 + 3] = 255;
 					}
 				}
-			}
-			else if (bpp == 24)
-			{
-				if (destFormat == GpPixelFormats::kBW1)
+				else if (bpp == 24)
 				{
 					for (size_t col = 0; col < numCopyCols; col++)
 					{
 						const size_t srcColIndex = col + firstSourceCol;
 						const size_t destColIndex = col + firstDestCol;
 
-						const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
-						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
-
-						const unsigned int combinedValue = srcLow | (srcHigh << 8);
-						const unsigned int b = (combinedValue & 0x1f);
-						const unsigned int g = ((combinedValue >> 5) & 0x1f);
-						const unsigned int r = ((combinedValue >> 10) & 0x1f);
-
-						if (r + g + b > 46)
-							currentDestRow[destColIndex] = 0;
-						else
-							currentDestRow[destColIndex] = 1;
+						currentDestRowBytes[destColIndex * 4 + 0] = currentSourceRow[srcColIndex * 3 + 2];
+						currentDestRowBytes[destColIndex * 4 + 1] = currentSourceRow[srcColIndex * 3 + 1];
+						currentDestRowBytes[destColIndex * 4 + 2] = currentSourceRow[srcColIndex * 3 + 0];
+						currentDestRowBytes[destColIndex * 4 + 3] = 255;
 					}
 				}
-				else
-				{
-					for (size_t col = 0; col < numCopyCols; col++)
-					{
-						const size_t srcColIndex = col + firstSourceCol;
-						const size_t destColIndex = col + firstDestCol;
 
-						ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, currentSourceRow[srcColIndex * 3 + 2], currentSourceRow[srcColIndex * 3 + 1], currentSourceRow[srcColIndex * 3 + 0], col, numCopyCols);
-
-						uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
-						PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
-
-						RedistributeError(errorDiffusionNextRow, errorDiffusionCurrentRow, wp.m_16[0], wp.m_16[1], wp.m_16[2], resultColor.r, resultColor.g, resultColor.b, col, numCopyCols);
-
-						currentDestRow[destColIndex] = colorIndex;
-					}
-				}
+				currentSourceRow -= sourcePitch;
+				currentDestRowBytes += destPitch;
 			}
-
-			currentSourceRow -= sourcePitch;
-			currentDestRow += destPitch;
 		}
-
-		if (errorDiffusionBuffer)
-			memManager->Release(errorDiffusionBuffer);
-	}
-	break;
+		break;
 	default:
 		// TODO: Implement higher-resolution pixel blitters
 		assert(false);
@@ -767,7 +1018,7 @@ void DrawSurface::FillRect(const Rect &rect, PortabilityLayer::ResolveCachingCol
 
 	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
 	const size_t pitch = pixMap->GetPitch();
-	const size_t firstIndex = static_cast<size_t>(constrainedRect.top) * pitch + static_cast<size_t>(constrainedRect.left);
+	const size_t firstRowStartIndex = static_cast<size_t>(constrainedRect.top) * pitch;
 	const size_t numLines = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
 	const size_t numCols = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
 	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
@@ -776,6 +1027,7 @@ void DrawSurface::FillRect(const Rect &rect, PortabilityLayer::ResolveCachingCol
 	{
 	case GpPixelFormats::k8BitStandard:
 		{
+			const size_t firstIndex = firstRowStartIndex + static_cast<size_t>(constrainedRect.left);
 			const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 
 			size_t scanlineIndex = 0;
@@ -784,6 +1036,20 @@ void DrawSurface::FillRect(const Rect &rect, PortabilityLayer::ResolveCachingCol
 				const size_t firstLineIndex = firstIndex + ln * pitch;
 				for (size_t col = 0; col < numCols; col++)
 					pixData[firstLineIndex + col] = color;
+			}
+		}
+		break;
+	case GpPixelFormats::kRGB32:
+		{
+			const size_t firstIndex = firstRowStartIndex + static_cast<size_t>(constrainedRect.left) * 4;
+			const uint32_t color = cacheColor.GetRGBAColor().AsUInt32();
+
+			size_t scanlineIndex = 0;
+			for (size_t ln = 0; ln < numLines; ln++)
+			{
+				const size_t firstLineIndex = firstIndex + ln * pitch;
+				for (size_t col = 0; col < numCols; col++)
+					reinterpret_cast<uint32_t&>(pixData[firstLineIndex + col * 4]) = color;
 			}
 		}
 		break;
@@ -816,7 +1082,7 @@ void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pa
 
 	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
 	const size_t pitch = pixMap->GetPitch();
-	const size_t firstIndex = static_cast<size_t>(constrainedRect.top) * pitch + static_cast<size_t>(constrainedRect.left);
+	const size_t rowFirstIndex = static_cast<size_t>(constrainedRect.top) * pitch;
 	const size_t numLines = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
 	const size_t numCols = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
 	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
@@ -827,25 +1093,45 @@ void DrawSurface::FillRectWithMaskPattern8x8(const Rect &rect, const uint8_t *pa
 	switch (pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
-	{
-		const uint8_t color = cacheColor.Resolve8(nullptr, 0);
-		uint8_t backColor = 0;
-
-		size_t scanlineIndex = 0;
-		for (size_t ln = 0; ln < numLines; ln++)
 		{
-			const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
-			const size_t firstLineIndex = firstIndex + ln * pitch;
+			const size_t firstIndex = rowFirstIndex + static_cast<size_t>(constrainedRect.left);
+			const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 
-			for (size_t col = 0; col < numCols; col++)
+			size_t scanlineIndex = 0;
+			for (size_t ln = 0; ln < numLines; ln++)
 			{
-				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
-				if ((pattern[patternRow] >> patternCol) & 1)
-					pixData[firstLineIndex + col] = color;
+				const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
+				const size_t firstLineIndex = firstIndex + ln * pitch;
+
+				for (size_t col = 0; col < numCols; col++)
+				{
+					const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
+					if ((pattern[patternRow] >> patternCol) & 1)
+						pixData[firstLineIndex + col] = color;
+				}
 			}
 		}
-	}
-	break;
+		break;
+	case GpPixelFormats::kRGB32:
+		{
+			const size_t firstIndex = rowFirstIndex + static_cast<size_t>(constrainedRect.left) * 4;
+			const uint32_t color = cacheColor.GetRGBAColor().AsUInt32();
+
+			size_t scanlineIndex = 0;
+			for (size_t ln = 0; ln < numLines; ln++)
+			{
+				const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
+				const size_t firstLineIndex = firstIndex + ln * pitch;
+
+				for (size_t col = 0; col < numCols; col++)
+				{
+					const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
+					if ((pattern[patternRow] >> patternCol) & 1)
+						reinterpret_cast<uint32_t&>(pixData[firstLineIndex + col * 4]) = color;
+				}
+			}
+		}
+		break;
 	default:
 		PL_NotYetImplemented();
 		return;
@@ -957,8 +1243,27 @@ void DrawSurface::FrameEllipse(const Rect &rect, PortabilityLayer::ResolveCachin
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-static void FillScanlineSpan(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor)
+static void FillScanlineSpan8(uint8_t *rowStart, size_t startCol, size_t endCol, uint8_t patternByte, uint8_t foreColor)
 {
+	if (patternByte == 0xff)
+	{
+		for (size_t col = startCol; col < endCol; col++)
+			rowStart[col] = foreColor;
+	}
+	else
+	{
+		for (size_t col = startCol; col < endCol; col++)
+		{
+			if (patternByte & (0x80 >> (col & 7)))
+				rowStart[col] = foreColor;
+		}
+	}
+}
+
+static void FillScanlineSpan32(uint8_t *rowStartBytes, size_t startCol, size_t endCol, uint8_t patternByte, uint32_t foreColor)
+{
+	uint32_t *rowStart = reinterpret_cast<uint32_t*>(rowStartBytes);
+
 	if (patternByte == 0xff)
 	{
 		for (size_t col = startCol; col < endCol; col++)
@@ -1011,14 +1316,18 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 	}
 
 	uint8_t foreColor8 = 0;
+	uint32_t foreColor32 = 0;
 
 	const GpPixelFormat_t pixelFormat = pixMap->m_pixelFormat;
 
 	size_t pixelSize = 0;
-	switch (pixMap->m_pixelFormat)
+	switch (pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
 		foreColor8 = cacheColor.Resolve8(nullptr, 256);
+		break;
+	case GpPixelFormats::kRGB32:
+		foreColor32 = cacheColor.GetRGBAColor().AsUInt32();
 		break;
 	default:
 		PL_NotYetImplemented();
@@ -1088,7 +1397,14 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 			{
 				const size_t spanEndCol = spanStartCol + currentSpan;
 				if (spanState)
-					FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8);
+				{
+					if (pixelFormat == GpPixelFormats::k8BitStandard)
+						FillScanlineSpan8(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8);
+					else if (pixelFormat == GpPixelFormats::kRGB32)
+						FillScanlineSpan32(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor32);
+					else
+						PL_NotYetImplemented();
+				}
 
 				spanStartCol = spanEndCol;
 				paintColsRemaining -= currentSpan;
@@ -1101,7 +1417,12 @@ void DrawSurface::FillScanlineMaskWithMaskPattern(const PortabilityLayer::Scanli
 		if (spanState)
 		{
 			const size_t spanEndCol = firstPortCol + constrainedRectWidth;
-			FillScanlineSpan(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8);
+			if (pixelFormat == GpPixelFormats::k8BitStandard)
+				FillScanlineSpan8(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor8);
+			else if (pixelFormat == GpPixelFormats::kRGB32)
+				FillScanlineSpan32(thisRowStart, spanStartCol, spanEndCol, thisRowPatternRow, foreColor32);
+			else
+				PL_NotYetImplemented();
 		}
 
 		if (row != numRows - 1)
@@ -1212,7 +1533,7 @@ void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 
 	PortabilityLayer::PixMapImpl *pixMap = static_cast<PortabilityLayer::PixMapImpl*>(*qdPort->GetPixMap());
 	const size_t pitch = pixMap->GetPitch();
-	const size_t firstIndex = static_cast<size_t>(constrainedRect.top) * pitch + static_cast<size_t>(constrainedRect.left);
+	const size_t rowFirstIndex = static_cast<size_t>(constrainedRect.top) * pitch;
 	const size_t numLines = static_cast<size_t>(constrainedRect.bottom - constrainedRect.top);
 	const size_t numCols = static_cast<size_t>(constrainedRect.right - constrainedRect.left);
 	uint8_t *pixData = static_cast<uint8_t*>(pixMap->GetPixelData());
@@ -1223,22 +1544,41 @@ void DrawSurface::InvertFillRect(const Rect &rect, const uint8_t *pattern)
 	switch (pixelFormat)
 	{
 	case GpPixelFormats::k8BitStandard:
-	{
-		size_t scanlineIndex = 0;
-		for (size_t ln = 0; ln < numLines; ln++)
 		{
-			const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
-			const size_t firstLineIndex = firstIndex + ln * pitch;
-
-			for (size_t col = 0; col < numCols; col++)
+			const size_t firstIndex = rowFirstIndex + static_cast<size_t>(constrainedRect.left);
+			size_t scanlineIndex = 0;
+			for (size_t ln = 0; ln < numLines; ln++)
 			{
-				const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
-				if ((pattern[patternRow] >> patternCol) & 1)
-					InvertPixel8(pixData[firstLineIndex + col]);
+				const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
+				const size_t firstLineIndex = firstIndex + ln * pitch;
+
+				for (size_t col = 0; col < numCols; col++)
+				{
+					const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
+					if ((pattern[patternRow] >> patternCol) & 1)
+						InvertPixel8(pixData[firstLineIndex + col]);
+				}
 			}
 		}
-	}
-	break;
+		break;
+	case GpPixelFormats::kRGB32:
+		{
+			const size_t firstIndex = rowFirstIndex + static_cast<size_t>(constrainedRect.left) * 4;
+			size_t scanlineIndex = 0;
+			for (size_t ln = 0; ln < numLines; ln++)
+			{
+				const int patternRow = static_cast<int>((patternFirstRow + ln) & 7);
+				const size_t firstLineIndex = firstIndex + ln * pitch;
+
+				for (size_t col = 0; col < numCols; col++)
+				{
+					const int patternCol = static_cast<int>((patternFirstCol + col) & 7);
+					if ((pattern[patternRow] >> patternCol) & 1)
+						InvertPixel32(pixData + (firstLineIndex + col * 4));
+				}
+			}
+		}
+		break;
 	default:
 		PL_NotYetImplemented();
 		return;
@@ -1291,7 +1631,7 @@ void GetIndPattern(Pattern *pattern, int patListID, int index)
 	memcpy(pattern, patternRes + 2 + (index - 1) * 8, 8);
 }
 
-static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *maskConstraintRect)
+static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap8, const BitMap *maskBitmap32, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *maskConstraintRect)
 {
 	assert(srcBitmap->m_pixelFormat == destBitmap->m_pixelFormat);
 
@@ -1300,7 +1640,23 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 	const GpPixelFormat_t pixelFormat = srcBitmap->m_pixelFormat;
 	const size_t srcPitch = srcBitmap->m_pitch;
 	const size_t destPitch = destBitmap->m_pitch;
-	const size_t maskPitch = (maskBitmap != nullptr) ? maskBitmap->m_pitch : 0;
+	size_t maskPitch = 0;
+
+	const BitMap *maskBitmapSelected = nullptr;
+	if (maskBitmap8)
+	{
+		assert(maskBitmap32 == nullptr);
+		maskPitch = maskBitmap8->m_pitch;
+		maskBitmapSelected = maskBitmap8;
+	}
+	if (maskBitmap32)
+	{
+		assert(maskBitmap8 == nullptr);
+		maskPitch = maskBitmap32->m_pitch;
+		maskBitmapSelected = maskBitmap32;
+	}
+
+	assert((maskBitmapSelected == nullptr) == (maskRectBase == nullptr));
 
 	if (srcRectBase->right - srcRectBase->left != destRectBase->right - destRectBase->left ||
 		srcRectBase->bottom - srcRectBase->top != destRectBase->bottom - destRectBase->top)
@@ -1309,14 +1665,19 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 		return;
 	}
 
-	if (maskBitmap)
+	if (maskBitmap8)
 	{
 		assert(maskRectBase);
 		assert(maskRectBase->right - maskRectBase->left == srcRectBase->right - srcRectBase->left);
-		assert(maskBitmap->m_pixelFormat == GpPixelFormats::kBW1 || maskBitmap->m_pixelFormat == GpPixelFormats::k8BitStandard);
+		assert(maskBitmap8->m_pixelFormat == GpPixelFormats::kBW1 || maskBitmap8->m_pixelFormat == GpPixelFormats::k8BitStandard);
 	}
 
-	assert((maskBitmap == nullptr) == (maskRectBase == nullptr));
+	if (maskBitmap32)
+	{
+		assert(maskRectBase);
+		assert(maskRectBase->right - maskRectBase->left == srcRectBase->right - srcRectBase->left);
+		assert(maskBitmap32->m_pixelFormat == GpPixelFormats::kRGB32);
+	}
 
 	Rect srcRect;
 	Rect destRect;
@@ -1404,8 +1765,8 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 	const size_t destFirstCol = destRect.left - destBitmap->m_rect.left;
 	const size_t destFirstRow = destRect.top - destBitmap->m_rect.top;
 
-	const size_t maskFirstCol = maskBitmap ? constrainedMaskRect.left - maskBitmap->m_rect.left : 0;
-	const size_t maskFirstRow = maskBitmap ? constrainedMaskRect.top - maskBitmap->m_rect.top : 0;
+	const size_t maskFirstCol = maskBitmapSelected ? constrainedMaskRect.left - maskBitmapSelected->m_rect.left : 0;
+	const size_t maskFirstRow = maskBitmapSelected ? constrainedMaskRect.top - maskBitmapSelected->m_rect.top : 0;
 
 	{
 		size_t pixelSizeBytes = 0;
@@ -1429,17 +1790,17 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 
 		const uint8_t *srcBytes = static_cast<const uint8_t*>(srcBitmap->m_data);
 		uint8_t *destBytes = static_cast<uint8_t*>(destBitmap->m_data);
-		const uint8_t *maskBytes = maskBitmap ? static_cast<uint8_t*>(maskBitmap->m_data) : nullptr;
+		const uint8_t *maskBytes = maskBitmapSelected ? static_cast<uint8_t*>(maskBitmapSelected->m_data) : nullptr;
 
 		const size_t firstSrcByte = srcFirstRow * srcPitch + srcFirstCol * pixelSizeBytes;
 		const size_t firstDestByte = destFirstRow * destPitch + destFirstCol * pixelSizeBytes;
-		const size_t firstMaskRowByte = maskBitmap ? maskFirstRow * maskPitch : 0;
+		const size_t firstMaskRowByte = maskBitmapSelected ? maskFirstRow * maskPitch : 0;
 
 		const size_t numCopiedRows = srcRect.bottom - srcRect.top;
 		const size_t numCopiedCols = srcRect.right - srcRect.left;
 		const size_t numCopiedBytesPerScanline = numCopiedCols * pixelSizeBytes;
 
-		if (maskBitmap)
+		if (maskBitmap8)
 		{
 			for (size_t i = 0; i < numCopiedRows; i++)
 			{
@@ -1454,6 +1815,36 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap, 
 					const size_t maskBitOffset = maskFirstCol + col;
 					//const bool maskBit = ((maskBytes[maskBitOffset / 8] & (0x80 >> (maskBitOffset & 7))) != 0);
 					const bool maskBit = (rowMaskBytes[maskBitOffset] != 0);
+					if (maskBit)
+						span += pixelSizeBytes;
+					else
+					{
+						if (span != 0)
+							memcpy(destRow + col * pixelSizeBytes - span, srcRow + col * pixelSizeBytes - span, span);
+
+						span = 0;
+					}
+				}
+
+				if (span != 0)
+					memcpy(destRow + numCopiedCols * pixelSizeBytes - span, srcRow + numCopiedCols * pixelSizeBytes - span, span);
+			}
+		}
+		else if (maskBitmap32)
+		{
+			for (size_t i = 0; i < numCopiedRows; i++)
+			{
+				uint8_t *destRow = destBytes + firstDestByte + i * destPitch;
+				const uint8_t *srcRow = srcBytes + firstSrcByte + i * srcPitch;
+				const uint8_t *rowMaskBytes = maskBytes + firstMaskRowByte + i * maskPitch;
+
+				size_t span = 0;
+
+				for (size_t col = 0; col < numCopiedCols; col++)
+				{
+					const size_t maskBitOffset = maskFirstCol + col;
+					//const bool maskBit = ((maskBytes[maskBitOffset / 8] & (0x80 >> (maskBitOffset & 7))) != 0);
+					const bool maskBit = (reinterpret_cast<const uint32_t*>(rowMaskBytes)[maskBitOffset] != 0xffffffffU);
 					if (maskBit)
 						span += pixelSizeBytes;
 					else
@@ -1484,20 +1875,26 @@ void CopyBits(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBa
 
 void CopyBitsConstrained(const BitMap *srcBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *destRectBase, CopyBitsMode copyMode, const Rect *constrainRect)
 {
-	const BitMap *maskBitmap = nullptr;
+	const BitMap *maskBitmap8 = nullptr;
+	const BitMap *maskBitmap32 = nullptr;
 	const Rect *maskRect = nullptr;
 	if (copyMode == transparent && srcBitmap->m_pixelFormat == GpPixelFormats::k8BitStandard)
 	{
-		maskBitmap = srcBitmap;
+		maskBitmap8 = srcBitmap;
+		maskRect = srcRectBase;
+	}
+	if (copyMode == transparent && srcBitmap->m_pixelFormat == GpPixelFormats::kRGB32)
+	{
+		maskBitmap32 = srcBitmap;
 		maskRect = srcRectBase;
 	}
 
-	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRect, destRectBase, constrainRect);
+	CopyBitsComplete(srcBitmap, maskBitmap8, maskBitmap32, destBitmap, srcRectBase, maskRect, destRectBase, constrainRect);
 }
 
 void CopyMaskConstrained(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase, const Rect *constrainRect)
 {
-	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, constrainRect);
+	CopyBitsComplete(srcBitmap, maskBitmap, nullptr, destBitmap, srcRectBase, maskRectBase, destRectBase, constrainRect);
 }
 
 // This doesn't bounds-check the source (because it's only used in one place)
@@ -1551,6 +1948,15 @@ void ImageInvert(const PixMap *invertMask, PixMap *targetBitmap, const Rect &src
 					InvertPixel8(targetRowStart[destCol]);
 			}
 			break;
+		case GpPixelFormats::kRGB32:
+			for (uint16_t c = 0; c < numCols; c++)
+			{
+				const int32_t srcCol = c + firstSrcCol;
+				const int32_t destCol = c + firstDestCol;
+				if (invertRowStart[srcCol] != 0)
+					InvertPixel32(targetRowStart + destCol * 4);
+			}
+			break;
 		default:
 			PL_NotYetImplemented();
 			break;
@@ -1566,7 +1972,7 @@ bool PointInScanlineMask(Point point, PortabilityLayer::ScanlineMask *scanlineMa
 
 void CopyMask(const BitMap *srcBitmap, const BitMap *maskBitmap, BitMap *destBitmap, const Rect *srcRectBase, const Rect *maskRectBase, const Rect *destRectBase)
 {
-	CopyBitsComplete(srcBitmap, maskBitmap, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
+	CopyBitsComplete(srcBitmap, maskBitmap, nullptr, destBitmap, srcRectBase, maskRectBase, destRectBase, nullptr);
 }
 
 PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr)

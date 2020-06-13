@@ -57,10 +57,10 @@ void InitClutter (void)
 	PLError_t		theErr;
 	
 	QSetRect(&clutterSrcRect, 0, 0, 128, 69);
-	theErr = CreateOffScreenGWorld(&clutterSrcMap, &clutterSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&clutterSrcMap, &clutterSrcRect);
 	LoadGraphic(clutterSrcMap, kClutterPictID);
 	
-	theErr = CreateOffScreenGWorld(&clutterMaskMap, &clutterSrcRect, GpPixelFormats::kBW1);
+	theErr = CreateOffScreenGWorldCustomDepth(&clutterMaskMap, &clutterSrcRect, GpPixelFormats::kBW1);
 	LoadGraphic(clutterMaskMap, kClutterPictID + 1000);
 	
 	QSetRect(&flowerSrc[0], 0, 0, 10, 28);
@@ -92,7 +92,7 @@ void InitSupport (void)
 	PLError_t		theErr;
 	
 	QSetRect(&suppSrcRect, 0, 0, kRoomWide, kFloorSupportTall);		// 44
-	theErr = CreateOffScreenGWorld(&suppSrcMap, &suppSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&suppSrcMap, &suppSrcRect);
 	LoadGraphic(suppSrcMap, kSupportPictID);
 }
 
@@ -106,10 +106,10 @@ void InitAngel (void)
 	PLError_t		theErr;
 	
 	QSetRect(&angelSrcRect, 0, 0, 96, 44);
-	theErr = CreateOffScreenGWorld(&angelSrcMap, &angelSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&angelSrcMap, &angelSrcRect);
 	LoadGraphic(angelSrcMap, kAngelPictID);
 	
-	theErr = CreateOffScreenGWorld(&angelMaskMap, &angelSrcRect, GpPixelFormats::kBW1);
+	theErr = CreateOffScreenGWorldCustomDepth(&angelMaskMap, &angelSrcRect, GpPixelFormats::kBW1);
 	LoadGraphic(angelMaskMap, kAngelPictID + 1);
 }
 
@@ -132,11 +132,11 @@ PLError_t RecreateOffscreens(void)
 
 	workSrcRect = houseRect;			// Set up work map
 	ZeroRectCorner(&workSrcRect);
-	theErr = CreateOffScreenGWorld(&workSrcMap, &workSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&workSrcMap, &workSrcRect);
 
 	backSrcRect = houseRect;			// Set up background map
 	ZeroRectCorner(&backSrcRect);
-	theErr = CreateOffScreenGWorld(&backSrcMap, &backSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&backSrcMap, &backSrcRect);
 
 	return PLErrors::kNone;
 }

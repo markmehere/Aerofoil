@@ -278,14 +278,14 @@ void InitDiedGameOver (void)
 	PLError_t		theErr;
 	
 	QSetRect(&pageSrcRect, 0, 0, 25, 32 * 8);
-	theErr = CreateOffScreenGWorld(&gameOverSrcMap, &pageSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&gameOverSrcMap, &pageSrcRect);
 	LoadGraphic(gameOverSrcMap, kLettersPictID);
 	
 	QSetRect(&pageSrcRect, 0, 0, 32, 32 * kPageFrames);
-	theErr = CreateOffScreenGWorld(&pageSrcMap, &pageSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&pageSrcMap, &pageSrcRect);
 	LoadGraphic(pageSrcMap, kPagesPictID);
 	
-	theErr = CreateOffScreenGWorld(&pageMaskMap, &pageSrcRect, GpPixelFormats::kBW1);	
+	theErr = CreateOffScreenGWorldCustomDepth(&pageMaskMap, &pageSrcRect, GpPixelFormats::kBW1);
 	LoadGraphic(pageMaskMap, kPagesMaskID);
 	
 	for (i = 0; i < kPageFrames; i++)	// initialize src page rects

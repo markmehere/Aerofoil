@@ -1205,14 +1205,12 @@ void GpDisplayDriverD3D11::Shutdown()
 	free(this);
 }
 
-void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *pixelFormat)
+void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height)
 {
 	if (width)
 		*width = m_windowWidthVirtual;
 	if (height)
 		*height = m_windowHeightVirtual;
-	if (pixelFormat)
-		*pixelFormat = GpPixelFormats::k8BitStandard;
 }
 
 IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat)
@@ -1422,6 +1420,11 @@ void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 		m_isFullScreenDesired = !m_isFullScreenDesired;
 		m_lastFullScreenToggleTimeStamp = timestamp;
 	}
+}
+
+const GpDisplayDriverProperties &GpDisplayDriverD3D11::GetProperties() const
+{
+	return m_properties;
 }
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)

@@ -32,7 +32,7 @@ struct DrawSurface
 		: m_port(PortabilityLayer::QDPortType_DrawSurface)
 		, m_ddSurface(nullptr)
 		, m_cachedAAColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
-		, m_cachedAATable(nullptr)
+		, m_cachedAATables(nullptr)
 	{
 	}
 
@@ -40,7 +40,7 @@ struct DrawSurface
 		: m_port(overridePortType)
 		, m_ddSurface(nullptr)
 		, m_cachedAAColor(PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
-		, m_cachedAATable(nullptr)
+		, m_cachedAATables(nullptr)
 	{
 	}
 
@@ -85,7 +85,7 @@ struct DrawSurface
 
 	IGpDisplayDriverSurface *m_ddSurface;
 
-	PortabilityLayer::AntiAliasTable *m_cachedAATable;
+	PortabilityLayer::AntiAliasTable *m_cachedAATables;
 	PortabilityLayer::RGBAColor m_cachedAAColor;
 
 	PortabilityLayer::QDPort m_port;

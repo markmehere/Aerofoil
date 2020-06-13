@@ -1,6 +1,9 @@
 #include "IconLoader.h"
+
+#include "DisplayDeviceManager.h"
 #include "PLCore.h"
 #include "PLCTabReducer.h"
+#include "PLStandardColors.h"
 #include "ResourceManager.h"
 #include "QDStandardPalette.h"
 #include "QDPixMap.h"
@@ -119,8 +122,12 @@ namespace PortabilityLayer
 			return false;
 
 		uint8_t remapping[256];
+		PortabilityLayer::RGBAColor palette[256];
 		for (int i = 0; i < 256; i++)
+		{
 			remapping[i] = 0;
+			palette[i] = StdColors::Black();
+		}
 
 		for (size_t i = 0; i < numItems; i++)
 		{
@@ -133,6 +140,7 @@ namespace PortabilityLayer
 				return false;
 
 			const PortabilityLayer::RGBAColor remappedColor = CTabReducer::DecodeClutItem(ctabItem);
+			palette[i] = remappedColor;
 
 			remapping[index] = StandardPalette::GetInstance()->MapColorLUT(remappedColor);
 		}
@@ -141,7 +149,9 @@ namespace PortabilityLayer
 		if (!rect.IsValid())
 			return false;
 
-		THandle<PixMapImpl> pixMap = PixMapImpl::Create(rect, GpPixelFormats::k8BitStandard);
+		GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
+
+		THandle<PixMapImpl> pixMap = PixMapImpl::Create(rect, pixelFormat);
 		if (!pixMap)
 			return false;
 
@@ -152,49 +162,117 @@ namespace PortabilityLayer
 		uint8_t *outData = static_cast<uint8_t*>((*pixMap)->GetPixelData());
 		const size_t outPitch = (*pixMap)->GetPitch();
 
-		for (size_t row = 0; row < height; row++)
+		if (pixelFormat == GpPixelFormats::k8BitStandard)
 		{
-			if (numItems > 16)
+			for (size_t row = 0; row < height; row++)
 			{
-				// 8bpp
-				for (size_t col = 0; col < width; col++)
+				if (numItems > 16)
 				{
-					const unsigned int index = inData[col];
-					outData[col] = remapping[index];
+					// 8bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = inData[col];
+						outData[col] = remapping[index];
+					}
 				}
-			}
-			else if (numItems > 4)
-			{
-				// 4bpp
-				for (size_t col = 0; col < width; col++)
+				else if (numItems > 4)
 				{
-					const unsigned int index = (inData[col / 2] >> (4 - ((col & 1) * 4))) & 0x0f;
-					outData[col] = remapping[index];
+					// 4bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = (inData[col / 2] >> (4 - ((col & 1) * 4))) & 0x0f;
+						outData[col] = remapping[index];
+					}
 				}
-			}
-			else if (numItems > 2)
-			{
-				// 2bpp
-				for (size_t col = 0; col < width; col++)
+				else if (numItems > 2)
 				{
-					const unsigned int index = (inData[col / 4] >> (6 - ((col & 3) * 2))) & 0x03;
-					outData[col] = remapping[index];
+					// 2bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = (inData[col / 4] >> (6 - ((col & 3) * 2))) & 0x03;
+						outData[col] = remapping[index];
+					}
 				}
-			}
-			else
-			{
-				// 1bpp
-				for (size_t col = 0; col < width; col++)
+				else
 				{
-					const unsigned int index = (inData[col / 4] >> (7 - (col & 7))) & 0x01;
-					outData[col] = remapping[index];
+					// 1bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = (inData[col / 4] >> (7 - (col & 7))) & 0x01;
+						outData[col] = remapping[index];
+					}
 				}
-			}
 
-			inData += inPitch;
-			outData += outPitch;
+				inData += inPitch;
+				outData += outPitch;
+			}
 		}
+		else if (pixelFormat == GpPixelFormats::kRGB32)
+		{
+			for (size_t row = 0; row < height; row++)
+			{
+				if (numItems > 16)
+				{
+					// 8bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = inData[col];
+						const PortabilityLayer::RGBAColor &color = palette[index];
+						outData[col * 4 + 0] = color.r;
+						outData[col * 4 + 1] = color.g;
+						outData[col * 4 + 2] = color.b;
+						outData[col * 4 + 3] = 255;
+					}
+				}
+				else if (numItems > 4)
+				{
+					// 4bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = (inData[col / 2] >> (4 - ((col & 1) * 4))) & 0x0f;
+						const PortabilityLayer::RGBAColor &color = palette[index];
+						outData[col * 4 + 0] = color.r;
+						outData[col * 4 + 1] = color.g;
+						outData[col * 4 + 2] = color.b;
+						outData[col * 4 + 3] = 255;
+					}
+				}
+				else if (numItems > 2)
+				{
+					// 2bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = (inData[col / 4] >> (6 - ((col & 3) * 2))) & 0x03;
+						const PortabilityLayer::RGBAColor &color = palette[index];
+						outData[col * 4 + 0] = color.r;
+						outData[col * 4 + 1] = color.g;
+						outData[col * 4 + 2] = color.b;
+						outData[col * 4 + 3] = 255;
+					}
+				}
+				else
+				{
+					// 1bpp
+					for (size_t col = 0; col < width; col++)
+					{
+						const unsigned int index = (inData[col / 4] >> (7 - (col & 7))) & 0x01;
+						const PortabilityLayer::RGBAColor &color = palette[index];
+						outData[col * 4 + 0] = color.r;
+						outData[col * 4 + 1] = color.g;
+						outData[col * 4 + 2] = color.b;
+						outData[col * 4 + 3] = 255;
+					}
+				}
 
+				inData += inPitch;
+				outData += outPitch;
+			}
+		}
+		else
+		{
+			PL_NotYetImplemented();
+		}
+			
 		outHandle = pixMap;
 		dataPtr = inData;
 
@@ -245,7 +323,10 @@ namespace PortabilityLayer
 			return THandle<PixMapImpl>();
 
 		const Rect rect = Rect::Create(0, 0, 32, 32);
-		THandle<PixMapImpl> pixMap = PixMapImpl::Create(rect, GpPixelFormats::k8BitStandard);
+
+		GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
+
+		THandle<PixMapImpl> pixMap = PixMapImpl::Create(rect, pixelFormat);
 		if (!pixMap)
 			return THandle<PixMapImpl>();
 
@@ -253,13 +334,34 @@ namespace PortabilityLayer
 		uint8_t *outData = static_cast<uint8_t*>((*pixMap)->GetPixelData());
 		const size_t outPitch = (*pixMap)->GetPitch();
 
-		for (size_t row = 0; row < 32; row++)
+		if (pixelFormat == GpPixelFormats::kRGB32)
 		{
-			for (size_t col = 0; col < 32; col++)
-				outData[col] = inData[col];
+			const PortabilityLayer::RGBAColor *palette = StandardPalette::GetInstance()->GetColors();
 
-			inData += 32;
-			outData += outPitch;
+			for (size_t row = 0; row < 32; row++)
+			{
+				uint32_t *outU32 = reinterpret_cast<uint32_t*>(outData);
+				for (size_t col = 0; col < 32; col++)
+					outU32[col] = palette[inData[col]].AsUInt32();
+
+				inData += 32;
+				outData += outPitch;
+			}
+		}
+		else if (pixelFormat == GpPixelFormats::k8BitStandard)
+		{
+			for (size_t row = 0; row < 32; row++)
+			{
+				for (size_t col = 0; col < 32; col++)
+					outData[col] = inData[col];
+
+				inData += 32;
+				outData += outPitch;
+			}
+		}
+		else
+		{
+			PL_NotYetImplemented();
 		}
 
 		return pixMap;

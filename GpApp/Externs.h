@@ -21,10 +21,6 @@ namespace PortabilityLayer
 	class RenderedFont;
 }
 
-#define kPreferredDepth				8
-#define kPreferredPixelFormat		(GpPixelFormats::k8BitStandard)
-
-
 #define	kNilPointer					0L
 #define	kPutInFront					(PL_GetPutInFrontWindowPtr())
 #define	kNormalUpdates				TRUE
@@ -168,15 +164,12 @@ void DumpToResEditFile (Ptr, long);
 void HandleEvent (void);								// --- Event.c
 void IgnoreThisClick (void);
 
-short WhatsOurDepth (void);								// --- Environs.c
-void SwitchToDepth (short, Boolean);
+void SwitchToDepth (short, Boolean);					// --- Environs.c
 void CheckOurEnvirons (void);
 void InstallResolutionHandler (void);
 //void ReflectSecondMonitorEnvirons (Boolean, Boolean, Boolean);
 void HandleDepthSwitching (void);
-void RestoreColorDepth (void);
 void CheckMemorySize (void);
-void SetAppMemorySize (long);
 
 Boolean CheckFileError (short, const PLPasStr &);				// --- File Error.c
 

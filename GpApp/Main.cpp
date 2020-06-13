@@ -395,7 +395,6 @@ int gpAppMain()
 		}
 	}
 	WriteOutPrefs();
-	RestoreColorDepth();
 	PL_DEAD(FlushEvents());
 //	theErr = LoadScrap();
 

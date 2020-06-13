@@ -12,5 +12,6 @@ namespace PortabilityLayer
 		uint8_t m_aaTranslate[256][16];
 
 		void GenerateForPalette(const RGBAColor &baseColor, const RGBAColor *colors, size_t numColors);
+		void GenerateForSimpleScale(uint8_t colorChannel);
 	};
 }

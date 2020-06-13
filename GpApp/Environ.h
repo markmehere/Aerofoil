@@ -12,7 +12,7 @@ typedef struct
 {
 	Rect		fullScreen, constrainedScreen, gray;
 	long		dirID;
-	short		wasDepth, isDepth;
+	short		isDepth;
 	short		numScreens;
 	short		vRefNum;
 	Boolean		can1Bit;

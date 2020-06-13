@@ -23,6 +23,9 @@ namespace PortabilityLayer
 		const AntiAliasTable &GetWhiteAATable() const;
 		const AntiAliasTable &GetBlackAATable() const;
 
+		const AntiAliasTable &GetWhiteToneAATable() const;
+		const AntiAliasTable &GetBlackToneAATable() const;
+
 		static const StandardPalette *GetInstance();
 
 	private:
@@ -31,6 +34,8 @@ namespace PortabilityLayer
 		RGBAColor m_colors[kSize];
 		AntiAliasTable m_whiteAATable;
 		AntiAliasTable m_blackAATable;
+		AntiAliasTable m_whiteToneAATable;
+		AntiAliasTable m_blackToneAATable;
 		uint8_t m_lut[16 * 16 * 16];
 	};
 }

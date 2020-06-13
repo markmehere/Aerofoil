@@ -436,7 +436,7 @@ void DoRoomInfo(void)
 	NumToString(thisRoom->numObjects, objectsStr);
 	DialogTextSubstitutions substitutions(floorStr, suiteStr, objectsStr);
 
-	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tileSrcMap, &tileSrcRect);
 	//	CreateOffScreenPixMap(&tileSrcRect, &tileSrcMap);
 	//	SetPort((GrafPtr)tileSrcMap);
 	if ((tempBack > kStars) && (!PictIDExists(tempBack)))

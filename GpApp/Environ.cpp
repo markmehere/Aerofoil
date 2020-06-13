@@ -207,30 +207,6 @@ Boolean DoWeHaveDragManager (void)
 	return true;
 }
 
-//--------------------------------------------------------------  WhatsOurDepth  
-
-// Determines the pixel bit depth for current device (monitor).
-
-short WhatsOurDepth (void)
-{
-	GpPixelFormat_t pixelFormat;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nil, nil, &pixelFormat);
-
-	switch (pixelFormat)
-	{
-	case GpPixelFormats::k8BitCustom:
-	case GpPixelFormats::k8BitStandard:
-		return 8;
-	case GpPixelFormats::kRGB555:
-		return 16;
-	case GpPixelFormats::kRGB24:
-	case GpPixelFormats::kRGB32:
-		return 32;
-	default:
-		return 0;
-	}
-}
-
 void SwitchToDepth (short, Boolean)
 {
 }
@@ -321,9 +297,6 @@ void CheckOurEnvirons (void)
 	thisMac.can4Bit = true;
 	thisMac.can8Bit = true;
 	thisMac.numScreens = HowManyUsableScreens(false, true, true);
-	
-	thisMac.wasDepth = WhatsOurDepth();
-	thisMac.wasColorOrGray = AreWeColorOrGrayscale();
 
 	thisMac.isResolutionDirty = true;
 	FlushResolutionChange();
@@ -417,53 +390,21 @@ void ReflectSecondMonitorEnvirons (Boolean use1Bit, Boolean use4Bit, Boolean use
 
 void HandleDepthSwitching (void)
 {
-	if (thisMac.hasColor)
+	switch (isDepthPref)
 	{
-		switch (isDepthPref)
-		{
-			case kSwitchIfNeeded:
-			if ((thisMac.wasDepth != 8) && 
-					((thisMac.wasDepth != 4) || (thisMac.wasColorOrGray)))
-				SwitchDepthOrAbort();
-			break;
-			
-			case kSwitchTo256Colors:
-			if (thisMac.wasDepth != 8)
-			{
-				if (thisMac.can8Bit)
-					SwitchToDepth(8, true);
-				else
-					SwitchDepthOrAbort();
-			}
-			break;
-			
-			case kSwitchTo16Grays:
-			if ((thisMac.wasDepth != 4) || (thisMac.wasColorOrGray))
-			{
-				if (thisMac.can4Bit)
-					SwitchToDepth(4, false);
-				else
-					SwitchDepthOrAbort();
-			}
-			break;
-			
-			default:
-			break;
-		}
+	case 32:
+		PortabilityLayer::DisplayDeviceManager::GetInstance()->SetPixelFormat(GpPixelFormats::kRGB32);
+		break;
+	case 8:
+		PortabilityLayer::DisplayDeviceManager::GetInstance()->SetPixelFormat(GpPixelFormats::k8BitStandard);
+		break;
+	default:
+		isDepthPref = 8;
+		PortabilityLayer::DisplayDeviceManager::GetInstance()->SetPixelFormat(GpPixelFormats::k8BitStandard);
+		break;
 	}
-	
-	thisMac.isDepth = WhatsOurDepth();
-}
 
-//--------------------------------------------------------------  RestoreColorDepth
-
-// Restores a monitor to its previous depth when we quit (if we changed it).
-
-void RestoreColorDepth (void)
-{
-	if ((thisMac.hasColor) && ((thisMac.wasDepth != thisMac.isDepth) || 
-			(thisMac.wasColorOrGray != AreWeColorOrGrayscale())))
-		SwitchToDepth(thisMac.wasDepth, true);
+	thisMac.isDepth = isDepthPref;
 }
 
 //--------------------------------------------------------------  CheckMemorySize
@@ -574,7 +515,7 @@ void GetDeviceRect(Rect *rect)
 {
 	unsigned int width;
 	unsigned int height;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, &height, nil);
+	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, &height);
 
 	SetRect(rect, 0, 0, static_cast<short>(width), static_cast<short>(height));
 }

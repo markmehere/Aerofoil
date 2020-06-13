@@ -839,6 +839,9 @@ namespace PortabilityLayer
 		if (int errorCode = m_surface.Init(adjustedBounds, pixelFormat))
 			return false;
 
+		PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
+		m_surface.FillRect(adjustedBounds, whiteColor);
+
 		m_title.Set(windowDef.m_title[0], reinterpret_cast<const char*>(windowDef.m_title + 1));
 
 		// Resolve chrome

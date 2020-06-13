@@ -15,6 +15,7 @@
 #include "QDPixMap.h"
 #include "BitmapImage.h"
 #include "DialogManager.h"
+#include "DisplayDeviceManager.h"
 #include "Externs.h"
 #include "HostSystemServices.h"
 #include "IconLoader.h"
@@ -211,13 +212,17 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 //--------------------------------------------------------------------  CreateOffScreenGWorld
 // Creates an offscreen GWorldÊusing the depth passed in.
 
-PLError_t CreateOffScreenGWorld (DrawSurface **theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat)
+PLError_t CreateOffScreenGWorld (DrawSurface **theGWorld, Rect *bounds)
 {
-	PLError_t		theErr;
+	GpPixelFormat_t pixelFormat = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetPixelFormat();
 	
-	theErr = NewGWorld(theGWorld, pixelFormat, bounds, nil);
-	
-	return theErr;
+	return NewGWorld(theGWorld, pixelFormat, bounds, nil);
+}
+
+
+PLError_t CreateOffScreenGWorldCustomDepth(DrawSurface **theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat)
+{
+	return NewGWorld(theGWorld, pixelFormat, bounds, nil);
 }
 
 //--------------------------------------------------------------  KillOffScreenPixMap

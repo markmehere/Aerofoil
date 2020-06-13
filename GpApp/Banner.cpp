@@ -68,10 +68,10 @@ void DrawBanner (Point *topLeft)
 	partPage.top = partPage.bottom - 30;
 	mapBounds = partPage;
 	ZeroRectCorner(&mapBounds);
-	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &mapBounds);
 	LoadGraphicCustom(tempMap, kBannerPageBottomPICT);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &mapBounds, GpPixelFormats::kBW1);	
+	theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &mapBounds, GpPixelFormats::kBW1);	
 	LoadGraphicCustom(tempMask, kBannerPageBottomMask);
 
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 

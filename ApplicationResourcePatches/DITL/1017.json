@@ -74,6 +74,14 @@
 			"enabled" : true
 		},
 		{
+			"name" : "32-bit color (Requires restart)",
+			"itemType" : "CheckBox",
+			"pos" : [ 8, 162 ],
+			"size" : [ 256, 18 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
 			"name" : "",
 			"itemType" : "UserItem",
 			"pos" : [ 8, 137 ],

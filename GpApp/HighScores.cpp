@@ -131,10 +131,10 @@ void DrawHighScores (DrawSurface *surface)
 	dropIt = 129 + splashOriginV;
 	
 	QSetRect(&tempRect, 0, 0, 332, 30);
-	theErr = CreateOffScreenGWorld(&tempMap, &tempRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &tempRect);
 	LoadGraphic(tempMap, kHighScoresPictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &tempRect, GpPixelFormats::kBW1);	
+	theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &tempRect, GpPixelFormats::kBW1);
 	LoadGraphic(tempMask, kHighScoresMaskID);
 	
 	tempRect2 = tempRect;

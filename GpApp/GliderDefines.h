@@ -41,8 +41,6 @@
 #define kYellowCantOrderLinks		24
 
 #define kSwitchIfNeeded				0
-#define kSwitchTo256Colors			1
-#define kSwitchTo16Grays			2
 
 #define kProdGameScoreMode			-4
 #define kKickGameScoreMode			-3

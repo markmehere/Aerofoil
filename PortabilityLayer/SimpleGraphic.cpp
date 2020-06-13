@@ -92,6 +92,42 @@ namespace PortabilityLayer
 				}
 			}
 			break;
+		case GpPixelFormats::kRGB32:
+			{
+				uint8_t *destFirstPixel = static_cast<uint8_t*>(pixMapData) + destXOffset * 4 + destYOffset * destPitch;
+				const PortabilityLayer::RGBAColor *srcPixel = m_pixelData;
+
+				for (size_t row = 0; row < srcHeight; row++)
+				{
+					uint8_t *destRowFirstPixel = destFirstPixel + row * destPitch;
+
+					if (maskData)
+					{
+						for (size_t col = 0; col < srcWidth; col++)
+						{
+							if (maskData[maskOffset / 8] & (0x80 >> (maskOffset & 7)))
+							{
+								destRowFirstPixel[col * 4 + 0] = srcPixel->r;
+								destRowFirstPixel[col * 4 + 1] = srcPixel->g;
+								destRowFirstPixel[col * 4 + 2] = srcPixel->b;
+							}
+							srcPixel++;
+							maskOffset++;
+						}
+					}
+					else
+					{
+						for (size_t col = 0; col < srcWidth; col++)
+						{
+							destRowFirstPixel[col * 4 + 0] = srcPixel->r;
+							destRowFirstPixel[col * 4 + 1] = srcPixel->g;
+							destRowFirstPixel[col * 4 + 2] = srcPixel->b;
+							srcPixel++;
+						}
+					}
+				}
+			}
+			break;
 		default:
 			PL_NotYetImplemented();
 			break;

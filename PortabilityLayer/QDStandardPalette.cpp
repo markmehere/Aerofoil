@@ -115,6 +115,9 @@ namespace PortabilityLayer
 		m_blackAATable.GenerateForPalette(RGBAColor::Create(0, 0, 0, 255), m_colors, 256);
 		m_whiteAATable.GenerateForPalette(RGBAColor::Create(255, 255, 255, 255), m_colors, 256);
 #endif
+
+		m_whiteToneAATable.GenerateForSimpleScale(255);
+		m_blackToneAATable.GenerateForSimpleScale(0);
 	}
 
 	const RGBAColor *StandardPalette::GetColors() const
@@ -271,6 +274,16 @@ namespace PortabilityLayer
 	const AntiAliasTable &StandardPalette::GetBlackAATable() const
 	{
 		return m_blackAATable;
+	}
+
+	const AntiAliasTable &StandardPalette::GetWhiteToneAATable() const
+	{
+		return m_whiteToneAATable;
+	}
+
+	const AntiAliasTable &StandardPalette::GetBlackToneAATable() const
+	{
+		return m_blackToneAATable;
 	}
 
 	StandardPalette StandardPalette::ms_instance;

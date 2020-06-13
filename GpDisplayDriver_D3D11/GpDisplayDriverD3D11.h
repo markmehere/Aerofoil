@@ -36,7 +36,7 @@ public:
 	void Run() override;
 	void Shutdown() override;
 
-	void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) override;
+	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
 
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
@@ -50,6 +50,8 @@ public:
 	void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
 
 	void RequestToggleFullScreen(uint32_t timestamp) override;
+
+	const GpDisplayDriverProperties &GetProperties() const override;
 
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
 

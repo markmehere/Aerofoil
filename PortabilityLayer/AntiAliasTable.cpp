@@ -1,6 +1,9 @@
 #include "AntiAliasTable.h"
 #include "RGBAColor.h"
 
+#include <algorithm>
+#include <math.h>
+
 // TODO: This is not gamma correct...
 namespace PortabilityLayer
 {
@@ -113,6 +116,30 @@ namespace PortabilityLayer
 				}
 
 				m_aaTranslate[i][b] = static_cast<uint8_t>(bestColor);
+			}
+		}
+	}
+
+	void AntiAliasTable::GenerateForSimpleScale(uint8_t colorChannel)
+	{
+		const double gamma = 1.8;
+		const double rcpGamma = 1.0 / gamma;
+		const double rcp255 = 1.0 / 255.0;
+		const double rcp15 = 1.0 / 15.0;
+		double colorChannelLinear = pow(colorChannel * rcp255, gamma);
+
+		for (size_t baseColor = 0; baseColor < 256; baseColor++)
+		{
+			const double baseColorLinear = pow(baseColor * rcp255, gamma);
+
+			for (size_t opacity = 0; opacity < 16; opacity++)
+			{
+				const double opacityF = static_cast<double>(opacity) * rcp15;
+				const double blendedColor = colorChannelLinear * opacityF + (1.0 - opacityF) * baseColorLinear;
+
+				const double blendedColorGammaSpace = pow(std::min(std::max(0.0, blendedColor), 1.0), rcpGamma);
+
+				m_aaTranslate[baseColor][opacity] = static_cast<uint8_t>(floor(blendedColorGammaSpace * 255.0 + 0.5));
 			}
 		}
 	}

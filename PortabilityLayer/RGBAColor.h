@@ -11,6 +11,8 @@ namespace PortabilityLayer
 		bool operator==(const RGBAColor &other) const;
 		bool operator!=(const RGBAColor &other) const;
 		static RGBAColor Create(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
+		uint32_t AsUInt32() const;
 	};
 
 	inline RGBAColor RGBAColor::Create(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
@@ -32,5 +34,16 @@ namespace PortabilityLayer
 	inline bool RGBAColor::operator!=(const RGBAColor &other) const
 	{
 		return !((*this) == other);
+	}
+
+	inline uint32_t RGBAColor::AsUInt32() const
+	{
+		uint32_t rgbaColor = 0;
+		uint8_t *rgbaColorBytes = reinterpret_cast<uint8_t*>(&rgbaColor);
+		rgbaColorBytes[0] = r;
+		rgbaColorBytes[1] = g;
+		rgbaColorBytes[2] = b;
+		rgbaColorBytes[3] = a;
+		return rgbaColor;
 	}
 }

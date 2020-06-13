@@ -762,7 +762,7 @@ void CreateNailOffscreen (void)
 	if (nailSrcMap == nil)
 	{
 		QSetRect(&nailSrcRect, 0, 0, kMapRoomWidth, kMapRoomHeight * (kNumBackgrounds + 1));
-		theErr = CreateOffScreenGWorld(&nailSrcMap, &nailSrcRect, kPreferredPixelFormat);
+		theErr = CreateOffScreenGWorld(&nailSrcMap, &nailSrcRect);
 
 		LoadGraphic(nailSrcMap, kThumbnailPictID);
 	}

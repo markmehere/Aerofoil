@@ -429,6 +429,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpWindowsGlobals.m_translateWindowsMessageFunc = TranslateWindowsMessage;
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_D3D11;
+
 	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_XAudio2;
 
 	EGpInputDriverType inputDrivers[] =

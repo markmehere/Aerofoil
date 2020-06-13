@@ -16,6 +16,7 @@ namespace PortabilityLayer
 		void Init() override;
 		void Shutdown() override;
 
+		void SetPixelFormat(GpPixelFormat_t pixelFormat) override;
 		GpPixelFormat_t GetPixelFormat() const override;
 		void SyncPalette(IGpDisplayDriver *displayDriver) override;
 
@@ -62,8 +63,6 @@ namespace PortabilityLayer
 
 	void DisplayDeviceManagerImpl::Init()
 	{
-		HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &m_pixelFormat);
-
 		const PortabilityLayer::RGBAColor *spColors = StandardPalette::GetInstance()->GetColors();
 		for (size_t i = 0; i < 256; i++)
 			m_palette[i] = spColors[i];
@@ -73,6 +72,11 @@ namespace PortabilityLayer
 
 	void DisplayDeviceManagerImpl::Shutdown()
 	{
+	}
+
+	void DisplayDeviceManagerImpl::SetPixelFormat(GpPixelFormat_t pixelFormat)
+	{
+		m_pixelFormat = pixelFormat;
 	}
 
 	GpPixelFormat_t DisplayDeviceManagerImpl::GetPixelFormat() const

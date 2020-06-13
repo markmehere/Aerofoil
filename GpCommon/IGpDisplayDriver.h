@@ -5,6 +5,7 @@
 
 struct IGpDisplayDriverSurface;
 struct IGpCursor;
+struct GpDisplayDriverProperties;
 
 struct GpDisplayDriverSurfaceEffects
 {
@@ -26,7 +27,7 @@ public:
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
 
-	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height, GpPixelFormat_t *bpp) = 0;
+	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height) = 0;
 
 	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) = 0;
 	virtual void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) = 0;
@@ -40,6 +41,8 @@ public:
 	virtual void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
 
 	virtual void RequestToggleFullScreen(uint32_t timestamp) = 0;
+
+	virtual const GpDisplayDriverProperties &GetProperties() const = 0;
 };
 
 inline GpDisplayDriverSurfaceEffects::GpDisplayDriverSurfaceEffects()

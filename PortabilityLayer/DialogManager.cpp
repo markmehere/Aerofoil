@@ -830,7 +830,7 @@ namespace PortabilityLayer
 	void DialogManagerImpl::PositionWindow(Window *window, const Rect &rect) const
 	{
 		unsigned int displayWidth, displayHeight;
-		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight, nullptr);
+		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight);
 
 		const unsigned int halfDisplayHeight = displayHeight / 2;
 		const unsigned int quarterDisplayWidth = displayHeight / 4;

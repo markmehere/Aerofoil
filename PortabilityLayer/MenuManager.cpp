@@ -819,8 +819,9 @@ namespace PortabilityLayer
 		}
 
 		unsigned int width;
-		GpPixelFormat_t pixelFormat;
-		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, nullptr, &pixelFormat);
+		HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, nullptr);
+
+		GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
 		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
 
@@ -1310,7 +1311,7 @@ namespace PortabilityLayer
 					int32_t popupBottom = m_popupPosition.m_y + menu->layoutFinalHeight;
 
 					unsigned int displayHeight = 0;
-					PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight, nullptr);
+					PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
 					if (popupBottom > static_cast<int32_t>(displayHeight))
 						m_popupPosition.m_y -= popupBottom - static_cast<int32_t>(displayHeight);
 				}
@@ -1397,8 +1398,7 @@ namespace PortabilityLayer
 
 		if (m_menuGraf == nullptr)
 		{
-			GpPixelFormat_t pixelFormat;
-			PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, nullptr, &pixelFormat);
+			GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
 			if (qdManager->NewGWorld(&m_menuGraf, pixelFormat, menuRect, nullptr) != 0)
 				return;

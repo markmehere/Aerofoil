@@ -169,10 +169,10 @@ void DrawMailboxLeft (Rect *theRect, short down)
 	}
 	
 	bounds = srcRects[kMailboxLf];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 	LoadGraphic(tempMap, kMailboxLeftPictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
+	theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 	LoadGraphic(tempMask, kMailboxLeftMaskID);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -241,10 +241,10 @@ void DrawMailboxRight (Rect *theRect, short down)
 	}
 	
 	bounds = srcRects[kMailboxRt];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 	LoadGraphic(tempMap, kMailboxRightPictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);	
+	theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 	LoadGraphic(tempMask, kMailboxRightMaskID);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -604,10 +604,10 @@ void DrawTV (Rect *theRect, Boolean isOn, Boolean isLit)
 	if (isLit)
 	{
 		bounds = srcRects[kTV];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 		LoadGraphic(tempMap, kTVPictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);	
+		theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 		LoadGraphic(tempMask, kTVMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -690,10 +690,10 @@ void DrawVCR (Rect *theRect, Boolean isOn, Boolean isLit)
 	if (isLit)
 	{
 		bounds = srcRects[kVCR];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 		LoadGraphic(tempMap, kVCRPictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
+		theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 		LoadGraphic(tempMask, kVCRMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -737,10 +737,10 @@ void DrawStereo (Rect *theRect, Boolean isOn, Boolean isLit)
 	if (isLit)
 	{
 		bounds = srcRects[kStereo];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 		LoadGraphic(tempMap, kStereoPictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
+		theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 		LoadGraphic(tempMask, kStereoMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -784,10 +784,10 @@ void DrawMicrowave (Rect *theRect, Boolean isOn, Boolean isLit)
 	if (isLit)
 	{
 		bounds = srcRects[kMicrowave];
-		theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+		theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 		LoadGraphic(tempMap, kMicrowavePictID);
 		
-		theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
+		theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 		LoadGraphic(tempMask, kMicrowaveMaskID);
 		
 		CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -1162,10 +1162,10 @@ void DrawPictWithMaskObject (short what, Rect *theRect)
 	}
 	
 	bounds = srcRects[what];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 	LoadGraphic(tempMap, pictID);
 	
-	theErr = CreateOffScreenGWorld(&tempMask, &bounds, GpPixelFormats::kBW1);
+	theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &bounds, GpPixelFormats::kBW1);
 	LoadGraphic(tempMask, maskID);
 	
 	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -1273,7 +1273,7 @@ void DrawPictSansWhiteObject (short what, Rect *theRect)
 	}
 	
 	bounds = srcRects[what];
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 	LoadGraphic(tempMap, pictID);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 
@@ -1293,7 +1293,7 @@ void DrawCustPictSansWhite (short pictID, Rect *theRect)
 	
 	bounds = *theRect;
 	ZeroRectCorner(&bounds);
-	theErr = CreateOffScreenGWorld(&tempMap, &bounds, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&tempMap, &bounds);
 	LoadGraphicCustom(tempMap, pictID);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(tempMap), 

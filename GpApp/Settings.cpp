@@ -34,12 +34,12 @@
 #define kDisplay9Item			5
 #define kBorder1Item			8
 #define kDoColorFadeItem		9
-//#define kCurrentDepth			10
+#define k32BitColorItem			10
 //#define k256Depth				11
 //#define k16Depth				12
-#define kBorder2Item			10
-#define kBorder3Item			11
-#define kDispDefault			12
+#define kBorder2Item			11
+#define kBorder3Item			12
+#define kDispDefault			13
 //#define kUseQDItem				13
 //#define kUseScreen2Item			14
 #define kSofterItem				4
@@ -906,6 +906,7 @@ void DisplayUpdate (Dialog *theDialog)
 	DrawDefaultButton(theDialog);
 	
 	SetDialogItemValue(theDialog, kDoColorFadeItem, (short)wasFade);
+	SetDialogItemValue(theDialog, k32BitColorItem, wasDepthPref == 32);
 	
 	FrameDisplayIcon(theDialog, StdColors::Red());
 	FrameDialogItemC(theDialog, kBorder1Item, kRedOrangeColor8);
@@ -1001,9 +1002,6 @@ void DoDisplayPrefs (void)
 	
 	BringUpDialog(&prefDlg, kDisplayPrefsDialID, nullptr);
 
-	if (!thisMac.can8Bit)
-		MyDisableControl(prefDlg, kDoColorFadeItem);
-
 	wasNeighbors = numNeighbors;
 	wasFade = isDoColorFade;
 	wasDepthPref = isDepthPref;
@@ -1058,6 +1056,14 @@ void DoDisplayPrefs (void)
 			case kDoColorFadeItem:
 			wasFade = !wasFade;
 			SetDialogItemValue(prefDlg, kDoColorFadeItem, (short)wasFade);
+			break;
+			
+			case k32BitColorItem:
+			if (wasDepthPref == 32)
+				wasDepthPref = 8;
+			else
+				wasDepthPref = 32;
+			SetDialogItemValue(prefDlg, k32BitColorItem, wasDepthPref == 32);
 			break;
 			
 			case kDispDefault:

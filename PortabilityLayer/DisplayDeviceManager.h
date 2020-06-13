@@ -21,6 +21,7 @@ namespace PortabilityLayer
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
 
+		virtual void SetPixelFormat(GpPixelFormat_t pixelFormat) = 0;
 		virtual GpPixelFormat_t GetPixelFormat() const = 0;
 		virtual void SyncPalette(IGpDisplayDriver *displayDriver) = 0;
 

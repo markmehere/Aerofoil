@@ -82,7 +82,7 @@ short BackUpToSavedMap (Rect *theRect, SInt16 where, SInt16 who, SInt16 componen
 	ZeroRectCorner(&mapRect);
 	savedMaps[numSavedMaps].dest = *theRect;
 //	CreateOffScreenPixMap(&mapRect, &savedMaps[numSavedMaps].map);
-	theErr = CreateOffScreenGWorld(&savedMaps[numSavedMaps].map, &mapRect, kPreferredPixelFormat);
+	theErr = CreateOffScreenGWorld(&savedMaps[numSavedMaps].map, &mapRect);
 	
 	CopyBits((BitMap *)*GetGWorldPixMap(backSrcMap), 
 			GetPortBitMapForCopyBits(savedMaps[numSavedMaps].map), 

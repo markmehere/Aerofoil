@@ -87,7 +87,7 @@ void CreateToolsOffscreen (void)
 	if (toolSrcMap == nil)
 	{
 		QSetRect(&toolSrcRect, 0, 0, 360, 216);
-		theErr = CreateOffScreenGWorld(&toolSrcMap, &toolSrcRect, kPreferredPixelFormat);
+		theErr = CreateOffScreenGWorld(&toolSrcMap, &toolSrcRect);
 		LoadGraphic(toolSrcMap, kToolsPictID);
 	}
 }

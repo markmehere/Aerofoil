@@ -1,8 +1,11 @@
 #include "QDPixMap.h"
 #include "CoreDefs.h"
 #include "MemoryManager.h"
+#include "QDStandardPalette.h"
 
 #include <assert.h>
+
+static const PortabilityLayer::RGBAColor *gs_staticPalette = PortabilityLayer::StandardPalette::GetInstance()->GetColors();
 
 class PixMapSampler_8BitStandard
 {
@@ -10,6 +13,26 @@ public:
 	inline static uint8_t ReadAs8BitStandard(const void *rowData, size_t index)
 	{
 		return static_cast<const uint8_t*>(rowData)[index];
+	}
+
+	inline static uint32_t ReadAsRGBA(const void *rowData, size_t index)
+	{
+		return gs_staticPalette[static_cast<const uint8_t*>(rowData)[index]].AsUInt32();
+	}
+};
+
+class PixMapSampler_32Bit
+{
+public:
+	inline static uint8_t ReadAs8BitStandard(const void *rowData, size_t index)
+	{
+		const uint8_t *pixelData = static_cast<const uint8_t*>(rowData) + index * 4;
+		return PortabilityLayer::StandardPalette::GetInstance()->MapColorLUT(PortabilityLayer::RGBAColor::Create(pixelData[0], pixelData[1], pixelData[2], 255));
+	}
+
+	inline static uint32_t ReadAsRGBA(const void *rowData, size_t index)
+	{
+		return static_cast<const uint32_t*>(rowData)[index];
 	}
 };
 
@@ -20,6 +43,16 @@ public:
 	inline static void Copy(const void *inData, size_t inIndex, void *outData, size_t outIndex)
 	{
 		static_cast<uint8_t*>(outData)[outIndex] = TSampler::ReadAs8BitStandard(inData, inIndex);
+	}
+};
+
+template<class TSampler>
+class PixMapCopier_32Bit
+{
+public:
+	inline static void Copy(const void *inData, size_t inIndex, void *outData, size_t outIndex)
+	{
+		static_cast<uint32_t*>(outData)[outIndex] = TSampler::ReadAsRGBA(inData, inIndex);
 	}
 };
 
@@ -139,6 +172,9 @@ public:
 		case GpPixelFormats::k8BitStandard:
 			blitFunc = PixMapRowBlitter<PixMapCopier_8BitStandard<TSampler> >::Blit;
 			break;
+		case GpPixelFormats::kRGB32:
+			blitFunc = PixMapRowBlitter<PixMapCopier_32Bit<TSampler> >::Blit;
+			break;
 		default:
 			PL_NotYetImplemented();
 			break;
@@ -162,6 +198,9 @@ public:
 		{
 		case GpPixelFormats::k8BitStandard:
 			blitFunc = PixMapBlitTargetDisambiguator<PixMapSampler_8BitStandard>::Blit;
+			break;
+		case GpPixelFormats::kRGB32:
+			blitFunc = PixMapBlitTargetDisambiguator<PixMapSampler_32Bit>::Blit;
 			break;
 		default:
 			PL_NotYetImplemented();
