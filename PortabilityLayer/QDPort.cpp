@@ -33,11 +33,6 @@ namespace PortabilityLayer
 
 	QDPort::~QDPort()
 	{
-#if GP_DEBUG_CONFIG
-		// Detach the port BEFORE destroying it!!
-		assert(&PortabilityLayer::QDManager::GetInstance()->GetPort()->m_port != this);
-#endif
-
 		DisposePixMap();
 	}
 
