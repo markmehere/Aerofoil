@@ -231,6 +231,9 @@ void OpenMainWindow (void)
 				windowManager->PutWindowBehind(boardWindow, PL_GetPutInFrontWindowPtr());
 			else
 				PL_NotYetImplemented_TODO("Errors");
+
+			PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
+			boardWindow->GetDrawSurface()->FillRect(boardWindow->GetSurfaceRect(), blackColor);
 		}
 		mainWindowRect = thisMac.constrainedScreen;
 		ZeroRectCorner(&mainWindowRect);
