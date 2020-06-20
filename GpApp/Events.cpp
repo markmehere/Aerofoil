@@ -37,7 +37,6 @@ short			idleMode;
 Boolean			doAutoDemo, switchedOut;
 
 extern	WindowPtr	mapWindow, toolsWindow, linkWindow;
-extern	WindowPtr	menuWindow;
 extern	short		isEditH, isEditV, isMapH, isMapV, isToolsH, isToolsV;
 extern	short		isLinkH, isLinkV, isCoordH, isCoordV;
 extern	Boolean		quitting, isMusicOn, failedMusic;
