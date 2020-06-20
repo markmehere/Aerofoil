@@ -460,6 +460,7 @@ void DoHouseMenu (short theItem)
 		if (CreateNewHouse())
 		{
 			whoCares = InitializeEmptyHouse();
+			whoCares = WriteHouse(false);		// Save initial house so it's not an empty file if reloaded immediately
 			OpenCloseEditWindows();
 		}
 		break;
