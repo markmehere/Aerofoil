@@ -15,7 +15,7 @@
 #include "WindowManager.h"
 
 
-#define kPrefsVersion			0x0035
+#define kPrefsVersion			0x0036
 
 
 void ReadInPrefs (void);
