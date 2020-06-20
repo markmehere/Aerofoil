@@ -738,7 +738,7 @@ void PadAlignWave(std::vector<uint8_t> &outWAV)
 		outWAV.push_back(0);
 }
 
-bool DecompressSound(int compressionID, int channelCount, const void *sndData, size_t numFrames, std::vector<uint8_t> &decompressed)
+bool DecompressSound(int compressionID, int channelCount, const void *sndData, size_t sndDataSize, size_t numFrames, std::vector<uint8_t> &decompressed)
 {
 	if (compressionID == AudioCompressionCodecID_ThreeToOne)
 	{
@@ -748,14 +748,39 @@ bool DecompressSound(int compressionID, int channelCount, const void *sndData, s
 			return false;
 		}
 
-		fprintf(stderr, "Unimplemented audio codec\n");
-		return false;
+		if (sndDataSize < numFrames * 2)
+		{
+			fprintf(stderr, "Sound data is too small\n");
+			return false;
+		}
+
+		MaceChannelDecState state;
+		memset(&state, 0, sizeof(state));
+
+		const uint8_t *packets = static_cast<const uint8_t*>(sndData);
+		for (size_t i = 0; i < numFrames; i++)
+		{
+			for (size_t subPkt = 0; subPkt < 2; subPkt++)
+			{
+				uint8_t samples[3];
+				DecodeMACE3(&state, packets[i * 2 + subPkt], samples);
+
+				for (int s = 0; s < 3; s++)
+					decompressed.push_back(samples[s]);
+			}
+		}
 	}
 	else if (compressionID = AudioCompressionCodecID_SixToOne)
 	{
 		if (channelCount != 1)
 		{
 			fprintf(stderr, "Unsupported MACE decode channel layout\n");
+			return false;
+		}
+
+		if (sndDataSize < numFrames)
+		{
+			fprintf(stderr, "Sound data is too small\n");
 			return false;
 		}
 
@@ -781,7 +806,7 @@ bool DecompressSound(int compressionID, int channelCount, const void *sndData, s
 	return true;
 }
 
-bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize)
+bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize, int resID)
 {
 	// Glider PRO has a hard-coded expectation that the sound will have exactly 20 bytes of prefix.
 	// The resource format can have more than that, we'll just follow this base expectation
@@ -861,8 +886,11 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	memcpy(&header, sndBufferData, sizeof(header));
 
 	std::vector<uint8_t> decompressedSound;
+	std::vector<uint8_t> resampledSound;
+	std::vector<uint8_t> downmixedSound;
 
-	uint32_t dataLength = 0;
+	uint32_t inputDataLength = 0;
+	uint32_t outputDataLength = 0;
 	if (header.m_encoding == 0xfe)
 	{
 		if (inSize < sizeof(CmpHeader))
@@ -874,10 +902,10 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 		sndBufferData += sizeof(ExtHeader);
 		inSize -= sizeof(ExtHeader);
 
-		if (!DecompressSound(cmpHeader.m_compressionID, cmpHeader.m_channelCount, sndBufferData, cmpHeader.m_numFrames, decompressedSound))
+		if (!DecompressSound(cmpHeader.m_compressionID, cmpHeader.m_channelCount, sndBufferData, inSize, cmpHeader.m_numFrames, decompressedSound))
 			return false;
 
-		dataLength = decompressedSound.size();
+		outputDataLength = decompressedSound.size();
 		if (decompressedSound.size() > 0)
 			sndBufferData = &decompressedSound[0];
 	}
@@ -900,34 +928,98 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 
 		uint16_t bitsPerSample = extHeader.m_sampleSize;
 
-		if (bitsPerSample != 8)
+		if (bitsPerSample != 8 && bitsPerSample != 16)
 		{
 			fprintf(stderr, "Sound had unexpected bit rate\n");
 			return false;
 		}
 
-		if (extHeader.m_channelCount != 1)
+		if (extHeader.m_channelCount != 1 && extHeader.m_channelCount != 2)
 		{
 			fprintf(stderr, "Sound had unexpected channel count\n");
 			return false;
 		}
 
-		dataLength = extHeader.m_numSamples * extHeader.m_channelCount * bitsPerSample / 8;
+		inputDataLength = extHeader.m_numSamples * extHeader.m_channelCount * (bitsPerSample / 8);
+		outputDataLength = extHeader.m_numSamples;
 
 		sndBufferData += sizeof(ExtHeader);
 		inSize -= sizeof(ExtHeader);
 
-		if (dataLength > inSize)
+		if (inputDataLength > inSize)
 			return false;
+
+		if (inputDataLength == 0)
+			return false;
+
+		int channelCount = extHeader.m_channelCount;
+		if (channelCount == 2)
+		{
+			fprintf(stderr, "WARNING: Downmixing sound resource %i to mono\n", resID);
+
+			if (bitsPerSample == 16)
+			{
+				const size_t numSamples = extHeader.m_numSamples;
+				downmixedSound.resize(numSamples * 2);
+
+				for (size_t i = 0; i < numSamples; i++)
+				{
+					BEInt16_t channels[2];
+					memcpy(channels, sndBufferData + i * 4, 4);
+
+					const BEInt16_t downmixedSample = BEInt16_t(static_cast<int16_t>((static_cast<int32_t>(channels[0]) + static_cast<int32_t>(channels[1]) + 1) >> 1));
+
+					memcpy(&downmixedSound[i * 2], &downmixedSample, 2);
+				}
+
+				sndBufferData = &downmixedSound[0];
+				inputDataLength = downmixedSound.size();
+			}
+			else
+			{
+				const size_t numSamples = extHeader.m_numSamples;
+				downmixedSound.resize(numSamples);
+
+				for (size_t i = 0; i < numSamples; i++)
+				{
+					const uint8_t *channels = sndBufferData + i * 2;
+					const uint8_t downmixedSample = static_cast<uint8_t>((channels[0] + channels[1] + 1) >> 1);
+
+					downmixedSound[i] = downmixedSample;
+				}
+
+				sndBufferData = &downmixedSound[0];
+				inputDataLength = downmixedSound.size();
+			}
+		}
+
+		if (bitsPerSample == 16)
+		{
+			fprintf(stderr, "WARNING: Downsampling sound resource %i to 8 bit\n", resID);
+
+			const size_t numSamples = extHeader.m_numSamples * extHeader.m_channelCount;
+			resampledSound.resize(numSamples);
+
+			for (size_t i = 0; i < numSamples; i++)
+			{
+				const uint16_t sample16BitSigned = ((static_cast<int16_t>(sndBufferData[i * 2]) << 8) | sndBufferData[i * 2 + 1]) ^ 0x8000;
+				const uint8_t sample8Bit = (static_cast<uint32_t>(sample16BitSigned) * 2 + 257) / 514;
+
+				resampledSound[i] = sample8Bit;
+			}
+
+			sndBufferData = &resampledSound[0];
+			inputDataLength = resampledSound.size();
+		}
 	}
 	else
 	{
-		dataLength = header.m_length;
+		inputDataLength = outputDataLength = header.m_length;
 
 		sndBufferData += sizeof(header);
 		inSize -= sizeof(header);
 
-		if (dataLength > inSize)
+		if (inputDataLength > inSize)
 			return false;
 	}
 
@@ -942,7 +1034,7 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	const size_t fmtTagSize = sizeof(PortabilityLayer::RIFFTag);
 	const size_t fmtContentSize = PadRiffChunk(sizeof(formatChunk));
 	const size_t dataTagSize = sizeof(PortabilityLayer::RIFFTag);
-	const size_t dataContentSize = PadRiffChunk(dataLength);
+	const size_t dataContentSize = PadRiffChunk(outputDataLength);
 
 	// Structure:
 	// riffTag
@@ -981,11 +1073,11 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 
 	PortabilityLayer::RIFFTag dataTag;
 	dataTag.m_tag = PortabilityLayer::WaveConstants::kDataChunkID;
-	dataTag.m_chunkSize = dataLength;
+	dataTag.m_chunkSize = outputDataLength;
 
 	VectorAppend(outWAV, reinterpret_cast<const uint8_t*>(&dataTag), sizeof(dataTag));
 
-	VectorAppend(outWAV, sndBufferData, dataLength);
+	VectorAppend(outWAV, sndBufferData, outputDataLength);
 	PadAlignWave(outWAV);
 
 	return true;
@@ -1408,8 +1500,10 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				entry.m_name = resName;
 
-				if (ImportSound(entry.m_uncompressedContents, resData, resSize))
+				if (ImportSound(entry.m_uncompressedContents, resData, resSize, res.m_resID))
 					contents.push_back(entry);
+				else
+					fprintf(stderr, "Failed to import snd res %i\n", static_cast<int>(res.m_resID));
 			}
 			else if (typeList.m_resType == indexStringTypeID)
 			{
