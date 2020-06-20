@@ -48,6 +48,7 @@ public:
 	void UpdatePalette(const void *paletteData) override;
 
 	void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
+	void SetBackgroundDarkenEffect(bool isDark) override;
 
 	void RequestToggleFullScreen(uint32_t timestamp) override;
 	void RequestResetVirtualResolution() override;
@@ -175,4 +176,5 @@ private:
 	HCURSOR m_ibeamCursor;
 
 	float m_bgColor[4];
+	bool m_bgIsDark;
 };

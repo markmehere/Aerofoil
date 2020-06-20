@@ -736,7 +736,6 @@ void DoBlowerObjectInfo (short what)
 	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kBlowerInfoDialogID, kPutInFront, &substitutions);
 	if (infoDial == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort(infoDial->GetWindow()->GetDrawSurface());
 	
 	newDirection = thisRoom->objects[objActive].data.a.vector & 0x0F;
 	if (thisRoom->objects[objActive].data.a.initial)
@@ -1353,7 +1352,6 @@ void DoLightObjectInfo (void)
 	infoDial = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kLightInfoDialogID, kPutInFront, &substitutions);
 	if (infoDial == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort(infoDial->GetWindow()->GetDrawSurface());
 	
 	if (thisRoom->objects[objActive].data.f.initial)
 		SetDialogItemValue(infoDial, kInitialStateCheckbox, 1);

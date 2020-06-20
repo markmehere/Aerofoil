@@ -613,8 +613,7 @@ void DrawDresser(Rect *dresser)
 	short		nRects, height, i;
 	Pattern		dummyPattern;
 
-	DrawSurface *surface = reinterpret_cast<DrawSurface*>(PortabilityLayer::QDManager::GetInstance()->GetPort());
-	//surface = backSrcMap;
+	DrawSurface *surface = backSrcMap;
 
 	if (thisMac.isDepth == 4)
 	{

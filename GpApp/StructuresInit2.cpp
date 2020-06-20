@@ -119,8 +119,6 @@ PLError_t RecreateOffscreens(void)
 {
 	PLError_t		theErr;
 
-	PortabilityLayer::QDManager::GetInstance()->SetPort(nullptr);
-
 	if (workSrcMap)
 		DisposeGWorld(workSrcMap);
 

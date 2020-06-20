@@ -606,7 +606,18 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 {
 	SynchronizeCursors();
 
-	m_deviceContext->ClearRenderTargetView(m_virtualScreenTextureRTV, m_bgColor);
+	FLOAT bgColor[4];
+
+	for (int i = 0; i < 4; i++)
+		bgColor[i] = m_bgColor[i];
+
+	if (m_bgIsDark)
+	{
+		for (int i = 0; i < 3; i++)
+			bgColor[i] *= 0.25f;
+	}
+
+	m_deviceContext->ClearRenderTargetView(m_virtualScreenTextureRTV, bgColor);
 
 	//ID3D11RenderTargetView *const rtv = m_backBufferRTV;
 	ID3D11RenderTargetView *const vsRTV = m_virtualScreenTextureRTV;
@@ -1413,6 +1424,11 @@ void GpDisplayDriverD3D11::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, u
 	m_bgColor[3] = static_cast<float>(a) / 255.0f;
 }
 
+void GpDisplayDriverD3D11::SetBackgroundDarkenEffect(bool isDark)
+{
+	m_bgIsDark = isDark;
+}
+
 void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 {
 	// Alt-Enter gets re-sent after a full-screen toggle, so we ignore toggle requests until half a second has elapsed
@@ -1462,6 +1478,7 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_isFullScreenDesired(false)
 	, m_isResolutionResetDesired(false)
 	, m_lastFullScreenToggleTimeStamp(0)
+	, m_bgIsDark(false)
 {
 	memset(&m_syncTimeBase, 0, sizeof(m_syncTimeBase));
 	memset(&m_windowModeRevertRect, 0, sizeof(m_windowModeRevertRect));
@@ -1474,10 +1491,10 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	m_ibeamCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_IBEAM), IMAGE_CURSOR, 0, 0, LR_SHARED));
 	m_waitCursor = reinterpret_cast<HCURSOR>(LoadImageW(nullptr, MAKEINTRESOURCEW(OCR_WAIT), IMAGE_CURSOR, 0, 0, LR_SHARED));
 
-	m_bgColor[0] = 0;
-	m_bgColor[1] = 0;
-	m_bgColor[2] = 0;
-	m_bgColor[3] = 255;
+	m_bgColor[0] = 0.0f;
+	m_bgColor[1] = 0.0f;
+	m_bgColor[2] = 0.0f;
+	m_bgColor[3] = 1.0f;
 }
 
 GpDisplayDriverD3D11::~GpDisplayDriverD3D11()

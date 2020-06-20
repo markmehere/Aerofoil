@@ -270,7 +270,6 @@ void SpillGrease (short who, short index)
 
 void RedrawAllGrease (void)
 {
-	DrawSurface	*wasCPort;
 	Rect		src;
 	short		i;
 	
@@ -291,14 +290,10 @@ void RedrawAllGrease (void)
 
 			QOffsetRect(&src, playOriginH, playOriginV);
 			
-			wasCPort = GetGraphicsPort();
-			
 			backSrcMap->FillRect(src, blackColorBack);
 			
 			workSrcMap->FillRect(src, blackColorWork);
 			AddRectToWorkRects(&src);
-			
-			SetGraphicsPort(wasCPort);
 		}
 	}
 }

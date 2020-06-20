@@ -61,10 +61,6 @@ typedef CIconPtr *CIconHandle;
 
 typedef Byte Pattern[8];
 
-void SetPortWindowPort(WindowPtr window);
-
-
-void SetPort(DrawSurface *graf);
 void EndUpdate(WindowPtr graf);
 
 void SetRect(Rect *rect, short left, short top, short right, short bottom);

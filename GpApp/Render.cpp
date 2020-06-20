@@ -147,8 +147,6 @@ void DrawReflection (gliderPtr thisGlider, Boolean oneOrTwo)
 	dest = thisGlider->dest;
 	QOffsetRect(&dest, playOriginH - 20, playOriginV - 16);
 	
-	SetPort(workSrcMap);
-
 	long numMirrorRects = GetHandleSize(mirrorRects.StaticCast<void>()) / sizeof(Rect);
 
 	for (long i = 0; i < numMirrorRects; i++)

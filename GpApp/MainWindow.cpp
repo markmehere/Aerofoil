@@ -54,7 +54,6 @@ extern	short		toolSelected;
 extern	Boolean		noRoomAtAll, isUseSecondScreen;
 extern	Boolean		quickerTransitions, houseIsReadOnly;
 
-
 //==============================================================  Functions
 //--------------------------------------------------------------  DrawOnSplash
 
@@ -114,8 +113,6 @@ void RedrawSplashScreen (void)
 	LoadScaledGraphic(surface, kSplash8BitPICT, &tempRect);
 	DrawOnSplash(surface);
 
-	SetPortWindowPort(mainWindow);
-
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
 		GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 		&workSrcRect, &workSrcRect, srcCopy);
@@ -138,8 +135,6 @@ void UpdateMainWindow (void)
 {
 	Rect		tempRect;
 	
-	SetPortWindowPort(mainWindow);
-	
 	if (theMode == kEditMode)
 	{
 		PauseMarquee();
@@ -159,7 +154,6 @@ void UpdateMainWindow (void)
 		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
 				GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()), 
 				&workSrcRect, &mainWindowRect, srcCopy);
-		SetPortWindowPort(mainWindow);
 		
 		DrawOnSplash(mainWindow->GetDrawSurface());
 	}
@@ -187,7 +181,7 @@ void OpenMainWindow (void)
 	
 	if (theMode == kEditMode)
 	{
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetBackgroundColor(51, 51, 102, 255);
+		PortabilityLayer::WindowManager::GetInstance()->SetBackgroundColor(51, 51, 102);
 
 		QSetRect(&mainWindowRect, 0, 0, 512, 322);
 		mainWindow = GetNewCWindow(kEditWindowID, nil, kPutInFront);
@@ -213,9 +207,9 @@ void OpenMainWindow (void)
 	else
 	{
 #ifdef NDEBUG
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetBackgroundColor(0, 0, 0, 255);
+		PortabilityLayer::WindowManager::GetInstance()->SetBackgroundColor(0, 0, 0);
 #else
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetBackgroundColor(51, 0, 0, 255);
+		PortabilityLayer::WindowManager::GetInstance()->SetBackgroundColor(51, 0, 0);
 #endif
 
 		if (boardWindow == nil)
@@ -248,7 +242,6 @@ void OpenMainWindow (void)
 		MoveWindow(boardWindow, mainWindowLeft, 0, true);
 		MoveWindow(mainWindow, mainWindowLeft, mainWindowTop, true);	// thisMac.menuHigh
 		ShowWindow(mainWindow);
-		SetPortWindowPort(mainWindow);
 
 		DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();
 
@@ -275,7 +268,6 @@ void OpenMainWindow (void)
 //			ForceCTSeed((CGrafPtr)mainWindow, wasSeed);
 //		}
 		
-		SetPortWindowPort(mainWindow);
 		UpdateMainWindow();
 	}
 
@@ -373,7 +365,6 @@ void HandleMainClick (Point wherePt, Boolean isDoubleClick)
 			(!houseUnlocked))
 		return;
 	
-	SetPortWindowPort(mainWindow);
 	wherePt -= mainWindow->GetTopLeftCoord();
 
 	DrawSurface *mainWindowSurface = mainWindow->GetDrawSurface();

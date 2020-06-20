@@ -327,7 +327,6 @@ void UpdateMapWindow (void)
 
 	mapWindow->DrawControls();
 	
-	SetPortWindowPort(mapWindow);
 	// PL_NotYetImplemented_TODO("Resize")
 	RedrawMapContents();
 
@@ -411,7 +410,6 @@ void OpenMapWindow (void)
 		PortabilityLayer::WindowManager::GetInstance()->ShowWindow(mapWindow);
 //		FlagWindowFloating(mapWindow);	TEMP - use flaoting windows
 		
-		SetPort(mapWindow->GetDrawSurface());
 		QSetRect(&mapHScrollRect, -1, mapRoomsHigh * kMapRoomHeight, 
 				mapRoomsWide * kMapRoomWidth + 1, 
 				mapRoomsHigh * kMapRoomHeight + kMapScrollBarWidth);
@@ -619,7 +617,6 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 	if (mapWindow == nil)
 		return;
 	
-	SetPortWindowPort(mapWindow);
 	globalWhere = wherePt;
 	wherePt -= mapWindow->GetTopLeftCoord();
 	wherePt.h -= 1;
@@ -645,7 +642,6 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 			
 			if (thisMac.hasDrag)
 			{
-				SetPortWindowPort(mainWindow);
 				QSetRect(&aRoom, 0, 0, kMapRoomWidth, kMapRoomHeight);
 				CenterRectOnPoint(&aRoom, globalWhere);
 //				if (DragRoom(theEvent, &aRoom, itsNumber))

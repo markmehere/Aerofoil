@@ -247,7 +247,6 @@ void NewGame (short mode)
 			StopTheMusic();
 	}
 	NilSavedMaps();
-	SetPortWindowPort(mainWindow);
 
 	UpdateMenus(false);
 	

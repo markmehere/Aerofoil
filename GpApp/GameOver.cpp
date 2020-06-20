@@ -70,7 +70,6 @@ void DoGameOver (void)
 	DrawSurface *surface = mainWindow->GetDrawSurface();
 	playing = false;
 	SetUpFinalScreen();
-	SetPort(mainWindow->GetDrawSurface());
 	ColorRect(surface, mainWindowRect, 244);
 	DoGameOverStarAnimation();
 	if (!TestHighScore())

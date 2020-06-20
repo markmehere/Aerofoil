@@ -205,7 +205,6 @@ void UpdateLinkWindow (void)
 	if (linkWindow == nil)
 		return;
 	
-	SetPortWindowPort(linkWindow);
 	UpdateLinkControl();
 #endif
 }
@@ -379,7 +378,6 @@ void HandleLinkClick (Point wherePt)
 	if (linkWindow == nil)
 		return;
 	
-	SetPortWindowPort(linkWindow);
 	wherePt -= linkWindow->GetTopLeftCoord();
 	
 	part = FindControl(wherePt, linkWindow, &theControl);

@@ -39,7 +39,6 @@ void BringUpDialog (Dialog **theDialog, short dialogID, const DialogTextSubstitu
 //	CenterDialog(dialogID);
 	if (*theDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetGraphicsPort((*theDialog)->GetWindow()->GetDrawSurface());
 	ShowWindow((*theDialog)->GetWindow());
 	DrawDefaultButton(*theDialog);
 }

@@ -24,8 +24,5 @@ PixMapHandle GetGWorldPixMap(DrawSurface *gworld);
 
 void OffsetRect(Rect *rect, int right, int down);
 
-DrawSurface *GetGraphicsPort();
-void SetGraphicsPort(DrawSurface *gw);
-
 
 #endif

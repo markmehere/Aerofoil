@@ -384,7 +384,6 @@ void HandleIdleTask (void)
 			HandleEditorResolutionChange();
 		}
 
-		SetPort(mainWindow->GetDrawSurface());
 		DoMarquee();
 		
 		if ((autoRoomEdit) && (newRoomNow))

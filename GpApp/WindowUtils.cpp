@@ -65,10 +65,7 @@ void GetWindowRect (WindowPtr theWindow, Rect *bounds)
 void GetLocalWindowRect (WindowPtr theWindow, Rect *bounds)
 {
 	if (theWindow != nil)
-	{
-		SetPortWindowPort(theWindow);
 		*bounds = theWindow->GetDrawSurface()->m_port.GetRect();
-	}
 }
 
 //--------------------------------------------------------------  FlagWindowFloating

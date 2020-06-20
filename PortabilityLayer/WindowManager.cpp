@@ -196,6 +196,8 @@ namespace PortabilityLayer
 
 		void HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) override;
 
+		void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b) override;
+
 		Window *GetPutInFrontSentinel() const override;
 
 		static WindowManagerImpl *GetInstance();
@@ -1163,9 +1165,6 @@ namespace PortabilityLayer
 
 		DetachWindow(window);
 
-		if (PortabilityLayer::QDManager::GetInstance()->GetPort() == windowImpl->GetDrawSurface())
-			PortabilityLayer::QDManager::GetInstance()->SetPort(nullptr);
-
 		windowImpl->~WindowImpl();
 		PortabilityLayer::MemoryManager::GetInstance()->Release(windowImpl);
 	}
@@ -1290,9 +1289,16 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::SwapExclusiveWindow(Window *& windowRef)
 	{
+		const bool hadExclusiveWindow = (m_exclusiveWindow != nullptr);
+
 		Window *temp = m_exclusiveWindow;
 		m_exclusiveWindow = static_cast<WindowImpl*>(windowRef);
 		windowRef = temp;
+
+		const bool haveExclusiveWindow = (m_exclusiveWindow != nullptr);
+
+		if (hadExclusiveWindow != haveExclusiveWindow)
+			HostDisplayDriver::GetInstance()->SetBackgroundDarkenEffect(haveExclusiveWindow);
 	}
 
 	void WindowManagerImpl::FlickerWindowIn(Window *window, int32_t velocity)
@@ -1470,6 +1476,11 @@ namespace PortabilityLayer
 
 			window->SetPosition(Vec2i(newX, newY));
 		}
+	}
+
+	void WindowManagerImpl::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b)
+	{
+		HostDisplayDriver::GetInstance()->SetBackgroundColor(r, g, b, 255);
 	}
 
 	void WindowManagerImpl::ResizeWindow(Window *window, int width, int height)

@@ -43,13 +43,3 @@ void OffsetRect(Rect *rect, int right, int down)
 	rect->top += down;
 	rect->bottom += down;
 }
-
-DrawSurface *GetGraphicsPort()
-{
-	return PortabilityLayer::QDManager::GetInstance()->GetPort();
-}
-
-void SetGraphicsPort(DrawSurface *gw)
-{
-	PortabilityLayer::QDManager::GetInstance()->SetPort(gw);
-}

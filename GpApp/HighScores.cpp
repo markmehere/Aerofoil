@@ -73,7 +73,6 @@ void DoHighScores (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	
 	SpinCursor(3);
-	SetPort(workSrcMap);
 	workSrcMap->FillRect(workSrcRect, blackColor);
 	QSetRect(&tempRect, 0, 0, 640, 480);
 	QOffsetRect(&tempRect, splashOriginH, splashOriginV);

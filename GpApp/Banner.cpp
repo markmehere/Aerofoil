@@ -116,10 +116,6 @@ void DrawBannerMessage (Point topLeft)
 	Str255		bannerStr, subStr;
 	short		count;
 
-	DrawSurface *wasGWorld = GetGraphicsPort();
-
-	SetGraphicsPort(workSrcMap);
-
 	PasStringCopy((*thisHouse)->banner, bannerStr);
 
 	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
@@ -157,8 +153,6 @@ void DrawBannerMessage (Point topLeft)
 		GetLocalizedString(5, subStr);
 		workSrcMap->DrawString(Point::Create(topLeft.h + 16, topLeft.v + 180), subStr, redColor, appFont);
 	}
-
-	SetGraphicsPort(wasGWorld);
 }
 
 //--------------------------------------------------------------  BringUpBanner

@@ -48,11 +48,6 @@ static inline void InvertPixel32(uint8_t *pixel)
 	pixel[3] = 255;
 }
 
-void SetPort(DrawSurface *graf)
-{
-	PortabilityLayer::QDManager::GetInstance()->SetPort(graf);
-}
-
 void EndUpdate(WindowPtr graf)
 {
 	graf->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
@@ -64,12 +59,6 @@ void SetRect(Rect *rect, short left, short top, short right, short bottom)
 	rect->top = top;
 	rect->bottom = bottom;
 	rect->right = right;
-}
-
-void SetPortWindowPort(WindowPtr window)
-{
-	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
-	PortabilityLayer::QDManager::GetInstance()->SetPort(window->GetDrawSurface());
 }
 
 static void PlotLine(DrawSurface *surface, const PortabilityLayer::Vec2i &pointA, const PortabilityLayer::Vec2i &pointB, PortabilityLayer::ResolveCachingColor &foreColor)

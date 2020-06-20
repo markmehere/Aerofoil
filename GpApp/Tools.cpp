@@ -198,8 +198,6 @@ void EraseSelectedTool (void)
 	if (toolsWindow == nil)
 		return;
 	
-	SetPort(toolsWindow->GetDrawSurface());
-	
 	toolIcon = toolSelected;
 	if ((toolMode == kBlowerMode) && (toolIcon >= 7))
 	{
@@ -470,7 +468,6 @@ void HandleToolsClick (Point wherePt)
 	if (toolsWindow == nil)
 		return;
 	
-	SetPortWindowPort(toolsWindow);
 	wherePt -= toolsWindow->GetTopLeftCoord();
 	
 	part = FindControl(wherePt, toolsWindow, &theControl);

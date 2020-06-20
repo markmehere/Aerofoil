@@ -15,8 +15,6 @@ namespace PortabilityLayer
 	{
 	public:
 		virtual void Init() = 0;
-		virtual DrawSurface *GetPort() const = 0;
-		virtual void SetPort(DrawSurface *gw) = 0;
 		virtual PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) = 0;
 		virtual void DisposeGWorld(DrawSurface *gw) = 0;
 

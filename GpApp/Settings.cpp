@@ -492,7 +492,6 @@ void DoControlPrefs (void)
 	prefDlg = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kControlPrefsDialID, kPutInFront, nullptr);
 	if (prefDlg == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 	for (i = 0; i < 4; i++)
 	{
 		GetDialogItemRect(prefDlg, i + kRightControl, &controlRects[i]);
@@ -1277,20 +1276,17 @@ void DoSettingsMain (void)
 			case kDisplayButton:
 			FlashSettingsButton(surface, 0);
 			DoDisplayPrefs();
-			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			break;
 			
 			case kSoundButton:
 			FlashSettingsButton(surface, 1);
 			DoSoundPrefs();
-			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			FlushEvents();
 			break;
 			
 			case kControlsButton:
 			FlashSettingsButton(surface, 2);
 			DoControlPrefs();
-			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			break;
 			
 			case kBrainsButton:
@@ -1302,7 +1298,6 @@ void DoSettingsMain (void)
 			}
 			FlashSettingsButton(surface, 3);
 			DoBrainsPrefs();
-			SetGraphicsPort(prefDlg->GetWindow()->GetDrawSurface());
 			break;
 			
 			case kAllDefaultsButton:

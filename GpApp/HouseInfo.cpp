@@ -231,7 +231,6 @@ void DoHouseInfo (void)
 	houseInfoDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kHouseInfoDialogID, kPutInFront, &substitutions);
 	if (houseInfoDialog == nil)
 		RedAlert(kErrDialogDidntLoad);
-	SetPort(houseInfoDialog->GetWindow()->GetDrawSurface());
 	ShowWindow(houseInfoDialog->GetWindow());
 
 	static_cast<PortabilityLayer::EditboxWidget*>(houseInfoDialog->GetItems()[kBannerTextItem - 1].GetWidget())->SetMultiLine(true);

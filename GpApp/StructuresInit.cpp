@@ -63,7 +63,6 @@ void InitScoreboardMap(void)
 {
 	Rect					bounds;
 	THandle<BitmapImage>	thePicture;
-	DrawSurface				*wasCPort;
 	PLError_t				theErr;
 	short					hOffset;
 
@@ -265,10 +264,7 @@ void InitBlowers (void)
 
 void InitFurniture (void)
 {
-	DrawSurface	*wasCPort;
 	PLError_t		theErr;
-	
-	wasCPort = GetGraphicsPort();
 	
 	QSetRect(&furnitureSrcRect, 0, 0, 64, 278);		// 17856 pixels
 	theErr = CreateOffScreenGWorld(&furnitureSrcMap, &furnitureSrcRect);
@@ -300,8 +296,6 @@ void InitFurniture (void)
 	
 	QSetRect(&deckSrc, 0, 0, 64, 21);
 	QOffsetRect(&deckSrc, 0, 162);
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  InitPrizes

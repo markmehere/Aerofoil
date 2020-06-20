@@ -845,10 +845,6 @@ namespace PortabilityLayer
 
 		RefreshMenuBarLayout();
 
-		DrawSurface *oldGraf = GetGraphicsPort();
-
-		SetGraphicsPort(m_menuBarGraf);
-
 		ResolveCachingColor barMidColor = gs_barMidColor;
 
 		graf->FillRect(menuRect, barMidColor);
@@ -975,8 +971,6 @@ namespace PortabilityLayer
 				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barHighlightTextColor, sysFont);
 			}
 		}
-
-		SetGraphicsPort(oldGraf);
 
 		m_menuBarGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
 	}
@@ -1406,10 +1400,6 @@ namespace PortabilityLayer
 
 		DrawSurface *surface = m_menuGraf;
 
-		DrawSurface *oldGraf = GetGraphicsPort();
-
-		SetGraphicsPort(m_menuGraf);
-
 		ResolveCachingColor barMidColor = gs_barMidColor;
 
 		{
@@ -1514,8 +1504,6 @@ namespace PortabilityLayer
 		}
 
 		m_menuGraf->m_port.SetDirty(QDPortDirtyFlag_Contents);
-
-		SetGraphicsPort(oldGraf);
 	}
 
 	MenuManager *MenuManager::GetInstance()

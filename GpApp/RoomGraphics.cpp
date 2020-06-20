@@ -80,7 +80,6 @@ void ResetLocale (Boolean soft)
 
 	takingTheStairs = false;
 
-	DrawSurface	*wasCPort = GetGraphicsPort();
 	const short roomV = (*thisHouse)->rooms[thisRoomNumber].floor;
 
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
@@ -138,8 +137,6 @@ void ResetLocale (Boolean soft)
 
 	if (soft)
 		RedrawAllGrease();
-	
-	SetGraphicsPort(wasCPort);
 }
 
 //--------------------------------------------------------------  LoadGraphicSpecial

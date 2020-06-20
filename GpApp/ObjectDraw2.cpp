@@ -1046,10 +1046,6 @@ void DrawCalendar (Rect *theRect)
 	Rect					bounds;
 	THandle<BitmapImage>	thePicture;
 	Str255					monthStr;
-	DrawSurface				*wasCPort;
-	
-	wasCPort = GetGraphicsPort();
-	SetGraphicsPort(backSrcMap);
 	
 	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kCalendarPictID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
