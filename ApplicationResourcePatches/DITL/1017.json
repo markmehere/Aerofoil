@@ -82,6 +82,14 @@
 			"enabled" : true
 		},
 		{
+			"name" : "Adjust resolution to fit window",
+			"itemType" : "CheckBox",
+			"pos" : [ 8, 182 ],
+			"size" : [ 256, 18 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
 			"name" : "",
 			"itemType" : "UserItem",
 			"pos" : [ 8, 137 ],

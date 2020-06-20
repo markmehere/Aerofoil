@@ -1152,7 +1152,7 @@ void GpDisplayDriverD3D11::Run()
 
 			unsigned int desiredWidth = clientRect.right - clientRect.left;
 			unsigned int desiredHeight = clientRect.bottom - clientRect.top;
-			if (clientRect.right - clientRect.left != m_windowWidthPhysical || clientRect.bottom - clientRect.top != m_windowHeightPhysical)
+			if (clientRect.right - clientRect.left != m_windowWidthPhysical || clientRect.bottom - clientRect.top != m_windowHeightPhysical || m_isResolutionResetDesired)
 			{
 				uint32_t prevWidthPhysical = m_windowWidthPhysical;
 				uint32_t prevHeightPhysical = m_windowHeightPhysical;
@@ -1177,6 +1177,7 @@ void GpDisplayDriverD3D11::Run()
 					m_windowHeightVirtual = virtualHeight;
 					m_pixelScaleX = pixelScaleX;
 					m_pixelScaleY = pixelScaleY;
+					m_isResolutionResetDesired = false;
 
 					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
 					{
@@ -1422,6 +1423,11 @@ void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 	}
 }
 
+void GpDisplayDriverD3D11::RequestResetVirtualResolution()
+{
+	m_isResolutionResetDesired = true;
+}
+
 const GpDisplayDriverProperties &GpDisplayDriverD3D11::GetProperties() const
 {
 	return m_properties;
@@ -1454,6 +1460,7 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_mouseIsInClientArea(false)
 	, m_isFullScreen(false)
 	, m_isFullScreenDesired(false)
+	, m_isResolutionResetDesired(false)
 	, m_lastFullScreenToggleTimeStamp(0)
 {
 	memset(&m_syncTimeBase, 0, sizeof(m_syncTimeBase));

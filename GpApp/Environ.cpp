@@ -31,6 +31,8 @@
 #define	kDisplay12Inch			2
 #define	kDisplay13Inch			3
 
+extern Boolean isAutoScale;
+
 
 typedef struct
 {
@@ -327,15 +329,20 @@ public:
 		if (physicalHeight < 480)
 			physicalHeight = 480;
 
-		double xMul = static_cast<double>(physicalWidth) / 640;
-		double yMul = static_cast<double>(physicalHeight) / 480;
+		double minMul = 1.0;
 
-		double granularity = 2.0;
+		if (isAutoScale)
+		{
+			double xMul = static_cast<double>(physicalWidth) / 640.0;
+			double yMul = static_cast<double>(physicalHeight) / 480.0;
 
-		xMul = floor(xMul * granularity) / granularity;
-		yMul = floor(yMul * granularity) / granularity;
+			double granularity = 2.0;
 
-		double minMul = std::max<double>(1.0, std::min(xMul, yMul));
+			xMul = floor(xMul * granularity) / granularity;
+			yMul = floor(yMul * granularity) / granularity;
+
+			minMul = std::max<double>(1.0, std::min(xMul, yMul));
+		}
 
 		virtualWidth = physicalWidth / minMul;
 		virtualHeight = physicalHeight / minMul;

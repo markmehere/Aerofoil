@@ -25,7 +25,7 @@ int main(int argc, const char **argv);
 
 short		isVolume, wasVolume;
 short		isDepthPref, dataResFile, numSMWarnings;
-Boolean		quitting, doZooms, quickerTransitions, isUseSecondScreen;
+Boolean		quitting, doZooms, quickerTransitions, isAutoScale;
 
 
 extern Str31		highBanner;
@@ -122,9 +122,7 @@ void ReadInPrefs (void)
 		toolMode = thePrefs.wasToolGroup;
 		doAutoDemo = thePrefs.wasDoAutoDemo;
 		isEscPauseKey = thePrefs.wasEscPauseKey;
-		isUseSecondScreen = thePrefs.wasScreen2;
-		if (thisMac.numScreens < 2)
-			isUseSecondScreen = false;
+		isAutoScale = thePrefs.wasAutoScale;
 		doBackground = thePrefs.wasDoBackground;
 		doPrettyMap = thePrefs.wasPrettyMap;
 		doBitchDialogs = thePrefs.wasBitchDialogs;
@@ -199,7 +197,7 @@ void ReadInPrefs (void)
 		toolMode = kBlowerMode;
 		doAutoDemo = true;
 		isEscPauseKey = false;
-		isUseSecondScreen = false;
+		isAutoScale = true;
 		doBackground = false;
 		doPrettyMap = false;
 		doBitchDialogs = true;
@@ -291,7 +289,7 @@ void WriteOutPrefs (void)
 	thePrefs.wasToolGroup = toolMode;
 	thePrefs.wasDoAutoDemo = doAutoDemo;
 	thePrefs.wasEscPauseKey = isEscPauseKey;
-	thePrefs.wasScreen2 = isUseSecondScreen;
+	thePrefs.wasAutoScale = isAutoScale;
 	thePrefs.wasDoBackground = doBackground;
 	thePrefs.wasPrettyMap = doPrettyMap;
 	thePrefs.wasBitchDialogs = doBitchDialogs;

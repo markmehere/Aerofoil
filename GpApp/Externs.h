@@ -116,7 +116,7 @@ typedef struct
 	Boolean		wasCoordOpen, wasQuickTrans;
 	Boolean		wasIdleMusic, wasGameMusic;
 	Boolean		wasEscPauseKey;
-	Boolean		wasDoAutoDemo, wasScreen2;
+	Boolean		wasDoAutoDemo, wasAutoScale;
 	Boolean		wasDoBackground, wasHouseChecks;
 	Boolean		wasPrettyMap, wasBitchDialogs;
 } prefsInfo;

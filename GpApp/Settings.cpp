@@ -16,7 +16,9 @@
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "HostDisplayDriver.h"
 #include "House.h"
+#include "IGpDisplayDriver.h"
 #include "WindowManager.h"
 
 
@@ -35,13 +37,10 @@
 #define kBorder1Item			8
 #define kDoColorFadeItem		9
 #define k32BitColorItem			10
-//#define k256Depth				11
-//#define k16Depth				12
-#define kBorder2Item			11
-#define kBorder3Item			12
-#define kDispDefault			13
-//#define kUseQDItem				13
-//#define kUseScreen2Item			14
+#define kScaleResolutionItem	11
+#define kBorder2Item			12
+#define kBorder3Item			13
+#define kDispDefault			14
 #define kSofterItem				4
 #define kLouderItem				5
 #define kVolNumberItem			7
@@ -98,11 +97,11 @@ Str15		tempLeftStr, tempRightStr, tempBattStr, tempBandStr;
 long		tempLeftMap, tempRightMap, tempBattMap, tempBandMap;
 short		whichCtrl, wasDepthPref;
 Boolean		wasFade, wasIdle, wasPlay, wasTransit, wasZooms, wasBackground;
-Boolean		wasEscPauseKey, wasDemos, wasScreen2, nextRestartChange, wasErrorCheck;
+Boolean		wasEscPauseKey, wasDemos, wasAutoScale, nextRestartChange, wasErrorCheck, needResolutionReset;
 Boolean		wasPrettyMap, wasBitchDialogs;
 
 extern	short		numNeighbors, isDepthPref, maxFiles, willMaxFiles;
-extern	Boolean		isDoColorFade, isPlayMusicIdle, isUseSecondScreen;
+extern	Boolean		isDoColorFade, isPlayMusicIdle, isAutoScale;
 extern	Boolean		isHouseChecks, doBitchDialogs;
 extern	Boolean		isEscPauseKey, failedMusic, isSoundOn, doBackground;
 extern	Boolean		isMusicOn, quickerTransitions, doAutoDemo;
@@ -862,7 +861,7 @@ void DisplayDefaults (void)
 	numNeighbors = 9;
 	wasDepthPref = kSwitchIfNeeded;
 	wasFade = true;
-	wasScreen2 = false;
+	wasAutoScale = true;
 }
 
 //--------------------------------------------------------------  FrameDisplayIcon
@@ -907,6 +906,7 @@ void DisplayUpdate (Dialog *theDialog)
 	
 	SetDialogItemValue(theDialog, kDoColorFadeItem, (short)wasFade);
 	SetDialogItemValue(theDialog, k32BitColorItem, wasDepthPref == 32);
+	SetDialogItemValue(theDialog, kScaleResolutionItem, (short)isAutoScale);
 	
 	FrameDisplayIcon(theDialog, StdColors::Red());
 	FrameDialogItemC(theDialog, kBorder1Item, kRedOrangeColor8);
@@ -1005,7 +1005,7 @@ void DoDisplayPrefs (void)
 	wasNeighbors = numNeighbors;
 	wasFade = isDoColorFade;
 	wasDepthPref = isDepthPref;
-	wasScreen2 = isUseSecondScreen;
+	wasAutoScale = isAutoScale;
 	leaving = false;
 
 	DisplayUpdate(prefDlg);
@@ -1017,10 +1017,12 @@ void DoDisplayPrefs (void)
 		{
 			case kOkayButton:
 			isDoColorFade = wasFade;
-			isDepthPref = wasDepthPref;
-			if (isUseSecondScreen != wasScreen2)
+			if (isDepthPref != wasDepthPref)
 				nextRestartChange = true;
-			isUseSecondScreen = wasScreen2;
+			if (isAutoScale != wasAutoScale)
+				needResolutionReset = true;
+			isDepthPref = wasDepthPref;
+			isAutoScale = wasAutoScale;
 			leaving = true;
 			break;
 			
@@ -1064,6 +1066,11 @@ void DoDisplayPrefs (void)
 			else
 				wasDepthPref = 32;
 			SetDialogItemValue(prefDlg, k32BitColorItem, wasDepthPref == 32);
+			break;
+			
+			case kScaleResolutionItem:
+			wasAutoScale = !wasAutoScale;
+			SetDialogItemValue(prefDlg, kScaleResolutionItem, (short)wasAutoScale);
 			break;
 			
 			case kDispDefault:
@@ -1126,6 +1133,8 @@ void SetAllDefaults (void)
 	quickerTransitions = false;
 	isDepthPref = kSwitchIfNeeded;
 	isDoColorFade = true;
+
+	needResolutionReset = true;
 }
 
 //--------------------------------------------------------------  FlashSettingsButton
@@ -1307,7 +1316,16 @@ void DoSettingsMain (void)
 	prefDlg->Destroy();
 	
 	if (nextRestartChange)
+	{
 		BitchAboutChanges();
+		nextRestartChange = false;
+	}
+
+	if (needResolutionReset)
+	{
+		PortabilityLayer::HostDisplayDriver::GetInstance()->RequestResetVirtualResolution();
+		needResolutionReset = false;
+	}
 }
 
 //--------------------------------------------------------------  BitchAboutChanges

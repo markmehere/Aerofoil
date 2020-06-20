@@ -50,6 +50,7 @@ public:
 	void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
 
 	void RequestToggleFullScreen(uint32_t timestamp) override;
+	void RequestResetVirtualResolution() override;
 
 	const GpDisplayDriverProperties &GetProperties() const override;
 
@@ -146,6 +147,7 @@ private:
 
 	bool m_isFullScreen;
 	bool m_isFullScreenDesired;
+	bool m_isResolutionResetDesired;
 	RECT m_windowModeRevertRect;
 	uint32_t m_lastFullScreenToggleTimeStamp;
 
@@ -154,7 +156,7 @@ private:
 
 	DWORD m_windowWidthPhysical;	// Physical resolution is the resolution of the actual window
 	DWORD m_windowHeightPhysical;
-	DWORD m_windowWidthVirtual;		// Virtual resolution is the resolution reported to teh game
+	DWORD m_windowWidthVirtual;		// Virtual resolution is the resolution reported to the game
 	DWORD m_windowHeightVirtual;
 	float m_pixelScaleX;
 	float m_pixelScaleY;
