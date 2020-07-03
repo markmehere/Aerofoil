@@ -1224,6 +1224,25 @@ void DrawSurface::FrameEllipse(const Rect &rect, PortabilityLayer::ResolveCachin
 			}
 		}
 		break;
+	case GpPixelFormats::kRGB32:
+		{
+			const uint32_t color32 = cacheColor.GetRGBAColor().AsUInt32();
+
+			for (;;)
+			{
+				const PortabilityLayer::Vec2i pt = plotter.GetPoint();
+
+				if (constraintRect32.Contains(pt))
+				{
+					const size_t pixelIndex = static_cast<size_t>(pt.m_y - portRect.top) * pitch + static_cast<size_t>(pt.m_x - portRect.left) * 4;
+					*reinterpret_cast<uint32_t*>(pixData + pixelIndex) = color32;
+				}
+
+				if (plotter.PlotNext() == PortabilityLayer::PlotDirection_Exhausted)
+					break;
+			}
+		}
+		break;
 	default:
 		PL_NotYetImplemented();
 		return;
