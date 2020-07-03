@@ -1,4 +1,4 @@
-Aerofoil is a port of Glider PRO by John Calhoun.
+Aerofoil is a port of John Calhoun's Glider PRO
 
 Currently, only Windows is supported, but the code has been significantly
 rewritten to keep the OS-specific code to a minimum and isolated to a few
