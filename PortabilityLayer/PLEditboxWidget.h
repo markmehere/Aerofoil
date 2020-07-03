@@ -35,6 +35,7 @@ namespace PortabilityLayer
 
 	private:
 		static const unsigned int kCaratBlinkRate = 20;
+		static const unsigned int kMouseScrollRate = 20;
 
 		enum CaratSelectionAnchor
 		{
@@ -61,9 +62,11 @@ namespace PortabilityLayer
 
 		void DrawSelection(DrawSurface *surface, const Vec2i &basePoint, PortabilityLayer::RenderedFont *font) const;
 
-		Vec2i ResolveCaratPos(const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const;
+		Vec2i ResolveCaratPos(PortabilityLayer::RenderedFont *rfont) const;
 		Vec2i ResolveBasePoint() const;
 		size_t ResolveCaratChar() const;
+		void AdjustScrollToCarat();
+		void AdjustScrollToTextBounds();
 
 		PortabilityLayer::FontFamily *GetFontFamily() const;
 		PortabilityLayer::RenderedFont *GetRenderedFont() const;
@@ -73,10 +76,12 @@ namespace PortabilityLayer
 		size_t m_length;
 		size_t m_selStartChar;
 		size_t m_selEndChar;
-		CaratSelectionAnchor m_caratSelectionAnchor;
+		CaratSelectionAnchor m_caratSelectionAnchor;	// Where the carat is attached to the selection range
 
-		Vec2i m_caratScrollPosition;
-		bool m_caratScrollLocked;
+		Vec2i m_caratScrollPosition;	// Ideal position of the carat in the editbox, but not necessarily its actual location (i.e. may be in the middle of a glyph)
+		bool m_caratScrollLocked;		// If true, the vertical position 
+
+		Vec2i m_scrollOffset;
 
 		bool m_hasFocus;
 		bool m_isMultiLine;
@@ -84,5 +89,6 @@ namespace PortabilityLayer
 		size_t m_dragSelectionStartChar;
 
 		uint16_t m_caratTimer;
+		uint16_t m_selectionScrollTimer;
 	};
 }

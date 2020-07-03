@@ -13,6 +13,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "ResolveCachingColor.h"
 #include "TextPlacer.h"
+#include "Rect2i.h"
 
 #include <algorithm>
 
@@ -30,9 +31,11 @@ namespace PortabilityLayer
 		, m_caratScrollLocked(false)
 		, m_hasFocus(false)
 		, m_caratTimer(0)
+		, m_selectionScrollTimer(0)
 		, m_isMultiLine(false)
 		, m_isDraggingSelection(false)
 		, m_dragSelectionStartChar(false)
+		, m_scrollOffset(0, 0)
 	{
 	}
 
@@ -99,7 +102,7 @@ namespace PortabilityLayer
 
 		if (m_hasFocus && m_selEndChar == m_selStartChar && m_caratTimer < kCaratBlinkRate)
 		{
-			PortabilityLayer::Vec2i caratPos = ResolveCaratPos(basePoint, sysFont);
+			PortabilityLayer::Vec2i caratPos = ResolveCaratPos(sysFont) + basePoint;
 
 			int32_t caratTop = caratPos.m_y;
 			int32_t caratBottom = caratTop + lineGap;
@@ -260,6 +263,7 @@ namespace PortabilityLayer
 				{
 					m_window->FocusWidget(this);
 					m_isDraggingSelection = true;
+					m_selectionScrollTimer = kMouseScrollRate;
 					return HandleDragSelection(evt);
 				}
 				else
@@ -321,6 +325,9 @@ namespace PortabilityLayer
 				Redraw();
 			}
 		}
+
+		if (m_isDraggingSelection)
+			m_selectionScrollTimer++;
 	}
 
 	void EditboxWidget::HandleCharacter(uint8_t ch, const uint32_t numRepeatsRequested)
@@ -354,6 +361,8 @@ namespace PortabilityLayer
 
 		// Reset length;
 		m_length = numPreSelChars + numInsertions + numPostSelChars;
+
+		AdjustScrollToCarat();
 
 		m_caratTimer = 0;
 		Redraw();
@@ -389,6 +398,9 @@ namespace PortabilityLayer
 		m_length = prefixKeep + suffixKeep;
 		m_selStartChar = m_selEndChar = prefixKeep;
 
+		AdjustScrollToCarat();
+		AdjustScrollToTextBounds();
+
 		m_caratTimer = 0;
 		Redraw();
 
@@ -423,6 +435,9 @@ namespace PortabilityLayer
 		m_length = prefixKeep + suffixKeep;
 		m_selStartChar = m_selEndChar = prefixKeep;
 
+		AdjustScrollToCarat();
+		AdjustScrollToTextBounds();
+
 		m_caratTimer = 0;
 		Redraw();
 
@@ -444,7 +459,7 @@ namespace PortabilityLayer
 
 		if (!m_caratScrollLocked)
 		{
-			m_caratScrollPosition = ResolveCaratPos(Vec2i(0, 0), rfont);
+			m_caratScrollPosition = ResolveCaratPos(rfont);
 			m_caratScrollLocked = true;
 		}
 
@@ -463,6 +478,8 @@ namespace PortabilityLayer
 				break;
 			}
 		}
+
+		AdjustScrollToCarat();
 
 		m_caratTimer = 0;
 		Redraw();
@@ -483,7 +500,7 @@ namespace PortabilityLayer
 
 		if (!m_caratScrollLocked)
 		{
-			m_caratScrollPosition = ResolveCaratPos(Vec2i(0, 0), rfont);
+			m_caratScrollPosition = ResolveCaratPos(rfont);
 			m_caratScrollLocked = true;
 		}
 
@@ -503,6 +520,8 @@ namespace PortabilityLayer
 			}
 		}
 
+		AdjustScrollToCarat();
+
 		m_caratTimer = 0;
 		Redraw();
 	}
@@ -521,6 +540,8 @@ namespace PortabilityLayer
 
 		m_caratScrollLocked = false;
 
+		AdjustScrollToCarat();
+
 		m_caratTimer = 0;
 		Redraw();
 	}
@@ -538,6 +559,8 @@ namespace PortabilityLayer
 		}
 
 		m_caratScrollLocked = false;
+
+		AdjustScrollToCarat();
 
 		m_caratTimer = 0;
 		Redraw();
@@ -601,6 +624,7 @@ namespace PortabilityLayer
 		return m_length;
 	}
 
+	// Handles adjustment of the selection range and anchor when the carat is moved with shift held
 	void EditboxWidget::HandleKeyMoveCarat(size_t newPos, bool shiftHeld)
 	{
 		if (shiftHeld)
@@ -673,6 +697,9 @@ namespace PortabilityLayer
 					m_selStartChar = m_dragSelectionStartChar;
 				}
 
+				if (m_selectionScrollTimer >= kMouseScrollRate)
+					AdjustScrollToCarat();
+
 				m_caratTimer = 0;
 				Redraw();
 
@@ -691,34 +718,6 @@ namespace PortabilityLayer
 	void EditboxWidget::DrawSelection(DrawSurface *surface, const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const
 	{
 		PortabilityLayer::TextPlacer placer(basePoint, m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
-
-#if 0
-		if (m_selStartChar == m_selEndChar)
-		{
-			PortabilityLayer::GlyphPlacementCharacteristics characteristics;
-
-			for (;;)
-			{
-				const bool placedGlyph = placer.PlaceGlyph(characteristics);
-
-				if (!placedGlyph)
-					break;
-
-				if (characteristics.m_characterIndex == m_selStartChar)
-				{
-					caratPos = characteristics.m_glyphStartPos;
-					break;
-				}
-				else if (characteristics.m_characterIndex < m_selStartChar)
-					caratPos = characteristics.m_glyphEndPos;
-				else
-					break;				
-			}
-
-			outCaratPos = Point::Create(caratPos.m_x, caratPos.m_y);
-			return;
-		}
-#endif
 
 		PortabilityLayer::Vec2i globalSelStart;
 		PortabilityLayer::Vec2i globalSelEnd;
@@ -788,19 +787,20 @@ namespace PortabilityLayer
 		}
 	}
 
-	Vec2i EditboxWidget::ResolveCaratPos(const Vec2i &basePoint, PortabilityLayer::RenderedFont *rfont) const
+	// This function returns the actual coordinate of the carat relative to the top-left corner of the text
+	Vec2i EditboxWidget::ResolveCaratPos(PortabilityLayer::RenderedFont *rfont) const
 	{
 		int32_t lineGap = rfont->GetMetrics().m_linegap;
 		bool failed = false;
 
-		PortabilityLayer::Vec2i caratPos = basePoint;
+		PortabilityLayer::Vec2i caratPos = Vec2i(0, 0);
 
 		const size_t caratChar = ResolveCaratChar();
 
 		if (caratChar > 0)
 		{
 			PortabilityLayer::RenderedFont *rfont = GetRenderedFont();
-			PortabilityLayer::TextPlacer placer(basePoint, m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
+			PortabilityLayer::TextPlacer placer(Vec2i(0, 0), m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
 
 			PortabilityLayer::GlyphPlacementCharacteristics characteristics;
 			for (size_t i = 0; i < caratChar; i++)
@@ -815,7 +815,7 @@ namespace PortabilityLayer
 			if (!failed)
 			{
 				if (characteristics.m_character == '\r')
-					caratPos = PortabilityLayer::Vec2i(basePoint.m_x, characteristics.m_glyphStartPos.m_y + lineGap);
+					caratPos = PortabilityLayer::Vec2i(0, characteristics.m_glyphStartPos.m_y + lineGap);
 				else
 					caratPos = characteristics.m_glyphEndPos;
 			}
@@ -826,7 +826,7 @@ namespace PortabilityLayer
 
 	Vec2i EditboxWidget::ResolveBasePoint() const
 	{
-		return Vec2i(m_rect.left, m_rect.top);
+		return Vec2i(m_rect.left, m_rect.top) + m_scrollOffset;
 	}
 
 	size_t EditboxWidget::ResolveCaratChar() const
@@ -835,6 +835,71 @@ namespace PortabilityLayer
 			return m_selEndChar;
 		else
 			return m_selStartChar;
+	}
+
+	void EditboxWidget::AdjustScrollToCarat()
+	{
+		PortabilityLayer::RenderedFont *rfont = GetRenderedFont();
+		int32_t lineGap = rfont->GetMetrics().m_linegap;
+
+		Vec2i caratRelativePos = m_scrollOffset + ResolveCaratPos(rfont);
+
+		int32_t w = m_rect.Width();
+		int32_t h = m_rect.Height();
+
+		Rect2i caratRect = Rect2i(caratRelativePos, caratRelativePos + Vec2i(1, lineGap));
+
+		Vec2i nudge = Vec2i(0, 0);
+		if (caratRect.Right() > w)
+			nudge.m_x = w - caratRect.Right();
+		if (caratRect.Bottom() > h)
+			nudge.m_y = h - caratRect.Bottom();
+		if (caratRect.Left() < 0)
+			nudge.m_x = -caratRect.Left();
+		if (caratRect.Top() < 0)
+			nudge.m_y = -caratRect.Top();
+
+		m_scrollOffset += nudge;
+	}
+
+	void EditboxWidget::AdjustScrollToTextBounds()
+	{
+		if (!m_isMultiLine)
+			return;
+
+		PortabilityLayer::RenderedFont *rfont = GetRenderedFont();
+		int32_t lineGap = rfont->GetMetrics().m_linegap;
+
+		bool failed = false;
+
+		PortabilityLayer::Vec2i caratPos = Vec2i(0, 0);
+
+		PortabilityLayer::TextPlacer placer(Vec2i(0, 0), m_isMultiLine ? m_rect.Width() : -1, rfont, GetString());
+
+		PortabilityLayer::GlyphPlacementCharacteristics characteristics;
+		for (size_t i = 0; i < m_length; i++)
+		{
+			if (!placer.PlaceGlyph(characteristics))
+			{
+				failed = true;
+				break;
+			}
+		}
+
+		if (!failed)
+		{
+			int32_t lowerY = 0;
+			if (characteristics.m_character == '\r')
+				lowerY = characteristics.m_glyphStartPos.m_y + lineGap;
+			else
+				lowerY = characteristics.m_glyphEndPos.m_y;
+
+			lowerY = lowerY + lineGap + m_scrollOffset.m_y;
+
+			int32_t h = m_rect.Height();
+			if (lowerY < h)
+				m_scrollOffset.m_y -= lowerY - h;
+		}
 	}
 
 	FontFamily *EditboxWidget::GetFontFamily() const
