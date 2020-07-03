@@ -19,6 +19,11 @@ const D3D_SHADER_MACRO drawQuadDefs[] =
 	{ nullptr }
 };
 
+const D3D_SHADER_MACRO drawQuadICCProfileDefs[] =
+{
+	{ "USE_ICC_PROFILE", nullptr }
+};
+
 const CompileJob kCompileJobs[] =
 {
 	{
@@ -38,6 +43,14 @@ const CompileJob kCompileJobs[] =
 		"ps_4_0"
 	},
 	{
+		L"ShaderSrc\\DrawQuadRGBP.hlsl",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuadRGBP_ICC_D3D11.cpp",
+		"g_drawQuadRGBICCP_D3D11",
+		drawQuadICCProfileDefs,
+		"PSMain",
+		"ps_4_0"
+	},
+	{
 		L"ShaderSrc\\DrawQuadPaletteP.hlsl",
 		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuadPaletteP_D3D11.cpp",
 		"g_drawQuadPaletteP_D3D11",
@@ -46,10 +59,26 @@ const CompileJob kCompileJobs[] =
 		"ps_4_0"
 	},
 	{
+		L"ShaderSrc\\DrawQuadPaletteP.hlsl",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuadPaletteP_ICC_D3D11.cpp",
+		"g_drawQuadPaletteICCP_D3D11",
+		drawQuadICCProfileDefs,
+		"PSMain",
+		"ps_4_0"
+	},
+	{
 		L"ShaderSrc\\DrawQuad15BitP.hlsl",
 		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuad15BitP_D3D11.cpp",
 		"g_drawQuad15BitP_D3D11",
 		drawQuadDefs,
+		"PSMain",
+		"ps_4_0"
+	},
+	{
+		L"ShaderSrc\\DrawQuad15BitP.hlsl",
+		L"GpDisplayDriver_D3D11\\CompiledShaders\\DrawQuad15BitP_ICC_D3D11.cpp",
+		"g_drawQuad15BitICCP_D3D11",
+		drawQuadICCProfileDefs,
 		"PSMain",
 		"ps_4_0"
 	},

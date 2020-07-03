@@ -32,10 +32,16 @@ struct GpDisplayDriverD3D11_Prefs
 namespace GpBinarizedShaders
 {
 	extern const unsigned char *g_drawQuadV_D3D11[2];
+
 	extern const unsigned char *g_drawQuadPaletteP_D3D11[2];
 	extern const unsigned char *g_drawQuadRGBP_D3D11[2];
-	extern const unsigned char *g_scaleQuadP_D3D11[2];
 	extern const unsigned char *g_drawQuad15BitP_D3D11[2];
+	
+	extern const unsigned char *g_drawQuadPaletteICCP_D3D11[2];
+	extern const unsigned char *g_drawQuadRGBICCP_D3D11[2];
+	extern const unsigned char *g_drawQuad15BitICCP_D3D11[2];
+
+	extern const unsigned char *g_scaleQuadP_D3D11[2];
 }
 
 struct GpShaderCodeBlob
@@ -469,12 +475,18 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 	const GpShaderCodeBlob drawQuadPalettePBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadPaletteP_D3D11);
 	const GpShaderCodeBlob drawQuadRGBPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadRGBP_D3D11);
 	const GpShaderCodeBlob drawQuad15BitPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuad15BitP_D3D11);
+	const GpShaderCodeBlob drawQuadPaletteICCPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadPaletteICCP_D3D11);
+	const GpShaderCodeBlob drawQuadRGBICCPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuadRGBICCP_D3D11);
+	const GpShaderCodeBlob drawQuad15BitICCPBlob = GetBinarizedShader(GpBinarizedShaders::g_drawQuad15BitICCP_D3D11);
 	const GpShaderCodeBlob scaleQuadPBlob = GetBinarizedShader(GpBinarizedShaders::g_scaleQuadP_D3D11);
 
 	m_device->CreateVertexShader(drawQuadVBlob.m_data, drawQuadVBlob.m_size, nullptr, m_drawQuadVertexShader.GetMutablePtr());
 	m_device->CreatePixelShader(drawQuadPalettePBlob.m_data, drawQuadPalettePBlob.m_size, nullptr, m_drawQuadPalettePixelShader.GetMutablePtr());
 	m_device->CreatePixelShader(drawQuadRGBPBlob.m_data, drawQuadRGBPBlob.m_size, nullptr, m_drawQuadRGBPixelShader.GetMutablePtr());
 	m_device->CreatePixelShader(drawQuad15BitPBlob.m_data, drawQuad15BitPBlob.m_size, nullptr, m_drawQuad15BitPixelShader.GetMutablePtr());
+	m_device->CreatePixelShader(drawQuadPaletteICCPBlob.m_data, drawQuadPaletteICCPBlob.m_size, nullptr, m_drawQuadPaletteICCPixelShader.GetMutablePtr());
+	m_device->CreatePixelShader(drawQuadRGBICCPBlob.m_data, drawQuadRGBICCPBlob.m_size, nullptr, m_drawQuadRGBICCPixelShader.GetMutablePtr());
+	m_device->CreatePixelShader(drawQuad15BitICCPBlob.m_data, drawQuad15BitICCPBlob.m_size, nullptr, m_drawQuad15BitICCPixelShader.GetMutablePtr());
 	m_device->CreatePixelShader(scaleQuadPBlob.m_data, scaleQuadPBlob.m_size, nullptr, m_scaleQuadPixelShader.GetMutablePtr());
 
 	// Quad input layout
@@ -1330,7 +1342,7 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 			m_paletteTextureSRV
 		};
 
-		m_deviceContext->PSSetShader(m_drawQuadPalettePixelShader, nullptr, 0);
+		m_deviceContext->PSSetShader(m_useICCProfile ? m_drawQuadPaletteICCPixelShader : m_drawQuadPalettePixelShader, nullptr, 0);
 		m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
 	}
 	else if (pixelFormat == GpPixelFormats::kRGB555)
@@ -1340,7 +1352,7 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 			d3d11Surface->GetSRV(),
 		};
 
-		m_deviceContext->PSSetShader(m_drawQuad15BitPixelShader, nullptr, 0);
+		m_deviceContext->PSSetShader(m_useICCProfile ? m_drawQuad15BitICCPixelShader : m_drawQuad15BitPixelShader, nullptr, 0);
 		m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
 	}
 	else if (pixelFormat == GpPixelFormats::kRGB32)
@@ -1350,7 +1362,7 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 			d3d11Surface->GetSRV(),
 		};
 
-		m_deviceContext->PSSetShader(m_drawQuadRGBPixelShader, nullptr, 0);
+		m_deviceContext->PSSetShader(m_useICCProfile ? m_drawQuadRGBICCPixelShader : m_drawQuadRGBPixelShader, nullptr, 0);
 		m_deviceContext->PSSetShaderResources(0, sizeof(psResourceViews) / sizeof(psResourceViews[0]), psResourceViews);
 	}
 	else
@@ -1437,6 +1449,12 @@ void GpDisplayDriverD3D11::SetBackgroundDarkenEffect(bool isDark)
 	m_bgIsDark = isDark;
 }
 
+
+void GpDisplayDriverD3D11::SetUseICCProfile(bool useICCProfile)
+{
+	m_useICCProfile = useICCProfile;
+}
+
 void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 {
 	// Alt-Enter gets re-sent after a full-screen toggle, so we ignore toggle requests until half a second has elapsed
@@ -1510,6 +1528,7 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_isResolutionResetDesired(false)
 	, m_lastFullScreenToggleTimeStamp(0)
 	, m_bgIsDark(false)
+	, m_useICCProfile(false)
 {
 	memset(&m_syncTimeBase, 0, sizeof(m_syncTimeBase));
 	memset(&m_windowModeRevertRect, 0, sizeof(m_windowModeRevertRect));

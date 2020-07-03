@@ -31,7 +31,7 @@
 #define	kDisplay12Inch			2
 #define	kDisplay13Inch			3
 
-extern Boolean isAutoScale;
+extern Boolean isAutoScale, isUseICCProfile;
 
 
 typedef struct
@@ -412,6 +412,8 @@ void HandleDepthSwitching (void)
 	}
 
 	thisMac.isDepth = isDepthPref;
+
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetUseICCProfile(isUseICCProfile != 0);
 }
 
 //--------------------------------------------------------------  CheckMemorySize

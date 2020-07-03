@@ -126,8 +126,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CompiledShaders\DrawQuad15BitP_D3D11.cpp" />
+    <ClCompile Include="CompiledShaders\DrawQuad15BitP_ICC_D3D11.cpp" />
     <ClCompile Include="CompiledShaders\DrawQuadPaletteP_D3D11.cpp" />
+    <ClCompile Include="CompiledShaders\DrawQuadPaletteP_ICC_D3D11.cpp" />
     <ClCompile Include="CompiledShaders\DrawQuadRGBP_D3D11.cpp" />
+    <ClCompile Include="CompiledShaders\DrawQuadRGBP_ICC_D3D11.cpp" />
     <ClCompile Include="CompiledShaders\DrawQuadV_D3D11.cpp" />
     <ClCompile Include="CompiledShaders\ScaleQuadP_D3D11.cpp" />
     <ClCompile Include="GpDisplayDriverD3D11.cpp" />

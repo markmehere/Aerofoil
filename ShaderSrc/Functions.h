@@ -68,3 +68,12 @@ float3 AppleRGBToSRGBLinear(float3 color)
 
 	return result;
 }
+
+float3 ApplyColorSpaceTransform(float3 color)
+{
+#ifdef USE_ICC_PROFILE
+	return saturate(AppleRGBToSRGBLinear(color));
+#else
+	return SRGBToLinear(color);
+#endif
+}

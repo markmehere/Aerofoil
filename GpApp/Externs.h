@@ -118,6 +118,7 @@ typedef struct
 	Boolean		wasDoAutoDemo, wasAutoScale;
 	Boolean		wasDoBackground, wasHouseChecks;
 	Boolean		wasPrettyMap, wasBitchDialogs;
+	Boolean		wasUseICCProfile;
 } prefsInfo;
 
 //--------------------------------------------------------------  Prototypes
@@ -230,7 +231,8 @@ void CloseThisWindow (WindowPtr *);
 //	THREEWORDINLINE(0x4218, 0x10B8, 0x0260);
 #endif
 
-extern Boolean		hasScrap, scrapIsARoom;
+
+extern Boolean		hasScrap, scrapIsARoom;
 
 #include "GliderDefines.h"
 #include "GliderStructs.h"

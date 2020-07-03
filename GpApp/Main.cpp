@@ -15,7 +15,7 @@
 #include "WindowManager.h"
 
 
-#define kPrefsVersion			0x0037
+#define kPrefsVersion			0x0038
 
 
 void ReadInPrefs (void);
@@ -25,7 +25,7 @@ int main(int argc, const char **argv);
 
 short		isVolume, wasVolume;
 short		isDepthPref, dataResFile, numSMWarnings;
-Boolean		quitting, doZooms, quickerTransitions, isAutoScale;
+Boolean		quitting, doZooms, quickerTransitions, isAutoScale, isUseICCProfile;
 
 
 extern Str31		highBanner;
@@ -127,6 +127,7 @@ void ReadInPrefs (void)
 		doAutoDemo = thePrefs.wasDoAutoDemo;
 		isEscPauseKey = thePrefs.wasEscPauseKey;
 		isAutoScale = thePrefs.wasAutoScale;
+		isUseICCProfile = thePrefs.wasUseICCProfile;
 		doBackground = thePrefs.wasDoBackground;
 		doPrettyMap = thePrefs.wasPrettyMap;
 		doBitchDialogs = thePrefs.wasBitchDialogs;
@@ -209,6 +210,7 @@ void ReadInPrefs (void)
 		doAutoDemo = true;
 		isEscPauseKey = false;
 		isAutoScale = true;
+		isUseICCProfile = true;
 		doBackground = false;
 		doPrettyMap = false;
 		doBitchDialogs = true;
@@ -303,6 +305,7 @@ void WriteOutPrefs (void)
 	thePrefs.wasDoAutoDemo = doAutoDemo;
 	thePrefs.wasEscPauseKey = isEscPauseKey;
 	thePrefs.wasAutoScale = isAutoScale;
+	thePrefs.wasUseICCProfile = isUseICCProfile;
 	thePrefs.wasDoBackground = doBackground;
 	thePrefs.wasPrettyMap = doPrettyMap;
 	thePrefs.wasBitchDialogs = doBitchDialogs;

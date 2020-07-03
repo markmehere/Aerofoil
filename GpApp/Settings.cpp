@@ -27,6 +27,8 @@
 #define kSoundPrefsDialID		1018
 #define kControlPrefsDialID		1023
 #define kBrainsPrefsDialID		1024
+
+// Display dialog
 #define kDisplayButton			3
 #define kSoundButton			4
 #define kControlsButton			5
@@ -35,18 +37,23 @@
 #define kDisplay3Item			4
 #define kDisplay9Item			5
 #define kBorder1Item			8
-#define kDoColorFadeItem		9
-#define k32BitColorItem			10
-#define kScaleResolutionItem	11
-#define kBorder2Item			12
-#define kBorder3Item			13
-#define kDispDefault			14
+#define k32BitColorItem			9
+#define kScaleResolutionItem	10
+#define kUseICCProfileItem		11
+#define kDoColorFadeItem		12
+#define kBorder2Item			13
+#define kBorder3Item			14
+#define kDispDefault			15
+
+// Sound dialog
 #define kSofterItem				4
 #define kLouderItem				5
 #define kVolNumberItem			7
 #define kIdleMusicItem			8
 #define kPlayMusicItem			9
 #define kSoundDefault			13
+
+// Controls dialog
 #define kRightControl			5
 #define kLeftControl			6
 #define kBattControl			7
@@ -54,6 +61,8 @@
 #define kControlDefaults		13
 #define kESCPausesRadio			14
 #define kTABPausesRadio			15
+
+// Brains dialog
 #define kMaxFilesItem			5
 #define kQuickTransitCheck		7
 #define kDoZoomsCheck			8
@@ -97,11 +106,11 @@ Str15		tempLeftStr, tempRightStr, tempBattStr, tempBandStr;
 long		tempLeftMap, tempRightMap, tempBattMap, tempBandMap;
 short		whichCtrl, wasDepthPref;
 Boolean		wasFade, wasIdle, wasPlay, wasTransit, wasZooms, wasBackground;
-Boolean		wasEscPauseKey, wasDemos, wasAutoScale, nextRestartChange, wasErrorCheck, needResolutionReset;
+Boolean		wasEscPauseKey, wasDemos, wasAutoScale, wasUseICCProfile, nextRestartChange, wasErrorCheck, needResolutionReset;
 Boolean		wasPrettyMap, wasBitchDialogs;
 
 extern	short		numNeighbors, isDepthPref, maxFiles, willMaxFiles;
-extern	Boolean		isDoColorFade, isPlayMusicIdle, isAutoScale;
+extern	Boolean		isDoColorFade, isPlayMusicIdle, isAutoScale, isUseICCProfile;
 extern	Boolean		isHouseChecks, doBitchDialogs;
 extern	Boolean		isEscPauseKey, failedMusic, isSoundOn, doBackground;
 extern	Boolean		isMusicOn, quickerTransitions, doAutoDemo;
@@ -861,6 +870,7 @@ void DisplayDefaults (void)
 	wasDepthPref = kSwitchIfNeeded;
 	wasFade = true;
 	wasAutoScale = true;
+	wasUseICCProfile = true;
 }
 
 //--------------------------------------------------------------  FrameDisplayIcon
@@ -906,6 +916,7 @@ void DisplayUpdate (Dialog *theDialog)
 	SetDialogItemValue(theDialog, kDoColorFadeItem, (short)wasFade);
 	SetDialogItemValue(theDialog, k32BitColorItem, wasDepthPref == 32);
 	SetDialogItemValue(theDialog, kScaleResolutionItem, (short)isAutoScale);
+	SetDialogItemValue(theDialog, kUseICCProfileItem, (short)isUseICCProfile);
 	
 	FrameDisplayIcon(theDialog, StdColors::Red());
 	FrameDialogItemC(theDialog, kBorder1Item, kRedOrangeColor8);
@@ -1005,6 +1016,7 @@ void DoDisplayPrefs (void)
 	wasFade = isDoColorFade;
 	wasDepthPref = isDepthPref;
 	wasAutoScale = isAutoScale;
+	wasUseICCProfile = isUseICCProfile;
 	leaving = false;
 
 	DisplayUpdate(prefDlg);
@@ -1022,6 +1034,7 @@ void DoDisplayPrefs (void)
 				needResolutionReset = true;
 			isDepthPref = wasDepthPref;
 			isAutoScale = wasAutoScale;
+			isUseICCProfile = wasUseICCProfile;
 			leaving = true;
 			break;
 			
@@ -1070,6 +1083,11 @@ void DoDisplayPrefs (void)
 			case kScaleResolutionItem:
 			wasAutoScale = !wasAutoScale;
 			SetDialogItemValue(prefDlg, kScaleResolutionItem, (short)wasAutoScale);
+			break;
+			
+			case kUseICCProfileItem:
+			wasUseICCProfile = !wasUseICCProfile;
+			SetDialogItemValue(prefDlg, kUseICCProfileItem, (short)wasUseICCProfile);
 			break;
 			
 			case kDispDefault:
@@ -1321,6 +1339,8 @@ void DoSettingsMain (void)
 		PortabilityLayer::HostDisplayDriver::GetInstance()->RequestResetVirtualResolution();
 		needResolutionReset = false;
 	}
+
+	PortabilityLayer::HostDisplayDriver::GetInstance()->SetUseICCProfile(isUseICCProfile);
 }
 
 //--------------------------------------------------------------  BitchAboutChanges

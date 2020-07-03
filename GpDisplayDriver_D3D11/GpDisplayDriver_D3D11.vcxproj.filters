@@ -42,6 +42,15 @@
     <ClCompile Include="CompiledShaders\ScaleQuadP_D3D11.cpp">
       <Filter>Source Files\CompiledShaders</Filter>
     </ClCompile>
+    <ClCompile Include="CompiledShaders\DrawQuad15BitP_ICC_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
+    <ClCompile Include="CompiledShaders\DrawQuadPaletteP_ICC_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
+    <ClCompile Include="CompiledShaders\DrawQuadRGBP_ICC_D3D11.cpp">
+      <Filter>Source Files\CompiledShaders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GpDisplayDriverD3D11.h">

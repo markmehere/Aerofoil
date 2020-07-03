@@ -53,6 +53,8 @@ public:
 	void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) override;
 	void SetBackgroundDarkenEffect(bool isDark) override;
 
+	void SetUseICCProfile(bool useICCProfile) override;
+
 	void RequestToggleFullScreen(uint32_t timestamp) override;
 	void RequestResetVirtualResolution() override;
 
@@ -129,6 +131,9 @@ private:
 	GpComPtr<ID3D11PixelShader> m_drawQuadPalettePixelShader;
 	GpComPtr<ID3D11PixelShader> m_drawQuad15BitPixelShader;
 	GpComPtr<ID3D11PixelShader> m_drawQuadRGBPixelShader;
+	GpComPtr<ID3D11PixelShader> m_drawQuadPaletteICCPixelShader;
+	GpComPtr<ID3D11PixelShader> m_drawQuad15BitICCPixelShader;
+	GpComPtr<ID3D11PixelShader> m_drawQuadRGBICCPixelShader;
 	GpComPtr<ID3D11PixelShader> m_scaleQuadPixelShader;
 	GpComPtr<ID3D11Buffer> m_drawQuadVertexConstantBuffer;
 	GpComPtr<ID3D11Buffer> m_drawQuadPixelConstantBuffer;
@@ -184,4 +189,6 @@ private:
 
 	float m_bgColor[4];
 	bool m_bgIsDark;
+
+	bool m_useICCProfile;
 };
