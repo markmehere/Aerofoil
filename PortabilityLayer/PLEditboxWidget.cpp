@@ -31,7 +31,6 @@ namespace PortabilityLayer
 		, m_caratScrollLocked(false)
 		, m_hasFocus(false)
 		, m_caratTimer(0)
-		, m_selectionScrollTimer(0)
 		, m_isMultiLine(false)
 		, m_isDraggingSelection(false)
 		, m_dragSelectionStartChar(false)
@@ -273,7 +272,6 @@ namespace PortabilityLayer
 				{
 					m_window->FocusWidget(this);
 					m_isDraggingSelection = true;
-					m_selectionScrollTimer = kMouseScrollRate;
 					return HandleDragSelection(evt);
 				}
 				else
@@ -335,9 +333,6 @@ namespace PortabilityLayer
 				Redraw();
 			}
 		}
-
-		if (m_isDraggingSelection)
-			m_selectionScrollTimer++;
 	}
 
 	void EditboxWidget::HandleCharacter(uint8_t ch, const uint32_t numRepeatsRequested)
@@ -762,8 +757,7 @@ namespace PortabilityLayer
 					m_selStartChar = m_dragSelectionStartChar;
 				}
 
-				if (m_selectionScrollTimer >= kMouseScrollRate)
-					AdjustScrollToCarat();
+				AdjustScrollToCarat();
 
 				m_caratTimer = 0;
 				Redraw();

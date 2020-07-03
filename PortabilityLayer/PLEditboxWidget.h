@@ -92,6 +92,5 @@ namespace PortabilityLayer
 		size_t m_dragSelectionStartChar;
 
 		uint16_t m_caratTimer;
-		uint16_t m_selectionScrollTimer;
 	};
 }
