@@ -20,6 +20,11 @@ Core application binaries:
 - GpInputDriver_XInput: XInput gamepad driver.
 - ReleasePackageInstaller: WiX project that builds the Windows Installer package.
 
+Building ReleasePackageInstaller will also automatically run all of the data
+import and packaging scripts.  Doing a clean Rebuild on ReleasePackageInstaller
+should give you a complete game installation in the "ReleasePkg" directory.
+  
+
 Libraries:
 - Common: Common core definitions used by all projects
 - GpCommon: Common types usable by any project.
