@@ -240,12 +240,11 @@ namespace PortabilityLayer
 						HandleDownArrow(keyEvent.m_repeatCount, isShiftHeld);
 						return WidgetHandleStates::kDigested;
 					}
-#if 0
 					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kDelete)
 					{
+						HandleForwardDelete(keyEvent.m_repeatCount);
 						return WidgetHandleStates::kDigested;
 					}
-#endif
 				}
 			}
 		}
@@ -382,6 +381,40 @@ namespace PortabilityLayer
 		{
 			uint8_t *moveSrc = m_chars + m_selEndChar;
 			uint8_t *moveDest = m_chars + prefixKeep;
+
+			if (moveSrc != moveDest)
+				memmove(moveDest, moveSrc, suffixKeep);
+		}
+
+		m_length = prefixKeep + suffixKeep;
+		m_selStartChar = m_selEndChar = prefixKeep;
+
+		m_caratTimer = 0;
+		Redraw();
+
+		m_caratScrollLocked = false;
+	}
+
+	void EditboxWidget::HandleForwardDelete(const uint32_t numRepeatsRequested)
+	{
+		const size_t numPostSelChars = m_length - m_selEndChar;
+		const size_t numSelChars = m_selEndChar - m_selStartChar;
+		const size_t numPreSelChars = m_selStartChar;
+
+		size_t suffixTrim = numRepeatsRequested;
+		if (numSelChars != 0)
+			suffixTrim--;
+
+		if (suffixTrim > numPostSelChars)
+			suffixTrim = numPostSelChars;
+
+		const size_t prefixKeep = numPreSelChars;
+		const size_t suffixKeep = numPostSelChars - suffixTrim;
+
+		if (suffixKeep > 0)
+		{
+			uint8_t *moveSrc = m_chars + m_length - suffixKeep;
+			uint8_t *moveDest = m_chars + m_selStartChar;
 
 			if (moveSrc != moveDest)
 				memmove(moveDest, moveSrc, suffixKeep);
