@@ -230,6 +230,7 @@ void CloseThisWindow (WindowPtr *);
 //	THREEWORDINLINE(0x4218, 0x10B8, 0x0260);
 #endif
 
+extern Boolean		hasScrap, scrapIsARoom;
 
 #include "GliderDefines.h"
 #include "GliderStructs.h"

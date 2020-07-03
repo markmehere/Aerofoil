@@ -157,7 +157,7 @@ void VariableInit (void)
 	paused = false;
 	hasMirror = false;
 	demoGoing = false;
-//	scrapIsARoom = true;
+	scrapIsARoom = true;
 	splashDrawn = false;
 	
 #ifndef COMPILEDEMO

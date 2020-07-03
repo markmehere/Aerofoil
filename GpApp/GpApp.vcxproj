@@ -185,6 +185,7 @@
     <ClCompile Include="RubberBands.cpp" />
     <ClCompile Include="SavedGames.cpp" />
     <ClCompile Include="Scoreboard.cpp" />
+    <ClCompile Include="Scrap.cpp" />
     <ClCompile Include="SelectHouse.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Sound.cpp" />

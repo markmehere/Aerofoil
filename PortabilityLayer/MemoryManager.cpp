@@ -123,7 +123,17 @@ namespace PortabilityLayer
 	bool MemoryManagerImpl::ResizeHandle(MMHandleBlock *hdl, size_t newSize)
 	{
 		if (hdl->m_contents == nullptr)
-			return false;
+		{
+			if (newSize != 0)
+			{
+				void *newBuf = Alloc(newSize);
+				if (!newBuf)
+					return false;
+
+				hdl->m_contents = newBuf;
+				hdl->m_size = newSize;
+			}
+		}
 
 		if (newSize != hdl->m_size)
 		{

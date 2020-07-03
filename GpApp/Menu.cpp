@@ -198,21 +198,21 @@ void UpdateClipboardMenus (void)
 		
 		mm->SetItemEnabled(houseMenu, iCut - 1, true);
 		mm->SetItemEnabled(houseMenu, iCopy - 1, true);
-//		if (hasScrap)
-//		{
-//			EnableMenuItem(houseMenu, iPaste);
-//			if (scrapIsARoom)
-//			{
-//				GetLocalizedString(42, title);
-//				SetMenuItemText(houseMenu, iPaste, title);
-//			}
-//			else
-//			{
-//				GetLocalizedString(43, title);
-//				SetMenuItemText(houseMenu, iPaste, title);
-//			}
-//		}
-//		else
+		if (hasScrap)
+		{
+			EnableMenuItem(houseMenu, iPaste);
+			if (scrapIsARoom)
+			{
+				GetLocalizedString(42, title);
+				SetMenuItemText(houseMenu, iPaste, title);
+			}
+			else
+			{
+				GetLocalizedString(43, title);
+				SetMenuItemText(houseMenu, iPaste, title);
+			}
+		}
+		else
 		{
 			mm->SetItemEnabled(houseMenu, iPaste - 1, false);
 			GetLocalizedString(44, title);
@@ -516,12 +516,12 @@ void DoHouseMenu (short theItem)
 		{
 			if (objActive > kNoObjectSelected)
 			{
-//				PutObjectScrap();
+				PutObjectScrap();
 				DeleteObject();
 			}
 			else
 			{
-//				PutRoomScrap();
+				PutRoomScrap();
 				DeleteRoom(false);
 			}
 			UpdateClipboardMenus();
@@ -531,10 +531,10 @@ void DoHouseMenu (short theItem)
 		case iCopy:
 		if (houseUnlocked)
 		{
-//			if (objActive > kNoObjectSelected)
-//				PutObjectScrap();
-//			else
-//				PutRoomScrap();
+			if (objActive > kNoObjectSelected)
+				PutObjectScrap();
+			else
+				PutRoomScrap();
 			UpdateClipboardMenus();
 		}
 		break;
@@ -542,12 +542,11 @@ void DoHouseMenu (short theItem)
 		case iPaste:
 		if (houseUnlocked)
 		{
-/*			if (scrapIsARoom)
+			if (scrapIsARoom)
 				GetRoomScrap();
 			else
 				GetObjectScrap();
 			UpdateClipboardMenus();
-*/
 		}
 		break;
 		

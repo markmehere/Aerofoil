@@ -435,8 +435,8 @@ void QuickBandsRefresh (Boolean);
 void QuickFoilRefresh (Boolean);
 void HandleScore (void);
 
-//void PutRoomScrap (void);								// --- Scrap.c
-//void PutObjectScrap (void);
+void PutRoomScrap (void);								// --- Scrap.c
+void PutObjectScrap (void);
 void GetRoomScrap (void);
 void GetObjectScrap (void);
 //void SeeIfValidScrapAvailable (Boolean);

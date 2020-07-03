@@ -82,5 +82,6 @@ void AppendMenuItem(MenuHandle menu, int8_t iconResID, uint8_t key, uint8_t subm
 
 void SetMenuItemText(MenuHandle menu, int index, const PLPasStr &text)
 {
-	PL_NotYetImplemented();
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+	mm->SetItemText(menu, index - 1, text);
 }
