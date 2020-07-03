@@ -15,7 +15,7 @@
 #include "WindowManager.h"
 
 
-#define kPrefsVersion			0x0036
+#define kPrefsVersion			0x0037
 
 
 void ReadInPrefs (void);
@@ -45,6 +45,8 @@ extern Boolean		isMapOpen, isToolsOpen, isCoordOpen;
 extern Boolean		doPrettyMap, doBitchDialogs;
 //extern Boolean		didValidation;
 
+THandle<void>		globalModulePrefs;
+
 //==============================================================  Functions
 //--------------------------------------------------------------  ReadInPrefs
 
@@ -55,8 +57,10 @@ extern Boolean		doPrettyMap, doBitchDialogs;
 void ReadInPrefs (void)
 {
 	prefsInfo	thePrefs;
+
+	THandle<void> modulePrefs;
 	
-	if (LoadPrefs(&thePrefs, kPrefsVersion))
+	if (LoadPrefs(&thePrefs, &modulePrefs, kPrefsVersion))
 	{
 #ifdef COMPILEDEMO
 		PasStringCopy("\pDemo House", thisHouseName);
@@ -126,6 +130,13 @@ void ReadInPrefs (void)
 		doBackground = thePrefs.wasDoBackground;
 		doPrettyMap = thePrefs.wasPrettyMap;
 		doBitchDialogs = thePrefs.wasBitchDialogs;
+
+		if (modulePrefs)
+			ApplyModulePrefs(&modulePrefs);
+
+		globalModulePrefs.Dispose();
+		globalModulePrefs = modulePrefs;
+		modulePrefs = nullptr;
 	}
 	else
 	{
@@ -201,6 +212,8 @@ void ReadInPrefs (void)
 		doBackground = false;
 		doPrettyMap = false;
 		doBitchDialogs = true;
+
+		modulePrefs.Dispose();
 	}
 	
 	if ((numNeighbors > 1) && (thisMac.constrainedScreen.right <= 512))
@@ -293,9 +306,13 @@ void WriteOutPrefs (void)
 	thePrefs.wasDoBackground = doBackground;
 	thePrefs.wasPrettyMap = doPrettyMap;
 	thePrefs.wasBitchDialogs = doBitchDialogs;
-	
-	if (!SavePrefs(&thePrefs, kPrefsVersion))
+
+	THandle<void> modulePrefs;
+
+	if (!SaveModulePrefs(globalModulePrefs, &modulePrefs) || !SavePrefs(&thePrefs, &modulePrefs, kPrefsVersion))
 		SysBeep(1);
+
+	modulePrefs.Dispose();
 	
 	UnivSetSoundVolume(wasVolume, thisMac.hasSM3);
 }
@@ -325,6 +342,9 @@ int gpAppMain()
 	SetUpAppleEvents();
 	LoadCursors();
 	ReadInPrefs();
+
+	SpinCursor(2);	// Tick once to let the display driver flush any resolution changes from prefs
+	FlushResolutionChange();
 	
 #if defined COMPILEDEMO
 	copyGood = true;
@@ -339,7 +359,7 @@ int gpAppMain()
 	else if (didValidation)
 		WriteOutPrefs();				SpinCursor(3);
 #endif
-	
+
 //	if ((thisMac.numScreens > 1) && (isUseSecondScreen))
 //		ReflectSecondMonitorEnvirons(false, true, true);
 	HandleDepthSwitching();

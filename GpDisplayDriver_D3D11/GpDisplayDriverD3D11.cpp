@@ -21,6 +21,14 @@
 
 static GpDisplayDriverSurfaceEffects gs_defaultEffects;
 
+static const char *kPrefsIdentifier = "GpDisplayDriverD3D11";
+static uint32_t kPrefsVersion = 1;
+
+struct GpDisplayDriverD3D11_Prefs
+{
+	bool m_isFullScreen;
+};
+
 namespace GpBinarizedShaders
 {
 	extern const unsigned char *g_drawQuadV_D3D11[2];
@@ -1447,6 +1455,29 @@ void GpDisplayDriverD3D11::RequestResetVirtualResolution()
 const GpDisplayDriverProperties &GpDisplayDriverD3D11::GetProperties() const
 {
 	return m_properties;
+}
+
+IGpPrefsHandler *GpDisplayDriverD3D11::GetPrefsHandler() const
+{
+	const IGpPrefsHandler *cPrefsHandler = this;
+	return const_cast<IGpPrefsHandler*>(cPrefsHandler);
+}
+
+void GpDisplayDriverD3D11::ApplyPrefs(const void *identifier, size_t identifierSize, const void *contents, size_t contentsSize, uint32_t version)
+{
+	if (version == kPrefsVersion && identifierSize == strlen(kPrefsIdentifier) && !memcmp(identifier, kPrefsIdentifier, identifierSize))
+	{
+		const GpDisplayDriverD3D11_Prefs *prefs = static_cast<const GpDisplayDriverD3D11_Prefs *>(contents);
+		m_isFullScreenDesired = prefs->m_isFullScreen;
+	}
+}
+
+bool GpDisplayDriverD3D11::SavePrefs(void *context, IGpPrefsHandler::WritePrefsFunc_t writeFunc)
+{
+	GpDisplayDriverD3D11_Prefs prefs;
+	prefs.m_isFullScreen = m_isFullScreenDesired;
+
+	return writeFunc(context, kPrefsIdentifier, strlen(kPrefsIdentifier), &prefs, sizeof(prefs), kPrefsVersion);
 }
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)

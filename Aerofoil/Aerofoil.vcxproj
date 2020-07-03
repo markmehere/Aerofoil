@@ -177,6 +177,7 @@
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
     <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />
     <ClInclude Include="..\GpCommon\IGpLogDriver.h" />
+    <ClInclude Include="..\GpCommon\IGpPrefsHandler.h" />
     <ClInclude Include="GpAppEnvironment.h" />
     <ClInclude Include="GpAudioDriverFactory.h" />
     <ClInclude Include="GpDisplayDriverFactory.h" />

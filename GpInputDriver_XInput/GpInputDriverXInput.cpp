@@ -76,6 +76,11 @@ void GpInputDriverXInput::Shutdown()
 	free(this);
 }
 
+IGpPrefsHandler *GpInputDriverXInput::GetPrefsHandler() const
+{
+	return nullptr;
+}
+
 GpInputDriverXInput *GpInputDriverXInput::Create(const GpInputDriverProperties &props)
 {
 	void *storage = malloc(sizeof(GpInputDriverXInput));

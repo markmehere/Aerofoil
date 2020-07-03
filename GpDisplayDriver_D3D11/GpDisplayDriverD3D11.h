@@ -4,11 +4,14 @@
 #include "GpRingBuffer.h"
 
 #include "IGpDisplayDriver.h"
+#include "IGpPrefsHandler.h"
 #include "GpCoreDefs.h"
 #include "GpDisplayDriverProperties.h"
 #include "GpComPtr.h"
 
 #include "GpPixelFormat.h"
+
+#include "IGpPrefsHandler.h"
 
 struct GpWindowsGlobals;
 struct IGpCursor_Win32;
@@ -30,7 +33,7 @@ struct ID3D11Texture2D;
 struct ID3D11VertexShader;
 
 
-class GpDisplayDriverD3D11 : public IGpDisplayDriver
+class GpDisplayDriverD3D11 : public IGpDisplayDriver, public IGpPrefsHandler
 {
 public:
 	void Run() override;
@@ -54,6 +57,10 @@ public:
 	void RequestResetVirtualResolution() override;
 
 	const GpDisplayDriverProperties &GetProperties() const override;
+	IGpPrefsHandler *GetPrefsHandler() const override;
+
+	void ApplyPrefs(const void *identifier, size_t identifierSize, const void *contents, size_t contentsSize, uint32_t version) override;
+	bool SavePrefs(void *context, IGpPrefsHandler::WritePrefsFunc_t writeFunc) override;
 
 	static GpDisplayDriverD3D11 *Create(const GpDisplayDriverProperties &properties);
 

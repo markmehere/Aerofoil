@@ -10,6 +10,11 @@ void GpAudioDriverXAudio2::Shutdown()
 	delete this;
 }
 
+IGpPrefsHandler *GpAudioDriverXAudio2::GetPrefsHandler() const
+{
+	return nullptr;
+}
+
 const GpAudioDriverProperties &GpAudioDriverXAudio2::GetProperties() const
 {
 	return m_properties;

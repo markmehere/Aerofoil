@@ -96,7 +96,6 @@ typedef struct
 	long		wasGPFlipMap;
 	long		wasGPFaceLeftMap, wasGPFaceRightMap;
 	short		wasVolume;
-	short		prefVersion;
 	short		wasMaxFiles;
 	short		wasEditH, wasEditV;
 	short		wasMapH, wasMapV;
@@ -175,8 +174,10 @@ Boolean CheckFileError (short, const PLPasStr &);				// --- File Error.c
 
 THandle<void> LoadHouseResource(const PortabilityLayer::ResTypeID &resTypeID, int16_t resID);	// --- HouseIO.c
 
-Boolean SavePrefs (prefsInfo *, short);					// --- Prefs.c
-Boolean LoadPrefs (prefsInfo *, short);
+Boolean SavePrefs (prefsInfo *, THandle<void> *modulePrefs, short);					// --- Prefs.c
+Boolean LoadPrefs (prefsInfo *, THandle<void> *modulePrefs, short);
+Boolean SaveModulePrefs (THandle<void> currentModulePrefs, THandle<void> *outModulePrefs);
+Boolean ApplyModulePrefs (THandle<void> *modulePrefs);
 
 void PasStringCopy (StringPtr, StringPtr);				// --- StringUtils.c
 short WhichStringFirst (StringPtr, StringPtr);

@@ -1,17 +1,18 @@
 #pragma once
 
-#include "HostKeyID.h"
+struct IGpInputDriver;
 
 namespace PortabilityLayer
 {
 	class HostInputDriver
 	{
 	public:
-
-		static HostInputDriver *GetInstance();
-		static void SetInstance(HostInputDriver *instance);
+		static size_t NumInstances();
+		static IGpInputDriver *GetInstance(size_t index);
+		static void SetInstances(IGpInputDriver *const* instances, size_t numInstances);
 
 	private:
-		static HostInputDriver *ms_instance;
+		static IGpInputDriver *const* ms_instances;
+		static size_t ms_numInstances;
 	};
 }

@@ -7,6 +7,7 @@
 #include "HostDisplayDriver.h"
 #include "HostLogDriver.h"
 #include "HostSystemServices.h"
+#include "HostInputDriver.h"
 #include "HostVOSEventQueue.h"
 #include "MenuManager.h"
 #include "WindowManager.h"
@@ -21,6 +22,7 @@ public:
 	void PL_Render(IGpDisplayDriver *displayDriver) override;
 	void PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance) override;
 	void PL_HostDisplayDriver_SetInstance(IGpDisplayDriver *instance) override;
+	void PL_HostInputDriver_SetInstances(IGpInputDriver *const* instances, size_t numInstances) override;
 	void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) override;
 	void PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance) override;
 	void PL_HostLogDriver_SetInstance(IGpLogDriver *instance) override;
@@ -70,6 +72,11 @@ void GpAppInterfaceImpl::PL_HostSystemServices_SetInstance(PortabilityLayer::Hos
 void GpAppInterfaceImpl::PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance)
 {
 	PortabilityLayer::HostAudioDriver::SetInstance(instance);
+}
+
+void GpAppInterfaceImpl::PL_HostInputDriver_SetInstances(IGpInputDriver *const* instances, size_t numInstances)
+{
+	PortabilityLayer::HostInputDriver::SetInstances(instances, numInstances);
 }
 
 void GpAppInterfaceImpl::PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance)

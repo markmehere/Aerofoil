@@ -142,6 +142,7 @@ void GpAppEnvironment::InitializeApplicationState()
 {
 	GpAppInterface_Get()->PL_HostDisplayDriver_SetInstance(m_displayDriver);
 	GpAppInterface_Get()->PL_HostAudioDriver_SetInstance(m_audioDriver);
+	GpAppInterface_Get()->PL_HostInputDriver_SetInstances(m_inputDrivers, m_numInputDrivers);
 	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
 
 	GpAppInterface_Get()->PL_HostFontHandler_SetInstance(m_fontHandler);

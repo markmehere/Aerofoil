@@ -14,6 +14,8 @@ public:
 	void SetMasterVolume(uint32_t vol, uint32_t maxVolume) override;
 	void Shutdown() override;
 
+	IGpPrefsHandler *GetPrefsHandler() const override;
+
 	const GpAudioDriverProperties &GetProperties() const;
 	IXAudio2 *GetXA2() const;
 	IXAudio2MasteringVoice *GetMasteringVoice() const;

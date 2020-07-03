@@ -5,6 +5,7 @@
 
 struct IGpDisplayDriverSurface;
 struct IGpCursor;
+struct IGpPrefsHandler;
 struct GpDisplayDriverProperties;
 
 struct GpDisplayDriverSurfaceEffects
@@ -45,6 +46,7 @@ public:
 	virtual void RequestResetVirtualResolution() = 0;
 
 	virtual const GpDisplayDriverProperties &GetProperties() const = 0;
+	virtual IGpPrefsHandler *GetPrefsHandler() const = 0;
 };
 
 inline GpDisplayDriverSurfaceEffects::GpDisplayDriverSurfaceEffects()

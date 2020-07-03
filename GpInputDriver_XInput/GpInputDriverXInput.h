@@ -13,6 +13,8 @@ public:
 	void ProcessInput() override;
 	void Shutdown() override;
 
+	IGpPrefsHandler *GetPrefsHandler() const override;
+
 	static GpInputDriverXInput *Create(const GpInputDriverProperties &props);
 
 private:

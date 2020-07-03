@@ -312,6 +312,7 @@
     <ClCompile Include="HostDisplayDriver.cpp" />
     <ClCompile Include="HostFileSystem.cpp" />
     <ClCompile Include="HostFontHandler.cpp" />
+    <ClCompile Include="HostInputDriver.cpp" />
     <ClCompile Include="HostLogDriver.cpp" />
     <ClCompile Include="HostSuspendHook.cpp" />
     <ClCompile Include="HostSystemServices.cpp" />
