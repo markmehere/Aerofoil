@@ -248,6 +248,16 @@ namespace PortabilityLayer
 						HandleForwardDelete(keyEvent.m_repeatCount);
 						return WidgetHandleStates::kDigested;
 					}
+					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kHome)
+					{
+						HandleHome(isShiftHeld);
+						return WidgetHandleStates::kDigested;
+					}
+					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kEnd)
+					{
+						HandleEnd(isShiftHeld);
+						return WidgetHandleStates::kDigested;
+					}
 				}
 			}
 		}
@@ -545,6 +555,61 @@ namespace PortabilityLayer
 		m_caratTimer = 0;
 		Redraw();
 	}
+
+	void EditboxWidget::HandleHome(bool shiftHeld)
+	{
+		const size_t originalCaratChar = ResolveCaratChar();
+		size_t caratChar = originalCaratChar;
+
+		while (caratChar > 0)
+		{
+			uint8_t prevChar = m_chars[caratChar - 1];
+			if (prevChar == '\r')
+				break;
+			else
+				caratChar--;
+		}
+
+		if (originalCaratChar != caratChar)
+		{
+			HandleKeyMoveCarat(caratChar, shiftHeld);
+
+			m_caratScrollLocked = false;
+
+			AdjustScrollToCarat();
+
+			m_caratTimer = 0;
+			Redraw();
+		}
+	}
+
+	void EditboxWidget::HandleEnd(bool shiftHeld)
+	{
+		const size_t originalCaratChar = ResolveCaratChar();
+		size_t caratChar = originalCaratChar;
+
+		while (caratChar < m_length)
+		{
+			uint8_t nextChar = m_chars[caratChar];
+			if (nextChar == '\r')
+				break;
+			else
+				caratChar++;
+		}
+
+		if (originalCaratChar != caratChar)
+		{
+			HandleKeyMoveCarat(caratChar, shiftHeld);
+
+			m_caratScrollLocked = false;
+
+			AdjustScrollToCarat();
+
+			m_caratTimer = 0;
+			Redraw();
+		}
+	}
+
 
 	void EditboxWidget::HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
 	{

@@ -55,6 +55,9 @@ namespace PortabilityLayer
 		void HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
 		void HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
 
+		void HandleHome(bool shiftHeld);
+		void HandleEnd(bool shiftHeld);
+
 		size_t FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange) const;
 		void HandleKeyMoveCarat(size_t newPos, bool shiftHeld);
 
