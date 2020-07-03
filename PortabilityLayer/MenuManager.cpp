@@ -654,7 +654,7 @@ namespace PortabilityLayer
 
 			for (size_t i = 0; i < numItems; i++)
 			{
-				if (items[i].key == shortcutChar)
+				if (items[i].key == shortcutChar && items[i].enabled)
 				{
 					menuID = menu->menuID;
 					itemID = static_cast<uint16_t>(i);
