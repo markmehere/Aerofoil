@@ -668,7 +668,6 @@ Boolean ReadHouse (void)
 		numberRooms = 0;
 		noRoomAtAll = true;
 		YellowAlert(kYellowNoRooms, 0);
-		return(false);
 	}
 	
 	wasHouseVersion = (*thisHouse)->version;
