@@ -1911,8 +1911,8 @@ void ImageInvert(const PixMap *invertMask, PixMap *targetBitmap, const Rect &src
 	const int32_t firstDestRow = destRect.top - targetBitmapRect.top + topInset;
 	const int32_t firstDestCol = destRect.left - targetBitmapRect.left + leftInset;
 
-	const uint16_t numRows = destRect.Height();
-	const uint16_t numCols = destRect.Width();
+	const uint16_t numRows = constrainedDestRect.Height();
+	const uint16_t numCols = constrainedDestRect.Width();
 
 	const size_t invertPitch = invertMask->m_pitch;
 	const uint8_t *invertPixelDataFirstRow = static_cast<const uint8_t*>(invertMask->m_data) + firstSrcRow * invertPitch;
