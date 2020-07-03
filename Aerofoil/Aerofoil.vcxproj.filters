@@ -153,6 +153,9 @@
     <ClInclude Include="..\GpCommon\IGpPrefsHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\GpCommon\GpBuildVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ConvertedResources\Large128.ico">

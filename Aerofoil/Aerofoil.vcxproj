@@ -170,6 +170,7 @@
     <ClInclude Include="..\GpCommon\EGpInputDriverType.h" />
     <ClInclude Include="..\GpCommon\EGpStandardCursor.h" />
     <ClInclude Include="..\GpCommon\GpApplicationName.h" />
+    <ClInclude Include="..\GpCommon\GpBuildVersion.h" />
     <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h" />
     <ClInclude Include="..\GpCommon\GpFileCreationDisposition.h" />
     <ClInclude Include="..\GpCommon\GpInputDriverProperties.h" />
