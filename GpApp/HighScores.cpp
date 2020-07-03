@@ -432,6 +432,32 @@ void UpdateNameDialog (Dialog *theDialog)
 	SetDialogNumToStr(theDialog, kNameNCharsItem, (long)nChars);
 }
 
+//--------------------------------------------------------------  EventIsTyping
+// Checks if a keyboard event should make a typing sound
+
+static bool EventIsTyping(const GpKeyboardInputEvent &kbEvent)
+{
+	if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
+	{
+		// Duplicate backspace event
+		if (kbEvent.m_keyIDSubset == GpKeyIDSubsets::kASCII && kbEvent.m_key.m_asciiChar == '\b')
+			return false;
+
+		return true;
+	}
+
+	if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDown || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAuto)
+	{
+		if (kbEvent.m_keyIDSubset == GpKeyIDSubsets::kSpecial)
+		{
+			if (kbEvent.m_key.m_specialKey == GpKeySpecials::kBackspace || kbEvent.m_key.m_specialKey == GpKeySpecials::kDelete)
+				return true;
+		}
+	}
+
+	return false;
+}
+
 //--------------------------------------------------------------  NameFilter
 // Dialog filter for the "Enter High Score Name" dialog.
 
@@ -453,7 +479,7 @@ int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 	{
 		const GpKeyboardInputEvent &kbEvent = evt->m_vosEvent.m_event.m_keyboardInputEvent;
 
-		if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
+		if (EventIsTyping(kbEvent))
 		{
 			PlayPrioritySound(kTypingSound, kTypingPriority);
 			keyStroke = true;
@@ -568,7 +594,7 @@ int16_t BannerFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 	{
 		const GpKeyboardInputEvent &kbEvent = evt->m_vosEvent.m_event.m_keyboardInputEvent;
 
-		if (kbEvent.m_eventType == GpKeyboardInputEventTypes::kDownChar || kbEvent.m_eventType == GpKeyboardInputEventTypes::kAutoChar)
+		if (EventIsTyping(kbEvent))
 		{
 			PlayPrioritySound(kTypingSound, kTypingPriority);
 			keyStroke = true;
