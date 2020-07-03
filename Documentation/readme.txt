@@ -26,7 +26,36 @@ LEGAL NOTICES
 -------------------------------------------------------------------------------
 Aerofoil is (c)2019-2020 Eric Lasota
 Based on Glider PRO (c)1994-2000 Casady & Greene, Inc., written by John Calhoun
-Distributed under the terms of the GNU General Public License version 2 (see license_gplv2.txt)
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+
+A copy of the license is included in the accompanying license_gplv2.txt file.
+
+
+ADDITIONAL CREDITS
+-------------------------------------------------------------------------------
+* Demo House and CD Demo House are by John Calhoun and Kim Money.
+* Davis Station, Metropolis and Titanic are by Jonathan Chin (alias Paul Finn) and John Calhoun.
+* Grand Prix, Leviathan, ImagineHouse PRO II and In The Mirror are by Jonathan Chin (alias Paul Finn).
+* Land of Illusion, Nemo's Market, Rainbow's End and SpacePods are by Ward Hartenstein.
+* Slumberland is by John Calhoun (first house and top of fourth house) Jonathan Chin (second house), Steve Sullivan (third house) and Ward Hartenstein (bottom of fourth house).
+* Teddy World is by Shawn Brenneman.
+* The Asylum Pro is by Steve Sullivan.
+* PICT resource 3975 (Ozma) is derived from an illustration by John R. Neill from [Ozma of Oz](https://www.gutenberg.org/files/33361/33361-h/33361-h.htm).
+* PICT resource 153 (About box) features a portion of [this Little Nemo comic](http://www.comicstriplibrary.org/display/116) by Winsor McCay.
 
 
 Aerofoil uses the following third-party software:
