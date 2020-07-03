@@ -780,7 +780,7 @@ namespace PortabilityLayer
 			const Rect midLinesRect = Rect::Create(globalSelStart.m_y + lineGap, m_rect.left, globalSelEnd.m_y, m_rect.right).Intersect(m_rect);
 			surface->FillRect(midLinesRect, focusColor);
 
-			Rect lastLineRect = Rect::Create(globalSelEnd.m_y, m_rect.left, globalSelEnd.m_y + lineGap, globalSelEnd.m_x);
+			Rect lastLineRect = Rect::Create(globalSelEnd.m_y, m_rect.left, globalSelEnd.m_y + lineGap, globalSelEnd.m_x).Intersect(m_rect);
 			if (endIsLineBreak || (m_isMultiLine == false && m_selEndChar == m_length))
 				lastLineRect.right = m_rect.right;
 
