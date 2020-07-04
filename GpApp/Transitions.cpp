@@ -9,9 +9,15 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "MainWindow.h"
+#include "MemoryManager.h"
 #include "QDPixMap.h"
 #include "PLQDraw.h"
 #include "RectUtils.h"
+#include "RandomNumberGenerator.h"
+
+#include <algorithm>
+
+extern Boolean quickerTransitions;
 
 
 //==============================================================  Functions
@@ -38,7 +44,10 @@ void PourScreenOn (Rect *theRect)
 		QSetRect(&columnRects[i], 0, 0, kChipWide, kChipHigh);
 		QOffsetRect(&columnRects[i], (i * kChipWide) + theRect->left, theRect->top);
 	}
-	
+
+	const int kUnitsPerBlock = 128;
+
+	int unitsCommitted = 0;
 	while (working)
 	{
 		do
@@ -68,47 +77,73 @@ void PourScreenOn (Rect *theRect)
 			if (colsComplete >= colWide)
 				working = false;
 		}
+
+		unitsCommitted++;
+
+		if (unitsCommitted == kUnitsPerBlock)
+		{
+			mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+			Delay(1, nullptr);
+
+			unitsCommitted = 0;
+		}
 	}
+
+	mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
 //--------------------------------------------------------------  WipeScreenOn
 
 void WipeScreenOn (short direction, Rect *theRect)
 {
-	#define		kWipeRectThick	4
+	if (quickerTransitions)
+	{
+		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
+			GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
+			theRect, theRect, srcCopy);
+
+		mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
+		return;
+	}
+
 	Rect		wipeRect;
 	short		hOffset, vOffset;
 	short		i, count;
+
+	const int kWipeTransitionTime = 10;
+
+	const int wipeRectThick = (theRect->Width() + kWipeTransitionTime - 1) / kWipeTransitionTime;
 	
 	wipeRect = *theRect;
 	switch (direction)
 	{
 		case kAbove:
-		wipeRect.bottom = wipeRect.top + kWipeRectThick;
+		wipeRect.bottom = wipeRect.top + wipeRectThick;
 		hOffset = 0;
-		vOffset = kWipeRectThick;
-		count = ((theRect->bottom - theRect->top) / kWipeRectThick) + 1;
+		vOffset = wipeRectThick;
+		count = ((theRect->bottom - theRect->top) / wipeRectThick) + 1;
 		break;
 		
 		case kToRight:
-		wipeRect.left = wipeRect.right - kWipeRectThick;
-		hOffset = -kWipeRectThick;
+		wipeRect.left = wipeRect.right - wipeRectThick;
+		hOffset = -wipeRectThick;
 		vOffset = 0;
-		count = workSrcRect.right / kWipeRectThick;
+		count = workSrcRect.right / wipeRectThick;
 		break;
 		
 		case kBelow:
-		wipeRect.top = wipeRect.bottom - kWipeRectThick;
+		wipeRect.top = wipeRect.bottom - wipeRectThick;
 		hOffset = 0;
-		vOffset = -kWipeRectThick;
-		count = ((theRect->bottom - theRect->top) / kWipeRectThick) + 1;
+		vOffset = -wipeRectThick;
+		count = ((theRect->bottom - theRect->top) / wipeRectThick) + 1;
 		break;
 		
 		case kToLeft:
-		wipeRect.right = wipeRect.left + kWipeRectThick;
-		hOffset = kWipeRectThick;
+		wipeRect.right = wipeRect.left + wipeRectThick;
+		hOffset = wipeRectThick;
 		vOffset = 0;
-		count = workSrcRect.right / kWipeRectThick;
+		count = workSrcRect.right / wipeRectThick;
 		break;
 	}
 	
@@ -128,19 +163,95 @@ void WipeScreenOn (short direction, Rect *theRect)
 			wipeRect.bottom = theRect->top;
 		else if (wipeRect.bottom > theRect->bottom)
 			wipeRect.bottom = theRect->bottom;
+
+		mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
+		Delay(1, nullptr);
 	}
 }
 
 //--------------------------------------------------------------  DumpScreenOn
 
-void DumpScreenOn (Rect *theRect)
+void DissolveScreenOn(Rect *theRect)
 {
 	DrawSurface *graf = mainWindow->GetDrawSurface();
 
-	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
+	const int kChunkHeight = 15;
+	const int kChunkWidth = 20;
+
+	const int rows = (theRect->Height() + kChunkHeight - 1) / kChunkHeight;
+	const int cols = (theRect->Width() + kChunkWidth - 1) / kChunkWidth;
+
+	const int numCells = rows * cols;
+
+	const int targetTransitionTime = 30;
+
+	Point *points = static_cast<Point*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(Point) * numCells));
+
+	int rectLeft = theRect->left;
+	int rectTop = theRect->top;
+
+	for (int row = 0; row < rows; row++)
+	{
+		for (int col = 0; col < cols; col++)
+			points[col + row * cols] = Point::Create(col * kChunkWidth + rectLeft, row * kChunkHeight + rectTop);
+	}
+
+	PortabilityLayer::RandomNumberGenerator *rng = PortabilityLayer::RandomNumberGenerator::GetInstance();
+
+	for (unsigned int shuffleIndex = 0; shuffleIndex < static_cast<unsigned int>(numCells - 1); shuffleIndex++)
+	{
+		unsigned int shuffleRange = static_cast<unsigned int>(numCells - 1) - shuffleIndex;
+		unsigned int shuffleTarget = (rng->GetNextAndAdvance() % shuffleRange) + shuffleIndex;
+
+		if (shuffleTarget != shuffleIndex)
+			std::swap(points[shuffleIndex], points[shuffleTarget]);
+	}
+
+	const int numCellsAtOnce = numCells / targetTransitionTime;
+
+	const BitMap *srcBitmap = *GetGWorldPixMap(workSrcMap);
+	BitMap *destBitmap = GetPortBitMapForCopyBits(graf);
+
+	for (unsigned int firstCell = 0; firstCell < static_cast<unsigned int>(numCells); firstCell += numCellsAtOnce)
+	{
+		unsigned int lastCell = firstCell + numCellsAtOnce;
+		if (lastCell > static_cast<unsigned int>(numCells))
+			lastCell = numCells;
+
+		for (unsigned int i = firstCell; i < lastCell; i++)
+		{
+			const Point &point = points[i];
+			const Rect copyRect = Rect::Create(point.v, point.h, point.v + kChunkHeight, point.h + kChunkWidth);
+
+			CopyBits(srcBitmap, destBitmap, &copyRect, &copyRect, srcCopy);
+		}
+
+		graf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
+		Delay(1, nullptr);
+	}
+
+	graf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+
+	PortabilityLayer::MemoryManager::GetInstance()->Release(points);
+}
+
+//--------------------------------------------------------------  DumpScreenOn
+
+void DumpScreenOn(Rect *theRect)
+{
+	if (quickerTransitions)
+	{
+		DrawSurface *graf = mainWindow->GetDrawSurface();
+
+		CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
 			GetPortBitMapForCopyBits(graf),
 			theRect, theRect, srcCopy);
 
-	graf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+		graf->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	}
+	else
+		DissolveScreenOn(theRect);
 }
 
