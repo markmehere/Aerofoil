@@ -83,19 +83,6 @@ void DrawOnSplash(DrawSurface *surface)
 		else
 			ColorText(surface, textPoint, houseLoadedStr, 28L, appFont);
 	}
-	
-	#if defined(powerc) || defined(__powerc)
-	TextSize(12);
-	TextFace(0);
-	TextFont(systemFont);
-	ForeColor(blackColor);
-	MoveTo(splashOriginH + 5, splashOriginV + 457);
-	DrawString("\pPowerPC Native!");
-	ForeColor(whiteColor);
-	MoveTo(splashOriginH + 4, splashOriginV + 456);
-	DrawString("\pPowerPC Native!");
-	ForeColor(blackColor);
-	#endif
 }
 
 //--------------------------------------------------------------  RedrawSplashScreen
