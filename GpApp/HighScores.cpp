@@ -82,13 +82,13 @@ void DoHighScores (void)
 //	else
 //		DissBits(&workSrcRect);
 
-	DumpScreenOn(&workSrcRect);
+	DumpScreenOn(&workSrcRect, false);
 
 	SpinCursor(3);
 
 	DrawHighScores(workSrcMap);
 
-	DumpScreenOn(&workSrcRect);
+	DumpScreenOn(&workSrcRect, false);
 
 	SpinCursor(3);
 //	if (quickerTransitions)

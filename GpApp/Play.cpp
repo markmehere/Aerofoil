@@ -168,16 +168,16 @@ void NewGame (short mode)
 	if (mode == kNewGameMode)
 	{
 		BringUpBanner();
-		DumpScreenOn(&justRoomsRect);
+		DumpScreenOn(&justRoomsRect, false);
 	}
 	else if (mode == kResumeGameMode)
 	{
 		DisplayStarsRemaining();
-		DumpScreenOn(&justRoomsRect);
+		DumpScreenOn(&justRoomsRect, false);
 	}
 	else
 	{
-		DumpScreenOn(&justRoomsRect);
+		DumpScreenOn(&justRoomsRect, false);
 	}
 	
 	InitGarbageRects();
@@ -381,7 +381,7 @@ void HandleGameResolutionChange(void)
 	ResetLocale(true);
 	InitScoreboardMap();
 	RefreshScoreboard(wasScoreboardTitleMode);
-	DumpScreenOn(&justRoomsRect);
+	DumpScreenOn(&justRoomsRect, true);
 }
 
 //--------------------------------------------------------------  PlayGame

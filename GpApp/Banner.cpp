@@ -166,7 +166,7 @@ void BringUpBanner (void)
 	DrawBanner(&topLeft);
 	DrawBannerMessage(topLeft);
 
-	DumpScreenOn(&justRoomsRect);
+	DumpScreenOn(&justRoomsRect, false);
 
 //	if (quickerTransitions)
 //		DissBitsChunky(&justRoomsRect);		// was workSrcRect

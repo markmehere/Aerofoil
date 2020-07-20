@@ -122,28 +122,28 @@ void WipeScreenOn (short direction, Rect *theRect)
 		wipeRect.bottom = wipeRect.top + wipeRectThick;
 		hOffset = 0;
 		vOffset = wipeRectThick;
-		count = ((theRect->bottom - theRect->top) / wipeRectThick) + 1;
+		count = (theRect->bottom - theRect->top + wipeRectThick - 1) / wipeRectThick;
 		break;
 		
 		case kToRight:
 		wipeRect.left = wipeRect.right - wipeRectThick;
 		hOffset = -wipeRectThick;
 		vOffset = 0;
-		count = workSrcRect.right / wipeRectThick;
+		count = (workSrcRect.right + wipeRectThick - 1) / wipeRectThick;
 		break;
 		
 		case kBelow:
 		wipeRect.top = wipeRect.bottom - wipeRectThick;
 		hOffset = 0;
 		vOffset = -wipeRectThick;
-		count = ((theRect->bottom - theRect->top) / wipeRectThick) + 1;
+		count = (theRect->bottom - theRect->top + wipeRectThick - 1) / wipeRectThick;
 		break;
 		
 		case kToLeft:
 		wipeRect.right = wipeRect.left + wipeRectThick;
 		hOffset = wipeRectThick;
 		vOffset = 0;
-		count = workSrcRect.right / wipeRectThick;
+		count = (workSrcRect.right + wipeRectThick - 1) / wipeRectThick;
 		break;
 	}
 	
@@ -170,7 +170,7 @@ void WipeScreenOn (short direction, Rect *theRect)
 	}
 }
 
-//--------------------------------------------------------------  DumpScreenOn
+//--------------------------------------------------------------  DissolveScreenOn
 
 void DissolveScreenOn(Rect *theRect)
 {
@@ -239,9 +239,9 @@ void DissolveScreenOn(Rect *theRect)
 
 //--------------------------------------------------------------  DumpScreenOn
 
-void DumpScreenOn(Rect *theRect)
+void DumpScreenOn(Rect *theRect, Boolean fast)
 {
-	if (quickerTransitions)
+	if (quickerTransitions || fast)
 	{
 		DrawSurface *graf = mainWindow->GetDrawSurface();
 
