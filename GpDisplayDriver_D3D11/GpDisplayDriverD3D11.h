@@ -58,6 +58,8 @@ public:
 	void RequestToggleFullScreen(uint32_t timestamp) override;
 	void RequestResetVirtualResolution() override;
 
+	bool IsFullScreen() const override;
+
 	const GpDisplayDriverProperties &GetProperties() const override;
 	IGpPrefsHandler *GetPrefsHandler() const override;
 

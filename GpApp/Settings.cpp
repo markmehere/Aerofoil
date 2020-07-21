@@ -41,9 +41,10 @@
 #define kScaleResolutionItem	10
 #define kUseICCProfileItem		11
 #define kDoColorFadeItem		12
-#define kBorder2Item			13
-#define kBorder3Item			14
-#define kDispDefault			15
+#define kFullScreenItem			13
+#define kBorder2Item			14
+#define kBorder3Item			15
+#define kDispDefault			16
 
 // Sound dialog
 #define kSofterItem				4
@@ -106,7 +107,7 @@ Str15		tempLeftStr, tempRightStr, tempBattStr, tempBandStr;
 long		tempLeftMap, tempRightMap, tempBattMap, tempBandMap;
 short		whichCtrl, wasDepthPref;
 Boolean		wasFade, wasIdle, wasPlay, wasTransit, wasZooms, wasBackground;
-Boolean		wasEscPauseKey, wasDemos, wasAutoScale, wasUseICCProfile, nextRestartChange, wasErrorCheck, needResolutionReset;
+Boolean		wasEscPauseKey, wasDemos, wasAutoScale, wasUseICCProfile, nextRestartChange, wasErrorCheck, wasFullscreenPref, needResolutionReset;
 Boolean		wasPrettyMap, wasBitchDialogs;
 
 extern	short		numNeighbors, isDepthPref, maxFiles, willMaxFiles;
@@ -917,6 +918,9 @@ void DisplayUpdate (Dialog *theDialog)
 	SetDialogItemValue(theDialog, k32BitColorItem, wasDepthPref == 32);
 	SetDialogItemValue(theDialog, kScaleResolutionItem, (short)isAutoScale);
 	SetDialogItemValue(theDialog, kUseICCProfileItem, (short)isUseICCProfile);
+
+	wasFullscreenPref = PortabilityLayer::HostDisplayDriver::GetInstance()->IsFullScreen();
+	SetDialogItemValue(theDialog, kFullScreenItem, wasFullscreenPref);
 	
 	FrameDisplayIcon(theDialog, StdColors::Red());
 	FrameDialogItemC(theDialog, kBorder1Item, kRedOrangeColor8);
@@ -1088,6 +1092,11 @@ void DoDisplayPrefs (void)
 			case kUseICCProfileItem:
 			wasUseICCProfile = !wasUseICCProfile;
 			SetDialogItemValue(prefDlg, kUseICCProfileItem, (short)wasUseICCProfile);
+			break;
+
+			case kFullScreenItem:
+			wasFullscreenPref = !wasFullscreenPref;
+			SetDialogItemValue(prefDlg, kFullScreenItem, (short)wasFullscreenPref);
 			break;
 			
 			case kDispDefault:
@@ -1332,6 +1341,14 @@ void DoSettingsMain (void)
 	{
 		BitchAboutChanges();
 		nextRestartChange = false;
+	}
+
+	IGpDisplayDriver *displayDriver = PortabilityLayer::HostDisplayDriver::GetInstance();
+
+	if (displayDriver->IsFullScreen() != (wasFullscreenPref != 0))
+	{
+		displayDriver->RequestToggleFullScreen(0);
+		needResolutionReset = false;
 	}
 
 	if (needResolutionReset)

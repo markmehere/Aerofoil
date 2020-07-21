@@ -10,6 +10,8 @@
 #include "PLKeyEncoding.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "HostDisplayDriver.h"
+#include "IGpDisplayDriver.h"
 #include "IOStream.h"
 #include "House.h"
 #include "WindowManager.h"
@@ -214,6 +216,10 @@ void ReadInPrefs (void)
 		doBackground = false;
 		doPrettyMap = false;
 		doBitchDialogs = true;
+
+		IGpDisplayDriver *displayDriver = PortabilityLayer::HostDisplayDriver::GetInstance();
+		if (!displayDriver->IsFullScreen())
+			displayDriver->RequestToggleFullScreen(0);
 
 		modulePrefs.Dispose();
 	}

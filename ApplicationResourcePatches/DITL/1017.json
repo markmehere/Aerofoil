@@ -74,7 +74,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Adjust resolution to fit window",
+			"name" : "Scale to fit window",
 			"itemType" : "CheckBox",
 			"pos" : [ 8, 105 ],
 			"size" : [ 256, 18 ],
@@ -93,6 +93,14 @@
 			"name" : "Beautiful opening color fade",
 			"itemType" : "CheckBox",
 			"pos" : [ 8, 152 ],
+			"size" : [ 256, 18 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "Full screen mode",
+			"itemType" : "CheckBox",
+			"pos" : [ 8, 172 ],
 			"size" : [ 256, 18 ],
 			"id" : 0,
 			"enabled" : true

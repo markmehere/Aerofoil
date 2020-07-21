@@ -47,6 +47,8 @@ public:
 	virtual void RequestToggleFullScreen(uint32_t timestamp) = 0;
 	virtual void RequestResetVirtualResolution() = 0;
 
+	virtual bool IsFullScreen() const = 0;
+
 	virtual const GpDisplayDriverProperties &GetProperties() const = 0;
 	virtual IGpPrefsHandler *GetPrefsHandler() const = 0;
 };

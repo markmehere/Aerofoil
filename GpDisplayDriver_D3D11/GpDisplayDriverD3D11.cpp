@@ -1458,7 +1458,7 @@ void GpDisplayDriverD3D11::SetUseICCProfile(bool useICCProfile)
 void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 {
 	// Alt-Enter gets re-sent after a full-screen toggle, so we ignore toggle requests until half a second has elapsed
-	if (timestamp > m_lastFullScreenToggleTimeStamp + 30)
+	if (timestamp == 0 || timestamp > m_lastFullScreenToggleTimeStamp + 30)
 	{
 		m_isFullScreenDesired = !m_isFullScreenDesired;
 		m_lastFullScreenToggleTimeStamp = timestamp;
@@ -1468,6 +1468,11 @@ void GpDisplayDriverD3D11::RequestToggleFullScreen(uint32_t timestamp)
 void GpDisplayDriverD3D11::RequestResetVirtualResolution()
 {
 	m_isResolutionResetDesired = true;
+}
+
+bool GpDisplayDriverD3D11::IsFullScreen() const
+{
+	return m_isFullScreenDesired;
 }
 
 const GpDisplayDriverProperties &GpDisplayDriverD3D11::GetProperties() const
