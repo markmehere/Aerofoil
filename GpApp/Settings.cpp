@@ -918,8 +918,6 @@ void DisplayUpdate (Dialog *theDialog)
 	SetDialogItemValue(theDialog, k32BitColorItem, wasDepthPref == 32);
 	SetDialogItemValue(theDialog, kScaleResolutionItem, (short)isAutoScale);
 	SetDialogItemValue(theDialog, kUseICCProfileItem, (short)isUseICCProfile);
-
-	wasFullscreenPref = PortabilityLayer::HostDisplayDriver::GetInstance()->IsFullScreen();
 	SetDialogItemValue(theDialog, kFullScreenItem, wasFullscreenPref);
 	
 	FrameDisplayIcon(theDialog, StdColors::Red());
@@ -1285,6 +1283,8 @@ void DoSettingsMain (void)
 	
 	leaving = false;
 	nextRestartChange = false;
+
+	wasFullscreenPref = PortabilityLayer::HostDisplayDriver::GetInstance()->IsFullScreen();
 
 	Window* exclWindow = prefDlg->GetWindow();
 
