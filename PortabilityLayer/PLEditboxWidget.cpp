@@ -6,7 +6,7 @@
 #include "MacRomanConversion.h"
 #include "MemoryManager.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
 #include "PLStandardColors.h"

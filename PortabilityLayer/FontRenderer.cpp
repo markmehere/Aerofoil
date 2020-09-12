@@ -1,14 +1,14 @@
 #include "FontRenderer.h"
 
 #include "CoreDefs.h"
-#include "HostFont.h"
+#include "IGpFont.h"
 #include "HostFontHandler.h"
-#include "HostFontRenderedGlyph.h"
+#include "IGpFontRenderedGlyph.h"
 #include "MacRomanConversion.h"
 #include "PLPasStr.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
-#include "RenderedGlyphMetrics.h"
+#include "GpRenderedFontMetrics.h"
+#include "GpRenderedGlyphMetrics.h"
 
 #include <assert.h>
 #include <string.h>
@@ -20,15 +20,15 @@ namespace PortabilityLayer
 	class RenderedFontImpl final : public RenderedFont
 	{
 	public:
-		bool GetGlyph(unsigned int character, const RenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const override;
-		const RenderedFontMetrics &GetMetrics() const override;
+		bool GetGlyph(unsigned int character, const GpRenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const override;
+		const GpRenderedFontMetrics &GetMetrics() const override;
 		size_t MeasureString(const uint8_t *chars, size_t len) const override;
 		bool IsAntiAliased() const override;
 
 		void Destroy() override;
 
-		void SetCharData(unsigned int charID, const void *data, size_t dataOffset, const RenderedGlyphMetrics &metrics);
-		void SetFontMetrics(const RenderedFontMetrics &metrics);
+		void SetCharData(unsigned int charID, const void *data, size_t dataOffset, const GpRenderedGlyphMetrics &metrics);
+		void SetFontMetrics(const GpRenderedFontMetrics &metrics);
 
 		static RenderedFontImpl *Create(size_t glyphDataSize, bool aa);
 
@@ -37,9 +37,9 @@ namespace PortabilityLayer
 		~RenderedFontImpl();
 
 		size_t m_dataOffsets[256];
-		RenderedGlyphMetrics m_glyphMetrics[256];
+		GpRenderedGlyphMetrics m_glyphMetrics[256];
 
-		RenderedFontMetrics m_fontMetrics;
+		GpRenderedFontMetrics m_fontMetrics;
 		bool m_isAntiAliased;
 
 		void *m_data;
@@ -48,7 +48,7 @@ namespace PortabilityLayer
 	class FontRendererImpl final : public FontRenderer
 	{
 	public:
-		RenderedFont *RenderFont(HostFont *font, int size, bool aa, FontHacks fontHacks) override;
+		RenderedFont *RenderFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) override;
 
 		static FontRendererImpl *GetInstance();
 
@@ -56,7 +56,7 @@ namespace PortabilityLayer
 		static FontRendererImpl ms_instance;
 	};
 
-	bool RenderedFontImpl::GetGlyph(unsigned int character, const RenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const
+	bool RenderedFontImpl::GetGlyph(unsigned int character, const GpRenderedGlyphMetrics *&outMetricsPtr, const void *&outData) const
 	{
 		const size_t dataOffset = m_dataOffsets[character];
 		if (!dataOffset)
@@ -68,7 +68,7 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	const RenderedFontMetrics &RenderedFontImpl::GetMetrics() const
+	const GpRenderedFontMetrics &RenderedFontImpl::GetMetrics() const
 	{
 		return m_fontMetrics;
 	}
@@ -79,7 +79,7 @@ namespace PortabilityLayer
 
 		for (size_t i = 0; i < len; i++)
 		{
-			const RenderedGlyphMetrics &metrics = m_glyphMetrics[chars[i]];
+			const GpRenderedGlyphMetrics &metrics = m_glyphMetrics[chars[i]];
 			measure += metrics.m_advanceX;
 		}
 
@@ -97,14 +97,14 @@ namespace PortabilityLayer
 		free(this);
 	}
 
-	void RenderedFontImpl::SetCharData(unsigned int charID, const void *data, size_t dataOffset, const RenderedGlyphMetrics &metrics)
+	void RenderedFontImpl::SetCharData(unsigned int charID, const void *data, size_t dataOffset, const GpRenderedGlyphMetrics &metrics)
 	{
 		m_dataOffsets[charID] = dataOffset;
 		m_glyphMetrics[charID] = metrics;
 		memcpy(static_cast<uint8_t*>(m_data) + dataOffset, data, metrics.m_glyphDataPitch * metrics.m_glyphHeight);
 	}
 
-	void RenderedFontImpl::SetFontMetrics(const RenderedFontMetrics &metrics)
+	void RenderedFontImpl::SetFontMetrics(const GpRenderedFontMetrics &metrics)
 	{
 		m_fontMetrics = metrics;
 	}
@@ -141,7 +141,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	RenderedFont *FontRendererImpl::RenderFont(HostFont *font, int size, bool aa, FontHacks fontHacks)
+	RenderedFont *FontRendererImpl::RenderFont(IGpFont *font, int size, bool aa, FontHacks fontHacks)
 	{
 		const unsigned int numCharacters = 256;
 
@@ -152,7 +152,7 @@ namespace PortabilityLayer
 		if (!font->GetLineSpacing(size, lineSpacing))
 			return nullptr;
 
-		HostFontRenderedGlyph *glyphs[numCharacters];
+		IGpFontRenderedGlyph *glyphs[numCharacters];
 
 		for (unsigned int i = 0; i < numCharacters; i++)
 			glyphs[i] = nullptr;
@@ -172,7 +172,7 @@ namespace PortabilityLayer
 		{
 			if (glyphs[i])
 			{
-				const RenderedGlyphMetrics &metrics = glyphs[i]->GetMetrics();
+				const GpRenderedGlyphMetrics &metrics = glyphs[i]->GetMetrics();
 				glyphDataSize += metrics.m_glyphDataPitch * metrics.m_glyphHeight;
 			}
 		}
@@ -187,9 +187,9 @@ namespace PortabilityLayer
 			{
 				if (glyphs[i])
 				{
-					HostFontRenderedGlyph *glyph = glyphs[i];
+					IGpFontRenderedGlyph *glyph = glyphs[i];
 					
-					RenderedGlyphMetrics metrics = glyph->GetMetrics();
+					GpRenderedGlyphMetrics metrics = glyph->GetMetrics();
 					const void *data = glyph->GetData();
 
 					if (fontHacks == FontHacks_Roboto && !aa)
@@ -219,7 +219,7 @@ namespace PortabilityLayer
 		}
 
 		// Compute metrics
-		RenderedFontMetrics fontMetrics;
+		GpRenderedFontMetrics fontMetrics;
 		fontMetrics.m_linegap = lineSpacing;
 		fontMetrics.m_ascent = 0;
 		fontMetrics.m_descent = 0;
@@ -227,7 +227,7 @@ namespace PortabilityLayer
 		bool measuredAnyGlyphs = false;
 		for (char capChar = 'A'; capChar <= 'Z'; capChar++)
 		{
-			const RenderedGlyphMetrics *glyphMetrics;
+			const GpRenderedGlyphMetrics *glyphMetrics;
 			const void *glyphData;
 			if (rfont->GetGlyph(static_cast<unsigned int>(capChar), glyphMetrics, glyphData) && glyphMetrics != nullptr)
 			{

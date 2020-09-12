@@ -26,7 +26,7 @@ public:
 	void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) override;
 	void PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance) override;
 	void PL_HostLogDriver_SetInstance(IGpLogDriver *instance) override;
-	void PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance) override;
+	void PL_HostFontHandler_SetInstance(IGpFontHandler *instance) override;
 	void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) override;
 	void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) override;
 	bool PL_AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY) override;
@@ -79,7 +79,7 @@ void GpAppInterfaceImpl::PL_HostInputDriver_SetInstances(IGpInputDriver *const* 
 	PortabilityLayer::HostInputDriver::SetInstances(instances, numInstances);
 }
 
-void GpAppInterfaceImpl::PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance)
+void GpAppInterfaceImpl::PL_HostFontHandler_SetInstance(IGpFontHandler *instance)
 {
 	PortabilityLayer::HostFontHandler::SetInstance(instance);
 }

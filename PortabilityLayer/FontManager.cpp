@@ -3,7 +3,7 @@
 #include "FontRenderer.h"
 
 #include "HostFileSystem.h"
-#include "HostFont.h"
+#include "IGpFont.h"
 #include "HostFontHandler.h"
 #include "GpIOStream.h"
 #include "RenderedFont.h"
@@ -24,7 +24,7 @@ namespace PortabilityLayer
 		FontFamily *GetSystemFont(int textSize, int variationFlags) const override;
 		FontFamily *GetApplicationFont(int textSize, int variationFlags) const override;
 
-		RenderedFont *GetRenderedFont(HostFont *font, int size, bool aa, FontHacks fontHacks) override;
+		RenderedFont *GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) override;
 		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
 
 		static FontManagerImpl *GetInstance();
@@ -35,7 +35,7 @@ namespace PortabilityLayer
 		struct CachedRenderedFont
 		{
 			RenderedFont *m_rfont;
-			const HostFont *m_font;
+			const IGpFont *m_font;
 			int m_size;
 			uint32_t m_lastUsage;
 			bool m_aa;
@@ -80,7 +80,7 @@ namespace PortabilityLayer
 		if (m_applicationFont)
 			m_applicationFont->Destroy();
 
-		HostFontHandler *hfh = HostFontHandler::GetInstance();
+		IGpFontHandler *hfh = HostFontHandler::GetInstance();
 
 		if (m_systemFont)
 		{
@@ -110,7 +110,7 @@ namespace PortabilityLayer
 		return m_applicationFont;
 	}
 
-	RenderedFont *FontManagerImpl::GetRenderedFont(HostFont *font, int size, bool aa, FontHacks fontHacks)
+	RenderedFont *FontManagerImpl::GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks)
 	{
 		CachedRenderedFont *newCacheSlot = &m_cachedRenderedFonts[0];
 
@@ -164,7 +164,7 @@ namespace PortabilityLayer
 	{
 		const int variation = fontFamily->GetVariationForFlags(flags);
 
-		PortabilityLayer::HostFont *hostFont = fontFamily->GetFontForVariation(variation);
+		IGpFont *hostFont = fontFamily->GetFontForVariation(variation);
 		if (!hostFont)
 			return nullptr;
 

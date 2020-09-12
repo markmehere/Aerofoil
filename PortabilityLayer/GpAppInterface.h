@@ -22,13 +22,13 @@
 struct IGpAudioDriver;
 struct IGpLogDriver;
 struct IGpInputDriver;
+struct IGpFontHandler;
 
 namespace PortabilityLayer
 {
 	class HostFileSystem;
 	class HostDisplayDriver;
 	class HostSystemServices;
-	class HostFontHandler;
 	class HostVOSEventQueue;
 }
 
@@ -46,7 +46,7 @@ public:
 	virtual void PL_HostLogDriver_SetInstance(IGpLogDriver *instance) = 0;
 	virtual void PL_HostInputDriver_SetInstances(IGpInputDriver *const* instances, size_t numInstances) = 0;
 	virtual void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) = 0;
-	virtual void PL_HostFontHandler_SetInstance(PortabilityLayer::HostFontHandler *instance) = 0;
+	virtual void PL_HostFontHandler_SetInstance(IGpFontHandler *instance) = 0;
 	virtual void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) = 0;
 
 	virtual void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) = 0;

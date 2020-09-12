@@ -1,8 +1,8 @@
 #include "TextPlacer.h"
 
 #include "PLPasStr.h"
-#include "RenderedFontMetrics.h"
-#include "RenderedGlyphMetrics.h"
+#include "GpRenderedFontMetrics.h"
+#include "GpRenderedGlyphMetrics.h"
 #include "RenderedFont.h"
 
 #include <assert.h>
@@ -63,7 +63,7 @@ namespace PortabilityLayer
 						if (character == '\r')
 							break;
 
-						const PortabilityLayer::RenderedGlyphMetrics *metrics = nullptr;
+						const GpRenderedGlyphMetrics *metrics = nullptr;
 						const void *glyphData = nullptr;
 						if (m_rfont->GetGlyph(m_chars[i], metrics, glyphData))
 							spanWidth += metrics->m_advanceX;
@@ -72,7 +72,7 @@ namespace PortabilityLayer
 					}
 					else
 					{
-						const PortabilityLayer::RenderedGlyphMetrics *metrics = nullptr;
+						const GpRenderedGlyphMetrics *metrics = nullptr;
 						const void *glyphData = nullptr;
 						if (!m_rfont->GetGlyph(m_chars[i], metrics, glyphData))
 						{
@@ -116,7 +116,7 @@ namespace PortabilityLayer
 			outCharacteristics.m_characterIndex = m_currentStartChar + m_emitOffset;
 			outCharacteristics.m_character = character;
 
-			const PortabilityLayer::RenderedGlyphMetrics *metrics;
+			const GpRenderedGlyphMetrics *metrics;
 			const void *data;
 			if (!m_rfont->GetGlyph(character, metrics, data))
 			{

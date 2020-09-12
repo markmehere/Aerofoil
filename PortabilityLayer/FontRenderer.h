@@ -2,15 +2,16 @@
 
 #include "FontHacks.h"
 
+struct IGpFont;
+
 namespace PortabilityLayer
 {
 	class RenderedFont;
-	class HostFont;
 
 	class FontRenderer
 	{
 	public:
-		virtual RenderedFont *RenderFont(HostFont *font, int size, bool aa, FontHacks fontHacks) = 0;
+		virtual RenderedFont *RenderFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) = 0;
 
 		static FontRenderer *GetInstance();
 	};

@@ -115,7 +115,7 @@ void GpAppEnvironment::SetInputDrivers(IGpInputDriver *const* inputDrivers, size
 	m_numInputDrivers = numDrivers;
 }
 
-void GpAppEnvironment::SetFontHandler(PortabilityLayer::HostFontHandler *fontHandler)
+void GpAppEnvironment::SetFontHandler(IGpFontHandler *fontHandler)
 {
 	m_fontHandler = fontHandler;
 }

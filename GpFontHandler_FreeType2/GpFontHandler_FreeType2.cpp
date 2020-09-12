@@ -3,9 +3,10 @@
 
 #include "CoreDefs.h"
 #include "GpIOStream.h"
-#include "HostFont.h"
-#include "HostFontRenderedGlyph.h"
-#include "RenderedGlyphMetrics.h"
+#include "IGpFont.h"
+#include "IGpFontRenderedGlyph.h"
+#include "GpRenderedGlyphMetrics.h"
+#include "IGpFontHandler.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -16,30 +17,30 @@
 #include <new>
 #include <assert.h>
 
-class GpFontRenderedGlyph_FreeType2 final : public PortabilityLayer::HostFontRenderedGlyph
+class GpFontRenderedGlyph_FreeType2 final : public IGpFontRenderedGlyph
 {
 public:
-	const PortabilityLayer::RenderedGlyphMetrics &GetMetrics() const override;
+	const GpRenderedGlyphMetrics &GetMetrics() const override;
 	const void *GetData() const override;
 	void Destroy() override;
 
-	static GpFontRenderedGlyph_FreeType2 *Create(size_t dataSize, const PortabilityLayer::RenderedGlyphMetrics &metrics);
+	static GpFontRenderedGlyph_FreeType2 *Create(size_t dataSize, const GpRenderedGlyphMetrics &metrics);
 
 	void *GetMutableData();
 
 private:
-	GpFontRenderedGlyph_FreeType2(void *data, const PortabilityLayer::RenderedGlyphMetrics &metrics);
+	GpFontRenderedGlyph_FreeType2(void *data, const GpRenderedGlyphMetrics &metrics);
 	~GpFontRenderedGlyph_FreeType2();
 
 	void *m_data;
-	PortabilityLayer::RenderedGlyphMetrics m_metrics;
+	GpRenderedGlyphMetrics m_metrics;
 };
 
-class GpFont_FreeType2 final : public PortabilityLayer::HostFont
+class GpFont_FreeType2 final : public IGpFont
 {
 public:
 	void Destroy() override;
-	GpFontRenderedGlyph_FreeType2 *Render(uint32_t unicodeCodePoint, unsigned int size, bool aa) override;
+	IGpFontRenderedGlyph *Render(uint32_t unicodeCodePoint, unsigned int size, bool aa) override;
 	bool GetLineSpacing(unsigned int size, int32_t &outSpacing) override;
 
 	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, GpIOStream *stream);
@@ -56,7 +57,7 @@ private:
 	unsigned int m_currentSize;
 };
 
-const PortabilityLayer::RenderedGlyphMetrics &GpFontRenderedGlyph_FreeType2::GetMetrics() const
+const GpRenderedGlyphMetrics &GpFontRenderedGlyph_FreeType2::GetMetrics() const
 {
 	return m_metrics;
 }
@@ -72,7 +73,7 @@ void GpFontRenderedGlyph_FreeType2::Destroy()
 	free(this);
 }
 
-GpFontRenderedGlyph_FreeType2 *GpFontRenderedGlyph_FreeType2::Create(size_t dataSize, const PortabilityLayer::RenderedGlyphMetrics &metrics)
+GpFontRenderedGlyph_FreeType2 *GpFontRenderedGlyph_FreeType2::Create(size_t dataSize, const GpRenderedGlyphMetrics &metrics)
 {
 	size_t alignedPrefixSize = (sizeof(GpFontRenderedGlyph_FreeType2) + GP_SYSTEM_MEMORY_ALIGNMENT - 1);
 	alignedPrefixSize -= alignedPrefixSize % GP_SYSTEM_MEMORY_ALIGNMENT;
@@ -90,7 +91,7 @@ void *GpFontRenderedGlyph_FreeType2::GetMutableData()
 }
 
 
-GpFontRenderedGlyph_FreeType2::GpFontRenderedGlyph_FreeType2(void *data, const PortabilityLayer::RenderedGlyphMetrics &metrics)
+GpFontRenderedGlyph_FreeType2::GpFontRenderedGlyph_FreeType2(void *data, const GpRenderedGlyphMetrics &metrics)
 	: m_metrics(metrics)
 	, m_data(data)
 {
@@ -106,7 +107,7 @@ void GpFont_FreeType2::Destroy()
 	free(this);
 }
 
-GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, bool aa)
+IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, bool aa)
 {
 	if (m_currentSize != size)
 	{
@@ -154,7 +155,7 @@ GpFontRenderedGlyph_FreeType2 *GpFont_FreeType2::Render(uint32_t unicodeCodePoin
 			return nullptr;	// This should never happen
 	}
 
-	PortabilityLayer::RenderedGlyphMetrics metrics;
+	GpRenderedGlyphMetrics metrics;
 	memset(&metrics, 0, sizeof(metrics));
 
 	metrics.m_bearingX = glyph->metrics.horiBearingX / 64;
@@ -303,7 +304,7 @@ GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
 	return fh;
 }
 
-PortabilityLayer::HostFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
+IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
 {
 	FT_StreamRec_ ftStream;
 	memset(&ftStream, 0, sizeof(ftStream));
@@ -424,7 +425,7 @@ bool GpFontHandler_FreeType2::Init()
 	return true;
 }
 
-extern "C" __declspec(dllexport) PortabilityLayer::HostFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties)
+extern "C" __declspec(dllexport) IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties)
 {
 	return GpFontHandler_FreeType2::Create();
 }

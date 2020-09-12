@@ -7,7 +7,7 @@
 #include "PLQDraw.h"
 #include "FontFamily.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "SimpleGraphic.h"
 

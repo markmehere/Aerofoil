@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HostFontHandler.h"
+#include "IGpFontHandler.h"
 
 #include <ft2build.h>
 #include FT_SYSTEM_H
@@ -13,10 +13,10 @@ namespace PortabilityLayer
 	class HostFont;
 }
 
-class GpFontHandler_FreeType2 final : public PortabilityLayer::HostFontHandler
+class GpFontHandler_FreeType2 final : public IGpFontHandler
 {
 public:
-	PortabilityLayer::HostFont *LoadFont(GpIOStream *stream) override;
+	IGpFont *LoadFont(GpIOStream *stream) override;
 	void Shutdown() override;
 
 	bool KeepStreamOpen() const override;

@@ -9,7 +9,6 @@
 namespace PortabilityLayer
 {
 	union HostSuspendCallArgument;
-	class HostFontHandler;
 	class HostVOSEventQueue;
 }
 
@@ -17,6 +16,7 @@ struct IGpDisplayDriver;
 struct IGpAudioDriver;
 struct IGpInputDriver;
 struct IGpFiber;
+struct IGpFontHandler;
 
 class GpAppEnvironment
 {
@@ -33,7 +33,7 @@ public:
 	void SetDisplayDriver(IGpDisplayDriver *displayDriver);
 	void SetAudioDriver(IGpAudioDriver *audioDriver);
 	void SetInputDrivers(IGpInputDriver *const* inputDrivers, size_t numDrivers);
-	void SetFontHandler(PortabilityLayer::HostFontHandler *fontHandler);
+	void SetFontHandler(IGpFontHandler *fontHandler);
 	void SetVOSEventQueue(GpVOSEventQueue *eventQueue);
 
 private:
@@ -59,7 +59,7 @@ private:
 	IGpDisplayDriver *m_displayDriver;
 	IGpAudioDriver *m_audioDriver;
 	IGpInputDriver *const* m_inputDrivers;
-	PortabilityLayer::HostFontHandler *m_fontHandler;
+	IGpFontHandler *m_fontHandler;
 	GpVOSEventQueue *m_vosEventQueue;
 	IGpFiber *m_applicationFiber;
 	IGpFiber *m_vosFiber;

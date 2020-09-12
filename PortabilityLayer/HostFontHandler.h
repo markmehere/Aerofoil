@@ -1,23 +1,17 @@
 #pragma once
 
 class GpIOStream;
+struct IGpFontHandler;
 
 namespace PortabilityLayer
 {
-	class HostFont;
-
 	class HostFontHandler
 	{
 	public:
-		virtual void Shutdown() = 0;
-
-		virtual HostFont *LoadFont(GpIOStream *stream) = 0;
-		virtual bool KeepStreamOpen() const = 0;
-
-		static void SetInstance(HostFontHandler *instance);
-		static HostFontHandler *GetInstance();
+		static void SetInstance(IGpFontHandler *instance);
+		static IGpFontHandler *GetInstance();
 
 	private:
-		static HostFontHandler *ms_instance;
+		static IGpFontHandler *ms_instance;
 	};
 }

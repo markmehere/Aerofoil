@@ -13,8 +13,8 @@
 #include "PLPasStr.h"
 #include "PLStandardColors.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
-#include "RenderedGlyphMetrics.h"
+#include "GpRenderedFontMetrics.h"
+#include "GpRenderedGlyphMetrics.h"
 #include "Rect2i.h"
 #include "ResourceManager.h"
 #include "ResTypeID.h"
@@ -240,7 +240,7 @@ static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, con
 {
 	assert(rect.IsValid());
 
-	const PortabilityLayer::RenderedGlyphMetrics *metrics;
+	const GpRenderedGlyphMetrics *metrics;
 	const void *data;
 	if (!rfont->GetGlyph(character, metrics, data))
 		return;

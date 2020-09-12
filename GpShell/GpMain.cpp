@@ -12,6 +12,7 @@
 #include "GpAppEnvironment.h"
 #include "IGpAudioDriver.h"
 #include "IGpDisplayDriver.h"
+#include "IGpFontHandler.h"
 #include "IGpInputDriver.h"
 
 #include <string.h>
@@ -105,7 +106,7 @@ int GpMain::Run()
 
 	IGpDisplayDriver *displayDriver = GpDisplayDriverFactory::CreateDisplayDriver(ddProps);
 	IGpAudioDriver *audioDriver = GpAudioDriverFactory::CreateAudioDriver(adProps);
-	PortabilityLayer::HostFontHandler *fontHandler = GpFontHandlerFactory::CreateFontHandler(fontProps);
+	IGpFontHandler *fontHandler = GpFontHandlerFactory::CreateFontHandler(fontProps);
 
 	appEnvironment->Init();
 

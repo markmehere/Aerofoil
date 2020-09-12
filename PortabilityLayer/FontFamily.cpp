@@ -1,8 +1,9 @@
 #include "FontFamily.h"
 #include "GpIOStream.h"
 #include "HostFileSystem.h"
+#include "IGpFontHandler.h"
 #include "HostFontHandler.h"
-#include "HostFont.h"
+#include "IGpFont.h"
 
 #include <stdlib.h>
 #include <new>
@@ -15,9 +16,9 @@ namespace PortabilityLayer
 		if (!sysFontStream)
 			return;
 
-		PortabilityLayer::HostFontHandler *fontHandler = PortabilityLayer::HostFontHandler::GetInstance();
+		IGpFontHandler *fontHandler = PortabilityLayer::HostFontHandler::GetInstance();
 
-		PortabilityLayer::HostFont *font = fontHandler->LoadFont(sysFontStream);
+		IGpFont *font = fontHandler->LoadFont(sysFontStream);
 
 		if (!fontHandler->KeepStreamOpen())
 			sysFontStream->Close();
@@ -49,7 +50,7 @@ namespace PortabilityLayer
 		return m_defaultVariation;
 	}
 
-	PortabilityLayer::HostFont *FontFamily::GetFontForVariation(int variation) const
+	IGpFont *FontFamily::GetFontForVariation(int variation) const
 	{
 		return m_fonts[variation];
 	}
@@ -88,7 +89,7 @@ namespace PortabilityLayer
 	{
 		for (unsigned int i = 0; i < kNumVariations; i++)
 		{
-			if (PortabilityLayer::HostFont *font = m_fonts[i])
+			if (IGpFont *font = m_fonts[i])
 				font->Destroy();
 		}
 	}

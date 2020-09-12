@@ -15,7 +15,7 @@
 #include "MainWindow.h"
 #include "RectUtils.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "Room.h"
 #include "Utilities.h"

@@ -3,7 +3,7 @@
 #include "FontFamily.h"
 #include "PLStandardColors.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 
 #include <algorithm>

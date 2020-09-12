@@ -2,15 +2,15 @@
 
 namespace PortabilityLayer
 {
-	void HostFontHandler::SetInstance(HostFontHandler *instance)
+	void HostFontHandler::SetInstance(IGpFontHandler *instance)
 	{
 		ms_instance = instance;
 	}
 
-	HostFontHandler *HostFontHandler::GetInstance()
+	IGpFontHandler *HostFontHandler::GetInstance()
 	{
 		return ms_instance;
 	}
 
-	HostFontHandler *HostFontHandler::ms_instance = nullptr;
+	IGpFontHandler *HostFontHandler::ms_instance = nullptr;
 }

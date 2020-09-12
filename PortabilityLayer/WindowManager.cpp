@@ -17,7 +17,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "Rect2i.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "Vec2i.h"
 #include "WindowDef.h"

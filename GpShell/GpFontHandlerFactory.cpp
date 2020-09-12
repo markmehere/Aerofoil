@@ -3,7 +3,7 @@
 
 #include <assert.h>
 
-PortabilityLayer::HostFontHandler *GpFontHandlerFactory::CreateFontHandler(const GpFontHandlerProperties &properties)
+IGpFontHandler *GpFontHandlerFactory::CreateFontHandler(const GpFontHandlerProperties &properties)
 {
 	assert(properties.m_type < EGpFontHandlerType_Count);
 

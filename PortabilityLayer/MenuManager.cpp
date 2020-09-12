@@ -3,7 +3,7 @@
 #include "FontFamily.h"
 #include "FontManager.h"
 #include "HostDisplayDriver.h"
-#include "HostFont.h"
+#include "IGpFont.h"
 #include "IGpDisplayDriver.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"

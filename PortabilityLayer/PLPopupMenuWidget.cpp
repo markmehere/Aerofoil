@@ -7,7 +7,7 @@
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "FontFamily.h"
 #include "Vec2i.h"

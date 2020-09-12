@@ -3,18 +3,18 @@
 #include "Vec2i.h"
 
 class PLPasStr;
+struct GpRenderedGlyphMetrics;
 
 namespace PortabilityLayer
 {
 	class RenderedFont;
-	struct RenderedGlyphMetrics;
 
 	struct GlyphPlacementCharacteristics
 	{
 		bool m_haveGlyph;
 		bool m_isParaStart;							// Character is the first character in the paragraph
 		bool m_isParaEnd;							// Character is the last character in the paragraph
-		const RenderedGlyphMetrics *m_glyphMetrics;	// Glyph metrics
+		const GpRenderedGlyphMetrics *m_glyphMetrics;	// Glyph metrics
 		const void *m_glyphData;					// Glyph data
 		Vec2i m_glyphStartPos;						// Glyph start position
 		Vec2i m_glyphEndPos;						// Glyph end position

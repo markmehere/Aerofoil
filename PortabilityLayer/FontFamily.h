@@ -4,11 +4,10 @@
 #include <stdint.h>
 
 class PLPasStr;
+struct IGpFont;
 
 namespace PortabilityLayer
 {
-	class HostFont;
-
 	enum FontFamilyFlags
 	{
 		FontFamilyFlag_None = 0,
@@ -27,15 +26,15 @@ namespace PortabilityLayer
 		void SetDefaultVariation(int defaultVariation);
 
 		int GetVariationForFlags(int variation) const;
-		PortabilityLayer::HostFont *GetFontForVariation(int variation) const;
-		PortabilityLayer::FontHacks GetHacksForVariation(int variation) const;
+		IGpFont *GetFontForVariation(int variation) const;
+		FontHacks GetHacksForVariation(int variation) const;
 
 		static FontFamily *Create();
 		void Destroy();
 
 	private:
-		PortabilityLayer::FontHacks m_hacks[kNumVariations];
-		PortabilityLayer::HostFont *m_fonts[kNumVariations];
+		FontHacks m_hacks[kNumVariations];
+		IGpFont *m_fonts[kNumVariations];
 		uint8_t m_defaultVariation;
 
 		FontFamily();

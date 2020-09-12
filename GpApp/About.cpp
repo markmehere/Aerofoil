@@ -27,7 +27,7 @@
 #include "GpBuildVersion.h"
 #include "HostSystemServices.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "ResourceManager.h"
 #include "ScanlineMask.h"

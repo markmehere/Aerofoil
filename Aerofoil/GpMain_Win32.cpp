@@ -28,7 +28,7 @@ GpWindowsGlobals g_gpWindowsGlobals;
 extern "C" __declspec(dllimport) IGpAudioDriver *GpDriver_CreateAudioDriver_XAudio2(const GpAudioDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpDisplayDriver *GpDriver_CreateDisplayDriver_D3D11(const GpDisplayDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpInputDriver *GpDriver_CreateInputDriver_XInput(const GpInputDriverProperties &properties);
-extern "C" __declspec(dllimport) PortabilityLayer::HostFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
+extern "C" __declspec(dllimport) IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
 
 static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
 {

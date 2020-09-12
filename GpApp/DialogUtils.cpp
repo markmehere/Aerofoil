@@ -19,7 +19,7 @@
 #include "ResourceManager.h"
 #include "ResolveCachingColor.h"
 #include "RenderedFont.h"
-#include "RenderedFontMetrics.h"
+#include "GpRenderedFontMetrics.h"
 
 #include <algorithm>
 
