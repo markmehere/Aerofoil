@@ -34,3 +34,4 @@ ReleasePackageInstaller/bin/*
 ReleasePackageInstaller/AerofoilPackageDefs.wxi
 ReleasePackageInstaller/AerofoilPackageVersion.wxi
 packages/*
+!SDL2-2.0.12/lib/x64/*
