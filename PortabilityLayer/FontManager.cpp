@@ -5,7 +5,7 @@
 #include "HostFileSystem.h"
 #include "HostFont.h"
 #include "HostFontHandler.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "RenderedFont.h"
 
 #include <string.h>

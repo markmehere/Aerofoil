@@ -2,10 +2,7 @@
 
 #include "IGpLogDriver.h"
 
-namespace PortabilityLayer
-{
-	class IOStream;
-}
+class GpIOStream;
 
 class GpLogDriver_Win32 : public IGpLogDriver
 {
@@ -22,7 +19,7 @@ public:
 private:
 	void InitInternal();
 
-	PortabilityLayer::IOStream *m_stream;
+	GpIOStream *m_stream;
 	bool m_isInitialized;
 
 	static GpLogDriver_Win32 ms_instance;

@@ -38,7 +38,7 @@ namespace PortabilityLayer
 			delete[] m_compiledTypeListBlob;
 	}
 
-	bool ResourceFile::Load(IOStream *stream)
+	bool ResourceFile::Load(GpIOStream *stream)
 	{
 		struct ResourceHeader
 		{
@@ -48,7 +48,7 @@ namespace PortabilityLayer
 			uint32_t m_resMapSize;
 		};
 
-		const UFilePos_t streamSize = stream->Size();
+		const GpUFilePos_t streamSize = stream->Size();
 		if (streamSize > UINT32_MAX)
 			return false;
 

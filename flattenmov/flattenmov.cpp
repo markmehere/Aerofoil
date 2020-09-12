@@ -18,7 +18,7 @@ uint8_t *ReadEntireFile(const char *path, uint32_t &szOut)
 
 	PortabilityLayer::CFileStream stream(f, true, false, true);
 
-	PortabilityLayer::UFilePos_t sz = stream.Size();
+	GpUFilePos_t sz = stream.Size();
 	uint8_t *buffer = new uint8_t[sz];
 	stream.Read(buffer, sz);
 

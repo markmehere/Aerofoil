@@ -1,5 +1,5 @@
 #include "QDPictHeader.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "SharedTypes.h"
 #include "CoreDefs.h"
 
@@ -13,7 +13,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool QDPictHeader::Load(IOStream *stream)
+	bool QDPictHeader::Load(GpIOStream *stream)
 	{
 		struct PictHeader
 		{

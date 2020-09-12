@@ -1,5 +1,5 @@
 #include "BinHex4.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 
 #include <string.h>
 #include <vector>
@@ -59,7 +59,7 @@ namespace
 
 namespace PortabilityLayer
 {
-	MacFileMem *BinHex4::LoadHQX(IOStream *stream)
+	MacFileMem *BinHex4::LoadHQX(GpIOStream *stream)
 	{
 		const uint8_t errCodeChar = 64;
 
@@ -112,10 +112,10 @@ namespace PortabilityLayer
 
 		if (stream->IsSeekable())
 		{
-			UFilePos_t filePos = stream->Tell();
+			GpUFilePos_t filePos = stream->Tell();
 			if (stream->SeekEnd(0))
 			{
-				UFilePos_t endPos = stream->Tell();
+				GpUFilePos_t endPos = stream->Tell();
 				if (!stream->SeekStart(filePos))
 					return nullptr;
 

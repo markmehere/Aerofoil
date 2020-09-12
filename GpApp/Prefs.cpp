@@ -14,7 +14,7 @@
 #include "IGpDisplayDriver.h"
 #include "IGpInputDriver.h"
 #include "IGpPrefsHandler.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "MemoryManager.h"
 #include "HostAudioDriver.h"
 #include "HostDisplayDriver.h"
@@ -59,7 +59,7 @@ Boolean CanUseFindFolder (void)
 Boolean WritePrefs (const prefsInfo *thePrefs, short versionNow, THandle<modulePrefsListEntry> modulePrefs)
 {
 	PLError_t		theErr;
-	PortabilityLayer::IOStream *fileStream;
+	GpIOStream *fileStream;
 	long		byteCount;
 	Str255		fileName;
 
@@ -188,8 +188,8 @@ static void DestroyModulePrefs(THandle<modulePrefsListEntry> *theModulePrefs)
 
 PLError_t ReadPrefs (prefsInfo *thePrefs, short versionNeed, Boolean *isOldVersion, THandle<modulePrefsListEntry> *theModulePrefs)
 {
-	PLError_t		theErr;
-	PortabilityLayer::IOStream		*fileStream;
+	PLError_t	theErr;
+	GpIOStream	*fileStream;
 	long		byteCount;
 	VFileSpec	theSpecs;
 	Str255		fileName;

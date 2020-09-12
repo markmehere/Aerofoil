@@ -1,5 +1,5 @@
 #include "WindowDef.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "CoreDefs.h"
 #include "PLPasStr.h"
 
@@ -7,7 +7,7 @@
 
 namespace PortabilityLayer
 {
-	bool WindowDef::Deserialize(IOStream *stream)
+	bool WindowDef::Deserialize(GpIOStream *stream)
 	{
 		struct WindowDefPart1
 		{

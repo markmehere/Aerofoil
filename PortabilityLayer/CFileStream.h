@@ -6,11 +6,11 @@
 #include <stdio.h>
 
 #include "CoreDefs.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 
 namespace PortabilityLayer
 {
-	class CFileStream final : public IOStream
+	class CFileStream final : public GpIOStream
 	{
 	public:
 		explicit CFileStream(FILE *f);
@@ -21,12 +21,12 @@ namespace PortabilityLayer
 		bool IsSeekable() const override;
 		bool IsReadOnly() const override;
 		bool IsWriteOnly() const override;
-		bool SeekStart(UFilePos_t loc) override;
-		bool SeekCurrent(FilePos_t loc) override;
-		bool SeekEnd(UFilePos_t loc) override;
-		bool Truncate(UFilePos_t loc) override;
-		UFilePos_t Size() const override;
-		UFilePos_t Tell() const override;
+		bool SeekStart(GpUFilePos_t loc) override;
+		bool SeekCurrent(GpFilePos_t loc) override;
+		bool SeekEnd(GpUFilePos_t loc) override;
+		bool Truncate(GpUFilePos_t loc) override;
+		GpUFilePos_t Size() const override;
+		GpUFilePos_t Tell() const override;
 		void Close() override;
 		void Flush() override;
 

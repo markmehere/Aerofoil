@@ -346,7 +346,7 @@ public:
 	Rect ConstrainRegion(const Rect &rect) const override;
 	void Start(PortabilityLayer::QDPictBlitSourceType sourceType, const PortabilityLayer::QDPictEmitScanlineParameters &params) override;
 	void BlitScanlineAndAdvance(const void *) override;
-	bool EmitQTContent(PortabilityLayer::IOStream *stream, uint32_t dataSize, bool isCompressed) override;
+	bool EmitQTContent(GpIOStream *stream, uint32_t dataSize, bool isCompressed) override;
 	bool AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, uint8_t *&buffer2, size_t buffer2Size) override;
 
 	void ReportError(int errorCode, int subCode) override
@@ -492,7 +492,7 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 	}
 }
 
-bool BMPDumperContext::EmitQTContent(PortabilityLayer::IOStream *stream, uint32_t dataSize, bool isCompressed)
+bool BMPDumperContext::EmitQTContent(GpIOStream *stream, uint32_t dataSize, bool isCompressed)
 {
 	// Only one known house ("Magic" seems to use uncompressed, which is partly documented here:
 	// https://github.com/gco/xee/blob/master/XeePhotoshopPICTLoader.m

@@ -3,15 +3,15 @@
 #include <stdint.h>
 #include "SharedTypes.h"
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
-
 	class QDPictHeader
 	{
 	public:
 		QDPictHeader();
-		bool Load(IOStream *stream);
+		bool Load(GpIOStream *stream);
 
 		int GetVersion() const;
 		const Rect &GetFrame() const;

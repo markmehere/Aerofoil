@@ -5,7 +5,7 @@
 #include "GPArchive.h"
 #include "HostFileSystem.h"
 #include "HostMemoryBuffer.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
 #include "MemReaderStream.h"
@@ -169,7 +169,7 @@ namespace PortabilityLayer
 
 	ResourceArchive *ResourceManagerImpl::LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const
 	{
-		IOStream *fStream = nullptr;
+		GpIOStream *fStream = nullptr;
 		if (FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Read, true, GpFileCreationDispositions::kOpenExisting, fStream) != PLErrors::kNone)
 			return nullptr;
 
@@ -193,7 +193,7 @@ namespace PortabilityLayer
 
 	PLError_t ResourceManagerImpl::CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename)
 	{
-		PortabilityLayer::IOStream *stream = nullptr;
+		GpIOStream *stream = nullptr;
 		PLError_t error = FileManager::GetInstance()->RawOpenFileResources(virtualDir, filename, EFilePermission_Write, true, GpFileCreationDispositions::kCreateOrOverwrite, stream);
 		if (error)
 			return error;
@@ -245,7 +245,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	ResourceArchive *ResourceArchive::Create(ZipFileProxy *zipFileProxy, IOStream *stream)
+	ResourceArchive *ResourceArchive::Create(ZipFileProxy *zipFileProxy, GpIOStream *stream)
 	{
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 
@@ -485,7 +485,7 @@ namespace PortabilityLayer
 		return THandle<void>(handle);
 	}
 
-	ResourceArchive::ResourceArchive(ZipFileProxy *zipFileProxy, IOStream *stream, ResourceArchiveRef *resourceHandles)
+	ResourceArchive::ResourceArchive(ZipFileProxy *zipFileProxy, GpIOStream *stream, ResourceArchiveRef *resourceHandles)
 		: m_zipFileProxy(zipFileProxy)
 		, m_stream(stream)
 		, m_resourceHandles(resourceHandles)

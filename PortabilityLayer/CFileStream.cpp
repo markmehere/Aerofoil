@@ -49,7 +49,7 @@ namespace PortabilityLayer
 		return m_writeOnly;
 	}
 
-	bool CFileStream::SeekStart(UFilePos_t loc)
+	bool CFileStream::SeekStart(GpUFilePos_t loc)
 	{
 		if (!m_file)
 			return false;
@@ -57,7 +57,7 @@ namespace PortabilityLayer
 		return fseek(m_file, static_cast<long>(loc), SEEK_SET) == 0;
 	}
 
-	bool CFileStream::SeekCurrent(FilePos_t loc)
+	bool CFileStream::SeekCurrent(GpFilePos_t loc)
 	{
 		if (!m_file)
 			return false;
@@ -65,7 +65,7 @@ namespace PortabilityLayer
 		return fseek(m_file, static_cast<long>(loc), SEEK_CUR) == 0;;
 	}
 
-	bool CFileStream::SeekEnd(UFilePos_t loc)
+	bool CFileStream::SeekEnd(GpUFilePos_t loc)
 	{
 		if (!m_file)
 			return false;
@@ -73,17 +73,17 @@ namespace PortabilityLayer
 		return fseek(m_file, static_cast<long>(loc), SEEK_END) == 0;
 	}
 
-	bool CFileStream::Truncate(UFilePos_t loc)
+	bool CFileStream::Truncate(GpUFilePos_t loc)
 	{
 		return false;
 	}
 
-	UFilePos_t CFileStream::Tell() const
+	GpUFilePos_t CFileStream::Tell() const
 	{
 		if (!m_file)
 			return 0;
 
-		return static_cast<UFilePos_t>(ftell(m_file));
+		return static_cast<GpUFilePos_t>(ftell(m_file));
 	}
 
 	void CFileStream::Close()
@@ -102,14 +102,14 @@ namespace PortabilityLayer
 	}
 
 
-	UFilePos_t CFileStream::Size() const
+	GpUFilePos_t CFileStream::Size() const
 	{
 		if (!m_file || !m_seekable)
 			return 0;
 
 		long oldPos = ftell(m_file);
 		fseek(m_file, 0, SEEK_END);
-		const UFilePos_t endPos = static_cast<UFilePos_t>(ftell(m_file));
+		const GpUFilePos_t endPos = static_cast<GpUFilePos_t>(ftell(m_file));
 		fseek(m_file, oldPos, SEEK_SET);
 
 		return endPos;

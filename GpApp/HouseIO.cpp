@@ -18,7 +18,7 @@
 #include "HostFileSystem.h"
 #include "HostSystemServices.h"
 #include "House.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "ObjectEdit.h"
 #include "ResourceManager.h"
 
@@ -38,7 +38,7 @@ AnimationPlayer		theMovie;
 Rect		movieRect;
 PortabilityLayer::ResourceArchive	*houseResFork;
 short		wasHouseVersion;
-PortabilityLayer::IOStream *houseStream;
+GpIOStream *houseStream;
 Boolean		houseOpen, fileDirty, gameDirty;
 Boolean		changeLockStateOfHouse, saveHouseLocked, houseIsReadOnly;
 Boolean		hasMovie, tvInRoom;

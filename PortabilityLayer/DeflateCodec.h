@@ -2,13 +2,13 @@
 
 #include <stdint.h>
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
-
 	class DeflateCodec
 	{
 	public:
-		static bool DecompressStream(IOStream *stream, size_t inSize, void *outBuffer, size_t outSize);
+		static bool DecompressStream(GpIOStream *stream, size_t inSize, void *outBuffer, size_t outSize);
 	};
 }

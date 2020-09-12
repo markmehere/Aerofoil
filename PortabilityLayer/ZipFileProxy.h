@@ -2,9 +2,10 @@
 
 #include "PLUnalignedPtr.h"
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
 	struct ZipCentralDirectoryFileHeader;
 
 	class ZipFileProxy
@@ -23,13 +24,13 @@ namespace PortabilityLayer
 		void GetFileName(size_t index, const char *&outName, size_t &outLength) const;
 
 
-		static ZipFileProxy *Create(IOStream *stream);
+		static ZipFileProxy *Create(GpIOStream *stream);
 
 	private:
-		ZipFileProxy(IOStream *stream, void *centralDirImage, UnalignedPtr<ZipCentralDirectoryFileHeader> *sortedFiles, size_t numFiles);
+		ZipFileProxy(GpIOStream *stream, void *centralDirImage, UnalignedPtr<ZipCentralDirectoryFileHeader> *sortedFiles, size_t numFiles);
 		~ZipFileProxy();
 
-		IOStream *m_stream;
+		GpIOStream *m_stream;
 		void *m_centralDirImage;
 		UnalignedPtr<ZipCentralDirectoryFileHeader> *m_sortedFiles;
 		size_t m_numFiles;

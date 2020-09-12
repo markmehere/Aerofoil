@@ -1,6 +1,6 @@
 #include "DeflateCodec.h"
 
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "MemoryManager.h"
 
 #include "zlib.h"
@@ -20,7 +20,7 @@ namespace
 
 namespace PortabilityLayer
 {
-	bool DeflateCodec::DecompressStream(IOStream *stream, size_t inSize, void *outBuffer, size_t outSize)
+	bool DeflateCodec::DecompressStream(GpIOStream *stream, size_t inSize, void *outBuffer, size_t outSize)
 	{
 		z_stream zstream;
 		zstream.zalloc = ZlibAllocShim;

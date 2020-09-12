@@ -5,7 +5,7 @@
 #include "QDPictHeader.h"
 #include "QDPictOpcodes.h"
 #include "QDPictEmitScanlineParameters.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "RGBAColor.h"
 #include "Vec2i.h"
 
@@ -42,7 +42,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool QDPictDecoder::DecodePict(IOStream *stream, QDPictEmitContext *emitContext)
+	bool QDPictDecoder::DecodePict(GpIOStream *stream, QDPictEmitContext *emitContext)
 	{
 		QDPictHeader header;
 		QDPictDecodeState decodeState;
@@ -288,7 +288,7 @@ namespace PortabilityLayer
 		}
 	}
 
-	int QDPictDecoder::ProcessRasterOp(IOStream *stream, int pictVersion, bool isPackedFlag, bool hasRegion, bool isDirect, const Rect &constraintRect, const Point &origin, QDPictEmitContext *context)
+	int QDPictDecoder::ProcessRasterOp(GpIOStream *stream, int pictVersion, bool isPackedFlag, bool hasRegion, bool isDirect, const Rect &constraintRect, const Point &origin, QDPictEmitContext *context)
 	{
 		uint16_t rowSizeBytes = 0;
 

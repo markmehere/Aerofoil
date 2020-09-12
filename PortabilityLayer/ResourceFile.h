@@ -4,9 +4,10 @@
 #include "ResTypeID.h"
 #include <stdint.h>
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
 	class MacFileMem;
 	struct MMHandleBlock;
 	struct ResourceCompiledRef;
@@ -16,7 +17,7 @@ namespace PortabilityLayer
 	class ResourceFile final
 	{
 	public:
-		bool Load(IOStream *stream);
+		bool Load(GpIOStream *stream);
 
 		void GetAllResourceTypeLists(ResourceCompiledTypeList *&outTypeLists, size_t &outCount) const;
 

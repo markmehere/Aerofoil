@@ -6,16 +6,17 @@
 #include FT_SYSTEM_H
 #include FT_FREETYPE_H
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
 	class HostFont;
 }
 
 class GpFontHandler_FreeType2 final : public PortabilityLayer::HostFontHandler
 {
 public:
-	PortabilityLayer::HostFont *LoadFont(PortabilityLayer::IOStream *stream) override;
+	PortabilityLayer::HostFont *LoadFont(GpIOStream *stream) override;
 	void Shutdown() override;
 
 	bool KeepStreamOpen() const override;

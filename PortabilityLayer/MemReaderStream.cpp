@@ -48,7 +48,7 @@ namespace PortabilityLayer
 		return false;
 	}
 
-	bool MemReaderStream::SeekStart(UFilePos_t loc)
+	bool MemReaderStream::SeekStart(GpUFilePos_t loc)
 	{
 		if (loc > m_size)
 			m_loc = m_size;
@@ -58,28 +58,28 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	bool MemReaderStream::SeekCurrent(FilePos_t loc)
+	bool MemReaderStream::SeekCurrent(GpFilePos_t loc)
 	{
 		if (loc < 0)
 		{
-			if (static_cast<FilePos_t>(m_loc) + loc < 0)
+			if (static_cast<GpFilePos_t>(m_loc) + loc < 0)
 				m_loc = 0;
 			else
-				m_loc = static_cast<size_t>(static_cast<FilePos_t>(m_loc) + loc);
+				m_loc = static_cast<size_t>(static_cast<GpFilePos_t>(m_loc) + loc);
 		}
 		else
 		{
 			const size_t available = m_size - m_loc;
-			if (static_cast<UFilePos_t>(loc) > available)
+			if (static_cast<GpUFilePos_t>(loc) > available)
 				m_loc = m_size;
 			else
-				m_loc = static_cast<size_t>(static_cast<FilePos_t>(m_loc) + loc);
+				m_loc = static_cast<size_t>(static_cast<GpFilePos_t>(m_loc) + loc);
 		}
 
 		return true;
 	}
 
-	bool MemReaderStream::SeekEnd(UFilePos_t loc)
+	bool MemReaderStream::SeekEnd(GpUFilePos_t loc)
 	{
 		if (m_size < loc)
 			m_loc = 0;
@@ -89,19 +89,19 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	bool MemReaderStream::Truncate(UFilePos_t loc)
+	bool MemReaderStream::Truncate(GpUFilePos_t loc)
 	{
 		return false;
 	}
 
-	UFilePos_t MemReaderStream::Size() const
+	GpUFilePos_t MemReaderStream::Size() const
 	{
 		return m_size;
 	}
 
-	UFilePos_t MemReaderStream::Tell() const
+	GpUFilePos_t MemReaderStream::Tell() const
 	{
-		return static_cast<UFilePos_t>(m_loc);
+		return static_cast<GpUFilePos_t>(m_loc);
 	}
 
 	void MemReaderStream::Close()

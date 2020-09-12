@@ -210,7 +210,7 @@ bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtual
 	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
-PortabilityLayer::IOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition)
+GpIOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
 	wchar_t winPath[MAX_PATH + 1];
 

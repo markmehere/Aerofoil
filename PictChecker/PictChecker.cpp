@@ -1018,7 +1018,7 @@ public:
 		m_outputIndexStart = firstRow * m_width + firstCol;
 	}
 
-	bool EmitQTContent(IOStream *stream, uint32_t dataSize, bool isCompressed) override
+	bool EmitQTContent(GpIOStream *stream, uint32_t dataSize, bool isCompressed) override
 	{
 		return false;
 	}

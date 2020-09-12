@@ -11,7 +11,7 @@
 #include "Externs.h"
 #include "FileManager.h"
 #include "House.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "InputManager.h"
 #include "MacFileInfo.h"
 #include "MemoryManager.h"
@@ -49,7 +49,7 @@ void SaveGame2 (void)
 	gamePtr				savedGame;
 	short				r, i, numRooms;
 	char				wasState;
-	PortabilityLayer::IOStream	*gameStream = nullptr;
+	GpIOStream	*gameStream = nullptr;
 
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
@@ -206,13 +206,13 @@ Boolean OpenSavedGame (void)
 	if (memcmp(props.m_fileType, "gliG", 4))
 		return false;
 
-	PortabilityLayer::IOStream *gameStream = nullptr;
+	GpIOStream *gameStream = nullptr;
 	PLError_t theErr = fm->OpenFileData(spec.m_dir, spec.m_name, PortabilityLayer::EFilePermission_Read, gameStream);
 
 	if (!CheckFileError(theErr, PSTR("Saved Game")))
 		return(false);
 
-	const PortabilityLayer::UFilePos_t fileSizeFP = gameStream->Size();
+	const GpUFilePos_t fileSizeFP = gameStream->Size();
 	if (fileSizeFP > SIZE_MAX)
 	{
 		gameStream->Close();

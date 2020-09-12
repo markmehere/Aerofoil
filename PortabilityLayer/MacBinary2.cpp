@@ -3,7 +3,7 @@
 #include "BytePack.h"
 #include "ByteUnpack.h"
 #include "DataTypes.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "MacFileMem.h"
 #include "XModemCRC.h"
 
@@ -40,7 +40,7 @@ namespace
 
 namespace PortabilityLayer
 {
-	void MacBinary2::WriteBin(const MacFileMem *file, IOStream *stream)
+	void MacBinary2::WriteBin(const MacFileMem *file, GpIOStream *stream)
 	{
 		const MacFileInfo &fileInfo = file->FileInfo();
 
@@ -102,7 +102,7 @@ namespace PortabilityLayer
 		stream->Write(padding, resourceForkPadding);
 	}
 
-	MacFileMem *MacBinary2::ReadBin(IOStream *stream)
+	MacFileMem *MacBinary2::ReadBin(GpIOStream *stream)
 	{
 		MacFileInfo fileInfo;
 

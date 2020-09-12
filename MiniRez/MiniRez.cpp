@@ -5,7 +5,7 @@
 
 #include "BytePack.h"
 #include "CFileStream.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 
 #include "MacBinary2.h"
 #include "MacFileMem.h"
@@ -142,7 +142,7 @@ int main(int argc, const char **argv)
 	{
 		printf("%i defs parsed...\n", defsParsed);
 		defsParsed++;
-		UFilePos_t defStartOffset = fs.Tell();
+		GpUFilePos_t defStartOffset = fs.Tell();
 
 		char nextChar = 0;
 		if (!FindNextNonWhitespace(fs, nextChar))

@@ -2,7 +2,7 @@
 #include "GpFontHandlerProperties.h"
 
 #include "CoreDefs.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "HostFont.h"
 #include "HostFontRenderedGlyph.h"
 #include "RenderedGlyphMetrics.h"
@@ -42,17 +42,17 @@ public:
 	GpFontRenderedGlyph_FreeType2 *Render(uint32_t unicodeCodePoint, unsigned int size, bool aa) override;
 	bool GetLineSpacing(unsigned int size, int32_t &outSpacing) override;
 
-	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream);
+	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, GpIOStream *stream);
 
 	bool FTLoad(const FT_Library &library);
 
 private:
-	explicit GpFont_FreeType2(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream);
+	explicit GpFont_FreeType2(const FT_StreamRec_ &streamRec, GpIOStream *stream);
 	~GpFont_FreeType2();
 
 	FT_StreamRec_ m_ftStream;
 	FT_Face m_face;
-	PortabilityLayer::IOStream *m_stream;
+	GpIOStream *m_stream;
 	unsigned int m_currentSize;
 };
 
@@ -247,7 +247,7 @@ bool GpFont_FreeType2::GetLineSpacing(unsigned int size, int32_t &outSpacing)
 }
 
 
-GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream)
+GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, GpIOStream *stream)
 {
 	void *storage = malloc(sizeof(GpFont_FreeType2));
 	if (!storage)
@@ -270,7 +270,7 @@ bool GpFont_FreeType2::FTLoad(const FT_Library &library)
 	return true;
 }
 
-GpFont_FreeType2::GpFont_FreeType2(const FT_StreamRec_ &streamRec, PortabilityLayer::IOStream *stream)
+GpFont_FreeType2::GpFont_FreeType2(const FT_StreamRec_ &streamRec, GpIOStream *stream)
 	: m_face(nullptr)
 	, m_ftStream(streamRec)
 	, m_stream(stream)
@@ -303,7 +303,7 @@ GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
 	return fh;
 }
 
-PortabilityLayer::HostFont *GpFontHandler_FreeType2::LoadFont(PortabilityLayer::IOStream *stream)
+PortabilityLayer::HostFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
 {
 	FT_StreamRec_ ftStream;
 	memset(&ftStream, 0, sizeof(ftStream));
@@ -372,11 +372,11 @@ void *GpFontHandler_FreeType2::FTReallocThunk(FT_Memory memory, long curSize, lo
 
 unsigned long GpFontHandler_FreeType2::FTStreamIo(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count)
 {
-	PortabilityLayer::IOStream *ioStream = static_cast<PortabilityLayer::IOStream*>(stream->descriptor.pointer);
+	GpIOStream *ioStream = static_cast<GpIOStream*>(stream->descriptor.pointer);
 
 	if (count == 0)
 	{
-		if (!ioStream->SeekStart(static_cast<PortabilityLayer::UFilePos_t>(offset)))
+		if (!ioStream->SeekStart(static_cast<GpUFilePos_t>(offset)))
 			return 1;
 
 		return 0;

@@ -1,5 +1,5 @@
 #include "FontFamily.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "HostFileSystem.h"
 #include "HostFontHandler.h"
 #include "HostFont.h"
@@ -11,7 +11,7 @@ namespace PortabilityLayer
 {
 	void FontFamily::AddFont(int flags, const char *path, FontHacks fontHacks)
 	{
-		PortabilityLayer::IOStream *sysFontStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, GpFileCreationDispositions::kOpenExisting);
+		GpIOStream *sysFontStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, GpFileCreationDispositions::kOpenExisting);
 		if (!sysFontStream)
 			return;
 

@@ -19,7 +19,7 @@
 #include "FontManager.h"
 #include "HostSystemServices.h"
 #include "House.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "MainWindow.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
@@ -28,11 +28,6 @@
 #include "ResolveCachingColor.h"
 #include "Utilities.h"
 #include "WindowManager.h"
-
-namespace PortabilityLayer
-{
-	class IOStream;
-}
 
 #define kHighScoresPictID		1994
 #define kHighScoresMaskID		1998
@@ -51,7 +46,7 @@ void GetHighScoreName (short);
 void UpdateBannerDialog (Dialog *);
 int16_t BannerFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void GetHighScoreBanner (void);
-Boolean OpenHighScoresFile (const VFileSpec &spec, PortabilityLayer::IOStream *&outStream);
+Boolean OpenHighScoresFile (const VFileSpec &spec, GpIOStream *&outStream);
 
 
 Str31		highBanner;
@@ -672,7 +667,7 @@ void GetHighScoreBanner (void)
 
 //--------------------------------------------------------------  OpenHighScoresFile
 
-Boolean OpenHighScoresFile (const VFileSpec &scoreSpec, PortabilityLayer::IOStream *&scoresStream)
+Boolean OpenHighScoresFile (const VFileSpec &scoreSpec, GpIOStream *&scoresStream)
 {
 	PLError_t		theErr;
 
@@ -704,7 +699,7 @@ Boolean WriteScoresToDisk (void)
 	PLError_t		theErr;
 	short		volRefNum;
 	char		wasState;
-	PortabilityLayer::IOStream	*scoresStream = nil;
+	GpIOStream	*scoresStream = nil;
 	
 	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
 	if (!OpenHighScoresFile(scoreSpec, scoresStream))
@@ -749,11 +744,11 @@ Boolean WriteScoresToDisk (void)
 Boolean ReadScoresFromDisk (void)
 {
 	scoresType	*theScores;
-	PortabilityLayer::UFilePos_t		byteCount;
+	GpUFilePos_t	byteCount;
 	PLError_t		theErr;
 	short		volRefNum;
 	char		wasState;
-	PortabilityLayer::IOStream *scoresStream = nil;
+	GpIOStream *scoresStream = nil;
 	
 	VFileSpec	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
 	if (!OpenHighScoresFile(scoreSpec, scoresStream))

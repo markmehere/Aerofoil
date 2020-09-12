@@ -16,6 +16,7 @@
 template<class T>
 class ArrayView;
 struct IGpCursor;
+class GpIOStream;
 struct GpVOSEvent;
 struct GpMouseInputEvent;
 struct TimeTaggedVOSEvent;
@@ -24,7 +25,6 @@ struct TimeTaggedVOSEvent;
 namespace PortabilityLayer
 {
 	struct MMHandleBlock;
-	class IOStream;
 	class Widget;
 	struct Vec2i;
 }

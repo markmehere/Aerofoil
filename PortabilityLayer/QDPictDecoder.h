@@ -4,10 +4,10 @@
 
 struct Rect;
 struct Point;
+class GpIOStream;
 
 namespace PortabilityLayer
 {
-	class IOStream;
 	class QDPictEmitContext;
 
 	class QDPictDecoder
@@ -15,13 +15,13 @@ namespace PortabilityLayer
 	public:
 		QDPictDecoder();
 
-		bool DecodePict(IOStream *stream, QDPictEmitContext *emitContext);
+		bool DecodePict(GpIOStream *stream, QDPictEmitContext *emitContext);
 
 	private:
-		int ProcessRasterOp(IOStream *stream, int pictVersion, bool isPackedFlag, bool hasRegion, bool isDirect, const Rect &drawArea, const Point &origin, QDPictEmitContext *context);
+		int ProcessRasterOp(GpIOStream *stream, int pictVersion, bool isPackedFlag, bool hasRegion, bool isDirect, const Rect &drawArea, const Point &origin, QDPictEmitContext *context);
 		static bool UnpackBits8(uint8_t *dest, size_t destSize, const uint8_t *src, size_t srcSize);
 		static bool UnpackBits16(uint8_t *dest, size_t destSize, const uint8_t *src, size_t srcSize);
 
-		IOStream *m_stream;
+		GpIOStream *m_stream;
 	};
 }

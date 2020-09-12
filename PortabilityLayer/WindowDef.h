@@ -4,11 +4,10 @@
 #include "PascalStr.h"
 
 class PLPasStr;
+class GpIOStream;
 
 namespace PortabilityLayer
 {
-	class IOStream;
-
 	namespace WindowStyleFlags
 	{
 		enum WindowStyleFlag
@@ -31,7 +30,7 @@ namespace PortabilityLayer
 		uint16_t m_positionSpec;
 		uint8_t m_title[256];
 
-		bool Deserialize(IOStream *stream);
+		bool Deserialize(GpIOStream *stream);
 
 		static WindowDef Create(const Rect &initialRect, uint16_t styleFlags, bool isVisible, uint32_t refConstant, uint16_t positionSpec, const PLPasStr &title);
 	};

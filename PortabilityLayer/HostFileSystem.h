@@ -5,9 +5,10 @@
 
 #include <stdint.h>
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
 	class HostDirectoryCursor;
 
 	class HostFileSystem
@@ -15,7 +16,7 @@ namespace PortabilityLayer
 	public:
 		virtual bool FileExists(VirtualDirectory_t virtualDirectory, const char *path) = 0;
 		virtual bool FileLocked(VirtualDirectory_t virtualDirectory, const char *path, bool *exists) = 0;
-		virtual IOStream *OpenFile(VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition) = 0;
+		virtual GpIOStream *OpenFile(VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition) = 0;
 		virtual bool DeleteFile(VirtualDirectory_t virtualDirectory, const char *path, bool &existed) = 0;
 		virtual HostDirectoryCursor *ScanDirectory(VirtualDirectory_t virtualDirectory) = 0;
 

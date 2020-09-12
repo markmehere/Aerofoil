@@ -2,7 +2,7 @@
 #include "GpFileSystem_Win32.h"
 
 #include "GpApplicationName.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 
 GpLogDriver_Win32::GpLogDriver_Win32()
 	: m_stream(nullptr)

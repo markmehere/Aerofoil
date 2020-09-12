@@ -78,33 +78,33 @@ bool GpFileStream_Win32::IsWriteOnly() const
 	return !m_readable;
 }
 
-bool GpFileStream_Win32::SeekStart(PortabilityLayer::UFilePos_t loc)
+bool GpFileStream_Win32::SeekStart(GpUFilePos_t loc)
 {
 	LARGE_INTEGER li;
 	li.QuadPart = static_cast<LONGLONG>(loc);
 	return SetFilePointerEx(m_handle, li, nullptr, FILE_BEGIN) != 0;
 }
 
-bool GpFileStream_Win32::SeekCurrent(PortabilityLayer::FilePos_t loc)
+bool GpFileStream_Win32::SeekCurrent(GpFilePos_t loc)
 {
 	LARGE_INTEGER li;
 	li.QuadPart = static_cast<LONGLONG>(loc);
 	return SetFilePointerEx(m_handle, li, nullptr, FILE_CURRENT) != 0;
 }
 
-bool GpFileStream_Win32::SeekEnd(PortabilityLayer::UFilePos_t loc)
+bool GpFileStream_Win32::SeekEnd(GpUFilePos_t loc)
 {
 	LARGE_INTEGER li;
 	li.QuadPart = -static_cast<LONGLONG>(loc);
 	return SetFilePointerEx(m_handle, li, nullptr, FILE_END) != 0;
 }
 
-bool GpFileStream_Win32::Truncate(PortabilityLayer::UFilePos_t loc)
+bool GpFileStream_Win32::Truncate(GpUFilePos_t loc)
 {
 	if (!m_writeable)
 		return false;
 
-	PortabilityLayer::UFilePos_t oldPos = Tell();
+	GpUFilePos_t oldPos = Tell();
 	if (!SeekStart(loc))
 		return false;
 
@@ -117,16 +117,16 @@ bool GpFileStream_Win32::Truncate(PortabilityLayer::UFilePos_t loc)
 	return true;
 }
 
-PortabilityLayer::UFilePos_t GpFileStream_Win32::Size() const
+GpUFilePos_t GpFileStream_Win32::Size() const
 {
 	LARGE_INTEGER fsize;
 	if (!GetFileSizeEx(m_handle, &fsize))
 		return 0;
 
-	return static_cast<PortabilityLayer::UFilePos_t>(fsize.QuadPart);
+	return static_cast<GpUFilePos_t>(fsize.QuadPart);
 }
 
-PortabilityLayer::UFilePos_t GpFileStream_Win32::Tell() const
+GpUFilePos_t GpFileStream_Win32::Tell() const
 {
 	LARGE_INTEGER zero;
 	zero.QuadPart = 0;
@@ -135,7 +135,7 @@ PortabilityLayer::UFilePos_t GpFileStream_Win32::Tell() const
 	if (!SetFilePointerEx(m_handle, zero, &fpos, FILE_CURRENT))
 		return 0;
 
-	return static_cast<PortabilityLayer::UFilePos_t>(fpos.QuadPart);
+	return static_cast<GpUFilePos_t>(fpos.QuadPart);
 }
 
 void GpFileStream_Win32::Close()

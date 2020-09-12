@@ -12,7 +12,7 @@
 #include "Environ.h"
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "House.h"
 #include "WindowManager.h"
 
@@ -35,7 +35,7 @@ extern Str15		leftName, rightName, batteryName, bandName;
 extern Str15		highName;
 //extern long		encryptedNumber;
 extern short		maxFiles, numNeighbors, willMaxFiles;
-extern PortabilityLayer::IOStream	*houseStream;
+extern GpIOStream	*houseStream;
 extern short		isEditH, isEditV, isMapH, isMapV;
 extern short		isToolsH, isToolsV, isCoordH, isCoordV;
 extern short		isLinkH, isLinkV, toolMode, mapLeftRoom, mapTopRoom;

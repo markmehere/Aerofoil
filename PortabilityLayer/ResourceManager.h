@@ -6,9 +6,10 @@
 
 class PLPasStr;
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
-	class IOStream;
 	struct MMHandleBlock;
 	struct ResourceCompiledRef;
 	class ResourceFile;
@@ -27,7 +28,7 @@ namespace PortabilityLayer
 	class ResourceArchive final
 	{
 	public:
-		static ResourceArchive *Create(ZipFileProxy *zipFileProxy, IOStream *stream);
+		static ResourceArchive *Create(ZipFileProxy *zipFileProxy, GpIOStream *stream);
 		void Destroy();
 
 		THandle<void> LoadResource(const ResTypeID &resTypeID, int id);
@@ -37,7 +38,7 @@ namespace PortabilityLayer
 		bool FindFirstResourceOfType(const ResTypeID &resTypeID, int16_t &outID) const;
 
 	private:
-		ResourceArchive(ZipFileProxy *zipFileProxy, IOStream *stream, ResourceArchiveRef *resourceHandles);
+		ResourceArchive(ZipFileProxy *zipFileProxy, GpIOStream *stream, ResourceArchiveRef *resourceHandles);
 		~ResourceArchive();
 
 		bool IndexResource(const ResTypeID &resTypeID, int id, size_t &outIndex, int &outValidationRule) const;
@@ -45,7 +46,7 @@ namespace PortabilityLayer
 		THandle<void> GetResource(const ResTypeID &resTypeID, int id, bool load);
 
 		ZipFileProxy *m_zipFileProxy;
-		IOStream *m_stream;
+		GpIOStream *m_stream;
 		ResourceArchiveRef *m_resourceHandles;
 	};
 

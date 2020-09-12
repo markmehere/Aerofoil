@@ -2,9 +2,9 @@
 
 #include "GpCoreDefs.h"
 #include "GpWindows.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 
-class GpFileStream_Win32 final : public PortabilityLayer::IOStream
+class GpFileStream_Win32 final : public GpIOStream
 {
 public:
 	explicit GpFileStream_Win32(HANDLE handle, bool readable, bool writeable, bool seekable);
@@ -14,12 +14,12 @@ public:
 	bool IsSeekable() const override;
 	bool IsReadOnly() const override;
 	bool IsWriteOnly() const override;
-	bool SeekStart(PortabilityLayer::UFilePos_t loc) override;
-	bool SeekCurrent(PortabilityLayer::FilePos_t loc) override;
-	bool SeekEnd(PortabilityLayer::UFilePos_t loc) override;
-	bool Truncate(PortabilityLayer::UFilePos_t loc) override;
-	PortabilityLayer::UFilePos_t Size() const override;
-	PortabilityLayer::UFilePos_t Tell() const override;
+	bool SeekStart(GpUFilePos_t loc) override;
+	bool SeekCurrent(GpFilePos_t loc) override;
+	bool SeekEnd(GpUFilePos_t loc) override;
+	bool Truncate(GpUFilePos_t loc) override;
+	GpUFilePos_t Size() const override;
+	GpUFilePos_t Tell() const override;
 	void Close() override;
 	void Flush() override;
 

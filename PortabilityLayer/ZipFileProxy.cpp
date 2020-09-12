@@ -1,7 +1,7 @@
 #include "ZipFileProxy.h"
 
 #include "BinarySearch.h"
-#include "IOStream.h"
+#include "GpIOStream.h"
 #include "MemoryManager.h"
 #include "ZipFile.h"
 
@@ -246,7 +246,7 @@ namespace PortabilityLayer
 		outName = GetZipItemName(itemPtr);
 	}
 
-	ZipFileProxy *ZipFileProxy::Create(IOStream *stream)
+	ZipFileProxy *ZipFileProxy::Create(GpIOStream *stream)
 	{
 		MemoryManager *mm = MemoryManager::GetInstance();
 
@@ -380,7 +380,7 @@ namespace PortabilityLayer
 		return new (storage) ZipFileProxy(stream, centralDirImage, centralDirFiles, numFiles);
 	}
 
-	ZipFileProxy::ZipFileProxy(IOStream *stream, void *centralDirImage, UnalignedPtr<ZipCentralDirectoryFileHeader> *sortedFiles, size_t numFiles)
+	ZipFileProxy::ZipFileProxy(GpIOStream *stream, void *centralDirImage, UnalignedPtr<ZipCentralDirectoryFileHeader> *sortedFiles, size_t numFiles)
 		: m_stream(stream)
 		, m_centralDirImage(centralDirImage)
 		, m_sortedFiles(sortedFiles)
