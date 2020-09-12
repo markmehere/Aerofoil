@@ -9,6 +9,7 @@
 #undef CreateMutex
 #undef DeleteFile
 #undef LoadCursor
+#undef CreateFile
 
 struct IGpFiber;
 struct IGpBWCursor_Win32;
