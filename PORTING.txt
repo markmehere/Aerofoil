@@ -1,22 +1,50 @@
 Some comments on porting the Aerofoil codebase to other platforms:
 
-The codebase is split up into some modular libraries, mostly for discipline.  They could be static-linked, it doesn't really matter.
+The codebase is split up into some modular libraries, mostly for discipline.
+They could be static-linked, it doesn't really matter.
 
 There are a few system-specific aspects:
 
-GpApp has a SoundSync_Win32.cpp file, which is used to synchronize sound priorities and interrupts.  This system is a bit cheesy and could work other ways.
+GpApp has a SoundSync_Win32.cpp file, which is used to synchronize sound
+priorities and interrupts.  This system is a bit cheesy and could work
+other ways.
 
-Basically, when PlayPrioritySound is called, we need to figure out which of the sound channels either has a sound already playing in it, or has a lower-priority sound, so SoundSync_ReadAll reads all of the priorities and returns them.  Once a channel is selected, anything currently playing in the channel is interrupted and the sound queue is flushed, guaranteeing that no other thread will modify that channel's priority.  Then, the main thread clears the priority (since the callback may have been aborted), inserts a new priority, and starts playing.  If a sound finishes, then the priority is simply cleared.
+Basically, when PlayPrioritySound is called, we need to figure out which
+of the sound channels either has a sound already playing in it, or has a
+lower-priority sound, so SoundSync_ReadAll reads all of the priorities and
+returns them.  Once a channel is selected, anything currently playing in
+the channel is interrupted and the sound queue is flushed, guaranteeing
+that no other thread will modify that channel's priority.  Then, the main
+thread clears the priority (since the callback may have been aborted),
+inserts a new priority, and starts playing.  If a sound finishes, then the
+priority is simply cleared.
 
-This could be done with a mutex instead, but x64 has appropriate memory semantics to just do it with atomic operations instead.
+This could be done with a mutex instead, but x64 has appropriate memory
+semantics to just do it with atomic operations instead.
 
 
-The audio driver is expected to use a buffer submission model.  When a channel finishes playing a sound, the audio thread should call NotifyBufferFinished on the callback object specified by SetAudioChannelContext.  If the sound is stopped, it should still call NotifyBufferFinished.  The "Stop" method is NOT a pause, it permanently aborts the playing sound.
+The audio driver is expected to use a buffer submission model.  When a
+channel finishes playing a sound, the audio thread should call
+NotifyBufferFinished on the callback object specified by
+SetAudioChannelContext.  If the sound is stopped, it should still call
+NotifyBufferFinished.  The "Stop" method is NOT a pause, it permanently
+aborts the playing sound.
 
 
-The display driver is a bit unusual in that it's responsible for calling the main game function.  This is because Glider PRO was written for a fixed 60Hz system and it produces a display frame every time that it's ticked, so the display driver is responsible for timing.
+The display driver is a bit unusual in that it's responsible for calling
+the main game function.  This is because Glider PRO was written for a
+fixed 60Hz system and it produces a display frame every time that it's
+ticked, so the display driver is responsible for timing.
 
-The display driver properties contain 2 callbacks: A render function and a tick function.  The render function will update and render surfaces and draw them.  The tick function will advance the game by 1 frame and will not call any rendering functions, except for creating draw surfaces.
+The display driver properties contain 2 callbacks: A render function and a
+tick function.  The render function will update and render surfaces and
+draw them.  The tick function will advance the game by 1 frame and will
+not call any rendering functions, except for creating draw surfaces.
 
 
-Aerofoil uses fibers on Windows.  Some platforms may not support true fibers because they implement security features that limit the ability of a thread stack to jump to a different memory region.  In those cases, you can use 2 threads and use wake-up events to alternate them instead, since Aerofoil doesn't do anything that requires that the switched-to fiber is executing on the same thread.
+Aerofoil uses fibers on Windows.  Some platforms may not support true
+fibers because they implement security features that limit the ability of
+a thread stack to jump to a different memory region.  In those cases, you
+can use 2 threads and use wake-up events to alternate them instead, since
+Aerofoil doesn't do anything that requires that the switched-to fiber is
+executing on the same thread.
