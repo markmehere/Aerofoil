@@ -72,6 +72,9 @@
       <Component Id="GpInputDriver_XInput.dll" Guid="*">
         <File Id="GpInputDriver_XInput.dll" Source="$(var.GpInputDriver_XInput.TargetPath)" KeyPath="yes" Checksum="yes"/>
       </Component>
+      <Component Id="GpFontHandler_FreeType2.dll" Guid="*">
+        <File Id="GpFontHandler_FreeType2.dll" Source="$(var.GpFontHandler_FreeType2.TargetPath)" KeyPath="yes" Checksum="yes"/>
+      </Component>
     </DirectoryRef>
 
     <DirectoryRef Id="AEROFOILPACKAGEDDIR">
@@ -138,6 +141,7 @@
       <ComponentRef Id="xaudio2_9redist.dll" />
       <ComponentRef Id="GpDisplayDriver_D3D11.dll" />
       <ComponentRef Id="GpInputDriver_XInput.dll" />
+      <ComponentRef Id="GpFontHandler_FreeType2.dll" />
       
       <ComponentRef Id="ApplicationResources" />
 

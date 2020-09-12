@@ -12,6 +12,7 @@ copy /Y x64\Release\GpAudioDriver_XAudio2.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\xaudio2_9redist.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\GpDisplayDriver_D3D11.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\GpInputDriver_XInput.dll ReleasePkg\Aerofoil
+copy /Y x64\Release\GpFontHandler_FreeType2.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\FreeType.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\GpApp.dll ReleasePkg\Aerofoil
 

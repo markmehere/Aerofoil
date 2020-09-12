@@ -1,4 +1,5 @@
 #include "GpFontHandler_FreeType2.h"
+#include "GpFontHandlerProperties.h"
 
 #include "CoreDefs.h"
 #include "IOStream.h"
@@ -14,7 +15,6 @@
 #include <stdlib.h>
 #include <new>
 #include <assert.h>
-
 
 class GpFontRenderedGlyph_FreeType2 final : public PortabilityLayer::HostFontRenderedGlyph
 {
@@ -422,4 +422,9 @@ bool GpFontHandler_FreeType2::Init()
 	FT_Add_Default_Modules(m_library);
 
 	return true;
+}
+
+extern "C" __declspec(dllexport) PortabilityLayer::HostFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties)
+{
+	return GpFontHandler_FreeType2::Create();
 }

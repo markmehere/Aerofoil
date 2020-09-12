@@ -1,19 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="GpVOSEventQueue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpAppEnvironment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpAudioDriverFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpColorCursor_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpDisplayDriverFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GpFiber_Win32.cpp">
@@ -28,25 +16,7 @@
     <ClCompile Include="GpFileSystem_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GpFontHandler_FreeType2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpFontHandlerFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpGlobalConfig.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpInputDriverFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpMain_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpMemoryBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GpMutex_Win32.cpp">
@@ -69,25 +39,13 @@
     <ClInclude Include="..\GpCommon\EGpStandardCursor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GpAppEnvironment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\GpCommon\GpApplicationName.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpAudioDriverFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpDisplayDriverFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpFiber_Win32.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpFiberStarter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GpCommon\GpFileCreationDisposition.h">
@@ -102,22 +60,7 @@
     <ClInclude Include="GpFontHandler_FreeType2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GpFontHandlerFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpGlobalConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpInputDriverFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\GpCommon\GpInputDriverProperties.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpMain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpMemoryBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpMutex_Win32.h">
@@ -127,9 +70,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpThreadEvent_Win32.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpVOSEventQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h">

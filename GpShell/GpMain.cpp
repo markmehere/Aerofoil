@@ -1,10 +1,11 @@
 #include "GpMain.h"
 #include "GpAudioDriverFactory.h"
 #include "GpAudioDriverProperties.h"
-#include "GpFontHandlerFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpDisplayDriverProperties.h"
 #include "GpDisplayDriverTickStatus.h"
+#include "GpFontHandlerFactory.h"
+#include "GpFontHandlerProperties.h"
 #include "GpInputDriverFactory.h"
 #include "GpInputDriverProperties.h"
 #include "GpGlobalConfig.h"
@@ -68,6 +69,11 @@ int GpMain::Run()
 	GpAudioDriverProperties adProps;
 	memset(&adProps, 0, sizeof(adProps));
 
+	GpFontHandlerProperties fontProps;
+	memset(&fontProps, 0, sizeof(fontProps));
+
+	fontProps.m_type = g_gpGlobalConfig.m_fontHandlerType;
+
 	// The sample rate used in all of Glider PRO's sound is 0x56ee8ba3
 	// This appears to be the "standard" Mac sample rate, probably rounded from 244800/11.
 	adProps.m_type = g_gpGlobalConfig.m_audioDriverType;
@@ -99,7 +105,7 @@ int GpMain::Run()
 
 	IGpDisplayDriver *displayDriver = GpDisplayDriverFactory::CreateDisplayDriver(ddProps);
 	IGpAudioDriver *audioDriver = GpAudioDriverFactory::CreateAudioDriver(adProps);
-	PortabilityLayer::HostFontHandler *fontHandler = GpFontHandlerFactory::Create();
+	PortabilityLayer::HostFontHandler *fontHandler = GpFontHandlerFactory::CreateFontHandler(fontProps);
 
 	appEnvironment->Init();
 

@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{0E383EF0-CEF7-4733-87C6-5AC9844AA1EF}</ProjectGuid>
-    <RootNamespace>Aerofoil</RootNamespace>
+    <ProjectGuid>{4B564030-8985-4975-91E1-E1B2C16AE2A1}</ProjectGuid>
+    <RootNamespace>GpFontHandlerFreeType2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -39,13 +39,13 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -59,51 +59,60 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
+    <Import Project="..\FreeTypePublic.props" />
+    <Import Project="..\FreeTypeImport.props" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
-    <Import Project="..\GpMainApp.props" />
-    <Import Project="GpShell.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
+    <Import Project="..\FreeTypePublic.props" />
+    <Import Project="..\FreeTypeImport.props" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
-    <Import Project="..\GpMainApp.props" />
-    <Import Project="..\Release.props" />
-    <Import Project="GpShell.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
+    <Import Project="..\FreeTypePublic.props" />
+    <Import Project="..\FreeTypeImport.props" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
-    <Import Project="..\GpMainApp.props" />
-    <Import Project="GpShell.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\PortabilityLayer.props" />
+    <Import Project="..\FreeTypePublic.props" />
+    <Import Project="..\FreeTypeImport.props" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
-    <Import Project="..\GpMainApp.props" />
-    <Import Project="..\Release.props" />
-    <Import Project="GpShell.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
@@ -125,82 +134,13 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GpColorCursor_Win32.cpp" />
-    <ClCompile Include="GpFiber_Win32.cpp" />
-    <ClCompile Include="GpFileStream_Win32.cpp" />
-    <ClCompile Include="GpFileSystem_Win32.cpp" />
-    <ClCompile Include="GpLogDriver_Win32.cpp" />
-    <ClCompile Include="GpMain_Win32.cpp" />
-    <ClCompile Include="GpMutex_Win32.cpp" />
-    <ClCompile Include="GpSystemServices_Win32.cpp" />
-    <ClCompile Include="GpFiberStarter_Win32.cpp" />
-    <ClCompile Include="GpThreadEvent_Win32.cpp" />
+    <ClCompile Include="GpFontHandler_FreeType2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\GpCommon\EGpInputDriverType.h" />
-    <ClInclude Include="..\GpCommon\EGpStandardCursor.h" />
-    <ClInclude Include="..\GpCommon\GpApplicationName.h" />
-    <ClInclude Include="..\GpCommon\GpBuildVersion.h" />
-    <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h" />
-    <ClInclude Include="..\GpCommon\GpFileCreationDisposition.h" />
-    <ClInclude Include="..\GpCommon\GpInputDriverProperties.h" />
-    <ClInclude Include="..\GpCommon\IGpCursor.h" />
-    <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
-    <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />
-    <ClInclude Include="..\GpCommon\IGpLogDriver.h" />
-    <ClInclude Include="..\GpCommon\IGpPrefsHandler.h" />
-    <ClInclude Include="GpFiber_Win32.h" />
-    <ClInclude Include="GpFileStream_Win32.h" />
-    <ClInclude Include="GpFileSystem_Win32.h" />
-    <ClInclude Include="GpFontHandler_FreeType2.h" />
-    <ClInclude Include="GpLogDriver_Win32.h" />
-    <ClInclude Include="GpMutex_Win32.h" />
-    <ClInclude Include="GpSystemServices_Win32.h" />
-    <ClInclude Include="GpThreadEvent_Win32.h" />
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GpApp\GpApp.vcxproj">
-      <Project>{6233c3f2-5781-488e-b190-4fa8836f5a77}</Project>
+    <ProjectReference Include="..\FreeType\FreeType.vcxproj">
+      <Project>{487216d8-16ba-4b4c-b5bf-43feedfee03a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\GpAudioDriver_XAudio2\GpAudioDriver_XAudio2.vcxproj">
-      <Project>{e3bdc783-8646-433e-adf0-8b6390d36669}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GpDisplayDriver_D3D11\GpDisplayDriver_D3D11.vcxproj">
-      <Project>{ffc961ac-55b4-4a38-a83e-06ae98f59acc}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GpFontHandler_FreeType2\GpFontHandler_FreeType2.vcxproj">
-      <Project>{4b564030-8985-4975-91e1-e1b2c16ae2a1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GpInputDriver_XInput\GpInputDriver_XInput.vcxproj">
-      <Project>{17b96f07-ef92-47cd-95a5-8e6ee38ab564}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GpShell\GpShell.vcxproj">
-      <Project>{10cf9b5f-61d0-4b5b-89f4-810b58fc053d}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Aerofoil.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="ConvertedResources\Large128.ico" />
-    <Image Include="ConvertedResources\Small128.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
