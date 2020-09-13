@@ -176,7 +176,7 @@
         <ComponentGroupRef Id="HousePack1ComponentGroup" />
       </Feature>
 
-      <Feature Id="ImportToolsFeature" Title="Data Import Utilities" Level="2" Description="!(loc.ImportToolsFeatureDescription)">
+      <Feature Id="ImportToolsFeature" Title="Data Import Utilities" Level="4" Description="!(loc.ImportToolsFeatureDescription)">
         <ComponentRef Id="bin2gp.exe" />
         <ComponentRef Id="flattenmov.exe" />
         <ComponentRef Id="FTagData.exe" />
