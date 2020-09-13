@@ -117,7 +117,7 @@ void DoAboutFramework (void)
 	PortabilityLayer::DialogManager *dialogManager = PortabilityLayer::DialogManager::GetInstance();
 	Dialog *dialog = dialogManager->LoadDialogFromTemplate(kAboutFrameworkDialogTemplateID, windowRect, true, false, 0, 0, PL_GetPutInFrontWindowPtr(), PSTR(""), nullptr);
 
-#ifdef NDEBUG
+#if !GP_DEBUG_CONFIG
 	#define ABOUT_DIALOG_CONFIGURATION_TAG "Release"
 #else
 	#define ABOUT_DIALOG_CONFIGURATION_TAG "Debug"

@@ -79,7 +79,7 @@ int GpMain::Run()
 	// This appears to be the "standard" Mac sample rate, probably rounded from 244800/11.
 	adProps.m_type = g_gpGlobalConfig.m_audioDriverType;
 	adProps.m_sampleRate = (244800 * 2 + 11) / (11 * 2);
-#ifdef NDEBUG
+#if !GP_DEBUG_CONFIG
 	adProps.m_debug = false;
 #else
 	adProps.m_debug = true;

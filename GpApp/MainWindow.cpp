@@ -193,7 +193,7 @@ void OpenMainWindow (void)
 	}
 	else
 	{
-#ifdef NDEBUG
+#if !GP_DEBUG_CONFIG
 		PortabilityLayer::WindowManager::GetInstance()->SetBackgroundColor(0, 0, 0);
 #else
 		PortabilityLayer::WindowManager::GetInstance()->SetBackgroundColor(51, 0, 0);

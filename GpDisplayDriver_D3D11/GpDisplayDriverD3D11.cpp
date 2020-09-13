@@ -157,7 +157,7 @@ void StartD3DForWindow(HWND hWnd, GpComPtr<IDXGISwapChain1>& outSwapChain, GpCom
 		D3D_FEATURE_LEVEL_10_0
 	};
 
-#ifndef NDEBUG
+#if GP_DEBUG_CONFIG
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 

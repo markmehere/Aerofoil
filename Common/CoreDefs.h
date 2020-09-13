@@ -41,6 +41,6 @@ struct __GpStaticAssertHelper<true>
 
 static const size_t GP_SYSTEM_MEMORY_ALIGNMENT = 16;
 
-#if !defined(NDEBUG)
-#define GP_DEBUG_CONFIG	1
+#if !defined(GP_DEBUG_CONFIG)
+#error "GP_DEBUG_CONFIG was not set"
 #endif

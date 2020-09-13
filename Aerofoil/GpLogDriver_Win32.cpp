@@ -100,7 +100,7 @@ void GpLogDriver_Win32::InitInternal()
 	if (m_stream)
 	{
 		this->Printf(IGpLogDriver::Category_Information, GP_APPLICATION_NAME " build " __TIMESTAMP__);
-#ifdef NDEBUG
+#if !GP_DEBUG_CONFIG
 		this->Printf(IGpLogDriver::Category_Information, "Configuration: Release");
 #else
 		this->Printf(IGpLogDriver::Category_Information, "Configuration: Debug");
