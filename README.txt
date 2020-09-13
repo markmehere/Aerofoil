@@ -28,6 +28,7 @@ should give you a complete game installation in the "ReleasePkg" directory.
 Libraries:
 - Common: Common core definitions used by all projects
 - GpCommon: Common types usable by any project.
+- GpShell: Static library containing platform-independent portion of the shell app.
 - MacRomanConversion: Small library that handles conversion between the Mac
   Roman character set and Unicode.
 - PortabilityLayer: A static library that supports interaction with various
