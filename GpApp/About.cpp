@@ -38,8 +38,8 @@
 static void HiLiteOkayButton (DrawSurface *surface);
 static void UnHiLiteOkayButton (DrawSurface *surface);
 static void UpdateMainPict (Dialog *);
-static int16_t AboutFilter(Dialog *, const TimeTaggedVOSEvent *evt);
-static int16_t AboutFrameworkFilter(Dialog *, const TimeTaggedVOSEvent *evt);
+static int16_t AboutFilter(void *context, Dialog *, const TimeTaggedVOSEvent *evt);
+static int16_t AboutFrameworkFilter(void *context, Dialog *, const TimeTaggedVOSEvent *evt);
 
 
 static Point			okayButtLowerV, okayButtUpperV;
@@ -91,7 +91,7 @@ void DoAbout (void)
 	
 	do										// Loop until user wants to exit
 	{
-		hit = aboutDialog->ExecuteModal(AboutFilter);
+		hit = aboutDialog->ExecuteModal(nullptr, AboutFilter);
 	}
 	while (hit != kOkayButton);
 
@@ -152,7 +152,7 @@ void DoAboutFramework (void)
 
 	do
 	{
-		hit = dialog->ExecuteModal(AboutFrameworkFilter);
+		hit = dialog->ExecuteModal(nullptr, AboutFrameworkFilter);
 	} while (hit != kOkayButton);
 
 	dialog->Destroy();
@@ -248,7 +248,7 @@ static bool PointIsInDiagonalOkayButton(const Point &pt)
 //--------------------------------------------------------------  AboutFilter
 // Dialog filter for the About dialog.
 
-static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
+static int16_t AboutFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt)
 {
 	bool		handledIt = false;
 	int16_t		hit = -1;
@@ -330,7 +330,7 @@ static int16_t AboutFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
 //--------------------------------------------------------------  AboutFrameworkFilter
 // Dialog filter for the About Framework dialog.
 
-static int16_t AboutFrameworkFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
+static int16_t AboutFrameworkFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt)
 {
 	bool		handledIt = false;
 	int16_t		hit = -1;

@@ -383,7 +383,7 @@ void HandleLinkClick (Point wherePt)
 	part = FindControl(wherePt, linkWindow, &theControl);
 	if ((theControl != nil) && (part != 0))
 	{
-		part = theControl->Capture(wherePt, nullptr);
+		part = theControl->Capture(nullptr, wherePt, nullptr);
 		if (part != 0)
 		{
 			if (theControl == linkControl)

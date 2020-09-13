@@ -97,7 +97,7 @@ void DoDisplayPrefs (void);
 void SetAllDefaults (void);
 void FlashSettingsButton (DrawSurface *, short);
 void UpdateSettingsMain (Dialog *);
-int16_t PrefsFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
+int16_t PrefsFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void BitchAboutChanges (void);
 
 
@@ -158,7 +158,7 @@ void UpdateSettingsBrains (Dialog *theDialog)
 
 //--------------------------------------------------------------  BrainsFilter
 
-int16_t BrainsFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t BrainsFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -253,7 +253,7 @@ void DoBrainsPrefs (void)
 
 	while (!leaving)
 	{
-		itemHit = prefDlg->ExecuteModal(BrainsFilter);
+		itemHit = prefDlg->ExecuteModal(nullptr, BrainsFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -383,7 +383,7 @@ void UpdateSettingsControl (Dialog *theDialog)
 
 //--------------------------------------------------------------  ControlFilter
 
-int16_t ControlFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t ControlFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	intptr_t		wasKeyMap;
 
@@ -535,7 +535,7 @@ void DoControlPrefs (void)
 	
 	while (!leaving)
 	{
-		itemHit = prefDlg->ExecuteModal(ControlFilter);
+		itemHit = prefDlg->ExecuteModal(nullptr, ControlFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -660,7 +660,7 @@ void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 
 //--------------------------------------------------------------  SoundFilter
 
-int16_t SoundFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t SoundFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		newVolume;
 
@@ -757,7 +757,7 @@ void DoSoundPrefs (void)
 
 	while (!leaving)
 	{
-		itemHit = prefDlg->ExecuteModal(SoundFilter);
+		itemHit = prefDlg->ExecuteModal(nullptr, SoundFilter);
 
 		switch (itemHit)
 		{
@@ -928,7 +928,7 @@ void DisplayUpdate (Dialog *theDialog)
 
 //--------------------------------------------------------------  DisplayFilter
 
-int16_t DisplayFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t DisplayFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -1025,7 +1025,7 @@ void DoDisplayPrefs (void)
 	
 	while (!leaving)
 	{
-		int16_t itemHit = prefDlg->ExecuteModal(DisplayFilter);
+		int16_t itemHit = prefDlg->ExecuteModal(nullptr, DisplayFilter);
 		switch (itemHit)
 		{
 			case kOkayButton:
@@ -1202,7 +1202,7 @@ void UpdateSettingsMain (Dialog *theDialog)
 
 //--------------------------------------------------------------  PrefsFilter
 
-int16_t PrefsFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t PrefsFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		i;
 	Boolean		foundHit;
@@ -1292,7 +1292,7 @@ void DoSettingsMain (void)
 	
 	while (!leaving)
 	{
-		int16_t selectedItem = prefDlg->ExecuteModal(PrefsFilter);
+		int16_t selectedItem = prefDlg->ExecuteModal(nullptr, PrefsFilter);
 
 		switch (selectedItem)
 		{

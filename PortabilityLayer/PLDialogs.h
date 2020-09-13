@@ -14,7 +14,7 @@ class PLPasStr;
 struct Control;
 struct Dialog;
 
-typedef int16_t(*DialogFilterFunc_t)(Dialog *dialog, const TimeTaggedVOSEvent *evt);
+typedef int16_t(*DialogFilterFunc_t)(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
 struct DialogTextSubstitutions
 {
@@ -39,7 +39,7 @@ struct Dialog
 
 	virtual void SetItemVisibility(unsigned int itemIndex, bool isVisible) = 0;
 
-	virtual int16_t ExecuteModal(DialogFilterFunc_t filterFunc) = 0;
+	virtual int16_t ExecuteModal(void *captureContext, DialogFilterFunc_t filterFunc) = 0;
 
 	virtual bool ReplaceWidget(unsigned int itemIndex, PortabilityLayer::Widget *widget) = 0;
 };

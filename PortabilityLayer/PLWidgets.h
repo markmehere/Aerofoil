@@ -25,7 +25,7 @@ namespace PortabilityLayer
 
 	typedef WidgetHandleStates::WidgetHandleState WidgetHandleState_t;
 
-	typedef void (*WidgetUpdateCallback_t)(Widget *control, int part);
+	typedef void (*WidgetUpdateCallback_t)(void *captureContext, Widget *control, int part);
 
 	struct WidgetBasicState
 	{
@@ -40,6 +40,8 @@ namespace PortabilityLayer
 		int16_t m_state;
 		int16_t m_resID;
 		bool m_enabled;
+
+		WidgetUpdateCallback_t m_defaultCallback;
 	};
 
 	class Widget
@@ -47,8 +49,8 @@ namespace PortabilityLayer
 	public:
 		virtual bool Init(const WidgetBasicState &state, const void *additionalData) = 0;
 		virtual void Destroy() = 0;
-		virtual WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
-		virtual int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);
+		virtual WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt);
+		virtual int16_t Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback);
 		virtual void DrawControl(DrawSurface *surface);
 
 		virtual void SetMin(int32_t v);
@@ -58,6 +60,7 @@ namespace PortabilityLayer
 		void Resize(uint16_t width, uint16_t height);
 
 		void SetEnabled(bool enabled);
+		bool IsEnabled() const;
 		virtual void SetState(int16_t state);
 		int16_t GetState() const;
 

@@ -14,8 +14,8 @@ namespace PortabilityLayer
 
 		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
-		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt);
-		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback);
+		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt);
+		int16_t Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback);
 		void DrawControl(DrawSurface *surface) override;
 
 		void OnStateChanged() override;

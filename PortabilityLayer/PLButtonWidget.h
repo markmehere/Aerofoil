@@ -30,10 +30,10 @@ namespace PortabilityLayer
 		void SetString(const PLPasStr &str) override;
 		PLPasStr GetString() const override;
 
-		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
+		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt) override;
 		void OnEnabledChanged() override;
 		void OnStateChanged() override;
-		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
+		int16_t Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback) override;
 		void SetHighlightStyle(int16_t style, bool enabled) override;
 
 		static void DrawDefaultButtonChrome(const Rect &rect, DrawSurface *surface);

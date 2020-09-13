@@ -35,6 +35,8 @@ namespace PortabilityLayer
 		, m_isDraggingSelection(false)
 		, m_dragSelectionStartChar(false)
 		, m_scrollOffset(0, 0)
+		, m_characterFilter(nullptr)
+		, m_characterFilterContext(nullptr)
 	{
 	}
 
@@ -121,17 +123,17 @@ namespace PortabilityLayer
 		m_length = len;
 		memcpy(m_chars, str.UChars(), len);
 
+		if (m_selStartChar > len)
+			m_selStartChar = len;
+		if (m_selEndChar > len)
+			m_selEndChar = len;
+
 		if (m_window)
 		{
 			DrawSurface *surface = m_window->GetDrawSurface();
 
 			DrawControl(surface);
 		}
-
-		if (m_selStartChar > len)
-			m_selStartChar = len;
-		if (m_selEndChar > len)
-			m_selEndChar = len;
 	}
 
 	PLPasStr EditboxWidget::GetString() const
@@ -166,7 +168,7 @@ namespace PortabilityLayer
 		Redraw();
 	}
 
-	WidgetHandleState_t EditboxWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t EditboxWidget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		if (m_isDraggingSelection)
 			return HandleDragSelection(evt);
@@ -198,6 +200,12 @@ namespace PortabilityLayer
 
 					if (codePoint < 0xffff)
 						resolvedChar = MacRoman::FromUnicode(ch, keyEvent.m_key.m_unicodeChar);
+				}
+
+				if (resolvedChar)
+				{
+					if (m_characterFilter)
+						resolvedChar = m_characterFilter(m_characterFilterContext, ch);
 				}
 
 				if (resolvedChar)
@@ -978,5 +986,16 @@ namespace PortabilityLayer
 			m_isMultiLine = isMultiLine;
 			Redraw();
 		}
+	}
+
+	void EditboxWidget::SetCharacterFilter(void *context, CharacterFilterCallback_t callback)
+	{
+		m_characterFilterContext = context;
+		m_characterFilter = callback;
+	}
+
+	void EditboxWidget::SetCapacity(size_t capacity)
+	{
+		m_capacity = std::min<size_t>(255, capacity);
 	}
 }

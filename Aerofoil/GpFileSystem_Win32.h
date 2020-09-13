@@ -18,10 +18,8 @@ public:
 	bool DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed) override;
 	PortabilityLayer::HostDirectoryCursor *ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory) override;
 
-	bool PromptSaveFile(PortabilityLayer::VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName) override;
-	bool PromptOpenFile(PortabilityLayer::VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity) override;
-
 	bool ValidateFilePath(const char *path, size_t sz) const override;
+	bool ValidateFilePathUnicodeChar(uint32_t ch) const override;
 
 	const wchar_t *GetBasePath() const;
 

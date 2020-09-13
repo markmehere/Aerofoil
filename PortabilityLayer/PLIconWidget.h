@@ -17,7 +17,7 @@ namespace PortabilityLayer
 
 		void DrawControl(DrawSurface *surface) override;
 
-		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
+		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt) override;
 
 	private:
 		THandle<PixMapImpl> m_iconImage;

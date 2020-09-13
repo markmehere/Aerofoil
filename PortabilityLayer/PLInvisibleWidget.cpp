@@ -21,7 +21,7 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	WidgetHandleState_t InvisibleWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t InvisibleWidget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		if (!m_visible || !m_enabled)
 			return WidgetHandleStates::kIgnored;

@@ -41,10 +41,10 @@
 
 void DrawHighScores (DrawSurface *);
 void UpdateNameDialog (Dialog *);
-int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent *evt);
+int16_t NameFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt);
 void GetHighScoreName (short);
 void UpdateBannerDialog (Dialog *);
-int16_t BannerFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
+int16_t BannerFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void GetHighScoreBanner (void);
 Boolean OpenHighScoresFile (const VFileSpec &spec, GpIOStream *&outStream);
 
@@ -456,7 +456,7 @@ static bool EventIsTyping(const GpKeyboardInputEvent &kbEvent)
 //--------------------------------------------------------------  NameFilter
 // Dialog filter for the "Enter High Score Name" dialog.
 
-int16_t NameFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t NameFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		nChars;
 
@@ -537,7 +537,7 @@ void GetHighScoreName (short place)
 
 	while (!leaving)
 	{
-		item = theDial->ExecuteModal(NameFilter);
+		item = theDial->ExecuteModal(nullptr, NameFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -571,7 +571,7 @@ void UpdateBannerDialog (Dialog *theDialog)
 //--------------------------------------------------------------  BannerFilter
 // Dialog filter for the "Enter Message" dialog.
 
-int16_t BannerFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t BannerFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		nChars;
 	
@@ -647,7 +647,7 @@ void GetHighScoreBanner (void)
 
 	while (!leaving)
 	{
-		item = theDial->ExecuteModal(BannerFilter);
+		item = theDial->ExecuteModal(nullptr, BannerFilter);
 		
 		if (item == kOkayButton)
 		{

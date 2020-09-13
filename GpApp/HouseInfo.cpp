@@ -34,7 +34,7 @@
 
 long CountTotalHousePoints (void);
 void UpdateHouseInfoDialog (Dialog *);
-int16_t HouseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt);
+int16_t HouseFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt);
 Boolean WarnLockingHouse (void);
 void HowToZeroScores (void);
 
@@ -123,7 +123,7 @@ void UpdateHouseInfoDialog (Dialog *theDialog)
 
 //--------------------------------------------------------------  HouseFilter
 
-int16_t HouseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t HouseFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	Point		mouseIs;
 	short		nChars;
@@ -248,7 +248,7 @@ void DoHouseInfo (void)
 	
 	while (!leaving)
 	{
-		item = houseInfoDialog->ExecuteModal(HouseFilter);
+		item = houseInfoDialog->ExecuteModal(nullptr, HouseFilter);
 		
 		if (item == kOkayButton)
 		{

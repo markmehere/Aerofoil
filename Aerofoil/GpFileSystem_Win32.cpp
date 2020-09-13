@@ -286,172 +286,24 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(Portabi
 	return GpDirectoryCursor_Win32::Create(ff, findData);
 }
 
-bool GpFileSystem_Win32::PromptSaveFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity, const char *initialFileName)
+bool GpFileSystem_Win32::ValidateFilePathUnicodeChar(uint32_t c) const
 {
-	wchar_t baseFN[MAX_PATH + 5];
-	wchar_t baseDir[MAX_PATH + 5];
+	if (c >= '0' && c <= '9')
+		return true;
 
-	const size_t existingPathLen = strlen(initialFileName);
-	if (existingPathLen >= MAX_PATH)
-		return false;
+	if (c == '_' || c == '\'')
+		return true;
 
-	for (size_t i = 0; i < existingPathLen; i++)
-		baseFN[i] = static_cast<wchar_t>(initialFileName[i]);
-	baseFN[existingPathLen] = 0;
+	if (c == ' ')
+		return true;
 
-	if (!ResolvePath(virtualDirectory, "", baseDir))
-		return false;
+	if (c >= 'a' && c <= 'z')
+		return true;
 
-	OPENFILENAMEW ofn;
-	memset(&ofn, 0, sizeof(ofn));
+	if (c >= 'A' && c <= 'Z')
+		return true;
 
-	ofn.lStructSize = sizeof(ofn);
-	ofn.lpstrFilter = GP_APPLICATION_NAME_W L" File (*.gpf)\0*.gpf\0";
-	ofn.lpstrFile = baseFN;
-	ofn.lpstrDefExt = L"gpf";
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrInitialDir = baseDir;
-	ofn.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
-	ofn.hwndOwner = g_gpWindowsGlobals.m_hwnd;
-
-	if (!GetSaveFileNameW(&ofn))
-		return false;
-
-	if (ofn.Flags & OFN_EXTENSIONDIFFERENT)
-	{
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, L"Save file failed: Saved files must have the '.gpf' extension", L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	const wchar_t *fn = ofn.lpstrFile + ofn.nFileOffset;
-	size_t fnLengthWithoutExt = wcslen(fn);
-	if (ofn.nFileExtension - 1 > ofn.nFileOffset)	// Off by 1 because extension doesn't include .
-		fnLengthWithoutExt = ofn.nFileExtension - ofn.nFileOffset - 1;
-
-	if (fnLengthWithoutExt >= pathCapacity)
-	{
-		wchar_t msg[256];
-		wsprintfW(msg, L"Save file failed: File name is too long.  Limit is %i characters.", static_cast<int>(pathCapacity));
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	if (ofn.nFileOffset != wcslen(baseDir) || memcmp(ofn.lpstrFile, baseDir, ofn.nFileOffset * sizeof(wchar_t)))
-	{
-		wchar_t msg[256 + MAX_PATH];
-		wsprintfW(msg, L"Save file failed: File can't be saved here, it must be saved in %s", baseDir);
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	const wchar_t *unsupportedCharMsg = L"File name contains unsupported characters.";
-
-	for (size_t i = 0; i < fnLengthWithoutExt; i++)
-	{
-		if (fn[i] < static_cast<wchar_t>(0) || fn[i] >= static_cast<wchar_t>(128))
-		{
-			MessageBeep(MB_ICONERROR);
-			MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
-			return false;
-		}
-
-		path[i] = static_cast<char>(fn[i]);
-	}
-
-	if (!ValidateFilePath(path, fnLengthWithoutExt))
-	{
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	outPathLength = fnLengthWithoutExt;
-
-	return true;
-}
-
-bool GpFileSystem_Win32::PromptOpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, char *path, size_t &outPathLength, size_t pathCapacity)
-{
-	wchar_t baseFN[MAX_PATH + 5];
-	wchar_t baseDir[MAX_PATH + 5];
-
-	baseFN[0] = 0;
-
-	if (!ResolvePath(virtualDirectory, "", baseDir))
-		return false;
-
-	OPENFILENAMEW ofn;
-	memset(&ofn, 0, sizeof(ofn));
-
-	ofn.lStructSize = sizeof(ofn);
-	ofn.lpstrFilter = GP_APPLICATION_NAME_W L" File (*.gpf)\0*.gpf\0";
-	ofn.lpstrFile = baseFN;
-	ofn.lpstrDefExt = L"gpf";
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrInitialDir = baseDir;
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
-	ofn.hwndOwner = g_gpWindowsGlobals.m_hwnd;
-
-	if (!GetOpenFileNameW(&ofn))
-		return false;
-
-	if (ofn.Flags & OFN_EXTENSIONDIFFERENT)
-	{
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, L"Open file failed: Files must have the '.gpf' extension", L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	const wchar_t *fn = ofn.lpstrFile + ofn.nFileOffset;
-	size_t fnLengthWithoutExt = wcslen(fn);
-	if (ofn.nFileExtension - 1 > ofn.nFileOffset)	// Off by 1 because extension doesn't include .
-		fnLengthWithoutExt = ofn.nFileExtension - ofn.nFileOffset - 1;
-
-	if (fnLengthWithoutExt >= pathCapacity)
-	{
-		wchar_t msg[256];
-		wsprintfW(msg, L"Open file failed: File name is too long.  Limit is %i characters.", static_cast<int>(pathCapacity));
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	if (ofn.nFileOffset != wcslen(baseDir) || memcmp(ofn.lpstrFile, baseDir, ofn.nFileOffset * sizeof(wchar_t)))
-	{
-		wchar_t msg[256 + MAX_PATH];
-		wsprintfW(msg, L"Open file failed: File can't be opened from here, it must be in %s", baseDir);
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, msg, L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	const wchar_t *unsupportedCharMsg = L"File name contains unsupported characters.";
-
-	for (size_t i = 0; i < fnLengthWithoutExt; i++)
-	{
-		if (fn[i] < static_cast<wchar_t>(0) || fn[i] >= static_cast<wchar_t>(128))
-		{
-			MessageBeep(MB_ICONERROR);
-			MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
-			return false;
-		}
-
-		path[i] = static_cast<char>(fn[i]);
-	}
-
-	if (!ValidateFilePath(path, fnLengthWithoutExt))
-	{
-		MessageBeep(MB_ICONERROR);
-		MessageBoxW(nullptr, unsupportedCharMsg, L"Invalid file path", MB_OK);
-		return false;
-	}
-
-	outPathLength = fnLengthWithoutExt;
-
-	return true;
+	return false;
 }
 
 bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
@@ -475,6 +327,71 @@ bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
 			continue;
 
 		return false;
+	}
+
+	const char *bannedNames[] =
+	{
+		"CON",
+		"PRN",
+		"AUX",
+		"NUL",
+		"COM1",
+		"COM2",
+		"COM3",
+		"COM4",
+		"COM5",
+		"COM6",
+		"COM7",
+		"COM8",
+		"COM9",
+		"LPT1",
+		"LPT2",
+		"LPT3",
+		"LPT4",
+		"LPT5",
+		"LPT6",
+		"LPT7",
+		"LPT8",
+		"LPT9"
+	};
+
+	size_t nameLengthWithoutExt = length;
+	for (size_t i = 0; i < length; i++)
+	{
+		if (str[i] == '.')
+		{
+			nameLengthWithoutExt = i;
+			break;
+		}
+	}
+
+	const size_t numBannedNames = sizeof(bannedNames) / sizeof(bannedNames[0]);
+
+	for (size_t i = 0; i < numBannedNames; i++)
+	{
+		const char *bannedName = bannedNames[i];
+		const size_t banLength = strlen(bannedName);
+
+		if (banLength == nameLengthWithoutExt)
+		{
+			bool isBanned = true;
+
+			for (size_t j = 0; j < banLength; j++)
+			{
+				char checkCH = str[j];
+				if (checkCH >= 'a' && checkCH <= 'z')
+					checkCH += ('A' - 'a');
+
+				if (bannedName[j] != checkCH)
+				{
+					isBanned = false;
+					break;
+				}
+			}
+
+			if (isBanned)
+				return false;
+		}
 	}
 
 	return true;

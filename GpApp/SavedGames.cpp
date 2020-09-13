@@ -82,7 +82,7 @@ void SaveGame2 (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr)))
+	if (!fm->PromptSaveFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game")))
 	{
 		mm->Release(savedGame);
 		return;
@@ -191,7 +191,7 @@ Boolean OpenSavedGame (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptOpenFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name)))
+	if (!fm->PromptOpenFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game")))
 		return false;
 
 	assert(savePathLength < sizeof(spec.m_name) - 1);

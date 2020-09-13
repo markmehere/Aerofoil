@@ -47,11 +47,11 @@
 void UpdateRoomInfoDialog (Dialog *);
 void DragMiniTile (Window *, DrawSurface *, Point, short *);
 void HiliteTileOver (DrawSurface *, Point);
-int16_t RoomFilter (Dialog *dialog, const TimeTaggedVOSEvent *evt);
+int16_t RoomFilter (void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
 short ChooseOriginalArt (short);
 void UpdateOriginalArt (Dialog *);
-int16_t OriginalArtFilter (Dialog *dialog, const TimeTaggedVOSEvent *evt);
+int16_t OriginalArtFilter (void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 Boolean PictIDExists (short);
 short GetFirstPICT (void);
 void BitchAboutPICTNotFound (void);
@@ -344,7 +344,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 //--------------------------------------------------------------  RoomFilter
 #ifndef COMPILEDEMO
 
-int16_t RoomFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t RoomFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	Point		mouseIs;
 	short		newTileOver;
@@ -502,7 +502,7 @@ void DoRoomInfo(void)
 	{
 		bool needRedraw = false;
 
-		item = roomInfoDialog->ExecuteModal(RoomFilter);
+		item = roomInfoDialog->ExecuteModal(nullptr, RoomFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -639,7 +639,7 @@ void UpdateOriginalArt (Dialog *theDialog)
 //--------------------------------------------------------------  OriginalArtFilter
 #ifndef COMPILEDEMO
 
-int16_t OriginalArtFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t OriginalArtFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	Point		mouseIs;
 
@@ -737,7 +737,7 @@ short ChooseOriginalArt (short was)
 	
 	while (!leaving)
 	{
-		item = theDialog->ExecuteModal(OriginalArtFilter);
+		item = theDialog->ExecuteModal(nullptr, OriginalArtFilter);
 		
 		if (item == kOkayButton)
 		{

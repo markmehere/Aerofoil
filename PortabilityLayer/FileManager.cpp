@@ -1,4 +1,6 @@
 #include "FileManager.h"
+
+#include "FileBrowserUI.h"
 #include "HostFileSystem.h"
 #include "HostMemoryBuffer.h"
 #include "MemReaderStream.h"
@@ -33,8 +35,8 @@ namespace PortabilityLayer
 		PLError_t RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 
-		bool PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName) override;
-		bool PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity) override;
+		bool PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText) override;
+		bool PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText) override;
 
 		static FileManagerImpl *GetInstance();
 
@@ -174,18 +176,18 @@ namespace PortabilityLayer
 		return RawOpenFileFork(dirID, filename, ".gpa", permission, ignoreMeta, createDisposition, outStream);
 	}
 
-	bool FileManagerImpl::PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName)
+	bool FileManagerImpl::PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText)
 	{
 		ExtendedFileName_t extFN;
 		if (!ConstructFilename(extFN, initialFileName, ""))
 			return false;
 
-		return PortabilityLayer::HostFileSystem::GetInstance()->PromptSaveFile(dirID, path, outPathLength, pathCapacity, extFN);
+		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Save, dirID, path, outPathLength, pathCapacity, initialFileName, promptText);
 	}
 
-	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity)
+	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText)
 	{
-		return PLSysCalls::PromptOpenFile(dirID, path, outPathLength, pathCapacity);
+		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Open, dirID, path, outPathLength, pathCapacity, PSTR(""), promptText);
 	}
 
 	FileManagerImpl *FileManagerImpl::GetInstance()

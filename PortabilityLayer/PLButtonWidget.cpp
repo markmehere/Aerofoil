@@ -229,7 +229,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	WidgetHandleState_t ButtonWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t ButtonWidget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		if (!m_visible || !m_enabled)
 			return WidgetHandleStates::kIgnored;
@@ -240,7 +240,7 @@ namespace PortabilityLayer
 
 			if (m_rect.Contains(pt))
 			{
-				if (Capture(pt, nullptr) == RegionIDs::kNone)
+				if (Capture(captureContext, pt, nullptr) == RegionIDs::kNone)
 					return WidgetHandleStates::kDigested;
 				else
 					return WidgetHandleStates::kActivated;
@@ -264,7 +264,7 @@ namespace PortabilityLayer
 			DrawControl(m_window->GetDrawSurface());
 	}
 
-	int16_t ButtonWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	int16_t ButtonWidget::Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback)
 	{
 		if (!m_enabled || !m_visible)
 			return 0;

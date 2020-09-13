@@ -15,7 +15,7 @@ namespace PortabilityLayer
 		bool Init(const WidgetBasicState &state, const void *additionalData) override;
 
 		void OnEnabledChanged() override;
-		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
+		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt) override;
 		void DrawControl(DrawSurface *surface) override;
 
 		void SetState(int16_t state) override;
@@ -24,7 +24,7 @@ namespace PortabilityLayer
 		void SetMin(int32_t v) override;
 		void SetMax(int32_t v) override;
 
-		int16_t Capture(const Point &pos, WidgetUpdateCallback_t callback) override;
+		int16_t Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback) override;
 
 		int ResolvePart(const Point &point) const override;
 
@@ -39,9 +39,9 @@ namespace PortabilityLayer
 
 		static void DrawBeveledBox(DrawSurface *surface, const Rect &rect);
 
-		int16_t CaptureScrollSegment(const Point &pos, int part, WidgetUpdateCallback_t callback);
-		int16_t CaptureIndicator(const Point &pos, WidgetUpdateCallback_t callback);
-		void IterateScrollSegment(int part, WidgetUpdateCallback_t callback);
+		int16_t CaptureScrollSegment(void *captureContext, const Point &pos, int part, WidgetUpdateCallback_t callback);
+		int16_t CaptureIndicator(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback);
+		void IterateScrollSegment(void *captureContext, int part, WidgetUpdateCallback_t callback);
 
 		int32_t m_min;
 		int32_t m_max;
@@ -51,5 +51,7 @@ namespace PortabilityLayer
 
 		bool m_isActive;
 		int m_activePart;
+
+		WidgetUpdateCallback_t m_callback;
 	};
 }

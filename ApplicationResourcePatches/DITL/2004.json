@@ -1,0 +1,21 @@
+{
+	"items" :
+	[
+		{
+			"name" : "Okay",
+			"itemType" : "Button",
+			"pos" : [ 253, 99 ],
+			"size" : [ 58, 20 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "The file name that you've specified is invalid.",
+			"itemType" : "Label",
+			"pos" : [ 16, 16 ],
+			"size" : [ 295, 74 ],
+			"id" : 0,
+			"enabled" : false
+		}
+	]
+}

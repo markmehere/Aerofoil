@@ -473,7 +473,7 @@ void HandleToolsClick (Point wherePt)
 	part = FindControl(wherePt, toolsWindow, &theControl);
 	if ((theControl != nil) && (part != 0))
 	{
-		part = theControl->Capture(wherePt, nullptr);
+		part = theControl->Capture(nullptr, wherePt, nullptr);
 		if (part != 0)
 		{
 			newMode = theControl->GetState();

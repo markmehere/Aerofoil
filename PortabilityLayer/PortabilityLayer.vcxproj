@@ -160,6 +160,7 @@
     <ClInclude Include="DialogManager.h" />
     <ClInclude Include="DisplayDeviceManager.h" />
     <ClInclude Include="EllipsePlotter.h" />
+    <ClInclude Include="FileBrowserUI.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FilePermission.h" />
     <ClInclude Include="FilePos.h" />
@@ -303,6 +304,7 @@
     <ClCompile Include="DialogManager.cpp" />
     <ClCompile Include="DisplayDeviceManager.cpp" />
     <ClCompile Include="EllipsePlotter.cpp" />
+    <ClCompile Include="FileBrowserUI.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FontFamily.cpp" />
     <ClCompile Include="FontManager.cpp" />

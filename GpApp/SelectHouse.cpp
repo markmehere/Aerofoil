@@ -201,7 +201,7 @@ void PageDownHouses (Dialog *theDial)
 //--------------------------------------------------------------  LoadFilter
 #ifndef COMPILEDEMO
 
-int16_t LoadFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t LoadFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		screenCount, i, wasIndex;
 
@@ -398,7 +398,7 @@ void DoLoadHouse (void)
 	
 	while (!leaving)
 	{
-		int16_t item = theDial->ExecuteModal(LoadFilter);
+		int16_t item = theDial->ExecuteModal(nullptr, LoadFilter);
 
 		bool requiresRedraw = false;
 		

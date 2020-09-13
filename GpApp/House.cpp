@@ -26,7 +26,7 @@
 
 
 void UpdateGoToDialog (Dialog *);
-int16_t GoToFilter (Dialog *dial, const TimeTaggedVOSEvent *evt);
+int16_t GoToFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt);
 
 extern PortabilityLayer::ResourceArchive	*houseResFork;
 
@@ -67,7 +67,7 @@ Boolean CreateNewHouse (void)
 	char savePath[sizeof(theSpec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House")))
+	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House")))
 		return false;
 
 	assert(savePathLength < sizeof(theSpec.m_name) - 1);
@@ -599,7 +599,7 @@ void UpdateGoToDialog (Dialog *theDialog)
 //--------------------------------------------------------------  GoToFilter
 // Dialog filter for the "Go To Room..." dialog.
 
-int16_t GoToFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t GoToFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -656,7 +656,7 @@ int16_t GoToFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 	
 	while (!leaving)
 	{
-		item = theDialog->ExecuteModal(GoToFilter);
+		item = theDialog->ExecuteModal(nullptr, GoToFilter);
 		
 		if (item == kOkayButton)
 		{

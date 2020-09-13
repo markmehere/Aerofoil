@@ -88,7 +88,7 @@ namespace PortabilityLayer
 		ArrayView<const DialogItem> GetItems() const override;
 		void SetItemVisibility(unsigned int itemIndex, bool isVisible) override;
 
-		int16_t ExecuteModal(DialogFilterFunc_t filterFunc) override;
+		int16_t ExecuteModal(void *captureContext, DialogFilterFunc_t filterFunc) override;
 
 		bool ReplaceWidget(unsigned int itemIndex, Widget *widget) override;
 
@@ -106,7 +106,7 @@ namespace PortabilityLayer
 
 		static void MakeStringSubstitutions(uint8_t *outStr, const uint8_t *inStr, const DialogTextSubstitutions *substitutions);
 
-		int16_t ExecuteModalInDarkenStack(DialogFilterFunc_t filterFunc);
+		int16_t ExecuteModalInDarkenStack(void *captureContext, DialogFilterFunc_t filterFunc);
 
 		Window *m_window;
 		DialogItem *m_items;
@@ -334,20 +334,20 @@ namespace PortabilityLayer
 		}
 	}
 
-	int16_t DialogImpl::ExecuteModal(DialogFilterFunc_t filterFunc)
+	int16_t DialogImpl::ExecuteModal(void *captureContext, DialogFilterFunc_t filterFunc)
 	{
 		Window *exclWindow = this->GetWindow();
 
 		WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);
 
-		int16_t result = ExecuteModalInDarkenStack(filterFunc);
+		int16_t result = ExecuteModalInDarkenStack(captureContext, filterFunc);
 
 		WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);
 
 		return result;
 	}
 
-	int16_t DialogImpl::ExecuteModalInDarkenStack(DialogFilterFunc_t filterFunc)
+	int16_t DialogImpl::ExecuteModalInDarkenStack(void *captureContext, DialogFilterFunc_t filterFunc)
 	{
 		Window *window = this->GetWindow();
 		Widget *capturingWidget = nullptr;
@@ -362,7 +362,7 @@ namespace PortabilityLayer
 			if (window->IsHandlingTickEvents())
 				window->OnTick();
 
-			const int16_t selection = filterFunc(this, haveEvent ? &evt : nullptr);
+			const int16_t selection = (filterFunc != nullptr) ? filterFunc(captureContext, this, haveEvent ? &evt : nullptr) : -1;
 
 			if (selection >= 0)
 				return selection;
@@ -371,7 +371,7 @@ namespace PortabilityLayer
 			{
 				if (capturingWidget != nullptr)
 				{
-					const WidgetHandleState_t state = capturingWidget->ProcessEvent(evt);
+					const WidgetHandleState_t state = capturingWidget->ProcessEvent(captureContext, evt);
 
 					if (state != WidgetHandleStates::kDigested)
 						capturingWidget = nullptr;
@@ -398,7 +398,7 @@ namespace PortabilityLayer
 					{
 						Widget *widget = this->m_items[i].GetWidget();
 
-						const WidgetHandleState_t state = widget->ProcessEvent(evt);
+						const WidgetHandleState_t state = widget->ProcessEvent(captureContext, evt);
 
 						if (state == WidgetHandleStates::kActivated)
 							return static_cast<int16_t>(i + 1);
@@ -621,7 +621,7 @@ namespace PortabilityLayer
 
 	private:
 
-		static int16_t AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
+		static int16_t AlertFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
 		static DialogManagerImpl ms_instance;
 	};
@@ -706,7 +706,7 @@ namespace PortabilityLayer
 		return dialog;
 	}
 
-	int16_t DialogManagerImpl::AlertFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
+	int16_t DialogManagerImpl::AlertFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt)
 	{
 		return -1;
 	}
@@ -767,7 +767,7 @@ namespace PortabilityLayer
 		if (!dialog)
 			return 0;
 
-		int16_t hit = dialog->ExecuteModal(DialogManagerImpl::AlertFilter);
+		int16_t hit = dialog->ExecuteModal(nullptr, DialogManagerImpl::AlertFilter);
 		dialog->Destroy();
 
 		return hit;

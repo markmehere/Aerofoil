@@ -39,7 +39,7 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	WidgetHandleState_t PopupMenuWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t PopupMenuWidget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		if (evt.IsLMouseDownEvent())
 		{
@@ -49,7 +49,7 @@ namespace PortabilityLayer
 
 			if (this->m_rect.Contains(Point::Create(localPoint.m_x, localPoint.m_y)))
 			{
-				int16_t part = Capture(Point::Create(localPoint.m_x, localPoint.m_y), nullptr);
+				int16_t part = Capture(captureContext, Point::Create(localPoint.m_x, localPoint.m_y), nullptr);
 				if (part >= 1)
 					return WidgetHandleStates::kActivated;
 				else
@@ -60,7 +60,7 @@ namespace PortabilityLayer
 		return WidgetHandleStates::kIgnored;
 	}
 
-	int16_t PopupMenuWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	int16_t PopupMenuWidget::Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback)
 	{
 		MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
 

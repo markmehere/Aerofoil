@@ -13,17 +13,18 @@ namespace PortabilityLayer
 		, m_max(0)
 		, m_state(0)
 		, m_enabled(true)
+		, m_defaultCallback(nullptr)
 	{
 	}
 
-	WidgetHandleState_t Widget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t Widget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		(void)evt;
 
 		return WidgetHandleStates::kIgnored;
 	}
 
-	int16_t Widget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	int16_t Widget::Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback)
 	{
 		return 0;
 	}
@@ -62,6 +63,11 @@ namespace PortabilityLayer
 	{
 		m_enabled = enabled;
 		OnEnabledChanged();
+	}
+
+	bool Widget::IsEnabled() const
+	{
+		return m_enabled;
 	}
 
 	void Widget::SetState(int16_t state)

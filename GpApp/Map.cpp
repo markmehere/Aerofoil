@@ -489,7 +489,7 @@ void ToggleMapWindow (void)
 //--------------------------------------------------------------  LiveHScrollAction
 #ifndef COMPILEDEMO
 
-void LiveHScrollAction (PortabilityLayer::Widget *theControl, int thePart)
+void LiveHScrollAction (void *captureContext, PortabilityLayer::Widget *theControl, int thePart)
 {
 	short		wasValue, newValue;
 	
@@ -546,7 +546,7 @@ void LiveHScrollAction (PortabilityLayer::Widget *theControl, int thePart)
 //--------------------------------------------------------------  LiveVScrollAction
 #ifndef COMPILEDEMO
 
-void LiveVScrollAction (PortabilityLayer::Widget *theControl, int thePart)
+void LiveVScrollAction (void *captureContext, PortabilityLayer::Widget *theControl, int thePart)
 {
 	short		wasValue, newValue;
 	
@@ -695,11 +695,11 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 				case kControlDownButtonPart:
 				case kControlPageUpPart:
 				case kControlPageDownPart:
-				whichControl->Capture(wherePt, LiveHScrollAction);
+				whichControl->Capture(nullptr, wherePt, LiveHScrollAction);
 				break;
 				
 				case kControlIndicatorPart:
-				if (whichControl->Capture(wherePt, nil))
+				if (whichControl->Capture(nullptr, wherePt, nil))
 				{
 					mapLeftRoom = whichControl->GetState();
 					RedrawMapContents();
@@ -715,11 +715,11 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 				case kControlDownButtonPart:
 				case kControlPageUpPart:
 				case kControlPageDownPart:
-				whichControl->Capture(wherePt, LiveVScrollAction);
+				whichControl->Capture(nullptr, wherePt, LiveVScrollAction);
 				break;
 				
 				case kControlIndicatorPart:
-				if (whichControl->Capture(wherePt, nil))
+				if (whichControl->Capture(nullptr, wherePt, nil))
 				{
 					mapTopRoom = whichControl->GetState();
 					RedrawMapContents();

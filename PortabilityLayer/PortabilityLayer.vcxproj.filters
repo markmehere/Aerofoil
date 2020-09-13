@@ -459,6 +459,9 @@
     <ClInclude Include="HostLogDriver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileBrowserUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -729,6 +732,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HostInputDriver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileBrowserUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

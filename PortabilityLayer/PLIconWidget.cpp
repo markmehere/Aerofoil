@@ -48,7 +48,7 @@ namespace PortabilityLayer
 		surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	}
 
-	WidgetHandleState_t IconWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t IconWidget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		if (!m_visible || !m_enabled)
 			return WidgetHandleStates::kIgnored;

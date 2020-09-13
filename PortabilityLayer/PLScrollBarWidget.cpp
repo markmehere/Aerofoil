@@ -4,6 +4,8 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "ResolveCachingColor.h"
 
+#include "PLRegions.h"
+
 namespace PortabilityLayer
 {
 	ScrollBarWidget::ScrollBarWidget(const WidgetBasicState &state)
@@ -15,13 +17,29 @@ namespace PortabilityLayer
 		, m_laneCapacity(0)
 		, m_isActive(false)
 		, m_activePart(0)
+		, m_callback(state.m_defaultCallback)
 	{
 	}
 
-	WidgetHandleState_t ScrollBarWidget::ProcessEvent(const TimeTaggedVOSEvent &evt)
+	WidgetHandleState_t ScrollBarWidget::ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt)
 	{
 		if (!m_visible || !m_enabled)
 			return WidgetHandleStates::kIgnored;
+
+		if (evt.IsLMouseDownEvent())
+		{
+			const Point pt = m_window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+
+			if (m_rect.Contains(pt))
+			{
+				if (Capture(captureContext, pt, m_callback) == RegionIDs::kNone)
+					return WidgetHandleStates::kDigested;
+				else
+					return WidgetHandleStates::kActivated;
+			}
+			else
+				return WidgetHandleStates::kIgnored;
+		}
 
 		return WidgetHandleStates::kIgnored;
 	}
@@ -279,19 +297,19 @@ namespace PortabilityLayer
 		}
 	}
 
-	int16_t ScrollBarWidget::Capture(const Point &pos, WidgetUpdateCallback_t callback)
+	int16_t ScrollBarWidget::Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback)
 	{
 		int part = ResolvePart(pos);
 		if (!part)
 			return 0;
 
 		if (part == kControlIndicatorPart)
-			return CaptureIndicator(pos, callback);
+			return CaptureIndicator(captureContext, pos, callback);
 		else
-			return CaptureScrollSegment(pos, part, callback);
+			return CaptureScrollSegment(captureContext, pos, part, callback);
 	}
 
-	int16_t ScrollBarWidget::CaptureScrollSegment(const Point &pos, int part, WidgetUpdateCallback_t callback)
+	int16_t ScrollBarWidget::CaptureScrollSegment(void *captureContext, const Point &pos, int part, WidgetUpdateCallback_t callback)
 	{
 		int tickDelay = 15;
 
@@ -308,7 +326,7 @@ namespace PortabilityLayer
 			if (ticksUntilIterate == 0)
 			{
 				if (m_isActive)
-					IterateScrollSegment(part, callback);
+					IterateScrollSegment(captureContext, part, callback);
 
 				ticksUntilIterate = tickDelay;
 			}
@@ -349,7 +367,7 @@ namespace PortabilityLayer
 		}
 	}
 
-	int16_t ScrollBarWidget::CaptureIndicator(const Point &pos, WidgetUpdateCallback_t callback)
+	int16_t ScrollBarWidget::CaptureIndicator(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback)
 	{
 		const bool isHorizontal = IsHorizontal();
 
@@ -428,10 +446,10 @@ namespace PortabilityLayer
 		}
 	}
 
-	void ScrollBarWidget::IterateScrollSegment(int part, WidgetUpdateCallback_t callback)
+	void ScrollBarWidget::IterateScrollSegment(void *captureContext, int part, WidgetUpdateCallback_t callback)
 	{
 		if (callback != nullptr)
-			callback(this, part);
+			callback(captureContext, this, part);
 	}
 
 	int ScrollBarWidget::ResolvePart(const Point &point) const

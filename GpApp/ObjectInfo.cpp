@@ -347,7 +347,7 @@ void UpdateFlowerInfo (Dialog *theDialog)
 
 //--------------------------------------------------------------  BlowerFilter
 
-int16_t BlowerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t BlowerFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -381,7 +381,7 @@ int16_t BlowerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  FurnitureFilter
 
-int16_t FurnitureFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t FurnitureFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -407,7 +407,7 @@ int16_t FurnitureFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  CustPictFilter
 
-int16_t CustPictFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t CustPictFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -431,7 +431,7 @@ int16_t CustPictFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  SwitchFilter
 
-int16_t SwitchFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t SwitchFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -459,7 +459,7 @@ int16_t SwitchFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  TriggerFilter
 
-int16_t TriggerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t TriggerFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -491,7 +491,7 @@ int16_t TriggerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  LightFilter
 
-int16_t LightFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t LightFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -519,7 +519,7 @@ int16_t LightFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  ApplianceFilter
 
-int16_t ApplianceFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t ApplianceFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -551,7 +551,7 @@ int16_t ApplianceFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  MicrowaveFilter
 
-int16_t MicrowaveFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t MicrowaveFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -579,7 +579,7 @@ int16_t MicrowaveFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  GreaseFilter
 
-int16_t GreaseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t GreaseFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -607,7 +607,7 @@ int16_t GreaseFilter(Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  InvisBonusFilter
 
-int16_t InvisBonusFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t InvisBonusFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -631,7 +631,7 @@ int16_t InvisBonusFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  TransFilter
 
-int16_t TransFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t TransFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -659,7 +659,7 @@ int16_t TransFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  EnemyFilter
 
-int16_t EnemyFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t EnemyFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -691,7 +691,7 @@ int16_t EnemyFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
 
 //--------------------------------------------------------------  FlowerFilter
 
-int16_t FlowerFilter (Dialog *dial, const TimeTaggedVOSEvent *evt)
+int16_t FlowerFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	if (!evt)
 		return -1;
@@ -785,7 +785,7 @@ void DoBlowerObjectInfo (short what)
 	{
 		bool redrawMain = false;
 
-		item = infoDial->ExecuteModal(BlowerFilter);
+		item = infoDial->ExecuteModal(nullptr, BlowerFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -937,7 +937,7 @@ void DoFurnitureObjectInfo (void)
 	
 	while (!leaving)
 	{
-		item = infoDial->ExecuteModal(FurnitureFilter);
+		item = infoDial->ExecuteModal(nullptr, FurnitureFilter);
 		
 		if (item == kOkayButton)
 			leaving = true;
@@ -997,7 +997,7 @@ void DoCustPictObjectInfo (void)
 	{
 		bool redrawMain = false;
 
-		item = infoDial->ExecuteModal(CustPictFilter);
+		item = infoDial->ExecuteModal(nullptr, CustPictFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1106,7 +1106,7 @@ void DoSwitchObjectInfo (void)
 	
 	while (!leaving)
 	{
-		item = infoDial->ExecuteModal(SwitchFilter);
+		item = infoDial->ExecuteModal(nullptr, SwitchFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1231,7 +1231,7 @@ void DoTriggerObjectInfo (void)
 	
 	while (!leaving)
 	{
-		item = infoDial->ExecuteModal(TriggerFilter);
+		item = infoDial->ExecuteModal(nullptr, TriggerFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1371,7 +1371,7 @@ void DoLightObjectInfo (void)
 	while (!leaving)
 	{
 		bool redrawMain = false;
-		item = infoDial->ExecuteModal(LightFilter);
+		item = infoDial->ExecuteModal(nullptr, LightFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1465,7 +1465,7 @@ void DoApplianceObjectInfo (short what)
 	while (!leaving)
 	{
 		bool redrawMain = false;
-		item = infoDial->ExecuteModal(ApplianceFilter);
+		item = infoDial->ExecuteModal(nullptr, ApplianceFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1585,7 +1585,7 @@ void DoMicrowaveObjectInfo (void)
 	while (!leaving)
 	{
 		bool redrawMain = false;
-		item = infoDial->ExecuteModal(MicrowaveFilter);
+		item = infoDial->ExecuteModal(nullptr, MicrowaveFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1695,7 +1695,7 @@ void DoGreaseObjectInfo (void)
 	{
 		bool redrawMain = false;
 
-		item = infoDial->ExecuteModal(GreaseFilter);
+		item = infoDial->ExecuteModal(nullptr, GreaseFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1783,7 +1783,7 @@ void DoInvisBonusObjectInfo (void)
 	
 	while (!leaving)
 	{
-		item = infoDial->ExecuteModal(InvisBonusFilter);
+		item = infoDial->ExecuteModal(nullptr, InvisBonusFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -1907,7 +1907,7 @@ void DoTransObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		item = infoDial->ExecuteModal(TransFilter);
+		item = infoDial->ExecuteModal(nullptr, TransFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -2017,7 +2017,7 @@ void DoEnemyObjectInfo (short what)
 	
 	while (!leaving)
 	{
-		item = infoDial->ExecuteModal(EnemyFilter);
+		item = infoDial->ExecuteModal(nullptr, EnemyFilter);
 		
 		if (item == kOkayButton)
 		{
@@ -2113,7 +2113,7 @@ void DoFlowerObjectInfo (void)
 	{
 		bool redrawMain = false;
 
-		item = infoDial->ExecuteModal(FlowerFilter);
+		item = infoDial->ExecuteModal(nullptr, FlowerFilter);
 		
 		if (item == kOkayButton)
 		{

@@ -11,6 +11,8 @@ namespace PortabilityLayer
 	class EditboxWidget final : public WidgetSpec<EditboxWidget>
 	{
 	public:
+		typedef bool (*CharacterFilterCallback_t)(void *context, uint8_t character);
+
 		EditboxWidget(const WidgetBasicState &state);
 		~EditboxWidget();
 
@@ -23,7 +25,7 @@ namespace PortabilityLayer
 		void GainFocus() override;
 		void LoseFocus() override;
 
-		WidgetHandleState_t ProcessEvent(const TimeTaggedVOSEvent &evt) override;
+		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt) override;
 
 		Rect GetExpandedRect() const override;
 
@@ -32,6 +34,9 @@ namespace PortabilityLayer
 		void SetSelection(size_t startChar, size_t endChar);
 
 		void SetMultiLine(bool isMultiLine);
+
+		void SetCharacterFilter(void *context, CharacterFilterCallback_t callback);
+		void SetCapacity(size_t capacity);
 
 	private:
 		static const unsigned int kCaratBlinkRate = 20;
@@ -92,5 +97,8 @@ namespace PortabilityLayer
 		size_t m_dragSelectionStartChar;
 
 		uint16_t m_caratTimer;
+
+		CharacterFilterCallback_t m_characterFilter;
+		void *m_characterFilterContext;
 	};
 }
