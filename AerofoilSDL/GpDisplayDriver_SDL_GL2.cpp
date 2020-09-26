@@ -436,6 +436,8 @@ bool GpGLVertexArray::InitWithSpecs(const GpGLVertexArraySpec *specs, size_t num
 		m_specs[i] = specs[i];
 
 	m_numSpecs = numSpecs;
+
+	return true;
 }
 
 void GpGLVertexArray::Activate(const GLint *locations)
