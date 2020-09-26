@@ -1245,7 +1245,7 @@ void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned in
 		*height = m_windowHeightVirtual;
 }
 
-IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat)
+IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat)
 {
 	return GpDisplayDriverSurfaceD3D11::Create(m_device, m_deviceContext, width, height, pixelFormat);
 }

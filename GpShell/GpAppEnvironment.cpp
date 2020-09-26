@@ -57,7 +57,7 @@ GpDisplayDriverTickStatus_t GpAppEnvironment::Tick(IGpFiber *vosFiber)
 			return GpDisplayDriverTickStatuses::kOK;
 		case ApplicationState_Running:
 			SynchronizeState();
-			m_applicationFiber->YieldTo();
+			m_vosFiber->YieldTo(m_applicationFiber);
 			break;
 		case ApplicationState_SystemCall:
 			{
@@ -135,7 +135,7 @@ void GpAppEnvironment::AppThreadFunc()
 	GpAppInterface_Get()->ApplicationMain();
 
 	m_applicationState = ApplicationState_Terminated;
-	m_vosFiber->YieldTo();
+	m_applicationFiber->YieldTo(m_vosFiber);
 }
 
 void GpAppEnvironment::InitializeApplicationState()
@@ -165,7 +165,7 @@ void GpAppEnvironment::StaticSuspendHookFunc(void *context, PortabilityLayer::Ho
 	appEnv->m_suspendReturnValue = returnValue;
 	appEnv->m_applicationState = ApplicationState_SystemCall;
 
-	appEnv->m_vosFiber->YieldTo();
+	appEnv->m_applicationFiber->YieldTo(appEnv->m_vosFiber);
 }
 
 void GpAppEnvironment::DispatchSystemCall(PortabilityLayer::HostSuspendCallID callID, const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue)

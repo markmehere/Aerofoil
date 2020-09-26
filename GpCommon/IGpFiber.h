@@ -4,6 +4,6 @@
 
 struct IGpFiber
 {
-	virtual void YieldTo() = 0;
+	virtual void YieldTo(IGpFiber *toFiber) = 0;
 	virtual void Destroy() = 0;
 };

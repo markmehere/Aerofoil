@@ -6,9 +6,9 @@ GpFiber_Win32::GpFiber_Win32(LPVOID fiber)
 {
 }
 
-void GpFiber_Win32::YieldTo()
+void GpFiber_Win32::YieldTo(IGpFiber *toFiber)
 {
-	SwitchToFiber(m_fiber);
+	SwitchToFiber(static_cast<GpFiber_Win32*>(toFiber)->m_fiber);
 }
 
 void GpFiber_Win32::Destroy()

@@ -29,6 +29,7 @@ InstallerPackages/*
 *.wixpdb
 *.wixobj
 *.CopyComplete
+*.lnk
 ReleasePackageInstaller/obj/*
 ReleasePackageInstaller/bin/*
 ReleasePackageInstaller/AerofoilPackageDefs.wxi

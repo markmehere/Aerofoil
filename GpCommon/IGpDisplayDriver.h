@@ -3,6 +3,8 @@
 #include "GpPixelFormat.h"
 #include "EGpStandardCursor.h"
 
+#include <stdint.h>
+
 struct IGpDisplayDriverSurface;
 struct IGpCursor;
 struct IGpPrefsHandler;
@@ -30,7 +32,7 @@ public:
 
 	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height) = 0;
 
-	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) = 0;
+	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat) = 0;
 	virtual void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) = 0;
 
 	virtual IGpCursor *LoadCursor(bool isColor, int cursorID) = 0;

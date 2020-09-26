@@ -28,7 +28,7 @@ void DrawSurface::PushToDDSurface(IGpDisplayDriver *displayDriver)
 	}
 
 	if (m_ddSurface == nullptr)
-		m_ddSurface = displayDriver->CreateSurface(pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, pixMap->m_pixelFormat);
+		m_ddSurface = displayDriver->CreateSurface(pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, pixMap->m_pitch, pixMap->m_pixelFormat);
 
 	if (m_port.IsDirty(PortabilityLayer::QDPortDirtyFlag_Contents) && m_ddSurface != nullptr)
 	{

@@ -40,6 +40,10 @@
     <Import Project="AerofoilSDL.props" />
     <Import Project="..\Common.props" />
     <Import Project="..\GpShell.props" />
+    <Import Project="..\GpMainApp.props" />
+    <Import Project="..\PortabilityLayer.props" />
+    <Import Project="..\GpCommon.props" />
+    <Import Project="..\Debug.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -47,6 +51,9 @@
     <Import Project="..\Common.props" />
     <Import Project="..\GpShell.props" />
     <Import Project="..\Release.props" />
+    <Import Project="..\GpMainApp.props" />
+    <Import Project="..\PortabilityLayer.props" />
+    <Import Project="..\GpCommon.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -62,6 +69,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -71,9 +79,47 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Aerofoil\GpColorCursor_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpFileStream_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpFileSystem_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpLogDriver_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpMutex_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpSystemServices_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpThreadEvent_Win32.cpp" />
+    <ClCompile Include="GpDisplayDriver_SDL_GL2.cpp" />
+    <ClCompile Include="GpFiberStarter_SDL.cpp" />
+    <ClCompile Include="GpFiber_SDL.cpp" />
     <ClCompile Include="GpMain_SDL_Win32.cpp" />
+    <ClCompile Include="ShaderCode\DrawQuadPaletteP.cpp" />
+    <ClCompile Include="ShaderCode\DrawQuadV.cpp" />
+    <ClCompile Include="ShaderCode\ScaleQuadP.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GpApp\GpApp.vcxproj">
+      <Project>{6233c3f2-5781-488e-b190-4fa8836f5a77}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GpAudioDriver_XAudio2\GpAudioDriver_XAudio2.vcxproj">
+      <Project>{e3bdc783-8646-433e-adf0-8b6390d36669}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GpFontHandler_FreeType2\GpFontHandler_FreeType2.vcxproj">
+      <Project>{4b564030-8985-4975-91e1-e1b2c16ae2a1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GpInputDriver_XInput\GpInputDriver_XInput.vcxproj">
+      <Project>{17b96f07-ef92-47cd-95a5-8e6ee38ab564}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GpShell\GpShell.vcxproj">
+      <Project>{10cf9b5f-61d0-4b5b-89f4-810b58fc053d}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GpFiber_SDL.h" />
+    <ClInclude Include="ShaderCode\DrawQuadPixelConstants.h" />
+    <ClInclude Include="ShaderCode\Functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

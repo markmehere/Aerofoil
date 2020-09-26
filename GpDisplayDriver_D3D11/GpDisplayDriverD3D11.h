@@ -41,7 +41,7 @@ public:
 
 	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
 
-	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, GpPixelFormat_t pixelFormat) override;
+	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
 
 	IGpCursor *LoadCursor(bool isColor, int cursorID) override;

@@ -20,7 +20,7 @@ namespace GpFiberStarter_Win32
 		GpFiberStarter::ThreadFunc_t threadFunc = tss->m_threadFunc;
 		IGpFiber *creatingFiber = tss->m_creatingFiber;
 		void *context = tss->m_context;
-		creatingFiber->YieldTo();
+		SwitchToFiber(static_cast<GpFiber_Win32*>(creatingFiber)->GetFiber());
 
 		threadFunc(context);
 
