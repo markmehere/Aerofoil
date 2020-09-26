@@ -66,6 +66,13 @@ struct GpGLFunctions
 	typedef void (GLAPIENTRYP PFNGLPIXELSTOREIPROC)(GLenum pname, GLint param);
 	typedef void (GLAPIENTRYP PFNGLTEXPARAMETERIPROC)(GLenum target, GLenum pname, GLint param);
 	typedef GLenum (GLAPIENTRYP PFNGLGETERRORPROC)();
+	typedef void (GLAPIENTRYP PFNGLENABLEPROC)(GLenum cap);
+	typedef void (GLAPIENTRYP PFNGLDISABLEPROC)(GLenum cap);
+	typedef void (GLAPIENTRYP PFNGLALPHAFUNCPROC)(GLenum func, GLclampf ref);
+
+	PFNGLENABLEPROC Enable;
+	PFNGLDISABLEPROC Disable;
+	PFNGLALPHAFUNCPROC AlphaFunc;
 
 	PFNGLCLEARPROC Clear;
 	PFNGLCLEARCOLORPROC ClearColor;
@@ -999,6 +1006,10 @@ static bool LookupOpenGLFunction(T &target, const char *name)
 
 bool GpGLFunctions::LookUpFunctions()
 {
+	LOOKUP_FUNC(Enable);
+	LOOKUP_FUNC(Disable);
+	LOOKUP_FUNC(AlphaFunc);
+
 	LOOKUP_FUNC(Clear);
 	LOOKUP_FUNC(ClearColor);
 
@@ -1293,6 +1304,12 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		m_gl.Uniform1fv(program->m_pixelFlickerEndThresholdLocation, 1, &flickerEnd);
 	}
 
+	if (effects->m_flicker)
+	{
+		m_gl.Enable(GL_ALPHA_TEST);
+		m_gl.AlphaFunc(GL_GREATER, 0.5f);
+	}
+
 	GLint vpos[1] = { program->m_vertexPosUVLocation };
 
 	m_quadVertexArray->Activate(vpos);
@@ -1325,6 +1342,9 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	m_quadVertexArray->Deactivate(vpos);
 
 	m_gl.UseProgram(0);
+
+	if (effects->m_flicker)
+		m_gl.Disable(GL_ALPHA_TEST);
 }
 
 IGpCursor *GpDisplayDriver_SDL_GL2::LoadCursor(bool isColor, int cursorID)

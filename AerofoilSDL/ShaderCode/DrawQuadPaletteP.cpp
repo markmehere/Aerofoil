@@ -15,7 +15,7 @@
 "{\n"\
 "	vec4 resultColor = vec4(SamplePixel(texCoord.xy), 1.0);\n"\
 "	resultColor *= constants_Modulation;\n"\
-"	resultColor = ApplyFlicker(constants_FlickerAxis, texCoord.xy, constants_FlickerStartThreshold, constants_FlickerEndThreshold, resultColor * constants_Modulation);\n"\
+"	resultColor = ApplyFlicker(constants_FlickerAxis, texCoord.zw, constants_FlickerStartThreshold, constants_FlickerEndThreshold, resultColor * constants_Modulation);\n"\
 "	resultColor = ApplyDesaturation(constants_Desaturation, resultColor);\n"\
 "\n"\
 "	gl_FragColor = vec4(ApplyColorSpaceTransform(resultColor.rgb), resultColor.a);\n"\
