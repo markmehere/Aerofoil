@@ -1,18 +1,10 @@
 #pragma once
 
-#include "IGpColorCursor.h"
+#include "IGpCursor_Win32.h"
 #include "GpWindows.h"
 
-struct IGpColorCursor_Win32 : public IGpColorCursor
-{
-	virtual const HCURSOR &GetHCursor() const = 0;
 
-	virtual void IncRef() = 0;
-	virtual void DecRef() = 0;
-};
-
-
-class GpColorCursor_Win32 final : public IGpColorCursor_Win32
+class GpColorCursor_Win32 final : public IGpCursor_Win32
 {
 public:
 	void Destroy() override;
@@ -22,7 +14,7 @@ public:
 	void IncRef() override;
 	void DecRef() override;
 
-	static IGpColorCursor_Win32 *Load(const wchar_t *path);
+	static IGpCursor_Win32 *Create(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY);
 
 private:
 	GpColorCursor_Win32(HCURSOR cursor);

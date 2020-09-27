@@ -2,7 +2,6 @@
 
 #include "GpMain.h"
 #include "GpAudioDriverFactory.h"
-#include "GpCursor_Win32.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpGlobalConfig.h"
 #include "GpFiber_Win32.h"
@@ -435,7 +434,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//g_gpWindowsGlobals.m_hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
 	//g_gpWindowsGlobals.m_hIconSm = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON2));
 
-	g_gpWindowsGlobals.m_loadCursorFunc = GpCursor_Win32::Load;
 	g_gpWindowsGlobals.m_translateWindowsMessageFunc = TranslateWindowsMessage;
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;

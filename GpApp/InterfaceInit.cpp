@@ -16,6 +16,7 @@
 #include "PLKeyEncoding.h"
 #include "PLPasStr.h"
 #include "RectUtils.h"
+#include "ResourceManager.h"
 #include "Tools.h"
 
 
@@ -81,21 +82,51 @@ void InitializeMenus (void)
 // Extra cursors (custom cursors) like the "hand" and various room…
 // editing cursors are loaded up.
 
+IGpCursor *LoadBWCursor(int resID)
+{
+	const THandle<void> resHdl = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('CURS', resID);
+	if (!resHdl)
+		return nullptr;
+
+	struct BWCursor
+	{
+		uint8_t m_pixels[32];
+		uint8_t m_mask[32];
+		BEUInt16_t m_hotSpotX;
+		BEUInt16_t m_hotSpotY;
+	};
+
+	const BWCursor *cursorData = static_cast<const BWCursor *>(*resHdl);
+
+	IGpCursor *cursor = PortabilityLayer::HostDisplayDriver::GetInstance()->CreateBWCursor(16, 16, cursorData->m_pixels, cursorData->m_mask, cursorData->m_hotSpotX, cursorData->m_hotSpotY);
+	resHdl.Dispose();
+
+	return cursor;
+}
+
 void GetExtraCursors (void)
 {
-	handCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kHandCursorID);
+	struct BWCursor
+	{
+		uint8_t m_pixels[32];
+		uint8_t m_mask[32];
+		BEUInt16_t m_hotSpotX;
+		BEUInt16_t m_hotSpotY;
+	};
+
+	handCursor = LoadBWCursor(kHandCursorID);
 	if (handCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
 	
-	vertCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kVertCursorID);
+	vertCursor = LoadBWCursor(kVertCursorID);
 	if (vertCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
 	
-	horiCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kHoriCursorID);
+	horiCursor = LoadBWCursor(kHoriCursorID);
 	if (horiCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
 	
-	diagCursor = PortabilityLayer::HostDisplayDriver::GetInstance()->LoadCursor(false, kDiagCursorID);
+	diagCursor = LoadBWCursor(kDiagCursorID);
 	if (diagCursor == nil)
 		RedAlert(kErrFailedResourceLoad);
 }

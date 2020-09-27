@@ -35,7 +35,9 @@ public:
 	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat) = 0;
 	virtual void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) = 0;
 
-	virtual IGpCursor *LoadCursor(bool isColor, int cursorID) = 0;
+	virtual IGpCursor *CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY) = 0;
+	virtual IGpCursor *CreateColorCursor(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY) = 0;
+
 	virtual void SetCursor(IGpCursor *cursor) = 0;
 	virtual void SetStandardCursor(EGpStandardCursor_t standardCursor) = 0;
 

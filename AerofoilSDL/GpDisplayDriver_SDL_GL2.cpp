@@ -14,6 +14,7 @@
 #include "IGpPrefsHandler.h"
 #include "IGpVOSEventQueue.h"
 
+#include "SDL_mouse.h"
 #include "SDL_opengl.h"
 #include "SDL_video.h"
 
@@ -588,8 +589,44 @@ private:
 class GpCursor_SDL2 final : public IGpCursor
 {
 public:
-	void Destroy() override { delete this; }
+	explicit GpCursor_SDL2(SDL_Cursor *cursor);
+
+	SDL_Cursor* GetCursor() const;
+
+	void IncRef();
+	void DecRef();
+
+	void Destroy() override { this->DecRef(); }
+
+private:
+	SDL_Cursor *m_cursor;
+	unsigned int m_count;
 };
+
+GpCursor_SDL2::GpCursor_SDL2(SDL_Cursor *cursor)
+	: m_cursor(cursor)
+	, m_count(1)
+{
+}
+
+SDL_Cursor* GpCursor_SDL2::GetCursor() const
+{
+	return m_cursor;
+}
+
+void GpCursor_SDL2::IncRef()
+{
+	++m_count;
+}
+
+void GpCursor_SDL2::DecRef()
+{
+	if (m_count == 1)
+		delete this;
+	else
+		--m_count;
+}
+
 
 class GpDisplayDriver_SDL_GL2 final : public IGpDisplayDriver, public IGpPrefsHandler
 {
@@ -604,7 +641,8 @@ public:
 	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
-	IGpCursor *LoadCursor(bool isColor, int cursorID) override;
+	IGpCursor *CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY) override;
+	IGpCursor *CreateColorCursor(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY) override;
 	void SetCursor(IGpCursor *cursor) override;
 	void SetStandardCursor(EGpStandardCursor_t standardCursor) override;
 	void UpdatePalette(const void *paletteData) override;
@@ -648,6 +686,10 @@ private:
 
 	void BecomeFullScreen();
 	void BecomeWindowed();
+
+	void SynchronizeCursors();
+	void ChangeToCursor(SDL_Cursor *cursor);
+	void ChangeToStandardCursor(EGpStandardCursor_t cursor);
 
 	bool ResizeOpenGLWindow(uint32_t &windowWidth, uint32_t &windowHeight, uint32_t desiredWidth, uint32_t desiredHeight, IGpLogDriver *logger);
 	bool InitBackBuffer(uint32_t width, uint32_t height);
@@ -710,6 +752,12 @@ private:
 	SDL_Window *m_window;
 	SDL_GLContext m_glContext;
 
+	SDL_Cursor *m_waitCursor;
+	SDL_Cursor *m_iBeamCursor;
+	SDL_Cursor *m_arrowCursor;
+	bool m_cursorIsHidden;
+
+
 	UINT m_expectedSyncDelta;
 	bool m_isResettingSwapChain;
 
@@ -732,8 +780,8 @@ private:
 	float m_pixelScaleX;
 	float m_pixelScaleY;
 
-	IGpCursor *m_activeCursor;
-	IGpCursor *m_pendingCursor;
+	GpCursor_SDL2 *m_activeCursor;
+	GpCursor_SDL2 *m_pendingCursor;
 	EGpStandardCursor_t m_currentStandardCursor;
 	EGpStandardCursor_t m_pendingStandardCursor;
 	bool m_mouseIsInClientArea;
@@ -741,10 +789,6 @@ private:
 	IGpFiber *m_vosFiber;
 	PortabilityLayer::HostThreadEvent *m_vosEvent;
 	GpWindowsGlobals *m_osGlobals;
-
-	HCURSOR m_arrowCursor;
-	HCURSOR m_waitCursor;
-	HCURSOR m_ibeamCursor;
 
 	float m_bgColor[4];
 	bool m_bgIsDark;
@@ -975,6 +1019,10 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_osGlobals(static_cast<GpWindowsGlobals*>(properties.m_osGlobals))
 	, m_properties(properties)
 	, m_syncTimeBase(std::chrono::time_point<std::chrono::high_resolution_clock>::duration::zero())
+	, m_waitCursor(nullptr)
+	, m_iBeamCursor(nullptr)
+	, m_arrowCursor(nullptr)
+	, m_cursorIsHidden(false)
 {
 	m_bgColor[0] = 0.f;
 	m_bgColor[1] = 0.f;
@@ -985,6 +1033,10 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	const intmax_t periodDen = std::chrono::high_resolution_clock::period::den;
 
 	m_frameTimeSliceSize = std::chrono::high_resolution_clock::duration(periodDen * static_cast<intmax_t>(properties.m_frameTimeLockNumerator) / static_cast<intmax_t>(properties.m_frameTimeLockDenominator) / periodNum);
+
+	m_waitCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
+	m_iBeamCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
+	m_arrowCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
 }
 
 template<class T>
@@ -1347,17 +1399,62 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		m_gl.Disable(GL_ALPHA_TEST);
 }
 
-IGpCursor *GpDisplayDriver_SDL_GL2::LoadCursor(bool isColor, int cursorID)
+
+IGpCursor *GpDisplayDriver_SDL_GL2::CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY)
 {
-	return new GpCursor_SDL2();
+	SDL_Cursor *cursor = SDL_CreateCursor(static_cast<const Uint8*>(pixelData), static_cast<const Uint8*>(maskData), width, height, hotSpotX, hotSpotY);
+	return new GpCursor_SDL2(cursor);
+}
+
+IGpCursor *GpDisplayDriver_SDL_GL2::CreateColorCursor(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY)
+{
+	uint32_t channelMasks[4];
+
+	for (int i = 0; i < 4; i++)
+	{
+		channelMasks[i] = 0;
+		reinterpret_cast<uint8_t*>(&channelMasks[i])[i] = 0xff;
+	}
+
+	SDL_Surface *surface = SDL_CreateRGBSurface(0, width, height, 32, channelMasks[0], channelMasks[1], channelMasks[2], channelMasks[3]);
+	if (!surface)
+		return nullptr;
+
+	size_t surfacePitch = surface->pitch;
+	uint8_t *destPixels = reinterpret_cast<uint8_t*>(surface->pixels);
+	for (size_t y = 0; y < height; y++)
+		memcpy(destPixels + y * surfacePitch, static_cast<const uint8_t*>(pixelDataRGBA) + y * width * 4, width * 4);
+
+	SDL_Cursor *cursor = SDL_CreateColorCursor(surface, hotSpotX, hotSpotY);
+	SDL_FreeSurface(surface);
+
+	if (!cursor)
+		return nullptr;
+
+	return new GpCursor_SDL2(cursor);
 }
 
 void GpDisplayDriver_SDL_GL2::SetCursor(IGpCursor *cursor)
 {
+	GpCursor_SDL2 *sdlCursor = static_cast<GpCursor_SDL2*>(cursor);
+
+	sdlCursor->IncRef();
+
+	if (m_pendingCursor)
+		m_pendingCursor->DecRef();
+
+	m_pendingCursor = sdlCursor;
 }
 
 void GpDisplayDriver_SDL_GL2::SetStandardCursor(EGpStandardCursor_t standardCursor)
 {
+	if (m_pendingCursor)
+	{
+		m_pendingCursor->DecRef();
+		m_pendingCursor = nullptr;
+	}
+
+	m_pendingStandardCursor = standardCursor;
 }
 
 void GpDisplayDriver_SDL_GL2::UpdatePalette(const void *paletteData)
@@ -1619,6 +1716,93 @@ void GpDisplayDriver_SDL_GL2::BecomeWindowed()
 	m_isFullScreen = false;
 }
 
+void GpDisplayDriver_SDL_GL2::SynchronizeCursors()
+{
+	if (m_activeCursor)
+	{
+		if (m_pendingCursor != m_activeCursor)
+		{
+			if (m_pendingCursor == nullptr)
+			{
+				m_currentStandardCursor = m_pendingStandardCursor;
+				ChangeToStandardCursor(m_currentStandardCursor);
+
+				m_activeCursor->DecRef();
+				m_activeCursor = nullptr;
+			}
+			else
+			{
+				ChangeToCursor(m_pendingCursor->GetCursor());
+
+				m_pendingCursor->IncRef();
+				m_activeCursor->DecRef();
+				m_activeCursor = m_pendingCursor;
+			}
+		}
+	}
+	else
+	{
+		if (m_pendingCursor)
+		{
+			m_pendingCursor->IncRef();
+			m_activeCursor = m_pendingCursor;
+
+			ChangeToCursor(m_activeCursor->GetCursor());
+		}
+		else
+		{
+			if (m_pendingStandardCursor != m_currentStandardCursor)
+			{
+				ChangeToStandardCursor(m_pendingStandardCursor);
+				m_currentStandardCursor = m_pendingStandardCursor;
+			}
+		}
+	}
+}
+
+void GpDisplayDriver_SDL_GL2::ChangeToCursor(SDL_Cursor *cursor)
+{
+	if (cursor == nullptr)
+	{
+		if (!m_cursorIsHidden)
+		{
+			m_cursorIsHidden = true;
+			SDL_ShowCursor(0);
+		}
+	}
+	else
+	{
+		if (m_cursorIsHidden)
+		{
+			m_cursorIsHidden = false;
+			SDL_ShowCursor(1);
+		}
+		SDL_SetCursor(cursor);
+	}
+}
+
+void GpDisplayDriver_SDL_GL2::ChangeToStandardCursor(EGpStandardCursor_t cursor)
+{
+	switch (cursor)
+	{
+	case EGpStandardCursors::kArrow:
+		SDL_SetCursor(m_arrowCursor);
+		break;
+	case EGpStandardCursors::kHidden:
+		SDL_SetCursor(nullptr);
+		break;
+	case EGpStandardCursors::kIBeam:
+		SDL_SetCursor(m_iBeamCursor);
+		break;
+	case EGpStandardCursors::kWait:
+		SDL_SetCursor(m_waitCursor);
+		break;
+	default:
+		break;
+	}
+}
+
+
 bool GpDisplayDriver_SDL_GL2::ResizeOpenGLWindow(uint32_t &windowWidth, uint32_t &windowHeight, uint32_t desiredWidth, uint32_t desiredHeight, IGpLogDriver *logger)
 {
 	if (logger)
@@ -1850,7 +2034,7 @@ bool GpDisplayDriver_SDL_GL2::ScaleQuadProgram::Link(GpDisplayDriver_SDL_GL2 *dr
 
 GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
 {
-	//SynchronizeCursors();
+	SynchronizeCursors();
 
 	float bgColor[4];
 

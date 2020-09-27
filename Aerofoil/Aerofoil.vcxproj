@@ -82,6 +82,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GpBWCursor_Win32.cpp" />
     <ClCompile Include="GpColorCursor_Win32.cpp" />
     <ClCompile Include="GpFiber_Win32.cpp" />
     <ClCompile Include="GpFileStream_Win32.cpp" />
@@ -106,10 +107,10 @@
     <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />
     <ClInclude Include="..\GpCommon\IGpLogDriver.h" />
     <ClInclude Include="..\GpCommon\IGpPrefsHandler.h" />
+    <ClInclude Include="GpBWCursor_Win32.h" />
     <ClInclude Include="GpFiber_Win32.h" />
     <ClInclude Include="GpFileStream_Win32.h" />
     <ClInclude Include="GpFileSystem_Win32.h" />
-    <ClInclude Include="GpFontHandler_FreeType2.h" />
     <ClInclude Include="GpLogDriver_Win32.h" />
     <ClInclude Include="GpMutex_Win32.h" />
     <ClInclude Include="GpSystemServices_Win32.h" />

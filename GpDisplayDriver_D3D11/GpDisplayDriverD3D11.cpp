@@ -877,8 +877,6 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 
 void GpDisplayDriverD3D11::SynchronizeCursors()
 {
-	HCURSOR replacementCursor = nullptr;
-
 	if (m_activeCursor)
 	{
 		if (m_pendingCursor != m_activeCursor)
@@ -1373,23 +1371,15 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 	m_deviceContext->DrawIndexed(6, 0, 0);
 }
 
-IGpCursor *GpDisplayDriverD3D11::LoadCursor(bool isColor, int cursorID)
+IGpCursor *GpDisplayDriverD3D11::CreateColorCursor(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY)
 {
-	const size_t bufSize = MAX_PATH;
-	wchar_t path[bufSize];
-
-	int sz = 0;
-	if (isColor)
-		sz = _snwprintf(path, bufSize, L"%sPackaged\\WinCursors\\c%i.cur", m_osGlobals->m_baseDir, cursorID);
-	else
-		sz = _snwprintf(path, bufSize, L"%sPackaged\\WinCursors\\b%i.cur", m_osGlobals->m_baseDir, cursorID);
-
-	if (sz < 0 || static_cast<size_t>(sz) >= bufSize)
-		return nullptr;
-
-	return m_osGlobals->m_loadCursorFunc(path);
+	return m_osGlobals->m_createColorCursorFunc(width, height, pixelDataRGBA, hotSpotX, hotSpotY);
 }
 
+IGpCursor *GpDisplayDriverD3D11::CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY)
+{
+	return m_osGlobals->m_createBWCursorFunc(width, height, pixelData, maskData, hotSpotX, hotSpotY);
+}
 
 // We can't just set the cursor because we want to post WM_SETCURSOR to keep it limited
 // to the game window area, but depending on the fiber implementation, this may not be
