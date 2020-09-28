@@ -122,6 +122,8 @@ namespace GpNumPadSpecials
 		kAsterisk,
 		kMinus,
 		kPlus,
+		kPeriod,
+		kComma,
 
 		kCount,
 	};

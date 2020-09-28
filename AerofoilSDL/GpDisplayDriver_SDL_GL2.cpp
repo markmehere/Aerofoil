@@ -14,6 +14,7 @@
 #include "IGpPrefsHandler.h"
 #include "IGpVOSEventQueue.h"
 
+#include "SDL_events.h"
 #include "SDL_mouse.h"
 #include "SDL_opengl.h"
 #include "SDL_video.h"
@@ -37,6 +38,69 @@
 class GpDisplayDriver_SDL_GL2;
 
 static GpDisplayDriverSurfaceEffects gs_defaultEffects;
+
+
+namespace DeleteMe
+{
+	bool DecodeCodePoint(const uint8_t *characters, size_t availableCharacters, size_t &outCharactersDigested, uint32_t &outCodePoint)
+	{
+		if (availableCharacters <= 0)
+			return false;
+
+		if ((characters[0] & 0x80) == 0x00)
+		{
+			outCharactersDigested = 1;
+			outCodePoint = characters[0];
+			return true;
+		}
+
+		size_t sz = 0;
+		uint32_t codePoint = 0;
+		uint32_t minCodePoint = 0;
+		if ((characters[0] & 0xe0) == 0xc0)
+		{
+			sz = 2;
+			minCodePoint = 0x80;
+			codePoint = (characters[0] & 0x1f);
+		}
+		else if ((characters[0] & 0xf0) == 0xe0)
+		{
+			sz = 3;
+			minCodePoint = 0x800;
+			codePoint = (characters[0] & 0x0f);
+		}
+		else if ((characters[0] & 0xf8) == 0xf0)
+		{
+			sz = 4;
+			minCodePoint = 0x10000;
+			codePoint = (characters[0] & 0x07);
+		}
+		else
+			return false;
+
+		if (availableCharacters < sz)
+			return false;
+
+		for (size_t auxByte = 1; auxByte < sz; auxByte++)
+		{
+			if ((characters[auxByte] & 0xc0) != 0x80)
+				return false;
+
+			codePoint = (codePoint << 6) | (characters[auxByte] & 0x3f);
+		}
+
+		if (codePoint < minCodePoint || codePoint > 0x10ffff)
+			return false;
+
+		if (codePoint >= 0xd800 && codePoint <= 0xdfff)
+			return false;
+
+		outCodePoint = codePoint;
+		outCharactersDigested = sz;
+
+		return true;
+	}
+}
 
 namespace GpBinarizedShaders
 {
@@ -636,6 +700,8 @@ public:
 
 	bool Init();
 
+	static void TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY);
+
 	void Run() override;
 	void Shutdown() override;
 	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
@@ -1138,6 +1204,462 @@ bool GpDisplayDriver_SDL_GL2::Init()
 	return true;
 }
 
+
+static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
+{
+	if (GpVOSEvent *evt = eventQueue->QueueEvent())
+	{
+		evt->m_eventType = GpVOSEventTypes::kMouseInput;
+
+		GpMouseInputEvent &mEvent = evt->m_event.m_mouseInputEvent;
+		mEvent.m_button = button;
+		mEvent.m_x = x;
+		mEvent.m_y = y;
+		mEvent.m_eventType = eventType;
+
+		if (pixelScaleX != 1.0f)
+			mEvent.m_x = static_cast<int32_t>(static_cast<float>(x) / pixelScaleX);
+
+		if (pixelScaleY != 1.0f)
+			mEvent.m_y = static_cast<int32_t>(static_cast<float>(y) / pixelScaleX);
+	}
+}
+
+static bool IdentifyVKey(const SDL_KeyboardEvent *keyEvt, GpKeyIDSubset_t &outSubset, GpKeyboardInputEvent::KeyUnion &outKey)
+{
+	SDL_KeyCode keyCode = static_cast<SDL_KeyCode>(keyEvt->keysym.sym);
+
+	switch (keyCode)
+	{
+	case SDLK_ESCAPE:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kEscape;
+		break;
+	case SDLK_PRINTSCREEN:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kPrintScreen;
+		break;
+	case SDLK_SCROLLLOCK:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kScrollLock;
+		break;
+	case SDLK_PAUSE:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kPause;
+		break;
+	case SDLK_INSERT:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kInsert;
+		break;
+	case SDLK_HOME:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kHome;
+		break;
+	case SDLK_PAGEUP:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kPageUp;
+		break;
+	case SDLK_PAGEDOWN:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kPageDown;
+		break;
+	case SDLK_DELETE:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kDelete;
+		break;
+	case SDLK_TAB:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kTab;
+		break;
+	case SDLK_END:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kEnd;
+		break;
+	case SDLK_BACKSPACE:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kBackspace;
+		break;
+	case SDLK_CAPSLOCK:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kCapsLock;
+		break;
+	case SDLK_RETURN:
+	case SDLK_KP_ENTER:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kEnter;
+		break;
+	case SDLK_LSHIFT:
+	case SDLK_RSHIFT:
+		{
+			if (keyCode == SDLK_LSHIFT)
+			{
+				outSubset = GpKeyIDSubsets::kSpecial;
+				outKey.m_specialKey = GpKeySpecials::kLeftShift;
+			}
+			else if (keyCode == SDLK_RSHIFT)
+			{
+				outSubset = GpKeyIDSubsets::kSpecial;
+				outKey.m_specialKey = GpKeySpecials::kRightShift;
+			}
+			else
+				return false;
+		}
+		break;
+	case SDLK_LCTRL:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kLeftCtrl;
+		break;
+	case SDLK_RCTRL:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kRightCtrl;
+		break;
+	case SDLK_LALT:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kLeftAlt;
+		break;
+	case SDLK_RALT:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kRightAlt;
+		break;
+	case SDLK_NUMLOCKCLEAR:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kNumLock;
+		break;
+	case SDLK_KP_0:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 0;
+		break;
+	case SDLK_KP_1:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 1;
+		break;
+	case SDLK_KP_2:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 2;
+		break;
+	case SDLK_KP_3:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 3;
+		break;
+	case SDLK_KP_4:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 4;
+		break;
+	case SDLK_KP_5:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 5;
+		break;
+	case SDLK_KP_6:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 6;
+		break;
+	case SDLK_KP_7:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 7;
+		break;
+	case SDLK_KP_8:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 8;
+		break;
+	case SDLK_KP_9:
+		outSubset = GpKeyIDSubsets::kNumPadNumber;
+		outKey.m_numPadNumber = 9;
+		break;
+
+	case SDLK_F1:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 1;
+		break;
+	case SDLK_F2:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 2;
+		break;
+	case SDLK_F3:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 3;
+		break;
+	case SDLK_F4:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 4;
+		break;
+	case SDLK_F5:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 5;
+		break;
+	case SDLK_F6:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 6;
+		break;
+	case SDLK_F7:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 7;
+		break;
+	case SDLK_F8:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 8;
+		break;
+	case SDLK_F9:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 9;
+		break;
+	case SDLK_F10:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 10;
+		break;
+	case SDLK_F11:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 11;
+		break;
+	case SDLK_F12:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 12;
+		break;
+	case SDLK_F13:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 13;
+		break;
+	case SDLK_F14:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 14;
+		break;
+	case SDLK_F15:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 15;
+		break;
+	case SDLK_F16:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 16;
+		break;
+	case SDLK_F17:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 17;
+		break;
+	case SDLK_F18:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 18;
+		break;
+	case SDLK_F19:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 19;
+		break;
+	case SDLK_F20:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 20;
+		break;
+	case SDLK_F21:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 21;
+		break;
+	case SDLK_F22:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 22;
+		break;
+	case SDLK_F23:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 23;
+		break;
+	case SDLK_F24:
+		outSubset = GpKeyIDSubsets::kFKey;
+		outKey.m_fKey = 24;
+		break;
+
+	case SDLK_COMMA:
+		outSubset = GpKeyIDSubsets::kASCII;
+		outKey.m_asciiChar = ',';
+		break;
+
+	case SDLK_MINUS:
+		outSubset = GpKeyIDSubsets::kASCII;
+		outKey.m_asciiChar = '-';
+		break;
+
+	case SDLK_UP:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kUpArrow;
+		break;
+	case SDLK_DOWN:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kDownArrow;
+		break;
+	case SDLK_LEFT:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kLeftArrow;
+		break;
+	case SDLK_RIGHT:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kRightArrow;
+		break;
+
+	case SDLK_KP_COMMA:
+		outSubset = GpKeyIDSubsets::kNumPadSpecial;
+		outKey.m_numPadSpecialKey = GpNumPadSpecials::kComma;
+		break;
+
+	case SDLK_KP_MULTIPLY:
+		outSubset = GpKeyIDSubsets::kNumPadSpecial;
+		outKey.m_numPadSpecialKey = GpNumPadSpecials::kAsterisk;
+		break;
+
+	case SDLK_KP_PERIOD:
+		outSubset = GpKeyIDSubsets::kNumPadSpecial;
+		outKey.m_numPadSpecialKey = GpNumPadSpecials::kPeriod;
+		break;
+
+	case SDLK_KP_DIVIDE:
+		outSubset = GpKeyIDSubsets::kNumPadSpecial;
+		outKey.m_numPadSpecialKey = GpNumPadSpecials::kSlash;
+		break;
+
+	default:
+		{
+			if (keyCode < 128)
+			{
+				outSubset = GpKeyIDSubsets::kASCII;
+				if (keyCode >= 'a' && keyCode <= 'z')
+					outKey.m_asciiChar = static_cast<char>(keyCode + 'A' - 'a');
+				else
+					outKey.m_asciiChar = static_cast<char>(keyCode);
+				break;
+			}
+		}
+		return false;
+	}
+
+	return true;
+}
+
+static void PostKeyboardEvent(IGpVOSEventQueue *eventQueue, GpKeyboardInputEventType_t eventType, GpKeyIDSubset_t subset, const GpKeyboardInputEvent::KeyUnion &key, uint32_t repeatCount)
+{
+	if (GpVOSEvent *evt = eventQueue->QueueEvent())
+	{
+		evt->m_eventType = GpVOSEventTypes::kKeyboardInput;
+
+		GpKeyboardInputEvent &mEvent = evt->m_event.m_keyboardInputEvent;
+		mEvent.m_key = key;
+		mEvent.m_eventType = eventType;
+		mEvent.m_keyIDSubset = subset;
+		mEvent.m_repeatCount = repeatCount;
+	}
+}
+
+void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY)
+{
+	switch (msg->type)
+	{
+	case SDL_MOUSEMOTION:
+		{
+			const SDL_MouseMotionEvent *mouseEvt = reinterpret_cast<const SDL_MouseMotionEvent *>(msg);
+			PostMouseEvent(eventQueue, GpMouseEventTypes::kMove, GpMouseButtons::kNone, mouseEvt->x, mouseEvt->y, pixelScaleX, pixelScaleY);
+		}
+		break;
+		break;
+	case SDL_MOUSEBUTTONDOWN:
+	case SDL_MOUSEBUTTONUP:
+		{
+			const SDL_MouseButtonEvent *mouseEvt = reinterpret_cast<const SDL_MouseButtonEvent *>(msg);
+			GpMouseEventType_t evtType = GpMouseEventTypes::kDown;
+			GpMouseButton_t mouseButton = GpMouseButtons::kLeft;
+
+			if (mouseEvt->type == SDL_MOUSEBUTTONDOWN)
+				evtType = GpMouseEventTypes::kDown;
+			else if (mouseEvt->type == SDL_MOUSEBUTTONUP)
+				evtType = GpMouseEventTypes::kUp;
+			else
+				break;
+
+			if (mouseEvt->button == SDL_BUTTON_LEFT)
+				mouseButton = GpMouseButtons::kLeft;
+			else if (mouseEvt->button == SDL_BUTTON_RIGHT)
+				mouseButton = GpMouseButtons::kRight;
+			else if (mouseEvt->button == SDL_BUTTON_MIDDLE)
+				mouseButton = GpMouseButtons::kMiddle;
+			else if (mouseEvt->button == SDL_BUTTON_X1)
+				mouseButton = GpMouseButtons::kX1;
+			else if (mouseEvt->button == SDL_BUTTON_X2)
+				mouseButton = GpMouseButtons::kX2;
+			else
+				break;
+
+			PostMouseEvent(eventQueue, evtType, mouseButton, mouseEvt->x, mouseEvt->y, pixelScaleX, pixelScaleY);
+		}
+		break;
+	case SDL_KEYDOWN:
+		{
+			const SDL_KeyboardEvent *keyEvt = reinterpret_cast<const SDL_KeyboardEvent *>(msg);
+
+			GpKeyIDSubset_t subset;
+			GpKeyboardInputEvent::KeyUnion key;
+			bool isRepeat = (keyEvt->repeat != 0);
+			const GpKeyboardInputEventType_t keyEventType = isRepeat ? GpKeyboardInputEventTypes::kAuto : GpKeyboardInputEventTypes::kDown;
+			if (IdentifyVKey(keyEvt, subset, key))
+			{
+				PostKeyboardEvent(eventQueue, keyEventType, subset, key, keyEvt->repeat + 1);
+				if (subset == GpKeyIDSubsets::kSpecial && key.m_specialKey == GpKeySpecials::kEnter)
+				{
+					const GpKeyboardInputEventType_t charEventType = isRepeat ? GpKeyboardInputEventTypes::kAutoChar : GpKeyboardInputEventTypes::kDownChar;
+
+					GpKeyboardInputEvent::KeyUnion crKey;
+					crKey.m_asciiChar = '\n';
+					PostKeyboardEvent(eventQueue, charEventType, GpKeyIDSubsets::kASCII, crKey, keyEvt->repeat + 1);
+				}
+			}
+		}
+		break;
+	case SDL_KEYUP:
+		{
+			const SDL_KeyboardEvent *keyEvt = reinterpret_cast<const SDL_KeyboardEvent *>(msg);
+
+			GpKeyIDSubset_t subset;
+			GpKeyboardInputEvent::KeyUnion key;
+			if (IdentifyVKey(keyEvt, subset, key))
+				PostKeyboardEvent(eventQueue, GpKeyboardInputEventTypes::kUp, subset, key, keyEvt->repeat + 1);
+		}
+		break;
+	case SDL_TEXTINPUT:
+		{
+			// SDL doesn't report if the text input event is a repeat, which sucks...
+			const SDL_TextInputEvent *teEvt = reinterpret_cast<const SDL_TextInputEvent *>(msg);
+
+			size_t lenUTF8 = strlen(teEvt->text);
+
+			size_t parseOffset = 0;
+			while (parseOffset < lenUTF8)
+			{
+				uint32_t codePoint;
+				size_t numDigested;
+				DeleteMe::DecodeCodePoint(reinterpret_cast<const uint8_t*>(teEvt->text) + parseOffset, lenUTF8 - parseOffset, numDigested, codePoint);
+
+				parseOffset += numDigested;
+
+				const GpKeyboardInputEventType_t keyEventType = GpKeyboardInputEventTypes::kDownChar;
+				GpKeyboardInputEvent::KeyUnion key;
+				GpKeyIDSubset_t subset = GpKeyIDSubsets::kASCII;
+				if (codePoint <= 128)
+					key.m_asciiChar = static_cast<char>(codePoint);
+				else
+				{
+					subset = GpKeyIDSubsets::kUnicode;
+					key.m_unicodeChar = static_cast<uint32_t>(codePoint);
+				}
+				PostKeyboardEvent(eventQueue, keyEventType, subset, key, 1);
+			}
+
+			// Monster hack.  This needs to be redone to support OSK.
+			SDL_StopTextInput();
+			SDL_StartTextInput();
+		}
+		break;
+	case SDL_QUIT:
+		{
+			if (GpVOSEvent *evt = eventQueue->QueueEvent())
+				evt->m_eventType = GpVOSEventTypes::kQuit;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void GpDisplayDriver_SDL_GL2::Run()
 {
 #if GP_GL_IS_OPENGL_4_CONTEXT
@@ -1154,6 +1676,8 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
+	SDL_StartTextInput();
+
 	StartOpenGLForWindow(logger);
 
 	if (!m_gl.LookUpFunctions())
@@ -1167,32 +1691,18 @@ void GpDisplayDriver_SDL_GL2::Run()
 	MSG msg;
 	for (;;)
 	{
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		SDL_Event msg;
+		if (SDL_PollEvent(&msg) != 0)
 		{
-			DispatchMessage(&msg);
-
+			if (msg.type == SDL_MOUSEMOTION)
 			{
-				if (msg.message == WM_MOUSEMOVE)
-				{
-					if (!m_mouseIsInClientArea)
-					{
-						m_mouseIsInClientArea = true;
-
-						TRACKMOUSEEVENT tme;
-						ZeroMemory(&tme, sizeof(tme));
-
-						tme.cbSize = sizeof(tme);
-						tme.dwFlags = TME_LEAVE;
-						tme.hwndTrack = m_osGlobals->m_hwnd;
-						tme.dwHoverTime = HOVER_DEFAULT;
-						TrackMouseEvent(&tme);
-					}
-				}
-				else if (msg.message == WM_MOUSELEAVE)
-					m_mouseIsInClientArea = false;
-
-				m_osGlobals->m_translateWindowsMessageFunc(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY);
+				if (!m_mouseIsInClientArea)
+					m_mouseIsInClientArea = true;
 			}
+			//else if (msg.type == SDL_MOUSELEAVE)	// Does SDL support this??
+			//	m_mouseIsInClientArea = false;
+
+			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY);
 		}
 		else
 		{
