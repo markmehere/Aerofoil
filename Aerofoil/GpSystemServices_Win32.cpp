@@ -56,6 +56,11 @@ PortabilityLayer::HostMutex *GpSystemServices_Win32::CreateMutex()
 	return GpMutex_Win32::Create();
 }
 
+PortabilityLayer::HostMutex *GpSystemServices_Win32::CreateRecursiveMutex()
+{
+	return GpMutex_Win32::Create();
+}
+
 PortabilityLayer::HostThreadEvent *GpSystemServices_Win32::CreateThreadEvent(bool autoReset, bool startSignaled)
 {
 	return GpThreadEvent_Win32::Create(autoReset, startSignaled);

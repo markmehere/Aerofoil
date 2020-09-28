@@ -60,6 +60,9 @@
     <ClCompile Include="GpDisplayDriver_SDL_GL2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GpAudioDriver_SDL2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderCode\Functions.h">

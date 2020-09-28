@@ -18,6 +18,7 @@ public:
 	int64_t GetTime() const override;
 	void GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const override;
 	PortabilityLayer::HostMutex *CreateMutex() override;
+	PortabilityLayer::HostMutex *CreateRecursiveMutex() override;
 	PortabilityLayer::HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
 	uint64_t GetFreeMemoryCosmetic() const override;
 	void Beep() const override;

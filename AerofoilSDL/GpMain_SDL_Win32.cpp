@@ -29,11 +29,11 @@
 
 GpWindowsGlobals g_gpWindowsGlobals;
 
-extern "C" __declspec(dllimport) IGpAudioDriver *GpDriver_CreateAudioDriver_XAudio2(const GpAudioDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpInputDriver *GpDriver_CreateInputDriver_XInput(const GpInputDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
 
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
+IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
 
 static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
 {
@@ -438,7 +438,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;
 
-	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_XAudio2;
+	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_SDL2;
 
 	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_FreeType2;
 
@@ -452,9 +452,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	g_gpGlobalConfig.m_osGlobals = &g_gpWindowsGlobals;
 	g_gpGlobalConfig.m_logger = logger;
+	g_gpGlobalConfig.m_systemServices = GpSystemServices_Win32::GetInstance();
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
-	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);
+	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_SDL2, GpDriver_CreateAudioDriver_SDL);
 	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_XInput, GpDriver_CreateInputDriver_XInput);
 	GpFontHandlerFactory::RegisterFontHandlerFactory(EGpFontHandlerType_FreeType2, GpDriver_CreateFontHandler_FreeType2);
 

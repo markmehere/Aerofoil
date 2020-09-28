@@ -91,6 +91,7 @@
     <ClCompile Include="..\Aerofoil\GpMutex_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpSystemServices_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpThreadEvent_Win32.cpp" />
+    <ClCompile Include="GpAudioDriver_SDL2.cpp" />
     <ClCompile Include="GpDisplayDriver_SDL_GL2.cpp" />
     <ClCompile Include="GpFiberStarter_SDL.cpp" />
     <ClCompile Include="GpFiber_SDL.cpp" />

@@ -6,6 +6,12 @@
 #define GP_IS_CPP11 0
 #endif
 
+#ifdef _MSC_VER
+#define GP_ALIGNED(n) __declspec(align(n))
+#else
+#define GP_ALIGNED(n) __attribute__((aligned(n)))
+#endif
+
 #if GP_IS_CPP11
 #define GP_DELETED = delete
 #define GP_STATIC_ASSERT(n) static_assert((n), "Static assert failed: " #n)

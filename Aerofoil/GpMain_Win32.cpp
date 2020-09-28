@@ -448,6 +448,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	g_gpGlobalConfig.m_osGlobals = &g_gpWindowsGlobals;
 	g_gpGlobalConfig.m_logger = logger;
+	g_gpGlobalConfig.m_systemServices = GpSystemServices_Win32::GetInstance();
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_D3D11, GpDriver_CreateDisplayDriver_D3D11);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);

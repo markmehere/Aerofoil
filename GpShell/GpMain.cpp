@@ -85,6 +85,7 @@ int GpMain::Run()
 	adProps.m_debug = true;
 #endif
 	adProps.m_logger = g_gpGlobalConfig.m_logger;
+	adProps.m_systemServices = g_gpGlobalConfig.m_systemServices;
 
 	IGpInputDriver **inputDrivers = static_cast<IGpInputDriver**>(malloc(sizeof(IGpInputDriver*) * g_gpGlobalConfig.m_numInputDrivers));
 

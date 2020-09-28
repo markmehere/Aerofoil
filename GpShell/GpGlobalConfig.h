@@ -7,6 +7,11 @@
 
 struct IGpLogDriver;
 
+namespace PortabilityLayer
+{
+	class HostSystemServices;
+}
+
 struct GpGlobalConfig
 {
 	EGpDisplayDriverType m_displayDriverType;
@@ -17,6 +22,7 @@ struct GpGlobalConfig
 	size_t m_numInputDrivers;
 
 	IGpLogDriver *m_logger;
+	PortabilityLayer::HostSystemServices *m_systemServices;
 	void *m_osGlobals;
 };
 

@@ -2,6 +2,11 @@
 
 #include "EGpAudioDriverType.h"
 
+namespace PortabilityLayer
+{
+	class HostSystemServices;
+}
+
 struct IGpAudioDriver;
 struct IGpLogDriver;
 
@@ -13,4 +18,5 @@ struct GpAudioDriverProperties
 	bool m_debug;
 
 	IGpLogDriver *m_logger;
+	PortabilityLayer::HostSystemServices *m_systemServices;
 };
