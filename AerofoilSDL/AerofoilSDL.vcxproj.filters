@@ -21,9 +21,6 @@
     <ClCompile Include="GpMain_SDL_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Aerofoil\GpLogDriver_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Aerofoil\GpFileSystem_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
