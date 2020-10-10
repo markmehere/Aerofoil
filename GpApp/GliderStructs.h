@@ -180,7 +180,7 @@ typedef struct
 	objectType	objects[kMaxRoomObs];		// 24 * 12
 } roomType, *roomPtr;						// total = 348
 
-typedef struct
+struct houseType
 {
 	int16_t		version;					// 2
 	int16_t		unusedShort;				// 2
@@ -198,9 +198,12 @@ typedef struct
 
 	int16_t		padding;
 	roomType	rooms[1];					// 348 * nRooms
+											// total = 866 +
 
 	static const size_t kBinaryDataSize = 866;
-} houseType, *housePtr;						// total = 866 +
+};
+
+typedef houseType *housePtr;
 
 typedef THandle<houseType> houseHand;
 

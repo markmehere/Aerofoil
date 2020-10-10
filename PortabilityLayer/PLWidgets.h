@@ -80,20 +80,22 @@ namespace PortabilityLayer
 		virtual int ResolvePart(const Point &point) const;
 
 		const Rect &GetRect() const;
-		Window *GetWindow() const;
 
-	protected:
-		friend struct Window;
+		void SetWindow(Window *window);
+		Window *GetWindow() const;
 
 		virtual void GainFocus();
 		virtual void LoseFocus();
 
-		explicit Widget(const WidgetBasicState &state);
-		virtual ~Widget();
-
 		virtual void OnEnabledChanged();
 		virtual void OnStateChanged();
 		virtual void OnTick();
+
+	protected:
+		friend struct Window;
+
+		explicit Widget(const WidgetBasicState &state);
+		virtual ~Widget();
 
 		static void BaseRelease(void *storage);
 		static void *BaseAlloc(size_t sz);

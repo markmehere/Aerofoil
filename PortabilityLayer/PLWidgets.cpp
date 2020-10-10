@@ -139,6 +139,11 @@ namespace PortabilityLayer
 		return m_rect;
 	}
 
+	void Widget::SetWindow(Window *window)
+	{
+		m_window = window;
+	}
+
 	Window *Widget::GetWindow() const
 	{
 		return m_window;

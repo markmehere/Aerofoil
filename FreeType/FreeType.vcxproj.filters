@@ -19,9 +19,6 @@
     <Filter Include="Source Files\base">
       <UniqueIdentifier>{3fb0e907-a078-4943-ab94-631783b69f75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\autofit">
-      <UniqueIdentifier>{61b2d9d3-2578-438e-bbf2-52b3a0f60001}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="freetype\src\winfonts\fnterrs.h">

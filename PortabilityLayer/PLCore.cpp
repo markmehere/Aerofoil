@@ -298,7 +298,7 @@ void NumToString(long number, unsigned char *str)
 		number /= 10;
 
 		*outChar = '0' + digit;
-		*outChar++;
+		outChar++;
 	}
 
 	const ptrdiff_t strLength = outChar - firstChar;
@@ -753,7 +753,7 @@ bool Window::ReplaceWidget(PortabilityLayer::Widget *oldWidget, PortabilityLayer
 
 			oldWidget->Destroy();
 			m_widgets[i] = newWidget;
-			newWidget->m_window = this;
+			newWidget->SetWindow(this);
 
 			newWidget->DrawControl(&m_surface);
 			m_surface.m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);

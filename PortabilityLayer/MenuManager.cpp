@@ -706,6 +706,8 @@ namespace PortabilityLayer
 						if (evt.m_vosEvent.m_event.m_mouseInputEvent.m_button == GpMouseButtons::kLeft)
 							canDismiss = true;
 						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -763,6 +765,8 @@ namespace PortabilityLayer
 					case GpMouseEventTypes::kUp:
 						if (evt.m_vosEvent.m_event.m_mouseInputEvent.m_button == GpMouseButtons::kLeft)
 							canDismiss = true;
+						break;
+					default:
 						break;
 					}
 				}

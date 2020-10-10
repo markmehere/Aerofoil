@@ -158,8 +158,8 @@ namespace PortabilityLayer
 		if (fileInfo.m_resourceForkSize != 0)
 			rsrcBuffer = new uint8_t[fileInfo.m_resourceForkSize];
 
-		ScopedArray<uint8_t> dataContents = dataBuffer;
-		ScopedArray<uint8_t> rsrcContents = rsrcBuffer;
+		ScopedArray<uint8_t> dataContents(dataBuffer);
+		ScopedArray<uint8_t> rsrcContents(rsrcBuffer);
 
 		uint8_t *padding = mb2Header;
 

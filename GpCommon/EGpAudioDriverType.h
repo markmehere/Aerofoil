@@ -2,6 +2,8 @@
 
 enum EGpAudioDriverType
 {
+	EGpAudioDriverType_None,
+
 	EGpAudioDriverType_XAudio2,
 	EGpAudioDriverType_SDL2,
 

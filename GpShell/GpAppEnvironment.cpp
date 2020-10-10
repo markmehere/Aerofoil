@@ -18,6 +18,7 @@ GpAppEnvironment::GpAppEnvironment()
 	, m_numInputDrivers(0)
 	, m_fontHandler(nullptr)
 	, m_vosEventQueue(nullptr)
+	, m_systemServices(nullptr)
 	, m_applicationFiber(nullptr)
 	, m_vosFiber(nullptr)
 	, m_suspendCallID(PortabilityLayer::HostSuspendCallID_Unknown)
@@ -50,7 +51,7 @@ GpDisplayDriverTickStatus_t GpAppEnvironment::Tick(IGpFiber *vosFiber)
 		{
 		case ApplicationState_NotStarted:
 			InitializeApplicationState();
-			m_applicationFiber = GpFiberStarter::StartFiber(GpAppEnvironment::StaticAppThreadFunc, this, vosFiber);
+			m_applicationFiber = GpFiberStarter::StartFiber(m_systemServices, GpAppEnvironment::StaticAppThreadFunc, this, vosFiber);
 			m_applicationState = ApplicationState_Running;
 			break;
 		case ApplicationState_WaitingForEvents:
@@ -123,6 +124,11 @@ void GpAppEnvironment::SetFontHandler(IGpFontHandler *fontHandler)
 void GpAppEnvironment::SetVOSEventQueue(GpVOSEventQueue *eventQueue)
 {
 	m_vosEventQueue = eventQueue;
+}
+
+void GpAppEnvironment::SetSystemServices(PortabilityLayer::HostSystemServices *systemServices)
+{
+	m_systemServices = systemServices;
 }
 
 void GpAppEnvironment::StaticAppThreadFunc(void *context)

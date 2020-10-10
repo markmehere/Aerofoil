@@ -28,7 +28,7 @@ namespace GpFiberStarter_Win32
 	}
 }
 
-IGpFiber *GpFiberStarter::StartFiber(ThreadFunc_t threadFunc, void *context, IGpFiber *creatingFiber)
+IGpFiber *GpFiberStarter::StartFiber(PortabilityLayer::HostSystemServices *systemServices, ThreadFunc_t threadFunc, void *context, IGpFiber *creatingFiber)
 {
 	ULONG_PTR lowLimit;
 	ULONG_PTR highLimit;

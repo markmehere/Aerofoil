@@ -8,9 +8,9 @@ void GpThreadEvent_Win32::Wait()
 	WaitForSingleObject(m_event, INFINITE);
 }
 
-void GpThreadEvent_Win32::WaitTimed(uint32_t msec)
+bool GpThreadEvent_Win32::WaitTimed(uint32_t msec)
 {
-	WaitForSingleObject(m_event, static_cast<DWORD>(msec));
+	return WaitForSingleObject(m_event, static_cast<DWORD>(msec)) == WAIT_OBJECT_0;
 }
 
 void GpThreadEvent_Win32::Signal()

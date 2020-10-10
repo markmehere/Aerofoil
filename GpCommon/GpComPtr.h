@@ -5,7 +5,7 @@ class GpComPtr final
 {
 public:
 	GpComPtr();
-	const GpComPtr(const GpComPtr<T> &other);
+	GpComPtr(const GpComPtr<T> &other);
 	explicit GpComPtr(T *ptr);
 	~GpComPtr();
 

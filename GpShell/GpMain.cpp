@@ -66,6 +66,7 @@ int GpMain::Run()
 	ddProps.m_osGlobals = g_gpGlobalConfig.m_osGlobals;
 	ddProps.m_eventQueue = eventQueue;
 	ddProps.m_logger = g_gpGlobalConfig.m_logger;
+	ddProps.m_systemServices = g_gpGlobalConfig.m_systemServices;
 
 	GpAudioDriverProperties adProps;
 	memset(&adProps, 0, sizeof(adProps));
@@ -116,6 +117,7 @@ int GpMain::Run()
 	appEnvironment->SetInputDrivers(inputDrivers, numCreatedInputDrivers);
 	appEnvironment->SetFontHandler(fontHandler);
 	appEnvironment->SetVOSEventQueue(eventQueue);
+	appEnvironment->SetSystemServices(g_gpGlobalConfig.m_systemServices);
 
 	// Start the display loop
 	displayDriver->Run();
@@ -128,8 +130,6 @@ int GpMain::Run()
 
 		free(inputDrivers);
 	}
-
-	// GP TODO: Cleanup
 
 	return 0;
 }

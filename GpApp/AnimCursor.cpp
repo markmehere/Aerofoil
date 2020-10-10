@@ -233,7 +233,7 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 	short			i, j;
 	IGpCursor *hwCursor;
 	Boolean			result = true;
-	
+
 	if (ballCursH)
 	{
 		j = (*ballCursH)->n;				// Get the number of cursors
@@ -266,8 +266,8 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 void InitAnimatedCursor (acurHandle ballCursH)
 {
 	compiledAcurHandle	compiledBallCursorH;
-	
-	if (ballCursH == nil) 
+
+	if (ballCursH == nil)
 		ballCursH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('acur', 128).StaticCast<acurRec>();
 	if (ballCursH && ballCursH != animCursorH)
 	{
@@ -288,7 +288,7 @@ void InitAnimatedCursor (acurHandle ballCursH)
 
 //--------------------------------------------------------------  LoadCursors
 
-// Just calls the above function.  Other code could be added here thoughÉ
+// Just calls the above function.  Other code could be added here though?
 // to add additional cursors.
 
 void LoadCursors (void)
@@ -302,8 +302,8 @@ void LoadCursors (void)
 
 void DisposCursors (void)
 {
-	register short		i, j;
-	
+	short		i, j;
+
 	if (compiledAnimCursorH != nil)
 	{
 		j = (*animCursorH)->n;
@@ -372,7 +372,7 @@ void SpinCursor (short incrementIndex)
 {
 	UInt32		dummyLong;
 	short		i;
-	
+
 	for (i = 0; i < incrementIndex; i++)
 	{
 		IncrementCursor();
@@ -388,7 +388,7 @@ void BackSpinCursor (short decrementIndex)
 {
 	UInt32		dummyLong;
 	short		i;
-	
+
 	for (i = 0; i < decrementIndex; i++)
 	{
 		DecrementCursor();

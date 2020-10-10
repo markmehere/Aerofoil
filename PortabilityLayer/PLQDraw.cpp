@@ -1783,6 +1783,7 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap8,
 		{
 		case GpPixelFormats::k8BitCustom:
 		case GpPixelFormats::k8BitStandard:
+		case GpPixelFormats::kBW1:
 			pixelSizeBytes = 1;
 			break;
 		case GpPixelFormats::kRGB555:
@@ -1794,6 +1795,8 @@ static void CopyBitsComplete(const BitMap *srcBitmap, const BitMap *maskBitmap8,
 		case GpPixelFormats::kRGB32:
 			pixelSizeBytes = 4;
 			break;
+		default:
+			return;
 		};
 
 		const uint8_t *srcBytes = static_cast<const uint8_t*>(srcBitmap->m_data);
@@ -2029,8 +2032,8 @@ void DebugPixMap(PixMap **pixMapH, const char *outName)
 {
 	PixMap *pixMap = *pixMapH;
 	char outPath[1024];
-	strcpy_s(outPath, outName);
-	strcat_s(outPath, ".png");
+	strcpy(outPath, outName);
+	strcat(outPath, ".png");
 
 	stbi_write_png(outPath, pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, 1, pixMap->m_data, pixMap->m_pitch);
 }

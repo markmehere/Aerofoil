@@ -87,6 +87,7 @@
     <ClCompile Include="..\Aerofoil\GpColorCursor_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileStream_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileSystem_Win32.cpp" />
+    <ClCompile Include="..\Aerofoil\GpLogDriver_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpMutex_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpSystemServices_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpThreadEvent_Win32.cpp" />

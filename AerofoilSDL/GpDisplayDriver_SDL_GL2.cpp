@@ -4,10 +4,11 @@
 #include "GpComPtr.h"
 #include "GpFiber_SDL.h"
 #include "GpDisplayDriverProperties.h"
-#include "GpSystemServices_Win32.h"
-#include "GpWindows.h"	// TODO: Remove
+//#include "GpSystemServices_Win32.h"
+//#include "GpWindows.h"	// TODO: Remove
 #include "GpVOSEvent.h"
 #include "GpRingBuffer.h"
+#include "HostSystemServices.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriverSurface.h"
 #include "IGpLogDriver.h"
@@ -152,7 +153,6 @@ struct GpGLFunctions
 
 	PFNGLGENBUFFERSPROC GenBuffers;
 	PFNGLBUFFERDATAPROC BufferData;
-	PFNGLMAPBUFFERPROC MapBuffer;
 	PFNGLBINDBUFFERPROC BindBuffer;
 	PFNGLDELETEBUFFERSPROC DeleteBuffers;
 
@@ -823,8 +823,6 @@ private:
 	SDL_Cursor *m_arrowCursor;
 	bool m_cursorIsHidden;
 
-
-	UINT m_expectedSyncDelta;
 	bool m_isResettingSwapChain;
 
 	bool m_isFullScreen;
@@ -854,7 +852,6 @@ private:
 
 	IGpFiber *m_vosFiber;
 	PortabilityLayer::HostThreadEvent *m_vosEvent;
-	GpWindowsGlobals *m_osGlobals;
 
 	float m_bgColor[4];
 	bool m_bgIsDark;
@@ -896,6 +893,9 @@ GpDisplayDriverSurface_GL2::GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *
 		assert(pitch % 4 == 0);
 		paddingPixels = pitch / 4 - width;
 		break;
+    default:
+        assert(false);
+        paddingPixels = 0;
 	}
 
 	m_paddedTextureWidth = width + paddingPixels;
@@ -1082,7 +1082,6 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_lastFullScreenToggleTimeStamp(0)
 	, m_bgIsDark(false)
 	, m_useICCProfile(false)
-	, m_osGlobals(static_cast<GpWindowsGlobals*>(properties.m_osGlobals))
 	, m_properties(properties)
 	, m_syncTimeBase(std::chrono::time_point<std::chrono::high_resolution_clock>::duration::zero())
 	, m_waitCursor(nullptr)
@@ -1112,7 +1111,7 @@ static bool LookupOpenGLFunction(T &target, const char *name)
 	void *proc = SDL_GL_GetProcAddress(name);
 	if (proc)
 	{
-		target = static_cast<T>(proc);
+		target = reinterpret_cast<T>(proc);
 		return true;
 	}
 	else
@@ -1120,7 +1119,7 @@ static bool LookupOpenGLFunction(T &target, const char *name)
 }
 
 #define LOOKUP_FUNC(func) do { if (!LookupOpenGLFunction(this->func, "gl" #func)) return false; } while(false)
-			
+
 
 bool GpGLFunctions::LookUpFunctions()
 {
@@ -1139,18 +1138,17 @@ bool GpGLFunctions::LookUpFunctions()
 	LOOKUP_FUNC(CheckFramebufferStatus);
 	LOOKUP_FUNC(DeleteFramebuffers);
 
-	LOOKUP_FUNC(GenBuffers);
-	LOOKUP_FUNC(BufferData);
-	LOOKUP_FUNC(MapBuffer);
-	LOOKUP_FUNC(BindBuffer);
-	LOOKUP_FUNC(DeleteBuffers);
-
 	LOOKUP_FUNC(CreateProgram);
 	LOOKUP_FUNC(DeleteProgram);
 	LOOKUP_FUNC(LinkProgram);
 	LOOKUP_FUNC(UseProgram);
 	LOOKUP_FUNC(GetProgramiv);
 	LOOKUP_FUNC(GetProgramInfoLog);
+
+	LOOKUP_FUNC(GenBuffers);
+	LOOKUP_FUNC(BufferData);
+	LOOKUP_FUNC(BindBuffer);
+	LOOKUP_FUNC(DeleteBuffers);
 
 	LOOKUP_FUNC(GetUniformLocation);
 	LOOKUP_FUNC(GetAttribLocation);
@@ -1671,7 +1669,7 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 	IGpLogDriver *logger = m_properties.m_logger;
 
-	m_vosEvent = GpSystemServices_Win32::GetInstance()->CreateThreadEvent(true, false);
+	m_vosEvent = m_properties.m_systemServices->CreateThreadEvent(true, false);
 	m_vosFiber = new GpFiber_SDL(nullptr, m_vosEvent);
 
 	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -1685,10 +1683,6 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 	InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
 
-	LARGE_INTEGER lastTimestamp;
-	memset(&lastTimestamp, 0, sizeof(lastTimestamp));
-
-	MSG msg;
 	for (;;)
 	{
 		SDL_Event msg;
@@ -2320,13 +2314,13 @@ bool GpDisplayDriver_SDL_GL2::ResizeOpenGLWindow(uint32_t &windowWidth, uint32_t
 
 	if (desiredWidth < 640)
 		desiredWidth = 640;
-	else if (desiredWidth > MAXDWORD)
-		desiredWidth = MAXDWORD;
+	else if (desiredWidth > 32768)
+		desiredWidth = 32768;
 
 	if (desiredHeight < 480)
 		desiredHeight = 480;
-	else if (desiredHeight > MAXDWORD)
-		desiredHeight = MAXDWORD;
+	else if (desiredHeight > 32768)
+		desiredHeight = 32768;
 
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "ResizeOpenGLWindow: Adjusted dimensions: %i x %i", static_cast<int>(desiredWidth), static_cast<int>(desiredHeight));
@@ -2432,8 +2426,8 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 		{
 			static_cast<float>(static_cast<double>(m_windowWidthVirtual) / static_cast<double>(m_windowWidthPhysical)),
 			static_cast<float>(static_cast<double>(m_windowHeightVirtual) / static_cast<double>(m_windowHeightPhysical)),
-			m_windowWidthVirtual,
-			m_windowHeightVirtual
+			static_cast<float>(m_windowWidthVirtual),
+			static_cast<float>(m_windowHeightVirtual)
 		};
 
 		m_gl.Uniform4fv(m_scaleQuadProgram.m_pixelDXDYDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(dxdy_dimensions));
@@ -2526,7 +2520,7 @@ bool GpDisplayDriver_SDL_GL2::ScaleQuadProgram::Link(GpDisplayDriver_SDL_GL2 *dr
 		std::vector<char> errorMsgBuffer;
 		errorMsgBuffer.resize(static_cast<size_t>(logLength) + 1);
 		errorMsgBuffer[logLength] = '\0';
-		
+
 		gl->GetProgramInfoLog(m_program->GetID(), static_cast<size_t>(logLength), nullptr, reinterpret_cast<GLchar*>(&errorMsgBuffer[0]));
 		const char *errorMsg = &errorMsgBuffer[0];
 

@@ -10,6 +10,11 @@ struct IGpFiber;
 struct IGpVOSEventQueue;
 struct IGpLogDriver;
 
+namespace PortabilityLayer
+{
+	class HostSystemServices;
+}
+
 struct GpDisplayDriverProperties
 {
 	typedef GpDisplayDriverTickStatus_t (*TickFunc_t)(void *context, IGpFiber *vosFiber);
@@ -41,4 +46,5 @@ struct GpDisplayDriverProperties
 
 	IGpVOSEventQueue *m_eventQueue;
 	IGpLogDriver *m_logger;
+	PortabilityLayer::HostSystemServices *m_systemServices;
 };

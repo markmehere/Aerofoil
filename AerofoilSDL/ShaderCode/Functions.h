@@ -1,3 +1,5 @@
+#define GP_GL_SHADER_CODE_PRECISION_PREFIX	"precision mediump float;\n"\
+
 #define GP_GL_SHADER_CODE_FUNCTIONS_H	"vec3 pow3(vec3 v, float ex)\n"\
 "{\n"\
 "	return vec3(pow(v.x, ex), pow(v.y, ex), pow(v.z, ex));\n"\

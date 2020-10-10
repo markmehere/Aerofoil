@@ -39,7 +39,7 @@
 
 namespace GpBinarizedShaders
 {
-	const char *g_scaleQuadP_GL2 = GP_GL_SHADER_CODE_FUNCTIONS_H GP_GL_SHADER_CODE_SCALEQUADP_GLSL;
+	const char *g_scaleQuadP_GL2 = GP_GL_SHADER_CODE_PRECISION_PREFIX GP_GL_SHADER_CODE_FUNCTIONS_H GP_GL_SHADER_CODE_SCALEQUADP_GLSL;
 
 	extern const char *g_drawQuadRGBP_GL2;
 	extern const char *g_drawQuad15BitP_GL2;

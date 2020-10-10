@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "VirtualDirectory.h"
 
 class PLPasStr;

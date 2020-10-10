@@ -5,6 +5,8 @@
 #include "EGpFontHandlerType.h"
 #include "EGpInputDriverType.h"
 
+#include <stdint.h>
+
 struct IGpLogDriver;
 
 namespace PortabilityLayer

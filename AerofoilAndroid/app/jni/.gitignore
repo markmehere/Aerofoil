@@ -1,1 +1,13 @@
+AerofoilSDL
+Common
+FreeType
+GpApp
+GpCommon
+GpFontHandler_FreeType2
+GpShell
+MacRomanConversion
+PortabilityLayer
+rapidjson
 SDL2
+stb
+zlib

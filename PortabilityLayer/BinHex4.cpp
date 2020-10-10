@@ -292,10 +292,10 @@ namespace PortabilityLayer
 		const uint16_t expectedResCRC = ByteUnpack::BigUInt16(&decodedBytes[resourceForkCRCLoc]);
 
 		if (expectedDataCRC != BinHexCRC(&decodedBytes[dataForkStart], mfi.m_dataForkSize))
-			return false;
+			return nullptr;
 
 		if (expectedResCRC != BinHexCRC(&decodedBytes[resourceForkStart], mfi.m_resourceForkSize))
-			return false;
+			return nullptr;
 
 		return new MacFileMem(&decodedBytes[dataForkStart], &decodedBytes[resourceForkStart], nullptr, mfi);
 	}

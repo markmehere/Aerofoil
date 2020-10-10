@@ -71,7 +71,7 @@ static void TranslateKeyboardInputEvent(const GpVOSEvent &vosEventBase, uint32_t
 		inputManager->ApplyKeyboardEvent(vosEvent);
 
 	// Special handling of alt-enter, redirect to display driver
-	if (vosEventBase.m_eventType == GpKeyboardInputEventTypes::kDown &&
+	if (vosEventBase.m_event.m_keyboardInputEvent.m_eventType == GpKeyboardInputEventTypes::kDown &&
 		vosEventBase.m_event.m_keyboardInputEvent.m_keyIDSubset == GpKeyIDSubsets::kSpecial &&
 		vosEventBase.m_event.m_keyboardInputEvent.m_key.m_specialKey == GpKeySpecials::kEnter)
 	{

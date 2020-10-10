@@ -8,7 +8,7 @@ class GpThreadEvent_Win32 final : public PortabilityLayer::HostThreadEvent
 {
 public:
 	void Wait() override;
-	void WaitTimed(uint32_t msec) override;
+	bool WaitTimed(uint32_t msec) override;
 	void Signal() override;
 	void Destroy() override;
 

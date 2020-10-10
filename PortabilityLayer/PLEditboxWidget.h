@@ -29,7 +29,7 @@ namespace PortabilityLayer
 
 		Rect GetExpandedRect() const override;
 
-		bool HandlesTickEvents() const;
+		bool HandlesTickEvents() const override;
 
 		void SetSelection(size_t startChar, size_t endChar);
 
@@ -87,7 +87,7 @@ namespace PortabilityLayer
 		CaratSelectionAnchor m_caratSelectionAnchor;	// Where the carat is attached to the selection range
 
 		Vec2i m_caratScrollPosition;	// Ideal position of the carat in the editbox, but not necessarily its actual location (i.e. may be in the middle of a glyph)
-		bool m_caratScrollLocked;		// If true, the vertical position 
+		bool m_caratScrollLocked;		// If true, the vertical position
 
 		Vec2i m_scrollOffset;
 

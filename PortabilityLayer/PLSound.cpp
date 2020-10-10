@@ -179,7 +179,7 @@ namespace PortabilityLayer
 	{
 		AudioCommand cmd;
 		cmd.m_commandType = AudioCommandTypes::kCallback;
-		cmd.m_param.m_ptr = callback;
+		cmd.m_param.m_ptr = reinterpret_cast<void*>(callback);
 
 		return this->PushCommand(cmd, blocking);
 	}

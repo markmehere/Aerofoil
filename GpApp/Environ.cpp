@@ -76,7 +76,7 @@ short GetThisVolumeRefNum (void)
 {
 	PLError_t		theErr;
 	short		vRef;
-	
+
 	theErr = GetVol(nil, &vRef);
 	return (vRef);
 }
@@ -87,7 +87,7 @@ short GetThisVolumeRefNum (void)
 long GetThisCurrentDirectoryID (void)
 {
 	long		dirID;
-	
+
 	dirID = LMGetCurDirStore();
 	return (dirID);
 }
@@ -110,7 +110,7 @@ Boolean DoWeHaveGestalt (void)
 	return (TrapExists(kGestaltTrap));
 }
 */
-//--------------------------------------------------------------  DoWeHaveWNE  
+//--------------------------------------------------------------  DoWeHaveWNE
 
 // Specifically tests for the availablity of the WaitNextEvent() trap.
 /*
@@ -119,25 +119,25 @@ Boolean DoWeHaveWNE (void)
 	return (TrapExists(kWNETrap));
 }
 */
-//--------------------------------------------------------------  DoWeHaveColor  
+//--------------------------------------------------------------  DoWeHaveColor
 // Determines if ROMs support Color QuickDraw (monitor not neccessarily color).
 /*
 Boolean DoWeHaveColor (void)
 {
 	SysEnvRec		thisWorld;
-	
+
 	SysEnvirons(2, &thisWorld);
 	return (thisWorld.hasColorQD);
 }
 */
-//--------------------------------------------------------------  DoWeHaveSystem602  
+//--------------------------------------------------------------  DoWeHaveSystem602
 // Determines if the System version is at least 6.0.2 or more recent.
 /*
 Boolean DoWeHaveSystem602 (void)
 {
 	SysEnvRec		thisWorld;
 	Boolean			haveIt;
-	
+
 	SysEnvirons(2, &thisWorld);
 	if (thisWorld.systemVersion >= 0x0602)
 		haveIt = true;
@@ -146,14 +146,14 @@ Boolean DoWeHaveSystem602 (void)
 	return (haveIt);
 }
 */
-//--------------------------------------------------------------  DoWeHaveSystem605  
+//--------------------------------------------------------------  DoWeHaveSystem605
 // Determines if the System version is at least 6.0.5 or more recent.
 /*
 Boolean DoWeHaveSystem605 (void)
 {
 	SysEnvRec		thisWorld;
 	Boolean			haveIt;
-	
+
 	SysEnvirons(2, &thisWorld);
 	if (thisWorld.systemVersion >= 0x0605)
 		haveIt = true;
@@ -161,16 +161,16 @@ Boolean DoWeHaveSystem605 (void)
 		haveIt = false;
 	return (haveIt);
 }
-/
-//--------------------------------------------------------------  DoWeHaveSystem7  
+*/
+//--------------------------------------------------------------  DoWeHaveSystem7
 
 // Determines if the System version is at least 7.0.0 or more recent.
-
+/*
 Boolean DoWeHaveSystem7 (void)
 {
 	SysEnvRec		thisWorld;
 	Boolean			haveIt;
-	
+
 	SysEnvirons(2, &thisWorld);
 	if (thisWorld.systemVersion >= 0x0700)
 		haveIt = true;
@@ -178,7 +178,7 @@ Boolean DoWeHaveSystem7 (void)
 		haveIt = false;
 	return (haveIt);
 }
-
+*/
 //--------------------------------------------------------------  DoWeHaveSoundManager3
 // Determines if the Sound Manager version is at least 3.0.0 or more recent.
 /*
@@ -186,12 +186,12 @@ Boolean DoWeHaveSoundManager3 (void)
 {
 //	NumVersion	version;
 	Boolean		hasIt;
-	
+
 	hasIt = true;
-	
+
 	version = SndSoundManagerVersion();
 	hasIt = (version.majorRev >= 3);
-	
+
 	return hasIt;
 }
 */
@@ -213,35 +213,35 @@ void SwitchToDepth (short, Boolean)
 {
 }
 
-//--------------------------------------------------------------  CanWeDisplay4Bit  
+//--------------------------------------------------------------  CanWeDisplay4Bit
 // Determines if device (monitor) capable of supporting 4 bit (16 colors/grays).
 /*
 Boolean CanWeDisplay4Bit (GDHandle theDevice)
 {
 	short		canDepth;
 	Boolean		canDo;
-	
+
 	canDo = false;
 	canDepth = HasDepth(theDevice, 4, 1, 0);
 	if (canDepth != 0)
 		canDo = true;
-	
+
 	return (canDo);
 }
 */
-//--------------------------------------------------------------  CanWeDisplay1Bit  
+//--------------------------------------------------------------  CanWeDisplay1Bit
 // Determines if device (monitor) capable of supporting 1 bit (black & white).
 /*
 Boolean CanWeDisplay1Bit (GDHandle theDevice)
 {
 	short		canDepth;
 	Boolean		canDo;
-	
+
 	canDo = false;
 	canDepth = HasDepth(theDevice, 1, 1, 0);
 	if (canDepth != 0)
 		canDo = true;
-	
+
 	return (canDo);
 }
 */
@@ -278,12 +278,12 @@ void FlushResolutionChange(void)
 	}
 }
 
-//--------------------------------------------------------------  CheckOurEnvirons  
-// Calls all the above functions in order to fill out a sort of "spec sheet"É
+//--------------------------------------------------------------  CheckOurEnvirons
+// Calls all the above functions in order to fill out a sort of "spec sheet"ï¿½
 // for the current Mac.
 
 void CheckOurEnvirons (void)
-{	
+{
 	thisMac.vRefNum = 0;		// TEMP
 	thisMac.dirID = 0;			// TEMP
 	thisMac.hasGestalt = true;	// TEMP
@@ -294,7 +294,7 @@ void CheckOurEnvirons (void)
 	thisMac.hasSM3 = true;	// TEMP
 	thisMac.hasQT = DoWeHaveQuickTime();
 	thisMac.hasDrag = DoWeHaveDragManager();
-	
+
 	thisMac.can1Bit = true;
 	thisMac.can4Bit = true;
 	thisMac.can8Bit = true;
@@ -368,13 +368,13 @@ void InstallResolutionHandler(void)
 void ReflectSecondMonitorEnvirons (Boolean use1Bit, Boolean use4Bit, Boolean use8Bit)
 {
 	GDHandle	tempGDevice;
-	
+
 	tempGDevice = GetDeviceList();
 	while (tempGDevice != nil)
 	{
 		if (TestDeviceAttribute(tempGDevice, screenDevice))
-			if ((use1Bit && CanWeDisplay1Bit(tempGDevice)) || 
-					(use4Bit && CanWeDisplay4Bit(tempGDevice)) || 
+			if ((use1Bit && CanWeDisplay1Bit(tempGDevice)) ||
+					(use4Bit && CanWeDisplay4Bit(tempGDevice)) ||
 					(use8Bit && CanWeDisplay8Bit(tempGDevice)))
 				if (!TestDeviceAttribute(tempGDevice, mainScreen))
 				{
@@ -418,8 +418,8 @@ void HandleDepthSwitching (void)
 
 //--------------------------------------------------------------  CheckMemorySize
 
-// Tests for a specific amount of memory available.  If the required memoryÉ
-// is not available, attempts to turn off various game features (music, etc.)É
+// Tests for a specific amount of memory available.  If the required memoryï¿½
+// is not available, attempts to turn off various game features (music, etc.)ï¿½
 // in order to accomodate the constrained memory available.
 
 void CheckMemorySize (void)
@@ -428,10 +428,10 @@ void CheckMemorySize (void)
 	#define		kPaddingBytes		204800L					// 200K Padding
 	long		bytesNeeded;
 	long		soundBytes, musicBytes;
-	
+
 	dontLoadMusic = false;
 	dontLoadSounds = false;
-	
+
 	bytesNeeded = kBaseBytesNeeded;							// base memory
 	soundBytes = SoundBytesNeeded();						// sound memory
 	if (soundBytes <= 0L)
@@ -444,15 +444,15 @@ void CheckMemorySize (void)
 	else
 		bytesNeeded += musicBytes;
 	bytesNeeded += 4L * (long)thisMac.constrainedScreen.bottom;		// main screen
-	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) * 
-			((long)houseRect.bottom + 1 - (long)houseRect.top) * 
+	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) *
+			((long)houseRect.bottom + 1 - (long)houseRect.top) *
 			(long)thisMac.isDepth) / 8L;					// work map
 	bytesNeeded += 4L * (long)houseRect.bottom;
-	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) * 
-			((long)houseRect.bottom + 1 - (long)houseRect.top) * 
+	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) *
+			((long)houseRect.bottom + 1 - (long)houseRect.top) *
 			(long)thisMac.isDepth) / 8L;					// back map
 	bytesNeeded += 4L * houseRect.bottom;
-	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) * 21 * 
+	bytesNeeded += (((long)houseRect.right - (long)houseRect.left) * 21 *
 			(long)thisMac.isDepth) / 8L;					// scoreboard map
 	bytesNeeded += (6396L * (long)thisMac.isDepth) / 8L;	// more scoreboard
 	bytesNeeded += (32112L * (long)thisMac.isDepth) / 8L;	// glider map
@@ -516,7 +516,7 @@ void CheckMemorySize (void)
 	bytesNeeded += sizeof(dynaType) * kMaxDynamicObs;
 	bytesNeeded += sizeof(objDataType) * kMaxMasterObjects;
 	bytesNeeded += kDemoLength;		SpinCursor(1);
-	
+
 	SpinCursor(1);
 }
 

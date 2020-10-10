@@ -62,7 +62,7 @@ struct GpAudioChannelBufferChain_SDL2 final
 	bool m_hasTrigger;
 };
 
-GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) class GpAudioChannel_SDL2 final : public IGpAudioChannel
+class GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) GpAudioChannel_SDL2 final : public IGpAudioChannel
 {
 public:
 	enum ChannelState
@@ -104,7 +104,7 @@ private:
 	ChannelState m_channelState;
 };
 
-GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) class GpAudioDriver_SDL2 final : public IGpAudioDriver, public IGpPrefsHandler
+class GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) GpAudioDriver_SDL2 final : public IGpAudioDriver, public IGpPrefsHandler
 {
 public:
 	friend class GpAudioChannel_SDL2;
