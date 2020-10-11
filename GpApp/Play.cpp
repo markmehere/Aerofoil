@@ -13,9 +13,12 @@
 #include "Environ.h"
 #include "House.h"
 #include "MainWindow.h"
+#include "PLEventQueue.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
 #include "ResolveCachingColor.h"
 #include "Scoreboard.h"
+#include "Utilities.h"
 
 
 #define kHouseBannerAlert		1009
@@ -42,8 +45,6 @@ void HandleRoomVisitation (void);
 void SetObjectsToDefaults (void);
 void InitTelephone (void);
 void HandleTelephone (void);
-Boolean DoesStarCodeExist (short);
-short GetNumStarsRemaining (short, short);
 
 
 phoneType	thePhone, theChimes;
@@ -55,11 +56,14 @@ short		batteryTotal, bandsTotal, foilTotal, mortals;
 Boolean		playing, evenFrame, twoPlayerGame, showFoil, demoGoing;
 Boolean		doBackground, playerSuicide, phoneBitSet, tvOn;
 
+touchScreenControlState touchScreen;
+
 extern	VFileSpec	*theHousesSpecs;
 extern	demoPtr		demoData;
 extern	gameType	smallGame;
 extern	Rect		gliderSrc[kNumGliderSrcRects];
 extern	Rect		boardDestRect, boardSrcRect;
+extern	Rect		localRoomsDest[];
 extern	long		incrementModeTime;
 extern	short		numBands, otherPlayerEscaped, demoIndex, demoHouseIndex;
 extern	short		splashOriginH, splashOriginV, countDown, thisHouseIndex;
@@ -384,15 +388,215 @@ void HandleGameResolutionChange(void)
 	DumpScreenOn(&justRoomsRect, true);
 }
 
+//--------------------------------------------------------------  HandleTouchUp
+
+void HandleTouchUp(int fingerID)
+{
+	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
+	{
+		if (touchScreen.fingers[i].fingerID == fingerID)
+		{
+			touchScreen.fingers[i].fingerID = -1;
+			touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::None;
+			return;
+		}
+	}
+}
+
+//--------------------------------------------------------------  HandleTouchMove
+
+void HandleTouchMove(int fingerID, const Point &pt)
+{
+	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
+	{
+		if (touchScreen.fingers[i].fingerID == fingerID)
+		{
+			touchScreen.fingers[i].point = pt;
+			return;
+		}
+	}
+}
+
+//--------------------------------------------------------------  HandleTouchDown
+
+void HandleTouchDown(int fingerID, const Point &pt)
+{
+	int freeFingerIndex = -1;
+
+	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
+	{
+		if (touchScreen.fingers[i].fingerID == fingerID)
+		{
+			// Finger is already considered down, something weird happened
+			HandleTouchMove(fingerID, pt);
+			return;
+		}
+		else if (touchScreen.fingers[i].fingerID < 0)
+			freeFingerIndex = i;
+	}
+
+	if (freeFingerIndex < 0)
+		return;
+
+	touchScreenFingerState &fingerState = touchScreen.fingers[freeFingerIndex];
+
+	for (int j = 0; j < TouchScreenCtrlIDs::Count; j++)
+	{
+		if (touchScreen.controls[j].isEnabled)
+		{
+			if (touchScreen.controls[j].touchRect.Contains(pt))
+			{
+				fingerState.fingerID = fingerID;
+				fingerState.capturingControl = static_cast<TouchScreenCtrlID_t>(j);
+				fingerState.point = pt;
+				return;
+			}
+		}
+	}
+
+}
+
+//--------------------------------------------------------------  HandleTouchLeave
+
+void HandleTouchLeave(int fingerID)
+{
+	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
+	{
+		if (touchScreen.fingers[i].fingerID == fingerID)
+		{
+			touchScreen.fingers[i].fingerID = -1;
+			touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::None;
+			return;
+		}
+	}
+}
+
+//--------------------------------------------------------------  HandleInGameEvents
+
+void HandleInGameEvents(void)
+{
+	PortabilityLayer::EventQueue *queue = PortabilityLayer::EventQueue::GetInstance();
+
+	TimeTaggedVOSEvent evt;
+	while (queue->Dequeue(&evt))
+	{
+		if (thisMac.isTouchscreen)
+		{
+			if (thisMac.isMouseTouchscreen && evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+			{
+				const GpMouseInputEvent &mouseInput = evt.m_vosEvent.m_event.m_mouseInputEvent;
+
+				const Point mousePt = mainWindow->MouseToLocal(mouseInput);
+
+				switch (mouseInput.m_eventType)
+				{
+				case GpMouseEventTypes::kDown:
+					if (mouseInput.m_button == GpMouseButtons::kLeft)
+						HandleTouchDown(0, mousePt);
+					break;
+				case GpMouseEventTypes::kLeave:
+					HandleTouchLeave(0);
+					break;
+				case GpMouseEventTypes::kUp:
+					HandleTouchMove(0, mousePt);
+					HandleTouchUp(0);
+					break;
+				case GpMouseEventTypes::kMove:
+					HandleTouchMove(0, mousePt);
+					break;
+				default:
+					break;
+				};
+			}
+		}
+	}
+}
+
+//--------------------------------------------------------------  ResetTouchScreenControlBounds
+
+static int16_t touchScreenControlSize = 32;
+
+void ResetTouchScreenControlBounds (void)
+{
+	if (!thisMac.isTouchscreen)
+		return;
+
+
+	const Rect centerRoomRect = localRoomsDest[kCentralRoom];
+
+	int16_t touchScreenControlInterSpacing = 16;
+	int16_t touchScreenControlEdgeSpacing = 24;
+
+	Point points[TouchScreenCtrlIDs::Count];
+	Point sizes[TouchScreenCtrlIDs::Count];
+
+	points[TouchScreenCtrlIDs::MoveLeft] = Point::Create(mainWindowRect.left + touchScreenControlEdgeSpacing, mainWindowRect.bottom - touchScreenControlEdgeSpacing - touchScreenControlSize);
+	points[TouchScreenCtrlIDs::MoveRight] = points[TouchScreenCtrlIDs::MoveLeft] + Point::Create(touchScreenControlInterSpacing + touchScreenControlSize, 0);
+
+	points[TouchScreenCtrlIDs::BatteryHelium] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.bottom - touchScreenControlEdgeSpacing - touchScreenControlSize);
+	points[TouchScreenCtrlIDs::Flip] = points[TouchScreenCtrlIDs::BatteryHelium] + Point::Create(0, -touchScreenControlInterSpacing - touchScreenControlSize);
+	points[TouchScreenCtrlIDs::Bands] = points[TouchScreenCtrlIDs::BatteryHelium] + Point::Create(-touchScreenControlInterSpacing - touchScreenControlSize, 0);
+
+	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
+		sizes[i] = Point::Create(touchScreenControlSize, touchScreenControlSize);
+
+	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
+	{
+		Point lowerRight = points[i] + sizes[i];
+		touchScreen.controls[i].graphicRect = Rect::Create(points[i].v, points[i].h, lowerRight.v, lowerRight.h);
+		touchScreen.controls[i].touchRect = touchScreen.controls[i].graphicRect.Inset(-(touchScreenControlInterSpacing / 2), -(touchScreenControlInterSpacing / 2));
+	}
+
+	// Clear all active touches
+	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
+	{
+		touchScreen.fingers[i].fingerID = -1;
+		touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::None;
+	}
+}
+
+//--------------------------------------------------------------  InitTouchScreenControlState
+
+void InitTouchScreenControlState(void)
+{
+	if (!thisMac.isTouchscreen)
+		return;
+
+	ResetTouchScreenControlBounds();
+
+	for (int i = 0; i < touchScreenControlGraphics::Count; i++)
+	{
+		if (touchScreen.graphics[i] != nil)
+			continue;
+
+		int resID = touchScreenControlGraphics::kTouchScreenGraphicStartID + i;
+
+		Rect resRect = Rect::Create(0, 0, touchScreenControlSize, touchScreenControlSize);
+		(void)CreateOffScreenGWorld(&touchScreen.graphics[i], &resRect);
+		LoadGraphic(touchScreen.graphics[i], resID);
+	}
+}
+
 //--------------------------------------------------------------  PlayGame
 
 void PlayGame (void)
 {
+	InitTouchScreenControlState();
+
+	touchScreen.controls[TouchScreenCtrlIDs::MoveLeft].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::MoveRight].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::Flip].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::Bands].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::BatteryHelium].isEnabled = true;
+
 	while ((playing) && (!quitting))
 	{
+		HandleInGameEvents();
+
 		if (thisMac.isResolutionDirty)
 		{
 			HandleGameResolutionChange();
+			ResetTouchScreenControlBounds();
 		}
 
 		gameFrame++;

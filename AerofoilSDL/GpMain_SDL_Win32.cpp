@@ -50,6 +50,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		if (!wcscmp(cmdLineArgs[i], L"-diagnostics"))
 			GpLogDriver_Win32::Init();
+
+		if (!wcscmp(cmdLineArgs[i], L"-touchscreensimulation"))
+			GpSystemServices_Win32::GetInstance()->SetTouchscreenSimulation(true);
 	}
 
 	IGpLogDriver *logger = GpLogDriver_Win32::GetInstance();

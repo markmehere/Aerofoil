@@ -301,6 +301,9 @@ void CheckOurEnvirons (void)
 	thisMac.numScreens = HowManyUsableScreens(false, true, true);
 
 	thisMac.isResolutionDirty = true;
+	thisMac.isTouchscreen = PortabilityLayer::HostSystemServices::GetInstance()->IsTouchscreen();
+	thisMac.isMouseTouchscreen = PortabilityLayer::HostSystemServices::GetInstance()->IsUsingMouseAsTouch();
+
 	FlushResolutionChange();
 }
 

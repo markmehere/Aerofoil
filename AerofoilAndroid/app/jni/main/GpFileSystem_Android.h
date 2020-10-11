@@ -21,7 +21,5 @@ public:
 	static GpFileSystem_Android *GetInstance();
 
 private:
-	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, wchar_t *outPath);
-
 	static GpFileSystem_Android ms_instance;
 };

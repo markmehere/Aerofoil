@@ -29,6 +29,7 @@ void RenderSparkles (void);
 void RenderStars (void);
 void RenderBands (void);
 void RenderShreds (void);
+void RenderTouchScreenControls (void);
 void CopyRectsQD (void);
 
 
@@ -55,6 +56,7 @@ extern	short		numBands, numStars, numShredded;
 extern	short		numSparkles, numFlyingPts, numPendulums, clockFrame;
 extern	short		numFlames, numSavedMaps, numTikiFlames, numCoals;
 extern	Boolean		evenFrame, shadowVisible, twoPlayerGame, tvOn;
+extern	touchScreenControlState	touchScreen;
 
 
 //==============================================================  Functions
@@ -604,6 +606,66 @@ void RenderShreds (void)
 	}
 }
 
+//--------------------------------------------------------------  RenderTouchScreenControls
+
+void RenderTouchScreenControls (void)
+{
+	DrawSurface *ctrlGraphics[TouchScreenCtrlIDs::Count];
+
+	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
+		ctrlGraphics[i] = nullptr;
+
+	ctrlGraphics[TouchScreenCtrlIDs::MoveLeft] = touchScreen.graphics[touchScreenControlGraphics::MoveLeftIdle];
+	ctrlGraphics[TouchScreenCtrlIDs::MoveRight] = touchScreen.graphics[touchScreenControlGraphics::MoveRightIdle];
+	ctrlGraphics[TouchScreenCtrlIDs::Flip] = touchScreen.graphics[touchScreenControlGraphics::FlipIdle];
+	ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsDisabled];
+	ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryDisabled];
+
+	if (batteryTotal < 0)
+		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumIdle];
+	else if (batteryTotal > 0)
+		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryIdle];
+
+	if (bandsTotal > 0)
+		ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsIdle];
+
+	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
+	{
+		if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::BatteryHelium)
+		{
+			if (batteryTotal < 0)
+				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumActive];
+			else if (batteryTotal > 0)
+				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BandsActive];
+		}
+		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Bands)
+		{
+			if (bandsTotal > 0)
+				ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsActive];
+		}
+		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Flip)
+			ctrlGraphics[TouchScreenCtrlIDs::Flip] = touchScreen.graphics[touchScreenControlGraphics::FlipActive];
+		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::MoveLeft)
+			ctrlGraphics[TouchScreenCtrlIDs::MoveLeft] = touchScreen.graphics[touchScreenControlGraphics::MoveLeftActive];
+		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::MoveRight)
+			ctrlGraphics[TouchScreenCtrlIDs::MoveRight] = touchScreen.graphics[touchScreenControlGraphics::MoveRightActive];
+	}
+
+	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
+	{
+		DrawSurface *graphic = ctrlGraphics[i];
+		if (!graphic)
+			continue;
+
+		const Rect sourceRect = ctrlGraphics[i]->m_port.GetRect();
+		Rect destRect = touchScreen.controls[i].graphicRect;
+
+		CopyMask(*GetGWorldPixMap(ctrlGraphics[i]), *GetGWorldPixMap(ctrlGraphics[i]), *GetGWorldPixMap(workSrcMap), &sourceRect, &sourceRect, &destRect);
+		AddRectToBackRects(&destRect);
+		AddRectToWorkRects(&destRect);
+	}
+}
+
 //--------------------------------------------------------------  CopyRectsQD
 
 void CopyRectsQD (void)
@@ -655,6 +717,7 @@ void RenderFrame (void)
 		RenderGlider(&theGlider2, false);
 	RenderShreds();
 	RenderBands();
+	RenderTouchScreenControls();
 	
 	while (TickCount() < nextFrame)
 	{

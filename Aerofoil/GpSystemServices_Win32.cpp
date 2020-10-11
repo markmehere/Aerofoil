@@ -10,6 +10,7 @@
 #endif
 
 GpSystemServices_Win32::GpSystemServices_Win32()
+	: m_isTouchscreenSimulation(false)
 {
 }
 
@@ -84,6 +85,20 @@ void GpSystemServices_Win32::Beep() const
 	MessageBeep(MB_OK);
 }
 
+bool GpSystemServices_Win32::IsTouchscreen() const
+{
+	return m_isTouchscreenSimulation;
+}
+
+bool GpSystemServices_Win32::IsUsingMouseAsTouch() const
+{
+	return m_isTouchscreenSimulation;
+}
+
+void GpSystemServices_Win32::SetTouchscreenSimulation(bool isTouchscreenSimulation)
+{
+	m_isTouchscreenSimulation = isTouchscreenSimulation;
+}
 
 GpSystemServices_Win32 *GpSystemServices_Win32::GetInstance()
 {

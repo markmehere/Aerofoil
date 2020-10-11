@@ -362,4 +362,72 @@ typedef struct
 	short		object;
 } retroLink, *retroLinkPtr;
 
+namespace TouchScreenCtrlIDs
+{
+	enum TouchScreenCtrlID
+	{
+		None,
 
+		MoveLeft,
+		MoveRight,
+		Flip,
+		Bands,
+		BatteryHelium,
+
+		Count,
+	};
+};
+
+typedef TouchScreenCtrlIDs::TouchScreenCtrlID TouchScreenCtrlID_t;
+
+typedef struct
+{
+	int fingerID;
+	Point point;
+	TouchScreenCtrlID_t capturingControl;
+} touchScreenFingerState;
+
+typedef struct
+{
+	Rect graphicRect;
+	Rect touchRect;
+	Boolean isEnabled;
+} touchScreenControl;
+
+namespace touchScreenControlGraphics
+{
+	enum touchScreenControlGraphic
+	{
+		BandsDisabled,
+		BandsActive,
+		BandsIdle,
+		FlipActive,
+		FlipIdle,
+		MoveRightActive,
+		MoveRightIdle,
+		MoveLeftActive,
+		MoveLeftIdle,
+		HeliumDisabled,
+		HeliumActive,
+		HeliumIdle,
+		BatteryDisabled,
+		BatteryActive,
+		BatteryIdle,
+
+		Count,
+	};
+
+	static const int kTouchScreenGraphicStartID = 1973;
+}
+
+typedef touchScreenControlGraphics::touchScreenControlGraphic touchScreenControlGraphic_t;
+
+typedef struct
+{
+	static const int kMaxFingers = 4;
+
+	touchScreenControl controls[TouchScreenCtrlIDs::Count];
+	touchScreenFingerState fingers[kMaxFingers];
+
+	DrawSurface *graphics[touchScreenControlGraphics::Count];
+} touchScreenControlState, *touchScreenControlStatePtr;

@@ -109,4 +109,4 @@ LOCAL_SRC_FILES := \
 
 LOCAL_STATIC_LIBRARIES := zlib MacRomanConversion stb
 
-include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_STATIC_LIBRARY)

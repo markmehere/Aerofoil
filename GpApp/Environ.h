@@ -29,6 +29,8 @@ typedef struct
 	Boolean		hasQT;
 	Boolean		hasDrag;
 	Boolean		isResolutionDirty;
+	Boolean		isTouchscreen;
+	Boolean		isMouseTouchscreen;
 } macEnviron;
 
 

@@ -265,6 +265,9 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 
 void InitAnimatedCursor (acurHandle ballCursH)
 {
+	if (thisMac.isTouchscreen)
+		return;
+
 	compiledAcurHandle	compiledBallCursorH;
 
 	if (ballCursH == nil)
@@ -275,7 +278,6 @@ void InitAnimatedCursor (acurHandle ballCursH)
 		if (!compiledBallCursorH)
 			RedAlert(kErrFailedResourceLoad);
 
-		GetColorCursors(ballCursH, compiledBallCursorH);
 		DisposCursors();
 
 		animCursorH = ballCursH;
@@ -335,8 +337,9 @@ void IncrementCursor (void)
 		InitAnimatedCursor(nil);
 	if (animCursorH)
 	{
-		(*animCursorH)->index++;
-		(*animCursorH)->index %= (*animCursorH)->n;
+		acurRec *acur = *animCursorH;
+		acur->index++;
+		acur->index %= acur->n;
 
 		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}

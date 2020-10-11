@@ -23,6 +23,8 @@ namespace PortabilityLayer
 		virtual HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) = 0;
 		virtual uint64_t GetFreeMemoryCosmetic() const = 0;	// Returns free memory in bytes, does not have to be accurate
 		virtual void Beep() const = 0;
+		virtual bool IsTouchscreen() const = 0;
+		virtual bool IsUsingMouseAsTouch() const = 0;
 
 		static void SetInstance(HostSystemServices *instance);
 		static HostSystemServices *GetInstance();

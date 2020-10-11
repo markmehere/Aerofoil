@@ -22,10 +22,16 @@ public:
 	PortabilityLayer::HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
 	uint64_t GetFreeMemoryCosmetic() const override;
 	void Beep() const override;
+	bool IsTouchscreen() const override;
+	bool IsUsingMouseAsTouch() const override;
+
+	void SetTouchscreenSimulation(bool isTouchscreenSimulation);
 
 	static GpSystemServices_Win32 *GetInstance();
 
 private:
+	bool m_isTouchscreenSimulation;
+
 	static GpSystemServices_Win32 ms_instance;
 };
 
