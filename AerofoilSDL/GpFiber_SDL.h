@@ -16,6 +16,7 @@ public:
 	~GpFiber_SDL();
 
 	void YieldTo(IGpFiber *fromFiber) override;
+	void YieldToTerminal(IGpFiber *fromFiber) override;
 	void Destroy() override;
 
 private:

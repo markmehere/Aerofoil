@@ -141,7 +141,7 @@ void GpAppEnvironment::AppThreadFunc()
 	GpAppInterface_Get()->ApplicationMain();
 
 	m_applicationState = ApplicationState_Terminated;
-	m_applicationFiber->YieldTo(m_vosFiber);
+	m_applicationFiber->YieldToTerminal(m_vosFiber);
 }
 
 void GpAppEnvironment::InitializeApplicationState()

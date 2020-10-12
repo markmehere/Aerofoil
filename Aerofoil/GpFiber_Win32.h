@@ -6,6 +6,7 @@ class GpFiber_Win32 final : public IGpFiber
 {
 public:
 	void YieldTo(IGpFiber *toFiber) override;
+	void YieldToTerminal(IGpFiber *toFiber) override;
 	void Destroy() override;
 
 	static IGpFiber *Create(LPVOID fiber);

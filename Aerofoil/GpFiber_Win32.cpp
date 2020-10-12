@@ -11,6 +11,11 @@ void GpFiber_Win32::YieldTo(IGpFiber *toFiber)
 	SwitchToFiber(static_cast<GpFiber_Win32*>(toFiber)->m_fiber);
 }
 
+void GpFiber_Win32::YieldToTerminal(IGpFiber *toFiber)
+{
+	YieldTo(toFiber);
+}
+
 void GpFiber_Win32::Destroy()
 {
 	this->~GpFiber_Win32();
