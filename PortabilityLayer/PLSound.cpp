@@ -369,7 +369,7 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		PortabilityLayer::HostMutex *mutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
+		PortabilityLayer::HostMutex *mutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateRecursiveMutex();
 		if (!mutex)
 		{
 			audioChannel->Destroy();
