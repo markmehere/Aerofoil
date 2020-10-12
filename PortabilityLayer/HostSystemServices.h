@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __PL_HOST_SYSTEM_SERVICES_H__
-#define __PL_HOST_SYSTEM_SERVICES_H__
 
 #include <stdint.h>
 
@@ -34,5 +32,3 @@ namespace PortabilityLayer
 		static HostSystemServices *ms_instance;
 	};
 }
-
-#endif

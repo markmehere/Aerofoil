@@ -68,7 +68,7 @@ Boolean		originalFloor;
 extern	IGpCursor	*handCursor;
 extern	short		lastBackground;
 
-extern PortabilityLayer::ResourceArchive *houseResFork;
+extern PortabilityLayer::IResourceArchive *houseResFork;
 
 
 //==============================================================  Functions

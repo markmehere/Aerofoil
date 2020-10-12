@@ -15,7 +15,7 @@ namespace PortabilityLayer
 	ScanlineMaskBuilder::~ScanlineMaskBuilder()
 	{
 		if (m_spans)
-			realloc(m_spans, 0);
+			(void)realloc(m_spans, 0);
 	}
 
 	bool ScanlineMaskBuilder::AppendSpan(size_t span)

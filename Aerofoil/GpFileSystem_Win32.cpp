@@ -183,7 +183,7 @@ bool GpFileSystem_Win32::FileExists(PortabilityLayer::VirtualDirectory_t virtual
 {
 	wchar_t winPath[MAX_PATH + 1];
 
-	if (!ResolvePath(virtualDirectory, path, winPath))
+	if (!ResolvePath(virtualDirectory, &path, 1, winPath))
 		return false;
 
 	return PathFileExistsW(winPath) != 0;
@@ -193,7 +193,7 @@ bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtual
 {
 	wchar_t winPath[MAX_PATH + 1];
 
-	if (!ResolvePath(virtualDirectory, path, winPath))
+	if (!ResolvePath(virtualDirectory, &path, 1, winPath))
 	{
 		*exists = false;
 		return false;
@@ -210,11 +210,11 @@ bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtual
 	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
-GpIOStream *GpFileSystem_Win32::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition)
+GpIOStream *GpFileSystem_Win32::OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
 	wchar_t winPath[MAX_PATH + 1];
 
-	if (!ResolvePath(virtualDirectory, path, winPath))
+	if (!ResolvePath(virtualDirectory, paths, numPaths, winPath))
 		return false;
 
 	const DWORD desiredAccess = writeAccess ? (GENERIC_WRITE | GENERIC_READ) : GENERIC_READ;
@@ -252,7 +252,7 @@ bool GpFileSystem_Win32::DeleteFile(PortabilityLayer::VirtualDirectory_t virtual
 {
 	wchar_t winPath[MAX_PATH + 1];
 
-	if (!ResolvePath(virtualDirectory, path, winPath))
+	if (!ResolvePath(virtualDirectory, &path, 1, winPath))
 		return false;
 
 	if (DeleteFileW(winPath))
@@ -270,11 +270,22 @@ bool GpFileSystem_Win32::DeleteFile(PortabilityLayer::VirtualDirectory_t virtual
 	return false;
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory)
+PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
 {
 	wchar_t winPath[MAX_PATH + 2];
 
-	if (!ResolvePath(virtualDirectory, "*", winPath))
+	const char **expandedPaths = static_cast<const char**>(malloc(sizeof(const char*) * (numPaths + 1)));
+	if (!expandedPaths)
+		return nullptr;
+
+	for (size_t i = 0; i < numPaths; i++)
+		expandedPaths[i] = paths[i];
+	expandedPaths[numPaths] = "*";
+
+	const bool isPathResolved = ResolvePath(virtualDirectory, expandedPaths, numPaths + 1, winPath);
+	free(expandedPaths);
+
+	if (!isPathResolved)
 		return nullptr;
 
 	WIN32_FIND_DATAW findData;
@@ -303,6 +314,11 @@ bool GpFileSystem_Win32::ValidateFilePathUnicodeChar(uint32_t c) const
 	if (c >= 'A' && c <= 'Z')
 		return true;
 
+	return false;
+}
+
+bool GpFileSystem_Win32::IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const
+{
 	return false;
 }
 
@@ -407,7 +423,7 @@ GpFileSystem_Win32 *GpFileSystem_Win32::GetInstance()
 	return &ms_instance;
 }
 
-bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, wchar_t *outPath)
+bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, wchar_t *outPath)
 {
 	const wchar_t *baseDir = nullptr;
 
@@ -445,22 +461,38 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 		return false;
 
 	const size_t baseDirLen = wcslen(baseDir);
-	const size_t pathLen = strlen(path);
-
-	if (baseDirLen >= MAX_PATH || MAX_PATH - baseDirLen < pathLen)
-		return false;
-
 	memcpy(outPath, baseDir, sizeof(wchar_t) * baseDirLen);
-	for (size_t i = 0; i < pathLen; i++)
+	outPath[baseDirLen] = static_cast<wchar_t>(0);
+
+	for (size_t i = 0; i < numPaths; i++)
 	{
-		char c = path[i];
-		if (c == '/')
-			c = '\\';
+		size_t outDirLen = wcslen(outPath);
 
-		outPath[baseDirLen + i] = static_cast<wchar_t>(c);
+		if (i != 0)
+		{
+			if (baseDirLen >= MAX_PATH || MAX_PATH - baseDirLen < 1)
+				return false;
+
+			outPath[outDirLen++] = '\\';
+		}
+
+		const char *path = paths[i];
+		const size_t pathLen = strlen(path);
+
+		if (baseDirLen >= MAX_PATH || MAX_PATH - baseDirLen < pathLen)
+			return false;
+
+		for (size_t j = 0; j < pathLen; j++)
+		{
+			char c = path[j];
+			if (c == '/')
+				c = '\\';
+
+			outPath[outDirLen + j] = static_cast<wchar_t>(c);
+		}
+
+		outPath[outDirLen + pathLen] = static_cast<wchar_t>(0);
 	}
-
-	outPath[baseDirLen + pathLen] = static_cast<wchar_t>(0);
 
 	return true;
 }

@@ -367,27 +367,6 @@ void KillSound (void)
 	DumpBufferSounds();
 }
 
-//--------------------------------------------------------------  SoundBytesNeeded
-
-long SoundBytesNeeded (void)
-{
-	long		totalBytes;
-	short		i;
-	
-	totalBytes = 0L;
-	for (i = 0; i < kMaxSounds - 1; i++)
-	{
-		size_t resSize = 0;
-		if (!PortabilityLayer::ResourceManager::GetInstance()->GetAppResourceArchive()->GetResourceSize('snd ', i + kBaseBufferSoundID, resSize))
-			return -1;
-
-		totalBytes += static_cast<long>(resSize);
-//		ReleaseResource(theSound);
-	}
-
-	return totalBytes;
-}
-
 //--------------------------------------------------------------  TellHerNoSounds
 
 void TellHerNoSounds (void)

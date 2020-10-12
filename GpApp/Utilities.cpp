@@ -330,7 +330,7 @@ void LoadScaledGraphicCustom(DrawSurface *surface, short resID, Rect *theRect)
 //--------------------------------------------------------------  LargeIconPlot
 // Draws a standard b&w icon (32 x 32) - resource is an 'ICON'.
 
-bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::ResourceArchive *resFile, short resID, const Rect &theRect)
+bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::IResourceArchive *resFile, short resID, const Rect &theRect)
 {
 	Handle hdl = resFile->LoadResource('icl8', resID);
 	if (hdl)

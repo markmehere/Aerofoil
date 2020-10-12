@@ -373,7 +373,6 @@ int gpAppMain()
 //		ReflectSecondMonitorEnvirons(false, true, true);
 	HandleDepthSwitching();
 	VariableInit();						SpinCursor(2);
-	CheckMemorySize();
 	GetExtraCursors();					SpinCursor(2);
 	InitMarquee();
 	CreatePointers();					SpinCursor(2);

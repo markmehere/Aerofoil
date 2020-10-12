@@ -14,5 +14,4 @@ rmdir app\jni\zlib
 rmdir app\jni\rapidjson
 rmdir app\jni\MacRomanConversion
 rmdir app\jni\stb
-rmdir app\src\main\assets\Packaged
 rmdir app\src\main\assets\Resources

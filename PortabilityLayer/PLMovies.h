@@ -7,7 +7,7 @@
 
 namespace PortabilityLayer
 {
-	class ResourceArchive;
+	struct IResourceArchive;
 }
 
 struct DrawSurface;
@@ -52,7 +52,7 @@ private:
 	~AnimationPackage();
 
 	THandle<BitmapImage> *m_images;
-	PortabilityLayer::ResourceArchive *m_resArchive;
+	PortabilityLayer::IResourceArchive *m_resArchive;
 	size_t m_numImages;
 
 	uint32_t m_frameRateNumerator;

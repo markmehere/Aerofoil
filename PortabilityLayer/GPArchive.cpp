@@ -25,6 +25,11 @@ static const char *gs_forbiddenNames[] =
 	"LPT9",
 };
 
+static bool IsCharForbidden(char c)
+{
+	return (c < ' ' || c == '<' || c == '>' || c == ':' || c == '\"' || c == '/' || c == '\\' || c == '|' || c == '?' || c == '*' || c > '~' || c == '$' || c == '#');
+}
+
 namespace PortabilityLayer
 {
 	GpArcResourceTypeTag GpArcResourceTypeTag::Encode(const ResTypeID &tag)
@@ -42,7 +47,7 @@ namespace PortabilityLayer
 		{
 			char c = chars[i];
 
-			bool isForbidden = (c < ' ' || c == '<' || c == '>' || c == ':' || c == '\"' || c == '/' || c == '\\' || c == '|' || c == '?' || c == '*' || c > '~' || c == '$');
+			bool isForbidden = IsCharForbidden(c);
 
 			if (i == 3)
 			{
@@ -80,5 +85,58 @@ namespace PortabilityLayer
 		}
 
 		return output;
+	}
+
+	bool GpArcResourceTypeTag::Load(const char *str)
+	{
+		size_t l = strlen(str);
+		if (l < sizeof(m_id))
+		{
+			memcpy(m_id, str, l);
+			m_id[l] = '\0';
+			return true;
+		}
+
+		return false;
+	}
+
+	bool GpArcResourceTypeTag::Decode(ResTypeID &outTag)
+	{
+		char decodedChars[4];
+		size_t parseOffset = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			char parseChar = m_id[parseOffset];
+			if (parseChar == '\0')
+				return false;
+
+			if (parseChar == '$')
+			{
+				char nibbles[2] = { m_id[parseOffset + 1], m_id[parseOffset + 2] };
+				parseOffset += 2;
+
+				int decodedNibbles[2];
+
+				for (int n = 0; n < 2; n++)
+				{
+					char nibble = nibbles[n];
+					if (nibble >= '0' && nibble <= '9')
+						decodedNibbles[n] = nibble - '0';
+					else if (nibble >= 'a' && nibble <= 'f')
+						decodedNibbles[n] = nibble - 'a' + 0xa;
+					else
+						return false;
+				}
+
+				decodedChars[i] = (decodedNibbles[0] << 4) | (decodedNibbles[1]);
+			}
+			else
+				decodedChars[i] = parseChar;
+
+			parseOffset++;
+		}
+
+		outTag = ResTypeID(decodedChars);
+		return true;
 	}
 }

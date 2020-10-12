@@ -368,25 +368,6 @@ void KillMusic (void)
 		musicMutex->Destroy();
 }
 
-//--------------------------------------------------------------  MusicBytesNeeded
-
-long MusicBytesNeeded (void)
-{
-	size_t		totalBytes;
-	short		i;
-
-	totalBytes = 0L;
-	for (i = 0; i < kMaxMusic; i++)
-	{
-		size_t resSize = 0;
-		if (!PortabilityLayer::ResourceManager::GetInstance()->GetAppResourceArchive()->GetResourceSize('snd ', i + kBaseBufferMusicID, resSize))
-			return -1;
-
-		totalBytes += static_cast<long>(resSize);
-	}
-	return totalBytes;
-}
-
 //--------------------------------------------------------------  TellHerNoMusic
 
 void TellHerNoMusic (void)

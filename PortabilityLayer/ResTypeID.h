@@ -19,6 +19,7 @@ namespace PortabilityLayer
 		bool operator!=(const ResTypeID &other) const;
 
 		void ExportAsChars(char *chars) const;
+		int32_t ExportAsInt32() const;
 
 	private:
 		char m_id[4];
@@ -69,6 +70,11 @@ namespace PortabilityLayer
 	inline void ResTypeID::ExportAsChars(char *chars) const
 	{
 		memcpy(chars, m_id, 4);
+	}
+
+	inline int32_t ResTypeID::ExportAsInt32() const
+	{
+		return ResTypeIDCodec::Decode(m_id);
 	}
 }
 

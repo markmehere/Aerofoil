@@ -235,7 +235,6 @@ void ToggleMusicWhilePlaying (void);
 void SetMusicalMode (SInt16);
 void InitMusic (void);
 void KillMusic (void);
-long MusicBytesNeeded (void);
 void TellHerNoMusic (void);
 
 Boolean AddNewObject (Point, SInt16, Boolean);			// --- ObjectAdd.c
@@ -456,7 +455,6 @@ PLError_t LoadTriggerSound (SInt16);
 void DumpTriggerSound (void);
 void InitSound (void);
 void KillSound (void);
-long SoundBytesNeeded (void);
 void TellHerNoSounds (void);
 void BitchAboutSM3 (void);
 

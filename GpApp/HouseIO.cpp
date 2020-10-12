@@ -36,7 +36,7 @@ Boolean IsFileReadOnly (const VFileSpec &);
 
 AnimationPlayer		theMovie;
 Rect		movieRect;
-PortabilityLayer::ResourceArchive	*houseResFork;
+PortabilityLayer::IResourceArchive	*houseResFork;
 short		wasHouseVersion;
 GpIOStream *houseStream;
 Boolean		houseOpen, fileDirty, gameDirty;

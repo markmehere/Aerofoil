@@ -17,7 +17,6 @@ mklink /D app\jni\zlib ..\..\..\zlib
 mklink /D app\jni\rapidjson ..\..\..\rapidjson
 mklink /D app\jni\MacRomanConversion ..\..\..\MacRomanConversion
 mklink /D app\jni\stb ..\..\..\stb
-mklink /D app\src\main\assets\Packaged ..\..\..\..\..\Packaged
 mklink /D app\src\main\assets\Resources ..\..\..\..\..\Resources
 
 pause

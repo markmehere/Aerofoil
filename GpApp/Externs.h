@@ -14,7 +14,7 @@
 namespace PortabilityLayer
 {
 	class ResolveCachingColor;
-	class ResourceArchive;
+	struct IResourceArchive;
 	class ScanlineMask;
 	class ResTypeID;
 	struct RGBAColor;
@@ -169,7 +169,6 @@ void CheckOurEnvirons (void);
 void InstallResolutionHandler (void);
 //void ReflectSecondMonitorEnvirons (Boolean, Boolean, Boolean);
 void HandleDepthSwitching (void);
-void CheckMemorySize (void);
 
 Boolean CheckFileError (short, const PLPasStr &);				// --- File Error.c
 
@@ -200,7 +199,7 @@ void LoadGraphic (DrawSurface *surface, short resID);			// Only loads from app r
 void LoadGraphicCustom (DrawSurface *surface, short resID);		// Supports custom graphics
 void LoadScaledGraphic (DrawSurface *, short, Rect *);			// Only loads from app resources
 void LoadScaledGraphicCustom (DrawSurface *, short, Rect *);	// Supports custom graphics
-bool LargeIconPlot (DrawSurface *, PortabilityLayer::ResourceArchive *, short, const Rect &);
+bool LargeIconPlot (DrawSurface *, PortabilityLayer::IResourceArchive *, short, const Rect &);
 void DrawCIcon (DrawSurface *surface, short, short, short);
 char KeyMapOffsetFromRawKey (char);
 long LongSquareRoot (long);

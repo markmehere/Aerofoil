@@ -28,7 +28,7 @@
 void UpdateGoToDialog (Dialog *);
 int16_t GoToFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt);
 
-extern PortabilityLayer::ResourceArchive	*houseResFork;
+extern PortabilityLayer::IResourceArchive	*houseResFork;
 
 
 houseHand	thisHouse;
