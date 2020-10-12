@@ -422,7 +422,7 @@ namespace touchScreenControlGraphics
 
 typedef touchScreenControlGraphics::touchScreenControlGraphic touchScreenControlGraphic_t;
 
-typedef struct
+struct touchScreenControlState
 {
 	static const int kMaxFingers = 4;
 
@@ -430,4 +430,6 @@ typedef struct
 	touchScreenFingerState fingers[kMaxFingers];
 
 	DrawSurface *graphics[touchScreenControlGraphics::Count];
-} touchScreenControlState, *touchScreenControlStatePtr;
+};
+
+typedef touchScreenControlState *touchScreenControlStatePtr;

@@ -24,6 +24,7 @@ public:
 	void Beep() const override;
 	bool IsTouchscreen() const override;
 	bool IsUsingMouseAsTouch() const override;
+	bool IsTextInputObstructive() const override;
 
 	void SetTouchscreenSimulation(bool isTouchscreenSimulation);
 

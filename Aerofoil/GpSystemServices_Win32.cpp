@@ -95,6 +95,11 @@ bool GpSystemServices_Win32::IsUsingMouseAsTouch() const
 	return m_isTouchscreenSimulation;
 }
 
+bool GpSystemServices_Win32::IsTextInputObstructive() const
+{
+	return false;
+}
+
 void GpSystemServices_Win32::SetTouchscreenSimulation(bool isTouchscreenSimulation)
 {
 	m_isTouchscreenSimulation = isTouchscreenSimulation;

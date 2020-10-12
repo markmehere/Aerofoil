@@ -700,7 +700,7 @@ public:
 
 	bool Init();
 
-	static void TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY);
+	static void TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY, bool obstructiveTextInput);
 
 	void Run() override;
 	void Shutdown() override;
@@ -1540,7 +1540,7 @@ static void PostKeyboardEvent(IGpVOSEventQueue *eventQueue, GpKeyboardInputEvent
 	}
 }
 
-void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY)
+void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY, bool obstructiveTextInput)
 {
 	switch (msg->type)
 	{
@@ -1642,9 +1642,11 @@ void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEv
 				PostKeyboardEvent(eventQueue, keyEventType, subset, key, 1);
 			}
 
-			// Monster hack.  This needs to be redone to support OSK.
-			SDL_StopTextInput();
-			SDL_StartTextInput();
+			if (!obstructiveTextInput)
+			{
+				SDL_StopTextInput();
+				SDL_StartTextInput();
+			}
 		}
 		break;
 	case SDL_QUIT:
@@ -1674,7 +1676,10 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
-	SDL_StartTextInput();
+	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
+
+	if (!obstructiveTextInput)
+		SDL_StartTextInput();
 
 	StartOpenGLForWindow(logger);
 
@@ -1696,7 +1701,7 @@ void GpDisplayDriver_SDL_GL2::Run()
 			//else if (msg.type == SDL_MOUSELEAVE)	// Does SDL support this??
 			//	m_mouseIsInClientArea = false;
 
-			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY);
+			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
 		}
 		else
 		{

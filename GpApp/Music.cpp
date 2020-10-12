@@ -60,17 +60,17 @@ PLError_t StartMusic (void)
 {
 	PLError_t		theErr;
 	short		soundVolume;
-	
+
 	theErr = PLErrors::kNone;
-	
+
 	if (dontLoadMusic)
 		return(theErr);
 
 	if (musicMutex == nullptr)
 		return(theErr);
-	
+
 	UnivGetSoundVolume(&soundVolume, thisMac.hasSM3);
-	
+
 	if ((soundVolume != 0) && (!failedMusic))
 	{
 		musicChannel->AddBuffer(theMusicData[musicState.musicSoundID], true);
@@ -83,10 +83,10 @@ PLError_t StartMusic (void)
 
 		musicChannel->AddBuffer(theMusicData[musicState.musicSoundID], true);
 		musicChannel->AddCallback(MusicCallBack, true);
-		
+
 		isMusicOn = true;
 	}
-	
+
 	return (theErr);
 }
 
@@ -95,16 +95,16 @@ PLError_t StartMusic (void)
 void StopTheMusic (void)
 {
 	PLError_t		theErr;
-	
+
 	if (dontLoadMusic)
 		return;
-	
+
 	theErr = PLErrors::kNone;
 	if ((isMusicOn) && (!failedMusic))
 	{
 		musicChannel->ClearAllCommands();
 		musicChannel->Stop();
-		
+
 		isMusicOn = false;
 	}
 }
@@ -114,10 +114,10 @@ void StopTheMusic (void)
 void ToggleMusicWhilePlaying (void)
 {
 	PLError_t		theErr;
-	
+
 	if (dontLoadMusic)
 		return;
-	
+
 	if (isPlayMusicGame)
 	{
 		if (!isMusicOn)
@@ -133,7 +133,7 @@ void ToggleMusicWhilePlaying (void)
 //--------------------------------------------------------------  SetMusicalPiece
 
 void SetMusicalMode (short newMode)
-{	
+{
 	if (dontLoadMusic || failedMusic)
 		return;
 
@@ -143,11 +143,11 @@ void SetMusicalMode (short newMode)
 		case kKickGameScoreMode:
 		musicState.musicCursor = 2;
 		break;
-		
+
 		case kProdGameScoreMode:
 		musicState.musicCursor = -1;
 		break;
-		
+
 		default:
 		musicState.musicMode = newMode;
 		musicState.musicCursor = 0;
@@ -176,14 +176,14 @@ void MusicCallBack (PortabilityLayer::AudioChannel *theChannel)
 			musicState.musicSoundID = gameScore[musicState.musicCursor];
 		}
 		break;
-		
+
 		case kPlayWholeScoreMode:
 		musicState.musicCursor++;
 		if (musicState.musicCursor >= kLastMusicPiece - 1)
 			musicState.musicCursor = 0;
 		musicState.musicSoundID = musicScore[musicState.musicCursor];
 		break;
-		
+
 		default:
 		musicState.musicSoundID = musicState.musicMode;
 		break;
@@ -204,18 +204,18 @@ PLError_t LoadMusicSounds (void)
 	long		soundDataSize;
 	PLError_t		theErr;
 	short		i;
-	
+
 	theErr = PLErrors::kNone;
-	
+
 	for (i = 0; i < kMaxMusic; i++)
 		theMusicData[i] = nil;
-	
+
 	for (i = 0; i < kMaxMusic; i++)
 	{
 		theSound = ParseAndConvertSound(PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferMusicID));
 		if (theSound == nil)
 			return PLErrors::kOutOfMemory;
-		
+
 		soundDataSize = GetHandleSize(theSound);
 
 		theMusicData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
@@ -234,16 +234,16 @@ PLError_t DumpMusicSounds (void)
 {
 	PLError_t		theErr;
 	short		i;
-	
+
 	theErr = PLErrors::kNone;
-	
+
 	for (i = 0; i < kMaxMusic; i++)
 	{
 		if (theMusicData[i] != nil)
 			PortabilityLayer::MemoryManager::GetInstance()->Release(theMusicData[i]);
 		theMusicData[i] = nil;
 	}
-	
+
 	return (theErr);
 }
 
@@ -252,12 +252,12 @@ PLError_t DumpMusicSounds (void)
 PLError_t OpenMusicChannel (void)
 {
 	PLError_t		theErr;
-	
+
 	theErr = PLErrors::kNone;
-	
+
 	if (musicChannel != nil)
 		return (theErr);
-	
+
 	musicChannel = PortabilityLayer::SoundSystem::GetInstance()->CreateChannel();
 
 	if (musicChannel == nil)
@@ -271,13 +271,13 @@ PLError_t OpenMusicChannel (void)
 PLError_t CloseMusicChannel (void)
 {
 	PLError_t		theErr;
-	
+
 	theErr = PLErrors::kNone;
-	
+
 	if (musicChannel != nil)
 		musicChannel->Destroy(false);
 	musicChannel = nil;
-	
+
 	return (theErr);
 }
 
@@ -286,12 +286,12 @@ PLError_t CloseMusicChannel (void)
 void InitMusic (void)
 {
 	PLError_t		theErr;
-	
+
 	if (dontLoadMusic)
 		return;
-	
+
 	musicChannel = nil;
-	
+
 	failedMusic = false;
 	isMusicOn = false;
 	theErr = LoadMusicSounds();
@@ -308,7 +308,7 @@ void InitMusic (void)
 		failedMusic = true;
 		return;
 	}
-	
+
 	musicScore[0] = 0;
 	musicScore[1] = 1;
 	musicScore[2] = 2;
@@ -325,14 +325,14 @@ void InitMusic (void)
 	musicScore[13] = kPlayRefrainSparse2;
 	musicScore[14] = kPlayChorus;
 	musicScore[15] = kPlayChorus;
-	
+
 	gameScore[0] = kPlayRefrainSparse2;
 	gameScore[1] = kPlayRefrainSparse1;
 	gameScore[2] = -1;
 	gameScore[3] = kPlayRefrainSparse2;
 	gameScore[4] = kPlayChorus;
 	gameScore[5] = kPlayChorus;
-	
+
 	musicState.musicCursor = 0;
 	musicState.musicSoundID = musicScore[musicState.musicCursor];
 	musicState.musicMode = kPlayWholeScoreMode;
@@ -340,7 +340,7 @@ void InitMusic (void)
 	musicMutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
 
 	PL_NotYetImplemented_TODO("MusicSync");
-	
+
 	if (isPlayMusicIdle)
 	{
 		theErr = StartMusic();
@@ -357,13 +357,15 @@ void InitMusic (void)
 void KillMusic (void)
 {
 	PLError_t		theErr;
-	
+
 	if (dontLoadMusic)
 		return;
 
 	theErr = CloseMusicChannel();
 	theErr = DumpMusicSounds();
-	musicMutex->Destroy();
+
+	if (musicMutex)
+		musicMutex->Destroy();
 }
 
 //--------------------------------------------------------------  MusicBytesNeeded
@@ -372,7 +374,7 @@ long MusicBytesNeeded (void)
 {
 	size_t		totalBytes;
 	short		i;
-	
+
 	totalBytes = 0L;
 	for (i = 0; i < kMaxMusic; i++)
 	{
@@ -391,7 +393,7 @@ void TellHerNoMusic (void)
 {
 	#define		kNoMemForMusicAlert	1038
 	short		hitWhat;
-	
+
 //	CenterAlert(kNoMemForMusicAlert);
 	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForMusicAlert, nullptr);
 }

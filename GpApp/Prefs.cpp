@@ -66,7 +66,7 @@ Boolean WritePrefs (const prefsInfo *thePrefs, short versionNow, THandle<moduleP
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
 
 	PasStringCopy(kPrefFileName, fileName);
-	
+
 	VFileSpec theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
 	if (!fm->FileExists(PortabilityLayer::VirtualDirectories::kPrefs, fileName))
 	{
@@ -148,7 +148,7 @@ Boolean WritePrefs (const prefsInfo *thePrefs, short versionNow, THandle<moduleP
 	}
 
 	fileStream->Close();
-	
+
 	return(true);
 }
 
@@ -158,7 +158,7 @@ Boolean SavePrefs (prefsInfo *thePrefs, THandle<void> *modulePrefs, short versio
 {
 	if (!WritePrefs(thePrefs, versionNow, modulePrefs->StaticCast<modulePrefsListEntry>()))
 		return(false);
-	
+
 	return(true);
 }
 
@@ -197,14 +197,14 @@ PLError_t ReadPrefs (prefsInfo *thePrefs, short versionNeed, Boolean *isOldVersi
 	*isOldVersion = false;
 
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
-	
+
 	PasStringCopy(kPrefFileName, fileName);
-	
+
 	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectory_t::kPrefs, fileName);
 
 	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(theSpecs.m_dir, theSpecs.m_name))
 		return PLErrors::kFileNotFound;
-	
+
 	theErr = fm->OpenFileData(theSpecs.m_dir, theSpecs.m_name, PortabilityLayer::EFilePermission_Read, fileStream);
 	if (theErr != PLErrors::kNone)
 	{
@@ -226,7 +226,7 @@ PLError_t ReadPrefs (prefsInfo *thePrefs, short versionNeed, Boolean *isOldVersi
 		fileStream->Close();
 		return(PLErrors::kNone);
 	}
-	
+
 	byteCount = sizeof(*thePrefs);
 
 	if (fileStream->Read(thePrefs, byteCount) != byteCount)
@@ -309,7 +309,7 @@ PLError_t ReadPrefs (prefsInfo *thePrefs, short versionNeed, Boolean *isOldVersi
 			}
 		}
 	}
-	
+
 	fileStream->Close();
 
 	return(theErr);
@@ -324,7 +324,7 @@ Boolean DeletePrefs ()
 	PLError_t		theErr;
 
 	PasStringCopy(kPrefFileName, fileName);
-	
+
 	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
 
 	return PortabilityLayer::FileManager::GetInstance()->DeleteFile(theSpecs.m_dir, theSpecs.m_name);
@@ -337,9 +337,13 @@ bool RunFunctionOnAllPrefsHandlers (void *context, bool (*func) (void *context, 
 	if (ddHandler && !func(context, ddHandler))
 		return false;
 
-	IGpPrefsHandler *adHandler = PortabilityLayer::HostAudioDriver::GetInstance()->GetPrefsHandler();
-	if (adHandler && !func(context, adHandler))
-		return false;
+
+	if (IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance())
+	{
+		IGpPrefsHandler *adHandler = audioDriver->GetPrefsHandler();
+		if (adHandler && !func(context, adHandler))
+			return false;
+	}
 
 	size_t numInputDrivers = PortabilityLayer::HostInputDriver::NumInstances();
 
@@ -364,7 +368,7 @@ Boolean LoadPrefs (prefsInfo *thePrefs, THandle<void> *modulePrefs, short versio
 	Boolean		isOldVersion = 0;
 
 	THandle<modulePrefsListEntry> mPrefs;
-	
+
 	theErr = ReadPrefs(thePrefs, versionNeed, &isOldVersion, &mPrefs);
 
 	if (theErr == PLErrors::kFileNotFound)
@@ -383,7 +387,7 @@ Boolean LoadPrefs (prefsInfo *thePrefs, THandle<void> *modulePrefs, short versio
 		noProblems = DeletePrefs();
 		return(false);
 	}
-	
+
 	*modulePrefs = mPrefs.StaticCast<void>();
 
 	return (true);
@@ -537,7 +541,7 @@ Boolean ApplyModulePrefs (THandle<void> *modulePrefs)
 void BringUpDeletePrefsAlert (void)
 {
 	short		whoCares;
-	
+
 	InitCursor();
 //	CenterAlert(kNewPrefsAlertID);
 	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNewPrefsAlertID, nullptr);

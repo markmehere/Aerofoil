@@ -525,21 +525,27 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 		audioMixBuffer += alignPadding;
 	}
 
+	bool noAudio = true;
+
 	for (size_t i = 0; i < numChannels; i++)
 	{
 		channels[i]->Consume(audioMixBuffer, kMixChunkSize);
 
 		if (i == 0)
 		{
+			noAudio = false;
 			for (size_t j = 0; j < kMixChunkSize; j++)
-				m_mixChunk[j] = audioMixBuffer[j] - 0x80;
+				m_mixChunk[j] = (audioMixBuffer[j] - 0x80) * 25;
 		}
 		else
 		{
 			for (size_t j = 0; j < kMixChunkSize; j++)
-				m_mixChunk[j] += audioMixBuffer[j] - 0x80;
+				m_mixChunk[j] += (audioMixBuffer[j] - 0x80) * 25;
 		}
 	}
+
+	if (noAudio)
+		memset(m_mixChunk, 0, kMixChunkSize * sizeof(m_mixChunk[0]));
 }
 
 

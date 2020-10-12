@@ -25,6 +25,7 @@ namespace PortabilityLayer
 		virtual void Beep() const = 0;
 		virtual bool IsTouchscreen() const = 0;
 		virtual bool IsUsingMouseAsTouch() const = 0;
+		virtual bool IsTextInputObstructive() const = 0;
 
 		static void SetInstance(HostSystemServices *instance);
 		static HostSystemServices *GetInstance();

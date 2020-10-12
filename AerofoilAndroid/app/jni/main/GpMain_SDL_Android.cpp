@@ -18,6 +18,8 @@
 
 #include "GpAndroid.h"
 
+#include <exception>
+
 GpAndroidGlobals g_gpAndroidGlobals;
 
 extern "C" IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
@@ -38,7 +40,7 @@ int main(int argc, char* argv[])
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;
 
-	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_None;
+	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_SDL2;
 
 	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_FreeType2;
 
@@ -54,6 +56,13 @@ int main(int argc, char* argv[])
 	GpFontHandlerFactory::RegisterFontHandlerFactory(EGpFontHandlerType_FreeType2, GpDriver_CreateFontHandler_FreeType2);
 
 	int returnCode = GpMain::Run();
+
+	SDL_Quit();
+
+	// This doesn't even actually exit, but it does stop this stupid brain-damaged OS from
+	// just calling "main" again with no cleanup...
+	// That'll have to do until proper cleanup code is added to everything.
+	exit(returnCode);
 
 	return returnCode;
 }

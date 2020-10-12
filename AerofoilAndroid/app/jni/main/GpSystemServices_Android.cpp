@@ -58,7 +58,7 @@ typedef GpMutex_Cpp11<std::recursive_mutex> GpMutex_Cpp11_Recursive;
 class GpThreadEvent_Cpp11 final : public PortabilityLayer::HostThreadEvent
 {
 public:
-	GpThreadEvent_Cpp11();
+	GpThreadEvent_Cpp11(bool autoReset, bool startSignaled);
 	~GpThreadEvent_Cpp11();
 
 	void Wait() override;
@@ -70,10 +70,12 @@ private:
 	std::mutex m_mutex;
 	std::condition_variable m_cvar;
 	bool m_flag;
+	bool m_autoReset;
 };
 
-GpThreadEvent_Cpp11::GpThreadEvent_Cpp11()
-	: m_flag(false)
+GpThreadEvent_Cpp11::GpThreadEvent_Cpp11(bool autoReset, bool startSignaled)
+	: m_flag(startSignaled)
+	, m_autoReset(autoReset)
 {
 }
 
@@ -84,14 +86,43 @@ GpThreadEvent_Cpp11::~GpThreadEvent_Cpp11()
 void GpThreadEvent_Cpp11::Wait()
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-	m_cvar.wait(lock,[&]()->bool{ return m_flag; });
+	if (m_autoReset)
+	{
+		m_cvar.wait(lock,[&]()->bool{
+			if (m_flag)
+			{
+				m_flag = false;
+				return true;
+			}
+			else
+				return false;
+		});
+	}
+	else
+		m_cvar.wait(lock,[&]()->bool{ return m_flag; });
 }
 
 bool GpThreadEvent_Cpp11::WaitTimed(uint32_t msec)
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-	if (!m_cvar.wait_for(lock, std::chrono::milliseconds(msec), [&]()->bool{ return m_flag; }))
-		return false;
+	if (m_autoReset)
+	{
+		if (!m_cvar.wait_for(lock, std::chrono::milliseconds(msec), [&]()->bool{
+			if (m_flag)
+			{
+				m_flag = false;
+				return true;
+			}
+			else
+				return false;
+		}))
+			return false;
+	}
+	else
+	{
+		if (!m_cvar.wait_for(lock, std::chrono::milliseconds(msec), [&]()->bool{ return m_flag; }))
+			return false;
+	}
 	return true;
 }
 
@@ -100,7 +131,10 @@ void GpThreadEvent_Cpp11::Signal()
 	m_mutex.lock();
 	m_flag = true;
 	m_mutex.unlock();
-	m_cvar.notify_all();
+	if (m_autoReset)
+		m_cvar.notify_one();
+	else
+		m_cvar.notify_all();
 }
 
 void GpThreadEvent_Cpp11::Destroy()
@@ -154,7 +188,7 @@ PortabilityLayer::HostThreadEvent *GpSystemServices_Android::CreateThreadEvent(b
 	if (!evt)
 		return nullptr;
 
-	return new (evt) GpThreadEvent_Cpp11();
+	return new (evt) GpThreadEvent_Cpp11(autoReset, startSignaled);
 }
 
 uint64_t GpSystemServices_Android::GetFreeMemoryCosmetic() const
@@ -164,6 +198,21 @@ uint64_t GpSystemServices_Android::GetFreeMemoryCosmetic() const
 
 void GpSystemServices_Android::Beep() const
 {
+}
+
+bool GpSystemServices_Android::IsTouchscreen() const
+{
+	return true;
+}
+
+bool GpSystemServices_Android::IsUsingMouseAsTouch() const
+{
+	return true;
+}
+
+bool GpSystemServices_Android::IsTextInputObstructive() const
+{
+	return true;
 }
 
 GpSystemServices_Android *GpSystemServices_Android::GetInstance()
