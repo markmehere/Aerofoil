@@ -158,7 +158,7 @@ void GpSystemServices_Android::GetLocalDateTime(unsigned int &year, unsigned int
 	time_t t = time(nullptr);
 	tm *tmObject = localtime(&t);
 	year = static_cast<unsigned int>(tmObject->tm_year);
-	month = static_cast<unsigned int>(tmObject->tm_mon);
+	month = static_cast<unsigned int>(tmObject->tm_mon + 1);
 	hour = static_cast<unsigned int>(tmObject->tm_hour);
 	minute = static_cast<unsigned int>(tmObject->tm_min);
 	second = static_cast<unsigned int>(tmObject->tm_sec);
