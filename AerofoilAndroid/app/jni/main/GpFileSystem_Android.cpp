@@ -1,14 +1,19 @@
 #define _LARGEFILE64_SOURCE
 #include "GpFileSystem_Android.h"
 #include "GpIOStream.h"
+#include "HostDirectoryCursor.h"
 #include "VirtualDirectory.h"
 
+#include "SDL.h"
 #include "SDL_rwops.h"
 
 #include <string>
+#include <vector>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <jni.h>
+#include "UTF8.h"
 
 
 
@@ -242,37 +247,73 @@ void GpFileStream_Android_File::Flush()
 	fflush(m_f);
 }
 
-static bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, std::string &resolution, bool &isAsset)
+static bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset)
 {
 	isAsset = false;
 	switch (virtualDirectory)
 	{
 	case PortabilityLayer::VirtualDirectories::kApplicationData:
-		resolution = std::string("Packaged/") + path;
+		resolution = std::string("Packaged") ;
 		isAsset = true;
-		return true;
+		break;
 	case PortabilityLayer::VirtualDirectories::kGameData:
-		resolution = std::string("Packaged/Houses/") + path;
+		resolution = std::string("Packaged/Houses");
 		isAsset = true;
-		return true;
+		break;
 	case PortabilityLayer::VirtualDirectories::kFonts:
-		resolution = std::string("Resources/") + path;
+		resolution = std::string("Resources");
 		isAsset = true;
-		return true;
+		break;
 	default:
 		return false;
 	};
+
+	for (size_t i = 0; i < numPaths; i++)
+	{
+		resolution += "/";
+		resolution += paths[i];
+	}
+
+	return true;
 }
 
 GpFileSystem_Android::GpFileSystem_Android()
+	: m_activity(nullptr)
 {
+}
+
+GpFileSystem_Android::~GpFileSystem_Android()
+{
+}
+
+void GpFileSystem_Android::InitJNI()
+{
+	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
+
+	jobject activityLR = static_cast<jobject>(SDL_AndroidGetActivity());
+	jclass activityClassLR = static_cast<jclass>(jni->GetObjectClass(activityLR));
+
+	m_scanAssetDirectoryMID = jni->GetMethodID(activityClassLR, "scanAssetDirectory", "(Ljava/lang/String;)[Ljava/lang/String;");
+
+	m_activity = jni->NewGlobalRef(activityLR);
+
+	jni->DeleteLocalRef(activityLR);
+	jni->DeleteLocalRef(activityClassLR);
+}
+
+void GpFileSystem_Android::ShutdownJNI()
+{
+	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
+
+	jni->DeleteGlobalRef(m_activity);
+	m_activity = nullptr;
 }
 
 bool GpFileSystem_Android::FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path)
 {
 	std::string resolvedPath;
 	bool isAsset;
-	if (!ResolvePath(virtualDirectory, path, resolvedPath, isAsset))
+	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath, isAsset))
 		return false;
 
 	if (isAsset)
@@ -281,6 +322,7 @@ bool GpFileSystem_Android::FileExists(PortabilityLayer::VirtualDirectory_t virtu
 		if (!rw)
 			return false;
 		SDL_RWclose(rw);
+		return true;
 	}
 
 	struct stat s;
@@ -291,21 +333,26 @@ bool GpFileSystem_Android::FileLocked(PortabilityLayer::VirtualDirectory_t virtu
 {
 	std::string resolvedPath;
 	bool isAsset;
-	if (!ResolvePath(virtualDirectory, path, resolvedPath, isAsset))
+	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath, isAsset))
 	{
-		*exists = false;
+		if (exists)
+			*exists = false;
 		return false;
 	}
 
 	if (isAsset)
+	{
+		if (exists)
+			*exists = this->FileExists(virtualDirectory, path);
 		return true;
+	}
 
 	int permissions = access(resolvedPath.c_str(), W_OK | F_OK);
 	*exists = ((permissions & F_OK) != 0);
 	return ((permissions & W_OK) != 0);
 }
 
-GpIOStream *GpFileSystem_Android::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition)
+GpIOStream *GpFileSystem_Android::OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
 	const char *mode = nullptr;
 	bool canWrite = false;
@@ -332,7 +379,7 @@ GpIOStream *GpFileSystem_Android::OpenFile(PortabilityLayer::VirtualDirectory_t 
 
 	std::string resolvedPath;
 	bool isAsset;
-	if (!ResolvePath(virtualDirectory, path, resolvedPath, isAsset))
+	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, resolvedPath, isAsset))
 		return nullptr;
 
 	if (isAsset)
@@ -386,7 +433,7 @@ bool GpFileSystem_Android::DeleteFile(PortabilityLayer::VirtualDirectory_t virtu
 {
 	std::string resolvedPath;
 	bool isAsset;
-	if (!ResolvePath(virtualDirectory, path, resolvedPath, isAsset))
+	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath, isAsset))
 	{
 		existed = false;
 		return false;
@@ -404,8 +451,11 @@ bool GpFileSystem_Android::DeleteFile(PortabilityLayer::VirtualDirectory_t virtu
 	return true;
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory)
+PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
 {
+	if (IsVirtualDirectoryLooseResources(virtualDirectory))
+		return ScanAssetDirectory(virtualDirectory, paths, numPaths);
+
 	return nullptr;
 }
 
@@ -455,9 +505,85 @@ bool GpFileSystem_Android::ValidateFilePathUnicodeChar(uint32_t c) const
 	return false;
 }
 
+bool GpFileSystem_Android::IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const
+{
+	return virtualDir == PortabilityLayer::VirtualDirectories::kApplicationData || virtualDir == PortabilityLayer::VirtualDirectories::kGameData;
+}
+
 GpFileSystem_Android *GpFileSystem_Android::GetInstance()
 {
 	return &ms_instance;
+}
+
+class GpDirectoryCursor_StringList final : public PortabilityLayer::HostDirectoryCursor
+{
+public:
+	explicit GpDirectoryCursor_StringList(std::vector<std::string> &paths);
+	~GpDirectoryCursor_StringList();
+
+	bool GetNext(const char *&outFileName) override;
+	void Destroy() override;
+
+private:
+	std::vector<std::string> m_paths;
+	size_t m_index;
+};
+
+GpDirectoryCursor_StringList::GpDirectoryCursor_StringList(std::vector<std::string> &paths)
+	: m_index(0)
+{
+	std::swap(paths, m_paths);
+}
+
+GpDirectoryCursor_StringList::~GpDirectoryCursor_StringList()
+{
+}
+
+bool GpDirectoryCursor_StringList::GetNext(const char *&outFileName)
+{
+	if (m_index == m_paths.size())
+		return false;
+	outFileName = m_paths[m_index].c_str();
+	m_index++;
+	return true;
+}
+
+void GpDirectoryCursor_StringList::Destroy()
+{
+	delete this;
+}
+
+PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
+{
+	std::string resolvedPath;
+	std::vector<std::string> subPaths;
+	bool isAsset = true;
+	if (!ResolvePath(virtualDirectory, paths, numPaths, resolvedPath, isAsset))
+		return nullptr;
+
+	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
+
+	jstring directory = jni->NewStringUTF(resolvedPath.c_str());
+
+	jobjectArray resultArray = static_cast<jobjectArray>(jni->CallObjectMethod(m_activity, m_scanAssetDirectoryMID, directory));
+	jni->DeleteLocalRef(directory);
+
+	size_t arrayLength = jni->GetArrayLength(resultArray);
+	subPaths.reserve(arrayLength);
+	for (size_t i = 0; i < arrayLength; i++)
+	{
+		jstring pathJStr = static_cast<jstring>(jni->GetObjectArrayElement(resultArray, i));
+		const char *pathStrChars = jni->GetStringUTFChars(pathJStr, nullptr);
+
+		subPaths.push_back(std::string(pathStrChars, static_cast<size_t>(jni->GetStringUTFLength(pathJStr))));
+
+		jni->ReleaseStringUTFChars(pathJStr, pathStrChars);
+		jni->DeleteLocalRef(pathJStr);
+	}
+
+	jni->DeleteLocalRef(resultArray);
+
+	return new GpDirectoryCursor_StringList(subPaths);
 }
 
 GpFileSystem_Android GpFileSystem_Android::ms_instance;

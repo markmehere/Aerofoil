@@ -33,7 +33,9 @@ int main(int argc, char* argv[])
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return -1;
 
-	SDL_GL_LoadLibrary("libGLESv2.so");
+	//SDL_GL_LoadLibrary("libGLESv2.so");
+
+	GpFileSystem_Android::GetInstance()->InitJNI();
 
 	GpAppInterface_Get()->PL_HostFileSystem_SetInstance(GpFileSystem_Android::GetInstance());
 	GpAppInterface_Get()->PL_HostSystemServices_SetInstance(GpSystemServices_Android::GetInstance());
@@ -56,6 +58,8 @@ int main(int argc, char* argv[])
 	GpFontHandlerFactory::RegisterFontHandlerFactory(EGpFontHandlerType_FreeType2, GpDriver_CreateFontHandler_FreeType2);
 
 	int returnCode = GpMain::Run();
+
+	GpFileSystem_Android::GetInstance()->ShutdownJNI();
 
 	SDL_Quit();
 
