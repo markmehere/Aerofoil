@@ -47,7 +47,7 @@
 "	if (flickerTotal < startThreshold)\n"\
 "		return vec4(0, 0, 0, 0);\n"\
 "	else if (flickerTotal >= endThreshold)\n"\
-"		return color;\n"\
+"		return vec4(color.rgb, 1);\n"\
 "\n"\
 "	return vec4(1, 1, 1, 1);\n"\
 "}\n"\
