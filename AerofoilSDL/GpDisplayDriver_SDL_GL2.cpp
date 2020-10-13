@@ -107,13 +107,19 @@ namespace GpBinarizedShaders
 {
 	extern const char *g_drawQuadV_GL2;
 
-	extern const char *g_drawQuadPaletteP_GL2;
-	extern const char *g_drawQuadRGBP_GL2;
-	extern const char *g_drawQuad15BitP_GL2;
+	extern const char *g_drawQuadPalettePF_GL2;
+	extern const char *g_drawQuadPalettePNF_GL2;
+	extern const char *g_drawQuadRGBPF_GL2;
+	extern const char *g_drawQuadRGBPNF_GL2;
+	extern const char *g_drawQuad15BitPF_GL2;
+	extern const char *g_drawQuad15BitPNF_GL2;
 
-	extern const char *g_drawQuadPaletteICCP_GL2;
-	extern const char *g_drawQuadRGBICCP_GL2;
-	extern const char *g_drawQuad15BitICCP_GL2;
+	extern const char *g_drawQuadPaletteICCPF_GL2;
+	extern const char *g_drawQuadPaletteICCPNF_GL2;
+	extern const char *g_drawQuadRGBICCPF_GL2;
+	extern const char *g_drawQuadRGBICCPNF_GL2;
+	extern const char *g_drawQuad15BitICCPF_GL2;
+	extern const char *g_drawQuad15BitICCPNF_GL2;
 
 	extern const char *g_scaleQuadP_GL2;
 }
@@ -134,11 +140,9 @@ struct GpGLFunctions
 	typedef GLenum (GLAPIENTRYP PFNGLGETERRORPROC)();
 	typedef void (GLAPIENTRYP PFNGLENABLEPROC)(GLenum cap);
 	typedef void (GLAPIENTRYP PFNGLDISABLEPROC)(GLenum cap);
-	typedef void (GLAPIENTRYP PFNGLALPHAFUNCPROC)(GLenum func, GLclampf ref);
 
 	PFNGLENABLEPROC Enable;
 	PFNGLDISABLEPROC Disable;
-	PFNGLALPHAFUNCPROC AlphaFunc;
 
 	PFNGLCLEARPROC Clear;
 	PFNGLCLEARCOLORPROC ClearColor;
@@ -808,10 +812,12 @@ private:
 
 	ScaleQuadProgram m_scaleQuadProgram;
 
-	DrawQuadProgram m_drawQuadPaletteProgram;
+	DrawQuadProgram m_drawQuadPaletteNoFlickerProgram;
+	DrawQuadProgram m_drawQuadPaletteFlickerProgram;
 	DrawQuadProgram m_drawQuadRGBProgram;
 	DrawQuadProgram m_drawQuad15BitProgram;
-	DrawQuadProgram m_drawQuadPaletteICCProgram;
+	DrawQuadProgram m_drawQuadPaletteICCNoFlickerProgram;
+	DrawQuadProgram m_drawQuadPaletteICCFlickerProgram;
 	DrawQuadProgram m_drawQuadRGBICCProgram;
 	DrawQuadProgram m_drawQuad15BitICCProgram;
 
@@ -1125,7 +1131,6 @@ bool GpGLFunctions::LookUpFunctions()
 {
 	LOOKUP_FUNC(Enable);
 	LOOKUP_FUNC(Disable);
-	LOOKUP_FUNC(AlphaFunc);
 
 	LOOKUP_FUNC(Clear);
 	LOOKUP_FUNC(ClearColor);
@@ -1800,7 +1805,22 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	DrawQuadProgram *program = nullptr;
 
 	if (pixelFormat == GpPixelFormats::k8BitStandard || pixelFormat == GpPixelFormats::k8BitCustom)
-		program = m_useICCProfile ? &m_drawQuadPaletteICCProgram : &m_drawQuadPaletteProgram;
+	{
+		if (m_useICCProfile)
+		{
+			if (effects->m_flicker)
+				program = &m_drawQuadPaletteICCFlickerProgram;
+			else
+				program = &m_drawQuadPaletteICCNoFlickerProgram;
+		}
+		else
+		{
+			if (effects->m_flicker)
+				program = &m_drawQuadPaletteFlickerProgram;
+			else
+				program = &m_drawQuadPaletteNoFlickerProgram;
+		}
+	}
 	else if (pixelFormat == GpPixelFormats::kRGB555)
 	{
 		return;
@@ -1864,12 +1884,6 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		m_gl.Uniform1fv(program->m_pixelFlickerStartThresholdLocation, 1, &flickerStart);
 		m_gl.Uniform1fv(program->m_pixelFlickerEndThresholdLocation, 1, &flickerEnd);
 		m_gl.Uniform1fv(program->m_pixelDesaturationLocation, 1, &desaturation);
-	}
-
-	if (effects->m_flicker)
-	{
-		m_gl.Enable(GL_ALPHA_TEST);
-		m_gl.AlphaFunc(GL_GREATER, 0.5f);
 	}
 
 	GLint vpos[1] = { program->m_vertexPosUVLocation };
@@ -2158,18 +2172,22 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 	}
 
 	GpComPtr<GpGLShader<GL_VERTEX_SHADER>> drawQuadVertexShader = CreateShader<GL_VERTEX_SHADER>(GpBinarizedShaders::g_drawQuadV_GL2);
-	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPalettePixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteP_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPalettePF_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteNoFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPalettePNF_GL2);
 	//m_drawQuadRGBPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadRGBP_GL2);
 	//m_drawQuad15BitPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad15BitP_GL2);
-	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCP_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCPF_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCNFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCPNF_GL2);
 	//m_drawQuadRGBICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadRGBICCP_GL2);
 	//m_drawQuad15BitICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad15BitICCP_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> scaleQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_scaleQuadP_GL2);
 
-	if (!m_drawQuadPaletteProgram.Link(this, drawQuadVertexShader, drawQuadPalettePixelShader)
+	if (!m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
+		|| !m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
 		//|| !m_drawQuadRGBProgram.Link(this, drawQuadVertexShader, drawQuadRGBPixelShader)
 		//|| !m_drawQuad15BitProgram.Link(this, drawQuadVertexShader, drawQuad15BitPixelShader)
-		|| !m_drawQuadPaletteICCProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCPixelShader)
+		|| !m_drawQuadPaletteICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCFPixelShader)
+		|| !m_drawQuadPaletteICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCNFPixelShader)
 		//|| !m_drawQuadRGBICCProgram.Link(this, drawQuadVertexShader, drawQuadRGBICCPixelShader)
 		//|| !m_drawQuad15BitICCProgram.Link(this, drawQuadVertexShader, drawQuad15BitICCPixelShader)
 		|| !m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader))
