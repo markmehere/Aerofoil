@@ -1863,6 +1863,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		m_gl.Uniform2fv(program->m_pixelFlickerAxisLocation, 1, flickerAxis);
 		m_gl.Uniform1fv(program->m_pixelFlickerStartThresholdLocation, 1, &flickerStart);
 		m_gl.Uniform1fv(program->m_pixelFlickerEndThresholdLocation, 1, &flickerEnd);
+		m_gl.Uniform1fv(program->m_pixelDesaturationLocation, 1, &desaturation);
 	}
 
 	if (effects->m_flicker)
