@@ -280,6 +280,8 @@ void InitAnimatedCursor (acurHandle ballCursH)
 
 		DisposCursors();
 
+		GetColorCursors(ballCursH, compiledBallCursorH);
+
 		animCursorH = ballCursH;
 		compiledAnimCursorH = compiledBallCursorH;
 		(*ballCursH)->index = 0;
