@@ -19,7 +19,7 @@
 "	resultColor *= constants_Modulation;\n"\
 "#ifdef ENABLE_FLICKER\n"\
 "	resultColor = ApplyFlicker(constants_FlickerAxis, texCoord.zw, constants_FlickerStartThreshold, constants_FlickerEndThreshold, resultColor * constants_Modulation);\n"\
-"	if (resultColor.a < 1)\n"\
+"	if (resultColor.a < 1.0)\n"\
 "		discard;\n"\
 "#endif\n"\
 "	resultColor = ApplyDesaturation(constants_Desaturation, resultColor);\n"\
