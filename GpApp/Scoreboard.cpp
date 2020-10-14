@@ -175,7 +175,7 @@ void RefreshRoomTitle (short mode)
 		break;
 		
 		case kSavingTitleMode:
-		surface->DrawString(strShadowPoint, PSTR("Saving GameÉ"), blackColor, appFont);
+		surface->DrawString(strShadowPoint, PSTR("Saving Game\xc9"), blackColor, appFont);
 		break;
 		
 		default:
@@ -190,7 +190,7 @@ void RefreshRoomTitle (short mode)
 		break;
 		
 		case kSavingTitleMode:
-		surface->DrawString(strPoint, PSTR("Saving GameÉ"), whiteColor, appFont);
+		surface->DrawString(strPoint, PSTR("Saving Game\xc9"), whiteColor, appFont);
 		break;
 		
 		default:

@@ -785,7 +785,7 @@ void ShiftWholeHouse (short howFar)
 	short		i, h, numRooms;
 	char		wasState;
 	
-	OpenMessageWindow(PSTR("Shifting Whole House…"));
+	OpenMessageWindow(PSTR("Shifting Whole House\xc9"));
 	SpinCursor(3);
 	
 	CopyThisRoomToRoom();

@@ -34,11 +34,11 @@ extern	Boolean		switchedOut;
 
 //--------------------------------------------------------------  ToolBoxInit
 
-// The standard ToolBox intialization that must happen when any MacÉ
+// The standard ToolBox intialization that must happen when any Macï¿½
 // program first launches.
 
 void ToolBoxInit (void)
-{	
+{
 	InitCursor();
 	switchedOut = false;
 }
@@ -48,13 +48,13 @@ void ToolBoxInit (void)
 
 short RandomInt (short range)
 {
-	register long	rawResult;
-	
+	long	rawResult;
+
 	rawResult = Random();
 	if (rawResult < 0L)
 		rawResult *= -1L;
 	rawResult = (rawResult * (long)range) / 32768L;
-	
+
 	return ((short)rawResult);
 }
 
@@ -64,30 +64,30 @@ short RandomInt (short range)
 
 long RandomLong (long range)
 {
-	register long	highWord, lowWord;
-	register long	rawResultHi, rawResultLo;
-	
+	long	highWord, lowWord;
+	long	rawResultHi, rawResultLo;
+
 	highWord = (range & 0xFFFF0000) >> 16;
 	lowWord = range & 0x0000FFFF;
-	
+
 	rawResultHi = Random();
 	if (rawResultHi < 0L)
 		rawResultHi *= -1L;
 	rawResultHi = (rawResultHi * highWord) / 32768L;
-	
+
 	rawResultLo = Random();
 	if (rawResultLo < 0L)
 		rawResultLo *= -1L;
 	rawResultLo = (rawResultLo * lowWord) / 32768L;
-	
+
 	rawResultHi = (rawResultHi << 16) + rawResultLo;
-	
+
 	return (rawResultHi);
 }
 
 //--------------------------------------------------------------  RedAlert
 
-// Called when we must quit app.  Brings up a dialog informing userÉ
+// Called when we must quit app.  Brings up a dialog informing userï¿½
 // of the problem and the exits to shell.
 
 void RedAlert (short errorNumber)
@@ -97,9 +97,9 @@ void RedAlert (short errorNumber)
 	#define			rErrMssgID		171		// string ID for death error message
 	short			dummyInt;
 	Str255			errTitle, errMessage, errNumberString;
-	
+
 	InitCursor();
-	
+
 	if (errorNumber > 1)		// <= 0 is unaccounted for
 	{
 		GetIndString(errTitle, rErrTitleID, errorNumber);
@@ -113,7 +113,7 @@ void RedAlert (short errorNumber)
 	NumToString((long)errorNumber, errNumberString);
 	DialogTextSubstitutions substitutions(errTitle, errMessage, errNumberString, PSTR(""));
 //	CenterAlert(rDeathAlertID);
-	
+
 	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rDeathAlertID, &substitutions);
 	//ExitToShell();
 
@@ -127,14 +127,14 @@ void RedAlert (short errorNumber)
 void CreateOffScreenBitMap (Rect *theRect, GrafPtr *offScreen)
 {
 	GrafPtr		theBWPort;
-	BitMap		theBitMap;	
+	BitMap		theBitMap;
 	long		theRowBytes;
-	
+
 	theBWPort = (GrafPtr)(NewPtr(sizeof(GrafPort)));
 	OpenPort(theBWPort);
 	theRowBytes = (long)((theRect->right - theRect->left + 15L) / 16L) * 2L;
 	theBitMap.rowBytes = (short)theRowBytes;
-	theBitMap.baseAddr = NewPtr((long)theBitMap.rowBytes * 
+	theBitMap.baseAddr = NewPtr((long)theBitMap.rowBytes *
 		(theRect->bottom - theRect->top));
 	if (theBitMap.baseAddr == nil)
 		RedAlert(kErrNoMemory);
@@ -161,7 +161,7 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 	PLError_t		theErr;
 	short		thisDepth;
 	char		wasState;
-	
+
 	oldDevice = GetGDevice();
 	SetGDevice(thisGDevice);
 	newCGrafPtr = nil;
@@ -170,7 +170,7 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 	{
 		OpenCPort(newCGrafPtr);
 		thisDepth = (**(*newCGrafPtr).portPixMap).pixelSize;
-		offRowBytes = ((((long)thisDepth * 
+		offRowBytes = ((((long)thisDepth *
 				(long)(theRect->right - theRect->left)) + 15L) >> 4L) << 1L;
 		sizeOfOff = (long)(theRect->bottom - theRect->top + 1) * offRowBytes;
 	//	sizeOfOff = (long)(theRect->bottom - theRect->top) * offRowBytes;
@@ -196,7 +196,7 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 		}
 		else
 		{
-			CloseCPort(newCGrafPtr);		
+			CloseCPort(newCGrafPtr);
 			DisposePtr((Ptr)newCGrafPtr);
 			newCGrafPtr = nil;
 			RedAlert(kErrNoMemory);
@@ -204,18 +204,18 @@ void CreateOffScreenPixMap (Rect *theRect, CGrafPtr *offScreen)
 	}
 	else
 		RedAlert(kErrNoMemory);
-	
+
 	*offScreen = newCGrafPtr;
 	SetGDevice(oldDevice);
 }
 */
 //--------------------------------------------------------------------  CreateOffScreenGWorld
-// Creates an offscreen GWorldÊusing the depth passed in.
+// Creates an offscreen GWorldï¿½using the depth passed in.
 
 PLError_t CreateOffScreenGWorld (DrawSurface **theGWorld, Rect *bounds)
 {
 	GpPixelFormat_t pixelFormat = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetPixelFormat();
-	
+
 	return NewGWorld(theGWorld, pixelFormat, bounds, nil);
 }
 
@@ -231,7 +231,7 @@ PLError_t CreateOffScreenGWorldCustomDepth(DrawSurface **theGWorld, Rect *bounds
 void KillOffScreenPixMap (CGrafPtr offScreen)
 {
 	Ptr		theseBits;
-	
+
 	if (offScreen != nil)
 	{
 		theseBits = (**(*offScreen).portPixMap).baseAddr;
@@ -257,23 +257,23 @@ void KillOffScreenBitMap (GrafPtr offScreen)
 }
 */
 //--------------------------------------------------------------  LoadGraphic
-// Function loads the specified 'PICT' from disk and draws it toÉ
-// the current port (no scaling, clipping, etc, are done).  AlwaysÉ
+// Function loads the specified 'PICT' from disk and draws it toï¿½
+// the current port (no scaling, clipping, etc, are done).  Alwaysï¿½
 // draws in the upper left corner of current port.
 
 void LoadGraphic (DrawSurface *surface, short resID)
 {
 	Rect					bounds;
 	THandle<BitmapImage>	thePicture;
-	
+
 	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', resID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
-	
+
 	bounds = (*thePicture)->GetRect();
 	OffsetRect(&bounds, -bounds.left, -bounds.top);
 	surface->DrawPicture(thePicture, bounds);
-	
+
 	thePicture.Dispose();
 }
 
@@ -296,14 +296,14 @@ void LoadGraphicCustom(DrawSurface *surface, short resID)
 }
 
 //--------------------------------------------------------------  LoadScaledGraphic
-// Loads the specified 'PICT' and draws it mapped to the rectangleÉ
-// specified.  If this rect isn't the same size of the 'PICT', scalingÉ
+// Loads the specified 'PICT' and draws it mapped to the rectangleï¿½
+// specified.  If this rect isn't the same size of the 'PICT', scalingï¿½
 // will occur.
 
 void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 {
 	THandle<BitmapImage>	thePicture;
-	
+
 	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', resID).StaticCast<BitmapImage>();
 	if (thePicture == nil)
 		RedAlert(kErrFailedGraphicLoad);
@@ -312,8 +312,8 @@ void LoadScaledGraphic (DrawSurface *surface, short resID, Rect *theRect)
 }
 
 //--------------------------------------------------------------  LoadScaledGraphic
-// Loads the specified 'PICT' and draws it mapped to the rectangleÉ
-// specified.  If this rect isn't the same size of the 'PICT', scalingÉ
+// Loads the specified 'PICT' and draws it mapped to the rectangleï¿½
+// specified.  If this rect isn't the same size of the 'PICT', scalingï¿½
 // will occur.
 
 void LoadScaledGraphicCustom(DrawSurface *surface, short resID, Rect *theRect)
@@ -378,7 +378,7 @@ void DrawCIcon (DrawSurface *surface, short theID, short h, short v)
 	if (PortabilityLayer::IconLoader::GetInstance()->LoadColorIcon(theID, colorImage, bwImage, maskImage))
 	{
 		Rect		theRect;
-	
+
 		SetRect(&theRect, 0, 0, 32, 32);
 		OffsetRect(&theRect, h, v);
 
@@ -393,27 +393,27 @@ void DrawCIcon (DrawSurface *surface, short theID, short h, short v)
 
 //--------------------------------------------------------------  LongSquareRoot
 
-// This is a quick and dirty square root function that returns prettyÉ
-// accurate long integer results.  It uses no transcendental functions orÉ
+// This is a quick and dirty square root function that returns prettyï¿½
+// accurate long integer results.  It uses no transcendental functions orï¿½
 // floating point.
 
 long LongSquareRoot (long theNumber)
 {
 	long		currentAnswer;
 	long		nextTrial;
-	
+
 	if (theNumber <= 1L)
 		return (theNumber);
-	
+
 	nextTrial = theNumber / 2;
-	
+
 	do
 	{
 		currentAnswer = nextTrial;
 		nextTrial = (nextTrial + theNumber / nextTrial) / 2;
 	}
 	while (nextTrial < currentAnswer);
-	
+
 	return(currentAnswer);
 }
 
@@ -427,13 +427,13 @@ Boolean WaitForInputEvent (short seconds)
 	TimeTaggedVOSEvent	theEvent;
 	long				timeToBail;
 	Boolean				waiting, didResume;
-	
+
 	timeToBail = TickCount() + 60L * (long)seconds;
 	FlushEvents();
 	waiting = true;
 	didResume = false;
 
-	
+
 	while (waiting)
 	{
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
@@ -462,9 +462,9 @@ Boolean WaitForInputEvent (short seconds)
 void WaitCommandQReleased (void)
 {
 	Boolean		waiting;
-	
+
 	waiting = true;
-	
+
 	while (waiting)
 	{
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
@@ -483,20 +483,20 @@ void WaitCommandQReleased (void)
 char KeyMapOffsetFromRawKey (char rawKeyCode)
 {
 	char		hiByte, loByte, theOffset;
-	
+
 	hiByte = rawKeyCode & 0xF0;
 	loByte = rawKeyCode & 0x0F;
-	
+
 	if (loByte <= 0x07)
 		theOffset = hiByte + (0x07 - loByte);
 	else
 		theOffset = hiByte + (0x17 - loByte);
-	
+
 	return (theOffset);
 }
 
 //--------------------------------------------------------------  GetKeyName
-// Given a keyDown event (it's message field), this function returnsÉ
+// Given a keyDown event (it's message field), this function returnsï¿½
 // a string with that key's name (so we get "Shift" and "Esc", etc.).
 
 static const char *gs_specialKeyNames[GpKeySpecials::kCount] =
@@ -591,6 +591,8 @@ void GetKeyName (intptr_t message, StringPtr theName)
 		// This should never happen
 		assert(false);
 		break;
+	default:
+		break;
 	}
 
 	const size_t name1Length = (name1 == nullptr) ? 0 : strlen(name1);
@@ -612,7 +614,7 @@ void GetKeyName (intptr_t message, StringPtr theName)
 Boolean OptionKeyDown (void)
 {
 	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
-	
+
 	if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt)))
 		return (true);
 	else
@@ -625,13 +627,13 @@ Boolean OptionKeyDown (void)
 long ExtractCTSeed (CGrafPtr porter)
 {
 	long		theSeed;
-	
+
 	theSeed = (**((**(porter->portPixMap)).pmTable)).ctSeed;
 	return(theSeed);
 }
 */
 //--------------------------------------------------------------  ForceCTSeed
-// Forces  the "color table seed" from a specified graf port to aÉ
+// Forces  the "color table seed" from a specified graf port to aï¿½
 // specified value.
 /*
 void ForceCTSeed (CGrafPtr porter, long newSeed)
@@ -640,25 +642,25 @@ void ForceCTSeed (CGrafPtr porter, long newSeed)
 }
 */
 //--------------------------------------------------------------  DelayTicks
-// Lil' function that just sits and waits a specified number ofÉ
+// Lil' function that just sits and waits a specified number ofï¿½
 // Ticks (1/60 of a second).
 
 void DelayTicks (long howLong)
 {
 	UInt32		whoCares;
-	
+
 	Delay(howLong, &whoCares);
 }
 
 //--------------------------------------------------------------  UnivGetSoundVolume
-// Returns the speaker volume (as set by the user) in the range ofÉ
+// Returns the speaker volume (as set by the user) in the range ofï¿½
 // zero to seven (handles Sound Manager 3 case as well).
 
 void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 {
 	long		longVol;
 	PLError_t		theErr;
-	
+
 //	if (hasSM3)
 //	{
 		longVol = PortabilityLayer::SoundSystem::GetInstance()->GetVolume();
@@ -666,7 +668,7 @@ void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 //	}
 //	else
 //		GetSoundVol(volume);
-	
+
 	if (*volume > 7)
 		*volume = 7;
 	else if (*volume < 0)
@@ -674,18 +676,18 @@ void UnivGetSoundVolume (short *volume, Boolean hasSM3)
 }
 
 //--------------------------------------------------------------  UnivSetSoundVolume
-// Sets the speaker volume to a specified value (in the range ofÉ
+// Sets the speaker volume to a specified value (in the range ofï¿½
 // zero to seven (handles Sound Manager 3 case as well).
 
 void  UnivSetSoundVolume (short volume, Boolean hasSM3)
 {
 	long		longVol;
-	
+
 	if (volume > 7)
 		volume = 7;
 	else if (volume < 0)
 		volume = 0;
-	
+
 //	if (hasSM3)
 //	{
 		longVol = (long)volume * 0x0025;

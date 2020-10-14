@@ -144,9 +144,9 @@ void DrawHighScores (DrawSurface *surface)
 
 	PortabilityLayer::RenderedFont *appFont14 = GetApplicationFont(14, PortabilityLayer::FontFamilyFlag_Bold, true);
 	
-	PasStringCopy(PSTR("¥ "), tempStr);
+	PasStringCopy(PSTR("\xa5 "), tempStr);
 	PasStringConcat(tempStr, thisHouseName);
-	PasStringConcat(tempStr, PSTR(" ¥"));
+	PasStringConcat(tempStr, PSTR(" \xa5"));
 
 	const Point scoreShadowPoint = Point::Create(scoreLeft + ((kScoreWide - appFont14->MeasurePStr(tempStr)) / 2) - 1, dropIt - 66);
 	surface->DrawString(scoreShadowPoint, tempStr, blackColor, appFont14);
