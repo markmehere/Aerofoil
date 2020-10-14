@@ -4,8 +4,6 @@
 #include "GpComPtr.h"
 #include "GpFiber_SDL.h"
 #include "GpDisplayDriverProperties.h"
-//#include "GpSystemServices_Win32.h"
-//#include "GpWindows.h"	// TODO: Remove
 #include "GpVOSEvent.h"
 #include "GpRingBuffer.h"
 #include "HostSystemServices.h"
@@ -121,6 +119,7 @@ namespace GpBinarizedShaders
 	extern const char *g_drawQuad15BitICCPF_GL2;
 	extern const char *g_drawQuad15BitICCPNF_GL2;
 
+	extern const char *g_copyQuadP_GL2;
 	extern const char *g_scaleQuadP_GL2;
 }
 
@@ -797,7 +796,7 @@ private:
 		bool Link(GpDisplayDriver_SDL_GL2 *driver, const GpGLShader<GL_VERTEX_SHADER> *vertexShader, const GpGLShader<GL_FRAGMENT_SHADER> *pixelShader);
 	};
 
-	struct ScaleQuadProgram
+	struct BlitQuadProgram
 	{
 		GpComPtr<GpGLProgram> m_program;
 		GLint m_vertexNDCOriginAndDimensionsLocation;
@@ -810,7 +809,8 @@ private:
 		bool Link(GpDisplayDriver_SDL_GL2 *driver, const GpGLShader<GL_VERTEX_SHADER> *vertexShader, const GpGLShader<GL_FRAGMENT_SHADER> *pixelShader);
 	};
 
-	ScaleQuadProgram m_scaleQuadProgram;
+	BlitQuadProgram m_scaleQuadProgram;
+	BlitQuadProgram m_copyQuadProgram;
 
 	DrawQuadProgram m_drawQuadPaletteNoFlickerProgram;
 	DrawQuadProgram m_drawQuadPaletteFlickerProgram;
@@ -994,11 +994,11 @@ bool GpDisplayDriverSurface_GL2::Init()
 {
 	m_gl->BindTexture(GL_TEXTURE_2D, m_texture->GetID());
 	m_gl->PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	m_gl->TexImage2D(GL_TEXTURE_2D, 0, ResolveGLInternalFormat(), m_paddedTextureWidth, m_height, 0, ResolveGLFormat(), ResolveGLType(), nullptr);
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	m_gl->TexImage2D(GL_TEXTURE_2D, 0, ResolveGLInternalFormat(), m_paddedTextureWidth, m_height, 0, ResolveGLFormat(), ResolveGLType(), nullptr);
 	m_gl->BindTexture(GL_TEXTURE_2D, 0);
 
 	return true;
@@ -2219,6 +2219,7 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 	//m_drawQuadRGBICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadRGBICCP_GL2);
 	//m_drawQuad15BitICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad15BitICCP_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> scaleQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_scaleQuadP_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> copyQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_copyQuadP_GL2);
 
 	if (!m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
 		|| !m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
@@ -2228,7 +2229,8 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 		|| !m_drawQuadPaletteICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCNFPixelShader)
 		//|| !m_drawQuadRGBICCProgram.Link(this, drawQuadVertexShader, drawQuadRGBICCPixelShader)
 		//|| !m_drawQuad15BitICCProgram.Link(this, drawQuadVertexShader, drawQuad15BitICCPixelShader)
-		|| !m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader))
+		|| !m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader)
+		|| !m_copyQuadProgram.Link(this, drawQuadVertexShader, copyQuadPixelShader))
 		return false;
 
 
@@ -2253,11 +2255,11 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 
 		m_gl.BindTexture(GL_TEXTURE_2D, m_paletteTexture->GetID());
 		m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, initialDataBytes);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, initialDataBytes);
 		m_gl.BindTexture(GL_TEXTURE_2D, 0);
 	}
 
@@ -2456,6 +2458,10 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 	m_gl.Viewport(0, 0, m_windowWidthPhysical, m_windowHeightPhysical);
 
+	const bool isIntegralScale = (m_pixelScaleX == floor(m_pixelScaleX) && m_pixelScaleY == floor(m_pixelScaleY));
+
+	const BlitQuadProgram &program = isIntegralScale ? m_copyQuadProgram : m_scaleQuadProgram;
+
 	{
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
 		const float twoDivHeight = 2.0f / static_cast<float>(m_windowHeightPhysical);
@@ -2466,8 +2472,8 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 		float ndcOriginsAndDimensions[4] =
 		{
-			twoDivWidth - 1.0f,
-			twoDivHeight - 1.0f,
+			-1.0f,
+			-1.0f,
 			fWidth * twoDivWidth,
 			fHeight * twoDivHeight
 		};
@@ -2480,9 +2486,9 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 			1.f
 		};
 
-		m_gl.UseProgram(m_scaleQuadProgram.m_program->GetID());
-		m_gl.Uniform4fv(m_scaleQuadProgram.m_vertexNDCOriginAndDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(ndcOriginsAndDimensions));
-		m_gl.Uniform4fv(m_scaleQuadProgram.m_vertexSurfaceDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(surfaceDimensions_TextureRegion));
+		m_gl.UseProgram(program.m_program->GetID());
+		m_gl.Uniform4fv(program.m_vertexNDCOriginAndDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(ndcOriginsAndDimensions));
+		m_gl.Uniform4fv(program.m_vertexSurfaceDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(surfaceDimensions_TextureRegion));
 
 		float dxdy_dimensions[4] =
 		{
@@ -2492,10 +2498,10 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 			static_cast<float>(m_windowHeightVirtual)
 		};
 
-		m_gl.Uniform4fv(m_scaleQuadProgram.m_pixelDXDYDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(dxdy_dimensions));
+		m_gl.Uniform4fv(program.m_pixelDXDYDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(dxdy_dimensions));
 	}
 
-	GLint attribLocations[] = { m_scaleQuadProgram.m_vertexPosUVLocation };
+	GLint attribLocations[] = { program.m_vertexPosUVLocation };
 
 	m_quadVertexArray->Activate(attribLocations);
 
@@ -2561,7 +2567,7 @@ bool GpDisplayDriver_SDL_GL2::DrawQuadProgram::Link(GpDisplayDriver_SDL_GL2 *dri
 	return true;
 }
 
-bool GpDisplayDriver_SDL_GL2::ScaleQuadProgram::Link(GpDisplayDriver_SDL_GL2 *driver, const GpGLShader<GL_VERTEX_SHADER> *vertexShader, const GpGLShader<GL_FRAGMENT_SHADER> *pixelShader)
+bool GpDisplayDriver_SDL_GL2::BlitQuadProgram::Link(GpDisplayDriver_SDL_GL2 *driver, const GpGLShader<GL_VERTEX_SHADER> *vertexShader, const GpGLShader<GL_FRAGMENT_SHADER> *pixelShader)
 {
 	m_program = GpGLProgram::Create(driver);
 	if (!m_program)

@@ -63,6 +63,9 @@
     <ClCompile Include="..\Aerofoil\GpLogDriver_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderCode\CopyQuadP.cpp">
+      <Filter>Source Files\ShaderCode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderCode\Functions.h">
