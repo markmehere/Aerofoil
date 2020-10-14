@@ -207,7 +207,7 @@ bool GpSystemServices_Android::IsTouchscreen() const
 
 bool GpSystemServices_Android::IsUsingMouseAsTouch() const
 {
-	return true;
+	return false;
 }
 
 bool GpSystemServices_Android::IsTextInputObstructive() const

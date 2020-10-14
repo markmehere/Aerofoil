@@ -615,8 +615,7 @@ void RenderTouchScreenControls (void)
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 		ctrlGraphics[i] = nullptr;
 
-	ctrlGraphics[TouchScreenCtrlIDs::MoveLeft] = touchScreen.graphics[touchScreenControlGraphics::MoveLeftIdle];
-	ctrlGraphics[TouchScreenCtrlIDs::MoveRight] = touchScreen.graphics[touchScreenControlGraphics::MoveRightIdle];
+	ctrlGraphics[TouchScreenCtrlIDs::Movement] = nullptr;
 	ctrlGraphics[TouchScreenCtrlIDs::Flip] = touchScreen.graphics[touchScreenControlGraphics::FlipIdle];
 	ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsDisabled];
 	ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryDisabled];
@@ -636,7 +635,7 @@ void RenderTouchScreenControls (void)
 			if (batteryTotal < 0)
 				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumActive];
 			else if (batteryTotal > 0)
-				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BandsActive];
+				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryActive];
 		}
 		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Bands)
 		{
@@ -645,10 +644,6 @@ void RenderTouchScreenControls (void)
 		}
 		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Flip)
 			ctrlGraphics[TouchScreenCtrlIDs::Flip] = touchScreen.graphics[touchScreenControlGraphics::FlipActive];
-		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::MoveLeft)
-			ctrlGraphics[TouchScreenCtrlIDs::MoveLeft] = touchScreen.graphics[touchScreenControlGraphics::MoveLeftActive];
-		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::MoveRight)
-			ctrlGraphics[TouchScreenCtrlIDs::MoveRight] = touchScreen.graphics[touchScreenControlGraphics::MoveRightActive];
 	}
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)

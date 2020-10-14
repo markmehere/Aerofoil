@@ -366,25 +366,59 @@ namespace TouchScreenCtrlIDs
 {
 	enum TouchScreenCtrlID
 	{
-		None,
-
-		MoveLeft,
-		MoveRight,
 		Flip,
 		Bands,
 		BatteryHelium,
+		Movement,
 
 		Count,
+
+		Invalid,
 	};
 };
 
 typedef TouchScreenCtrlIDs::TouchScreenCtrlID TouchScreenCtrlID_t;
 
+struct touchScreenFingerID
+{
+	int64_t m_deviceID;
+	int64_t m_fingerID;
+
+	touchScreenFingerID();
+	touchScreenFingerID(int64_t deviceID, int64_t fingerID);
+
+	bool operator ==(const touchScreenFingerID &other) const;
+	bool operator !=(const touchScreenFingerID &other) const;
+};
+
+inline touchScreenFingerID::touchScreenFingerID()
+	: m_fingerID(0)
+	, m_deviceID(0)
+{
+}
+
+inline touchScreenFingerID::touchScreenFingerID(int64_t deviceID, int64_t fingerID)
+	: m_fingerID(fingerID)
+	, m_deviceID(deviceID)
+{
+}
+
+inline bool touchScreenFingerID::operator==(const touchScreenFingerID &other) const
+{
+	return this->m_fingerID == other.m_fingerID && this->m_deviceID == other.m_deviceID;
+}
+
+inline bool touchScreenFingerID::operator!=(const touchScreenFingerID &other) const
+{
+	return !((*this) == other);
+}
+
 typedef struct
 {
-	int fingerID;
+	touchScreenFingerID tfingerID;
 	Point point;
 	TouchScreenCtrlID_t capturingControl;
+	bool active;
 } touchScreenFingerState;
 
 typedef struct

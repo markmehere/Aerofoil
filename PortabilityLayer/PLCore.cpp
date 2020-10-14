@@ -679,6 +679,11 @@ DrawSurface *Window::GetDrawSurface() const
 	return const_cast<DrawSurface*>(&m_surface);
 }
 
+Point Window::TouchToLocal(const GpTouchInputEvent &evt) const
+{
+	return Point::Create(evt.m_x - m_wmX, evt.m_y - m_wmY);
+}
+
 Point Window::MouseToLocal(const GpMouseInputEvent &evt) const
 {
 	return Point::Create(evt.m_x - m_wmX, evt.m_y - m_wmY);

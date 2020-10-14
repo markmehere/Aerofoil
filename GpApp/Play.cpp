@@ -390,14 +390,16 @@ void HandleGameResolutionChange(void)
 
 //--------------------------------------------------------------  HandleTouchUp
 
-void HandleTouchUp(int fingerID)
+void HandleTouchUp(touchScreenFingerID fingerID)
 {
 	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
 	{
-		if (touchScreen.fingers[i].fingerID == fingerID)
+		touchScreenFingerState &fstate = touchScreen.fingers[i];
+		if (fstate.active && fstate.tfingerID == fingerID)
 		{
-			touchScreen.fingers[i].fingerID = -1;
-			touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::None;
+			fstate.active = false;
+			fstate.tfingerID = touchScreenFingerID();
+			fstate.capturingControl = TouchScreenCtrlIDs::Invalid;
 			return;
 		}
 	}
@@ -405,13 +407,15 @@ void HandleTouchUp(int fingerID)
 
 //--------------------------------------------------------------  HandleTouchMove
 
-void HandleTouchMove(int fingerID, const Point &pt)
+void HandleTouchMove(touchScreenFingerID fingerID, const Point &pt)
 {
 	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
 	{
-		if (touchScreen.fingers[i].fingerID == fingerID)
+		touchScreenFingerState &fstate = touchScreen.fingers[i];
+
+		if (fstate.active && fstate.tfingerID == fingerID)
 		{
-			touchScreen.fingers[i].point = pt;
+			fstate.point = pt;
 			return;
 		}
 	}
@@ -419,19 +423,21 @@ void HandleTouchMove(int fingerID, const Point &pt)
 
 //--------------------------------------------------------------  HandleTouchDown
 
-void HandleTouchDown(int fingerID, const Point &pt)
+void HandleTouchDown(touchScreenFingerID fingerID, const Point &pt)
 {
 	int freeFingerIndex = -1;
 
 	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
 	{
-		if (touchScreen.fingers[i].fingerID == fingerID)
+		touchScreenFingerState &fstate = touchScreen.fingers[i];
+
+		if (fstate.active && fstate.tfingerID == fingerID)
 		{
 			// Finger is already considered down, something weird happened
 			HandleTouchMove(fingerID, pt);
 			return;
 		}
-		else if (touchScreen.fingers[i].fingerID < 0)
+		else if (!fstate.active)
 			freeFingerIndex = i;
 	}
 
@@ -446,7 +452,8 @@ void HandleTouchDown(int fingerID, const Point &pt)
 		{
 			if (touchScreen.controls[j].touchRect.Contains(pt))
 			{
-				fingerState.fingerID = fingerID;
+				fingerState.tfingerID = fingerID;
+				fingerState.active = true;
 				fingerState.capturingControl = static_cast<TouchScreenCtrlID_t>(j);
 				fingerState.point = pt;
 				return;
@@ -458,14 +465,17 @@ void HandleTouchDown(int fingerID, const Point &pt)
 
 //--------------------------------------------------------------  HandleTouchLeave
 
-void HandleTouchLeave(int fingerID)
+void HandleTouchLeave(touchScreenFingerID fingerID)
 {
 	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
 	{
-		if (touchScreen.fingers[i].fingerID == fingerID)
+		touchScreenFingerState &fstate = touchScreen.fingers[i];
+
+		if (fstate.active && fstate.tfingerID == fingerID)
 		{
-			touchScreen.fingers[i].fingerID = -1;
-			touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::None;
+			fstate.tfingerID = touchScreenFingerID();
+			fstate.active = false;
+			fstate.capturingControl = TouchScreenCtrlIDs::Invalid;
 			return;
 		}
 	}
@@ -492,17 +502,43 @@ void HandleInGameEvents(void)
 				{
 				case GpMouseEventTypes::kDown:
 					if (mouseInput.m_button == GpMouseButtons::kLeft)
-						HandleTouchDown(0, mousePt);
+						HandleTouchDown(touchScreenFingerID(), mousePt);
 					break;
 				case GpMouseEventTypes::kLeave:
-					HandleTouchLeave(0);
+					HandleTouchLeave(touchScreenFingerID());
 					break;
 				case GpMouseEventTypes::kUp:
-					HandleTouchMove(0, mousePt);
-					HandleTouchUp(0);
+					HandleTouchMove(touchScreenFingerID(), mousePt);
+					HandleTouchUp(touchScreenFingerID());
 					break;
 				case GpMouseEventTypes::kMove:
-					HandleTouchMove(0, mousePt);
+					HandleTouchMove(touchScreenFingerID(), mousePt);
+					break;
+				default:
+					break;
+				};
+			}
+
+			if (!thisMac.isMouseTouchscreen && evt.m_vosEvent.m_eventType == GpVOSEventTypes::kTouchInput)
+			{
+				const GpTouchInputEvent &touchInput = evt.m_vosEvent.m_event.m_touchInputEvent;
+
+				const Point touchPt = mainWindow->TouchToLocal(touchInput);
+
+				switch (touchInput.m_eventType)
+				{
+				case GpTouchEventTypes::kDown:
+					HandleTouchDown(touchScreenFingerID(touchInput.m_deviceID, touchInput.m_fingerID), touchPt);
+					break;
+				case GpTouchEventTypes::kLeave:
+					HandleTouchLeave(touchScreenFingerID(touchInput.m_deviceID, touchInput.m_fingerID));
+					break;
+				case GpTouchEventTypes::kUp:
+					HandleTouchMove(touchScreenFingerID(touchInput.m_deviceID, touchInput.m_fingerID), touchPt);
+					HandleTouchUp(touchScreenFingerID(touchInput.m_deviceID, touchInput.m_fingerID));
+					break;
+				case GpTouchEventTypes::kMove:
+					HandleTouchMove(touchScreenFingerID(), touchPt);
 					break;
 				default:
 					break;
@@ -530,15 +566,15 @@ void ResetTouchScreenControlBounds (void)
 	Point points[TouchScreenCtrlIDs::Count];
 	Point sizes[TouchScreenCtrlIDs::Count];
 
-	points[TouchScreenCtrlIDs::MoveLeft] = Point::Create(mainWindowRect.left + touchScreenControlEdgeSpacing, mainWindowRect.bottom - touchScreenControlEdgeSpacing - touchScreenControlSize);
-	points[TouchScreenCtrlIDs::MoveRight] = points[TouchScreenCtrlIDs::MoveLeft] + Point::Create(touchScreenControlInterSpacing + touchScreenControlSize, 0);
-
+	points[TouchScreenCtrlIDs::Movement] = Point::Create(mainWindowRect.left, mainWindowRect.top);
 	points[TouchScreenCtrlIDs::BatteryHelium] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.bottom - touchScreenControlEdgeSpacing - touchScreenControlSize);
 	points[TouchScreenCtrlIDs::Flip] = points[TouchScreenCtrlIDs::BatteryHelium] + Point::Create(0, -touchScreenControlInterSpacing - touchScreenControlSize);
 	points[TouchScreenCtrlIDs::Bands] = points[TouchScreenCtrlIDs::BatteryHelium] + Point::Create(-touchScreenControlInterSpacing - touchScreenControlSize, 0);
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 		sizes[i] = Point::Create(touchScreenControlSize, touchScreenControlSize);
+
+	sizes[TouchScreenCtrlIDs::Movement] = Point::Create(mainWindowRect.Width(), mainWindowRect.Height());
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 	{
@@ -550,8 +586,9 @@ void ResetTouchScreenControlBounds (void)
 	// Clear all active touches
 	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
 	{
-		touchScreen.fingers[i].fingerID = -1;
-		touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::None;
+		touchScreen.fingers[i].tfingerID = touchScreenFingerID();
+		touchScreen.fingers[i].active = false;
+		touchScreen.fingers[i].capturingControl = TouchScreenCtrlIDs::Invalid;
 	}
 }
 
@@ -581,10 +618,13 @@ void InitTouchScreenControlState(void)
 
 void PlayGame (void)
 {
+	const houseType *debugHouse = nullptr;
+	if (thisHouse)
+		debugHouse = *thisHouse;
+
 	InitTouchScreenControlState();
 
-	touchScreen.controls[TouchScreenCtrlIDs::MoveLeft].isEnabled = true;
-	touchScreen.controls[TouchScreenCtrlIDs::MoveRight].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::Movement].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::Flip].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::Bands].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::BatteryHelium].isEnabled = true;

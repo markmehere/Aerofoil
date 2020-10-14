@@ -704,7 +704,7 @@ public:
 
 	bool Init();
 
-	static void TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY, bool obstructiveTextInput);
+	void TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY, bool obstructiveTextInput);
 
 	void Run() override;
 	void Shutdown() override;
@@ -1100,6 +1100,9 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	m_bgColor[2] = 0.f;
 	m_bgColor[3] = 1.f;
 
+	// Stupid hack to detect mobile...
+	m_isFullScreenDesired = m_properties.m_systemServices->IsTouchscreen();
+
 	const intmax_t periodNum = std::chrono::high_resolution_clock::period::num;
 	const intmax_t periodDen = std::chrono::high_resolution_clock::period::den;
 
@@ -1207,7 +1210,6 @@ bool GpDisplayDriver_SDL_GL2::Init()
 	return true;
 }
 
-
 static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
 {
 	if (GpVOSEvent *evt = eventQueue->QueueEvent())
@@ -1225,6 +1227,21 @@ static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t even
 
 		if (pixelScaleY != 1.0f)
 			mEvent.m_y = static_cast<int32_t>(static_cast<float>(y) / pixelScaleX);
+	}
+}
+
+static void PostTouchEvent(IGpVOSEventQueue *eventQueue, GpTouchEventType_t eventType, int32_t x, int32_t y, int64_t deviceID, int64_t fingerID)
+{
+	if (GpVOSEvent *evt = eventQueue->QueueEvent())
+	{
+		evt->m_eventType = GpVOSEventTypes::kTouchInput;
+
+		GpTouchInputEvent &tEvent = evt->m_event.m_touchInputEvent;
+		tEvent.m_deviceID = deviceID;
+		tEvent.m_fingerID = fingerID;
+		tEvent.m_x = x;
+		tEvent.m_y = y;
+		tEvent.m_eventType = eventType;
 	}
 }
 
@@ -1555,7 +1572,6 @@ void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEv
 			PostMouseEvent(eventQueue, GpMouseEventTypes::kMove, GpMouseButtons::kNone, mouseEvt->x, mouseEvt->y, pixelScaleX, pixelScaleY);
 		}
 		break;
-		break;
 	case SDL_MOUSEBUTTONDOWN:
 	case SDL_MOUSEBUTTONUP:
 		{
@@ -1584,6 +1600,28 @@ void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEv
 				break;
 
 			PostMouseEvent(eventQueue, evtType, mouseButton, mouseEvt->x, mouseEvt->y, pixelScaleX, pixelScaleY);
+		}
+		break;
+	case SDL_FINGERUP:
+	case SDL_FINGERDOWN:
+	case SDL_FINGERMOTION:
+		{
+			const SDL_TouchFingerEvent *fingerEvt = reinterpret_cast<const SDL_TouchFingerEvent *>(msg);
+			GpTouchEventType_t evtType = GpTouchEventTypes::kDown;
+
+			if (fingerEvt->type == SDL_FINGERUP)
+				evtType = GpTouchEventTypes::kUp;
+			else if (fingerEvt->type == SDL_FINGERDOWN)
+				evtType = GpTouchEventTypes::kDown;
+			else if (fingerEvt->type == SDL_FINGERMOTION)
+				evtType = GpTouchEventTypes::kMove;
+			else
+				break;
+
+			float unnormalizedX = static_cast<float>(m_windowWidthVirtual) * fingerEvt->x;
+			float unnormalizedY = static_cast<float>(m_windowHeightVirtual) * fingerEvt->y;
+
+			PostTouchEvent(eventQueue, evtType, static_cast<int32_t>(unnormalizedX), static_cast<int32_t>(unnormalizedY), fingerEvt->touchId, fingerEvt->fingerId);
 		}
 		break;
 	case SDL_KEYDOWN:

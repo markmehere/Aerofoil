@@ -19,6 +19,7 @@ struct IGpCursor;
 class GpIOStream;
 struct GpVOSEvent;
 struct GpMouseInputEvent;
+struct GpTouchInputEvent;
 struct TimeTaggedVOSEvent;
 
 
@@ -94,6 +95,8 @@ struct Window
 
 	// Convenience method to convert a mouse event to local point
 	Point MouseToLocal(const GpMouseInputEvent &evt) const;
+
+	Point TouchToLocal(const GpTouchInputEvent &evt) const;
 
 	// Convenience method that returns a 16-bit precision X/Y
 	Point GetTopLeftCoord() const;

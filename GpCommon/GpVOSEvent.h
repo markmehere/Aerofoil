@@ -237,6 +237,29 @@ struct GpMouseInputEvent
 	GpMouseButton_t m_button;
 };
 
+
+namespace GpTouchEventTypes
+{
+	enum GpTouchEventType
+	{
+		kUp,
+		kDown,
+		kMove,
+		kLeave,
+	};
+}
+
+typedef GpTouchEventTypes::GpTouchEventType GpTouchEventType_t;
+
+struct GpTouchInputEvent
+{
+	int32_t m_x;
+	int32_t m_y;
+	int64_t m_deviceID;
+	int64_t m_fingerID;
+	GpTouchEventType_t m_eventType;
+};
+
 struct GpVideoResolutionChangedEvent
 {
 	uint32_t m_prevWidth;
@@ -251,6 +274,7 @@ namespace GpVOSEventTypes
 	{
 		kKeyboardInput,
 		kMouseInput,
+		kTouchInput,
 		kGamepadInput,
 		kVideoResolutionChanged,
 		kQuit
@@ -265,6 +289,7 @@ struct GpVOSEvent
 	{
 		GpKeyboardInputEvent m_keyboardInputEvent;
 		GpMouseInputEvent m_mouseInputEvent;
+		GpTouchInputEvent m_touchInputEvent;
 		GpGamepadInputEvent m_gamepadInputEvent;
 		GpVideoResolutionChangedEvent m_resolutionChangedEvent;
 	};

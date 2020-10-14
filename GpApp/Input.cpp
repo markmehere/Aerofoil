@@ -8,6 +8,7 @@
 #include "PLDialogs.h"
 #include "PLKeyEncoding.h"
 #include "DialogManager.h"
+#include "Environ.h"
 #include "Externs.h"
 #include "InputManager.h"
 #include "MainWindow.h"
@@ -39,6 +40,8 @@ Boolean		isEscPauseKey, paused, batteryWasEngaged;
 extern	long		gameFrame;
 extern	short		otherPlayerEscaped;
 extern	Boolean		quitting, playing, onePlayerLeft, twoPlayerGame, demoGoing;
+extern	touchScreenControlState	touchScreen;
+extern	macEnviron	thisMac;
 
 
 //==============================================================  Functions
@@ -320,6 +323,8 @@ void GetInput (gliderPtr thisGlider)
 		bool holdFlipState = false;
 		bool leftState = false;
 		bool rightState = false;
+		bool bandsState = false;
+		bool batteryState = false;
 
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
@@ -336,6 +341,56 @@ void GetInput (gliderPtr thisGlider)
 			leftState = true;
 		else
 			thisGlider->tipped = false;
+
+		if (thisMac.isTouchscreen)
+		{
+			for (int fi = 0; fi < touchScreenControlState::kMaxFingers; fi++)
+			{
+				const touchScreenFingerState &fstate = touchScreen.fingers[fi];
+				if (!fstate.active)
+					continue;
+
+				const Point touchScreenPoint = touchScreen.fingers[fi].point;
+
+				if (!touchScreen.controls[fstate.capturingControl].touchRect.Contains(touchScreenPoint))
+					continue;
+
+				switch (fstate.capturingControl)
+				{
+				case TouchScreenCtrlIDs::Movement:
+					{
+						int32_t screenWidth = mainWindowRect.Width();
+						const bool touchLeftState = (touchScreenPoint.h * 2 <= screenWidth);
+						const bool touchRightState = (touchScreenPoint.h * 2 - screenWidth >= 0);
+
+						if (touchLeftState)
+						{
+							if (touchRightState)
+								continuousFlipState = true;
+							else
+								leftState = true;
+						}
+						else
+						{
+							if (touchRightState)
+								rightState = true;
+						}
+					}
+					break;
+				case TouchScreenCtrlIDs::Flip:
+					holdFlipState = true;
+					break;
+				case TouchScreenCtrlIDs::Bands:
+					bandsState = true;
+					break;
+				case TouchScreenCtrlIDs::BatteryHelium:
+					batteryState = true;
+					break;
+				default:
+					break;
+				}
+			}
+		}
 
 		if (theKeys->IsSet(thisGlider->gamepadRightKey))
 			rightState = true;
@@ -407,7 +462,7 @@ void GetInput (gliderPtr thisGlider)
 		if (!leftState && !rightState)
 			thisGlider->tipped = false;
 
-		if ((theKeys->IsSet(thisGlider->battKey) || theKeys->IsSet(thisGlider->gamepadBattKey)) && (batteryTotal != 0) &&
+		if ((theKeys->IsSet(thisGlider->battKey) || theKeys->IsSet(thisGlider->gamepadBattKey) || batteryState) && (batteryTotal != 0) &&
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
@@ -421,7 +476,7 @@ void GetInput (gliderPtr thisGlider)
 		else
 			batteryWasEngaged = false;
 		
-		if ((theKeys->IsSet(thisGlider->bandKey) || theKeys->IsSet(thisGlider->gamepadBandKey)) && (bandsTotal > 0) &&
+		if ((theKeys->IsSet(thisGlider->bandKey) || theKeys->IsSet(thisGlider->gamepadBandKey) || bandsState) && (bandsTotal > 0) &&
 				(thisGlider->mode == kGliderNormal))
 		{
 		#ifdef CREATEDEMODATA
