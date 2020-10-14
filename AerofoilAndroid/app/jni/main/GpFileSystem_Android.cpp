@@ -198,6 +198,7 @@ bool GpFileStream_Android_File::SeekStart(GpUFilePos_t loc)
 	if (!m_seekable)
 		return false;
 
+	fflush(m_f);
 	return lseek64(m_fd, static_cast<off64_t>(loc), SEEK_SET) >= 0;
 }
 
@@ -206,6 +207,7 @@ bool GpFileStream_Android_File::SeekCurrent(GpFilePos_t loc)
 	if (!m_seekable)
 		return false;
 
+	fflush(m_f);
 	return lseek64(m_fd, static_cast<off64_t>(loc), SEEK_CUR) >= 0;
 }
 
@@ -214,16 +216,20 @@ bool GpFileStream_Android_File::SeekEnd(GpUFilePos_t loc)
 	if (!m_seekable)
 		return false;
 
+	fflush(m_f);
 	return lseek64(m_fd, -static_cast<off64_t>(loc), SEEK_END) >= 0;
 }
 
 bool GpFileStream_Android_File::Truncate(GpUFilePos_t loc)
 {
+	fflush(m_f);
 	return ftruncate64(m_fd, static_cast<off64_t>(loc)) >= 0;
 }
 
 GpUFilePos_t GpFileStream_Android_File::Size() const
 {
+	fflush(m_f);
+
 	struct stat64 s;
 	if (fstat64(m_fd, &s) < 0)
 		return 0;
@@ -249,6 +255,8 @@ void GpFileStream_Android_File::Flush()
 
 static bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset)
 {
+	const char *prefsAppend = nullptr;
+
 	isAsset = false;
 	switch (virtualDirectory)
 	{
@@ -264,9 +272,29 @@ static bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, c
 		resolution = std::string("Resources");
 		isAsset = true;
 		break;
+	case PortabilityLayer::VirtualDirectories::kHighScores:
+		prefsAppend = "HighScores";
+		break;
+	case PortabilityLayer::VirtualDirectories::kUserData:
+		prefsAppend = "Houses";
+		break;
+	case PortabilityLayer::VirtualDirectories::kUserSaves:
+		prefsAppend = "SavedGames";
+		break;
+	case PortabilityLayer::VirtualDirectories::kPrefs:
+		prefsAppend = "Prefs";
+		break;
 	default:
 		return false;
 	};
+
+	if (prefsAppend)
+	{
+		char *prefsDir = SDL_GetPrefPath("aerofoil", "aerofoil");
+		resolution = prefsDir;
+		SDL_free(prefsDir);
+		resolution += prefsAppend;
+	}
 
 	for (size_t i = 0; i < numPaths; i++)
 	{
@@ -299,6 +327,26 @@ void GpFileSystem_Android::InitJNI()
 
 	jni->DeleteLocalRef(activityLR);
 	jni->DeleteLocalRef(activityClassLR);
+
+	char *prefsDir = SDL_GetPrefPath("aerofoil", "aerofoil");
+	size_t prefsDirLen = strlen(prefsDir);
+	for (size_t i = 0; i < prefsDirLen; i++)
+	{
+		if (prefsDir[i] == '/')
+		{
+			prefsDir[i] = '\0';
+			int created = mkdir(prefsDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+			prefsDir[i] = '/';
+		}
+	}
+	const char *extensions[] = { "HighScores", "Houses", "SavedGames", "Prefs" };
+	for (size_t i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++)
+	{
+		std::string prefsPath = std::string(prefsDir) + extensions[i];
+		int created = mkdir(prefsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		int n = 0;
+	}
+	SDL_free(prefsDir);
 }
 
 void GpFileSystem_Android::ShutdownJNI()
@@ -356,6 +404,7 @@ GpIOStream *GpFileSystem_Android::OpenFileNested(PortabilityLayer::VirtualDirect
 {
 	const char *mode = nullptr;
 	bool canWrite = false;
+	bool needResetPosition = false;
 
 	switch (createDisposition) {
 		case GpFileCreationDispositions::kCreateOrOverwrite:
@@ -365,7 +414,8 @@ GpIOStream *GpFileSystem_Android::OpenFileNested(PortabilityLayer::VirtualDirect
 			mode = "x+b";
 			break;
 		case GpFileCreationDispositions::kCreateOrOpen:
-			mode = "c+b";
+			mode = "a+b";
+			needResetPosition = true;
 			break;
 		case GpFileCreationDispositions::kOpenExisting:
 			mode = writeAccess ? "r+b" : "rb";
@@ -412,6 +462,9 @@ GpIOStream *GpFileSystem_Android::OpenFileNested(PortabilityLayer::VirtualDirect
 			free(objStorage);
 			return nullptr;
 		}
+
+		if (needResetPosition)
+			fseek(f, 0, SEEK_SET);
 
 		int fd = fileno(f);
 
