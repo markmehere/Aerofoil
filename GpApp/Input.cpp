@@ -103,9 +103,9 @@ void DoPause (void)
 
 		Delay(1, nullptr);
 	}
-	while ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) || 
+	while ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
 			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))));
-	
+
 	paused = true;
 	while (paused)
 	{
@@ -119,11 +119,11 @@ void DoPause (void)
 
 		Delay(1, nullptr);
 	}
-	
-	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap), 
+
+	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
 			GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 			&bounds, &bounds, srcCopy);
-	
+
 	do
 	{
 		theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
@@ -151,9 +151,9 @@ void DoBatteryEngaged (gliderPtr thisGlider)
 		else
 			thisGlider->hVel += kHyperThrust;
 	}
-	
+
 	batteryTotal--;
-	
+
 	if (batteryTotal == 0)
 	{
 		QuickBatteryRefresh(false);
@@ -178,7 +178,7 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 {
 	thisGlider->vDesiredVel = -kHeliumLift;
 	batteryTotal++;
-	
+
 	if (batteryTotal == 0)
 	{
 		QuickBatteryRefresh(false);
@@ -206,9 +206,9 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 
  	if (thisGlider->which == kPlayer1)
 	{
-		
+
 #if BUILD_ARCADE_VERSION
-		
+
 		if ((theKeys->IsSet(thisGlider->leftKey)) ||
 			(theKeys->IsSet(thisGlider->gamepadLeftKey)) ||
 				(theKeys->IsSet(thisGlider->rightKey)) ||
@@ -221,15 +221,15 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 			playing = false;
 			paused = false;
 		}
-		
+
 #else
-		
+
 		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
-		
+
 #endif
 	}
-	
+
 	if (thisGlider->mode == kGliderBurning)
 	{
 		if (thisGlider->facing == kFaceLeft)
@@ -242,7 +242,7 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		thisGlider->heldLeft = false;
 		thisGlider->heldRight = false;
 		thisGlider->tipped = false;
-		
+
 	 	if (gameFrame == (long)demoData[demoIndex].frame)
 	 	{
 	 		switch (demoData[demoIndex].key)
@@ -253,14 +253,14 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 				thisGlider->heldRight = true;
 				thisGlider->fireHeld = false;
 	 			break;
-	 			
+
 	 			case 1:		// right key
 	 			thisGlider->hDesiredVel -= kNormalThrust;
 				thisGlider->tipped = (thisGlider->facing == kFaceRight);
 				thisGlider->heldLeft = true;
 				thisGlider->fireHeld = false;
 	 			break;
-	 			
+
 	 			case 2:		// battery key
 		 		if (batteryTotal > 0)
 					DoBatteryEngaged(thisGlider);
@@ -268,28 +268,28 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 					DoHeliumEngaged(thisGlider);
 	 			thisGlider->fireHeld = false;
 	 			break;
-	 			
+
 	 			case 3:		// rubber band key
 	 			if (!thisGlider->fireHeld)
 				{
-					if (AddBand(thisGlider, thisGlider->dest.left + 24, 
+					if (AddBand(thisGlider, thisGlider->dest.left + 24,
 							thisGlider->dest.top + 10, thisGlider->facing))
 					{
 						bandsTotal--;
 						if (bandsTotal <= 0)
 							QuickBandsRefresh(false);
-						
+
 						thisGlider->fireHeld = true;
 					}
 				}
 	 			break;
 	 		}
-	 		
+
 	 		demoIndex++;
 	 	}
 	 	else
 	 		thisGlider->fireHeld = false;
-	 	
+
 		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
 				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
 		{
@@ -297,7 +297,7 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		}
  	}
  }
- 
+
 //--------------------------------------------------------------  GetInput
 
 void GetInput (gliderPtr thisGlider)
@@ -309,7 +309,7 @@ void GetInput (gliderPtr thisGlider)
 		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 	}
-	
+
 	if (thisGlider->mode == kGliderBurning)
 	{
 		if (thisGlider->facing == kFaceLeft)
@@ -344,6 +344,9 @@ void GetInput (gliderPtr thisGlider)
 
 		if (thisMac.isTouchscreen)
 		{
+			bool touchLeftState = false;
+			bool touchRightState = false;
+
 			for (int fi = 0; fi < touchScreenControlState::kMaxFingers; fi++)
 			{
 				const touchScreenFingerState &fstate = touchScreen.fingers[fi];
@@ -360,21 +363,10 @@ void GetInput (gliderPtr thisGlider)
 				case TouchScreenCtrlIDs::Movement:
 					{
 						int32_t screenWidth = mainWindowRect.Width();
-						const bool touchLeftState = (touchScreenPoint.h * 2 <= screenWidth);
-						const bool touchRightState = (touchScreenPoint.h * 2 - screenWidth >= 0);
-
-						if (touchLeftState)
-						{
-							if (touchRightState)
-								continuousFlipState = true;
-							else
-								leftState = true;
-						}
-						else
-						{
-							if (touchRightState)
-								rightState = true;
-						}
+						if (touchScreenPoint.h * 2 <= screenWidth)
+							touchLeftState = true;
+						if (touchScreenPoint.h * 2 - screenWidth >= 0)
+							touchRightState = true;
 					}
 					break;
 				case TouchScreenCtrlIDs::Flip:
@@ -390,6 +382,16 @@ void GetInput (gliderPtr thisGlider)
 					break;
 				}
 			}
+
+			if (touchLeftState)
+			{
+				if (touchRightState)
+					continuousFlipState = true;
+				else
+					leftState = true;
+			}
+			else if (touchRightState)
+				rightState = true;
 		}
 
 		if (theKeys->IsSet(thisGlider->gamepadRightKey))
@@ -475,7 +477,7 @@ void GetInput (gliderPtr thisGlider)
 		}
 		else
 			batteryWasEngaged = false;
-		
+
 		if ((theKeys->IsSet(thisGlider->bandKey) || theKeys->IsSet(thisGlider->gamepadBandKey) || bandsState) && (bandsTotal > 0) &&
 				(thisGlider->mode == kGliderNormal))
 		{
@@ -484,27 +486,27 @@ void GetInput (gliderPtr thisGlider)
 		#endif
 			if (!thisGlider->fireHeld)
 			{
-				if (AddBand(thisGlider, thisGlider->dest.left + 24, 
+				if (AddBand(thisGlider, thisGlider->dest.left + 24,
 						thisGlider->dest.top + 10, thisGlider->facing))
 				{
 					bandsTotal--;
 					if (bandsTotal <= 0)
 						QuickBandsRefresh(false);
-					
+
 					thisGlider->fireHeld = true;
 				}
 			}
 		}
 		else
 			thisGlider->fireHeld = false;
-		
-		if ((otherPlayerEscaped != kNoOneEscaped) && 
+
+		if ((otherPlayerEscaped != kNoOneEscaped) &&
 				(theKeys->IsSet(PL_KEY_SPECIAL(kDelete))) &&
 				(thisGlider->which) && (!onePlayerLeft))
 		{
 			ForceKillGlider();
 		}
-		
+
 		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
 				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
 		{
@@ -520,7 +522,7 @@ Boolean QuerySaveGame (void)
 	#define		kSaveGameAlert		1041
 	#define		kYesSaveGameButton	1
 	short		hitWhat;
-	
+
 	InitCursor();
 	FlushEvents();
 //	CenterAlert(kSaveGameAlert);
