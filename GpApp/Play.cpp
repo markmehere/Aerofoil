@@ -567,9 +567,8 @@ void ResetTouchScreenControlBounds (void)
 	Point sizes[TouchScreenCtrlIDs::Count];
 
 	points[TouchScreenCtrlIDs::Movement] = Point::Create(mainWindowRect.left, mainWindowRect.top);
-	points[TouchScreenCtrlIDs::BatteryHelium] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.bottom - touchScreenControlEdgeSpacing - touchScreenControlSize);
-	points[TouchScreenCtrlIDs::Flip] = points[TouchScreenCtrlIDs::BatteryHelium] + Point::Create(0, -touchScreenControlInterSpacing - touchScreenControlSize);
-	points[TouchScreenCtrlIDs::Bands] = points[TouchScreenCtrlIDs::BatteryHelium] + Point::Create(-touchScreenControlInterSpacing - touchScreenControlSize, 0);
+	points[TouchScreenCtrlIDs::BatteryHelium] = Point::Create(mainWindowRect.left + touchScreenControlEdgeSpacing, mainWindowRect.top + touchScreenControlEdgeSpacing);
+	points[TouchScreenCtrlIDs::Bands] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.top + touchScreenControlEdgeSpacing);
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 		sizes[i] = Point::Create(touchScreenControlSize, touchScreenControlSize);
@@ -625,7 +624,6 @@ void PlayGame (void)
 	InitTouchScreenControlState();
 
 	touchScreen.controls[TouchScreenCtrlIDs::Movement].isEnabled = true;
-	touchScreen.controls[TouchScreenCtrlIDs::Flip].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::Bands].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::BatteryHelium].isEnabled = true;
 

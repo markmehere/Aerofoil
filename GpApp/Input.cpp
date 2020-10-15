@@ -369,9 +369,6 @@ void GetInput (gliderPtr thisGlider)
 							touchRightState = true;
 					}
 					break;
-				case TouchScreenCtrlIDs::Flip:
-					holdFlipState = true;
-					break;
 				case TouchScreenCtrlIDs::Bands:
 					bandsState = true;
 					break;

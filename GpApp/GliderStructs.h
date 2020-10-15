@@ -366,7 +366,6 @@ namespace TouchScreenCtrlIDs
 {
 	enum TouchScreenCtrlID
 	{
-		Flip,
 		Bands,
 		BatteryHelium,
 		Movement,
