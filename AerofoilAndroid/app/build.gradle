@@ -8,15 +8,15 @@ else {
 }
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 29
     defaultConfig {
         if (buildAsApplication) {
-            applicationId "org.glideport.game"
+            applicationId "org.thecodedeposit.aerofoil"
         }
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.9pre1"
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-16"
@@ -69,3 +69,5 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 }
+
+android.buildTypes.release.ndk.debugSymbolLevel = 'FULL'
