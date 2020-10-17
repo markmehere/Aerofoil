@@ -1,4 +1,4 @@
-package org.glideport.game;
+package org.thecodedeposit.aerofoil;
 
 import org.libsdl.app.SDLActivity;
 import android.content.res.AssetManager;

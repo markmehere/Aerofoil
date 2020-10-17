@@ -1,4 +1,4 @@
-package org.glideport.game;
+package org.thecodedeposit.aerofoil;
 
 public class GpSystemServices
 {
