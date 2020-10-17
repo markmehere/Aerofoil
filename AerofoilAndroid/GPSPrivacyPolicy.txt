@@ -1,7 +1,5 @@
 Aerofoil - Google Play Store Distribution - Privacy Policy
 ------------------------------------------------------------------------------
 
-Aerofoil may transmit the active Google account ID and gameplay activity to
-Google Play Games for the purpose of leaderboard and achievement activity.
-
-The Aerofoil app does not collect or transmit any other personal information.
+The Aerofoil app does not collect or transmit any personal information,
+sensitive information, or any other form of user data.
