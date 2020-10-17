@@ -58,7 +58,7 @@ android {
             variant.outputs.each { output ->
                 def outputFile = output.outputFile
                 if (outputFile != null && outputFile.name.endsWith(".aar")) {
-                    def fileName = "org.glideport.game.aar";
+                    def fileName = "org.thecodedeposit.aerofoil.aar";
                     output.outputFile = new File(outputFile.parent, fileName);
                 }
             }
