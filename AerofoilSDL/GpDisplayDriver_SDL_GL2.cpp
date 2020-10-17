@@ -207,6 +207,12 @@ struct GpGLFunctions
 	bool LookUpFunctions();
 };
 
+static void CheckGLError(const GpGLFunctions &gl)
+{
+	GLenum errorCode = gl.GetError();
+	assert(errorCode == 0);
+}
+
 class GpGLObject
 {
 public:
@@ -942,8 +948,7 @@ void GpDisplayDriverSurface_GL2::UploadEntire(const void *data, size_t pitch)
 {
 	assert(pitch == m_pitch);
 
-	GLenum preError = m_gl->GetError();
-	GLenum preError2 = m_gl->GetError();
+	CheckGLError(*m_gl);
 
 	const GLint internalFormat = ResolveGLInternalFormat();
 	const GLenum glFormat = ResolveGLFormat();
@@ -953,9 +958,7 @@ void GpDisplayDriverSurface_GL2::UploadEntire(const void *data, size_t pitch)
 	m_gl->TexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_paddedTextureWidth, m_height, 0, glFormat, glType, data);
 	m_gl->BindTexture(GL_TEXTURE_2D, 0);
 
-	GLenum postError = m_gl->GetError();
-
-	int n = 0;
+	CheckGLError(*m_gl);
 }
 
 void GpDisplayDriverSurface_GL2::Destroy()
@@ -992,6 +995,8 @@ GpGLTexture *GpDisplayDriverSurface_GL2::GetTexture() const
 
 bool GpDisplayDriverSurface_GL2::Init()
 {
+	CheckGLError(*m_gl);
+
 	m_gl->BindTexture(GL_TEXTURE_2D, m_texture->GetID());
 	m_gl->PixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	m_gl->TexImage2D(GL_TEXTURE_2D, 0, ResolveGLInternalFormat(), m_paddedTextureWidth, m_height, 0, ResolveGLFormat(), ResolveGLType(), nullptr);
@@ -1000,6 +1005,8 @@ bool GpDisplayDriverSurface_GL2::Init()
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	m_gl->BindTexture(GL_TEXTURE_2D, 0);
+
+	CheckGLError(*m_gl);
 
 	return true;
 }
@@ -1872,7 +1879,11 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		return;
 	}
 
+	CheckGLError(m_gl);
+
 	m_gl.UseProgram(program->m_program->GetID());
+
+	CheckGLError(m_gl);
 
 	{
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthVirtual);
@@ -1943,6 +1954,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	m_gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+	CheckGLError(m_gl);
 
 	if (pixelFormat == GpPixelFormats::k8BitStandard || pixelFormat == GpPixelFormats::k8BitCustom)
 	{
@@ -1957,8 +1969,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 
 	m_gl.UseProgram(0);
 
-	if (effects->m_flicker)
-		m_gl.Disable(GL_ALPHA_TEST);
+	CheckGLError(m_gl);
 }
 
 
@@ -2507,7 +2518,7 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 	m_gl.ActiveTexture(GL_TEXTURE0 + 0);
 	m_gl.BindTexture(GL_TEXTURE_2D, m_virtualScreenTexture->GetID());
-	m_gl.Uniform1i(m_scaleQuadProgram.m_pixelSurfaceTextureLocation, 0);
+	m_gl.Uniform1i(program.m_pixelSurfaceTextureLocation, 0);
 
 	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_quadIndexBuffer->GetID());
 	m_gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
@@ -2633,7 +2644,7 @@ GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
 
 	ScaleVirtualScreen();
 
-	GLenum errorCode = m_gl.GetError();
+	CheckGLError(m_gl);
 
 	SDL_GL_SwapWindow(m_window);
 
@@ -2732,7 +2743,12 @@ GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
 			GpDisplayDriverTickStatus_t tickStatus = m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
 			m_frameTimeAccumulated -= m_frameTimeSliceSize;
 
-			if (tickStatus != GpDisplayDriverTickStatuses::kOK)
+			if (tickStatus == GpDisplayDriverTickStatuses::kSynchronizing)
+			{
+				m_frameTimeAccumulated = std::chrono::high_resolution_clock::duration::zero();
+				break;
+			}
+			else if (tickStatus != GpDisplayDriverTickStatuses::kOK)
 				return tickStatus;
 		}
 	}
