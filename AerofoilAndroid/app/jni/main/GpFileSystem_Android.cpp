@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dirent.h>
 #include <jni.h>
 #include "UTF8.h"
 
@@ -509,7 +510,7 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanDirectoryNested
 	if (IsVirtualDirectoryLooseResources(virtualDirectory))
 		return ScanAssetDirectory(virtualDirectory, paths, numPaths);
 
-	return nullptr;
+	return ScanStorageDirectory(virtualDirectory, paths, numPaths);
 }
 
 bool GpFileSystem_Android::ValidateFilePath(const char *path, size_t length) const
@@ -606,6 +607,44 @@ void GpDirectoryCursor_StringList::Destroy()
 	delete this;
 }
 
+class GpDirectoryCursor_POSIX final : public PortabilityLayer::HostDirectoryCursor
+{
+public:
+	explicit GpDirectoryCursor_POSIX(DIR *dir);
+	~GpDirectoryCursor_POSIX();
+
+	bool GetNext(const char *&outFileName) override;
+	void Destroy() override;
+
+private:
+	DIR *m_dir;
+};
+
+GpDirectoryCursor_POSIX::GpDirectoryCursor_POSIX(DIR *dir)
+	: m_dir(dir)
+{
+}
+
+GpDirectoryCursor_POSIX::~GpDirectoryCursor_POSIX()
+{
+	closedir(m_dir);
+}
+
+bool GpDirectoryCursor_POSIX::GetNext(const char *&outFileName)
+{
+	struct dirent *dir = readdir(m_dir);
+	if (!dir)
+		return false;
+
+	outFileName = dir->d_name;
+	return true;
+}
+
+void GpDirectoryCursor_POSIX::Destroy()
+{
+	delete this;
+}
+
 PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
 {
 	std::string resolvedPath;
@@ -637,6 +676,21 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanAssetDirectory(
 	jni->DeleteLocalRef(resultArray);
 
 	return new GpDirectoryCursor_StringList(subPaths);
+}
+
+PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
+{
+	std::string resolvedPath;
+	std::vector<std::string> subPaths;
+	bool isAsset = true;
+	if (!ResolvePath(virtualDirectory, paths, numPaths, resolvedPath, isAsset))
+		return nullptr;
+
+	DIR *d = opendir(resolvedPath.c_str());
+	if (!d)
+		return nullptr;
+
+	return new GpDirectoryCursor_POSIX(d);
 }
 
 GpFileSystem_Android GpFileSystem_Android::ms_instance;

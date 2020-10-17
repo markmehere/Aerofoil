@@ -30,6 +30,7 @@ public:
 
 private:
 	PortabilityLayer::HostDirectoryCursor *ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
+	PortabilityLayer::HostDirectoryCursor *ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 
 	jobject m_activity;
 	jmethodID m_scanAssetDirectoryMID;
