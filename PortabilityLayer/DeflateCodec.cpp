@@ -3,7 +3,11 @@
 #include "GpIOStream.h"
 #include "MemoryManager.h"
 
+#ifdef GP_ZLIB_BUILTIN
+#include <zlib.h>
+#else
 #include "zlib.h"
+#endif
 
 namespace
 {

@@ -13,7 +13,6 @@ mklink /D app\jni\GpCommon ..\..\..\GpCommon
 mklink /D app\jni\GpFontHandler_FreeType2 ..\..\..\GpFontHandler_FreeType2
 mklink /D app\jni\PortabilityLayer ..\..\..\PortabilityLayer
 mklink /D app\jni\FreeType ..\..\..\FreeType
-mklink /D app\jni\zlib ..\..\..\zlib
 mklink /D app\jni\rapidjson ..\..\..\rapidjson
 mklink /D app\jni\MacRomanConversion ..\..\..\MacRomanConversion
 mklink /D app\jni\stb ..\..\..\stb

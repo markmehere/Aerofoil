@@ -11,7 +11,9 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../MacRomanConversion	\
 	$(LOCAL_PATH)/../stb
 
-LOCAL_CFLAGS := -DGP_DEBUG_CONFIG=0
+LOCAL_CFLAGS := -DGP_DEBUG_CONFIG=0 -DGP_ZLIB_BUILTIN=1
+
+LOCAL_EXPORT_LDLIBS := -lz
 
 # Add your application source files here...
 LOCAL_SRC_FILES := \
@@ -107,6 +109,6 @@ LOCAL_SRC_FILES := \
 	ZipFileProxy.cpp
 	
 
-LOCAL_STATIC_LIBRARIES := zlib MacRomanConversion stb
+LOCAL_STATIC_LIBRARIES := MacRomanConversion stb
 
 include $(BUILD_STATIC_LIBRARY)
