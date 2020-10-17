@@ -108,6 +108,11 @@ void Delay(int ticks, UInt32 *endTickCount)
 		*endTickCount = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount();
 }
 
+void ForceSyncFrame()
+{
+	PLSysCalls::ForceSyncFrame();
+}
+
 short FindWindow(Point point, WindowPtr *window)
 {
 	short part = 0;

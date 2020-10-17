@@ -79,6 +79,15 @@ GpDisplayDriverTickStatus_t GpAppEnvironment::Tick(IGpFiber *vosFiber)
 				return GpDisplayDriverTickStatuses::kOK;
 			}
 			break;
+		case ApplicationState_Synchronizing:
+			if (m_delaySuspendTicks == 0)
+				m_applicationState = ApplicationState_Running;
+			else
+			{
+				m_delaySuspendTicks--;
+				return GpDisplayDriverTickStatuses::kSynchronizing;
+			}
+			break;
 		case ApplicationState_Terminated:
 			m_applicationFiber->Destroy();
 			m_applicationFiber = nullptr;
@@ -181,6 +190,10 @@ void GpAppEnvironment::DispatchSystemCall(PortabilityLayer::HostSuspendCallID ca
 	case PortabilityLayer::HostSuspendCallID_Delay:
 		m_applicationState = ApplicationState_TimedSuspend;
 		m_delaySuspendTicks = args[0].m_uint;
+		break;
+	case PortabilityLayer::HostSuspendCallID_ForceSyncFrame:
+		m_applicationState = ApplicationState_Synchronizing;
+		m_delaySuspendTicks = 1;
 		break;
 	case PortabilityLayer::HostSuspendCallID_CallOnVOSThread:
 		args[0].m_functionPtr(static_cast<const PortabilityLayer::HostSuspendCallArgument*>(args[1].m_constPointer), static_cast<PortabilityLayer::HostSuspendCallArgument*>(args[2].m_pointer));

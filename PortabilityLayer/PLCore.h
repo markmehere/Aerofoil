@@ -216,6 +216,7 @@ void InitCursor();
 void HideCursor();
 
 void Delay(int ticks, UInt32 *endTickCount);
+void ForceSyncFrame();
 
 short FindWindow(Point point, WindowPtr *window);	// Translates global coordinates to window coordinates, returns a region ID
 bool TrackGoAway(WindowPtr window, Point point);	// Returns true if the close box was actually clicked (?)

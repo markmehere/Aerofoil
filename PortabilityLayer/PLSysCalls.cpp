@@ -184,4 +184,9 @@ namespace PLSysCalls
 			AnimationManager::GetInstance()->TickPlayers(ticks);
 		}
 	}
+
+	void ForceSyncFrame()
+	{
+		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_ForceSyncFrame, nullptr, nullptr);
+	}
 }

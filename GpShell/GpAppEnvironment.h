@@ -47,6 +47,7 @@ private:
 		ApplicationState_Terminated,
 		ApplicationState_SystemCall,
 		ApplicationState_TimedSuspend,
+		ApplicationState_Synchronizing,
 	};
 
 	static void StaticAppThreadFunc(void *context);

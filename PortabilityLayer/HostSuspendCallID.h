@@ -10,6 +10,7 @@ namespace PortabilityLayer
 
 		HostSuspendCallID_Delay,
 		HostSuspendCallID_CallOnVOSThread,
+		HostSuspendCallID_ForceSyncFrame
 	};
 }
 

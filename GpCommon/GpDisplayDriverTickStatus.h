@@ -9,6 +9,8 @@ namespace GpDisplayDriverTickStatuses
 		kFatalFault = 2,
 
 		kApplicationTerminated = 3,
+
+		kSynchronizing = 4,
 	};
 }
 

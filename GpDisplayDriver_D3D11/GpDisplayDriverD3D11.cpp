@@ -768,7 +768,12 @@ GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
 			GpDisplayDriverTickStatus_t tickStatus = m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
 			m_frameTimeAccumulated -= m_frameTimeSliceSize;
 
-			if (tickStatus != GpDisplayDriverTickStatuses::kOK)
+			if (tickStatus == GpDisplayDriverTickStatuses::kSynchronizing)
+			{
+				m_frameTimeAccumulated = 0;
+				break;
+			}
+			else if (tickStatus != GpDisplayDriverTickStatuses::kOK)
 				return tickStatus;
 		}
 	}

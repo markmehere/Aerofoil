@@ -6,15 +6,27 @@
 //============================================================================
 
 
+#include <WindowDef.h>
 #include "PLApplication.h"
 #include "PLKeyEncoding.h"
+#include "PLStandardColors.h"
+#include "PLSysCalls.h"
 #include "Externs.h"
 #include "Environ.h"
+#include "FontFamily.h"
+#include "GpRenderedFontMetrics.h"
 #include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
 #include "GpIOStream.h"
 #include "House.h"
+#include "RenderedFont.h"
+#include "ResolveCachingColor.h"
 #include "WindowManager.h"
+
+
+WindowPtr loadScreenWindow;
+Rect loadScreenProgressBarRect;
+int loadScreenProgress;
 
 
 #define kPrefsVersion			0x0038
@@ -52,8 +64,8 @@ THandle<void>		globalModulePrefs;
 //==============================================================  Functions
 //--------------------------------------------------------------  ReadInPrefs
 
-// Called only once when game launches - reads in the preferences saved…
-// from the last time Glider PRO was launched.  If no prefs are found,…
+// Called only once when game launches - reads in the preferences saved?
+// from the last time Glider PRO was launched.  If no prefs are found,?
 // it assigns default settings.
 
 void ReadInPrefs (void)
@@ -61,7 +73,7 @@ void ReadInPrefs (void)
 	prefsInfo	thePrefs;
 
 	THandle<void> modulePrefs;
-	
+
 	if (LoadPrefs(&thePrefs, &modulePrefs, kPrefsVersion))
 	{
 #ifdef COMPILEDEMO
@@ -171,7 +183,7 @@ void ReadInPrefs (void)
 			isVolume = 1;
 		else if (isVolume > 3)
 			isVolume = 3;
-		
+
 		isDepthPref = kSwitchIfNeeded;
 		isSoundOn = true;
 		isMusicOn = true;
@@ -223,13 +235,13 @@ void ReadInPrefs (void)
 
 		modulePrefs.Dispose();
 	}
-	
+
 	if ((numNeighbors > 1) && (thisMac.constrainedScreen.right <= 512))
 		numNeighbors = 1;
-	
+
 	UnivGetSoundVolume(&wasVolume, thisMac.hasSM3);
 	UnivSetSoundVolume(isVolume, thisMac.hasSM3);
-	
+
 	if (isVolume == 0)
 		isSoundOn = false;
 	else
@@ -238,15 +250,15 @@ void ReadInPrefs (void)
 
 //--------------------------------------------------------------  WriteOutPrefs
 
-// Called just before Glider PRO quits.  This function writes out…
+// Called just before Glider PRO quits.  This function writes out?
 // the user preferences to disk.
 
 void WriteOutPrefs (void)
 {
-	prefsInfo	thePrefs;	
-	
+	prefsInfo	thePrefs;
+
 	UnivGetSoundVolume(&isVolume, thisMac.hasSM3);
-	
+
 #ifdef COMPILEDEMO
 	PasStringCopy("\pDemo House", thePrefs.wasDefaultName);
 #else
@@ -322,8 +334,91 @@ void WriteOutPrefs (void)
 		SysBeep(1);
 
 	modulePrefs.Dispose();
-	
+
 	UnivSetSoundVolume(wasVolume, thisMac.hasSM3);
+}
+
+void StepLoadScreen(int steps)
+{
+	if (loadScreenWindow)
+	{
+		int oldProgress = loadScreenProgress;
+		int loadScreenMax = 19;
+		loadScreenProgress = loadScreenProgress + steps;
+		if (loadScreenProgress > loadScreenMax)
+			loadScreenProgress = loadScreenMax;
+
+		PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+
+		int prevStep = oldProgress * loadScreenProgressBarRect.Width() / loadScreenMax;
+		int thisStep = loadScreenProgress * loadScreenProgressBarRect.Width() / loadScreenMax;
+
+		loadScreenWindow->GetDrawSurface()->FillRect(Rect::Create(loadScreenProgressBarRect.top, loadScreenProgressBarRect.left + prevStep, loadScreenProgressBarRect.bottom, loadScreenProgressBarRect.left + thisStep), blackColor);
+		ForceSyncFrame();
+	}
+
+	SpinCursor(steps);
+}
+
+void InitLoadingWindow()
+{
+	static const int kLoadScreenHeight = 32;
+	static const int kLoadScreenWidth = 256;
+
+	ForceSyncFrame();
+	PLSysCalls::Sleep(1);
+
+	int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
+	int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
+
+
+	const Rect loadScreenRect = Rect::Create(lsY, lsX, lsY + kLoadScreenHeight, lsX + kLoadScreenWidth);
+	const Rect loadScreenLocalRect = Rect::Create(0, 0, loadScreenRect.Height(), loadScreenRect.Width());
+
+	PortabilityLayer::WindowDef def = PortabilityLayer::WindowDef::Create(loadScreenRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
+
+	loadScreenWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
+	PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(loadScreenWindow, PL_GetPutInFrontWindowPtr());
+
+	DrawSurface *surface = loadScreenWindow->GetDrawSurface();
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor whiteColor(StdColors::White());
+
+	surface->FillRect(loadScreenLocalRect, whiteColor);
+
+	PortabilityLayer::WindowManager::GetInstance()->FlickerWindowIn(loadScreenWindow, 32);
+
+	const PLPasStr loadingText = PSTR("Loading...");
+	PortabilityLayer::RenderedFont *font = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
+	int32_t textY = (kLoadScreenHeight + font->GetMetrics().m_ascent) / 2;
+	surface->DrawString(Point::Create(4+16, textY), loadingText, blackColor, font);
+
+	static const int32_t loadBarPadding = 16;
+	int32_t loadBarStartX = static_cast<int32_t>(font->MeasureString(loadingText.UChars(), loadingText.Length())) + 4 + 16 + loadBarPadding;
+	int32_t loadBarEndX = loadScreenLocalRect.right - loadBarPadding;
+
+	loadScreenProgressBarRect = Rect::Create((loadScreenLocalRect.Height() - 8) / 2, loadBarStartX, (loadScreenLocalRect.Height() + 8) / 2, loadBarEndX);
+	loadScreenProgress = 0;
+
+	surface->FrameRect(loadScreenProgressBarRect, blackColor);
+}
+
+void PreloadFonts()
+{
+	GetApplicationFont(8, PortabilityLayer::FontFamilyFlag_None, true);
+	StepLoadScreen(1);
+	GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
+	StepLoadScreen(1);
+	GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
+	StepLoadScreen(1);
+	GetApplicationFont(14, PortabilityLayer::FontFamilyFlag_Bold, true);
+	StepLoadScreen(1);
+	GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	StepLoadScreen(1);
+	GetApplicationFont(10, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
+	StepLoadScreen(1);
+	GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	StepLoadScreen(1);
 }
 
 //--------------------------------------------------------------  main
@@ -337,10 +432,11 @@ int gpAppMain()
 	Boolean		whoCares, copyGood;
 
 	PL_Init();
-	
+
 	ToolBoxInit();
 	CheckOurEnvirons();
 	InstallResolutionHandler();
+
 	if (!thisMac.hasColor)
 		RedAlert(kErrNeedColorQD);
 	if (!thisMac.hasSystem7)
@@ -354,7 +450,10 @@ int gpAppMain()
 
 	SpinCursor(2);	// Tick once to let the display driver flush any resolution changes from prefs
 	FlushResolutionChange();
-	
+
+	InitLoadingWindow();	StepLoadScreen(2);
+	PreloadFonts();		StepLoadScreen(2);
+
 #if defined COMPILEDEMO
 	copyGood = true;
 #elif defined COMPILENOCP
@@ -366,18 +465,23 @@ int gpAppMain()
 	if (!copyGood)
 		encryptedNumber = 0L;
 	else if (didValidation)
-		WriteOutPrefs();				SpinCursor(3);
+		WriteOutPrefs();				StepLoadScreen(3);
 #endif
 
 //	if ((thisMac.numScreens > 1) && (isUseSecondScreen))
 //		ReflectSecondMonitorEnvirons(false, true, true);
 	HandleDepthSwitching();
-	VariableInit();						SpinCursor(2);
-	GetExtraCursors();					SpinCursor(2);
+	VariableInit();						StepLoadScreen(2);
+	GetExtraCursors();					StepLoadScreen(2);
 	InitMarquee();
-	CreatePointers();					SpinCursor(2);
+	CreatePointers();					StepLoadScreen(2);
 	InitSrcRects();
-	CreateOffscreens();					SpinCursor(2);
+	CreateOffscreens();					StepLoadScreen(2);
+
+	PortabilityLayer::WindowManager::GetInstance()->FlickerWindowOut(loadScreenWindow, 32);
+	PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(loadScreenWindow);
+	PLSysCalls::Sleep(15);
+
 	OpenMainWindow();
 
 	if (isDoColorFade)
@@ -388,27 +492,27 @@ int gpAppMain()
 	BuildHouseList();
 	if (OpenHouse())
 		whoCares = ReadHouse();
-	
+
 	PlayPrioritySound(kBirdSound, kBirdPriority);
 	DelayTicks(6);
 	InitializeMenus();					InitCursor();
-	
+
 #if BUILD_ARCADE_VERSION
 //	HideMenuBarOld();
 #endif
-	
+
 	if (isDoColorFade)
 		WashColorIn();
 
 	UpdateMainWindow();
-	
+
 	while (!quitting)		// this is the main loop
 		HandleEvent();
-/*	
+/*
 #if BUILD_ARCADE_VERSION
 	ShowMenuBarOld();
 #endif
-*/	
+*/
 	KillMusic();
 	KillSound();
 	if (houseOpen)

@@ -7,4 +7,5 @@
 namespace PLSysCalls
 {
 	void Sleep(uint32_t ticks);
+	void ForceSyncFrame();
 }
