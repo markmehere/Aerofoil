@@ -362,6 +362,10 @@ void StepLoadScreen(int steps)
 
 void InitLoadingWindow()
 {
+	// Only phones are slow enough for this to matter
+	if (!thisMac.isTouchscreen)
+		return;
+
 	static const int kLoadScreenHeight = 32;
 	static const int kLoadScreenWidth = 256;
 
@@ -478,9 +482,12 @@ int gpAppMain()
 	InitSrcRects();
 	CreateOffscreens();					StepLoadScreen(2);
 
-	PortabilityLayer::WindowManager::GetInstance()->FlickerWindowOut(loadScreenWindow, 32);
-	PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(loadScreenWindow);
-	PLSysCalls::Sleep(15);
+	if (loadScreenWindow)
+	{
+		PortabilityLayer::WindowManager::GetInstance()->FlickerWindowOut(loadScreenWindow, 32);
+		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(loadScreenWindow);
+		PLSysCalls::Sleep(15);
+	}
 
 	OpenMainWindow();
 
