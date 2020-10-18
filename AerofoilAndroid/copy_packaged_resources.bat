@@ -17,6 +17,7 @@ cd Houses
 ..\..\..\..\..\..\..\Tools\7z.exe x "-oCD Demo House" "CD Demo House.gpa"
 ..\..\..\..\..\..\..\Tools\7z.exe x "-oCD Demo House.mov" "CD Demo House.mov.gpa"
 ..\..\..\..\..\..\..\Tools\7z.exe x "-oDavis Station" "Davis Station.gpa"
+..\..\..\..\..\..\..\Tools\7z.exe x "-oDavis Station.mov" "Davis Station.mov.gpa"
 ..\..\..\..\..\..\..\Tools\7z.exe x "-oDemo House" "Demo House.gpa"
 ..\..\..\..\..\..\..\Tools\7z.exe x "-oDemo House.mov" "Demo House.mov.gpa"
 ..\..\..\..\..\..\..\Tools\7z.exe x "-oEmpty House" "Empty House.gpa"
