@@ -6,6 +6,17 @@ class GpIOStream;
 
 namespace PortabilityLayer
 {
+	class DeflateContext
+	{
+	public:
+		static DeflateContext *Create(GpIOStream *stream, int compressionLevel);
+
+		virtual void Destroy() = 0;
+		virtual bool Append(const void *buffer, size_t size) = 0;
+
+		virtual bool Flush() = 0;
+	};
+
 	class DeflateCodec
 	{
 	public:

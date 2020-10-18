@@ -48,6 +48,7 @@ namespace PortabilityLayer
 
 #define iAbout					1
 #define iAboutAerofoil			3
+#define iExportSourceCode		4
 #define iNewGame				1
 #define iTwoPlayer				2
 #define iOpenSavedGame			3
@@ -125,6 +126,9 @@ typedef struct
 
 void DoAbout (void);									// --- About.c
 void DoAboutFramework (void);
+
+// --- SourceExport.c
+void DoExportSourceCode (void);
 
 void LoadCursors (void);								// --- AnimCursor.c
 void DisposCursors (void);

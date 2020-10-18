@@ -34,6 +34,9 @@ namespace PortabilityLayer
 		LEUInt32_t m_uncompressedSize;
 		LEUInt16_t m_fileNameLength;
 		LEUInt16_t m_extraFieldLength;
+
+		// File name
+		// Extra field
 	};
 
 	struct ZipCentralDirectoryFileHeader

@@ -297,6 +297,10 @@ void DoAppleMenu (short theItem)
 		DoAboutFramework();
 		break;
 		
+		case iExportSourceCode:
+		DoExportSourceCode();
+		break;
+		
 		default:
 //		GetMenuItemText(appleMenu, theItem, daName);
 //		GetPort(&wasPort);

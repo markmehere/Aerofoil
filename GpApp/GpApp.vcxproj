@@ -133,6 +133,7 @@
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="SoundSync_Win32.cpp" />
+    <ClCompile Include="SourceExport.cpp" />
     <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="StructuresInit.cpp" />
     <ClCompile Include="StructuresInit2.cpp" />

@@ -72,6 +72,7 @@ LOCAL_SRC_FILES := \
 	Settings.cpp	\
 	Sound.cpp	\
 	SoundSync_Cpp11.cpp	\
+	SourceExport.cpp	\
 	StringUtils.cpp	\
 	StructuresInit.cpp	\
 	StructuresInit2.cpp	\
