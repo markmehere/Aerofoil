@@ -29,7 +29,7 @@ struct SourceExportState
 	Rect m_filledProgress;
 	GpIOStream *m_tsStream;
 	GpIOStream *m_sourcePkgStream;
-	GpIOStream *m_looseStream;
+	GpIOStream *m_fStream;
 
 	size_t m_dataProcessed;
 	size_t m_dataTotal;
@@ -49,7 +49,7 @@ SourceExportState::SourceExportState()
 	, m_progressRect(Rect::Create(0, 0, 0, 0))
 	, m_tsStream(nullptr)
 	, m_sourcePkgStream(nullptr)
-	, m_looseStream(nullptr)
+	, m_fStream(nullptr)
 	, m_dataProcessed(0)
 	, m_dataTotal(0)
 {
@@ -62,7 +62,7 @@ SourceExportState::~SourceExportState()
 
 	CloseStreamIfOpen(m_tsStream);
 	CloseStreamIfOpen(m_sourcePkgStream);
-	CloseStreamIfOpen(m_looseStream);
+	CloseStreamIfOpen(m_fStream);
 }
 
 struct SortableEntry
@@ -175,70 +175,6 @@ static bool RetrieveSingleFileSize(PortabilityLayer::VirtualDirectory_t virtualD
 	return true;
 }
 
-static bool RetrieveResourceTypeDirSize(PortabilityLayer::VirtualDirectory_t virtualDir, const char *arcDir, const char *typeDir, size_t &totalSizeOut)
-{
-	size_t totalSize = 0;
-
-	const char *nestedDirs[2] = { arcDir, typeDir };
-
-	PortabilityLayer::HostDirectoryCursor *dirCursor = PortabilityLayer::HostFileSystem::GetInstance()->ScanDirectoryNested(virtualDir, nestedDirs, 2);
-	if (!dirCursor)
-		return false;
-
-	const char *fname = nullptr;
-	while (dirCursor->GetNext(fname))
-	{
-		const char *nestedFile[3] = { arcDir, typeDir, fname };
-
-		size_t fileSize = 0;
-		if (!RetrieveSingleFileSize(virtualDir, nestedFile, 3, fileSize))
-			return false;
-
-		totalSize += fileSize;
-	}
-
-	dirCursor->Destroy();
-
-	totalSizeOut = totalSize;
-
-	return true;
-}
-
-static bool RetrieveResourceDirSize(PortabilityLayer::VirtualDirectory_t virtualDir, const char *arcDir, size_t arcDirLen, size_t &totalSizeOut)
-{
-	size_t totalSize = 0;
-
-	char *subDir = static_cast<char*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(arcDirLen + 1));
-	memcpy(subDir, arcDir, arcDirLen);
-	subDir[arcDirLen] = '\0';
-
-	PortabilityLayer::HostDirectoryCursor *dirCursor = PortabilityLayer::HostFileSystem::GetInstance()->ScanDirectoryNested(virtualDir, &subDir, 1);
-	if (!dirCursor)
-	{
-		// It's okay for the resource dir to not exist
-		totalSizeOut = 0;
-		return true;
-	}
-
-	const char *fname = nullptr;
-	while (dirCursor->GetNext(fname))
-	{
-		size_t resTypeDirSize = 0;
-		if (!RetrieveResourceTypeDirSize(virtualDir, subDir, fname, resTypeDirSize))
-			return false;
-
-		totalSize += resTypeDirSize;
-	}
-
-	dirCursor->Destroy();
-
-	PortabilityLayer::MemoryManager::GetInstance()->Release(subDir);
-
-	totalSizeOut = totalSize;
-
-	return true;
-}
-
 static bool RetrieveCompositeDirSize(PortabilityLayer::VirtualDirectory_t virtualDir, size_t &totalSizeOut)
 {
 	size_t totalSize = 0;
@@ -252,27 +188,14 @@ static bool RetrieveCompositeDirSize(PortabilityLayer::VirtualDirectory_t virtua
 	while (dirCursor->GetNext(fname))
 	{
 		size_t fnameLen = strlen(fname);
-		if (fnameLen >= 4 && !memcmp(fname + fnameLen - 4, ".gpf", 4))
+		if (fnameLen >= 4 && fname[fnameLen - 4] == '.' && fname[fnameLen - 3] == 'g' && fname[fnameLen - 2] == 'p' &&
+				(fname[fnameLen - 1] == 'f' || fname[fnameLen - 1] == 'd' || fname[fnameLen - 1] == 'a'))
 		{
-			size_t resDirSize = 0;
-			if (!RetrieveResourceDirSize(virtualDir, fname, fnameLen - 4, resDirSize))
+			size_t fSize = 0;
+			if (!RetrieveSingleFileSize(virtualDir, &fname, 1, fSize))
 				return false;
 
-			totalSize += resDirSize;
-
-			size_t gpfSize = 0;
-			if (!RetrieveSingleFileSize(virtualDir, &fname, 1, gpfSize))
-				return false;
-
-			totalSize += gpfSize;
-		}
-		else if (fnameLen >= 4 && !memcmp(fname + fnameLen - 4, ".gpd", 4))
-		{
-			size_t gpdSize = 0;
-			if (!RetrieveSingleFileSize(virtualDir, &fname, 1, gpdSize))
-				return false;
-
-			totalSize += gpdSize;
+			totalSize += fSize;
 		}
 	}
 
@@ -452,6 +375,173 @@ static bool RepackSourcePackage(SourceExportState &state, GpIOStream *outStream,
 	return true;
 }
 
+static bool RepackDirectory(SourceExportState &state, GpIOStream *outStream, std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> &centralDirFiles, std::vector<uint8_t> &fileNameChars, std::vector<size_t> &fileNameLengths, const char *storageDir, PortabilityLayer::VirtualDirectory_t virtualDir)
+{
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+	uint16_t dosDate = 0;
+	uint16_t dosTime = 0;
+	ConvertToMSDOSTimestamp(state.m_ts, dosDate, dosTime);
+
+	PortabilityLayer::HostDirectoryCursor *dirCursor = PortabilityLayer::HostFileSystem::GetInstance()->ScanDirectory(virtualDir);
+	if (!dirCursor)
+		return false;
+
+	const size_t storageDirLength = strlen(storageDir);
+
+	const char *fpath = nullptr;
+	while (dirCursor->GetNext(fpath))
+	{
+		const size_t fpathLength = strlen(fpath);
+
+		if (fpathLength < 4)
+			continue;
+
+		const char *extension = fpath + fpathLength - 4;
+		if (extension[0] != '.' || extension[1] != 'g' || extension[2] != 'p')
+			continue;
+
+		if (extension[3] != 'a' && extension[3] != 'f' && extension[3] != 'd')
+			continue;
+
+		const bool shouldStore = (extension[3] == 'a');
+
+		state.m_fStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(virtualDir, fpath, false, GpFileCreationDispositions::kOpenExisting);
+		if (!state.m_fStream)
+			return false;
+
+		const size_t combinedPathLength = fpathLength + storageDirLength;
+
+		PortabilityLayer::DeflateContext *defContext = nullptr;
+
+		if (!shouldStore)
+		{
+			defContext = PortabilityLayer::DeflateContext::Create(outStream, 9);
+			if (!defContext)
+				return false;
+		}
+
+		const size_t fileSize = state.m_fStream->Size();
+
+		GpUFilePos_t localHeaderPos = outStream->Tell();
+
+		PortabilityLayer::ZipFileLocalHeader lHeader;
+		memset(&lHeader, 0, sizeof(lHeader));
+
+		if (outStream->Write(&lHeader, sizeof(lHeader)) != sizeof(lHeader))
+			return false;
+
+		if (outStream->Write(storageDir, storageDirLength) != storageDirLength || outStream->Write(fpath, fpathLength) != fpathLength)
+			return false;
+
+		GpUFilePos_t fileContentsPos = outStream->Tell();
+
+		const size_t kCopyBufferSize = 1024;
+		uint8_t copyBuffer[kCopyBufferSize];
+
+		uint32_t crc = 0;
+		for (size_t foffs = 0; foffs < fileSize; foffs += kCopyBufferSize)
+		{
+			size_t chunkSize = kCopyBufferSize;
+			if (fileSize - foffs < chunkSize)
+				chunkSize = fileSize - foffs;
+
+			if (state.m_fStream->Read(copyBuffer, chunkSize) != chunkSize)
+			{
+				defContext->Destroy();
+				return false;
+			}
+
+			crc = PortabilityLayer::DeflateContext::CRC32(crc, copyBuffer, chunkSize);
+
+			if (defContext)
+			{
+				if (!defContext->Append(copyBuffer, chunkSize))
+				{
+					defContext->Destroy();
+					return false;
+				}
+			}
+			else
+			{
+				if (outStream->Write(copyBuffer, chunkSize) != chunkSize)
+					return false;
+			}
+		}
+
+		if (defContext && !defContext->Flush())
+		{
+			defContext->Destroy();
+			return false;
+		}
+
+		if (defContext)
+			defContext->Destroy();
+
+		GpUFilePos_t compressedEndPos = outStream->Tell();
+		GpUFilePos_t compressedSize = compressedEndPos - fileContentsPos;
+
+		lHeader.m_signature = PortabilityLayer::ZipFileLocalHeader::kSignature;
+		lHeader.m_versionRequired = shouldStore ? PortabilityLayer::ZipConstants::kStoredRequiredVersion : PortabilityLayer::ZipConstants::kCompressedRequiredVersion;
+		lHeader.m_flags = 0;
+		lHeader.m_method = shouldStore ? PortabilityLayer::ZipConstants::kStoredMethod : PortabilityLayer::ZipConstants::kDeflatedMethod;
+		lHeader.m_modificationTime = dosTime;
+		lHeader.m_modificationDate = dosDate;
+		lHeader.m_crc = crc;
+		lHeader.m_compressedSize = compressedSize;
+		lHeader.m_uncompressedSize = fileSize;
+		lHeader.m_fileNameLength = combinedPathLength;
+		lHeader.m_extraFieldLength = 0;
+
+		if (!outStream->SeekStart(localHeaderPos))
+			return false;
+
+		if (outStream->Write(&lHeader, sizeof(lHeader)) != sizeof(lHeader))
+			return false;
+
+		if (!outStream->SeekStart(compressedEndPos))
+			return false;
+
+		PortabilityLayer::ZipCentralDirectoryFileHeader cdirHeader;
+
+		cdirHeader.m_signature = PortabilityLayer::ZipCentralDirectoryFileHeader::kSignature;
+		cdirHeader.m_versionCreated = PortabilityLayer::ZipConstants::kCompressedRequiredVersion;
+		cdirHeader.m_versionRequired = lHeader.m_versionRequired;
+		cdirHeader.m_flags = 0;
+		cdirHeader.m_method = lHeader.m_method;
+		cdirHeader.m_modificationTime = lHeader.m_modificationTime;
+		cdirHeader.m_modificationDate = lHeader.m_modificationDate;
+		cdirHeader.m_crc = lHeader.m_crc;
+		cdirHeader.m_compressedSize = lHeader.m_compressedSize;
+		cdirHeader.m_uncompressedSize = lHeader.m_uncompressedSize;
+		cdirHeader.m_fileNameLength = lHeader.m_fileNameLength;
+		cdirHeader.m_extraFieldLength = lHeader.m_extraFieldLength;
+		cdirHeader.m_commentLength = 0;
+		cdirHeader.m_diskNumber = 0;
+		cdirHeader.m_internalAttributes = 0;
+		cdirHeader.m_externalAttributes = PortabilityLayer::ZipConstants::kArchivedAttributes;
+		cdirHeader.m_localHeaderOffset = localHeaderPos;
+
+		fileNameChars.resize(fileNameChars.size() + combinedPathLength);
+		uint8_t *fileNameStorageLoc = &fileNameChars[fileNameChars.size() - combinedPathLength];
+
+		memcpy(fileNameStorageLoc, storageDir, storageDirLength);
+		memcpy(fileNameStorageLoc + storageDirLength, fpath, fpathLength);
+
+		fileNameLengths.push_back(combinedPathLength);
+
+		centralDirFiles.push_back(cdirHeader);
+
+		state.m_dataProcessed += fileSize;
+
+		UpdateProgress(state);
+	}
+
+	dirCursor->Destroy();
+
+	return true;
+}
+
 static bool WriteCentralDirectory(GpIOStream *stream, const std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> &centralDirFiles, const std::vector<uint8_t> &fileNameChars, const std::vector<size_t> &fileNameLengths)
 {
 	const size_t numEntries = centralDirFiles.size();
@@ -492,6 +582,64 @@ static bool WriteCentralDirectory(GpIOStream *stream, const std::vector<Portabil
 	return true;
 }
 
+static bool AddZipDirectory(GpIOStream *stream, std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> &centralDirFiles, std::vector<uint8_t> &fileNameChars, std::vector<size_t> &fileNameLengths, const char *path, const PortabilityLayer::CombinedTimestamp &ts)
+{
+	size_t nameLength = strlen(path);
+
+	uint16_t dosDate = 0;
+	uint16_t dosTime = 0;
+	ConvertToMSDOSTimestamp(ts, dosDate, dosTime);
+
+	GpUFilePos_t localHeaderPos = stream->Tell();
+
+	PortabilityLayer::ZipFileLocalHeader localHeader;
+	localHeader.m_signature = PortabilityLayer::ZipFileLocalHeader::kSignature;
+	localHeader.m_versionRequired = PortabilityLayer::ZipConstants::kDirectoryRequiredVersion;
+	localHeader.m_flags = 0;
+	localHeader.m_method = PortabilityLayer::ZipConstants::kStoredMethod;
+	localHeader.m_modificationTime = dosTime;
+	localHeader.m_modificationDate = dosDate;
+	localHeader.m_crc = 0;
+	localHeader.m_compressedSize = 0;
+	localHeader.m_uncompressedSize = 0;
+	localHeader.m_fileNameLength = nameLength;
+	localHeader.m_extraFieldLength = 0;
+
+	if (stream->Write(&localHeader, sizeof(localHeader)) != sizeof(localHeader))
+		return false;
+
+	if (stream->Write(path, nameLength) != nameLength)
+		return false;
+
+	PortabilityLayer::ZipCentralDirectoryFileHeader cdirHeader;
+	cdirHeader.m_signature = PortabilityLayer::ZipCentralDirectoryFileHeader::kSignature;
+	cdirHeader.m_versionCreated = PortabilityLayer::ZipConstants::kCompressedRequiredVersion;
+	cdirHeader.m_versionRequired = PortabilityLayer::ZipConstants::kDirectoryRequiredVersion;
+	cdirHeader.m_flags = 0;
+	cdirHeader.m_method = PortabilityLayer::ZipConstants::kStoredMethod;
+	cdirHeader.m_modificationTime = dosTime;
+	cdirHeader.m_modificationDate = dosDate;
+	cdirHeader.m_crc = 0;
+	cdirHeader.m_compressedSize = 0;
+	cdirHeader.m_uncompressedSize = 0;
+	cdirHeader.m_fileNameLength = nameLength;
+	cdirHeader.m_extraFieldLength = 0;
+	cdirHeader.m_commentLength = 0;
+	cdirHeader.m_diskNumber = 0;
+	cdirHeader.m_internalAttributes = 0;
+	cdirHeader.m_externalAttributes = PortabilityLayer::ZipConstants::kDirectoryAttributes;
+	cdirHeader.m_localHeaderOffset = localHeaderPos;
+
+	centralDirFiles.push_back(cdirHeader);
+
+	for (size_t i = 0; i < nameLength; i++)
+		fileNameChars.push_back(reinterpret_cast<const uint8_t*>(path)[i]);
+
+	fileNameLengths.push_back(nameLength);
+
+	return true;
+}
+
 bool ExportSourceToStream (GpIOStream *stream)
 {
 	SourceExportState state;
@@ -522,8 +670,8 @@ bool ExportSourceToStream (GpIOStream *stream)
 	PLSysCalls::Sleep(1);
 
 	size_t applicationDataSize = 0;
-	const char *applicationDataPath = "ApplicationResources";
-	if (!RetrieveResourceDirSize(PortabilityLayer::VirtualDirectories::kApplicationData, applicationDataPath, strlen(applicationDataPath), applicationDataSize))
+	const char *appResourcesPath = "ApplicationResources.gpa";
+	if (!RetrieveSingleFileSize(PortabilityLayer::VirtualDirectories::kApplicationData, &appResourcesPath, 1, applicationDataSize))
 		return false;
 
 	PLSysCalls::ForceSyncFrame();
@@ -535,7 +683,23 @@ bool ExportSourceToStream (GpIOStream *stream)
 	std::vector<uint8_t> fileNameChars;
 	std::vector<size_t> fileNameLengths;
 
-	RepackSourcePackage(state, stream, centralDirFiles, fileNameChars, fileNameLengths);
+	if (!RepackSourcePackage(state, stream, centralDirFiles, fileNameChars, fileNameLengths))
+		return false;
+
+	state.m_sourcePkgStream->Close();
+	state.m_sourcePkgStream = nullptr;
+
+	if (!AddZipDirectory(stream, centralDirFiles, fileNameChars, fileNameLengths, "Packaged/", state.m_ts))
+		return false;
+
+	if (!RepackDirectory(state, stream, centralDirFiles, fileNameChars, fileNameLengths, "Packaged/", PortabilityLayer::VirtualDirectories::kApplicationData))
+		return false;
+
+	if (!AddZipDirectory(stream, centralDirFiles, fileNameChars, fileNameLengths, "Packaged/Houses/", state.m_ts))
+		return false;
+
+	if (!RepackDirectory(state, stream, centralDirFiles, fileNameChars, fileNameLengths, "Packaged/Houses/", PortabilityLayer::VirtualDirectories::kGameData))
+		return false;
 
 	if (!WriteCentralDirectory(stream, centralDirFiles, fileNameChars, fileNameLengths))
 		return false;

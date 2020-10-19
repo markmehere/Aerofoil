@@ -15,6 +15,8 @@ namespace PortabilityLayer
 		virtual bool Append(const void *buffer, size_t size) = 0;
 
 		virtual bool Flush() = 0;
+
+		static uint32_t CRC32(uint32_t inputValue, const void *buffer, size_t bufferLength);
 	};
 
 	class DeflateCodec

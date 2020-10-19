@@ -195,6 +195,7 @@ bool PortabilityLayer::DeflateContextImpl::Flush()
 	return true;
 }
 
+
 PortabilityLayer::DeflateContext *PortabilityLayer::DeflateContext::Create(GpIOStream *stream, int compressionLevel)
 {
 	void *storage = PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::DeflateContextImpl));
@@ -209,4 +210,9 @@ PortabilityLayer::DeflateContext *PortabilityLayer::DeflateContext::Create(GpIOS
 	}
 
 	return obj;
+}
+
+uint32_t PortabilityLayer::DeflateContext::CRC32(uint32_t inputValue, const void *buffer, size_t bufferLength)
+{
+	return crc32(inputValue, static_cast<const Bytef*>(buffer), bufferLength);
 }
