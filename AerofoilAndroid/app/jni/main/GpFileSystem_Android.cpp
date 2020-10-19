@@ -507,7 +507,7 @@ bool GpFileSystem_Android::DeleteFile(PortabilityLayer::VirtualDirectory_t virtu
 
 PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
 {
-	if (IsVirtualDirectoryLooseResources(virtualDirectory))
+	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kGameData || virtualDirectory == PortabilityLayer::VirtualDirectories::kApplicationData)
 		return ScanAssetDirectory(virtualDirectory, paths, numPaths);
 
 	return ScanStorageDirectory(virtualDirectory, paths, numPaths);
@@ -561,7 +561,7 @@ bool GpFileSystem_Android::ValidateFilePathUnicodeChar(uint32_t c) const
 
 bool GpFileSystem_Android::IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const
 {
-	return virtualDir == PortabilityLayer::VirtualDirectories::kApplicationData || virtualDir == PortabilityLayer::VirtualDirectories::kGameData;
+	return false;
 }
 
 GpFileSystem_Android *GpFileSystem_Android::GetInstance()
