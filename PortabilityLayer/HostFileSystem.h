@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 class GpIOStream;
+struct IGpThreadRelay;
 
 namespace PortabilityLayer
 {
@@ -30,6 +31,8 @@ namespace PortabilityLayer
 		static void SetInstance(HostFileSystem *instance);
 
 		GpIOStream *OpenFile(VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition);
+
+		virtual void SetMainThreadRelay(IGpThreadRelay *relay) = 0;
 
 	private:
 		static HostFileSystem *ms_instance;

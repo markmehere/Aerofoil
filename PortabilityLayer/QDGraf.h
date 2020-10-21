@@ -89,4 +89,8 @@ struct DrawSurface
 	PortabilityLayer::RGBAColor m_cachedAAColor;
 
 	PortabilityLayer::QDPort m_port;
+
+private:
+	static void StaticOnDriverInvalidate(void *context);
+	void OnDriverInvalidate();
 };

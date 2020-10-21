@@ -326,25 +326,24 @@ public:
 
 	void AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualHeight, float &pixelScaleX, float &pixelScaleY) override
 	{
-		if (physicalWidth < 640)
-			physicalWidth = 640;
-
-		if (physicalHeight < 480)
-			physicalHeight = 480;
-
 		double minMul = 1.0;
 
-		if (isAutoScale)
+		if (isAutoScale || physicalWidth < 640 && physicalHeight < 480)
 		{
 			double xMul = static_cast<double>(physicalWidth) / 640.0;
 			double yMul = static_cast<double>(physicalHeight) / 480.0;
 
-			double granularity = 2.0;
+			minMul = std::min(xMul, yMul);
 
-			xMul = floor(xMul * granularity) / granularity;
-			yMul = floor(yMul * granularity) / granularity;
+			if (minMul >= 1.0)
+			{
+				double granularity = 2.0;
 
-			minMul = std::max<double>(1.0, std::min(xMul, yMul));
+				xMul = floor(xMul * granularity) / granularity;
+				yMul = floor(yMul * granularity) / granularity;
+
+				minMul = std::min(xMul, yMul);
+			}
 		}
 
 		virtualWidth = physicalWidth / minMul;

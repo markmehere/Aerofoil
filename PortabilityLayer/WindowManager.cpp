@@ -1434,6 +1434,7 @@ namespace PortabilityLayer
 	void WindowManagerImpl::HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight)
 	{
 		const uint32_t menuBarHeight = PortabilityLayer::MenuManager::GetInstance()->GetMenuBarHeight();
+		const bool menuIsTouchScreen = PortabilityLayer::MenuManager::GetInstance()->IsMenuTouchScreenStyle();
 
 		for (PortabilityLayer::WindowImpl *window = m_windowStackTop; window != nullptr; window = window->GetWindowBelow())
 		{
@@ -1457,17 +1458,37 @@ namespace PortabilityLayer
 
 			int64_t newY = 0;
 			int32_t currentY = window->GetPosition().m_y;
-			if (currentY < static_cast<int32_t>(menuBarHeight))
-				newY = currentY;
-			else
+			if (!menuIsTouchScreen)
 			{
-				if (newHeight <= (paddedHeight + menuBarHeight) || prevHeight <= paddedHeight + menuBarHeight)
-					newY = (static_cast<int64_t>(newHeight) - paddedHeight - menuBarHeight) / 2 + menuBarHeight;
+				if (currentY < static_cast<int32_t>(menuBarHeight))
+					newY = currentY;
 				else
 				{
-					uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
-					uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
-					newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + menuBarHeight + chromePadding[WindowChromeSides::kTop];
+					if (newHeight <= (paddedHeight + menuBarHeight) || prevHeight <= paddedHeight + menuBarHeight)
+						newY = (static_cast<int64_t>(newHeight) - paddedHeight - menuBarHeight) / 2 + menuBarHeight;
+					else
+					{
+						uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
+						uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
+						newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + menuBarHeight + chromePadding[WindowChromeSides::kTop];
+					}
+				}
+			}
+			else
+			{
+				uint32_t heightWithoutMenu = surfaceRect.Height() - menuBarHeight;
+				if (currentY + static_cast<int32_t>(paddedHeight) >= heightWithoutMenu)
+					newY = currentY;
+				else
+				{
+					if (newHeight <= (paddedHeight + menuBarHeight) || prevHeight <= paddedHeight + menuBarHeight)
+						newY = (static_cast<int64_t>(newHeight) - paddedHeight - menuBarHeight) / 2 + menuBarHeight;
+					else
+					{
+						uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
+						uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
+						newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + chromePadding[WindowChromeSides::kTop];
+					}
 				}
 			}
 

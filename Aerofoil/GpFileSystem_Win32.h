@@ -23,6 +23,8 @@ public:
 
 	bool IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const override;
 
+	void SetMainThreadRelay(IGpThreadRelay *relay) override;
+
 	const wchar_t *GetBasePath() const;
 
 	static GpFileSystem_Win32 *GetInstance();

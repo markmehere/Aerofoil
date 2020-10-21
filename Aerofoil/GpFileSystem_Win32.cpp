@@ -322,6 +322,11 @@ bool GpFileSystem_Win32::IsVirtualDirectoryLooseResources(PortabilityLayer::Virt
 	return false;
 }
 
+void GpFileSystem_Win32::SetMainThreadRelay(IGpThreadRelay *relay)
+{
+	(void)relay;
+}
+
 bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
 {
 	for (size_t i = 0; i < length; i++)

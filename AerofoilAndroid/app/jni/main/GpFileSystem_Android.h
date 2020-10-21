@@ -5,6 +5,7 @@
 #include "GpCoreDefs.h"
 
 #include <jni.h>
+#include <string>
 
 class GpFileSystem_Android final : public PortabilityLayer::HostFileSystem
 {
@@ -26,14 +27,35 @@ public:
 
 	bool IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const override;
 
+	void SetMainThreadRelay(IGpThreadRelay *relay) override;
+
 	static GpFileSystem_Android *GetInstance();
 
 private:
+	struct ScanDirectoryNestedContext
+	{
+		GpFileSystem_Android *m_this;
+
+		PortabilityLayer::HostDirectoryCursor *m_returnValue;
+		PortabilityLayer::VirtualDirectory_t m_virtualDirectory;
+		char const *const *m_paths;
+		size_t m_numPaths;
+	};
+
+	static void ScanDirectoryNestedThunk(void *context);
+	PortabilityLayer::HostDirectoryCursor *ScanDirectoryNestedInternal(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
+
 	PortabilityLayer::HostDirectoryCursor *ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 	PortabilityLayer::HostDirectoryCursor *ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 
+	bool ResolvePathInDownloadsDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset);
+	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset);
+
+	IGpThreadRelay *m_relay;
+
 	jobject m_activity;
 	jmethodID m_scanAssetDirectoryMID;
+	jmethodID m_selectSourceExportPathMID;
 
 	static GpFileSystem_Android ms_instance;
 };

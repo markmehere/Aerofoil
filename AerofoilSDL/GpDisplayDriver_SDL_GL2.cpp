@@ -629,14 +629,16 @@ GLuint GpGLShader<TShaderType>::GetID() const
 class GpDisplayDriverSurface_GL2 : public IGpDisplayDriverSurface
 {
 public:
-	GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpGLTexture *texture, GpPixelFormat_t pixelFormat);
+	GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpGLTexture *texture, GpPixelFormat_t pixelFormat, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext);
 	~GpDisplayDriverSurface_GL2();
 
-	static GpDisplayDriverSurface_GL2 *Create(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat);
+	static GpDisplayDriverSurface_GL2 *Create(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, GpDisplayDriverSurface_GL2 *prevSurface, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext);
 
 	void Upload(const void *data, size_t x, size_t y, size_t width, size_t height, size_t pitch);
 	void UploadEntire(const void *data, size_t pitch);
 	void Destroy();
+
+	bool RecreateAll();
 
 	size_t GetImageWidth() const;
 	size_t GetPaddedTextureWidth() const;
@@ -645,7 +647,8 @@ public:
 	GpGLTexture *GetTexture() const;
 
 private:
-	bool Init();
+	bool Init(GpDisplayDriverSurface_GL2 *prevSurface);
+	bool RecreateSingle();
 	GLenum ResolveGLFormat() const;
 	GLenum ResolveGLInternalFormat() const;
 	GLenum ResolveGLType() const;
@@ -657,6 +660,13 @@ private:
 	size_t m_paddedTextureWidth;
 	size_t m_pitch;
 	size_t m_height;
+
+	GpDisplayDriver_SDL_GL2 *m_driver;
+	GpDisplayDriverSurface_GL2 *m_next;
+	GpDisplayDriverSurface_GL2 *m_prev;
+
+	IGpDisplayDriver::SurfaceInvalidateCallback_t m_invalidateCallback;
+	void *m_invalidateContext;
 };
 
 class GpCursor_SDL2 final : public IGpCursor
@@ -714,7 +724,7 @@ public:
 	void Run() override;
 	void Shutdown() override;
 	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
-	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat) override;
+	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
 	IGpCursor *CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY) override;
 	IGpCursor *CreateColorCursor(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY) override;
@@ -732,6 +742,8 @@ public:
 
 	void ApplyPrefs(const void *identifier, size_t identifierSize, const void *contents, size_t contentsSize, uint32_t version) override;
 	bool SavePrefs(void *context, WritePrefsFunc_t writeFunc) override;
+
+	void UnlinkSurface(GpDisplayDriverSurface_GL2 *surface, GpDisplayDriverSurface_GL2 *prev, GpDisplayDriverSurface_GL2 *next);
 
 	const GpGLFunctions *GetGLFunctions() const;
 
@@ -776,15 +788,6 @@ private:
 	GpGLFunctions m_gl;
 	GpDisplayDriverProperties m_properties;
 
-	GpComPtr<GpGLRenderTargetView> m_virtualScreenTextureRTV;
-	GpComPtr<GpGLTexture> m_virtualScreenTexture;
-
-	GpComPtr<GpGLVertexArray> m_quadVertexArray;
-	GpComPtr<GpGLBuffer> m_quadVertexBufferKeepalive;
-	GpComPtr<GpGLBuffer> m_quadIndexBuffer;
-
-	GpComPtr<GpGLTexture> m_paletteTexture;
-
 	struct DrawQuadProgram
 	{
 		GpComPtr<GpGLProgram> m_program;
@@ -815,17 +818,31 @@ private:
 		bool Link(GpDisplayDriver_SDL_GL2 *driver, const GpGLShader<GL_VERTEX_SHADER> *vertexShader, const GpGLShader<GL_FRAGMENT_SHADER> *pixelShader);
 	};
 
-	BlitQuadProgram m_scaleQuadProgram;
-	BlitQuadProgram m_copyQuadProgram;
+	struct InstancedResources
+	{
+		GpComPtr<GpGLRenderTargetView> m_virtualScreenTextureRTV;
+		GpComPtr<GpGLTexture> m_virtualScreenTexture;
 
-	DrawQuadProgram m_drawQuadPaletteNoFlickerProgram;
-	DrawQuadProgram m_drawQuadPaletteFlickerProgram;
-	DrawQuadProgram m_drawQuadRGBProgram;
-	DrawQuadProgram m_drawQuad15BitProgram;
-	DrawQuadProgram m_drawQuadPaletteICCNoFlickerProgram;
-	DrawQuadProgram m_drawQuadPaletteICCFlickerProgram;
-	DrawQuadProgram m_drawQuadRGBICCProgram;
-	DrawQuadProgram m_drawQuad15BitICCProgram;
+		GpComPtr<GpGLVertexArray> m_quadVertexArray;
+		GpComPtr<GpGLBuffer> m_quadVertexBufferKeepalive;
+		GpComPtr<GpGLBuffer> m_quadIndexBuffer;
+
+		GpComPtr<GpGLTexture> m_paletteTexture;
+
+		BlitQuadProgram m_scaleQuadProgram;
+		BlitQuadProgram m_copyQuadProgram;
+
+		DrawQuadProgram m_drawQuadPaletteNoFlickerProgram;
+		DrawQuadProgram m_drawQuadPaletteFlickerProgram;
+		DrawQuadProgram m_drawQuadRGBProgram;
+		DrawQuadProgram m_drawQuad15BitProgram;
+		DrawQuadProgram m_drawQuadPaletteICCNoFlickerProgram;
+		DrawQuadProgram m_drawQuadPaletteICCFlickerProgram;
+		DrawQuadProgram m_drawQuadRGBICCProgram;
+		DrawQuadProgram m_drawQuad15BitICCProgram;
+	};
+
+	InstancedResources m_res;
 
 	SDL_Window *m_window;
 	SDL_GLContext m_glContext;
@@ -834,6 +851,7 @@ private:
 	SDL_Cursor *m_iBeamCursor;
 	SDL_Cursor *m_arrowCursor;
 	bool m_cursorIsHidden;
+	bool m_contextLost;
 
 	bool m_isResettingSwapChain;
 
@@ -872,10 +890,16 @@ private:
 
 	std::chrono::time_point<std::chrono::high_resolution_clock>::duration m_syncTimeBase;
 	GpRingBuffer<CompactedPresentHistoryItem, 60> m_presentHistory;
+
+	GpDisplayDriverSurface_GL2 *m_firstSurface;
+	GpDisplayDriverSurface_GL2 *m_lastSurface;
+
+	uint8_t m_paletteStorage[256 * 4 + GP_SYSTEM_MEMORY_ALIGNMENT];
+	uint8_t *m_paletteData;
 };
 
 
-GpDisplayDriverSurface_GL2::GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpGLTexture *texture, GpPixelFormat_t pixelFormat)
+GpDisplayDriverSurface_GL2::GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpGLTexture *texture, GpPixelFormat_t pixelFormat, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext)
 	: m_gl(driver->GetGLFunctions())
 	, m_texture(texture)
 	, m_pixelFormat(pixelFormat)
@@ -883,6 +907,11 @@ GpDisplayDriverSurface_GL2::GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *
 	, m_paddedTextureWidth(0)
 	, m_height(height)
 	, m_pitch(pitch)
+	, m_driver(driver)
+	, m_prev(nullptr)
+	, m_next(nullptr)
+	, m_invalidateCallback(invalidateCallback)
+	, m_invalidateContext(invalidateContext)
 {
 	size_t paddingPixels = 0;
 
@@ -915,9 +944,15 @@ GpDisplayDriverSurface_GL2::GpDisplayDriverSurface_GL2(GpDisplayDriver_SDL_GL2 *
 
 GpDisplayDriverSurface_GL2::~GpDisplayDriverSurface_GL2()
 {
+	if (m_prev)
+		m_prev->m_next = m_next;
+	if (m_next)
+		m_next->m_prev = m_prev;
+
+	m_driver->UnlinkSurface(this, m_prev, m_next);
 }
 
-GpDisplayDriverSurface_GL2 *GpDisplayDriverSurface_GL2::Create(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat)
+GpDisplayDriverSurface_GL2 *GpDisplayDriverSurface_GL2::Create(GpDisplayDriver_SDL_GL2 *driver, size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, GpDisplayDriverSurface_GL2 *prevSurface, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext)
 {
 	GpComPtr<GpGLTexture> texture = GpComPtr<GpGLTexture>(GpGLTexture::Create(driver));
 	if (!texture)
@@ -927,8 +962,8 @@ GpDisplayDriverSurface_GL2 *GpDisplayDriverSurface_GL2::Create(GpDisplayDriver_S
 	if (!surface)
 		return nullptr;
 
-	new (surface) GpDisplayDriverSurface_GL2(driver, width, height, pitch, texture, pixelFormat);
-	if (!surface->Init())
+	new (surface) GpDisplayDriverSurface_GL2(driver, width, height, pitch, texture, pixelFormat, invalidateCallback, invalidateContext);
+	if (!surface->Init(prevSurface))
 	{
 		surface->Destroy();
 		return nullptr;
@@ -967,6 +1002,23 @@ void GpDisplayDriverSurface_GL2::Destroy()
 	free(this);
 }
 
+bool GpDisplayDriverSurface_GL2::RecreateAll()
+{
+	for (GpDisplayDriverSurface_GL2 *scan = this; scan; scan = scan->m_next)
+	{
+		scan->m_invalidateCallback(scan->m_invalidateContext);
+		scan->m_texture = nullptr;
+	}
+
+	for (GpDisplayDriverSurface_GL2 *scan = this; scan; scan = scan->m_next)
+	{
+		if (!scan->RecreateSingle())
+			return false;
+	}
+
+	return true;
+}
+
 size_t GpDisplayDriverSurface_GL2::GetImageWidth() const
 {
 	return m_imageWidth;
@@ -993,7 +1045,7 @@ GpGLTexture *GpDisplayDriverSurface_GL2::GetTexture() const
 }
 
 
-bool GpDisplayDriverSurface_GL2::Init()
+bool GpDisplayDriverSurface_GL2::Init(GpDisplayDriverSurface_GL2 *prevSurface)
 {
 	CheckGLError(*m_gl);
 
@@ -1009,6 +1061,12 @@ bool GpDisplayDriverSurface_GL2::Init()
 	CheckGLError(*m_gl);
 
 	return true;
+}
+
+bool GpDisplayDriverSurface_GL2::RecreateSingle()
+{
+	m_texture = GpGLTexture::Create(m_driver);
+	return m_texture != nullptr;
 }
 
 GLenum GpDisplayDriverSurface_GL2::ResolveGLFormat() const
@@ -1101,6 +1159,9 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_iBeamCursor(nullptr)
 	, m_arrowCursor(nullptr)
 	, m_cursorIsHidden(false)
+	, m_contextLost(true)
+	, m_lastSurface(nullptr)
+	, m_firstSurface(nullptr)
 {
 	m_bgColor[0] = 0.f;
 	m_bgColor[1] = 0.f;
@@ -1118,6 +1179,12 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	m_waitCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
 	m_iBeamCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
 	m_arrowCursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+
+	m_paletteData = m_paletteStorage;
+	while (reinterpret_cast<uintptr_t>(m_paletteData) % GP_SYSTEM_MEMORY_ALIGNMENT != 0)
+		m_paletteData++;
+
+	memset(m_paletteData, 255, 256 * 4);
 }
 
 template<class T>
@@ -1724,7 +1791,45 @@ void GpDisplayDriver_SDL_GL2::Run()
 	m_vosEvent = m_properties.m_systemServices->CreateThreadEvent(true, false);
 	m_vosFiber = new GpFiber_SDL(nullptr, m_vosEvent);
 
-	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+	if (m_isFullScreenDesired)
+	{
+		windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		m_isFullScreen = true;
+	}
+	else
+		windowFlags |= SDL_WINDOW_RESIZABLE;
+
+	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, windowFlags);
+
+	if (m_isFullScreen)
+	{
+		m_windowModeRevertWidth = m_windowWidthPhysical;
+		m_windowModeRevertHeight = m_windowHeightPhysical;
+
+		int windowWidth = 0;
+		int windowHeight = 0;
+		SDL_GetWindowSize(m_window, &windowWidth, &windowHeight);
+
+		m_windowWidthPhysical = windowWidth;
+		m_windowHeightPhysical = windowHeight;
+
+
+		uint32_t desiredWidth = windowWidth;
+		uint32_t desiredHeight = windowHeight;
+		uint32_t virtualWidth = m_windowWidthVirtual;
+		uint32_t virtualHeight = m_windowHeightVirtual;
+		float pixelScaleX = m_pixelScaleX;
+		float pixelScaleY = m_pixelScaleY;
+
+		if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
+		{
+			m_windowWidthVirtual = virtualWidth;
+			m_windowHeightVirtual = virtualHeight;
+			m_pixelScaleX = pixelScaleX;
+			m_pixelScaleY = pixelScaleY;
+		}
+	}
 
 	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
 
@@ -1735,8 +1840,6 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 	if (!m_gl.LookUpFunctions())
 		return;
-
-	InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
 
 	for (;;)
 	{
@@ -1750,8 +1853,11 @@ void GpDisplayDriver_SDL_GL2::Run()
 			}
 			//else if (msg.type == SDL_MOUSELEAVE)	// Does SDL support this??
 			//	m_mouseIsInClientArea = false;
+			else if (msg.type == SDL_RENDER_DEVICE_RESET || msg.type == SDL_RENDER_TARGETS_RESET)
+				m_contextLost = true;
 
 			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
+
 		}
 		else
 		{
@@ -1761,6 +1867,9 @@ void GpDisplayDriver_SDL_GL2::Run()
 					BecomeFullScreen();
 				else
 					BecomeWindowed();
+
+				m_contextLost = true;
+				continue;
 			}
 
 			int clientWidth = 0;
@@ -1784,7 +1893,6 @@ void GpDisplayDriver_SDL_GL2::Run()
 				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
 				{
 					bool resizedOK = ResizeOpenGLWindow(m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, logger);
-					resizedOK = resizedOK && InitBackBuffer(virtualWidth, virtualHeight);
 
 					if (!resizedOK)
 						break;	// Critical video driver error, exit
@@ -1803,7 +1911,28 @@ void GpDisplayDriver_SDL_GL2::Run()
 						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidthVirtual;
 						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
 					}
+
+					m_contextLost = true;
+					continue;
 				}
+			}
+
+			if (m_contextLost)
+			{
+				// Drop everything and reset
+				m_res.~InstancedResources();
+				new (&m_res) InstancedResources();
+
+				if (m_firstSurface)
+					m_firstSurface->RecreateAll();
+
+				if (!InitBackBuffer(m_windowWidthVirtual, m_windowHeightVirtual))
+					break;
+
+				InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
+
+				m_contextLost = false;
+				continue;
 			}
 
 			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
@@ -1830,9 +1959,16 @@ void GpDisplayDriver_SDL_GL2::GetDisplayResolution(unsigned int *width, unsigned
 		*height = m_windowHeightVirtual;
 }
 
-IGpDisplayDriverSurface *GpDisplayDriver_SDL_GL2::CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat)
+IGpDisplayDriverSurface *GpDisplayDriver_SDL_GL2::CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext)
 {
-	return GpDisplayDriverSurface_GL2::Create(this, width, height, pitch, pixelFormat);
+	GpDisplayDriverSurface_GL2 *surface = GpDisplayDriverSurface_GL2::Create(this, width, height, pitch, pixelFormat, m_lastSurface, invalidateCallback, invalidateContext);
+	if (surface)
+	{
+		m_lastSurface = surface;
+		if (m_firstSurface == nullptr)
+			m_firstSurface = surface;
+	}
+	return surface;
 }
 
 void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects)
@@ -1840,7 +1976,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	if (!effects)
 		effects = &gs_defaultEffects;
 
-	GpGLVertexArray *vaPtr = m_quadVertexArray;
+	GpGLVertexArray *vaPtr = m_res.m_quadVertexArray;
 	size_t vbStride = sizeof(float) * 2;
 	size_t zero = 0;
 
@@ -1854,16 +1990,16 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		if (m_useICCProfile)
 		{
 			if (effects->m_flicker)
-				program = &m_drawQuadPaletteICCFlickerProgram;
+				program = &m_res.m_drawQuadPaletteICCFlickerProgram;
 			else
-				program = &m_drawQuadPaletteICCNoFlickerProgram;
+				program = &m_res.m_drawQuadPaletteICCNoFlickerProgram;
 		}
 		else
 		{
 			if (effects->m_flicker)
-				program = &m_drawQuadPaletteFlickerProgram;
+				program = &m_res.m_drawQuadPaletteFlickerProgram;
 			else
-				program = &m_drawQuadPaletteNoFlickerProgram;
+				program = &m_res.m_drawQuadPaletteNoFlickerProgram;
 		}
 	}
 	else if (pixelFormat == GpPixelFormats::kRGB555)
@@ -1937,7 +2073,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 
 	GLint vpos[1] = { program->m_vertexPosUVLocation };
 
-	m_quadVertexArray->Activate(vpos);
+	m_res.m_quadVertexArray->Activate(vpos);
 
 	m_gl.ActiveTexture(GL_TEXTURE0);
 	m_gl.BindTexture(GL_TEXTURE_2D, glSurface->GetTexture()->GetID());
@@ -1946,11 +2082,11 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	if (pixelFormat == GpPixelFormats::k8BitStandard || pixelFormat == GpPixelFormats::k8BitCustom)
 	{
 		m_gl.ActiveTexture(GL_TEXTURE1);
-		m_gl.BindTexture(GL_TEXTURE_2D, m_paletteTexture->GetID());
+		m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_paletteTexture->GetID());
 		m_gl.Uniform1i(program->m_pixelPaletteTextureLocation, 1);
 	}
 
-	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_quadIndexBuffer->GetID());
+	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_res.m_quadIndexBuffer->GetID());
 	m_gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -1965,7 +2101,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	m_gl.ActiveTexture(GL_TEXTURE0);
 	m_gl.BindTexture(GL_TEXTURE_2D, 0);
 
-	m_quadVertexArray->Deactivate(vpos);
+	m_res.m_quadVertexArray->Deactivate(vpos);
 
 	m_gl.UseProgram(0);
 
@@ -2032,8 +2168,11 @@ void GpDisplayDriver_SDL_GL2::SetStandardCursor(EGpStandardCursor_t standardCurs
 
 void GpDisplayDriver_SDL_GL2::UpdatePalette(const void *paletteData)
 {
-	m_gl.BindTexture(GL_TEXTURE_2D, m_paletteTexture->GetID());
-	m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, paletteData);
+	memcpy(m_paletteData, paletteData, 256 * 4);
+
+	m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_paletteTexture->GetID());
+	m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_paletteData);
 	m_gl.BindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -2091,6 +2230,15 @@ void GpDisplayDriver_SDL_GL2::ApplyPrefs(const void *identifier, size_t identifi
 bool GpDisplayDriver_SDL_GL2::SavePrefs(void *context, WritePrefsFunc_t writeFunc)
 {
 	return true;
+}
+
+void GpDisplayDriver_SDL_GL2::UnlinkSurface(GpDisplayDriverSurface_GL2 *surface, GpDisplayDriverSurface_GL2 *prev, GpDisplayDriverSurface_GL2 *next)
+{
+	if (m_lastSurface == surface)
+		m_lastSurface = prev;
+
+	if (m_firstSurface == surface)
+		m_firstSurface = next;
 }
 
 const GpGLFunctions *GpDisplayDriver_SDL_GL2::GetGLFunctions() const
@@ -2154,8 +2302,8 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 	{
 		const uint16_t indexBufferData[] = { 0, 1, 2, 1, 3, 2 };
 
-		m_quadIndexBuffer = GpGLBuffer::Create(this);
-		if (!m_quadIndexBuffer)
+		m_res.m_quadIndexBuffer = GpGLBuffer::Create(this);
+		if (!m_res.m_quadIndexBuffer)
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: CreateBuffer for draw quad index buffer failed");
@@ -2163,7 +2311,7 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 			return false;
 		}
 
-		m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_quadIndexBuffer->GetID());
+		m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_res.m_quadIndexBuffer->GetID());
 		m_gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexBufferData), indexBufferData, GL_STATIC_DRAW);
 		m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
@@ -2178,8 +2326,8 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 			1.f, 1.f,
 		};
 
-		m_quadVertexBufferKeepalive = GpGLBuffer::Create(this);
-		if (!m_quadVertexBufferKeepalive)
+		m_res.m_quadVertexBufferKeepalive = GpGLBuffer::Create(this);
+		if (!m_res.m_quadVertexBufferKeepalive)
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: GpGLBuffer::Create for draw quad vertex buffer failed");
@@ -2187,12 +2335,12 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 			return false;
 		}
 
-		m_gl.BindBuffer(GL_ARRAY_BUFFER, m_quadVertexBufferKeepalive->GetID());
+		m_gl.BindBuffer(GL_ARRAY_BUFFER, m_res.m_quadVertexBufferKeepalive->GetID());
 		m_gl.BufferData(GL_ARRAY_BUFFER, sizeof(vertexBufferData), vertexBufferData, GL_STATIC_DRAW);
 		m_gl.BindBuffer(GL_ARRAY_BUFFER, 0);
 
-		m_quadVertexArray = GpGLVertexArray::Create(this);
-		if (!m_quadVertexBufferKeepalive)
+		m_res.m_quadVertexArray = GpGLVertexArray::Create(this);
+		if (!m_res.m_quadVertexBufferKeepalive)
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: GpGLVertexArray::Create for draw quad vertex buffer failed");
@@ -2202,7 +2350,7 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 
 		GpGLVertexArraySpec specs[] =
 		{
-			m_quadVertexBufferKeepalive,
+			m_res.m_quadVertexBufferKeepalive,
 			0,					// index
 			2,					// size
 			GL_FLOAT,			// type
@@ -2211,7 +2359,7 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 			0
 		};
 
-		if (!m_quadVertexArray->InitWithSpecs(specs, sizeof(specs) / sizeof(specs[0])))
+		if (!m_res.m_quadVertexArray->InitWithSpecs(specs, sizeof(specs) / sizeof(specs[0])))
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: InitWithSpecs for draw quad vertex buffer failed");
@@ -2232,31 +2380,22 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> scaleQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_scaleQuadP_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> copyQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_copyQuadP_GL2);
 
-	if (!m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
-		|| !m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
+	if (!m_res.m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
+		|| !m_res.m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
 		//|| !m_drawQuadRGBProgram.Link(this, drawQuadVertexShader, drawQuadRGBPixelShader)
 		//|| !m_drawQuad15BitProgram.Link(this, drawQuadVertexShader, drawQuad15BitPixelShader)
-		|| !m_drawQuadPaletteICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCFPixelShader)
-		|| !m_drawQuadPaletteICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCNFPixelShader)
+		|| !m_res.m_drawQuadPaletteICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCFPixelShader)
+		|| !m_res.m_drawQuadPaletteICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCNFPixelShader)
 		//|| !m_drawQuadRGBICCProgram.Link(this, drawQuadVertexShader, drawQuadRGBICCPixelShader)
 		//|| !m_drawQuad15BitICCProgram.Link(this, drawQuadVertexShader, drawQuad15BitICCPixelShader)
-		|| !m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader)
-		|| !m_copyQuadProgram.Link(this, drawQuadVertexShader, copyQuadPixelShader))
+		|| !m_res.m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader)
+		|| !m_res.m_copyQuadProgram.Link(this, drawQuadVertexShader, copyQuadPixelShader))
 		return false;
-
-
 
 	// Palette texture
 	{
-		uint8_t initialDataBytes[256][4];
-		for (int i = 0; i < 256; i++)
-		{
-			for (int ch = 0; ch < 4; ch++)
-				initialDataBytes[i][ch] = 255;
-		}
-
-		m_paletteTexture = GpGLTexture::Create(this);
-		if (!m_paletteTexture)
+		m_res.m_paletteTexture = GpGLTexture::Create(this);
+		if (!m_res.m_paletteTexture)
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: GpGLTexture::Create failed");
@@ -2264,9 +2403,9 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 			return false;
 		}
 
-		m_gl.BindTexture(GL_TEXTURE_2D, m_paletteTexture->GetID());
+		m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_paletteTexture->GetID());
 		m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, initialDataBytes);
+		m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_paletteData);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2387,14 +2526,10 @@ bool GpDisplayDriver_SDL_GL2::ResizeOpenGLWindow(uint32_t &windowWidth, uint32_t
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "ResizeOpenGLWindow: %i x %i", static_cast<int>(desiredWidth), static_cast<int>(desiredHeight));
 
-	if (desiredWidth < 640)
-		desiredWidth = 640;
-	else if (desiredWidth > 32768)
+	if (desiredWidth > 32768)
 		desiredWidth = 32768;
 
-	if (desiredHeight < 480)
-		desiredHeight = 480;
-	else if (desiredHeight > 32768)
+	if (desiredHeight > 32768)
 		desiredHeight = 32768;
 
 	if (logger)
@@ -2416,8 +2551,8 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriver_SDL_GL2::InitBackBuffer");
 
 	{
-		m_virtualScreenTexture = GpGLTexture::Create(this);
-		if (!m_virtualScreenTexture)
+		m_res.m_virtualScreenTexture = GpGLTexture::Create(this);
+		if (!m_res.m_virtualScreenTexture)
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: GpGLTexture::Create for virtual screen texture failed");
@@ -2425,7 +2560,7 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 			return false;
 		}
 
-		m_gl.BindTexture(GL_TEXTURE_2D, m_virtualScreenTexture->GetID());
+		m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_virtualScreenTexture->GetID());
 		m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -2436,9 +2571,9 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 	}
 
 	{
-		m_virtualScreenTextureRTV = GpGLRenderTargetView::Create(this);
+		m_res.m_virtualScreenTextureRTV = GpGLRenderTargetView::Create(this);
 
-		if (!m_virtualScreenTextureRTV)
+		if (!m_res.m_virtualScreenTextureRTV)
 		{
 			if (logger)
 				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: GpGLRenderTargetView::Create for virtual screen texture failed");
@@ -2446,8 +2581,8 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 			return false;
 		}
 
-		m_gl.BindFramebuffer(GL_FRAMEBUFFER, m_virtualScreenTextureRTV->GetID());
-		m_gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_virtualScreenTexture->GetID(), 0);
+		m_gl.BindFramebuffer(GL_FRAMEBUFFER, m_res.m_virtualScreenTextureRTV->GetID());
+		m_gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_res.m_virtualScreenTexture->GetID(), 0);
 		GLenum status = m_gl.CheckFramebufferStatus(GL_FRAMEBUFFER);
 
 		if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -2471,7 +2606,7 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 	const bool isIntegralScale = (m_pixelScaleX == floor(m_pixelScaleX) && m_pixelScaleY == floor(m_pixelScaleY));
 
-	const BlitQuadProgram &program = isIntegralScale ? m_copyQuadProgram : m_scaleQuadProgram;
+	const BlitQuadProgram &program = isIntegralScale ? m_res.m_copyQuadProgram : m_res.m_scaleQuadProgram;
 
 	{
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
@@ -2514,13 +2649,13 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 	GLint attribLocations[] = { program.m_vertexPosUVLocation };
 
-	m_quadVertexArray->Activate(attribLocations);
+	m_res.m_quadVertexArray->Activate(attribLocations);
 
 	m_gl.ActiveTexture(GL_TEXTURE0 + 0);
-	m_gl.BindTexture(GL_TEXTURE_2D, m_virtualScreenTexture->GetID());
+	m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_virtualScreenTexture->GetID());
 	m_gl.Uniform1i(program.m_pixelSurfaceTextureLocation, 0);
 
-	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_quadIndexBuffer->GetID());
+	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_res.m_quadIndexBuffer->GetID());
 	m_gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 
 	m_gl.UseProgram(0);
@@ -2528,7 +2663,7 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 	m_gl.ActiveTexture(GL_TEXTURE0 + 0);
 	m_gl.BindTexture(GL_TEXTURE_2D, 0);
 
-	m_quadVertexArray->Deactivate(attribLocations);
+	m_res.m_quadVertexArray->Deactivate(attribLocations);
 
 	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
@@ -2631,7 +2766,7 @@ GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
 	}
 
 	//ID3D11RenderTargetView *const rtv = m_backBufferRTV;
-	GpGLRenderTargetView *const vsRTV = m_virtualScreenTextureRTV;
+	GpGLRenderTargetView *const vsRTV = m_res.m_virtualScreenTextureRTV;
 
 	m_gl.BindFramebuffer(GL_FRAMEBUFFER, vsRTV->GetID());
 

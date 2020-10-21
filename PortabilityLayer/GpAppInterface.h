@@ -37,6 +37,7 @@ struct IGpDisplayDriver;
 class GpAppInterface
 {
 public:
+	virtual void ApplicationInit() = 0;
 	virtual int ApplicationMain() = 0;
 	virtual void PL_IncrementTickCounter(uint32_t count) = 0;
 	virtual void PL_Render(IGpDisplayDriver *displayDriver) = 0;

@@ -159,6 +159,9 @@ namespace PortabilityLayer
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
+		void SetMenuTouchScreenStyle(bool isTouchScreen) override;
+		bool IsMenuTouchScreenStyle() const override;
+
 		static MenuManagerImpl *GetInstance();
 
 	private:
@@ -199,13 +202,18 @@ namespace PortabilityLayer
 		void ProcessMouseMoveToMenuBar(const Vec2i &point);
 		void ProcessMouseMoveToMenu(const Vec2i &point);
 
+		bool IsYInMenuBarRange(int32_t y) const;
+
 		static bool ItemIsSeparator(const Menu &menu, const MenuItem &item);
 
 		static const unsigned int kIconResID = 128;
 		static const unsigned int kMenuFontSize = 12;
+		static const unsigned int kTouchScreenMenuFontSize = 24;
 		static const unsigned int kMenuBarIconYOffset = 2;
 		static const unsigned int kMenuBarTextYOffset = 14;
+		static const unsigned int kTouchScreenMenuBarTextYOffset = 26;
 		static const unsigned int kMenuBarHeight = 20;
+		static const unsigned int kTouchscreenMenuBarHeight = 38;
 		static const unsigned int kMenuBarItemPadding = 6;
 		static const unsigned int kMenuBarInitialPadding = 16;
 
@@ -223,6 +231,7 @@ namespace PortabilityLayer
 		static const unsigned int kMenuItemLeftPadding = 16 + 2 + 2;	// 2 for left border, 16 for icon, 2 for spacing
 
 		static const int kMenuFontFlags = PortabilityLayer::FontFamilyFlag_Bold;
+		static const int kTouchScreenMenuFontFlags = PortabilityLayer::FontFamilyFlag_None;
 
 		DrawSurface *m_menuBarGraf;
 
@@ -231,6 +240,7 @@ namespace PortabilityLayer
 		bool m_haveMenuBarLayout;
 		bool m_haveIcon;
 		bool m_menuBarVisible;
+		bool m_isTouchScreen;
 
 		uint8_t m_iconColors[16 * 16];
 		uint8_t m_iconMask[32];
@@ -252,6 +262,7 @@ namespace PortabilityLayer
 		, m_haveIcon(false)
 		, m_iconGraphic(nullptr)
 		, m_menuBarVisible(false)
+		, m_isTouchScreen(false)
 	{
 	}
 
@@ -634,7 +645,7 @@ namespace PortabilityLayer
 
 	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const
 	{
-		return point.m_y >= 0 && static_cast<uint32_t>(point.m_y) < kMenuBarHeight;
+		return IsYInMenuBarRange(point.m_y);
 	}
 
 	uint16_t MenuManagerImpl::GetMenuBarHeight() const
@@ -829,7 +840,9 @@ namespace PortabilityLayer
 
 		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
 
-		const Rect menuRect = Rect::Create(0, 0, kMenuBarHeight, width);
+		const int16_t menuHeight = m_isTouchScreen ? kTouchscreenMenuBarHeight : kMenuBarHeight;
+
+		const Rect menuRect = Rect::Create(0, 0, menuHeight, width);
 
 		if (m_menuBarGraf == nullptr)
 		{
@@ -863,7 +876,7 @@ namespace PortabilityLayer
 
 		// Left stripe
 		{
-			const Rect rect = Rect::Create(0, 0, kMenuBarHeight - 1, 1);
+			const Rect rect = Rect::Create(0, 0, menuHeight - 1, 1);
 			m_menuBarGraf->FillRect(rect, barBrightColor);
 		}
 
@@ -871,13 +884,13 @@ namespace PortabilityLayer
 
 		// Bottom stripe
 		{
-			const Rect rect = Rect::Create(kMenuBarHeight - 2, 1, kMenuBarHeight - 1, width);
+			const Rect rect = Rect::Create(menuHeight - 2, 1, menuHeight - 1, width);
 			m_menuBarGraf->FillRect(rect, barDarkColor);
 		}
 
 		// Right stripe
 		{
-			const Rect rect = Rect::Create(0, width - 1, kMenuBarHeight - 1, width);
+			const Rect rect = Rect::Create(0, width - 1, menuHeight - 1, width);
 			m_menuBarGraf->FillRect(rect, barDarkColor);
 		}
 
@@ -885,7 +898,7 @@ namespace PortabilityLayer
 
 		// Bottom edge
 		{
-			const Rect rect = Rect::Create(kMenuBarHeight - 1, 0, kMenuBarHeight, width);
+			const Rect rect = Rect::Create(menuHeight - 1, 0, menuHeight, width);
 			m_menuBarGraf->FillRect(rect, barBottomEdgeColor);
 		}
 
@@ -917,20 +930,31 @@ namespace PortabilityLayer
 			// Middle
 			{
 				ResolveCachingColor barHighlightMidColor = gs_barHighlightMidColor;
-				const Rect rect = Rect::Create(1, left, kMenuBarHeight - 2, right);
+				const Rect rect = Rect::Create(1, left, menuHeight - 2, right);
 				m_menuBarGraf->FillRect(rect, barHighlightMidColor);
 			}
 
 			{
 				ResolveCachingColor barHighlightDarkColor = gs_barHighlightDarkColor;
-				const Rect rect = Rect::Create(kMenuBarHeight - 2, left, kMenuBarHeight - 1, right);
+				const Rect rect = Rect::Create(menuHeight - 2, left, menuHeight - 1, right);
 				m_menuBarGraf->FillRect(rect, barHighlightDarkColor);
 			}
 		}
 
 		// Text items
 		ResolveCachingColor barNormalTextColor = gs_barNormalTextColor;
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = nullptr;
+		unsigned int textYOffset = 0;
+		if (m_isTouchScreen)
+		{
+			sysFont = GetApplicationFont(kTouchScreenMenuFontSize, kTouchScreenMenuFontFlags, true);
+			textYOffset = kTouchScreenMenuBarTextYOffset;
+		}
+		else
+		{
+			sysFont = GetSystemFont(kMenuFontSize, kMenuFontFlags, true);
+			textYOffset = kMenuBarTextYOffset;
+		}
 
 		{
 			Menu **menuHdl = m_firstMenu;
@@ -951,7 +975,7 @@ namespace PortabilityLayer
 					{
 						if (menuHdl != selectedMenuHdl)
 						{
-							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
+							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), textYOffset);
 							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barNormalTextColor, sysFont);
 						}
 					}
@@ -971,7 +995,7 @@ namespace PortabilityLayer
 
 				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
 
-				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), kMenuBarTextYOffset);
+				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), textYOffset);
 				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barHighlightTextColor, sysFont);
 			}
 		}
@@ -1001,7 +1025,16 @@ namespace PortabilityLayer
 				const PixMap *pixMap = *m_menuBarGraf->m_port.GetPixMap();
 				const size_t width = pixMap->m_rect.right - pixMap->m_rect.left;
 				const size_t height = pixMap->m_rect.bottom - pixMap->m_rect.top;
-				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, 0, width, height, nullptr);
+				int32_t y = 0;
+
+				if (m_isTouchScreen)
+				{
+					unsigned int displayHeight = 0;
+					displayDriver->GetDisplayResolution(nullptr, &displayHeight);
+					y = static_cast<int32_t>(displayHeight) - kTouchscreenMenuBarHeight;
+				}
+
+				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, y, width, height, nullptr);
 			}
 		}
 
@@ -1030,6 +1063,16 @@ namespace PortabilityLayer
 		}
 	}
 
+	void MenuManagerImpl::SetMenuTouchScreenStyle(bool isTouchScreenStyle)
+	{
+		m_isTouchScreen = isTouchScreenStyle;
+	}
+
+	bool MenuManagerImpl::IsMenuTouchScreenStyle() const
+	{
+		return m_isTouchScreen;
+	}
+
 	void MenuManagerImpl::RefreshMenuBarLayout()
 	{
 		if (m_haveMenuBarLayout)
@@ -1037,11 +1080,29 @@ namespace PortabilityLayer
 
 		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-		PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(kMenuFontSize, kMenuFontFlags);
+		PortabilityLayer::FontFamily *fontFamily = nullptr;
+
+		unsigned int fontSize = 0;
+		unsigned int fontFlags = 0;
+
+		if (m_isTouchScreen)
+		{
+			fontSize = kTouchScreenMenuFontSize;
+			fontFlags = PortabilityLayer::FontFamilyFlag_None;
+			fontFamily = PortabilityLayer::FontManager::GetInstance()->GetApplicationFont(kTouchScreenMenuFontSize, PortabilityLayer::FontFamilyFlag_None);
+		}
+		else
+		{
+			fontSize = kMenuFontSize;
+			fontFlags = kMenuFontFlags;
+			fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(kMenuFontSize, kMenuFontFlags);
+		}
+
+		
 		if (!fontFamily)
 			return;
 
-		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, true, kMenuFontFlags);
+		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, fontSize, true, fontFlags);
 		if (!rfont)
 			return;
 
@@ -1137,7 +1198,7 @@ namespace PortabilityLayer
 		if (point.m_y < 0)
 			return;
 
-		if (!m_menuSelectionState.IsPopup() &&  point.m_y < static_cast<int>(kMenuBarHeight))
+		if (!m_menuSelectionState.IsPopup() && IsYInMenuBarRange(point.m_y))
 		{
 			m_menuSelectionState.ClearSelection();
 			ProcessMouseMoveToMenuBar(point);
@@ -1233,6 +1294,18 @@ namespace PortabilityLayer
 		}
 
 		m_menuSelectionState.ClearSelection();
+	}
+
+	bool MenuManagerImpl::IsYInMenuBarRange(int32_t y) const
+	{
+		if (m_isTouchScreen)
+		{
+			unsigned int displayHeight = 0;
+			PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+			return y >= (static_cast<int32_t>(displayHeight - kTouchscreenMenuBarHeight)) && y < static_cast<int32_t>(displayHeight);
+		}
+		else
+			return y >= 0 && y < static_cast<int32_t>(kMenuBarHeight);
 	}
 
 	bool MenuManagerImpl::ItemIsSeparator(const Menu &menu, const MenuItem &item)

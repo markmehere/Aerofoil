@@ -28,11 +28,21 @@ void DrawSurface::PushToDDSurface(IGpDisplayDriver *displayDriver)
 	}
 
 	if (m_ddSurface == nullptr)
-		m_ddSurface = displayDriver->CreateSurface(pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, pixMap->m_pitch, pixMap->m_pixelFormat);
+		m_ddSurface = displayDriver->CreateSurface(pixMap->m_rect.right - pixMap->m_rect.left, pixMap->m_rect.bottom - pixMap->m_rect.top, pixMap->m_pitch, pixMap->m_pixelFormat, DrawSurface::StaticOnDriverInvalidate, this);
 
 	if (m_port.IsDirty(PortabilityLayer::QDPortDirtyFlag_Contents) && m_ddSurface != nullptr)
 	{
 		m_ddSurface->UploadEntire(pixMap->m_data, pixMap->m_pitch);
 		m_port.ClearDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 	}
+}
+
+void DrawSurface::StaticOnDriverInvalidate(void *context)
+{
+	static_cast<DrawSurface*>(context)->OnDriverInvalidate();
+}
+
+void DrawSurface::OnDriverInvalidate()
+{
+	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }

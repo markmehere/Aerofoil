@@ -224,7 +224,10 @@ void OpenMainWindow (void)
 				mainWindowRect.bottom - mainWindowRect.top, false);
 
 		const short mainWindowLeft = (thisMac.fullScreen.left + thisMac.fullScreen.right + thisMac.constrainedScreen.left - thisMac.constrainedScreen.right) / 2;
-		const short mainWindowTop = (thisMac.fullScreen.top + thisMac.fullScreen.bottom + thisMac.constrainedScreen.top - thisMac.constrainedScreen.bottom) / 2 + kScoreboardTall;
+		short mainWindowTop = (thisMac.fullScreen.top + thisMac.fullScreen.bottom + thisMac.constrainedScreen.top - thisMac.constrainedScreen.bottom) / 2;
+
+		if (!PortabilityLayer::MenuManager::GetInstance()->IsMenuTouchScreenStyle())
+			mainWindowTop += kScoreboardTall;
 
 		MoveWindow(boardWindow, mainWindowLeft, 0, true);
 		MoveWindow(mainWindow, mainWindowLeft, mainWindowTop, true);	// thisMac.menuHigh

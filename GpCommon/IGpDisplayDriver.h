@@ -26,13 +26,14 @@ struct GpDisplayDriverSurfaceEffects
 // Display drivers are responsible for timing and calling the game tick function.
 struct IGpDisplayDriver
 {
-public:
+	typedef void (*SurfaceInvalidateCallback_t) (void *context);
+
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
 
 	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height) = 0;
 
-	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat) = 0;
+	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext) = 0;
 	virtual void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) = 0;
 
 	virtual IGpCursor *CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY) = 0;

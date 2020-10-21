@@ -21,6 +21,7 @@
 #include "HostVOSEventQueue.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriver.h"
+#include "IGpThreadRelay.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "MacFileInfo.h"
@@ -46,6 +47,29 @@
 
 #include <assert.h>
 #include <algorithm>
+
+class PLMainThreadRelay final : public IGpThreadRelay
+{
+public:
+	void Invoke(Callback_t callback, void *context) const override;
+
+	static PLMainThreadRelay *GetInstance();
+
+private:
+	static PLMainThreadRelay ms_instance;
+};
+
+void PLMainThreadRelay::Invoke(Callback_t callback, void *context) const
+{
+	PLSysCalls::RunOnVOSThread(callback, context);
+}
+
+PLMainThreadRelay *PLMainThreadRelay::GetInstance()
+{
+	return &ms_instance;
+}
+
+PLMainThreadRelay PLMainThreadRelay::ms_instance;
 
 static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 {
@@ -650,6 +674,8 @@ void PL_Init()
 	PortabilityLayer::DisplayDeviceManager::GetInstance()->Init();
 	PortabilityLayer::QDManager::GetInstance()->Init();
 	PortabilityLayer::MenuManager::GetInstance()->Init();
+
+	PortabilityLayer::HostFileSystem::GetInstance()->SetMainThreadRelay(PLMainThreadRelay::GetInstance());
 }
 
 WindowPtr PL_GetPutInFrontWindowPtr()

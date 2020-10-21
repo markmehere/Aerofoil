@@ -13,11 +13,14 @@
 #include "WindowManager.h"
 
 int gpAppMain();
+void gpAppInit();
 
 class GpAppInterfaceImpl final : public GpAppInterface
 {
 public:
+	void ApplicationInit() override;
 	int ApplicationMain() override;
+
 	void PL_IncrementTickCounter(uint32_t count) override;
 	void PL_Render(IGpDisplayDriver *displayDriver) override;
 	void PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance) override;
@@ -32,6 +35,10 @@ public:
 	bool PL_AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY) override;
 };
 
+void GpAppInterfaceImpl::ApplicationInit()
+{
+	gpAppInit();
+}
 
 int GpAppInterfaceImpl::ApplicationMain()
 {

@@ -54,6 +54,9 @@ namespace PortabilityLayer
 
 		virtual void RenderFrame(IGpDisplayDriver *displayDriver) = 0;
 
+		virtual void SetMenuTouchScreenStyle(bool isTouchScreenStyle) = 0;
+		virtual bool IsMenuTouchScreenStyle() const = 0;
+
 		static MenuManager *GetInstance();
 	};
 }

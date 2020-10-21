@@ -711,7 +711,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 
 void DoExportSourceCode (void)
 {
-	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kPrefs, "SourceExport.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
+	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, "SourceExport.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
 	if (!stream)
 		return;
 

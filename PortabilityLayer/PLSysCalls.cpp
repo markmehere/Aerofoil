@@ -189,4 +189,13 @@ namespace PLSysCalls
 	{
 		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_ForceSyncFrame, nullptr, nullptr);
 	}
+
+	void RunOnVOSThread(void(*callback)(void *context), void *context)
+	{
+		PortabilityLayer::HostSuspendCallArgument args[2];
+		args[0].m_functionPtr = callback;
+		args[1].m_pointer = context;
+
+		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_CallOnVOSThread, args, nullptr);
+	}
 }

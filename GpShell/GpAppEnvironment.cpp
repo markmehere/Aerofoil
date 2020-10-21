@@ -34,6 +34,7 @@ GpAppEnvironment::~GpAppEnvironment()
 
 void GpAppEnvironment::Init()
 {
+	GpAppInterface_Get()->ApplicationInit();
 }
 
 GpDisplayDriverTickStatus_t GpAppEnvironment::Tick(IGpFiber *vosFiber)
@@ -196,7 +197,7 @@ void GpAppEnvironment::DispatchSystemCall(PortabilityLayer::HostSuspendCallID ca
 		m_delaySuspendTicks = 1;
 		break;
 	case PortabilityLayer::HostSuspendCallID_CallOnVOSThread:
-		args[0].m_functionPtr(static_cast<const PortabilityLayer::HostSuspendCallArgument*>(args[1].m_constPointer), static_cast<PortabilityLayer::HostSuspendCallArgument*>(args[2].m_pointer));
+		args[0].m_functionPtr(args[1].m_pointer);
 		m_applicationState = ApplicationState_Running;
 		break;
 	default:

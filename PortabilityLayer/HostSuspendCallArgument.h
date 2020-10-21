@@ -13,6 +13,6 @@ namespace PortabilityLayer
 		size_t m_size;
 		void *m_pointer;
 		const void *m_constPointer;
-		void (*m_functionPtr)(const HostSuspendCallArgument *args, HostSuspendCallArgument *returnValue);
+		void (*m_functionPtr)(void *context);
 	};
 }

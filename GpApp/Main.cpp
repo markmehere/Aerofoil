@@ -19,6 +19,7 @@
 #include "IGpDisplayDriver.h"
 #include "GpIOStream.h"
 #include "House.h"
+#include "MenuManager.h"
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "WindowManager.h"
@@ -425,6 +426,12 @@ void PreloadFonts()
 	StepLoadScreen(1);
 }
 
+void gpAppInit()
+{
+	// This is called before the display driver is initialized
+	InstallResolutionHandler();
+}
+
 //--------------------------------------------------------------  main
 // Here is main().  The first function called when Glider PRO comes up.
 
@@ -439,7 +446,9 @@ int gpAppMain()
 
 	ToolBoxInit();
 	CheckOurEnvirons();
-	InstallResolutionHandler();
+
+	if (thisMac.isTouchscreen)
+		PortabilityLayer::MenuManager::GetInstance()->SetMenuTouchScreenStyle(true);
 
 	if (!thisMac.hasColor)
 		RedAlert(kErrNeedColorQD);

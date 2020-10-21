@@ -30,6 +30,8 @@ IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &pr
 
 int main(int argc, char* argv[])
 {
+	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_WARN);
+
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return -1;
 
