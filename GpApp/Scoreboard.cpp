@@ -87,6 +87,16 @@ void RefreshScoreboard (SInt16 mode)
 	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(false);
 }
 
+void ClearScoreboard (void)
+{
+	DrawSurface *surface = boardWindow->GetDrawSurface();
+
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	surface->FillRect(boardWindow->GetSurfaceRect(), blackColor);
+	MarkScoreboardPortDirty();
+}
+
+
 //--------------------------------------------------------------  HandleDynamicScoreboard
 
  void HandleDynamicScoreboard (void)

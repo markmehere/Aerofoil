@@ -426,6 +426,7 @@ Boolean OpenSavedGame (void);
 //void SaveGame (Boolean);
 
 void RefreshScoreboard (SInt16);							// --- Scoreboard.c
+void ClearScoreboard (void);
 void HandleDynamicScoreboard (void);
 void QuickGlidersRefresh (void);
 void QuickScoreRefresh (void);

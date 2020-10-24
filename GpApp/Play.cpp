@@ -214,6 +214,8 @@ void NewGame (short mode)
 	playing = true;		// everything before this line is game set-up
 	PlayGame();			// everything following is after a game has ended
 
+	ClearScoreboard();
+
 #ifdef CREATEDEMODATA
 	DumpToResEditFile((Ptr)demoData, sizeof(demoType) * (long)demoIndex);
 #endif
