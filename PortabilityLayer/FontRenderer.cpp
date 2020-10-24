@@ -2,9 +2,11 @@
 
 #include "CoreDefs.h"
 #include "IGpFont.h"
+#include "GpIOStream.h"
 #include "HostFontHandler.h"
 #include "IGpFontRenderedGlyph.h"
 #include "MacRomanConversion.h"
+#include "PLBigEndian.h"
 #include "PLPasStr.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
@@ -30,11 +32,27 @@ namespace PortabilityLayer
 		void SetCharData(unsigned int charID, const void *data, size_t dataOffset, const GpRenderedGlyphMetrics &metrics);
 		void SetFontMetrics(const GpRenderedFontMetrics &metrics);
 
+		static RenderedFont *Load(GpIOStream *stream);
+		bool Save(GpIOStream *stream) const;
+
 		static RenderedFontImpl *Create(size_t glyphDataSize, bool aa);
 
 	private:
-		RenderedFontImpl(void *data, bool aa);
+		struct CacheHeader
+		{
+			BEUInt32_t m_cacheVersion;
+			BEUInt32_t m_glyphDataSize;
+			BEUInt32_t m_sizeSize;
+
+			BEUInt32_t m_isAA;
+		};
+
+		static const uint32_t kRFontCacheVersion = 2;
+
+		RenderedFontImpl(void *data, size_t dataSize, bool aa);
 		~RenderedFontImpl();
+
+		bool LoadInternal(GpIOStream *stream);
 
 		size_t m_dataOffsets[256];
 		GpRenderedGlyphMetrics m_glyphMetrics[256];
@@ -43,12 +61,15 @@ namespace PortabilityLayer
 		bool m_isAntiAliased;
 
 		void *m_data;
+		size_t m_dataSize;
 	};
 
 	class FontRendererImpl final : public FontRenderer
 	{
 	public:
 		RenderedFont *RenderFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) override;
+		RenderedFont *LoadCache(GpIOStream *stream) override;
+		bool SaveCache(const RenderedFont *rfont, GpIOStream *stream) override;
 
 		static FontRendererImpl *GetInstance();
 
@@ -109,6 +130,57 @@ namespace PortabilityLayer
 		m_fontMetrics = metrics;
 	}
 
+	RenderedFont *RenderedFontImpl::Load(GpIOStream *stream)
+	{
+		CacheHeader header;
+		if (stream->Read(&header, sizeof(header)) != sizeof(header))
+			return nullptr;
+
+		if (header.m_cacheVersion != kRFontCacheVersion)
+			return nullptr;
+
+		if (header.m_sizeSize != sizeof(size_t))
+			return nullptr;
+
+		RenderedFontImpl *rfont = RenderedFontImpl::Create(header.m_glyphDataSize, header.m_isAA != 0);
+		if (!rfont)
+			return nullptr;
+
+		if (!rfont->LoadInternal(stream))
+		{
+			rfont->Destroy();
+			return nullptr;
+		}
+
+		return rfont;
+	}
+
+	bool RenderedFontImpl::Save(GpIOStream *stream) const
+	{
+		CacheHeader header;
+		header.m_cacheVersion = kRFontCacheVersion;
+		header.m_glyphDataSize = this->m_dataSize;
+		header.m_isAA = m_isAntiAliased;
+		header.m_sizeSize = sizeof(size_t);
+
+		if (stream->Write(&header, sizeof(header)) != sizeof(header))
+			return false;
+
+		if (stream->Write(m_data, m_dataSize) != m_dataSize)
+			return false;
+
+		if (stream->Write(m_dataOffsets, sizeof(m_dataOffsets)) != sizeof(m_dataOffsets))
+			return false;
+
+		if (stream->Write(m_glyphMetrics, sizeof(m_glyphMetrics)) != sizeof(m_glyphMetrics))
+			return false;
+
+		if (stream->Write(&m_fontMetrics, sizeof(m_fontMetrics)) != sizeof(m_fontMetrics))
+			return false;
+
+		return true;
+	}
+
 	RenderedFontImpl *RenderedFontImpl::Create(size_t glyphDataSize, bool aa)
 	{
 		size_t alignedPrefixSize = sizeof(RenderedFontImpl) + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
@@ -125,11 +197,12 @@ namespace PortabilityLayer
 
 		memset(storage, 0, allocSize);
 
-		return new (storage) RenderedFontImpl(static_cast<uint8_t*>(storage) + alignedPrefixSize, aa);
+		return new (storage) RenderedFontImpl(static_cast<uint8_t*>(storage) + alignedPrefixSize, glyphDataSize, aa);
 	}
 
-	RenderedFontImpl::RenderedFontImpl(void *data, bool aa)
+	RenderedFontImpl::RenderedFontImpl(void *data, size_t dataSize, bool aa)
 		: m_data(data)
+		, m_dataSize(dataSize)
 		, m_isAntiAliased(aa)
 	{
 		memset(m_glyphMetrics, 0, sizeof(m_glyphMetrics));
@@ -140,6 +213,24 @@ namespace PortabilityLayer
 	RenderedFontImpl::~RenderedFontImpl()
 	{
 	}
+
+	bool RenderedFontImpl::LoadInternal(GpIOStream *stream)
+	{
+		if (stream->Read(m_data, m_dataSize) != m_dataSize)
+			return false;
+
+		if (stream->Read(m_dataOffsets, sizeof(m_dataOffsets)) != sizeof(m_dataOffsets))
+			return false;
+
+		if (stream->Read(m_glyphMetrics, sizeof(m_glyphMetrics)) != sizeof(m_glyphMetrics))
+			return false;
+
+		if (stream->Read(&m_fontMetrics, sizeof(m_fontMetrics)) != sizeof(m_fontMetrics))
+			return false;
+
+		return true;
+	}
+
 
 	RenderedFont *FontRendererImpl::RenderFont(IGpFont *font, int size, bool aa, FontHacks fontHacks)
 	{
@@ -260,6 +351,19 @@ namespace PortabilityLayer
 		}
 
 		return rfont;
+	}
+
+	RenderedFont *FontRendererImpl::LoadCache(GpIOStream *stream)
+	{
+		return RenderedFontImpl::Load(stream);
+	}
+
+	bool FontRendererImpl::SaveCache(const RenderedFont *rfont, GpIOStream *stream)
+	{
+		if (!static_cast<const RenderedFontImpl*>(rfont)->Save(stream))
+			return false;
+
+		return true;
 	}
 
 	FontRendererImpl *FontRendererImpl::GetInstance()

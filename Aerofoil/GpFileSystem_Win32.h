@@ -41,6 +41,7 @@ private:
 	std::wstring m_userHousesDir;
 	std::wstring m_userSavesDir;
 	std::wstring m_resourcesDir;
+	std::wstring m_fontCacheDir;
 	wchar_t m_executablePath[MAX_PATH];
 
 	static GpFileSystem_Win32 ms_instance;

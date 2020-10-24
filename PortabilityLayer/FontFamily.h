@@ -29,15 +29,18 @@ namespace PortabilityLayer
 		IGpFont *GetFontForVariation(int variation) const;
 		FontHacks GetHacksForVariation(int variation) const;
 
-		static FontFamily *Create();
+		int GetCacheID() const;
+
+		static FontFamily *Create(int cacheID);
 		void Destroy();
 
 	private:
 		FontHacks m_hacks[kNumVariations];
 		IGpFont *m_fonts[kNumVariations];
 		uint8_t m_defaultVariation;
+		int m_cacheID;
 
-		FontFamily();
+		explicit FontFamily(int cacheID);
 		~FontFamily();
 	};
 }

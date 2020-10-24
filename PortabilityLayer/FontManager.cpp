@@ -7,7 +7,9 @@
 #include "HostFontHandler.h"
 #include "GpIOStream.h"
 #include "RenderedFont.h"
+#include "PLBigEndian.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -27,10 +29,17 @@ namespace PortabilityLayer
 		RenderedFont *GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) override;
 		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
 
+		RenderedFont *LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const override;
+		void SaveCachedRenderedFont(const RenderedFont *rfont, int cacheID, int size, bool aa, int flags) const override;
+
 		static FontManagerImpl *GetInstance();
 
 	private:
 		static const unsigned int kNumCachedRenderedFonts = 32;
+		static const int kSystemFontCacheID = 1;
+		static const int kApplicationFontCacheID = 2;
+		static const int kFontCacheVersion = 1;
+		static const int kFontCacheNameSize = 64;
 
 		struct CachedRenderedFont
 		{
@@ -46,6 +55,8 @@ namespace PortabilityLayer
 		void ResetUsageCounter();
 		static int CRFSortPredicate(const void *a, const void *b);
 
+		static void GenerateCacheFileName(char(&str)[kFontCacheNameSize], int cacheID, int size, bool aa, int flags);
+
 		FontFamily *m_systemFont;
 		FontFamily *m_applicationFont;
 		uint32_t m_usageCounter;
@@ -57,8 +68,8 @@ namespace PortabilityLayer
 
 	void FontManagerImpl::Init()
 	{
-		m_systemFont = FontFamily::Create();
-		m_applicationFont = FontFamily::Create();
+		m_systemFont = FontFamily::Create(kSystemFontCacheID);
+		m_applicationFont = FontFamily::Create(kApplicationFontCacheID);
 
 		if (m_systemFont)
 			m_systemFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", FontHacks_None);
@@ -162,13 +173,71 @@ namespace PortabilityLayer
 
 	RenderedFont *FontManagerImpl::GetRenderedFontFromFamily(FontFamily *fontFamily, int size, bool aa, int flags)
 	{
+		PortabilityLayer::FontManager *fm = PortabilityLayer::FontManager::GetInstance();
+
+		RenderedFont *rfont = fm->LoadCachedRenderedFont(fontFamily->GetCacheID(), size, aa, flags);
+		if (rfont)
+			return rfont;
+
 		const int variation = fontFamily->GetVariationForFlags(flags);
 
 		IGpFont *hostFont = fontFamily->GetFontForVariation(variation);
 		if (!hostFont)
 			return nullptr;
 
-		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
+		rfont = fm->GetRenderedFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
+		if (rfont)
+			fm->SaveCachedRenderedFont(rfont, fontFamily->GetCacheID(), size, aa, flags);
+
+		return rfont;
+	}
+
+	RenderedFont *FontManagerImpl::LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const
+	{
+		char filename[kFontCacheNameSize];
+		GenerateCacheFileName(filename, cacheID, size, aa, flags);
+
+		GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, false, GpFileCreationDispositions::kOpenExisting);
+		if (!stream)
+			return nullptr;
+
+		BEUInt32_t version;
+		if (stream->Read(&version, sizeof(version)) != sizeof(version) || version != kFontCacheVersion)
+		{
+			stream->Close();
+			return nullptr;
+		}
+
+		RenderedFont *rfont = PortabilityLayer::FontRenderer::GetInstance()->LoadCache(stream);
+		stream->Close();
+
+		return rfont;
+	}
+
+	void FontManagerImpl::SaveCachedRenderedFont(const RenderedFont *rfont, int cacheID, int size, bool aa, int flags) const
+	{
+		char filename[kFontCacheNameSize];
+		GenerateCacheFileName(filename, cacheID, size, aa, flags);
+
+		GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, true, GpFileCreationDispositions::kCreateOrOverwrite);
+		if (!stream)
+			return;
+
+		BEUInt32_t zero32(0);
+		if (stream->Write(&zero32, sizeof(zero32)) != sizeof(zero32))
+		{
+			stream->Close();
+			return;
+		}
+
+		if (PortabilityLayer::FontRenderer::GetInstance()->SaveCache(rfont, stream))
+		{
+			BEUInt32_t version(kFontCacheVersion);
+			stream->SeekStart(0);
+			stream->Write(&version, sizeof(version));
+		}
+
+		stream->Close();
 	}
 
 	FontManagerImpl *FontManagerImpl::GetInstance()
@@ -220,6 +289,11 @@ namespace PortabilityLayer
 			return 1;
 
 		return 0;
+	}
+
+	void FontManagerImpl::GenerateCacheFileName(char(&str)[kFontCacheNameSize], int cacheID, int size, bool aa, int flags)
+	{
+		sprintf(str, "rf_%i_%i_%s_%i.cache", cacheID, size, aa ? "aa" : "mc", flags);
 	}
 
 	FontManagerImpl FontManagerImpl::ms_instance;

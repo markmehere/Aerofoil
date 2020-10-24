@@ -441,6 +441,9 @@ bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virt
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		prefsAppend = "Prefs";
 		break;
+	case PortabilityLayer::VirtualDirectories::kFontCache:
+		prefsAppend = "FontCache";
+		break;
 	default:
 		return false;
 	};
@@ -509,7 +512,7 @@ void GpFileSystem_Android::InitJNI()
 			prefsDir[i] = '/';
 		}
 	}
-	const char *extensions[] = { "HighScores", "Houses", "SavedGames", "Prefs" };
+	const char *extensions[] = { "HighScores", "Houses", "SavedGames", "Prefs", "FontCache" };
 	for (size_t i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++)
 	{
 		std::string prefsPath = std::string(prefsDir) + extensions[i];

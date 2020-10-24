@@ -60,13 +60,18 @@ namespace PortabilityLayer
 		return m_hacks[variation];
 	}
 
-	FontFamily *FontFamily::Create()
+	int FontFamily::GetCacheID() const
+	{
+		return m_cacheID;
+	}
+
+	FontFamily *FontFamily::Create(int cacheID)
 	{
 		void *storage = malloc(sizeof(FontFamily));
 		if (!storage)
 			return nullptr;
 
-		return new (storage) FontFamily();
+		return new (storage) FontFamily(cacheID);
 	}
 
 	void FontFamily::Destroy()
@@ -75,8 +80,9 @@ namespace PortabilityLayer
 		free(this);
 	}
 
-	FontFamily::FontFamily()
+	FontFamily::FontFamily(int cacheID)
 		: m_defaultVariation(0)
+		, m_cacheID(cacheID)
 	{
 		for (unsigned int i = 0; i < kNumVariations; i++)
 		{
