@@ -15,6 +15,8 @@ namespace PortabilityLayer
 	class HostFileSystem
 	{
 	public:
+		typedef void (*DelayCallback_t)(uint32_t ticks);
+
 		virtual bool FileExists(VirtualDirectory_t virtualDirectory, const char *path) = 0;
 		virtual bool FileLocked(VirtualDirectory_t virtualDirectory, const char *path, bool *exists) = 0;
 		virtual GpIOStream *OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition) = 0;
@@ -33,6 +35,7 @@ namespace PortabilityLayer
 		GpIOStream *OpenFile(VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition);
 
 		virtual void SetMainThreadRelay(IGpThreadRelay *relay) = 0;
+		virtual void SetDelayCallback(DelayCallback_t delayCallback) = 0;
 
 	private:
 		static HostFileSystem *ms_instance;

@@ -4,17 +4,23 @@ import org.libsdl.app.SDLActivity;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 
-
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class GpActivity extends SDLActivity
 {
+    private static final int SOURCE_EXPORT_REQUEST_ID = 20;
+
     private AssetManager assetManager;
 
     @Override
@@ -40,10 +46,36 @@ public class GpActivity extends SDLActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent)
     {
-        if (requestCode == 1111 && resultCode == RESULT_OK && intent != null)
+        if (requestCode == SOURCE_EXPORT_REQUEST_ID)
         {
-            Uri uri = intent.getData();
-            int n = 0;
+            if (resultCode == RESULT_OK)
+            {
+                Uri uri = intent.getData();
+                Context context = getContext();
+                ContentResolver contentResolver = context.getContentResolver();
+                try
+                {
+                    ParcelFileDescriptor fd = contentResolver.openFileDescriptor(uri, "w");
+                    GpFileSystemAPI.nativePostSourceExportRequest(false, fd.getFd(), fd);
+                }
+                catch (FileNotFoundException e)
+                {
+                    GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
+                    return;
+                }
+                catch (IOException e)
+                {
+                    GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
+                    return;
+                }
+            }
+            else
+                GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
         }
         else
         {
@@ -51,13 +83,23 @@ public class GpActivity extends SDLActivity
         }
     }
 
-    public String selectSourceExportPath(String fname)
+    public void selectSourceExportPath(String fname)
     {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
                 .setType("application/zip")
                 .addCategory(Intent.CATEGORY_OPENABLE)
-                .putExtra(Intent.EXTRA_TITLE, "SourceCode.zip");
-        startActivityForResult(intent, 1111);
-        return "";
+                .putExtra(Intent.EXTRA_TITLE, fname);
+        startActivityForResult(intent, SOURCE_EXPORT_REQUEST_ID);
+    }
+
+    public void closeSourceExportPFD(Object obj)
+    {
+        try
+        {
+            ((ParcelFileDescriptor) obj).close();
+        }
+        catch (IOException e)
+        {
+        }
     }
 }

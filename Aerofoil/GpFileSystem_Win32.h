@@ -24,6 +24,7 @@ public:
 	bool IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const override;
 
 	void SetMainThreadRelay(IGpThreadRelay *relay) override;
+	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
 	const wchar_t *GetBasePath() const;
 

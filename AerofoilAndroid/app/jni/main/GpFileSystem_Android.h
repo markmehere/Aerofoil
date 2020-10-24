@@ -7,6 +7,11 @@
 #include <jni.h>
 #include <string>
 
+namespace PortabilityLayer
+{
+	class HostMutex;
+}
+
 class GpFileSystem_Android final : public PortabilityLayer::HostFileSystem
 {
 public:
@@ -28,6 +33,10 @@ public:
 	bool IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const override;
 
 	void SetMainThreadRelay(IGpThreadRelay *relay) override;
+	void SetDelayCallback(DelayCallback_t delayCallback) override;
+
+	void PostSourceExportRequest(bool cancelled, int fd, jobject pfd);
+	void ClosePFD(jobject pfd);
 
 	static GpFileSystem_Android *GetInstance();
 
@@ -48,14 +57,22 @@ private:
 	PortabilityLayer::HostDirectoryCursor *ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 	PortabilityLayer::HostDirectoryCursor *ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 
-	bool ResolvePathInDownloadsDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset);
+	bool OpenSourceExportFD(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, int &fd, jobject &pfd);
 	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset);
 
 	IGpThreadRelay *m_relay;
+	DelayCallback_t m_delayCallback;
 
 	jobject m_activity;
 	jmethodID m_scanAssetDirectoryMID;
 	jmethodID m_selectSourceExportPathMID;
+	jmethodID m_closeSourceExportPFDMID;
+
+	PortabilityLayer::HostMutex *m_sourceExportMutex;
+	int m_sourceExportFD;
+	bool m_sourceExportWaiting;
+	bool m_sourceExportCancelled;
+	jobject m_sourceExportPFD;
 
 	static GpFileSystem_Android ms_instance;
 };

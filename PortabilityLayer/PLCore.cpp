@@ -676,6 +676,7 @@ void PL_Init()
 	PortabilityLayer::MenuManager::GetInstance()->Init();
 
 	PortabilityLayer::HostFileSystem::GetInstance()->SetMainThreadRelay(PLMainThreadRelay::GetInstance());
+	PortabilityLayer::HostFileSystem::GetInstance()->SetDelayCallback(PLSysCalls::Sleep);
 }
 
 WindowPtr PL_GetPutInFrontWindowPtr()

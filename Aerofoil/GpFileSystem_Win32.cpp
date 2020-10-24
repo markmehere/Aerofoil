@@ -327,6 +327,10 @@ void GpFileSystem_Win32::SetMainThreadRelay(IGpThreadRelay *relay)
 	(void)relay;
 }
 
+void GpFileSystem_Win32::SetDelayCallback(GpFileSystem_Win32::DelayCallback_t delayCallback)
+{
+}
+
 bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
 {
 	for (size_t i = 0; i < length; i++)

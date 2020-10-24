@@ -2,6 +2,8 @@
 #include "GpFileSystem_Android.h"
 #include "GpIOStream.h"
 #include "HostDirectoryCursor.h"
+#include "HostSystemServices.h"
+#include "HostMutex.h"
 #include "IGpThreadRelay.h"
 #include "VirtualDirectory.h"
 
@@ -17,7 +19,40 @@
 #include <jni.h>
 #include "UTF8.h"
 
+JNIEXPORT void JNICALL nativePostSourceExportRequest(JNIEnv *env, jclass cls, jboolean cancelled, jint fd, jobject pfd);
 
+static JNINativeMethod GpFileSystemAPI_tab[] =
+{
+	{ "nativePostSourceExportRequest", "(ZILjava/lang/Object;)V", reinterpret_cast<void*>(nativePostSourceExportRequest) },
+};
+
+class GpFileStream_PFD final : public GpIOStream
+{
+public:
+	GpFileStream_PFD(GpFileSystem_Android *fs, int fd, jobject pfd, bool readOnly, bool writeOnly);
+	~GpFileStream_PFD();
+
+	size_t Read(void *bytesOut, size_t size) override;
+	size_t Write(const void *bytes, size_t size) override;
+	bool IsSeekable() const override;
+	bool IsReadOnly() const override;
+	bool IsWriteOnly() const override;
+	bool SeekStart(GpUFilePos_t loc) override;
+	bool SeekCurrent(GpFilePos_t loc) override;
+	bool SeekEnd(GpUFilePos_t loc) override;
+	bool Truncate(GpUFilePos_t loc) override;
+	GpUFilePos_t Size() const override;
+	GpUFilePos_t Tell() const override;
+	void Close() override;
+	void Flush() override;
+
+private:
+	GpFileSystem_Android *m_fs;
+	int m_fd;
+	jobject m_pfd;
+	bool m_readOnly;
+	bool m_writeOnly;
+};
 
 class GpFileStream_SDLRWops final : public GpIOStream
 {
@@ -44,6 +79,121 @@ private:
 	bool m_isReadOnly;
 	bool m_isWriteOnly;
 };
+
+class GpFileStream_Android_File final : public GpIOStream
+{
+public:
+	GpFileStream_Android_File(FILE *f, int fd, bool readOnly, bool writeOnly);
+	~GpFileStream_Android_File();
+
+	size_t Read(void *bytesOut, size_t size) override;
+	size_t Write(const void *bytes, size_t size) override;
+	bool IsSeekable() const override;
+	bool IsReadOnly() const override;
+	bool IsWriteOnly() const override;
+	bool SeekStart(GpUFilePos_t loc) override;
+	bool SeekCurrent(GpFilePos_t loc) override;
+	bool SeekEnd(GpUFilePos_t loc) override;
+	bool Truncate(GpUFilePos_t loc) override;
+	GpUFilePos_t Size() const override;
+	GpUFilePos_t Tell() const override;
+	void Close() override;
+	void Flush() override;
+
+private:
+	FILE *m_f;
+	int m_fd;
+	bool m_seekable;
+	bool m_isReadOnly;
+	bool m_isWriteOnly;
+};
+
+GpFileStream_PFD::GpFileStream_PFD(GpFileSystem_Android *fs, int fd, jobject pfd, bool readOnly, bool writeOnly)
+	: m_fs(fs)
+	, m_fd(fd)
+	, m_readOnly(readOnly)
+	, m_writeOnly(writeOnly)
+	, m_pfd(pfd)
+{
+}
+
+GpFileStream_PFD::~GpFileStream_PFD()
+{
+	m_fs->ClosePFD(m_pfd);
+}
+
+size_t GpFileStream_PFD::Read(void *bytesOut, size_t size)
+{
+	if (m_writeOnly)
+		return 0;
+	return read(m_fd, bytesOut, size);
+}
+
+size_t GpFileStream_PFD::Write(const void *bytes, size_t size)
+{
+	if (m_readOnly)
+		return 0;
+	return write(m_fd, bytes, size);
+}
+
+bool GpFileStream_PFD::IsSeekable() const
+{
+	return true;
+}
+
+bool GpFileStream_PFD::IsReadOnly() const
+{
+	return m_readOnly;
+}
+
+bool GpFileStream_PFD::IsWriteOnly() const
+{
+	return m_writeOnly;
+}
+
+bool GpFileStream_PFD::SeekStart(GpUFilePos_t loc)
+{
+	return lseek64(m_fd, loc, SEEK_SET) >= 0;
+}
+
+bool GpFileStream_PFD::SeekCurrent(GpFilePos_t loc)
+{
+	return lseek64(m_fd, loc, SEEK_CUR) >= 0;
+}
+
+bool GpFileStream_PFD::SeekEnd(GpUFilePos_t loc)
+{
+	return lseek64(m_fd, loc, SEEK_END) >= 0;
+}
+
+bool GpFileStream_PFD::Truncate(GpUFilePos_t loc)
+{
+	return ftruncate64(m_fd, static_cast<off64_t>(loc)) >= 0;
+}
+
+GpUFilePos_t GpFileStream_PFD::Size() const
+{
+	struct stat64 s;
+	if (fstat64(m_fd, &s) < 0)
+		return 0;
+
+	return static_cast<GpUFilePos_t>(s.st_size);
+}
+
+GpUFilePos_t GpFileStream_PFD::Tell() const
+{
+	return lseek64(m_fd, 0, SEEK_CUR);
+}
+
+void GpFileStream_PFD::Close()
+{
+	this->~GpFileStream_PFD();
+	free(this);
+}
+
+void GpFileStream_PFD::Flush()
+{
+}
 
 
 GpFileStream_SDLRWops::GpFileStream_SDLRWops(SDL_RWops *f, bool readOnly, bool writeOnly)
@@ -123,34 +273,6 @@ void GpFileStream_SDLRWops::Close()
 void GpFileStream_SDLRWops::Flush()
 {
 }
-
-class GpFileStream_Android_File final : public GpIOStream
-{
-public:
-	GpFileStream_Android_File(FILE *f, int fd, bool readOnly, bool writeOnly);
-	~GpFileStream_Android_File();
-
-	size_t Read(void *bytesOut, size_t size) override;
-	size_t Write(const void *bytes, size_t size) override;
-	bool IsSeekable() const override;
-	bool IsReadOnly() const override;
-	bool IsWriteOnly() const override;
-	bool SeekStart(GpUFilePos_t loc) override;
-	bool SeekCurrent(GpFilePos_t loc) override;
-	bool SeekEnd(GpUFilePos_t loc) override;
-	bool Truncate(GpUFilePos_t loc) override;
-	GpUFilePos_t Size() const override;
-	GpUFilePos_t Tell() const override;
-	void Close() override;
-	void Flush() override;
-
-private:
-	FILE *m_f;
-	int m_fd;
-	bool m_seekable;
-	bool m_isReadOnly;
-	bool m_isWriteOnly;
-};
 
 GpFileStream_Android_File::GpFileStream_Android_File(FILE *f, int fd, bool readOnly, bool writeOnly)
 	: m_f(f)
@@ -255,29 +377,37 @@ void GpFileStream_Android_File::Flush()
 	fflush(m_f);
 }
 
-bool GpFileSystem_Android::ResolvePathInDownloadsDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset)
+bool GpFileSystem_Android::OpenSourceExportFD(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths, int &fd, jobject &pfd)
 {
+	if (!m_sourceExportMutex)
+		m_sourceExportMutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
+
+	m_sourceExportWaiting = true;
+	m_sourceExportCancelled = false;
+
 	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
 
 	jstring fname = jni->NewStringUTF(paths[0]);
 
-	jobject resultName = jni->CallObjectMethod(m_activity, this->m_selectSourceExportPathMID, fname);
-	int n = 0;
-	jstring resultPath = static_cast<jstring>(resultName);
+	jni->CallVoidMethod(m_activity, this->m_selectSourceExportPathMID, fname);
 	jni->DeleteLocalRef(fname);
 
-	const char *pathStrChars = jni->GetStringUTFChars(resultPath, nullptr);
-	resolution = std::string(pathStrChars, static_cast<size_t>(jni->GetStringUTFLength(resultPath)));
+	for (;;)
+	{
+		m_sourceExportMutex->Lock();
+		const bool isWaiting = m_sourceExportWaiting;
+		m_sourceExportMutex->Unlock();
 
-	jni->ReleaseStringUTFChars(resultPath, pathStrChars);
-	jni->DeleteLocalRef(resultPath);
+		if (!isWaiting)
+			break;
 
-	resolution = SDL_AndroidGetExternalStoragePath();
-	resolution += "/SourceCode.zip";
+		m_delayCallback(5);
+	}
 
-	isAsset = false;
+	fd = m_sourceExportFD;
+	pfd = m_sourceExportPFD;
 
-	return true;
+	return !m_sourceExportCancelled;
 }
 
 bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset)
@@ -311,8 +441,6 @@ bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virt
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		prefsAppend = "Prefs";
 		break;
-	case PortabilityLayer::VirtualDirectories::kSourceExport:
-		return ResolvePathInDownloadsDirectory(virtualDirectory, paths, numPaths, resolution, isAsset);
 	default:
 		return false;
 	};
@@ -337,6 +465,12 @@ bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virt
 GpFileSystem_Android::GpFileSystem_Android()
 	: m_activity(nullptr)
 	, m_relay(nullptr)
+	, m_delayCallback(nullptr)
+	, m_sourceExportMutex(nullptr)
+	, m_sourceExportFD(0)
+	, m_sourceExportWaiting(false)
+	, m_sourceExportCancelled(false)
+	, m_sourceExportPFD(nullptr)
 {
 }
 
@@ -348,11 +482,16 @@ void GpFileSystem_Android::InitJNI()
 {
 	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
 
+	jclass fileSystemAPIClass = jni->FindClass("org/thecodedeposit/aerofoil/GpFileSystemAPI");
+	int registerStatus = jni->RegisterNatives(fileSystemAPIClass, GpFileSystemAPI_tab, sizeof(GpFileSystemAPI_tab) / sizeof(GpFileSystemAPI_tab[0]));
+	jni->DeleteLocalRef(fileSystemAPIClass);
+
 	jobject activityLR = static_cast<jobject>(SDL_AndroidGetActivity());
 	jclass activityClassLR = static_cast<jclass>(jni->GetObjectClass(activityLR));
 
 	m_scanAssetDirectoryMID = jni->GetMethodID(activityClassLR, "scanAssetDirectory", "(Ljava/lang/String;)[Ljava/lang/String;");
-	m_selectSourceExportPathMID = jni->GetMethodID(activityClassLR, "selectSourceExportPath", "(Ljava/lang/String;)Ljava/lang/String;");
+	m_selectSourceExportPathMID = jni->GetMethodID(activityClassLR, "selectSourceExportPath", "(Ljava/lang/String;)V");
+	m_closeSourceExportPFDMID = jni->GetMethodID(activityClassLR, "closeSourceExportPFD", "(Ljava/lang/Object;)V");
 
 	m_activity = jni->NewGlobalRef(activityLR);
 
@@ -458,6 +597,24 @@ GpIOStream *GpFileSystem_Android::OpenFileNested(PortabilityLayer::VirtualDirect
 		default:
 			return nullptr;
 	};
+
+	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kSourceExport)
+	{
+		void *objStorage = malloc(sizeof(GpFileStream_PFD));
+		if (!objStorage)
+			return nullptr;
+
+		int fd = 0;
+		jobject pfd = nullptr;
+		const bool resolved = OpenSourceExportFD(virtualDirectory, subPaths, numSubPaths, fd, pfd);
+		if (!resolved)
+		{
+			free(objStorage);
+			return nullptr;
+		}
+
+		return new (objStorage) GpFileStream_PFD(this, fd, pfd, false, true);
+	}
 
 	std::string resolvedPath;
 	bool isAsset;
@@ -619,6 +776,31 @@ void GpFileSystem_Android::SetMainThreadRelay(IGpThreadRelay *relay)
 	m_relay = relay;
 }
 
+void GpFileSystem_Android::SetDelayCallback(DelayCallback_t delayCallback)
+{
+	m_delayCallback = delayCallback;
+}
+
+void GpFileSystem_Android::PostSourceExportRequest(bool cancelled, int fd, jobject pfd)
+{
+	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
+	jobject globalRef = jni->NewGlobalRef(pfd);
+
+	m_sourceExportMutex->Lock();
+	m_sourceExportWaiting = false;
+	m_sourceExportCancelled = cancelled;
+	m_sourceExportFD = fd;
+	m_sourceExportPFD = globalRef;
+	m_sourceExportMutex->Unlock();
+}
+
+void GpFileSystem_Android::ClosePFD(jobject pfd)
+{
+	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
+	jni->CallVoidMethod(m_activity, m_closeSourceExportPFDMID, pfd);
+	jni->DeleteGlobalRef(pfd);
+}
+
 GpFileSystem_Android *GpFileSystem_Android::GetInstance()
 {
 	return &ms_instance;
@@ -747,6 +929,11 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanStorageDirector
 		return nullptr;
 
 	return new GpDirectoryCursor_POSIX(d);
+}
+
+JNIEXPORT void JNICALL nativePostSourceExportRequest(JNIEnv *env, jclass cls, jboolean cancelled, jint fd, jobject pfd)
+{
+	GpFileSystem_Android::GetInstance()->PostSourceExportRequest(cancelled != JNI_FALSE, fd, pfd);
 }
 
 GpFileSystem_Android GpFileSystem_Android::ms_instance;
