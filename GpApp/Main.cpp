@@ -40,7 +40,8 @@ int main(int argc, const char **argv);
 
 short		isVolume, wasVolume;
 short		isDepthPref, dataResFile, numSMWarnings;
-Boolean		quitting, doZooms, quickerTransitions, isAutoScale, isUseICCProfile;
+Boolean		quitting, doZooms, quickerTransitions, isUseICCProfile;
+Boolean		isAutoScale = true;
 
 
 extern Str31		highBanner;
