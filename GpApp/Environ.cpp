@@ -328,7 +328,7 @@ public:
 	{
 		double minMul = 1.0;
 
-		if (isAutoScale || physicalWidth < 640 && physicalHeight < 480)
+		if (isAutoScale || physicalWidth < 640 || physicalHeight < 480)
 		{
 			double xMul = static_cast<double>(physicalWidth) / 640.0;
 			double yMul = static_cast<double>(physicalHeight) / 480.0;
