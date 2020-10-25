@@ -371,6 +371,7 @@ static void HandleMainMenuUISelection(MainMenuUIState::ControlID controlID)
 	case MainMenuUIState::Control_NewGame:
 		DismissMainMenuUIPage();
 		DoGameMenu(iNewGame);
+		StartMainMenuUI();
 		break;
 
 	case MainMenuUIState::Control_LoadSavedGame:
