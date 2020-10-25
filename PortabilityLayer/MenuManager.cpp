@@ -208,12 +208,12 @@ namespace PortabilityLayer
 
 		static const unsigned int kIconResID = 128;
 		static const unsigned int kMenuFontSize = 12;
-		static const unsigned int kTouchScreenMenuFontSize = 24;
+		static const unsigned int kTouchScreenMenuFontSize = 40;
 		static const unsigned int kMenuBarIconYOffset = 2;
 		static const unsigned int kMenuBarTextYOffset = 14;
-		static const unsigned int kTouchScreenMenuBarTextYOffset = 26;
+		static const unsigned int kTouchScreenMenuBarTextYOffset = 40;
 		static const unsigned int kMenuBarHeight = 20;
-		static const unsigned int kTouchscreenMenuBarHeight = 38;
+		static const unsigned int kTouchscreenMenuBarHeight = 54;
 		static const unsigned int kMenuBarItemPadding = 6;
 		static const unsigned int kMenuBarInitialPadding = 16;
 
@@ -645,6 +645,9 @@ namespace PortabilityLayer
 
 	bool MenuManagerImpl::IsPointInMenuBar(const Vec2i &point) const
 	{
+		if (!m_menuBarVisible)
+			return false;
+
 		return IsYInMenuBarRange(point.m_y);
 	}
 

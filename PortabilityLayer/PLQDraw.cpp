@@ -2026,6 +2026,24 @@ PortabilityLayer::RenderedFont *GetSystemFont(int size, int variationFlags, bool
 	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
 }
 
+PortabilityLayer::RenderedFont *GetHandwritingFont(int size, int variationFlags, bool aa)
+{
+	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetHandwritingFont(size, variationFlags);
+	if (!fontFamily)
+		return nullptr;
+
+	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
+}
+
+PortabilityLayer::RenderedFont *GetMonospaceFont(int size, int variationFlags, bool aa)
+{
+	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetMonospaceFont(size, variationFlags);
+	if (!fontFamily)
+		return nullptr;
+
+	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
+}
+
 #include "stb_image_write.h"
 
 void DebugPixMap(PixMap **pixMapH, const char *outName)

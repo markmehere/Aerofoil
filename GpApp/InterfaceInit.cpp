@@ -67,9 +67,12 @@ void InitializeMenus (void)
 	if (optionsMenu == nil)
 		RedAlert(kErrFailedResourceLoad);
 	InsertMenu(optionsMenu, 0);
-	
-	menusUp = true;
-	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
+
+	if (!thisMac.isTouchscreen)
+	{
+		menusUp = true;
+		PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
+	}
 	
 	houseMenu = GetMenu(kHouseMenuID);
 	if (houseMenu == nil)

@@ -14,6 +14,7 @@
 #include "PLResources.h"
 #include "PLSound.h"
 #include "PLPasStr.h"
+#include "PLScrollBarWidget.h"
 #include "PLStandardColors.h"
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
@@ -40,11 +41,53 @@ static void UnHiLiteOkayButton (DrawSurface *surface);
 static void UpdateMainPict (Dialog *);
 static int16_t AboutFilter(void *context, Dialog *, const TimeTaggedVOSEvent *evt);
 static int16_t AboutFrameworkFilter(void *context, Dialog *, const TimeTaggedVOSEvent *evt);
+static int16_t LicenseReaderFilter(void *context, Dialog *, const TimeTaggedVOSEvent *evt);
+static void DrawLicenseReader(Window *window);
+void DoLicenseReader(int licenseResID);
 
 
 static Point			okayButtLowerV, okayButtUpperV;
 static Rect				okayButtonBounds, mainPICTBounds;
 static Boolean			okayButtIsHiLit, clickedDownInOkay;
+
+
+struct LicenseReaderLine
+{
+	PortabilityLayer::PascalStr<80> m_text;
+};
+
+static const unsigned int kLicenseReaderPointHistoryLength = 3;
+static Boolean			licenseReaderIsScrolling;
+static Point			licenseReaderPointHistory[kLicenseReaderPointHistoryLength];
+
+static int32_t licenseReaderVelocity;
+static unsigned int licenseReaderTextScroll;
+static unsigned int licenseReaderTextScrollMax;
+static unsigned int licenseReaderNumLines;
+static THandle<LicenseReaderLine> licenseReaderLines;
+static const unsigned int kLicenseReaderTextSpacing = 10;
+static const Rect licenseReaderTextRect = Rect::Create(16, 16, 344, 496);
+static PortabilityLayer::ScrollBarWidget *licenseReaderScrollBarWidget;
+
+static void InitLicenseReader(unsigned int numLines)
+{
+	for (unsigned int i = 0; i < kLicenseReaderPointHistoryLength; i++)
+		licenseReaderPointHistory[i] = Point::Create(0, 0);
+
+	licenseReaderIsScrolling = false;
+
+	licenseReaderTextScroll = 0;
+	licenseReaderVelocity = 0;
+	licenseReaderTextScrollMax = numLines * kLicenseReaderTextSpacing;
+	if (licenseReaderTextScrollMax < licenseReaderTextRect.Height())
+		licenseReaderTextScrollMax = 0;
+	else
+		licenseReaderTextScrollMax -= licenseReaderTextRect.Height();
+
+	licenseReaderNumLines = numLines;
+	licenseReaderScrollBarWidget = nullptr;
+}
+
 
 
 //==============================================================  Functions
@@ -98,9 +141,168 @@ void DoAbout (void)
 	aboutDialog->Destroy();
 }
 
+void DoLicenseReader(int resID)
+{
+	static const int kLicenseReaderDialogTemplateID = 2006;
+
+	THandle<uint8_t> licenseTextHandle = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('LICS', resID).StaticCast<uint8_t>();
+
+	if (!licenseTextHandle)
+		return;
+
+	// Count lines
+	unsigned int numLines = 1;
+	const uint8_t *licenseText = *licenseTextHandle;
+	const size_t licenseTextLength = licenseTextHandle.MMBlock()->m_size;
+
+	for (size_t i = 0; i < licenseTextLength; i++)
+	{
+		if (licenseText[i] == '\n')
+			numLines++;
+	}
+
+	licenseReaderLines = NewHandle(sizeof(LicenseReaderLine) * numLines).StaticCast<LicenseReaderLine>();
+	if (!licenseReaderLines)
+	{
+		licenseTextHandle.Dispose();
+		return;
+	}
+
+	LicenseReaderLine *lines = *licenseReaderLines;
+	unsigned int lineIndex = 0;
+	size_t lineStart = 0;
+	for (size_t i = 0; i < licenseTextLength; i++)
+	{
+		if (licenseText[i] == '\n')
+		{
+			assert(i - lineStart <= 80);
+			lines[lineIndex++].m_text.Set(i - lineStart, reinterpret_cast<const char*>(licenseText + lineStart));
+			lineStart = i + 1;
+		}
+	}
+	assert(licenseTextLength - lineStart <= 80);
+	lines[lineIndex++].m_text.Set(licenseTextLength - lineStart, reinterpret_cast<const char*>(licenseText + lineStart));
+
+	assert(lineIndex == numLines);
+
+	licenseTextHandle.Dispose();
+
+	const Rect windowRect = Rect::Create(0, 0, 396, 528);
+
+	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
+
+	PortabilityLayer::DialogManager *dialogManager = PortabilityLayer::DialogManager::GetInstance();
+	Dialog *dialog = dialogManager->LoadDialogFromTemplate(kLicenseReaderDialogTemplateID, windowRect, true, false, 0, 0, PL_GetPutInFrontWindowPtr(), PSTR(""), nullptr);
+
+	DrawDefaultButton(dialog);
+
+	int16_t hit = 0;
+
+	InitLicenseReader(numLines);
+	DrawLicenseReader(dialog->GetWindow());
+
+	if (licenseReaderTextScrollMax != 0)
+	{
+		PortabilityLayer::WidgetBasicState state;
+		state.m_rect = Rect::Create(licenseReaderTextRect.top, licenseReaderTextRect.right, licenseReaderTextRect.bottom, licenseReaderTextRect.right + 16);
+		state.m_refConstant = 2;
+		state.m_window = dialog->GetWindow();
+		state.m_max = licenseReaderTextScrollMax;
+		state.m_state = 0;
+		licenseReaderScrollBarWidget = PortabilityLayer::ScrollBarWidget::Create(state, nullptr);
+	}
+
+	dialog->GetWindow()->DrawControls();
+
+	do
+	{
+		hit = dialog->ExecuteModal(nullptr, LicenseReaderFilter);
+	} while (hit != kOkayButton);
+
+	dialog->Destroy();
+	licenseReaderLines.Dispose();
+}
+
+void DoAboutOpenSource(void)
+{
+	static const int kExportSourceItem = 2;
+	static const int kAerofoilLicenseButton = 4;
+	static const int kGliderPROLicenseButton = 6;
+	static const int kOpenSansLicenseButton = 8;
+	static const int kRobotoMonoLicenseButton = 10;
+	static const int kGochiHandLicenseButton = 12;
+	static const int kLibIConvLicenseButton = 14;
+	static const int kRapidJSONLicenseButton = 16;
+	static const int kZLibLicenseButton = 18;
+	static const int kFreeTypeLicenseButton = 20;
+	static const int kSDLLicenseButton = 22;
+
+	static const int kLicenseResourceApache = 1000;
+	static const int kLicenseResourceGPLv2 = 1001;
+	static const int kLicenseResourceLGPLv3 = 1002;
+	static const int kLicenseResourceOFL = 1003;
+	static const int kLicenseResourceRapidJSON = 1004;
+	static const int kLicenseResourceZLib = 1005;
+	static const int kLicenseResourceSDL = 1006;
+
+	static const int kAboutOpenSourceDialogTemplateID = 2005;
+
+	const Rect windowRect = Rect::Create(0, 0, 324, 512);
+
+	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
+
+	PortabilityLayer::DialogManager *dialogManager = PortabilityLayer::DialogManager::GetInstance();
+	Dialog *dialog = dialogManager->LoadDialogFromTemplate(kAboutOpenSourceDialogTemplateID, windowRect, true, false, 0, 0, PL_GetPutInFrontWindowPtr(), PSTR(""), nullptr);
+
+	DrawDefaultButton(dialog);
+
+	if (thisMac.isTouchscreen)
+		dialog->GetItems()[kExportSourceItem - 1].GetWidget()->SetEnabled(true);
+
+	int16_t hit = 0;
+
+	do
+	{
+		hit = dialog->ExecuteModal(nullptr, AboutFrameworkFilter);
+
+		switch (hit)
+		{
+		case kExportSourceItem:
+			DoExportSourceCode();
+			break;
+		case kAerofoilLicenseButton:
+		case kGliderPROLicenseButton:
+			DoLicenseReader(kLicenseResourceGPLv2);
+			break;
+		case kOpenSansLicenseButton:
+		case kRobotoMonoLicenseButton:
+			DoLicenseReader(kLicenseResourceApache);
+			break;
+		case kGochiHandLicenseButton:
+			DoLicenseReader(kLicenseResourceOFL);
+			break;
+		case kLibIConvLicenseButton:
+		case kFreeTypeLicenseButton:
+			DoLicenseReader(kLicenseResourceLGPLv3);
+			break;
+		case kZLibLicenseButton:
+			DoLicenseReader(kLicenseResourceZLib);
+			break;
+		case kSDLLicenseButton:
+			DoLicenseReader(kLicenseResourceSDL);
+			break;
+		default:
+			break;
+		}
+	} while (hit != kOkayButton);
+
+	dialog->Destroy();
+}
+
 void DoAboutFramework (void)
 {
-#define			kAboutFrameworkDialogTemplateID			2000
+	static const int kAboutFrameworkDialogTemplateID = 2000;
+	static const int kAboutOpenSourceButton = 2;
 
 	const Rect windowRect = Rect::Create(0, 0, 272, 450);
 
@@ -153,6 +355,9 @@ void DoAboutFramework (void)
 	do
 	{
 		hit = dialog->ExecuteModal(nullptr, AboutFrameworkFilter);
+
+		if (hit == kAboutOpenSourceButton)
+			DoAboutOpenSource();
 	} while (hit != kOkayButton);
 
 	dialog->Destroy();
@@ -356,6 +561,196 @@ static int16_t AboutFrameworkFilter(void *context, Dialog *dialog, const TimeTag
 
 		default:
 			handledIt = false;
+			break;
+		}
+	}
+
+	if (!handledIt)
+		return -1;
+
+	return hit;
+}
+
+void DrawLicenseReader(Window *window)
+{
+	PortabilityLayer::RenderedFont *rfont = GetMonospaceFont(10, PortabilityLayer::FontFamilyFlag_None, true);
+	if (!rfont)
+		return;
+
+	PortabilityLayer::ResolveCachingColor whiteColor(StdColors::White());
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+
+	DrawSurface *surface = window->GetDrawSurface();
+	surface->FillRect(licenseReaderTextRect, whiteColor);
+
+	int32_t ascent = rfont->GetMetrics().m_ascent;
+
+	const LicenseReaderLine *lines = *licenseReaderLines;
+
+	for (unsigned int i = 0; i < licenseReaderNumLines; i++)
+	{
+		int32_t lineY = licenseReaderTextRect.top + ascent + static_cast<int32_t>(kLicenseReaderTextSpacing * i);
+		lineY -= static_cast<int32_t>(licenseReaderTextScroll);
+
+		surface->DrawStringConstrained(Point::Create(licenseReaderTextRect.left, lineY), lines[i].m_text.ToShortStr(), licenseReaderTextRect, blackColor, rfont);
+	}
+}
+
+static void CycleLicenseReaderMouseHistory()
+{
+	for (unsigned int ri = 1; ri < kLicenseReaderPointHistoryLength; ri++)
+	{
+		unsigned int i = kLicenseReaderPointHistoryLength - ri;
+		licenseReaderPointHistory[i] = licenseReaderPointHistory[i - 1];
+	}
+}
+
+static void HandleLicenseReaderScroll(Window *window, int32_t offset)
+{
+	int32_t newScroll = static_cast<int32_t>(licenseReaderTextScroll) + offset;
+	if (newScroll < 0)
+		newScroll = 0;
+	else if (newScroll > static_cast<int32_t>(licenseReaderTextScrollMax))
+		newScroll = licenseReaderTextScrollMax;
+
+	if (newScroll != licenseReaderTextScroll)
+	{
+		licenseReaderTextScroll = newScroll;
+		licenseReaderScrollBarWidget->SetState(newScroll);
+		DrawLicenseReader(window);
+	}
+}
+
+static void AutoScrollLicenseReader(Window *window)
+{
+	if (licenseReaderIsScrolling)
+		return;
+
+	int32_t decayRate = 2;
+	if (licenseReaderVelocity < 0)
+	{
+		HandleLicenseReaderScroll(window, licenseReaderVelocity);
+		licenseReaderVelocity += decayRate;
+		if (licenseReaderVelocity > 0)
+			licenseReaderVelocity = 0;
+	}
+	else if (licenseReaderVelocity > 0)
+	{
+		HandleLicenseReaderScroll(window, licenseReaderVelocity);
+		licenseReaderVelocity -= decayRate;
+		if (licenseReaderVelocity < 0)
+			licenseReaderVelocity = 0;
+	}
+}
+
+static void ComputeLicenseReaderVelocity()
+{
+	int32_t velocity = licenseReaderPointHistory[kLicenseReaderPointHistoryLength - 1].v - licenseReaderPointHistory[0].v;
+	licenseReaderVelocity = velocity;
+}
+
+static void LicenseReaderScrollBarUpdate(void *captureContext, PortabilityLayer::Widget *widget, int part)
+{
+	Window *window = static_cast<Window*>(captureContext);	// This is stupid and very lazy...
+
+
+	const int incrementalStepping = kLicenseReaderTextSpacing;
+	const int pageStepping = 20;
+
+	switch (part)
+	{
+	case kControlUpButtonPart:
+		widget->SetState(widget->GetState() - incrementalStepping);
+		break;
+	case kControlDownButtonPart:
+		widget->SetState(widget->GetState() + incrementalStepping);
+		break;
+	case kControlPageUpPart:
+		widget->SetState(widget->GetState() - pageStepping * incrementalStepping);
+		break;
+	case kControlPageDownPart:
+		widget->SetState(widget->GetState() + pageStepping * incrementalStepping);
+		break;
+	default:
+		break;
+	};
+
+	licenseReaderTextScroll = widget->GetState();
+	DrawLicenseReader(window);
+}
+
+static int16_t LicenseReaderFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt)
+{
+	bool		handledIt = false;
+	int16_t		hit = -1;
+
+	if (!evt)
+	{
+		if (licenseReaderIsScrolling)
+			CycleLicenseReaderMouseHistory();
+		else
+			AutoScrollLicenseReader(dialog->GetWindow());
+		return -1;
+	}
+
+	Window *window = dialog->GetWindow();
+	DrawSurface *surface = window->GetDrawSurface();
+
+	if (evt->IsKeyDownEvent())
+	{
+		switch (PackVOSKeyCode(evt->m_vosEvent.m_event.m_keyboardInputEvent))
+		{
+		case PL_KEY_SPECIAL(kEnter):
+		case PL_KEY_NUMPAD_SPECIAL(kEnter):
+			dialog->GetItems()[kOkayButton - 1].GetWidget()->SetHighlightStyle(kControlButtonPart, true);
+			PLSysCalls::Sleep(8);
+			dialog->GetItems()[kOkayButton - 1].GetWidget()->SetHighlightStyle(kControlButtonPart, false);
+			hit = kOkayButton;
+			handledIt = true;
+			break;
+
+		default:
+			handledIt = false;
+			break;
+		}
+	}
+
+	if (evt->m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+	{
+		const GpMouseInputEvent &mouseEvt = evt->m_vosEvent.m_event.m_mouseInputEvent;
+
+		Point mouseLocalPt = window->MouseToLocal(mouseEvt);
+
+		switch (mouseEvt.m_eventType)
+		{
+		case GpMouseEventTypes::kDown:
+			if (licenseReaderTextRect.Contains(mouseLocalPt))
+			{
+				for (unsigned int i = 0; i < kLicenseReaderPointHistoryLength; i++)
+					licenseReaderPointHistory[i] = mouseLocalPt;
+				licenseReaderIsScrolling = true;
+			}
+			else if (licenseReaderScrollBarWidget->GetRect().Contains(mouseLocalPt))
+			{
+				licenseReaderScrollBarWidget->Capture(dialog->GetWindow(), mouseLocalPt, LicenseReaderScrollBarUpdate);
+				licenseReaderTextScroll = licenseReaderScrollBarWidget->GetState();
+				DrawLicenseReader(dialog->GetWindow());
+			}
+			break;
+		case GpMouseEventTypes::kLeave:
+		case GpMouseEventTypes::kUp:
+			licenseReaderIsScrolling = false;
+			ComputeLicenseReaderVelocity();
+			break;
+		case GpMouseEventTypes::kMove:
+			if (licenseReaderIsScrolling)
+			{
+				Point prevPoint = licenseReaderPointHistory[0];
+				licenseReaderPointHistory[0] = mouseLocalPt;
+				HandleLicenseReaderScroll(window, prevPoint.v - mouseLocalPt.v);
+			}
+			break;
+		default:
 			break;
 		}
 	}

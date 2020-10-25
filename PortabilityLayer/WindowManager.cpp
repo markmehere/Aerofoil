@@ -1108,7 +1108,8 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::FindWindow(const Point &point, Window **outWindow, short *outRegion) const
 	{
-		if (PortabilityLayer::MenuManager::GetInstance()->IsPointInMenuBar(PortabilityLayer::Vec2i(point.h, point.v)))
+		PortabilityLayer::MenuManager *menuManager = PortabilityLayer::MenuManager::GetInstance();
+		if (menuManager->IsPointInMenuBar(PortabilityLayer::Vec2i(point.h, point.v)))
 		{
 			if (outWindow)
 				*outWindow = nullptr;

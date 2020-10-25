@@ -14,6 +14,7 @@
 #include "Environ.h"
 #include "House.h"
 #include "InputManager.h"
+#include "MainMenuUI.h"
 #include "ObjectEdit.h"
 #include "Rect2i.h"
 #include "WindowManager.h"
@@ -125,7 +126,7 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 			if (vDelta < 0)
 				vDelta = -vDelta;
 			if (((tick - lastUp) < doubleTime) && (hDelta < 5) &&
-					(vDelta < 5))
+				(vDelta < 5))
 				isDoubleClick = true;
 			else
 			{
@@ -141,6 +142,9 @@ void HandleMouseEvent (const GpMouseInputEvent &theEvent, uint32_t tick)
 			HandleToolsClick(evtPoint);
 		else if (whichWindow == linkWindow)
 			HandleLinkClick(evtPoint);
+		else if (HandleMainMenuUIClick(whichWindow, evtPoint))
+		{
+		}
 		break;
 		
 	default:
@@ -328,6 +332,8 @@ void HandleSplashResolutionChange(void)
 	InitScoreboardMap();
 	//RefreshScoreboard(wasScoreboardTitleMode);
 	//DumpScreenOn(&justRoomsRect);
+
+	HandleMainMenuUIResolutionChange();
 }
 
 void KeepWindowInBounds(Window *window)
@@ -401,6 +407,8 @@ void HandleIdleTask (void)
 			HandleSplashResolutionChange();
 		}
 	}
+
+	TickMainMenuUI();
 }
 
 //--------------------------------------------------------------  HandleEvent
@@ -410,7 +418,7 @@ void HandleIdleTask (void)
 void HandleEvent (void)
 {
 	TimeTaggedVOSEvent	theEvent;
-	uint32_t			sleep = 2;
+	uint32_t			sleep = 1;
 	bool				itHappened = true;
 
 	const KeyDownStates *eventKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
@@ -456,12 +464,13 @@ void HandleEvent (void)
 	}
 	else
 		HandleIdleTask();
-	
+
 	if ((theMode == kSplashMode) && doAutoDemo && !switchedOut)
 	{
 		if (TickCount() >= incrementModeTime)
 			DoDemoGame();
 	}
+
 }
 
 //--------------------------------------------------------------  IgnoreThisClick

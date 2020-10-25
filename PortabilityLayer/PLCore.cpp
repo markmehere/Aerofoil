@@ -647,6 +647,9 @@ bool WaitForEvent(TimeTaggedVOSEvent *eventOut, uint32_t ticks)
 		Delay(1, nullptr);
 
 		ticks--;
+
+		if (ticks == 0)
+			break;
 	}
 
 	return false;

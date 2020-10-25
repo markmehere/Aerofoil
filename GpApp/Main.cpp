@@ -19,6 +19,7 @@
 #include "IGpDisplayDriver.h"
 #include "GpIOStream.h"
 #include "House.h"
+#include "MainMenuUI.h"
 #include "MenuManager.h"
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
@@ -523,8 +524,12 @@ int gpAppMain()
 
 	UpdateMainWindow();
 
+	if (thisMac.isTouchscreen)
+		StartMainMenuUI();
+
 	while (!quitting)		// this is the main loop
 		HandleEvent();
+
 /*
 #if BUILD_ARCADE_VERSION
 	ShowMenuBarOld();

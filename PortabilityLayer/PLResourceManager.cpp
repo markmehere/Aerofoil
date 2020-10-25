@@ -276,7 +276,7 @@ namespace PortabilityLayer
 			extension = kPICTExtension;
 			outValidationRule = ResourceValidationRules::kBMP;
 		}
-		else if (resTypeID == ResTypeID('STR#'))
+		else if (resTypeID == ResTypeID('STR#') || resTypeID == ResTypeID('LICS'))
 			extension = ".txt";
 		else if (resTypeID == ResTypeID('DITL') || resTypeID == ResTypeID('muvi'))
 			extension = ".json";

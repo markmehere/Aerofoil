@@ -1,0 +1,13 @@
+{
+	"items" :
+	[
+		{
+			"name" : "Okay",
+			"itemType" : "Button",
+			"pos" : [ 454, 360 ],
+			"size" : [ 58, 20 ],
+			"id" : 1,
+			"enabled" : true
+		}
+	]
+}

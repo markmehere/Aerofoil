@@ -103,6 +103,7 @@
     <ClCompile Include="InterfaceInit.cpp" />
     <ClCompile Include="Link.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MainMenuUI.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Marquee.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="GliderStructs.h" />
     <ClInclude Include="GliderVars.h" />
     <ClInclude Include="House.h" />
+    <ClInclude Include="MainMenuUI.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Marquee.h" />

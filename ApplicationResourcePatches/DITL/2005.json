@@ -1,0 +1,181 @@
+{
+	"items" :
+	[
+		{
+			"name" : "Okay",
+			"itemType" : "Button",
+			"pos" : [ 438, 292 ],
+			"size" : [ 58, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Export Source Code to ZIP Archive...",
+			"itemType" : "Button",
+			"pos" : [ 205, 292 ],
+			"size" : [ 226, 20 ],
+			"id" : 1,
+			"enabled" : false
+		},
+		{
+			"name" : "Aerofoil (c)2019-2020 Eric Lasota",
+			"itemType" : "Label",
+			"pos" : [ 16, 21 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 16 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Based on Glider PRO (c)1994-2000 Casady & Greene, Inc., created by John Calhoun",
+			"itemType" : "Label",
+			"pos" : [ 16, 44 ],
+			"size" : [ 398, 28 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 44 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Open Sans font (c)2011 Google",
+			"itemType" : "Label",
+			"pos" : [ 16, 77 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 72 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Roboto Mono font (c)2011 Google",
+			"itemType" : "Label",
+			"pos" : [ 16, 101 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 96 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Gochi Hand font (c)2011 Juan Pablo del Peral",
+			"itemType" : "Label",
+			"pos" : [ 16, 125 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 120 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "LIBICONV (c)1999-2001, 2016 Free Software Foundation, Inc.",
+			"itemType" : "Label",
+			"pos" : [ 16, 149 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 144 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "RapidJSON (c) 2015 THL A29 Limited, a Tencent company, and Milo Yip.",
+			"itemType" : "Label",
+			"pos" : [ 16, 172 ],
+			"size" : [ 406, 28 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 172 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "zlib (c)1995-2017 Jean-loup Gailly and Mark Adler",
+			"itemType" : "Label",
+			"pos" : [ 16, 205 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 200 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "FreeType (c)2020 The FreeType Project",
+			"itemType" : "Label",
+			"pos" : [ 16, 229 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 224 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Simple DirectMedia Layer (c)1997-2020 Sam Lantinga",
+			"itemType" : "Label",
+			"pos" : [ 16, 253 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 248 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		}
+	]
+}

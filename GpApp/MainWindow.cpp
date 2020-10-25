@@ -30,8 +30,6 @@
 
 
 void DrawOnSplash (DrawSurface *surface);
-void SetPaletteToGrays (void);
-void HardDrawMainWindow (void);
 void KeepWindowInBounds(Window *window);
 
 CTabHandle		theCTab;
@@ -53,6 +51,7 @@ Boolean			fadeGraysOut, isDoColorFade, splashDrawn;
 extern	short		toolSelected;
 extern	Boolean		noRoomAtAll, isUseSecondScreen;
 extern	Boolean		quickerTransitions, houseIsReadOnly;
+extern	Boolean		menusUp;
 
 //==============================================================  Functions
 //--------------------------------------------------------------  DrawOnSplash
@@ -111,7 +110,12 @@ void RedrawSplashScreen (void)
 	CopyRectMainToWork(&workSrcRect);
 
 	mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
-	PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
+
+	if (!thisMac.isTouchscreen)
+	{
+		menusUp = true;
+		PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
+	}
 }
 
 //--------------------------------------------------------------  UpdateMainWindow

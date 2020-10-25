@@ -166,6 +166,7 @@ void FillScreenRed (void);
 void DumpToResEditFile (Ptr, long);
 
 void HandleEvent (void);								// --- Event.c
+void HandleIdleTask (void);
 void IgnoreThisClick (void);
 
 void SwitchToDepth (short, Boolean);					// --- Environs.c

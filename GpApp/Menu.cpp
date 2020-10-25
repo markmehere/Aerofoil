@@ -15,6 +15,7 @@
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
+#include "Environ.h"
 #include "House.h"
 #include "MenuManager.h"
 #include "ObjectEdit.h"
@@ -417,6 +418,13 @@ void DoOptionsMenu (short theItem)
 				}
 			}
 			CloseMainWindow();
+
+			if (thisMac.isTouchscreen)
+			{
+				menusUp = false;
+				PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(false);
+			}
+
 			OpenMainWindow();
 			incrementModeTime = TickCount() + kIdleSplashTicks;
 		}
@@ -425,6 +433,10 @@ void DoOptionsMenu (short theItem)
 			theMode = kEditMode;
 			StopTheMusic();
 			CloseMainWindow();
+
+			menusUp = true;
+			PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
+
 			OpenMainWindow();
 			OpenCloseEditWindows();
 		}

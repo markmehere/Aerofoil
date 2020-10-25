@@ -42,6 +42,7 @@ LOCAL_SRC_FILES := \
 	InterfaceInit.cpp	\
 	Link.cpp	\
 	Main.cpp	\
+	MainMenuUI.cpp	\
 	MainWindow.cpp	\
 	Map.cpp	\
 	Marquee.cpp	\

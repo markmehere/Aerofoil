@@ -25,6 +25,8 @@ namespace PortabilityLayer
 
 		FontFamily *GetSystemFont(int textSize, int variationFlags) const override;
 		FontFamily *GetApplicationFont(int textSize, int variationFlags) const override;
+		FontFamily *GetHandwritingFont(int textSize, int variationFlags) const override;
+		FontFamily *GetMonospaceFont(int textSize, int variationFlags) const override;
 
 		RenderedFont *GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) override;
 		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
@@ -38,6 +40,8 @@ namespace PortabilityLayer
 		static const unsigned int kNumCachedRenderedFonts = 32;
 		static const int kSystemFontCacheID = 1;
 		static const int kApplicationFontCacheID = 2;
+		static const int kHandwritingFontCacheID = 3;
+		static const int kMonospaceFontCacheID = 3;
 		static const int kFontCacheVersion = 1;
 		static const int kFontCacheNameSize = 64;
 
@@ -59,6 +63,8 @@ namespace PortabilityLayer
 
 		FontFamily *m_systemFont;
 		FontFamily *m_applicationFont;
+		FontFamily *m_handwritingFont;
+		FontFamily *m_monospaceFont;
 		uint32_t m_usageCounter;
 
 		CachedRenderedFont m_cachedRenderedFonts[kNumCachedRenderedFonts];
@@ -70,6 +76,8 @@ namespace PortabilityLayer
 	{
 		m_systemFont = FontFamily::Create(kSystemFontCacheID);
 		m_applicationFont = FontFamily::Create(kApplicationFontCacheID);
+		m_handwritingFont = FontFamily::Create(kHandwritingFontCacheID);
+		m_monospaceFont = FontFamily::Create(kMonospaceFontCacheID);
 
 		if (m_systemFont)
 			m_systemFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", FontHacks_None);
@@ -79,6 +87,12 @@ namespace PortabilityLayer
 			m_applicationFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-SemiBold.ttf", FontHacks_None);
 			m_applicationFont->AddFont(FontFamilyFlag_Bold, "Fonts/OpenSans/OpenSans-Bold.ttf", FontHacks_None);
 		}
+
+		if (m_handwritingFont)
+			m_handwritingFont->AddFont(FontFamilyFlag_None, "Fonts/GochiHand/GochiHand-Regular.ttf", FontHacks_None);
+
+		if (m_monospaceFont)
+			m_monospaceFont->AddFont(FontFamilyFlag_None, "Fonts/Roboto/RobotoMono-Regular.ttf", FontHacks_None);
 
 		memset(m_cachedRenderedFonts, 0, sizeof(m_cachedRenderedFonts));
 	}
@@ -91,13 +105,13 @@ namespace PortabilityLayer
 		if (m_applicationFont)
 			m_applicationFont->Destroy();
 
-		IGpFontHandler *hfh = HostFontHandler::GetInstance();
+		if (m_handwritingFont)
+			m_handwritingFont->Destroy();
 
-		if (m_systemFont)
-		{
-			m_systemFont->Destroy();
-			m_systemFont = nullptr;
-		}
+		if (m_monospaceFont)
+			m_monospaceFont->Destroy();
+
+		IGpFontHandler *hfh = HostFontHandler::GetInstance();
 
 		for (int i = 0; i < sizeof(m_cachedRenderedFonts) / sizeof(m_cachedRenderedFonts[0]); i++)
 		{
@@ -109,7 +123,6 @@ namespace PortabilityLayer
 
 	FontFamily *FontManagerImpl::GetSystemFont(int textSize, int variationFlags) const
 	{
-		(void)textSize;
 		return m_systemFont;
 	}
 
@@ -119,6 +132,16 @@ namespace PortabilityLayer
 			return m_systemFont;	// Use heavier font below 11pt
 
 		return m_applicationFont;
+	}
+
+	FontFamily *FontManagerImpl::GetHandwritingFont(int textSize, int variationFlags) const
+	{
+		return m_handwritingFont;
+	}
+
+	FontFamily *FontManagerImpl::GetMonospaceFont(int textSize, int variationFlags) const
+	{
+		return m_monospaceFont;
 	}
 
 	RenderedFont *FontManagerImpl::GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks)

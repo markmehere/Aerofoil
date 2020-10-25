@@ -16,10 +16,11 @@ IN-GAME SHORTCUT COMMANDS
 - Alt-Enter toggles full screen.
 
 
-GAMEPAD SUPPORT
+GAMEPAD SUPPORT (WINDOWS)
 -------------------------------------------------------------------------------
 XInput gamepads are supported.  Other gamepads may be supported via third-party
-software that maps them to XInput (i.e. PS4 gamepads are supported via DS4Windows)
+software that maps them to XInput (i.e. PS4 gamepads are supported via
+DS4Windows)
 
 
 LEGAL NOTICES
@@ -62,8 +63,8 @@ ADDITIONAL CREDITS
 * PICT resource 3975 (Ozma) is derived from an illustration by John R. Neill
   from [Ozma of Oz](https://www.gutenberg.org/files/33361/33361-h/33361-h.htm).
 * PICT resource 153 (About box) features a portion of
-  [this Little Nemo comic](http://www.comicstriplibrary.org/display/116) by Winsor
-  McCay.
+  [this Little Nemo comic](http://www.comicstriplibrary.org/display/116)
+  byWinsor McCay.
 
 
 Aerofoil uses the following third-party software:
@@ -71,6 +72,16 @@ Aerofoil uses the following third-party software:
 Open Sans font:
 (c)2011 Google
 Distributed under the Apache License (see license_apache.txt)
+
+
+Roboto Mono font:
+(c)2015 Google
+Distributed under the Apache License (see license_apache.txt)
+
+
+Gochi Hand font:
+(c) 2011 Juan Pablo del Peral
+Distributed under the Open Font License (see license_ofl.txt)
 
 
 stb_image_write:
@@ -84,7 +95,8 @@ Distributed under the LGPLv2 license (See license_lgplv2.txt)
 
 
 RapidJSON:
-Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.  All rights reserved.
+Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.  All
+rights reserved.
 
 Distributed under the MIT license (See license_rapidjson.txt)
 
@@ -115,7 +127,8 @@ zlib:
 
 FreeType:
 
-Portions of this software are copyright (c)2020 The FreeType Project (www.freetype.org).
+Portions of this software are copyright (c)2020 The FreeType Project
+(www.freetype.org).
 All rights reserved.
 
 Distributed under the GPLv2 license (see license_gplv2.txt)

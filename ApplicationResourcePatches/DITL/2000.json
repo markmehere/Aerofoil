@@ -8,6 +8,14 @@
 			"size" : [ 58, 20 ],
 			"id" : 1,
 			"enabled" : true
+		},
+		{
+			"name" : "Third Party/Licensing Info...",
+			"itemType" : "Button",
+			"pos" : [ 176, 240 ],
+			"size" : [ 190, 20 ],
+			"id" : 1,
+			"enabled" : true
 		}
 	]
 }

@@ -9,6 +9,7 @@
 #include "PLStandardColors.h"
 #include "PLSysCalls.h"
 #include "RenderedFont.h"
+#include "GpApplicationName.h"
 #include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
 #include "ZipFile.h"
@@ -711,7 +712,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 
 void DoExportSourceCode (void)
 {
-	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, "SourceExport.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
+	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, GP_APPLICATION_NAME "SourceCode.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
 	if (!stream)
 		return;
 

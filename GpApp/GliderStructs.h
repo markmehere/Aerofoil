@@ -3,8 +3,9 @@
 //								GliderStructs.h
 //----------------------------------------------------------------------------
 //============================================================================
+#pragma once
 
-
+#include "GliderDefines.h"
 #include "PLQDOffscreen.h"
 #include "GpVOSEvent.h"
 #include "ByteSwap.h"

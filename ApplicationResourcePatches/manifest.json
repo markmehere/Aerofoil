@@ -7,6 +7,8 @@
 		"DITL/2002.json" : "ApplicationResourcePatches/DITL/2002.json",
 		"DITL/2003.json" : "ApplicationResourcePatches/DITL/2003.json",
 		"DITL/2004.json" : "ApplicationResourcePatches/DITL/2004.json",
+		"DITL/2005.json" : "ApplicationResourcePatches/DITL/2005.json",
+		"DITL/2006.json" : "ApplicationResourcePatches/DITL/2006.json",
 		"PICT/1973.bmp" : "ApplicationResourcePatches/PICT/1973.bmp",
 		"PICT/1974.bmp" : "ApplicationResourcePatches/PICT/1974.bmp",
 		"PICT/1975.bmp" : "ApplicationResourcePatches/PICT/1975.bmp",
@@ -21,7 +23,14 @@
 		"PICT/1984.bmp" : "ApplicationResourcePatches/PICT/1984.bmp",
 		"PICT/1985.bmp" : "ApplicationResourcePatches/PICT/1985.bmp",
 		"PICT/1986.bmp" : "ApplicationResourcePatches/PICT/1986.bmp",
-		"PICT/1987.bmp" : "ApplicationResourcePatches/PICT/1987.bmp"
+		"PICT/1987.bmp" : "ApplicationResourcePatches/PICT/1987.bmp",
+		"LICS/1000.txt" : "ApplicationResourcePatches/LICS/1000.txt",
+		"LICS/1001.txt" : "ApplicationResourcePatches/LICS/1001.txt",
+		"LICS/1002.txt" : "ApplicationResourcePatches/LICS/1002.txt",
+		"LICS/1003.txt" : "ApplicationResourcePatches/LICS/1003.txt",
+		"LICS/1004.txt" : "ApplicationResourcePatches/LICS/1004.txt",
+		"LICS/1005.txt" : "ApplicationResourcePatches/LICS/1005.txt",
+		"LICS/1006.txt" : "ApplicationResourcePatches/LICS/1006.txt"
 	},
 	"delete" :
 	[
