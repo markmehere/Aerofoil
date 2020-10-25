@@ -67,7 +67,7 @@ struct MainMenuUIState
 	static const unsigned int kControlBottomSpacing = 20;
 	static const unsigned int kControlIntermediateSpacing = 16;
 	static const unsigned int kControlInteriorSpacing = 6;
-	static const unsigned int kControlScrollInDecay = 2;
+	static const unsigned int kControlScrollInDecay = 32;
 	static const unsigned int kControlScrollInDecayFalloffBits = 0;
 };
 
@@ -337,11 +337,15 @@ void HandleMainMenuUIResolutionChange()
 		{
 			PortabilityLayer::Vec2i pos = control.m_window->GetPosition();
 			pos.m_y = displayHeight - MainMenuUIState::kControlBottomSpacing - MainMenuUIState::kControlHeight;
+			pos.m_x = control.m_targetHorizontalCoordinate;
 			control.m_window->SetPosition(pos);
 
 			wm->PutWindowBehind(control.m_window, wm->GetPutInFrontSentinel());
 		}
 	}
+
+	mainMenu.m_scrollInStep = 0;
+	mainMenu.m_scrollInOffset = 0;
 }
 
 static void MainMenuUIMouseMove(Window *window, MainMenuUIState::ControlID controlID, const Point &localPoint)
