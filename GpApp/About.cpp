@@ -730,7 +730,7 @@ static int16_t LicenseReaderFilter(void *context, Dialog *dialog, const TimeTagg
 					licenseReaderPointHistory[i] = mouseLocalPt;
 				licenseReaderIsScrolling = true;
 			}
-			else if (licenseReaderScrollBarWidget->GetRect().Contains(mouseLocalPt))
+			else if (licenseReaderScrollBarWidget != nullptr && licenseReaderScrollBarWidget->GetRect().Contains(mouseLocalPt))
 			{
 				licenseReaderScrollBarWidget->Capture(dialog->GetWindow(), mouseLocalPt, LicenseReaderScrollBarUpdate);
 				licenseReaderTextScroll = licenseReaderScrollBarWidget->GetState();
