@@ -27,6 +27,7 @@ struct SourceExportState
 	~SourceExportState();
 
 	Window *m_window;
+	Window *m_exclWindow;
 	Rect m_progressRect;
 	Rect m_filledProgress;
 	GpIOStream *m_tsStream;
@@ -48,6 +49,7 @@ private:
 
 SourceExportState::SourceExportState()
 	: m_window(nullptr)
+	, m_exclWindow(nullptr)
 	, m_progressRect(Rect::Create(0, 0, 0, 0))
 	, m_tsStream(nullptr)
 	, m_sourcePkgStream(nullptr)
@@ -60,7 +62,10 @@ SourceExportState::SourceExportState()
 SourceExportState::~SourceExportState()
 {
 	if (m_window)
+	{
+		PortabilityLayer::WindowManager::GetInstance()->SwapExclusiveWindow(m_exclWindow);
 		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(m_window);
+	}
 
 	CloseStreamIfOpen(m_tsStream);
 	CloseStreamIfOpen(m_sourcePkgStream);
@@ -139,6 +144,10 @@ static void InitSourceExportWindow(SourceExportState *state)
 	PortabilityLayer::WindowDef def = PortabilityLayer::WindowDef::Create(loadScreenRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
 	state->m_window = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
+	state->m_exclWindow = state->m_window;
+
+	PortabilityLayer::WindowManager::GetInstance()->SwapExclusiveWindow(state->m_exclWindow);
+
 	PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(state->m_window, PL_GetPutInFrontWindowPtr());
 
 	DrawSurface *surface = state->m_window->GetDrawSurface();
