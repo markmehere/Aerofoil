@@ -291,6 +291,9 @@ void DoAboutOpenSource(void)
 		case kSDLLicenseButton:
 			DoLicenseReader(kLicenseResourceSDL);
 			break;
+		case kRapidJSONLicenseButton:
+			DoLicenseReader(kLicenseResourceRapidJSON);
+			break;
 		default:
 			break;
 		}
