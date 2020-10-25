@@ -280,6 +280,8 @@ static void DismissMainMenuUIPage()
 
 		Delay(1, nullptr);
 	}
+
+	DismissMainMenuUI();
 }
 
 
