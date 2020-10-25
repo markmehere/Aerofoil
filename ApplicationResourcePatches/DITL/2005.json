@@ -18,7 +18,7 @@
 			"enabled" : false
 		},
 		{
-			"name" : "Aerofoil (c)2019-2020 Eric Lasota",
+			"name" : "Aerofoil ©2019-2020 Eric Lasota",
 			"itemType" : "Label",
 			"pos" : [ 16, 21 ],
 			"size" : [ 406, 20 ],
@@ -34,7 +34,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Based on Glider PRO (c)1994-2000 Casady & Greene, Inc., created by John Calhoun",
+			"name" : "Based on Glider PRO ©1994-2000 Casady & Greene, Inc., created by John Calhoun",
 			"itemType" : "Label",
 			"pos" : [ 16, 44 ],
 			"size" : [ 398, 28 ],
@@ -50,7 +50,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Open Sans font (c)2011 Google",
+			"name" : "Open Sans font ©2011 Google",
 			"itemType" : "Label",
 			"pos" : [ 16, 77 ],
 			"size" : [ 406, 20 ],
@@ -66,7 +66,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Roboto Mono font (c)2011 Google",
+			"name" : "Roboto Mono font ©2015 Google",
 			"itemType" : "Label",
 			"pos" : [ 16, 101 ],
 			"size" : [ 406, 20 ],
@@ -82,7 +82,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Gochi Hand font (c)2011 Juan Pablo del Peral",
+			"name" : "Gochi Hand font ©2011 Juan Pablo del Peral",
 			"itemType" : "Label",
 			"pos" : [ 16, 125 ],
 			"size" : [ 406, 20 ],
@@ -98,7 +98,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "LIBICONV (c)1999-2001, 2016 Free Software Foundation, Inc.",
+			"name" : "LIBICONV ©1999-2001, 2016 Free Software Foundation, Inc.",
 			"itemType" : "Label",
 			"pos" : [ 16, 149 ],
 			"size" : [ 406, 20 ],
@@ -114,7 +114,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "RapidJSON (c) 2015 THL A29 Limited, a Tencent company, and Milo Yip.",
+			"name" : "RapidJSON ©2015 THL A29 Limited, a Tencent company, and Milo Yip",
 			"itemType" : "Label",
 			"pos" : [ 16, 172 ],
 			"size" : [ 406, 28 ],
@@ -130,7 +130,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "zlib (c)1995-2017 Jean-loup Gailly and Mark Adler",
+			"name" : "zlib ©1995-2017 Jean-loup Gailly and Mark Adler",
 			"itemType" : "Label",
 			"pos" : [ 16, 205 ],
 			"size" : [ 406, 20 ],
@@ -146,7 +146,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "FreeType (c)2020 The FreeType Project",
+			"name" : "FreeType ©2020 The FreeType Project",
 			"itemType" : "Label",
 			"pos" : [ 16, 229 ],
 			"size" : [ 406, 20 ],
@@ -162,7 +162,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Simple DirectMedia Layer (c)1997-2020 Sam Lantinga",
+			"name" : "Simple DirectMedia Layer ©1997-2020 Sam Lantinga",
 			"itemType" : "Label",
 			"pos" : [ 16, 253 ],
 			"size" : [ 406, 20 ],
