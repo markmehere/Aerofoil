@@ -12,6 +12,7 @@
 #include "PLSysCalls.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
+#include "MainMenuUI.h"
 #include "ResolveCachingColor.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "WindowDef.h"
@@ -397,9 +398,7 @@ static void HandleMainMenuUISelection(MainMenuUIState::ControlID controlID)
 		break;
 
 	case MainMenuUIState::Control_Demo:
-		DismissMainMenuUIPage();
-		DoOptionsMenu(iHelp);
-		StartMainMenuUI();
+		DoDemoGame();	// This handles main menu UI by itself
 		break;
 
 	case MainMenuUIState::Control_AboutApplication:

@@ -12,6 +12,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "MainMenuUI.h"
 #include "MainWindow.h"
 #include "PLEventQueue.h"
 #include "PLTimeTaggedVOSEvent.h"
@@ -278,9 +279,15 @@ void DoDemoGame (void)
 	PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
 	if (OpenHouse())
 	{
+		if (thisMac.isTouchscreen)
+			DismissMainMenuUI();
+
 		whoCares = ReadHouse();
 		demoGoing = true;
 		NewGame(kNewGameMode);
+
+		if (thisMac.isTouchscreen)
+			StartMainMenuUI();
 	}
 	whoCares = CloseHouse();
 	thisHouseIndex = wasHouseIndex;
@@ -571,6 +578,7 @@ void ResetTouchScreenControlBounds (void)
 	points[TouchScreenCtrlIDs::Movement] = Point::Create(mainWindowRect.left, mainWindowRect.top);
 	points[TouchScreenCtrlIDs::BatteryHelium] = Point::Create(mainWindowRect.left + touchScreenControlEdgeSpacing, mainWindowRect.top + touchScreenControlEdgeSpacing);
 	points[TouchScreenCtrlIDs::Bands] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.top + touchScreenControlEdgeSpacing);
+	points[TouchScreenCtrlIDs::Menu] = Point::Create(points[TouchScreenCtrlIDs::Bands].h - touchScreenControlInterSpacing - touchScreenControlSize, points[TouchScreenCtrlIDs::BatteryHelium].v);
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 		sizes[i] = Point::Create(touchScreenControlSize, touchScreenControlSize);
@@ -628,6 +636,7 @@ void PlayGame (void)
 	touchScreen.controls[TouchScreenCtrlIDs::Movement].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::Bands].isEnabled = true;
 	touchScreen.controls[TouchScreenCtrlIDs::BatteryHelium].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::Menu].isEnabled = true;
 
 	while ((playing) && (!quitting))
 	{

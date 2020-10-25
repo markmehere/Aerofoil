@@ -622,6 +622,7 @@ void RenderTouchScreenControls (void)
 	ctrlGraphics[TouchScreenCtrlIDs::Movement] = nullptr;
 	ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsDisabled];
 	ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryDisabled];
+	ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::MenuIdle];
 
 	if (batteryTotal < 0)
 		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumIdle];
@@ -645,6 +646,8 @@ void RenderTouchScreenControls (void)
 			if (bandsTotal > 0)
 				ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsActive];
 		}
+		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Menu)
+			ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::MenuActive];
 	}
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)

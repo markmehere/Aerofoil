@@ -369,7 +369,9 @@ namespace TouchScreenCtrlIDs
 	{
 		Bands,
 		BatteryHelium,
-		Movement,
+		Menu,
+
+		Movement,	// Keep this last
 
 		Count,
 
@@ -432,6 +434,8 @@ namespace touchScreenControlGraphics
 {
 	enum touchScreenControlGraphic
 	{
+		MenuActive,
+		MenuIdle,
 		BandsDisabled,
 		BandsActive,
 		BandsIdle,
@@ -451,7 +455,7 @@ namespace touchScreenControlGraphics
 		Count,
 	};
 
-	static const int kTouchScreenGraphicStartID = 1973;
+	static const int kTouchScreenGraphicStartID = 1971;
 }
 
 typedef touchScreenControlGraphics::touchScreenControlGraphic touchScreenControlGraphic_t;
