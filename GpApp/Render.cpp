@@ -57,6 +57,7 @@ extern	short		numSparkles, numFlyingPts, numPendulums, clockFrame;
 extern	short		numFlames, numSavedMaps, numTikiFlames, numCoals;
 extern	Boolean		evenFrame, shadowVisible, twoPlayerGame, tvOn;
 extern	touchScreenControlState	touchScreen;
+extern	Boolean		demoGoing;
 
 
 //==============================================================  Functions
@@ -610,6 +611,9 @@ void RenderShreds (void)
 
 void RenderTouchScreenControls (void)
 {
+	if (demoGoing)
+		return;
+
 	DrawSurface *ctrlGraphics[TouchScreenCtrlIDs::Count];
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
