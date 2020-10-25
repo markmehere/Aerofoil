@@ -1,6 +1,7 @@
 #include "CombinedTimestamp.h"
 #include "DeflateCodec.h"
 #include "Environ.h"
+#include "GpBuildVersion.h"
 #include "GpIOStream.h"
 #include "HostDirectoryCursor.h"
 #include "HostFileSystem.h"
@@ -712,7 +713,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 
 void DoExportSourceCode (void)
 {
-	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, GP_APPLICATION_NAME "SourceCode.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
+	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, GP_APPLICATION_NAME "-" GP_APPLICATION_VERSION_STRING "-SourceCode.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
 	if (!stream)
 		return;
 
