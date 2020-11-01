@@ -2,8 +2,10 @@
 
 #include "DisplayDeviceManager.h"
 #include "HostDisplayDriver.h"
+#include "HostLogDriver.h"
 #include "IGpDisplayDriver.h"
 #include "IGpDisplayDriverSurface.h"
+#include "IGpLogDriver.h"
 #include "PLCore.h"
 #include "PLEventQueue.h"
 #include "PLStandardColors.h"
@@ -1434,6 +1436,11 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight)
 	{
+		IGpLogDriver *logger = PortabilityLayer::HostLogDriver::GetInstance();
+
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Information, "WindowManagerImpl: Resizing from %ix%i to %ix%i", static_cast<int>(prevWidth), static_cast<int>(prevHeight), static_cast<int>(newWidth), static_cast<int>(newHeight));
+
 		const uint32_t menuBarHeight = PortabilityLayer::MenuManager::GetInstance()->GetMenuBarHeight();
 		const bool menuIsTouchScreen = PortabilityLayer::MenuManager::GetInstance()->IsMenuTouchScreenStyle();
 
@@ -1443,6 +1450,9 @@ namespace PortabilityLayer
 			window->GetChromePadding(chromePadding);
 
 			const Rect surfaceRect = window->GetDrawSurface()->m_port.GetRect();
+
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Information, "Auto window reposition: Pos: %i,%i Size %i,%i", static_cast<int>(window->GetPosition().m_x), static_cast<int>(window->GetPosition().m_y), static_cast<int>(surfaceRect.Width()), static_cast<int>(surfaceRect.Height()));
 
 			uint32_t paddedWidth = surfaceRect.Width() + chromePadding[WindowChromeSides::kLeft] + chromePadding[WindowChromeSides::kRight];
 			uint32_t paddedHeight = surfaceRect.Height() + chromePadding[WindowChromeSides::kTop] + chromePadding[WindowChromeSides::kBottom];
@@ -1478,7 +1488,7 @@ namespace PortabilityLayer
 			else
 			{
 				uint32_t heightWithoutMenu = surfaceRect.Height() - menuBarHeight;
-				if (currentY + static_cast<int32_t>(paddedHeight) >= heightWithoutMenu)
+				if (currentY + static_cast<int32_t>(paddedHeight) >= static_cast<int32_t>(heightWithoutMenu))
 					newY = currentY;
 				else
 				{
@@ -1495,6 +1505,9 @@ namespace PortabilityLayer
 
 			newX = std::max<int64_t>(0, std::min<int64_t>(newX, newWidth - 1));
 			newY = std::max<int64_t>(0, std::min<int64_t>(newY, newHeight - 1));
+
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Information, "New position: %i,%i", static_cast<int>(newX), static_cast<int>(newY));
 
 			window->SetPosition(Vec2i(newX, newY));
 		}
