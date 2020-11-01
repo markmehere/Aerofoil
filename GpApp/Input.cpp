@@ -7,13 +7,25 @@
 
 #include "PLDialogs.h"
 #include "PLKeyEncoding.h"
+#include "BitmapImage.h"
 #include "DialogManager.h"
 #include "Environ.h"
 #include "Externs.h"
+#include "FontFamily.h"
 #include "InputManager.h"
 #include "MainWindow.h"
+#include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
 #include "RectUtils.h"
+#include "RenderedFont.h"
+#include "GpRenderedFontMetrics.h"
+#include "ResolveCachingColor.h"
+#include "ResourceManager.h"
+#include "Utilities.h"
+#include "Vec2i.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
 
 
 #define kNormalThrust		5
@@ -27,6 +39,7 @@
 void LogDemoKey (char);
 void DoCommandKey (void);
 void DoPause (void);
+void DoTouchScreenMenu (void);
 void DoBatteryEngaged (gliderPtr);
 void DoHeliumEngaged (gliderPtr);
 Boolean QuerySaveGame (void);
@@ -39,7 +52,7 @@ Boolean		isEscPauseKey, paused, batteryWasEngaged;
 
 extern	long		gameFrame;
 extern	short		otherPlayerEscaped;
-extern	Boolean		quitting, playing, onePlayerLeft, twoPlayerGame, demoGoing;
+extern	Boolean		quitting, playing, onePlayerLeft, twoPlayerGame, demoGoing, pendingTouchScreenMenu;
 extern	touchScreenControlState	touchScreen;
 extern	macEnviron	thisMac;
 
@@ -77,6 +90,260 @@ void DoCommandKey (void)
 		HideCursor();
 		CopyRectWorkToMain(&workSrcRect);
 		RefreshScoreboard(kNormalTitleMode);
+	}
+}
+
+//--------------------------------------------------------------  DrawTouchScreenMenu
+
+namespace TouchScreenMenuMetrics
+{
+	const int kTextLineSpacing = 42;
+	const int kTextLeftX = 36;
+	const int kTextFirstY = 34;
+	const int kTextSize = 18;
+
+	const int kHighlightXOffset = 10;
+	const int kHighlightYOffset = 30;
+}
+
+namespace TouchScreenMenuItems
+{
+	enum TouchScreenMenuItem
+	{
+		kResume,
+		kSave,
+		kQuit,
+
+		kCount,
+	};
+}
+
+typedef TouchScreenMenuItems::TouchScreenMenuItem TouchScreenMenuItem_t;
+
+
+
+//--------------------------------------------------------------  IsTouchScreenMenuItemEnabled
+
+Boolean IsTouchScreenMenuItemEnabled(int index)
+{
+	if (index == TouchScreenMenuItems::kSave)
+		return !twoPlayerGame;
+
+	return true;
+}
+
+//--------------------------------------------------------------  DrawTouchScreenMenu
+
+void DrawTouchScreenMenu (DrawSurface *surface, const THandle<BitmapImage> &backgroundImage, const DrawSurface *highlightSurface, int selectedItemIndex)
+{
+	surface->DrawPicture(backgroundImage, (*backgroundImage)->GetRect());
+
+	const PLPasStr itemTexts[TouchScreenMenuItems::kCount] =
+	{
+		PSTR("Resume"),
+		PSTR("Save"),
+		PSTR("Quit"),
+	};
+
+	const int numItems = sizeof(itemTexts) / sizeof(itemTexts[0]);
+
+	PortabilityLayer::RenderedFont *rfont = GetHandwritingFont(48, PortabilityLayer::FontFamilyFlag_None, true);
+	if (!rfont)
+		return;
+
+	const int32_t fontAscent = rfont->GetMetrics().m_ascent;
+	const int32_t firstY = TouchScreenMenuMetrics::kTextFirstY + (fontAscent + TouchScreenMenuMetrics::kTextLineSpacing + 1) / 2;
+
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor grayColor(PortabilityLayer::RGBAColor::Create(120, 120, 120, 255));
+
+	for (int i = 0; i < numItems; i++)
+	{
+		PortabilityLayer::ResolveCachingColor &selectedColor = IsTouchScreenMenuItemEnabled(i) ? blackColor : grayColor;
+
+		surface->DrawString(Point::Create(TouchScreenMenuMetrics::kTextLeftX, firstY + i * TouchScreenMenuMetrics::kTextLineSpacing), itemTexts[i], selectedColor, rfont);
+	}
+
+	if (selectedItemIndex >= 0)
+	{
+		BitMap *highlightBitmap = *highlightSurface->m_port.GetPixMap();
+		Rect highlightRect = highlightBitmap->m_rect;
+		Rect highlightDestRect = highlightRect;
+		highlightDestRect += Point::Create(TouchScreenMenuMetrics::kHighlightXOffset, TouchScreenMenuMetrics::kHighlightYOffset + selectedItemIndex * TouchScreenMenuMetrics::kTextLineSpacing);
+
+		CopyMask(highlightBitmap, highlightBitmap, *surface->m_port.GetPixMap(), &highlightRect, &highlightRect, &highlightDestRect);
+	}
+}
+
+//--------------------------------------------------------------  DoTouchScreenMenu
+
+void DoTouchScreenMenu(void)
+{
+	static const int kTouchScreenMenuResource = 1300;
+	static const int kTouchScreenHighlightResource = 1301;
+
+	THandle<BitmapImage> highlightH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kTouchScreenHighlightResource).StaticCast<BitmapImage>();
+	BitmapImage *highlightImage = *highlightH;
+
+	if (!highlightH)
+		return;
+
+	DrawSurface *highlightSurface = nullptr;
+	Rect highlightRect = highlightImage->GetRect();
+	if (CreateOffScreenGWorld(&highlightSurface, &highlightRect) != PLErrors::kNone)
+	{
+		highlightH.Dispose();
+		return;
+	}
+
+	highlightSurface->DrawPicture(highlightH, highlightRect);
+	highlightH.Dispose();
+
+	BitMap *highlightBitmap = *highlightSurface->m_port.GetPixMap();
+
+	THandle<BitmapImage> imageH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kTouchScreenMenuResource).StaticCast<BitmapImage>();
+
+	if (!imageH)
+		return;
+
+	BitmapImage *image = *imageH;
+	Rect menuRect = image->GetRect();
+
+	const uint16_t width = image->GetRect().Width();
+	const uint16_t height = image->GetRect().Height();
+
+	uint16_t wx = (thisMac.fullScreen.left + thisMac.fullScreen.right - width) / 2;
+	uint16_t wy = (thisMac.fullScreen.top + thisMac.fullScreen.bottom - height) / 2;
+
+	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(menuRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, 0, 0, PSTR(""));
+	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
+
+	Window *window = wm->CreateWindow(wdef);
+	wm->PutWindowBehind(window, wm->GetPutInFrontSentinel());
+	window->SetPosition(PortabilityLayer::Vec2i(wx, wy));
+
+	Window *exclWindow = window;
+	wm->SwapExclusiveWindow(exclWindow);
+
+	DrawSurface *surface = window->GetDrawSurface();
+
+	DrawTouchScreenMenu(surface, imageH, highlightSurface, -1);
+
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor grayColor(StdColors::Black());
+
+	int lockedItem = -1;
+	int highlightedItem = -1;
+	for (;;)
+	{
+		TimeTaggedVOSEvent evt;
+		if (WaitForEvent(&evt, 1))
+		{
+			int newLockedItem = lockedItem;
+			int newHighlightedItem = highlightedItem;
+			if (evt.IsLMouseDownEvent())
+			{
+				const Point mousePt = window->MouseToLocal(evt.m_vosEvent.m_event.m_mouseInputEvent);
+				if (!menuRect.Contains(mousePt))
+					continue;
+
+				newLockedItem = -1;
+				if (mousePt.v >= TouchScreenMenuMetrics::kTextFirstY)
+				{
+					int itemV = mousePt.v - TouchScreenMenuMetrics::kTextFirstY;
+					int itemIndex = itemV / TouchScreenMenuMetrics::kTextLineSpacing;
+
+					if (itemIndex >= 0 && itemIndex < TouchScreenMenuItems::kCount)
+					{
+						newLockedItem = itemIndex;
+						newHighlightedItem = itemIndex;
+					}
+				}
+			}
+			else if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
+			{
+				const GpMouseInputEvent &mouseEvt = evt.m_vosEvent.m_event.m_mouseInputEvent;
+				if (mouseEvt.m_eventType == GpMouseEventTypes::kLeave)
+				{
+					newHighlightedItem = -1;
+					newLockedItem = -1;
+				}
+				else if (mouseEvt.m_eventType == GpMouseEventTypes::kMove || mouseEvt.m_eventType == GpMouseEventTypes::kUp)
+				{
+					const Point mousePt = window->MouseToLocal(mouseEvt);
+					newHighlightedItem = -1;
+
+					if (menuRect.Contains(mousePt) && mousePt.v >= TouchScreenMenuMetrics::kTextFirstY)
+					{
+						int itemV = mousePt.v - TouchScreenMenuMetrics::kTextFirstY;
+						int itemIndex = itemV / TouchScreenMenuMetrics::kTextLineSpacing;
+
+						if (itemIndex >= 0 && itemIndex < TouchScreenMenuItems::kCount)
+						{
+							if (itemIndex == lockedItem)
+								newHighlightedItem = itemIndex;
+							else
+								newHighlightedItem = -1;
+						}
+					}
+
+					if (mouseEvt.m_eventType == GpMouseEventTypes::kUp)
+					{
+						if (newHighlightedItem >= 0)
+						{
+							highlightedItem = newHighlightedItem;
+							break;
+						}
+						else
+						{
+							newLockedItem = -1;
+							newHighlightedItem = -1;
+						}
+					}
+				}
+			}
+
+			if (newLockedItem != lockedItem)
+				lockedItem = newLockedItem;
+
+			if (newHighlightedItem != highlightedItem)
+			{
+				highlightedItem = newHighlightedItem;
+				DrawTouchScreenMenu(surface, imageH, highlightSurface, highlightedItem);
+			}
+		}
+	}
+
+	wm->SwapExclusiveWindow(exclWindow);
+
+	wm->DestroyWindow(window);
+	imageH.Dispose();
+	DisposeGWorld(highlightSurface);
+
+	if (highlightedItem < 0)
+		return;
+
+	switch (highlightedItem)
+	{
+	case TouchScreenMenuItems::kQuit:
+		playing = false;
+		paused = false;
+		if ((!twoPlayerGame) && (!demoGoing))
+		{
+			if (QuerySaveGame())
+				SaveGame2();		// New save game.
+		}
+		break;
+	case TouchScreenMenuItems::kSave:
+		assert(!twoPlayerGame);
+		RefreshScoreboard(kSavingTitleMode);
+		SaveGame2();				// New save game.
+		HideCursor();
+		CopyRectWorkToMain(&workSrcRect);
+		RefreshScoreboard(kNormalTitleMode);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -308,6 +575,12 @@ void GetInput (gliderPtr thisGlider)
 
 		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
+	}
+
+	if (pendingTouchScreenMenu)
+	{
+		pendingTouchScreenMenu = false;
+		DoTouchScreenMenu();
 	}
 
 	if (thisGlider->mode == kGliderBurning)

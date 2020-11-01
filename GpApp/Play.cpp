@@ -56,6 +56,7 @@ long		gameFrame;
 short		batteryTotal, bandsTotal, foilTotal, mortals;
 Boolean		playing, evenFrame, twoPlayerGame, showFoil, demoGoing;
 Boolean		doBackground, playerSuicide, phoneBitSet, tvOn;
+Boolean		pendingTouchScreenMenu;
 
 touchScreenControlState touchScreen;
 
@@ -406,6 +407,9 @@ void HandleTouchUp(touchScreenFingerID fingerID)
 		touchScreenFingerState &fstate = touchScreen.fingers[i];
 		if (fstate.active && fstate.tfingerID == fingerID)
 		{
+			if (fstate.capturingControl == TouchScreenCtrlIDs::Menu && touchScreen.controls[fstate.capturingControl].touchRect.Contains(fstate.point))
+				pendingTouchScreenMenu = true;
+
 			fstate.active = false;
 			fstate.tfingerID = touchScreenFingerID();
 			fstate.capturingControl = TouchScreenCtrlIDs::Invalid;
@@ -566,7 +570,6 @@ void ResetTouchScreenControlBounds (void)
 	if (!thisMac.isTouchscreen)
 		return;
 
-
 	const Rect centerRoomRect = localRoomsDest[kCentralRoom];
 
 	int16_t touchScreenControlInterSpacing = 16;
@@ -621,6 +624,8 @@ void InitTouchScreenControlState(void)
 		(void)CreateOffScreenGWorld(&touchScreen.graphics[i], &resRect);
 		LoadGraphic(touchScreen.graphics[i], resID);
 	}
+
+	pendingTouchScreenMenu = false;
 }
 
 //--------------------------------------------------------------  PlayGame
@@ -633,9 +638,9 @@ void PlayGame (void)
 
 	InitTouchScreenControlState();
 
-	touchScreen.controls[TouchScreenCtrlIDs::Movement].isEnabled = true;
-	touchScreen.controls[TouchScreenCtrlIDs::Bands].isEnabled = true;
-	touchScreen.controls[TouchScreenCtrlIDs::BatteryHelium].isEnabled = true;
+	touchScreen.controls[TouchScreenCtrlIDs::Movement].isEnabled = (demoGoing == 0);
+	touchScreen.controls[TouchScreenCtrlIDs::Bands].isEnabled = (demoGoing == 0);
+	touchScreen.controls[TouchScreenCtrlIDs::BatteryHelium].isEnabled = (demoGoing == 0);
 	touchScreen.controls[TouchScreenCtrlIDs::Menu].isEnabled = true;
 
 	while ((playing) && (!quitting))
