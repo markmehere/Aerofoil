@@ -41,7 +41,7 @@ int main(int argc, const char **argv);
 
 short		isVolume, wasVolume;
 short		isDepthPref, dataResFile, numSMWarnings;
-Boolean		quitting, doZooms, quickerTransitions, isUseICCProfile;
+Boolean		quitting, doZooms, quickerTransitions, isUseICCProfile, isPrefsLoaded;
 Boolean		isAutoScale = true;
 
 
@@ -155,6 +155,8 @@ void ReadInPrefs (void)
 		globalModulePrefs.Dispose();
 		globalModulePrefs = modulePrefs;
 		modulePrefs = nullptr;
+
+		isPrefsLoaded = true;
 	}
 	else
 	{
@@ -237,6 +239,8 @@ void ReadInPrefs (void)
 			displayDriver->RequestToggleFullScreen(0);
 
 		modulePrefs.Dispose();
+
+		isPrefsLoaded = false;
 	}
 
 	if ((numNeighbors > 1) && (thisMac.constrainedScreen.right <= 512))
@@ -346,7 +350,7 @@ void StepLoadScreen(int steps)
 	if (loadScreenWindow)
 	{
 		int oldProgress = loadScreenProgress;
-		int loadScreenMax = 19;
+		int loadScreenMax = 25;
 		loadScreenProgress = loadScreenProgress + steps;
 		if (loadScreenProgress > loadScreenMax)
 			loadScreenProgress = loadScreenMax;
@@ -370,7 +374,15 @@ void InitLoadingWindow()
 		return;
 
 	static const int kLoadScreenHeight = 32;
-	static const int kLoadScreenWidth = 256;
+
+	int kLoadScreenWidth = 256;
+	PLPasStr loadingText = PSTR("Loading...");
+
+	if (!isPrefsLoaded)
+	{
+		loadingText = PSTR("Performing First-Time Setup...");
+		kLoadScreenWidth = 420;
+	}
 
 	ForceSyncFrame();
 	PLSysCalls::Sleep(1);
@@ -395,7 +407,6 @@ void InitLoadingWindow()
 
 	PortabilityLayer::WindowManager::GetInstance()->FlickerWindowIn(loadScreenWindow, 32);
 
-	const PLPasStr loadingText = PSTR("Loading...");
 	PortabilityLayer::RenderedFont *font = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
 	int32_t textY = (kLoadScreenHeight + font->GetMetrics().m_ascent) / 2;
 	surface->DrawString(Point::Create(4+16, textY), loadingText, blackColor, font);
@@ -412,20 +423,65 @@ void InitLoadingWindow()
 
 void PreloadFonts()
 {
-	GetApplicationFont(8, PortabilityLayer::FontFamilyFlag_None, true);
-	StepLoadScreen(1);
-	GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
-	StepLoadScreen(1);
-	GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
-	StepLoadScreen(1);
-	GetApplicationFont(14, PortabilityLayer::FontFamilyFlag_Bold, true);
-	StepLoadScreen(1);
-	GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
-	StepLoadScreen(1);
-	GetApplicationFont(10, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
-	StepLoadScreen(1);
-	GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
-	StepLoadScreen(1);
+	enum FontCategory
+	{
+		FontCategory_System,
+		FontCategory_Application,
+		FontCategory_Handwriting,
+		FontCategory_Monospace,
+	};
+
+	struct FontSpec
+	{
+		FontCategory m_category;
+		int m_size;
+		int m_flags;
+		bool m_aa;
+	};
+
+	FontSpec specs[] =
+	{
+		{ FontCategory_System, 9, PortabilityLayer::FontFamilyFlag_Bold, true },
+		{ FontCategory_System, 10, PortabilityLayer::FontFamilyFlag_Bold, true },
+		{ FontCategory_System, 12, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_System, 12, PortabilityLayer::FontFamilyFlag_Bold, true },
+		{ FontCategory_Application, 8, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_Application, 9, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_Application, 12, PortabilityLayer::FontFamilyFlag_Bold, true },
+		{ FontCategory_Application, 14, PortabilityLayer::FontFamilyFlag_Bold, true },
+		{ FontCategory_Application, 18, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_Application, 40, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_Handwriting, 24, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_Handwriting, 48, PortabilityLayer::FontFamilyFlag_None, true },
+		{ FontCategory_Monospace, 10, PortabilityLayer::FontFamilyFlag_None, true },
+	};
+
+	const int numFontSpecs = sizeof(specs) / sizeof(specs[0]);
+
+	for (int i = 0; i < numFontSpecs; i++)
+	{
+		const FontSpec &spec = specs[i];
+
+		switch (spec.m_category)
+		{
+		case FontCategory_Application:
+			GetApplicationFont(spec.m_size, spec.m_flags, spec.m_aa);
+			break;
+		case FontCategory_System:
+			GetSystemFont(spec.m_size, spec.m_flags, spec.m_aa);
+			break;
+		case FontCategory_Handwriting:
+			GetHandwritingFont(spec.m_size, spec.m_flags, spec.m_aa);
+			break;
+		case FontCategory_Monospace:
+			GetMonospaceFont(spec.m_size, spec.m_flags, spec.m_aa);
+			break;
+		default:
+			break;
+		}
+
+		StepLoadScreen(1);
+	}
 }
 
 void gpAppInit()
@@ -480,7 +536,7 @@ int gpAppMain()
 	if (!copyGood)
 		encryptedNumber = 0L;
 	else if (didValidation)
-		WriteOutPrefs();				StepLoadScreen(3);
+		WriteOutPrefs();				SpinCursor(3);
 #endif
 
 //	if ((thisMac.numScreens > 1) && (isUseSecondScreen))

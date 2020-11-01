@@ -41,7 +41,7 @@ namespace PortabilityLayer
 		static const int kSystemFontCacheID = 1;
 		static const int kApplicationFontCacheID = 2;
 		static const int kHandwritingFontCacheID = 3;
-		static const int kMonospaceFontCacheID = 3;
+		static const int kMonospaceFontCacheID = 4;
 		static const int kFontCacheVersion = 1;
 		static const int kFontCacheNameSize = 64;
 
