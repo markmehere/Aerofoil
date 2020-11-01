@@ -1471,6 +1471,9 @@ namespace PortabilityLayer
 			int32_t currentY = window->GetPosition().m_y;
 			if (!menuIsTouchScreen)
 			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "currentY: %i menuBarHeight: %i", static_cast<int>(currentY), static_cast<int>(menuBarHeight));
+
 				if (currentY < static_cast<int32_t>(menuBarHeight))
 					newY = currentY;
 				else
@@ -1481,13 +1484,21 @@ namespace PortabilityLayer
 					{
 						uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
 						uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
+
+						if (logger)
+							logger->Printf(IGpLogDriver::Category_Information, "prevClearanceY: %i newClearanceY: %i", static_cast<int>(prevClearanceY), static_cast<int>(newClearanceY));
+
 						newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + menuBarHeight + chromePadding[WindowChromeSides::kTop];
 					}
 				}
 			}
 			else
 			{
-				uint32_t heightWithoutMenu = surfaceRect.Height() - menuBarHeight;
+				uint32_t heightWithoutMenu = std::max<uint32_t>(prevHeight, menuBarHeight) - menuBarHeight;
+
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "currentY: %i paddedHeight: %i heightWithoutMenu: %i", static_cast<int>(currentY), static_cast<int>(paddedHeight), static_cast<int>(heightWithoutMenu));
+
 				if (currentY + static_cast<int32_t>(paddedHeight) >= static_cast<int32_t>(heightWithoutMenu))
 					newY = currentY;
 				else
@@ -1498,6 +1509,10 @@ namespace PortabilityLayer
 					{
 						uint32_t prevClearanceY = prevHeight - paddedHeight - menuBarHeight;
 						uint32_t newClearanceY = newHeight - paddedHeight - menuBarHeight;
+
+						if (logger)
+							logger->Printf(IGpLogDriver::Category_Information, "prevClearanceY: %i newClearanceY: %i", static_cast<int>(prevClearanceY), static_cast<int>(newClearanceY));
+
 						newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + chromePadding[WindowChromeSides::kTop];
 					}
 				}
