@@ -12,6 +12,7 @@
 #include "GpSystemServices_Android.h"
 #include "GpVOSEvent.h"
 #include "IGpVOSEventQueue.h"
+#include "IGpLogDriver.h"
 
 #include "HostFileSystem.h"
 #include "HostThreadEvent.h"
@@ -27,10 +28,51 @@ extern "C" IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHand
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
 IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
 
+class GpLogDriver_Android final : public IGpLogDriver
+{
+public:
+	void VPrintf(Category category, const char *fmt, va_list args) override;
+	void Shutdown() override;
+
+	static GpLogDriver_Android *GetInstance();
+
+private:
+	static GpLogDriver_Android ms_instance;
+};
+
+void GpLogDriver_Android::VPrintf(IGpLogDriver::Category category, const char *fmt, va_list args)
+{
+	switch (category)
+	{
+	case IGpLogDriver::Category_Error:
+		SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, fmt, args);
+		break;
+	case IGpLogDriver::Category_Warning:
+		SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_WARN, fmt, args);
+		break;
+	case IGpLogDriver::Category_Information:
+		SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, args);
+		break;
+	default:
+		SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_VERBOSE, fmt, args);
+		break;
+	};
+}
+
+void GpLogDriver_Android::Shutdown()
+{
+}
+
+GpLogDriver_Android *GpLogDriver_Android::GetInstance()
+{
+	return &ms_instance;
+}
+
+GpLogDriver_Android GpLogDriver_Android::ms_instance;
 
 int main(int argc, char* argv[])
 {
-	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_WARN);
+	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		return -1;
@@ -41,6 +83,7 @@ int main(int argc, char* argv[])
 
 	GpAppInterface_Get()->PL_HostFileSystem_SetInstance(GpFileSystem_Android::GetInstance());
 	GpAppInterface_Get()->PL_HostSystemServices_SetInstance(GpSystemServices_Android::GetInstance());
+	GpAppInterface_Get()->PL_HostLogDriver_SetInstance(GpLogDriver_Android::GetInstance());
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;
 
@@ -52,7 +95,7 @@ int main(int argc, char* argv[])
 	g_gpGlobalConfig.m_numInputDrivers = 0;
 
 	g_gpGlobalConfig.m_osGlobals = &g_gpAndroidGlobals;
-	g_gpGlobalConfig.m_logger = nullptr;
+	g_gpGlobalConfig.m_logger = GpLogDriver_Android::GetInstance();
 	g_gpGlobalConfig.m_systemServices = GpSystemServices_Android::GetInstance();
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
