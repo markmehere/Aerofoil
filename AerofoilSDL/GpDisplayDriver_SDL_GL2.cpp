@@ -1854,7 +1854,12 @@ void GpDisplayDriver_SDL_GL2::Run()
 			//else if (msg.type == SDL_MOUSELEAVE)	// Does SDL support this??
 			//	m_mouseIsInClientArea = false;
 			else if (msg.type == SDL_RENDER_DEVICE_RESET || msg.type == SDL_RENDER_TARGETS_RESET)
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to device loss (Type: %i)", static_cast<int>(msg.type));
+
 				m_contextLost = true;
+			}
 
 			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
 
@@ -1867,6 +1872,9 @@ void GpDisplayDriver_SDL_GL2::Run()
 					BecomeFullScreen();
 				else
 					BecomeWindowed();
+
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to fullscreen state change");
 
 				m_contextLost = true;
 				continue;
@@ -1881,6 +1889,9 @@ void GpDisplayDriver_SDL_GL2::Run()
 			unsigned int desiredHeight = clientHeight;
 			if (desiredWidth != m_windowWidthPhysical || desiredHeight != m_windowHeightPhysical || m_isResolutionResetDesired)
 			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Detected window size change");
+
 				uint32_t prevWidthPhysical = m_windowWidthPhysical;
 				uint32_t prevHeightPhysical = m_windowHeightPhysical;
 				uint32_t prevWidthVirtual = m_windowWidthVirtual;
@@ -1912,6 +1923,9 @@ void GpDisplayDriver_SDL_GL2::Run()
 						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
 					}
 
+					if (logger)
+						logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to window size change");
+
 					m_contextLost = true;
 					continue;
 				}
@@ -1919,6 +1933,9 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 			if (m_contextLost)
 			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Resetting OpenGL context");
+
 				// Drop everything and reset
 				m_res.~InstancedResources();
 				new (&m_res) InstancedResources();
@@ -1937,7 +1954,17 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
 			if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault || tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
+			{
+				if (logger)
+				{
+					if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault)
+						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to fatal fault");
+					if (tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
+						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to application termination");
+				}
+
 				break;
+			}
 		}
 	}
 
