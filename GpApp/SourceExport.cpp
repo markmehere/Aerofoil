@@ -4,7 +4,9 @@
 #include "GpBuildVersion.h"
 #include "GpIOStream.h"
 #include "HostDirectoryCursor.h"
+#include "HostDisplayDriver.h"
 #include "HostFileSystem.h"
+#include "IGpDisplayDriver.h"
 #include "MemoryManager.h"
 #include "PLCore.h"
 #include "PLStandardColors.h"
@@ -134,8 +136,14 @@ static void InitSourceExportWindow(SourceExportState *state)
 	ForceSyncFrame();
 	PLSysCalls::Sleep(1);
 
-	int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
-	int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
+	// We have to use this instead of thisMac.fullScreen because the resolution may change during the sleep call, especially on Android displays where
+	// the status bar dismissal causes a major change in the virtual resolution.
+	unsigned int displayWidth = 0;
+	unsigned int displayHeight = 0;
+	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight);
+
+	int32_t lsX = (static_cast<int32_t>(displayWidth) - kLoadScreenWidth) / 2;
+	int32_t lsY = (static_cast<int32_t>(displayHeight) - kLoadScreenHeight) / 2;
 
 
 	const Rect loadScreenRect = Rect::Create(lsY, lsX, lsY + kLoadScreenHeight, lsX + kLoadScreenWidth);
