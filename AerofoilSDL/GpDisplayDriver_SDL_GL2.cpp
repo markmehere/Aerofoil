@@ -207,9 +207,15 @@ struct GpGLFunctions
 	bool LookUpFunctions();
 };
 
-static void CheckGLError(const GpGLFunctions &gl)
+static void CheckGLError(const GpGLFunctions &gl, IGpLogDriver *logger)
 {
 	GLenum errorCode = gl.GetError();
+	if (errorCode != 0)
+	{
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Error, "GL error reported: %x", static_cast<int>(errorCode));
+	}
+
 	assert(errorCode == 0);
 }
 
@@ -740,6 +746,8 @@ public:
 	const GpDisplayDriverProperties &GetProperties() const override;
 	IGpPrefsHandler *GetPrefsHandler() const override;
 
+	bool SupportsSizedFormats() const;
+
 	void ApplyPrefs(const void *identifier, size_t identifierSize, const void *contents, size_t contentsSize, uint32_t version) override;
 	bool SavePrefs(void *context, WritePrefsFunc_t writeFunc) override;
 
@@ -983,7 +991,7 @@ void GpDisplayDriverSurface_GL2::UploadEntire(const void *data, size_t pitch)
 {
 	assert(pitch == m_pitch);
 
-	CheckGLError(*m_gl);
+	CheckGLError(*m_gl, m_driver->GetProperties().m_logger);
 
 	const GLint internalFormat = ResolveGLInternalFormat();
 	const GLenum glFormat = ResolveGLFormat();
@@ -993,7 +1001,7 @@ void GpDisplayDriverSurface_GL2::UploadEntire(const void *data, size_t pitch)
 	m_gl->TexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_paddedTextureWidth, m_height, 0, glFormat, glType, data);
 	m_gl->BindTexture(GL_TEXTURE_2D, 0);
 
-	CheckGLError(*m_gl);
+	CheckGLError(*m_gl, m_driver->GetProperties().m_logger);
 }
 
 void GpDisplayDriverSurface_GL2::Destroy()
@@ -1047,7 +1055,7 @@ GpGLTexture *GpDisplayDriverSurface_GL2::GetTexture() const
 
 bool GpDisplayDriverSurface_GL2::Init(GpDisplayDriverSurface_GL2 *prevSurface)
 {
-	CheckGLError(*m_gl);
+	CheckGLError(*m_gl, m_driver->GetProperties().m_logger);
 
 	m_gl->BindTexture(GL_TEXTURE_2D, m_texture->GetID());
 	m_gl->PixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -1058,7 +1066,7 @@ bool GpDisplayDriverSurface_GL2::Init(GpDisplayDriverSurface_GL2 *prevSurface)
 	m_gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	m_gl->BindTexture(GL_TEXTURE_2D, 0);
 
-	CheckGLError(*m_gl);
+	CheckGLError(*m_gl, m_driver->GetProperties().m_logger);
 
 	return true;
 }
@@ -1076,7 +1084,7 @@ GLenum GpDisplayDriverSurface_GL2::ResolveGLFormat() const
 	case GpPixelFormats::k8BitCustom:
 	case GpPixelFormats::k8BitStandard:
 	case GpPixelFormats::kBW1:
-		return GL_RED;
+		return m_driver->SupportsSizedFormats() ? GL_RED : GL_LUMINANCE;
 	case GpPixelFormats::kRGB24:
 	case GpPixelFormats::kRGB555:
 		return GL_RGB;
@@ -1089,20 +1097,41 @@ GLenum GpDisplayDriverSurface_GL2::ResolveGLFormat() const
 
 GLenum GpDisplayDriverSurface_GL2::ResolveGLInternalFormat() const
 {
-	switch (m_pixelFormat)
+	if (m_driver->SupportsSizedFormats())
 	{
-	case GpPixelFormats::k8BitCustom:
-	case GpPixelFormats::k8BitStandard:
-	case GpPixelFormats::kBW1:
-		return GL_R8;
-	case GpPixelFormats::kRGB24:
-		return GL_RGB8;
-	case GpPixelFormats::kRGB555:
-		return GL_RGB5;
-	case GpPixelFormats::kRGB32:
-		return GL_RGBA8;
-	default:
-		return GL_RGBA8;
+		switch (m_pixelFormat)
+		{
+		case GpPixelFormats::k8BitCustom:
+		case GpPixelFormats::k8BitStandard:
+		case GpPixelFormats::kBW1:
+			return GL_R8;
+		case GpPixelFormats::kRGB24:
+			return GL_RGB8;
+		case GpPixelFormats::kRGB555:
+			return GL_RGB5;
+		case GpPixelFormats::kRGB32:
+			return GL_RGBA8;
+		default:
+			return GL_RGBA8;
+		}
+	}
+	else
+	{
+		switch (m_pixelFormat)
+		{
+		case GpPixelFormats::k8BitCustom:
+		case GpPixelFormats::k8BitStandard:
+		case GpPixelFormats::kBW1:
+			return GL_LUMINANCE;
+		case GpPixelFormats::kRGB24:
+			return GL_RGB;
+		case GpPixelFormats::kRGB555:
+			return GL_RGBA;
+		case GpPixelFormats::kRGB32:
+			return GL_RGBA;
+		default:
+			return GL_RGBA;
+		}
 	}
 }
 
@@ -1811,9 +1840,11 @@ void GpDisplayDriver_SDL_GL2::Run()
 		int windowHeight = 0;
 		SDL_GetWindowSize(m_window, &windowWidth, &windowHeight);
 
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Information, "Initialized fullscreen SDL window %i x %i", windowWidth, windowHeight);
+
 		m_windowWidthPhysical = windowWidth;
 		m_windowHeightPhysical = windowHeight;
-
 
 		uint32_t desiredWidth = windowWidth;
 		uint32_t desiredHeight = windowHeight;
@@ -1828,6 +1859,14 @@ void GpDisplayDriver_SDL_GL2::Run()
 			m_windowHeightVirtual = virtualHeight;
 			m_pixelScaleX = pixelScaleX;
 			m_pixelScaleY = pixelScaleY;
+
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Information, "AdjustedRequestedResolution succeeded.  Virtual dimensions %i x %i  Pixel scale %f x %f", static_cast<int>(virtualWidth), static_cast<int>(virtualHeight), static_cast<float>(pixelScaleX), static_cast<float>(pixelScaleY));
+		}
+		else
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "AdjustedRequestedResolution failed!");
 		}
 	}
 
@@ -1934,7 +1973,7 @@ void GpDisplayDriver_SDL_GL2::Run()
 			if (m_contextLost)
 			{
 				if (logger)
-					logger->Printf(IGpLogDriver::Category_Information, "Resetting OpenGL context");
+					logger->Printf(IGpLogDriver::Category_Information, "Resetting OpenGL context.  Physical: %i x %i   Virtual %i x %i", static_cast<int>(m_windowWidthPhysical), static_cast<int>(m_windowHeightPhysical), static_cast<int>(m_windowWidthVirtual), static_cast<int>(m_windowHeightVirtual));
 
 				// Drop everything and reset
 				m_res.~InstancedResources();
@@ -1943,10 +1982,13 @@ void GpDisplayDriver_SDL_GL2::Run()
 				if (m_firstSurface)
 					m_firstSurface->RecreateAll();
 
-				if (!InitBackBuffer(m_windowWidthVirtual, m_windowHeightVirtual))
-					break;
+				if (!InitResources(m_windowWidthVirtual, m_windowHeightVirtual))
+				{
+					if (logger)
+						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to InitResources failing");
 
-				InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
+					break;
+				}
 
 				m_contextLost = false;
 				continue;
@@ -2042,11 +2084,11 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 		return;
 	}
 
-	CheckGLError(m_gl);
+	CheckGLError(m_gl, m_properties.m_logger);
 
 	m_gl.UseProgram(program->m_program->GetID());
 
-	CheckGLError(m_gl);
+	CheckGLError(m_gl, m_properties.m_logger);
 
 	{
 		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthVirtual);
@@ -2117,7 +2159,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	m_gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	CheckGLError(m_gl);
+	CheckGLError(m_gl, m_properties.m_logger);
 
 	if (pixelFormat == GpPixelFormats::k8BitStandard || pixelFormat == GpPixelFormats::k8BitCustom)
 	{
@@ -2132,7 +2174,7 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 
 	m_gl.UseProgram(0);
 
-	CheckGLError(m_gl);
+	CheckGLError(m_gl, m_properties.m_logger);
 }
 
 
@@ -2197,9 +2239,11 @@ void GpDisplayDriver_SDL_GL2::UpdatePalette(const void *paletteData)
 {
 	memcpy(m_paletteData, paletteData, 256 * 4);
 
+	GLenum internalFormat = SupportsSizedFormats() ? GL_RGBA8 : GL_RGBA;
+
 	m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_paletteTexture->GetID());
 	m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_paletteData);
+	m_gl.TexImage2D(GL_TEXTURE_2D, 0, internalFormat, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_paletteData);
 	m_gl.BindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -2248,6 +2292,15 @@ const GpDisplayDriverProperties &GpDisplayDriver_SDL_GL2::GetProperties() const
 IGpPrefsHandler *GpDisplayDriver_SDL_GL2::GetPrefsHandler() const
 {
 	return const_cast<GpDisplayDriver_SDL_GL2*>(this);
+}
+
+bool GpDisplayDriver_SDL_GL2::SupportsSizedFormats() const
+{
+#if GP_GL_IS_OPENGL_4_CONTEXT
+	return true;
+#else
+	return false;
+#endif
 }
 
 void GpDisplayDriver_SDL_GL2::ApplyPrefs(const void *identifier, size_t identifierSize, const void *contents, size_t contentsSize, uint32_t version)
@@ -2321,6 +2374,8 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriver_SDL_GL2::InitResources");
+
+	CheckGLError(m_gl, logger);
 
 	if (!InitBackBuffer(virtualWidth, virtualHeight))
 		return false;
@@ -2430,9 +2485,11 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virt
 			return false;
 		}
 
+		GLenum internalFormat = SupportsSizedFormats() ? GL_RGBA8 : GL_RGBA;
+
 		m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_paletteTexture->GetID());
 		m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_paletteData);
+		m_gl.TexImage2D(GL_TEXTURE_2D, 0, internalFormat, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_paletteData);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -2575,7 +2632,7 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 	IGpLogDriver *logger = m_properties.m_logger;
 
 	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriver_SDL_GL2::InitBackBuffer");
+		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriver_SDL_GL2::InitBackBuffer: %i x %i", static_cast<int>(width), static_cast<int>(height));
 
 	{
 		m_res.m_virtualScreenTexture = GpGLTexture::Create(this);
@@ -2587,14 +2644,18 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 			return false;
 		}
 
+		GLenum internalFormat = SupportsSizedFormats() ? GL_RGBA8 : GL_RGBA;
+
 		m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_virtualScreenTexture->GetID());
 		m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		m_gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		m_gl.TexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		m_gl.BindTexture(GL_TEXTURE_2D, 0);
+
+		CheckGLError(m_gl, logger);
 	}
 
 	{
@@ -2615,11 +2676,15 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
 			if (logger)
-				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: Framebuffer complete check failed");
+				logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: Framebuffer complete check failed, status was %i   VST ID is %i", static_cast<int>(status), static_cast<int>(m_res.m_virtualScreenTextureRTV->GetID()));
 
 			return false;
 		}
+
+		m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+
+	CheckGLError(m_gl, logger);
 
 	return true;
 }
@@ -2806,7 +2871,7 @@ GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
 
 	ScaleVirtualScreen();
 
-	CheckGLError(m_gl);
+	CheckGLError(m_gl, m_properties.m_logger);
 
 	SDL_GL_SwapWindow(m_window);
 
