@@ -6,7 +6,8 @@
 //============================================================================
 
 
-#include <WindowDef.h>
+#include "WindowDef.h"
+#include "BitmapImage.h"
 #include "PLApplication.h"
 #include "PLKeyEncoding.h"
 #include "PLStandardColors.h"
@@ -16,19 +17,30 @@
 #include "FontFamily.h"
 #include "GpRenderedFontMetrics.h"
 #include "HostDisplayDriver.h"
+#include "HostSystemServices.h"
+#include "HostThreadEvent.h"
 #include "IGpDisplayDriver.h"
 #include "GpIOStream.h"
 #include "House.h"
 #include "MainMenuUI.h"
+#include "MemoryManager.h"
 #include "MenuManager.h"
+#include "QDPixMap.h"
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
+#include "ResourceManager.h"
+#include "Utilities.h"
 #include "WindowManager.h"
+#include "WorkerThread.h"
+
+#include <atomic>
 
 
+int loadScreenRingStep;
 WindowPtr loadScreenWindow;
 Rect loadScreenProgressBarRect;
 int loadScreenProgress;
+DrawSurface *loadScreenRingSurface;
 
 
 #define kPrefsVersion			0x0038
@@ -345,6 +357,23 @@ void WriteOutPrefs (void)
 	UnivSetSoundVolume(wasVolume, thisMac.hasSM3);
 }
 
+void StepLoadScreenRing()
+{
+	if (loadScreenWindow)
+	{
+		const int loadScreenStepGranularity = 2;
+		loadScreenRingStep++;
+		if (loadScreenRingStep == 24 * loadScreenStepGranularity)
+			loadScreenRingStep = 0;
+
+		Rect ringDestRect = Rect::Create(8, 8, 24, 24);
+		Rect ringSrcRect = Rect::Create(0, 0, 16, 16) + Point::Create((loadScreenRingStep / loadScreenStepGranularity) * 16, 0);
+
+		CopyBits(*loadScreenRingSurface->m_port.GetPixMap(), *loadScreenWindow->GetDrawSurface()->m_port.GetPixMap(), &ringSrcRect, &ringDestRect, srcCopy);
+		loadScreenWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	}
+}
+
 void StepLoadScreen(int steps)
 {
 	if (loadScreenWindow)
@@ -362,9 +391,15 @@ void StepLoadScreen(int steps)
 
 		loadScreenWindow->GetDrawSurface()->FillRect(Rect::Create(loadScreenProgressBarRect.top, loadScreenProgressBarRect.left + prevStep, loadScreenProgressBarRect.bottom, loadScreenProgressBarRect.left + thisStep), blackColor);
 		ForceSyncFrame();
-	}
 
-	SpinCursor(steps);
+		for (int i = 0; i < steps; i++)
+		{
+			StepLoadScreenRing();
+			Delay(1, nullptr);
+		}
+	}
+	else
+		SpinCursor(steps);
 }
 
 void InitLoadingWindow()
@@ -374,18 +409,27 @@ void InitLoadingWindow()
 		return;
 
 	static const int kLoadScreenHeight = 32;
+	static const int kLoadRingResource = 1302;
 
-	int kLoadScreenWidth = 256;
+	int kLoadScreenWidth = 296;
 	PLPasStr loadingText = PSTR("Loading...");
 
 	if (!isPrefsLoaded)
 	{
 		loadingText = PSTR("Performing First-Time Setup...");
-		kLoadScreenWidth = 420;
+		kLoadScreenWidth = 440;
 	}
 
 	ForceSyncFrame();
 	PLSysCalls::Sleep(1);
+
+	THandle<BitmapImage> loadRingImageH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kLoadRingResource).StaticCast<BitmapImage>();
+	BitmapImage *loadRingImage = *loadRingImageH;
+
+	DrawSurface *loadRingSurface = nullptr;
+	Rect loadRingRect = loadRingImage->GetRect();
+	CreateOffScreenGWorld(&loadRingSurface, &loadRingRect);
+	loadRingSurface->DrawPicture(loadRingImageH, loadRingRect);
 
 	int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
 	int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
@@ -409,37 +453,101 @@ void InitLoadingWindow()
 
 	PortabilityLayer::RenderedFont *font = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
 	int32_t textY = (kLoadScreenHeight + font->GetMetrics().m_ascent) / 2;
-	surface->DrawString(Point::Create(4+16, textY), loadingText, blackColor, font);
+	surface->DrawString(Point::Create(4+16+8, textY), loadingText, blackColor, font);
 
 	static const int32_t loadBarPadding = 16;
-	int32_t loadBarStartX = static_cast<int32_t>(font->MeasureString(loadingText.UChars(), loadingText.Length())) + 4 + 16 + loadBarPadding;
+	int32_t loadBarStartX = static_cast<int32_t>(font->MeasureString(loadingText.UChars(), loadingText.Length())) + 4 + 16 + 8 + loadBarPadding;
 	int32_t loadBarEndX = loadScreenLocalRect.right - loadBarPadding;
 
 	loadScreenProgressBarRect = Rect::Create((loadScreenLocalRect.Height() - 8) / 2, loadBarStartX, (loadScreenLocalRect.Height() + 8) / 2, loadBarEndX);
 	loadScreenProgress = 0;
 
 	surface->FrameRect(loadScreenProgressBarRect, blackColor);
+
+	Rect ringDestRect = Rect::Create(8, 8, 24, 24);
+	Rect ringSrcRect = Rect::Create(0, 0, 16, 16);
+	CopyBits(*loadRingSurface->m_port.GetPixMap(), *surface->m_port.GetPixMap(), &ringSrcRect, &ringDestRect, srcCopy);
+
+	loadRingImageH.Dispose();
+
+	loadScreenRingSurface = loadRingSurface;
+}
+
+enum PreloadFontCategory
+{
+	FontCategory_System,
+	FontCategory_Application,
+	FontCategory_Handwriting,
+	FontCategory_Monospace,
+};
+
+struct PreloadFontSpec
+{
+	PreloadFontCategory m_category;
+	int m_size;
+	int m_flags;
+	bool m_aa;
+};
+
+struct PreloadFontWorkSlot
+{
+	PortabilityLayer::HostThreadEvent *m_completedEvent;
+	PortabilityLayer::WorkerThread *m_workerThread;
+	std::atomic<int> m_singleJobCompleted;
+	const PreloadFontSpec *m_spec;
+	bool m_queued;
+
+	PreloadFontWorkSlot();
+	~PreloadFontWorkSlot();
+};
+
+PreloadFontWorkSlot::PreloadFontWorkSlot()
+	: m_completedEvent(nullptr)
+	, m_workerThread(nullptr)
+	, m_spec(nullptr)
+	, m_queued(false)
+{
+}
+
+PreloadFontWorkSlot::~PreloadFontWorkSlot()
+{
+	if (m_workerThread)
+		m_workerThread->Destroy();
+}
+
+void PreloadSingleFont (const PreloadFontSpec &spec)
+{
+	switch (spec.m_category)
+	{
+	case FontCategory_Application:
+		GetApplicationFont(spec.m_size, spec.m_flags, spec.m_aa);
+		break;
+	case FontCategory_System:
+		GetSystemFont(spec.m_size, spec.m_flags, spec.m_aa);
+		break;
+	case FontCategory_Handwriting:
+		GetHandwritingFont(spec.m_size, spec.m_flags, spec.m_aa);
+		break;
+	case FontCategory_Monospace:
+		GetMonospaceFont(spec.m_size, spec.m_flags, spec.m_aa);
+		break;
+	default:
+		break;
+	}
+}
+
+void PreloadThreadFunc(void *context)
+{
+	PreloadFontWorkSlot *wSlot = static_cast<PreloadFontWorkSlot*>(context);
+
+	PreloadSingleFont(*wSlot->m_spec);
+	++wSlot->m_singleJobCompleted;
+	wSlot->m_completedEvent->Signal();
 }
 
 void PreloadFonts()
 {
-	enum FontCategory
-	{
-		FontCategory_System,
-		FontCategory_Application,
-		FontCategory_Handwriting,
-		FontCategory_Monospace,
-	};
-
-	struct FontSpec
-	{
-		FontCategory m_category;
-		int m_size;
-		int m_flags;
-		bool m_aa;
-	};
-
-	FontSpec specs[] =
+	static PreloadFontSpec specs[] =
 	{
 		{ FontCategory_System, 9, PortabilityLayer::FontFamilyFlag_Bold, true },
 		{ FontCategory_System, 10, PortabilityLayer::FontFamilyFlag_Bold, true },
@@ -456,32 +564,51 @@ void PreloadFonts()
 		{ FontCategory_Monospace, 10, PortabilityLayer::FontFamilyFlag_None, true },
 	};
 
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+
 	const int numFontSpecs = sizeof(specs) / sizeof(specs[0]);
 
-	for (int i = 0; i < numFontSpecs; i++)
-	{
-		const FontSpec &spec = specs[i];
+	int queuedSpecs = 0;
+	int completedSpecs = 0;
 
-		switch (spec.m_category)
+	// We can't actually slot these because FT isn't thread-safe when accessing the same font,
+	// but we can do this to unclog the render thread.
+	PreloadFontWorkSlot slot;
+	slot.m_workerThread = PortabilityLayer::WorkerThread::Create();
+	slot.m_completedEvent = PortabilityLayer::HostSystemServices::GetInstance()->CreateThreadEvent(true, false);
+
+	while (completedSpecs < numFontSpecs)
+	{
+		if (slot.m_queued)
 		{
-		case FontCategory_Application:
-			GetApplicationFont(spec.m_size, spec.m_flags, spec.m_aa);
-			break;
-		case FontCategory_System:
-			GetSystemFont(spec.m_size, spec.m_flags, spec.m_aa);
-			break;
-		case FontCategory_Handwriting:
-			GetHandwritingFont(spec.m_size, spec.m_flags, spec.m_aa);
-			break;
-		case FontCategory_Monospace:
-			GetMonospaceFont(spec.m_size, spec.m_flags, spec.m_aa);
-			break;
-		default:
-			break;
+			if (slot.m_singleJobCompleted.load(std::memory_order_relaxed) != 0)
+			{
+				slot.m_completedEvent->Wait();
+				slot.m_queued = false;
+				completedSpecs++;
+
+				StepLoadScreen(1);
+			}
 		}
 
-		StepLoadScreen(1);
+		if (!slot.m_queued)
+		{
+			if (queuedSpecs < numFontSpecs)
+			{
+				slot.m_queued = true;
+				slot.m_singleJobCompleted.store(0);
+				slot.m_spec = specs + queuedSpecs;
+				slot.m_workerThread->AsyncExecuteTask(PreloadThreadFunc, &slot);
+
+				queuedSpecs++;
+			}
+		}
+
+		StepLoadScreenRing();
+		Delay(1, nullptr);
 	}
+
 }
 
 void gpAppInit()
@@ -554,6 +681,12 @@ int gpAppMain()
 		PortabilityLayer::WindowManager::GetInstance()->FlickerWindowOut(loadScreenWindow, 32);
 		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(loadScreenWindow);
 		PLSysCalls::Sleep(15);
+	}
+
+	if (loadScreenRingSurface)
+	{
+		DisposeGWorld(loadScreenRingSurface);
+		loadScreenRingSurface = nullptr;
 	}
 
 	OpenMainWindow();

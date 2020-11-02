@@ -6,6 +6,10 @@
 #error "CreateMutex was macrod"
 #endif
 
+#ifdef CreateThread
+#error "CreateThread was macrod"
+#endif
+
 namespace PortabilityLayer
 {
 	class HostMutex;
@@ -14,16 +18,20 @@ namespace PortabilityLayer
 	class HostSystemServices
 	{
 	public:
+		typedef int (*ThreadFunc_t)(void *context);
+
 		virtual int64_t GetTime() const = 0;
 		virtual void GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const = 0;
 		virtual HostMutex *CreateMutex() = 0;
 		virtual HostMutex *CreateRecursiveMutex() = 0;
+		virtual void *CreateThread(ThreadFunc_t threadFunc, void *context) = 0;
 		virtual HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) = 0;
 		virtual uint64_t GetFreeMemoryCosmetic() const = 0;	// Returns free memory in bytes, does not have to be accurate
 		virtual void Beep() const = 0;
 		virtual bool IsTouchscreen() const = 0;
 		virtual bool IsUsingMouseAsTouch() const = 0;
 		virtual bool IsTextInputObstructive() const = 0;
+		virtual unsigned int GetCPUCount() const = 0;
 
 		static void SetInstance(HostSystemServices *instance);
 		static HostSystemServices *GetInstance();

@@ -165,6 +165,7 @@
     <ClInclude Include="PLUnalignedPtr.h" />
     <ClInclude Include="PLWidgets.h" />
     <ClInclude Include="ResolveCachingColor.h" />
+    <ClInclude Include="WorkerThread.h" />
     <ClInclude Include="TextPlacer.h" />
     <ClInclude Include="UTF16.h" />
     <ClInclude Include="UTF8.h" />
@@ -320,6 +321,7 @@
     <ClCompile Include="UTF8.cpp" />
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />
+    <ClCompile Include="WorkerThread.cpp" />
     <ClCompile Include="XModemCRC.cpp" />
     <ClCompile Include="ZipFileProxy.cpp" />
   </ItemGroup>

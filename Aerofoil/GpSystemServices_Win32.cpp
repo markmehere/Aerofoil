@@ -9,6 +9,26 @@
 #undef CreateMutex
 #endif
 
+struct GpSystemServices_Win32_ThreadStartParams
+{
+	GpSystemServices_Win32::ThreadFunc_t m_threadFunc;
+	void *m_threadContext;
+	PortabilityLayer::HostThreadEvent *m_threadStartEvent;
+};
+
+static DWORD WINAPI StaticStartThread(LPVOID lpThreadParameter)
+{
+	const GpSystemServices_Win32_ThreadStartParams *threadParams = static_cast<const GpSystemServices_Win32_ThreadStartParams*>(lpThreadParameter);
+
+	GpSystemServices_Win32::ThreadFunc_t threadFunc = threadParams->m_threadFunc;
+	void *threadContext = threadParams->m_threadContext;
+	PortabilityLayer::HostThreadEvent *threadStartEvent = threadParams->m_threadStartEvent;
+
+	threadStartEvent->Signal();
+
+	return threadFunc(threadContext);
+}
+
 GpSystemServices_Win32::GpSystemServices_Win32()
 	: m_isTouchscreenSimulation(false)
 {
@@ -67,6 +87,30 @@ PortabilityLayer::HostThreadEvent *GpSystemServices_Win32::CreateThreadEvent(boo
 	return GpThreadEvent_Win32::Create(autoReset, startSignaled);
 }
 
+void *GpSystemServices_Win32::CreateThread(ThreadFunc_t threadFunc, void *context)
+{
+	PortabilityLayer::HostThreadEvent *evt = CreateThreadEvent(true, false);
+	if (!evt)
+		return nullptr;
+
+	GpSystemServices_Win32_ThreadStartParams startParams;
+	startParams.m_threadContext = context;
+	startParams.m_threadFunc = threadFunc;
+	startParams.m_threadStartEvent = evt;
+
+	HANDLE threadHdl = ::CreateThread(nullptr, 0, StaticStartThread, &startParams, 0, nullptr);
+	if (threadHdl == nullptr)
+	{
+		evt->Destroy();
+		return nullptr;
+	}
+
+	evt->Wait();
+	evt->Destroy();
+
+	return threadHdl;
+}
+
 uint64_t GpSystemServices_Win32::GetFreeMemoryCosmetic() const
 {
 	MEMORYSTATUSEX memStatus;
@@ -98,6 +142,13 @@ bool GpSystemServices_Win32::IsUsingMouseAsTouch() const
 bool GpSystemServices_Win32::IsTextInputObstructive() const
 {
 	return false;
+}
+
+unsigned int GpSystemServices_Win32::GetCPUCount() const
+{
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	return sysInfo.dwNumberOfProcessors;
 }
 
 void GpSystemServices_Win32::SetTouchscreenSimulation(bool isTouchscreenSimulation)

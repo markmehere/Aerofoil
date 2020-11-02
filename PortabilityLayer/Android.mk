@@ -105,6 +105,7 @@ LOCAL_SRC_FILES := \
 	UTF16.cpp	\
 	WindowDef.cpp	\
 	WindowManager.cpp	\
+	WorkerThread.cpp	\
 	XModemCRC.cpp	\
 	ZipFileProxy.cpp
 	

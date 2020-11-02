@@ -1,10 +1,32 @@
 #include "GpSystemServices_Android.h"
 #include "HostMutex.h"
 #include "HostThreadEvent.h"
+#include "SDL.h"
 
 #include <time.h>
 #include <mutex>
 #include <condition_variable>
+#include <unistd.h>
+
+struct GpSystemServices_Android_ThreadStartParams
+{
+	GpSystemServices_Android::ThreadFunc_t m_threadFunc;
+	void *m_threadContext;
+	PortabilityLayer::HostThreadEvent *m_threadStartEvent;
+};
+
+static int SDLCALL StaticStartThread(void *lpThreadParameter)
+{
+	const GpSystemServices_Android_ThreadStartParams *threadParams = static_cast<const GpSystemServices_Android_ThreadStartParams*>(lpThreadParameter);
+
+	GpSystemServices_Android::ThreadFunc_t threadFunc = threadParams->m_threadFunc;
+	void *threadContext = threadParams->m_threadContext;
+	PortabilityLayer::HostThreadEvent *threadStartEvent = threadParams->m_threadStartEvent;
+
+	threadStartEvent->Signal();
+
+	return threadFunc(threadContext);
+}
 
 template<class TMutex>
 class GpMutex_Cpp11 final : public PortabilityLayer::HostMutex
@@ -173,6 +195,31 @@ PortabilityLayer::HostMutex *GpSystemServices_Android::CreateMutex()
 	return new (mutex) GpMutex_Cpp11_Vanilla();
 }
 
+
+void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *context)
+{
+	PortabilityLayer::HostThreadEvent *evt = CreateThreadEvent(true, false);
+	if (!evt)
+		return nullptr;
+
+	GpSystemServices_Android_ThreadStartParams startParams;
+	startParams.m_threadContext = context;
+	startParams.m_threadFunc = threadFunc;
+	startParams.m_threadStartEvent = evt;
+
+	SDL_Thread *thread = SDL_CreateThread(StaticStartThread, "WorkerThread", &startParams);
+	if (thread == nullptr)
+	{
+		evt->Destroy();
+		return nullptr;
+	}
+
+	evt->Wait();
+	evt->Destroy();
+
+	return thread;
+}
+
 PortabilityLayer::HostMutex *GpSystemServices_Android::CreateRecursiveMutex()
 {
 	GpMutex_Cpp11_Recursive *mutex = static_cast<GpMutex_Cpp11_Recursive*>(malloc(sizeof(GpMutex_Cpp11_Recursive)));
@@ -193,7 +240,9 @@ PortabilityLayer::HostThreadEvent *GpSystemServices_Android::CreateThreadEvent(b
 
 uint64_t GpSystemServices_Android::GetFreeMemoryCosmetic() const
 {
-	return 0;
+	long pages = sysconf(_SC_AVPHYS_PAGES);
+	long pageSize = sysconf(_SC_PAGE_SIZE);
+	return pages * pageSize;
 }
 
 void GpSystemServices_Android::Beep() const
@@ -213,6 +262,11 @@ bool GpSystemServices_Android::IsUsingMouseAsTouch() const
 bool GpSystemServices_Android::IsTextInputObstructive() const
 {
 	return true;
+}
+
+unsigned int GpSystemServices_Android::GetCPUCount() const
+{
+	return SDL_GetCPUCount();
 }
 
 GpSystemServices_Android *GpSystemServices_Android::GetInstance()
