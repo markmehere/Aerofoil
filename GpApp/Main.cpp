@@ -689,6 +689,11 @@ int gpAppMain()
 		loadScreenRingSurface = nullptr;
 	}
 
+	if (!isPrefsLoaded)
+	{
+		WriteOutPrefs();
+	}
+
 	OpenMainWindow();
 
 	if (isDoColorFade)
