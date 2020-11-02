@@ -97,13 +97,13 @@ void DoCommandKey (void)
 
 namespace TouchScreenMenuMetrics
 {
-	const int kTextLineSpacing = 42;
+	const int kTextLineSpacing = 70;
 	const int kTextLeftX = 36;
-	const int kTextFirstY = 34;
+	const int kTextFirstY = 48;
 	const int kTextSize = 18;
 
 	const int kHighlightXOffset = 10;
-	const int kHighlightYOffset = 30;
+	const int kHighlightYOffset = 58;
 }
 
 namespace TouchScreenMenuItems
