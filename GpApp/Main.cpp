@@ -378,18 +378,19 @@ void StepLoadScreen(int steps)
 {
 	if (loadScreenWindow)
 	{
+		Rect loadScreenProgressBarFillRect = loadScreenProgressBarRect.Inset(1, 1);
 		int oldProgress = loadScreenProgress;
 		int loadScreenMax = 25;
 		loadScreenProgress = loadScreenProgress + steps;
 		if (loadScreenProgress > loadScreenMax)
 			loadScreenProgress = loadScreenMax;
 
-		PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+		PortabilityLayer::ResolveCachingColor fillColor(PortabilityLayer::RGBAColor::Create(51, 51, 51, 255));
 
-		int prevStep = oldProgress * loadScreenProgressBarRect.Width() / loadScreenMax;
-		int thisStep = loadScreenProgress * loadScreenProgressBarRect.Width() / loadScreenMax;
+		int prevStep = oldProgress * loadScreenProgressBarFillRect.Width() / loadScreenMax;
+		int thisStep = loadScreenProgress * loadScreenProgressBarFillRect.Width() / loadScreenMax;
 
-		loadScreenWindow->GetDrawSurface()->FillRect(Rect::Create(loadScreenProgressBarRect.top, loadScreenProgressBarRect.left + prevStep, loadScreenProgressBarRect.bottom, loadScreenProgressBarRect.left + thisStep), blackColor);
+		loadScreenWindow->GetDrawSurface()->FillRect(Rect::Create(loadScreenProgressBarFillRect.top, loadScreenProgressBarFillRect.left + prevStep, loadScreenProgressBarFillRect.bottom, loadScreenProgressBarFillRect.left + thisStep), fillColor);
 		ForceSyncFrame();
 
 		for (int i = 0; i < steps; i++)
@@ -416,7 +417,7 @@ void InitLoadingWindow()
 
 	if (!isPrefsLoaded)
 	{
-		loadingText = PSTR("Performing First-Time Setup...");
+		loadingText = PSTR("Getting some things ready...");
 		kLoadScreenWidth = 440;
 	}
 
@@ -456,13 +457,16 @@ void InitLoadingWindow()
 	surface->DrawString(Point::Create(4+16+8, textY), loadingText, blackColor, font);
 
 	static const int32_t loadBarPadding = 16;
+	static const int32_t loadBarHeight = 10;
 	int32_t loadBarStartX = static_cast<int32_t>(font->MeasureString(loadingText.UChars(), loadingText.Length())) + 4 + 16 + 8 + loadBarPadding;
 	int32_t loadBarEndX = loadScreenLocalRect.right - loadBarPadding;
 
-	loadScreenProgressBarRect = Rect::Create((loadScreenLocalRect.Height() - 8) / 2, loadBarStartX, (loadScreenLocalRect.Height() + 8) / 2, loadBarEndX);
+	loadScreenProgressBarRect = Rect::Create((loadScreenLocalRect.Height() - loadBarHeight) / 2, loadBarStartX, (loadScreenLocalRect.Height() + loadBarHeight) / 2, loadBarEndX);
 	loadScreenProgress = 0;
 
+	PortabilityLayer::ResolveCachingColor partialFillColor(PortabilityLayer::RGBAColor::Create(255, 255, 204, 255));
 	surface->FrameRect(loadScreenProgressBarRect, blackColor);
+	surface->FillRect(loadScreenProgressBarRect.Inset(1, 1), partialFillColor);
 
 	Rect ringDestRect = Rect::Create(8, 8, 24, 24);
 	Rect ringSrcRect = Rect::Create(0, 0, 16, 16);
