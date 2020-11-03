@@ -1513,7 +1513,7 @@ namespace PortabilityLayer
 						if (logger)
 							logger->Printf(IGpLogDriver::Category_Information, "prevClearanceY: %i newClearanceY: %i", static_cast<int>(prevClearanceY), static_cast<int>(newClearanceY));
 
-						newY = (static_cast<int64_t>(currentY) - static_cast<int64_t>(menuBarHeight) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + chromePadding[WindowChromeSides::kTop];
+						newY = (static_cast<int64_t>(currentY) - chromePadding[WindowChromeSides::kTop]) * static_cast<int64_t>(newClearanceY) / static_cast<int64_t>(prevClearanceY) + chromePadding[WindowChromeSides::kTop];
 					}
 				}
 			}
