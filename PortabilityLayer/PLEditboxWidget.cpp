@@ -781,6 +781,9 @@ namespace PortabilityLayer
 
 				if (mouseEvent.m_eventType == GpMouseEventTypes::kUp)
 				{
+					// Re-enable text input if it was dismissed
+					PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(true);
+
 					m_caratScrollLocked = false;
 					m_isDraggingSelection = false;
 					return WidgetHandleStates::kDigested;

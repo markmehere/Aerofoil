@@ -2022,6 +2022,11 @@ void GpDisplayDriver_SDL_GL2::Run()
 					SDL_StopTextInput();
 			}
 
+			// Handle dismissal of on-screen keyboard
+			const bool isTextInputActuallyActive = SDL_IsTextInputActive();
+			m_textInputEnabled = isTextInputActuallyActive;
+			m_properties.m_systemServices->SetTextInputEnabled(isTextInputActuallyActive);
+
 			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
 			if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault || tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
 			{
