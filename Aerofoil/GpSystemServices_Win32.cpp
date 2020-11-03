@@ -153,6 +153,12 @@ unsigned int GpSystemServices_Win32::GetCPUCount() const
 
 void GpSystemServices_Win32::SetTextInputEnabled(bool isEnabled)
 {
+	(void)isEnabled;
+}
+
+bool GpSystemServices_Win32::IsTextInputEnabled() const
+{
+	return true;
 }
 
 void GpSystemServices_Win32::SetTouchscreenSimulation(bool isTouchscreenSimulation)

@@ -399,6 +399,8 @@ static void TranslateWindowsMessage(const MSG *msg, IGpVOSEventQueue *eventQueue
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	(void)lpCmdLine;
+
 	LPWSTR cmdLine = GetCommandLineW();
 
 	int nArgs;
