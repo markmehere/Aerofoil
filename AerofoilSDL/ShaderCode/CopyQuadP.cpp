@@ -5,11 +5,6 @@
 "\n"\
 "uniform vec4 dxdy_dimensions;\n"\
 "\n"\
-"vec3 SamplePixel(vec2 coord)\n"\
-"{\n"\
-"	return texture2D(surfaceTexture, (coord + vec2(0.5, 0.5)) / dxdy_dimensions.zw).rgb;\n"\
-"}\n"\
-"\n"\
 "void main()\n"\
 "{\n"\
 "	gl_FragColor = vec4(LinearToSRGB(texture2D(surfaceTexture, texCoord.xy).rgb), 1.0);\n"\
@@ -17,5 +12,5 @@
 
 namespace GpBinarizedShaders
 {
-	const char *g_copyQuadP_GL2 = GP_GL_SHADER_CODE_PRECISION_PREFIX GP_GL_SHADER_CODE_FUNCTIONS_H GP_GL_SHADER_CODE_COPYQUADP_GLSL;
+	const char *g_copyQuadP_GL2 = GP_GL_SHADER_CODE_MEDIUM_PRECISION_PREFIX GP_GL_SHADER_CODE_FUNCTIONS_H GP_GL_SHADER_CODE_COPYQUADP_GLSL;
 }

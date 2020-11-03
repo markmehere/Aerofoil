@@ -25,6 +25,7 @@
 #include <chrono>
 #include <numeric>
 #include <vector>
+#include <algorithm>
 
 
 #pragma push_macro("LoadCursor")
@@ -644,6 +645,7 @@ public:
 	void UploadEntire(const void *data, size_t pitch);
 	void Destroy();
 
+	void DestroyAll();
 	bool RecreateAll();
 
 	size_t GetImageWidth() const;
@@ -777,7 +779,7 @@ private:
 	};
 
 	void StartOpenGLForWindow(IGpLogDriver *logger);
-	bool InitResources(uint32_t virtualWidth, uint32_t virtualHeight);
+	bool InitResources(uint32_t physicalWidth, uint32_t physicalHeight, uint32_t virtualWidth, uint32_t virtualHeight);
 
 	void BecomeFullScreen();
 	void BecomeWindowed();
@@ -821,7 +823,6 @@ private:
 		GLint m_pixelDXDYDimensionsLocation;
 		GLint m_vertexPosUVLocation;
 		GLint m_pixelSurfaceTextureLocation;
-		GLint m_pixelPaletteTextureLocation;
 
 		bool Link(GpDisplayDriver_SDL_GL2 *driver, const GpGLShader<GL_VERTEX_SHADER> *vertexShader, const GpGLShader<GL_FRAGMENT_SHADER> *pixelShader);
 	};
@@ -830,6 +831,12 @@ private:
 	{
 		GpComPtr<GpGLRenderTargetView> m_virtualScreenTextureRTV;
 		GpComPtr<GpGLTexture> m_virtualScreenTexture;
+
+		GpComPtr<GpGLRenderTargetView> m_upscaleTextureRTV;
+		GpComPtr<GpGLTexture> m_upscaleTexture;
+
+		uint32_t m_upscaleTextureWidth;
+		uint32_t m_upscaleTextureHeight;
 
 		GpComPtr<GpGLVertexArray> m_quadVertexArray;
 		GpComPtr<GpGLBuffer> m_quadVertexBufferKeepalive;
@@ -881,6 +888,7 @@ private:
 	uint32_t m_windowHeightVirtual;
 	float m_pixelScaleX;
 	float m_pixelScaleY;
+	bool m_useUpscaleFilter;
 
 	GpCursor_SDL2 *m_activeCursor;
 	GpCursor_SDL2 *m_pendingCursor;
@@ -1010,14 +1018,17 @@ void GpDisplayDriverSurface_GL2::Destroy()
 	free(this);
 }
 
-bool GpDisplayDriverSurface_GL2::RecreateAll()
+void GpDisplayDriverSurface_GL2::DestroyAll()
 {
 	for (GpDisplayDriverSurface_GL2 *scan = this; scan; scan = scan->m_next)
 	{
 		scan->m_invalidateCallback(scan->m_invalidateContext);
 		scan->m_texture = nullptr;
 	}
+}
 
+bool GpDisplayDriverSurface_GL2::RecreateAll()
+{
 	for (GpDisplayDriverSurface_GL2 *scan = this; scan; scan = scan->m_next)
 	{
 		if (!scan->RecreateSingle())
@@ -1068,13 +1079,15 @@ bool GpDisplayDriverSurface_GL2::Init(GpDisplayDriverSurface_GL2 *prevSurface)
 
 	CheckGLError(*m_gl, m_driver->GetProperties().m_logger);
 
+	m_prev = prevSurface;
+
 	return true;
 }
 
 bool GpDisplayDriverSurface_GL2::RecreateSingle()
 {
 	m_texture = GpGLTexture::Create(m_driver);
-	return m_texture != nullptr;
+	return m_texture != nullptr && this->Init(m_prev);
 }
 
 GLenum GpDisplayDriverSurface_GL2::ResolveGLFormat() const
@@ -1165,6 +1178,7 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_windowHeightVirtual(480)
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
+	, m_useUpscaleFilter(false)
 	, m_vosFiber(nullptr)
 	, m_vosEvent(nullptr)
 	, m_pendingCursor(nullptr)
@@ -1980,15 +1994,18 @@ void GpDisplayDriver_SDL_GL2::Run()
 				new (&m_res) InstancedResources();
 
 				if (m_firstSurface)
-					m_firstSurface->RecreateAll();
+					m_firstSurface->DestroyAll();
 
-				if (!InitResources(m_windowWidthVirtual, m_windowHeightVirtual))
+				if (!InitResources(m_windowWidthPhysical, m_windowHeightPhysical, m_windowWidthVirtual, m_windowHeightVirtual))
 				{
 					if (logger)
 						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to InitResources failing");
 
 					break;
 				}
+
+				if (m_firstSurface)
+					m_firstSurface->RecreateAll();
 
 				m_contextLost = false;
 				continue;
@@ -2368,12 +2385,15 @@ void GpDisplayDriver_SDL_GL2::StartOpenGLForWindow(IGpLogDriver *logger)
 	SDL_GL_SetSwapInterval(1);
 }
 
-bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t virtualWidth, uint32_t virtualHeight)
+bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t physicalWidth, uint32_t physicalHeight, uint32_t virtualWidth, uint32_t virtualHeight)
 {
 	IGpLogDriver *logger = m_properties.m_logger;
 
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriver_SDL_GL2::InitResources");
+
+	if ((m_pixelScaleX < 2.0f && m_pixelScaleX > 1.0f) || (m_pixelScaleY < 2.0f && m_pixelScaleY > 1.0f))
+		m_useUpscaleFilter = true;
 
 	CheckGLError(m_gl, logger);
 
@@ -2684,6 +2704,66 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 		m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+
+	if (m_pixelScaleX != floor(m_pixelScaleX) || m_pixelScaleY != floor(m_pixelScaleY))
+	{
+		uint32_t upscaleX = ceil(m_pixelScaleX);
+		uint32_t upscaleY = ceil(m_pixelScaleY);
+
+		{
+			m_res.m_upscaleTexture = GpGLTexture::Create(this);
+			if (!m_res.m_upscaleTexture)
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: GpGLTexture::Create for upscale texture failed");
+
+				return false;
+			}
+
+			m_res.m_upscaleTextureWidth = width * upscaleX;
+			m_res.m_upscaleTextureHeight = height * upscaleY;
+
+			GLenum internalFormat = SupportsSizedFormats() ? GL_RGBA8 : GL_RGBA;
+
+			m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_upscaleTexture->GetID());
+			m_gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			m_gl.TexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_res.m_upscaleTextureWidth, m_res.m_upscaleTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			m_gl.BindTexture(GL_TEXTURE_2D, 0);
+
+			CheckGLError(m_gl, logger);
+		}
+
+		{
+			m_res.m_upscaleTextureRTV = GpGLRenderTargetView::Create(this);
+
+			if (!m_res.m_upscaleTextureRTV)
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: GpGLRenderTargetView::Create for upscale texture failed");
+
+				return false;
+			}
+
+			m_gl.BindFramebuffer(GL_FRAMEBUFFER, m_res.m_upscaleTextureRTV->GetID());
+			m_gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_res.m_upscaleTexture->GetID(), 0);
+			GLenum status = m_gl.CheckFramebufferStatus(GL_FRAMEBUFFER);
+
+			if (status != GL_FRAMEBUFFER_COMPLETE)
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitBackBuffer: Framebuffer complete check failed for upscale texture, status was %i   VST ID is %i", static_cast<int>(status), static_cast<int>(m_res.m_virtualScreenTextureRTV->GetID()));
+
+				return false;
+			}
+
+			m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+	}
+
 	CheckGLError(m_gl, logger);
 
 	return true;
@@ -2692,28 +2772,20 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 
 void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 {
-	m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	m_gl.Viewport(0, 0, m_windowWidthPhysical, m_windowHeightPhysical);
-
-	const bool isIntegralScale = (m_pixelScaleX == floor(m_pixelScaleX) && m_pixelScaleY == floor(m_pixelScaleY));
-
-	const BlitQuadProgram &program = isIntegralScale ? m_res.m_copyQuadProgram : m_res.m_scaleQuadProgram;
-
+	if (m_useUpscaleFilter)
 	{
-		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
-		const float twoDivHeight = 2.0f / static_cast<float>(m_windowHeightPhysical);
+		m_gl.BindFramebuffer(GL_FRAMEBUFFER, m_res.m_upscaleTextureRTV->GetID());
 
-		// Use the scaled virtual width instead of the physical width to correctly handle cases where the window boundary is in the middle of a pixel
-		float fWidth = static_cast<float>(m_windowWidthVirtual) * m_pixelScaleX;
-		float fHeight = static_cast<float>(m_windowHeightVirtual) * m_pixelScaleY;
+		m_gl.Viewport(0, 0, m_res.m_upscaleTextureWidth, m_res.m_upscaleTextureHeight);
+
+		const BlitQuadProgram &program = m_res.m_scaleQuadProgram;
 
 		float ndcOriginsAndDimensions[4] =
 		{
 			-1.0f,
 			-1.0f,
-			fWidth * twoDivWidth,
-			fHeight * twoDivHeight
+			2.0f,
+			2.0f,
 		};
 
 		float surfaceDimensions_TextureRegion[4] =
@@ -2730,8 +2802,73 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 		float dxdy_dimensions[4] =
 		{
-			static_cast<float>(static_cast<double>(m_windowWidthVirtual) / static_cast<double>(m_windowWidthPhysical)),
-			static_cast<float>(static_cast<double>(m_windowHeightVirtual) / static_cast<double>(m_windowHeightPhysical)),
+			static_cast<float>(1.0 / m_windowWidthVirtual),
+			static_cast<float>(1.0 / m_windowHeightVirtual),
+			static_cast<float>(m_windowWidthVirtual),
+			static_cast<float>(m_windowHeightVirtual)
+		};
+
+		m_gl.Uniform4fv(program.m_pixelDXDYDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(dxdy_dimensions));
+
+		GLint attribLocations[] = { program.m_vertexPosUVLocation };
+
+		m_res.m_quadVertexArray->Activate(attribLocations);
+
+		m_gl.ActiveTexture(GL_TEXTURE0 + 0);
+		m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_virtualScreenTexture->GetID());
+		m_gl.Uniform1i(program.m_pixelSurfaceTextureLocation, 0);
+
+		m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_res.m_quadIndexBuffer->GetID());
+		m_gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+
+		m_gl.UseProgram(0);
+
+		m_gl.ActiveTexture(GL_TEXTURE0 + 0);
+		m_gl.BindTexture(GL_TEXTURE_2D, 0);
+
+		m_res.m_quadVertexArray->Deactivate(attribLocations);
+
+		m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
+	m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	m_gl.Viewport(0, 0, m_windowWidthPhysical, m_windowHeightPhysical);
+
+	const BlitQuadProgram &program = m_res.m_copyQuadProgram;
+
+	{
+		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
+		const float twoDivHeight = 2.0f / static_cast<float>(m_windowHeightPhysical);
+
+		// Use the scaled virtual width instead of the physical width to correctly handle cases where the window boundary is in the middle of a pixel
+		float fWidth = static_cast<float>(m_windowWidthVirtual) * m_pixelScaleX;
+		float fHeight = static_cast<float>(m_windowHeightVirtual) * m_pixelScaleY;
+
+		float ndcOriginsAndDimensions[4] =
+		{
+			-1.0f,
+			-1.0f,
+			2.0f,
+			2.0f,
+		};
+
+		float surfaceDimensions_TextureRegion[4] =
+		{
+			static_cast<float>(m_windowWidthVirtual),
+			static_cast<float>(m_windowHeightVirtual),
+			1.f,
+			1.f
+		};
+
+		m_gl.UseProgram(program.m_program->GetID());
+		m_gl.Uniform4fv(program.m_vertexNDCOriginAndDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(ndcOriginsAndDimensions));
+		m_gl.Uniform4fv(program.m_vertexSurfaceDimensionsLocation, 1, reinterpret_cast<const GLfloat*>(surfaceDimensions_TextureRegion));
+
+		float dxdy_dimensions[4] =
+		{
+			static_cast<float>(1.0 / m_windowWidthVirtual),
+			static_cast<float>(1.0 / m_windowHeightVirtual),
 			static_cast<float>(m_windowWidthVirtual),
 			static_cast<float>(m_windowHeightVirtual)
 		};
@@ -2743,8 +2880,11 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 	m_res.m_quadVertexArray->Activate(attribLocations);
 
+
+	GpGLTexture *inputTexture = m_useUpscaleFilter ? static_cast<GpGLTexture*>(m_res.m_upscaleTexture) : static_cast<GpGLTexture*>(m_res.m_virtualScreenTexture);
+
 	m_gl.ActiveTexture(GL_TEXTURE0 + 0);
-	m_gl.BindTexture(GL_TEXTURE_2D, m_res.m_virtualScreenTexture->GetID());
+	m_gl.BindTexture(GL_TEXTURE_2D, inputTexture->GetID());
 	m_gl.Uniform1i(program.m_pixelSurfaceTextureLocation, 0);
 
 	m_gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_res.m_quadIndexBuffer->GetID());
