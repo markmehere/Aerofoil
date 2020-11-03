@@ -166,6 +166,7 @@ void GpThreadEvent_Cpp11::Destroy()
 }
 
 GpSystemServices_Android::GpSystemServices_Android()
+	: m_textInputEnabled(false)
 {
 }
 
@@ -267,6 +268,16 @@ bool GpSystemServices_Android::IsTextInputObstructive() const
 unsigned int GpSystemServices_Android::GetCPUCount() const
 {
 	return SDL_GetCPUCount();
+}
+
+void GpSystemServices_Android::SetTextInputEnabled(bool isEnabled)
+{
+	m_textInputEnabled = isEnabled;
+}
+
+bool GpSystemServices_Android::IsTextInputEnabled() const
+{
+	return m_textInputEnabled;
 }
 
 GpSystemServices_Android *GpSystemServices_Android::GetInstance()

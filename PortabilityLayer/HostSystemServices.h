@@ -32,6 +32,8 @@ namespace PortabilityLayer
 		virtual bool IsUsingMouseAsTouch() const = 0;
 		virtual bool IsTextInputObstructive() const = 0;
 		virtual unsigned int GetCPUCount() const = 0;
+		virtual void SetTextInputEnabled(bool isEnabled) = 0;
+		virtual bool IsTextInputEnabled() const = 0;
 
 		static void SetInstance(HostSystemServices *instance);
 		static HostSystemServices *GetInstance();

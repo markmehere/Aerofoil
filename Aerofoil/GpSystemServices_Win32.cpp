@@ -151,6 +151,10 @@ unsigned int GpSystemServices_Win32::GetCPUCount() const
 	return sysInfo.dwNumberOfProcessors;
 }
 
+void GpSystemServices_Win32::SetTextInputEnabled(bool isEnabled)
+{
+}
+
 void GpSystemServices_Win32::SetTouchscreenSimulation(bool isTouchscreenSimulation)
 {
 	m_isTouchscreenSimulation = isTouchscreenSimulation;

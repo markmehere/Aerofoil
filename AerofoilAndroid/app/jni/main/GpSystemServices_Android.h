@@ -20,9 +20,15 @@ public:
 	bool IsUsingMouseAsTouch() const override;
 	bool IsTextInputObstructive() const override;
 	unsigned int GetCPUCount() const override;
+	void SetTextInputEnabled(bool isEnabled) override;
+	bool IsTextInputEnabled() const override;
+
+	void FlushTextInputEnabled();
 
 	static GpSystemServices_Android *GetInstance();
 
 private:
 	static GpSystemServices_Android ms_instance;
+
+	bool m_textInputEnabled;
 };

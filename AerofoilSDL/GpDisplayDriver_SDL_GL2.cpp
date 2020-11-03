@@ -912,6 +912,8 @@ private:
 
 	uint8_t m_paletteStorage[256 * 4 + GP_SYSTEM_MEMORY_ALIGNMENT];
 	uint8_t *m_paletteData;
+
+	bool m_textInputEnabled;
 };
 
 
@@ -1205,6 +1207,7 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_contextLost(true)
 	, m_lastSurface(nullptr)
 	, m_firstSurface(nullptr)
+	, m_textInputEnabled(false)
 {
 	m_bgColor[0] = 0.f;
 	m_bgColor[1] = 0.f;
@@ -1915,7 +1918,6 @@ void GpDisplayDriver_SDL_GL2::Run()
 			}
 
 			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
-
 		}
 		else
 		{
@@ -1936,7 +1938,6 @@ void GpDisplayDriver_SDL_GL2::Run()
 			int clientWidth = 0;
 			int clientHeight = 0;
 			SDL_GetWindowSize(m_window, &clientWidth, &clientHeight);
-
 
 			unsigned int desiredWidth = clientWidth;
 			unsigned int desiredHeight = clientHeight;
@@ -2009,6 +2010,16 @@ void GpDisplayDriver_SDL_GL2::Run()
 
 				m_contextLost = false;
 				continue;
+			}
+
+			bool wantTextInput = m_properties.m_systemServices->IsTextInputEnabled();
+			if (wantTextInput != m_textInputEnabled)
+			{
+				m_textInputEnabled = wantTextInput;
+				if (m_textInputEnabled)
+					SDL_StartTextInput();
+				else
+					SDL_StopTextInput();
 			}
 
 			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();

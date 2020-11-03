@@ -2,6 +2,7 @@
 
 #include "FontFamily.h"
 #include "FontManager.h"
+#include "HostSystemServices.h"
 #include "InputManager.h"
 #include "MacRomanConversion.h"
 #include "MemoryManager.h"
@@ -42,6 +43,9 @@ namespace PortabilityLayer
 
 	EditboxWidget::~EditboxWidget()
 	{
+		if (m_hasFocus)
+			PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(false);
+
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 
 		if (m_chars)
@@ -155,10 +159,15 @@ namespace PortabilityLayer
 			DrawSurface *surface = m_window->GetDrawSurface();
 			DrawControl(surface);
 		}
+
+		PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(true);
 	}
 
 	void EditboxWidget::LoseFocus()
 	{
+		if (m_hasFocus)
+			PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(false);
+
 		m_hasFocus = false;
 		m_selStartChar = 0;
 		m_selEndChar = 0;
