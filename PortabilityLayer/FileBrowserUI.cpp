@@ -41,6 +41,8 @@ static const int kFileBrowserUIOpenDialogTemplateID = 2001;
 static const int kFileBrowserUISaveDialogTemplateID = 2002;
 static const int kFileBrowserUIOverwriteDialogTemplateID = 2003;
 static const int kFileBrowserUIBadNameDialogTemplateID = 2004;
+static const int kFileBrowserUISaveDialogUnobstructiveTemplateID = 2007;
+
 
 static const int kOverwriteNoButton = 1;
 static const int kOverwriteYesButton = 2;
@@ -472,6 +474,12 @@ namespace PortabilityLayer
 
 	int16_t FileBrowserUIImpl::PopUpAlert(const Rect &rect, int dialogResID, const DialogTextSubstitutions *substitutions)
 	{
+		PortabilityLayer::HostSystemServices *sysServices = PortabilityLayer::HostSystemServices::GetInstance();
+
+		// Disable text input temporarily and restore it after
+		const bool wasTextInput = sysServices->IsTextInputEnabled();
+		sysServices->SetTextInputEnabled(false);
+
 		PortabilityLayer::DialogManager *dialogManager = PortabilityLayer::DialogManager::GetInstance();
 		Dialog *dialog = dialogManager->LoadDialogFromTemplate(dialogResID, rect, true, false, 0, 0, PL_GetPutInFrontWindowPtr(), PSTR(""), substitutions);
 
@@ -488,16 +496,29 @@ namespace PortabilityLayer
 
 		dialog->Destroy();
 
+		sysServices->SetTextInputEnabled(wasTextInput);
+
 		return hit;
 	}
 
 	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText)
 	{
 		int dialogID = 0;
+		bool isObstructive = false;
+		int windowHeight = 272;
 		if (mode == Mode_Open)
 			dialogID = kFileBrowserUIOpenDialogTemplateID;
 		else if (mode == Mode_Save)
-			dialogID = kFileBrowserUISaveDialogTemplateID;
+		{
+			if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
+			{
+				dialogID = kFileBrowserUISaveDialogUnobstructiveTemplateID;
+				windowHeight = 240;
+				isObstructive = true;
+			}
+			else
+				dialogID = kFileBrowserUISaveDialogTemplateID;
+		}
 		else
 		{
 			assert(false);
@@ -538,7 +559,7 @@ namespace PortabilityLayer
 		dirCursor->Destroy();
 
 		const int scrollBarWidth = 16;
-		const Rect windowRect = Rect::Create(0, 0, 272, 450);
+		const Rect windowRect = Rect::Create(0, 0, windowHeight, 450);
 
 		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
@@ -556,6 +577,9 @@ namespace PortabilityLayer
 		Dialog *dialog = dialogManager->LoadDialogFromTemplate(dialogID, windowRect, true, false, 0, 0, PL_GetPutInFrontWindowPtr(), PSTR(""), &substitutions);
 
 		Window *window = dialog->GetWindow();
+
+		if (isObstructive)
+			window->SetPosition(PortabilityLayer::Vec2i(window->GetPosition().m_x, 6));
 
 		DrawSurface *surface = window->GetDrawSurface();
 
