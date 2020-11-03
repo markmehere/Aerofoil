@@ -975,6 +975,9 @@ namespace PortabilityLayer
 			int32_t h = m_rect.Height();
 			if (lowerY < h)
 				m_scrollOffset.m_y -= lowerY - h;
+
+			if (m_scrollOffset.m_y > 0)
+				m_scrollOffset.m_y = 0;
 		}
 	}
 
