@@ -37,7 +37,6 @@
           <Directory Id="AEROFOILRESOURCESDIR" Name="Resources" />
           <Directory Id="AEROFOILPACKAGEDDIR" Name="Packaged">
             <Directory Id="AEROFOILHOUSESDIR" Name="Houses" />
-            <Directory Id="AEROFOILWINCURSORSDIR" Name="WinCursors" />
           </Directory>
           <Directory Id="AEROFOILDOCUMENTATIONDIR" Name="Documentation" />
           <Directory Id="AEROFOILTOOLSDIR" Name="Tools" />
@@ -163,7 +162,6 @@
 
       <ComponentRef Id="readme.txt" />
 
-      <ComponentGroupRef Id="WinCursorsComponentGroup"/>
       <ComponentGroupRef Id="DefaultHousesComponentGroup"/>
       
       <ComponentGroupRef Id="ResourcesComponentGroup"/>

@@ -170,22 +170,12 @@
     <DefineConstants>
 ResourcesDataDir=$(SolutionDir)\Resources;
 DocumentationDataDir=$(SolutionDir)\Documentation;
-WinCursorsDataDir=$(SolutionDir)\Packaged\WinCursors;
 HousesDataDir=$(SolutionDir)\Packaged\Houses;
 PackagedDataDir=$(SolutionDir)\Packaged;
 	</DefineConstants>
   </PropertyGroup>
   <Target Name="BeforeBuild">
     <ItemGroup>
-      <HarvestDirectory Include="$(SolutionDir)\Packaged\WinCursors">
-        <DirectoryRefId>AEROFOILWINCURSORSDIR</DirectoryRefId>
-        <SuppressRootDirectory>true</SuppressRootDirectory>
-        <SuppressCom>true</SuppressCom>
-        <SuppressRegistry>true</SuppressRegistry>
-        <ComponentGroupName>WinCursorsComponentGroup</ComponentGroupName>
-        <AutogenerateGuids>true</AutogenerateGuids>
-        <PreprocessorVariable>var.WinCursorsDataDir</PreprocessorVariable>
-      </HarvestDirectory>
       <HarvestDirectory Include="$(SolutionDir)\Resources">
         <DirectoryRefId>AEROFOILRESOURCESDIR</DirectoryRefId>
         <SuppressRootDirectory>true</SuppressRootDirectory>
