@@ -81,7 +81,7 @@ struct DrawSurface
 	void DrawStringConstrained(const Point &point, const PLPasStr &str, const Rect &constraintRect, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *font);
 	void DrawStringWrap(const Point &point, const Rect &constrainRect, const PLPasStr &str, PortabilityLayer::ResolveCachingColor &cacheColor, PortabilityLayer::RenderedFont *font);
 
-	void DrawPicture(THandle<BitmapImage> pictHandle, const Rect &rect);
+	void DrawPicture(THandle<BitmapImage> pictHandle, const Rect &rect, bool errorDiffusion = true);
 
 	IGpDisplayDriverSurface *m_ddSurface;
 

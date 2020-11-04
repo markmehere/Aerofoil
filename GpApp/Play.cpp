@@ -581,7 +581,11 @@ void ResetTouchScreenControlBounds (void)
 	points[TouchScreenCtrlIDs::Movement] = Point::Create(mainWindowRect.left, mainWindowRect.top);
 	points[TouchScreenCtrlIDs::BatteryHelium] = Point::Create(mainWindowRect.left + touchScreenControlEdgeSpacing, mainWindowRect.top + touchScreenControlEdgeSpacing);
 	points[TouchScreenCtrlIDs::Bands] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.top + touchScreenControlEdgeSpacing);
-	points[TouchScreenCtrlIDs::Menu] = Point::Create(points[TouchScreenCtrlIDs::Bands].h - touchScreenControlInterSpacing - touchScreenControlSize, points[TouchScreenCtrlIDs::BatteryHelium].v);
+
+	if (demoGoing)
+		points[TouchScreenCtrlIDs::Menu] = Point::Create(mainWindowRect.right - touchScreenControlEdgeSpacing - touchScreenControlSize, mainWindowRect.top + touchScreenControlEdgeSpacing);
+	else
+		points[TouchScreenCtrlIDs::Menu] = Point::Create(points[TouchScreenCtrlIDs::Bands].h - touchScreenControlInterSpacing - touchScreenControlSize, points[TouchScreenCtrlIDs::BatteryHelium].v);
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 		sizes[i] = Point::Create(touchScreenControlSize, touchScreenControlSize);
@@ -622,7 +626,7 @@ void InitTouchScreenControlState(void)
 
 		Rect resRect = Rect::Create(0, 0, touchScreenControlSize, touchScreenControlSize);
 		(void)CreateOffScreenGWorld(&touchScreen.graphics[i], &resRect);
-		LoadGraphic(touchScreen.graphics[i], resID);
+		LoadGraphicNoDither(touchScreen.graphics[i], resID);
 	}
 
 	pendingTouchScreenMenu = false;

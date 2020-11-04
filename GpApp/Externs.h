@@ -201,6 +201,7 @@ short RandomInt (short);
 long RandomLong (long);
 void RedAlert (short);
 void LoadGraphic (DrawSurface *surface, short resID);			// Only loads from app resources
+void LoadGraphicNoDither (DrawSurface *surface, short resID);
 void LoadGraphicCustom (DrawSurface *surface, short resID);		// Supports custom graphics
 void LoadScaledGraphic (DrawSurface *, short, Rect *);			// Only loads from app resources
 void LoadScaledGraphicCustom (DrawSurface *, short, Rect *);	// Supports custom graphics

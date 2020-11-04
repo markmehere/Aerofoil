@@ -494,6 +494,12 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
 			DoCommandKey();
 
+		// Cheesy - Use touchscreen menu as quit
+		if (pendingTouchScreenMenu)
+		{
+			playing = false;
+			paused = false;
+		}
 #endif
 	}
 

@@ -611,43 +611,62 @@ void RenderShreds (void)
 
 void RenderTouchScreenControls (void)
 {
-	if (demoGoing)
-		return;
-
 	DrawSurface *ctrlGraphics[TouchScreenCtrlIDs::Count];
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)
 		ctrlGraphics[i] = nullptr;
 
 	ctrlGraphics[TouchScreenCtrlIDs::Movement] = nullptr;
-	ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsDisabled];
-	ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryDisabled];
-	ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::MenuIdle];
 
-	if (batteryTotal < 0)
-		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumIdle];
-	else if (batteryTotal > 0)
-		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryIdle];
+	if (demoGoing)
+	{
+		ctrlGraphics[TouchScreenCtrlIDs::Bands] = nullptr;
+		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = nullptr;
+		ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::StopIdle];
+	}
+	else
+	{
+		ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsDisabled];
+		ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryDisabled];
+		ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::MenuIdle];
 
-	if (bandsTotal > 0)
-		ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsIdle];
+		if (batteryTotal < 0)
+			ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumIdle];
+		else if (batteryTotal > 0)
+			ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryIdle];
+
+		if (bandsTotal > 0)
+			ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsIdle];
+	}
 
 	for (int i = 0; i < touchScreenControlState::kMaxFingers; i++)
 	{
-		if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::BatteryHelium)
+		if (demoGoing)
 		{
-			if (batteryTotal < 0)
-				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumActive];
-			else if (batteryTotal > 0)
-				ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryActive];
+			if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Menu)
+			{
+				ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::StopActive];
+			}
 		}
-		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Bands)
+		else
 		{
-			if (bandsTotal > 0)
-				ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsActive];
+			if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::BatteryHelium)
+			{
+				if (batteryTotal < 0)
+					ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::HeliumActive];
+				else if (batteryTotal > 0)
+					ctrlGraphics[TouchScreenCtrlIDs::BatteryHelium] = touchScreen.graphics[touchScreenControlGraphics::BatteryActive];
+			}
+			else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Bands)
+			{
+				if (bandsTotal > 0)
+					ctrlGraphics[TouchScreenCtrlIDs::Bands] = touchScreen.graphics[touchScreenControlGraphics::BandsActive];
+			}
+			else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Menu)
+			{
+				ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::MenuActive];
+			}
 		}
-		else if (touchScreen.fingers[i].capturingControl == TouchScreenCtrlIDs::Menu)
-			ctrlGraphics[TouchScreenCtrlIDs::Menu] = touchScreen.graphics[touchScreenControlGraphics::MenuActive];
 	}
 
 	for (int i = 0; i < TouchScreenCtrlIDs::Count; i++)

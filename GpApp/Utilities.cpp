@@ -277,6 +277,22 @@ void LoadGraphic (DrawSurface *surface, short resID)
 	thePicture.Dispose();
 }
 
+void LoadGraphicNoDither(DrawSurface *surface, short resID)
+{
+	Rect					bounds;
+	THandle<BitmapImage>	thePicture;
+
+	thePicture = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', resID).StaticCast<BitmapImage>();
+	if (thePicture == nil)
+		RedAlert(kErrFailedGraphicLoad);
+
+	bounds = (*thePicture)->GetRect();
+	OffsetRect(&bounds, -bounds.left, -bounds.top);
+	surface->DrawPicture(thePicture, bounds, false);
+
+	thePicture.Dispose();
+}
+
 //--------------------------------------------------------------  LoadGraphicCustom
 // Same as LoadGraphic but supports custom graphics
 void LoadGraphicCustom(DrawSurface *surface, short resID)
