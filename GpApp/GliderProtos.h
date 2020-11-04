@@ -99,6 +99,7 @@ void SortHighScores (void);
 void ZeroHighScores (void);
 void ZeroAllButHighestScore (void);
 Boolean TestHighScore (void);
+void WriteScores (void);	// Either saves the house or saves scores, depending on if it's read-only
 Boolean WriteScoresToDisk (void);
 Boolean ReadScoresFromDisk (void);
 

@@ -55,5 +55,5 @@ extern	long		theScore;
 extern	short		playOriginH, playOriginV;
 extern	short		thisRoomNumber, theMode, batteryTotal, bandsTotal;
 extern	short		foilTotal, mortals, numMasterObjects, previousRoom;
-extern	Boolean		fileDirty, gameDirty, showFoil, doZooms, isPlayMusicGame;
+extern	Boolean		fileDirty, showFoil, doZooms, isPlayMusicGame;
 

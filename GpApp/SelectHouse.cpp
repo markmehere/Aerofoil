@@ -42,7 +42,7 @@
 #define kGrayedOutDownArrow		1053
 #define kMaxExtraHouses			8
 
-
+void WriteOutPrefs (void);
 void UpdateLoadDialog (Dialog *);
 void PageUpHouses (Dialog *);
 void PageDownHouses (Dialog *);
@@ -343,6 +343,7 @@ void DoLoadHouse (void)
 	Dialog			*theDial;
 	short			i, wasIndex, screenCount;
 	Boolean			leaving, whoCares;
+	bool			houseNameDirty = false;
 
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 	
@@ -411,7 +412,10 @@ void DoLoadHouse (void)
 				PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 						thisHouseName);
 				if (OpenHouse())
+				{
 					whoCares = ReadHouse();
+					houseNameDirty = true;
+				}
 			}
 			leaving = true;
 		}
@@ -449,7 +453,10 @@ void DoLoadHouse (void)
 					PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 							thisHouseName);
 					if (OpenHouse())
+					{
 						whoCares = ReadHouse();
+						houseNameDirty = true;
+					}
 				}
 				leaving = true;
 			}
@@ -483,7 +490,10 @@ void DoLoadHouse (void)
 					PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 							thisHouseName);
 					if (OpenHouse())
+					{
 						whoCares = ReadHouse();
+						houseNameDirty = true;
+					}
 				}
 				leaving = true;
 			}
@@ -500,6 +510,9 @@ void DoLoadHouse (void)
 		if (requiresRedraw)
 			UpdateLoadDialog(theDial);
 	}
+
+	if (houseNameDirty)
+		WriteOutPrefs();
 
 	wm->SwapExclusiveWindow(exclWindow);	// Pop exclusive window
 

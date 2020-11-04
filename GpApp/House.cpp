@@ -24,6 +24,7 @@
 
 #define kGoToDialogID			1043
 
+void WriteOutPrefs(void);
 
 void UpdateGoToDialog (Dialog *);
 int16_t GoToFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt);
@@ -104,6 +105,8 @@ Boolean CreateNewHouse (void)
 	InitCursor();
 	if (!OpenHouse())
 		return (false);
+
+	WriteOutPrefs();
 	
 	return (true);
 }

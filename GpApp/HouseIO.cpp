@@ -39,7 +39,7 @@ Rect		movieRect;
 PortabilityLayer::IResourceArchive	*houseResFork;
 short		wasHouseVersion;
 GpIOStream *houseStream;
-Boolean		houseOpen, fileDirty, gameDirty;
+Boolean		houseOpen, fileDirty;
 Boolean		changeLockStateOfHouse, saveHouseLocked, houseIsReadOnly;
 Boolean		hasMovie, tvInRoom;
 
@@ -639,7 +639,6 @@ Boolean ReadHouse (void)
 	
 	objActive = kNoObjectSelected;
 	ReflectCurrentRoom(true);
-	gameDirty = false;
 	fileDirty = false;
 	UpdateMenus(false);
 	
@@ -724,7 +723,6 @@ Boolean WriteHouse (Boolean checkIt)
 		ReflectCurrentRoom(true);
 	}
 	
-	gameDirty = false;
 	fileDirty = false;
 	UpdateMenus(false);
 	return (true);
@@ -740,17 +738,7 @@ Boolean CloseHouse (void)
 	if (!houseOpen)
 		return (true);
 	
-	if (gameDirty)
-	{
-		if (houseIsReadOnly)
-		{
-			if (!WriteScoresToDisk())
-				YellowAlert(kYellowFailedWrite, 0);
-		}
-		else if (!WriteHouse(theMode == kEditMode))
-			YellowAlert(kYellowFailedWrite, 0);
-	}
-	else if (fileDirty)
+	if (fileDirty)
 	{
 #ifndef COMPILEDEMO
 		if (!QuerySaveChanges())	// false signifies user canceled

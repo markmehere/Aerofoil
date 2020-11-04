@@ -99,6 +99,7 @@ void FlashSettingsButton (DrawSurface *, short);
 void UpdateSettingsMain (Dialog *);
 int16_t PrefsFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void BitchAboutChanges (void);
+void WriteOutPrefs (void);
 
 
 Rect		prefButton[4], controlRects[4];
@@ -1358,6 +1359,8 @@ void DoSettingsMain (void)
 	}
 
 	PortabilityLayer::HostDisplayDriver::GetInstance()->SetUseICCProfile(isUseICCProfile);
+
+	WriteOutPrefs();
 }
 
 //--------------------------------------------------------------  BitchAboutChanges

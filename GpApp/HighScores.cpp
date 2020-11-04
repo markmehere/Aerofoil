@@ -55,7 +55,7 @@ short		lastHighScore;
 Boolean		keyStroke;
 
 extern	short		splashOriginH, splashOriginV;
-extern	Boolean		quickerTransitions, resumedSavedGame;
+extern	Boolean		quickerTransitions, resumedSavedGame, houseIsReadOnly;
 
 
 //==============================================================  Functions
@@ -402,7 +402,8 @@ Boolean TestHighScore (void)
 		thisHousePtr->highScores.timeStamps[kMaxScores - 1] = static_cast<uint32_t>(scoreTimestamp);
 		thisHousePtr->highScores.levels[kMaxScores - 1] = CountRoomsVisited();
 		SortHighScores();
-		gameDirty = true;
+
+		WriteScores();
 	}
 	
 	if (placing != -1)
@@ -734,9 +735,18 @@ Boolean WriteScoresToDisk (void)
 
 	scoresStream->Close();
 
-	gameDirty = false;
-
 	return (true);
+}
+
+void WriteScores (void)
+{
+	if (houseIsReadOnly)
+	{
+		if (!WriteScoresToDisk())
+			YellowAlert(kYellowFailedWrite, 0);
+	}
+	else if (!WriteHouse(theMode == kEditMode))
+		YellowAlert(kYellowFailedWrite, 0);
 }
 
 //--------------------------------------------------------------  ReadScoresFromDisk
