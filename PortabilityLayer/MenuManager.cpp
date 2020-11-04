@@ -658,6 +658,9 @@ namespace PortabilityLayer
 
 	bool MenuManagerImpl::FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar)
 	{
+		if (!m_menuBarVisible)
+			return false;
+
 		MenuHandle menuH = m_firstMenu;
 		while (menuH)
 		{
