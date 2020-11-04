@@ -2410,6 +2410,8 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t physicalWidth, uint32_t phy
 
 	if ((m_pixelScaleX < 2.0f && m_pixelScaleX > 1.0f) || (m_pixelScaleY < 2.0f && m_pixelScaleY > 1.0f))
 		m_useUpscaleFilter = true;
+	else
+		m_useUpscaleFilter = false;
 
 	CheckGLError(m_gl, logger);
 
