@@ -513,7 +513,7 @@ namespace PortabilityLayer
 			if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
 			{
 				dialogID = kFileBrowserUISaveDialogUnobstructiveTemplateID;
-				windowHeight = 240;
+				windowHeight = 208;
 				isObstructive = true;
 			}
 			else
