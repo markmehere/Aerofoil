@@ -71,7 +71,7 @@ extern Boolean		isMusicOn, isSoundOn, isPlayMusicIdle, isHouseChecks;
 extern Boolean		houseOpen, isDoColorFade, isEscPauseKey;
 extern Boolean		autoRoomEdit, doAutoDemo, doBackground;
 extern Boolean		isMapOpen, isToolsOpen, isCoordOpen;
-extern Boolean		doPrettyMap, doBitchDialogs;
+extern Boolean		doPrettyMap, doComplainDialogs;
 //extern Boolean		didValidation;
 
 THandle<void>		globalModulePrefs;
@@ -159,7 +159,7 @@ void ReadInPrefs (void)
 		isUseICCProfile = thePrefs.wasUseICCProfile;
 		doBackground = thePrefs.wasDoBackground;
 		doPrettyMap = thePrefs.wasPrettyMap;
-		doBitchDialogs = thePrefs.wasBitchDialogs;
+		doComplainDialogs = thePrefs.wasComplainDialogs;
 
 		if (modulePrefs)
 			ApplyModulePrefs(&modulePrefs);
@@ -244,7 +244,7 @@ void ReadInPrefs (void)
 		isUseICCProfile = true;
 		doBackground = false;
 		doPrettyMap = false;
-		doBitchDialogs = true;
+		doComplainDialogs = true;
 
 		IGpDisplayDriver *displayDriver = PortabilityLayer::HostDisplayDriver::GetInstance();
 		if (!displayDriver->IsFullScreen())
@@ -345,7 +345,7 @@ void WriteOutPrefs (void)
 	thePrefs.wasUseICCProfile = isUseICCProfile;
 	thePrefs.wasDoBackground = doBackground;
 	thePrefs.wasPrettyMap = doPrettyMap;
-	thePrefs.wasBitchDialogs = doBitchDialogs;
+	thePrefs.wasComplainDialogs = doComplainDialogs;
 
 	THandle<void> modulePrefs;
 

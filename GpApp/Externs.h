@@ -118,7 +118,7 @@ typedef struct
 	Boolean		wasEscPauseKey;
 	Boolean		wasDoAutoDemo, wasAutoScale;
 	Boolean		wasDoBackground, wasHouseChecks;
-	Boolean		wasPrettyMap, wasBitchDialogs;
+	Boolean		wasPrettyMap, wasComplainDialogs;
 	Boolean		wasUseICCProfile;
 } prefsInfo;
 

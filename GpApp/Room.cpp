@@ -35,7 +35,7 @@ short		numberRooms, thisRoomNumber, previousRoom;
 short		leftThresh, rightThresh, lastBackground;
 Boolean		autoRoomEdit, newRoomNow, noRoomAtAll;
 Boolean		leftOpen, rightOpen, topOpen, bottomOpen;
-Boolean		doBitchDialogs;
+Boolean		doComplainDialogs;
 
 extern	short		tempTiles[];
 

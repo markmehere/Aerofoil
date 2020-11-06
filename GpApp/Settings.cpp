@@ -72,7 +72,7 @@
 #define kDoBackgroundCheck		11
 #define kDoErrorCheck			12
 #define kDoPrettyMapCheck		13
-#define kDoBitchDlgsCheck		14
+#define kDoComplainDlgsCheck		14
 
 
 void SetBrainsToDefaults (Dialog *);
@@ -98,7 +98,7 @@ void SetAllDefaults (void);
 void FlashSettingsButton (DrawSurface *, short);
 void UpdateSettingsMain (Dialog *);
 int16_t PrefsFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
-void BitchAboutChanges (void);
+void ComplainAboutChanges (void);
 void WriteOutPrefs (void);
 
 
@@ -109,11 +109,11 @@ long		tempLeftMap, tempRightMap, tempBattMap, tempBandMap;
 short		whichCtrl, wasDepthPref;
 Boolean		wasFade, wasIdle, wasPlay, wasTransit, wasZooms, wasBackground;
 Boolean		wasEscPauseKey, wasDemos, wasAutoScale, wasUseICCProfile, nextRestartChange, wasErrorCheck, wasFullscreenPref, needResolutionReset;
-Boolean		wasPrettyMap, wasBitchDialogs;
+Boolean		wasPrettyMap, wasComplainDialogs;
 
 extern	short		numNeighbors, isDepthPref, maxFiles, willMaxFiles;
 extern	Boolean		isDoColorFade, isPlayMusicIdle, isAutoScale, isUseICCProfile;
-extern	Boolean		isHouseChecks, doBitchDialogs;
+extern	Boolean		isHouseChecks, doComplainDialogs;
 extern	Boolean		isEscPauseKey, failedMusic, isSoundOn, doBackground;
 extern	Boolean		isMusicOn, quickerTransitions, doAutoDemo;
 extern	Boolean		changeLockStateOfHouse, saveHouseLocked, doPrettyMap;
@@ -135,14 +135,14 @@ void SetBrainsToDefaults (Dialog *theDialog)
 	wasBackground = false;
 	wasErrorCheck = true;
 	wasPrettyMap = true;
-	wasBitchDialogs = true;
+	wasComplainDialogs = true;
 	SetDialogItemValue(theDialog, kQuickTransitCheck, (short)wasTransit);
 	SetDialogItemValue(theDialog, kDoZoomsCheck, (short)wasZooms);
 	SetDialogItemValue(theDialog, kDoDemoCheck, (short)wasDemos);
 	SetDialogItemValue(theDialog, kDoBackgroundCheck, (short)wasBackground);
 	SetDialogItemValue(theDialog, kDoErrorCheck, (short)wasErrorCheck);
 	SetDialogItemValue(theDialog, kDoPrettyMapCheck, (short)wasPrettyMap);
-	SetDialogItemValue(theDialog, kDoBitchDlgsCheck, (short)wasBitchDialogs);
+	SetDialogItemValue(theDialog, kDoComplainDlgsCheck, (short)wasComplainDialogs);
 }
 
 //--------------------------------------------------------------  UpdateSettingsBrains
@@ -238,7 +238,7 @@ void DoBrainsPrefs (void)
 	wasBackground = doBackground;
 	wasErrorCheck = isHouseChecks;
 	wasPrettyMap = doPrettyMap;
-	wasBitchDialogs = doBitchDialogs;
+	wasComplainDialogs = doComplainDialogs;
 	
 	SetDialogItemValue(prefDlg, kQuickTransitCheck, (short)wasTransit);
 	SetDialogItemValue(prefDlg, kDoZoomsCheck, (short)wasZooms);
@@ -246,7 +246,7 @@ void DoBrainsPrefs (void)
 	SetDialogItemValue(prefDlg, kDoBackgroundCheck, (short)wasBackground);
 	SetDialogItemValue(prefDlg, kDoErrorCheck, (short)wasErrorCheck);
 	SetDialogItemValue(prefDlg, kDoPrettyMapCheck, (short)wasPrettyMap);
-	SetDialogItemValue(prefDlg, kDoBitchDlgsCheck, (short)wasBitchDialogs);
+	SetDialogItemValue(prefDlg, kDoComplainDlgsCheck, (short)wasComplainDialogs);
 
 	UpdateSettingsBrains(prefDlg);
 
@@ -272,7 +272,7 @@ void DoBrainsPrefs (void)
 			doBackground = wasBackground;
 			isHouseChecks = wasErrorCheck;
 			doPrettyMap = wasPrettyMap;
-			doBitchDialogs = wasBitchDialogs;
+			doComplainDialogs = wasComplainDialogs;
 			leaving = true;
 			break;
 			
@@ -315,9 +315,9 @@ void DoBrainsPrefs (void)
 			SetDialogItemValue(prefDlg, kDoPrettyMapCheck, (short)wasPrettyMap);
 			break;
 			
-			case kDoBitchDlgsCheck:
-			wasBitchDialogs = !wasBitchDialogs;
-			SetDialogItemValue(prefDlg, kDoBitchDlgsCheck, (short)wasBitchDialogs);
+			case kDoComplainDlgsCheck:
+			wasComplainDialogs = !wasComplainDialogs;
+			SetDialogItemValue(prefDlg, kDoComplainDlgsCheck, (short)wasComplainDialogs);
 			break;
 		}
 	}
@@ -1121,7 +1121,7 @@ void SetAllDefaults (void)
 	doBackground = false;
 	isHouseChecks = true;
 	doPrettyMap = true;
-	doBitchDialogs = true;
+	doComplainDialogs = true;
 								// Default control settings
 	PasStringCopy(PSTR("lf arrow"), leftName);
 	PasStringCopy(PSTR("rt arrow"), rightName);
@@ -1340,7 +1340,7 @@ void DoSettingsMain (void)
 	
 	if (nextRestartChange)
 	{
-		BitchAboutChanges();
+		ComplainAboutChanges();
 		nextRestartChange = false;
 	}
 
@@ -1363,9 +1363,9 @@ void DoSettingsMain (void)
 	WriteOutPrefs();
 }
 
-//--------------------------------------------------------------  BitchAboutChanges
+//--------------------------------------------------------------  ComplainAboutChanges
 
-void BitchAboutChanges (void)
+void ComplainAboutChanges (void)
 {
 	#define		kChangesEffectAlert	1040
 	short		hitWhat;

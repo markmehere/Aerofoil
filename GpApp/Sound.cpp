@@ -378,17 +378,6 @@ void TellHerNoSounds (void)
 	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoMemForSoundsAlert, nullptr);
 }
 
-//--------------------------------------------------------------  BitchAboutSM3
-
-void BitchAboutSM3 (void)
-{
-	#define		kNoSoundManager3Alert	1030
-	short		hitWhat;
-	
-//	CenterAlert(kNoSoundManager3Alert);
-	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kNoSoundManager3Alert, nullptr);
-}
-
 
 
 //--------------------------------------------------------------  ParseAndConvertSound

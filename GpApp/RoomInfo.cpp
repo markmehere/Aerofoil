@@ -54,7 +54,7 @@ void UpdateOriginalArt (Dialog *);
 int16_t OriginalArtFilter (void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 Boolean PictIDExists (short);
 short GetFirstPICT (void);
-void BitchAboutPICTNotFound (void);
+void ComplainAboutPICTNotFound (void);
 
 
 Rect		tileSrc, tileDest, tileSrcRect, editTETextBox;
@@ -441,7 +441,7 @@ void DoRoomInfo(void)
 	//	SetPort((GrafPtr)tileSrcMap);
 	if ((tempBack > kStars) && (!PictIDExists(tempBack)))
 	{
-		BitchAboutPICTNotFound();
+		ComplainAboutPICTNotFound();
 		tempBack = kSimpleRoom;
 	}
 	if ((tempBack == 2002) || (tempBack == 2011) ||
@@ -869,10 +869,10 @@ short GetFirstPICT (void)
 	return resID;
 }
 
-//--------------------------------------------------------------  BitchAboutPICTNotFound
+//--------------------------------------------------------------  ComplainAboutPICTNotFound
 
 #ifndef COMPILEDEMO
-void BitchAboutPICTNotFound (void)
+void ComplainAboutPICTNotFound (void)
 {
 	short		hitWhat;
 	

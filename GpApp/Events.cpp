@@ -20,7 +20,6 @@
 #include "WindowManager.h"
 
 
-short BitchAboutColorDepth (void);
 void HandleMouseEvent (const GpMouseInputEvent &, uint32_t);
 void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent &);
 void HandleUpdateEvent (EventRecord *);
@@ -45,20 +44,6 @@ extern	Boolean		autoRoomEdit, newRoomNow, isPlayMusicIdle;
 
 
 //==============================================================  Functions
-//--------------------------------------------------------------  BitchAboutColorDepth
-// Display a dialog that alerts the user that they have switched the bitÉ
-// depth of the monitor under our noses.  They must return it to previous.
-
-short BitchAboutColorDepth (void)
-{
-	#define		kColorSwitchedAlert		1042
-	short		sheSaid;
-	
-//	CenterAlert(kColorSwitchedAlert);
-	sheSaid = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kColorSwitchedAlert, nullptr);
-	
-	return (sheSaid);
-}
 
 //--------------------------------------------------------------  HandleMouseEvent
 // Handle a mouse click event.

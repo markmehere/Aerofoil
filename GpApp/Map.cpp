@@ -53,7 +53,7 @@ short			isMapH, isMapV, mapRoomsHigh, mapRoomsWide;
 short			mapLeftRoom, mapTopRoom;
 Boolean			isMapOpen, doPrettyMap;
 
-extern	Boolean		doBitchDialogs;
+extern	Boolean		doComplainDialogs;
 
 
 //==============================================================  Functions
@@ -651,7 +651,7 @@ void HandleMapClick (const GpMouseInputEvent &theEvent)
 		}
 		else
 		{
-			if (doBitchDialogs)
+			if (doComplainDialogs)
 			{
 				if (QueryNewRoom())
 				{

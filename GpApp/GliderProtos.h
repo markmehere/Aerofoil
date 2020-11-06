@@ -461,7 +461,6 @@ void DumpTriggerSound (void);
 void InitSound (void);
 void KillSound (void);
 void TellHerNoSounds (void);
-void BitchAboutSM3 (void);
 
 void InitScoreboardMap (void);							// --- StructuresInit.c
 void InitGliderMap (void);

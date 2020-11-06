@@ -52,7 +52,7 @@ bool LZWDecompressor::ReadBytes(void *dest, size_t numBytes)
 				symbolcounter++;
 				if (symbol == 256 && blockmode)
 				{
-					// Skip garbage data after a clear. God damn, this is dumb.
+					// Skip garbage data after a clear.
 					int symbolsize = LZWSuggestedSymbolSize(lzw);
 					if (symbolcounter % 8)
 					{
