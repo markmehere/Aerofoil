@@ -56,7 +56,7 @@ namespace PortabilityLayer
 		for (size_t i = 0; i < 256; i++)
 		{
 			PortabilityLayer::RGBAColor &color = m_palette[i];
-			color.r = color.g = color.b = i;
+			color.r = color.g = color.b = static_cast<uint8_t>(i);
 			color.a = 255;
 		}
 	}

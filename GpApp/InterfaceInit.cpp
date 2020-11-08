@@ -176,8 +176,6 @@ void RecomputeInterfaceRects (void)
 
 void VariableInit (void)
 {
-	short		i;
-	
 	menusUp = false;
 	quitting = false;
 	houseOpen = false;

@@ -108,13 +108,12 @@ void DoHighScores (void)
 void DrawHighScores (DrawSurface *surface)
 {
 	DrawSurface	*tempMap, *tempMask;
-	DrawSurface	*wasCPort;
 	PLError_t		theErr;
 	houseType	*thisHousePtr;
 	Rect		tempRect, tempRect2;
 	Str255		tempStr;
 	short		scoreLeft, bannerWidth, i, dropIt;
-	char		wasState;
+
 	PortabilityLayer::ResolveCachingColor blackColor = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
 	PortabilityLayer::ResolveCachingColor yellowColor = PortabilityLayer::RGBAColor::Create(255, 255, 0, 255);
 	PortabilityLayer::ResolveCachingColor cyanColor = PortabilityLayer::RGBAColor::Create(0, 255, 255, 255);
@@ -277,7 +276,6 @@ void SortHighScores (void)
 	houseType	*thisHousePtr;
 	long		greatest;
 	short		i, h, which;
-	char		wasState;
 	
 	thisHousePtr = *thisHouse;
 	
@@ -313,7 +311,6 @@ void ZeroHighScores (void)
 {
 	houseType	*thisHousePtr;
 	short		i;
-	char		wasState;
 	
 	thisHousePtr = *thisHouse;
 	
@@ -356,7 +353,6 @@ Boolean TestHighScore (void)
 {
 	houseType	*thisHousePtr;
 	short		placing, i;
-	char		wasState;
 	
 	if (resumedSavedGame)
 		return (false);

@@ -75,8 +75,8 @@ namespace PortabilityLayer
 		mb2Header[MB2FileOffsets::Protected] = fileInfo.m_properties.m_protected;
 		BytePack::BigUInt32(mb2Header + MB2FileOffsets::DataForkSize, fileInfo.m_dataForkSize);
 		BytePack::BigUInt32(mb2Header + MB2FileOffsets::ResourceForkSize, fileInfo.m_resourceForkSize);
-		BytePack::BigUInt32(mb2Header + MB2FileOffsets::CreationDate, fileInfo.m_properties.m_creationDate);
-		BytePack::BigUInt32(mb2Header + MB2FileOffsets::ModifiedDate, fileInfo.m_properties.m_modifiedDate);
+		BytePack::BigUInt32(mb2Header + MB2FileOffsets::CreationDate, static_cast<uint32_t>(fileInfo.m_properties.m_creationDate));
+		BytePack::BigUInt32(mb2Header + MB2FileOffsets::ModifiedDate, static_cast<uint32_t>(fileInfo.m_properties.m_modifiedDate));
 
 		BytePack::BigUInt16(mb2Header + MB2FileOffsets::CommentLength, fileInfo.m_commentSize);
 		mb2Header[MB2FileOffsets::FinderFlagsLow] = static_cast<uint8_t>(fileInfo.m_properties.m_finderFlags & 0xff);

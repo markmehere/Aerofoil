@@ -602,8 +602,6 @@ Boolean KeepObjectLegal (void)
 #ifndef COMPILEDEMO
 void WrapBannerAndTrailer (void)
 {
-	char		wasState;
-	
 	WrapText((*thisHouse)->banner, 40);
 	WrapText((*thisHouse)->trailer, 64);
 }
@@ -615,7 +613,6 @@ void WrapBannerAndTrailer (void)
 void ValidateNumberOfRooms (void)
 {
 	long		countedRooms, reportsRooms;
-	char		wasState;
 	
 	reportsRooms = (long)(*thisHouse)->nRooms;
 	countedRooms = (GetHandleSize(thisHouse.StaticCast<void>()) - 
@@ -637,7 +634,6 @@ void CheckDuplicateFloorSuite (void)
 	#define		kRoomsTimesSuites	8192
 	short		i, numRooms, bitPlace;
 	char		*pidgeonHoles;
-	char		wasState;
 	
 	pidgeonHoles = (char *)NewPtrClear(sizeof(char) * kRoomsTimesSuites);
 	if (pidgeonHoles == nil)
@@ -672,7 +668,6 @@ void CheckDuplicateFloorSuite (void)
 void CompressHouse (void)
 {
 	short		wasFirstRoom, roomNumber, probe;
-	char		wasState;
 	Boolean		compressing, probing;
 	
 	wasFirstRoom = (*thisHouse)->firstRoom;
@@ -720,7 +715,6 @@ void LopOffExtraRooms (void)
 {
 	long		newSize;
 	short		r, count;
-	char		wasState;
 	Str255		message;
 	
 	count = 0;
@@ -756,7 +750,6 @@ void LopOffExtraRooms (void)
 void ValidateRoomNumbers (void)
 {
 	short		i, numRooms;
-	char		wasState;
 	Str255		message;
 	
 	numRooms = (*thisHouse)->nRooms;
@@ -796,7 +789,6 @@ void ValidateRoomNumbers (void)
 void CountUntitledRooms (void)
 {
 	short		i, numRooms;
-	char		wasState;
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -814,7 +806,6 @@ void CountUntitledRooms (void)
 void CheckRoomNameLength (void)
 {
 	short		i, numRooms;
-	char		wasState;
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -837,7 +828,6 @@ void CheckRoomNameLength (void)
 void MakeSureNumObjectsJives (void)
 {
 	short		i, h, numRooms, count;
-	char		wasState;
 	
 	numRooms = (*thisHouse)->nRooms;
 	for (i = 0; i < numRooms; i++)
@@ -866,7 +856,6 @@ void MakeSureNumObjectsJives (void)
 void KeepAllObjectsLegal (void)
 {
 	short		i, h, numRooms;
-	char		wasState;
 	Str255		message;
 	
 	numRooms = (*thisHouse)->nRooms;
@@ -901,7 +890,6 @@ void KeepAllObjectsLegal (void)
 void CheckForStaircasePairs (void)
 {
 	short		i, h, g, numRooms, neighbor;
-	char		wasState;
 	Boolean		hasStairs;
 	Str255		message;
 	

@@ -159,7 +159,7 @@ namespace PortabilityLayer
 	{
 		CacheHeader header;
 		header.m_cacheVersion = kRFontCacheVersion;
-		header.m_glyphDataSize = this->m_dataSize;
+		header.m_glyphDataSize = static_cast<uint32_t>(this->m_dataSize);
 		header.m_isAA = m_isAntiAliased;
 		header.m_sizeSize = sizeof(size_t);
 

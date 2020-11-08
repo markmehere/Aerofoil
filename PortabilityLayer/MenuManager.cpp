@@ -68,7 +68,7 @@ namespace
 
 struct MenuItem
 {
-	uint32_t nameOffsetInStringBlob;
+	size_t nameOffsetInStringBlob;
 	int8_t iconResID;
 	uint8_t key;
 	uint8_t submenuID;
@@ -1055,7 +1055,7 @@ namespace PortabilityLayer
 			int32_t yCoordinate = 0;
 			if (!m_menuSelectionState.IsPopup())
 			{
-				xCoordinate = kMenuBarInitialPadding + selectedMenu->menuIndex * kMenuBarItemPadding * 2 + selectedMenu->cumulativeOffset - kMenuBarItemPadding;
+				xCoordinate = static_cast<int32_t>(kMenuBarInitialPadding + selectedMenu->menuIndex * kMenuBarItemPadding * 2 + selectedMenu->cumulativeOffset - kMenuBarItemPadding);
 				yCoordinate = kMenuBarHeight;
 			}
 			else
@@ -1385,7 +1385,7 @@ namespace PortabilityLayer
 					m_popupPosition.m_y = kMenuBarHeight;
 				else
 				{
-					int32_t popupBottom = m_popupPosition.m_y + menu->layoutFinalHeight;
+					int32_t popupBottom = static_cast<int32_t>(m_popupPosition.m_y + menu->layoutFinalHeight);
 
 					unsigned int displayHeight = 0;
 					PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
@@ -1486,18 +1486,18 @@ namespace PortabilityLayer
 		ResolveCachingColor barMidColor = gs_barMidColor;
 
 		{
-			const Rect rect = Rect::Create(0, 0, menu->layoutFinalHeight, menu->layoutWidth);
+			const Rect rect = Rect::Create(0, 0, static_cast<int16_t>(menu->layoutFinalHeight), menu->layoutWidth);
 			surface->FillRect(rect, barMidColor);
 
 			ResolveCachingColor whiteColor = StdColors::White();
 
-			surface->FillRect(Rect::Create(0, 0, 1, menu->layoutWidth - 1), whiteColor);
-			surface->FillRect(Rect::Create(1, 0, menu->layoutFinalHeight - 1, 1), whiteColor);
+			surface->FillRect(Rect::Create(0, 0, 1, static_cast<int16_t>(menu->layoutWidth - 1)), whiteColor);
+			surface->FillRect(Rect::Create(1, 0, static_cast<int16_t>(menu->layoutFinalHeight - 1), 1), whiteColor);
 
 			ResolveCachingColor darkGrayColor = RGBAColor::Create(kDarkGray, kDarkGray, kDarkGray, 255);
 
-			surface->FillRect(Rect::Create(1, menu->layoutWidth - 1, menu->layoutFinalHeight, menu->layoutWidth), darkGrayColor);
-			surface->FillRect(Rect::Create(menu->layoutFinalHeight - 1, 1, menu->layoutFinalHeight, menu->layoutWidth - 1), darkGrayColor);
+			surface->FillRect(Rect::Create(1, static_cast<int16_t>(menu->layoutWidth - 1), static_cast<int16_t>(menu->layoutFinalHeight), static_cast<int16_t>(menu->layoutWidth)), darkGrayColor);
+			surface->FillRect(Rect::Create(static_cast<int16_t>(menu->layoutFinalHeight - 1), 1, static_cast<int16_t>(menu->layoutFinalHeight), static_cast<int16_t>(menu->layoutWidth - 1)), darkGrayColor);
 		}
 
 		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold, true);

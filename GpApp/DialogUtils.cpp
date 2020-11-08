@@ -147,8 +147,6 @@ void CenterDialog (SInt16 dialogID)
 
 void GetDialogRect (Rect *bounds, short dialogID)
 {
-	Byte		wasState;
-	
 	Handle dlogHandle = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('DLOG', dialogID).StaticCast<void>();
 	if (dlogHandle != nil)
 	{
@@ -343,10 +341,8 @@ void ZoomOutAlertRect (short alertID)
 
 void FlashDialogButton (Dialog *theDialog, short itemNumber)
 {
-	Rect			itemRect;
 	ControlHandle	itemHandle;
 	UInt32			dummyLong;
-	short			itemType;
 
 	PortabilityLayer::Widget *widget = theDialog->GetItems()[itemNumber - 1].GetWidget();
 
@@ -445,9 +441,7 @@ void ToggleDialogItemValue (Dialog *theDialog, short item)
 void SetDialogNumToStr (Dialog *theDialog, short item, long theNumber)
 {
 	Str255			theString;
-	Rect			itemRect;
 	ControlHandle	itemHandle;
-	short			itemType;
 
 	NumToString(theNumber, theString);
 	PortabilityLayer::Widget *widget = theDialog->GetItems()[item - 1].GetWidget();
@@ -570,7 +564,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 {
 	ControlHandle	iHandle;
 	Str255			stringCopy;
-	short			iType, i, inset;
+	short			inset;
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 
@@ -622,9 +616,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 
 void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 {
-	;
 	Str255			stringCopy;
-	short			iType;
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);

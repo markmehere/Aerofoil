@@ -11,14 +11,14 @@
 void GpDisplayDriverSurfaceD3D11::Upload(const void *data, size_t x, size_t y, size_t width, size_t height, size_t pitch)
 {
 	D3D11_BOX box;
-	box.left = x;
-	box.right = x + width;
-	box.top = y;
-	box.bottom = y + height;
+	box.left = static_cast<UINT>(x);
+	box.right = static_cast<UINT>(x + width);
+	box.top = static_cast<UINT>(y);
+	box.bottom = static_cast<UINT>(y + height);
 	box.front = 0;
 	box.back = 1;
 
-	m_deviceContext->UpdateSubresource(m_texture, 0, &box, data, pitch, height * pitch);
+	m_deviceContext->UpdateSubresource(m_texture, 0, &box, data, pitch, static_cast<UINT>(height * pitch));
 }
 
 void GpDisplayDriverSurfaceD3D11::UploadEntire(const void *data, size_t pitch)
