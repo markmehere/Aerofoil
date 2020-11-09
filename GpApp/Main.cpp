@@ -26,6 +26,7 @@
 #include "MemoryManager.h"
 #include "MenuManager.h"
 #include "QDPixMap.h"
+#include "QDStandardPalette.h"
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "ResourceManager.h"
@@ -380,7 +381,7 @@ void StepLoadScreen(int steps)
 	{
 		Rect loadScreenProgressBarFillRect = loadScreenProgressBarRect.Inset(1, 1);
 		int oldProgress = loadScreenProgress;
-		int loadScreenMax = 25;
+		int loadScreenMax = 32;
 		loadScreenProgress = loadScreenProgress + steps;
 		if (loadScreenProgress > loadScreenMax)
 			loadScreenProgress = loadScreenMax;
@@ -612,7 +613,32 @@ void PreloadFonts()
 		StepLoadScreenRing();
 		Delay(1, nullptr);
 	}
+}
 
+void PreloadAATables()
+{
+	PortabilityLayer::StandardPalette *sp = PortabilityLayer::StandardPalette::GetInstance();
+	PortabilityLayer::RGBAColor preloadColors[] =
+	{
+		PortabilityLayer::RGBAColor::Create(255, 255, 255, 255),
+		PortabilityLayer::RGBAColor::Create(255, 51, 51, 255),
+		PortabilityLayer::RGBAColor::Create(255, 0, 0, 255),
+		PortabilityLayer::RGBAColor::Create(255, 255, 0, 255),
+		PortabilityLayer::RGBAColor::Create(0, 255, 255, 255),
+		PortabilityLayer::RGBAColor::Create(0, 0, 255, 255),
+		PortabilityLayer::RGBAColor::Create(204, 102, 51, 255),
+	};
+
+	const size_t numPreloads = sizeof(preloadColors) / sizeof(preloadColors[0]);
+
+	for (size_t i = 0; i < numPreloads; i++)
+	{
+		sp->GetCachedPaletteAATable(preloadColors[i]);
+		sp->GetCachedToneAATable(preloadColors[i].r);
+		sp->GetCachedToneAATable(preloadColors[i].g);
+		sp->GetCachedToneAATable(preloadColors[i].b);
+		StepLoadScreen(1);
+	}
 }
 
 void gpAppInit()
@@ -655,6 +681,7 @@ int gpAppMain()
 
 	InitLoadingWindow();	StepLoadScreen(2);
 	PreloadFonts();		StepLoadScreen(2);
+	PreloadAATables();
 
 #if defined COMPILEDEMO
 	copyGood = true;

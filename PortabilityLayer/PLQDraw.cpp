@@ -235,8 +235,7 @@ static void PlotLine(DrawSurface *surface, const PortabilityLayer::Vec2i &pointA
 	surface->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
 
-static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character,
-	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor, PortabilityLayer::ResolveCachingColor &cacheColor)
+static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, const PortabilityLayer::RenderedFont *rfont, unsigned int character, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	assert(rect.IsValid());
 
@@ -282,28 +281,7 @@ static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, con
 			const PortabilityLayer::AntiAliasTable *aaTable = nullptr;
 
 			if (isAA)
-			{
-				if (cacheColor.GetRGBAColor() == PortabilityLayer::RGBAColor::Create(0, 0, 0, 255))
-					aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetBlackAATable();
-				else if (cacheColor.GetRGBAColor() == PortabilityLayer::RGBAColor::Create(255, 255, 255, 255))
-					aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetWhiteAATable();
-				else if (cachedAATable != nullptr && cacheColor.GetRGBAColor() == cachedAATableColor)
-					aaTable = cachedAATable;
-				else
-				{
-					if (!cachedAATable)
-					{
-						cachedAATable = static_cast<PortabilityLayer::AntiAliasTable*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::AntiAliasTable)));
-						if (!cachedAATable)
-							return;
-					}
-
-					cachedAATableColor = cacheColor.GetRGBAColor();
-					cachedAATable->GenerateForPalette(cacheColor.GetRGBAColor(), PortabilityLayer::StandardPalette::GetInstance()->GetColors(), 256);
-
-					aaTable = cachedAATable;
-				}
-			}
+				aaTable = &PortabilityLayer::StandardPalette::GetInstance()->GetCachedPaletteAATable(cacheColor.GetRGBAColor());
 
 			const uint8_t color = cacheColor.Resolve8(nullptr, 0);
 			for (uint32_t row = 0; row < numRows; row++)
@@ -349,36 +327,9 @@ static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, con
 			{
 				PortabilityLayer::RGBAColor rgbaColor = cacheColor.GetRGBAColor();
 				uint8_t rgbColor[3] = { rgbaColor.r, rgbaColor.g, rgbaColor.b };
-				uint8_t cacheRGBColor[3] = { cachedAATableColor.r, cachedAATableColor.g, cachedAATableColor.b };
 
 				for (int ch = 0; ch < 3; ch++)
-				{
-					if (rgbColor[ch] == 0)
-						aaTables[ch] = &PortabilityLayer::StandardPalette::GetInstance()->GetBlackToneAATable();
-					else if (rgbColor[ch] == 255)
-						aaTables[ch] = &PortabilityLayer::StandardPalette::GetInstance()->GetWhiteToneAATable();
-					else if (cachedAATable != nullptr && rgbColor[ch] == cacheRGBColor[ch])
-						aaTables[ch] = &cachedAATable[ch];
-					else
-					{
-						if (!cachedAATable)
-						{
-							cachedAATable = static_cast<PortabilityLayer::AntiAliasTable*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::AntiAliasTable) * 3));
-							if (!cachedAATable)
-								return;
-
-							cachedAATableColor = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
-							cachedAATable[0] = cachedAATable[1] = cachedAATable[2] = PortabilityLayer::StandardPalette::GetInstance()->GetBlackToneAATable();
-						}
-
-						cacheRGBColor[ch] = rgbColor[ch];
-
-						cachedAATableColor = PortabilityLayer::RGBAColor::Create(cacheRGBColor[0], cacheRGBColor[1], cacheRGBColor[2], 255);
-						cachedAATable[ch].GenerateForSimpleScale(rgbColor[ch]);
-
-						aaTables[ch] = &cachedAATable[ch];
-					}
-				}
+					aaTables[ch] = &PortabilityLayer::StandardPalette::GetInstance()->GetCachedToneAATable(rgbColor[ch]);
 			}
 
 			for (uint32_t row = 0; row < numRows; row++)
@@ -426,14 +377,13 @@ static void DrawGlyph(PixMap *pixMap, const Rect &rect, const Point &penPos, con
 	}
 }
 
-static void DrawText(PortabilityLayer::TextPlacer &placer, PixMap *pixMap, const Rect &rect, const PortabilityLayer::RenderedFont *rfont,
-	PortabilityLayer::AntiAliasTable *&cachedAATable, PortabilityLayer::RGBAColor &cachedAATableColor, PortabilityLayer::ResolveCachingColor &cacheColor)
+static void DrawText(PortabilityLayer::TextPlacer &placer, PixMap *pixMap, const Rect &rect, const PortabilityLayer::RenderedFont *rfont, PortabilityLayer::ResolveCachingColor &cacheColor)
 {
 	PortabilityLayer::GlyphPlacementCharacteristics characteristics;
 	while (placer.PlaceGlyph(characteristics))
 	{
 		if (characteristics.m_haveGlyph)
-			DrawGlyph(pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cachedAATable, cachedAATableColor, cacheColor);
+			DrawGlyph(pixMap, rect, Point::Create(characteristics.m_glyphStartPos.m_x, characteristics.m_glyphStartPos.m_y), rfont, characteristics.m_character, cacheColor);
 	}
 }
 
@@ -457,7 +407,7 @@ void DrawSurface::DrawStringConstrained(const Point &point, const PLPasStr &str,
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), -1, rfont, str);
 
-	DrawText(placer, pixMap, rect, rfont, m_cachedAATables, m_cachedAAColor, cacheColor);
+	DrawText(placer, pixMap, rect, rfont, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
@@ -482,7 +432,7 @@ void DrawSurface::DrawStringWrap(const Point &point, const Rect &constrainRect, 
 
 	PortabilityLayer::TextPlacer placer(PortabilityLayer::Vec2i(point.h, point.v), areaRect.Width(), rfont, str);
 
-	DrawText(placer, pixMap, limitRect, rfont, m_cachedAATables, m_cachedAAColor, cacheColor);
+	DrawText(placer, pixMap, limitRect, rfont, cacheColor);
 
 	m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }

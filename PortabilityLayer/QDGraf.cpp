@@ -8,8 +8,6 @@
 
 DrawSurface::~DrawSurface()
 {
-	if (m_cachedAATables)
-		PortabilityLayer::MemoryManager::GetInstance()->Release(m_cachedAATables);
 }
 
 void DrawSurface::PushToDDSurface(IGpDisplayDriver *displayDriver)

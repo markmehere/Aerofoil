@@ -24,6 +24,8 @@ namespace
 namespace PortabilityLayer
 {
 	StandardPalette::StandardPalette()
+		: m_numCachedPaletteTables(0)
+		, m_numCachedToneTables(0)
 	{
 		for (unsigned int rs = 0; rs < 6; rs++)
 		{
@@ -82,42 +84,6 @@ namespace PortabilityLayer
 			for (unsigned int gs = 0; gs < 16; gs++)
 				for (unsigned int bs = 0; bs < 16; bs++)
 					m_lut[rs + (gs << 4) + (bs << 8)] = MapColorAnalyticTruncated(rs, gs, bs);
-
-#if 0
-		for (unsigned int i = 0; i < 256; i++)
-		{
-			unsigned int shortChannels[3] =
-			{
-				m_colors[i].r / 17,
-				m_colors[i].g / 17,
-				m_colors[i].b / 17
-			};
-
-			for (unsigned int b = 0; b < 16; b++)
-			{
-				unsigned int whiteScale[3];
-				unsigned int blackScale[3];
-
-				for (unsigned int ch = 0; ch < 3; ch++)
-				{
-					unsigned int scaledBackground = (15 - b) * shortChannels[ch];
-					unsigned int scaledWhiteForeground = 15 * b;
-
-					blackScale[ch] = scaledBackground / 15;
-					whiteScale[ch] = (scaledBackground + scaledWhiteForeground) / 15;
-				}
-
-				m_blackAATable.m_aaTranslate[i][b] = MapColorAnalyticTruncated(blackScale[0], blackScale[1], blackScale[2]);
-				m_whiteAATable.m_aaTranslate[i][b] = MapColorAnalyticTruncated(whiteScale[0], whiteScale[1], whiteScale[2]);
-			}
-		}
-#else
-		m_blackAATable.GenerateForPalette(RGBAColor::Create(0, 0, 0, 255), m_colors, 256);
-		m_whiteAATable.GenerateForPalette(RGBAColor::Create(255, 255, 255, 255), m_colors, 256);
-#endif
-
-		m_whiteToneAATable.GenerateForSimpleScale(255);
-		m_blackToneAATable.GenerateForSimpleScale(0);
 	}
 
 	const RGBAColor *StandardPalette::GetColors() const
@@ -261,29 +227,51 @@ namespace PortabilityLayer
 		return MapColorLUT(color.r, color.g, color.b);
 	}
 
-	const StandardPalette *StandardPalette::GetInstance()
+	StandardPalette *StandardPalette::GetInstance()
 	{
 		return &ms_instance;
 	}
 
-	const AntiAliasTable &StandardPalette::GetWhiteAATable() const
+	const AntiAliasTable &StandardPalette::GetCachedPaletteAATable(const RGBAColor &color)
 	{
-		return m_whiteAATable;
+		uint8_t rgb[3] = { color.r, color.g, color.b };
+
+		for (size_t i = 0; i < m_numCachedPaletteTables; i++)
+		{
+			const CachedPaletteTableEntry &entry = m_cachedPaletteTables[i];
+			if (entry.m_rgb[0] == rgb[0] && entry.m_rgb[1] == rgb[1] && entry.m_rgb[2] == rgb[2])
+				return entry.m_aaTable;
+		}
+
+		if (m_numCachedPaletteTables == kMaxCachedPaletteTables)
+			m_numCachedPaletteTables = 0;
+
+		CachedPaletteTableEntry &entry = m_cachedPaletteTables[m_numCachedPaletteTables++];
+		entry.m_rgb[0] = rgb[0];
+		entry.m_rgb[1] = rgb[1];
+		entry.m_rgb[2] = rgb[2];
+		entry.m_aaTable.GenerateForPalette(color, m_colors, 256);
+
+		return entry.m_aaTable;
 	}
 
-	const AntiAliasTable &StandardPalette::GetBlackAATable() const
+	const AntiAliasTable &StandardPalette::GetCachedToneAATable(uint8_t tone)
 	{
-		return m_blackAATable;
-	}
+		for (size_t i = 0; i < m_numCachedToneTables; i++)
+		{
+			const CachedToneTableEntry &entry = m_cachedToneTables[i];
+			if (entry.m_tone == tone)
+				return entry.m_aaTable;
+		}
 
-	const AntiAliasTable &StandardPalette::GetWhiteToneAATable() const
-	{
-		return m_whiteToneAATable;
-	}
+		if (m_numCachedToneTables == kMaxCachedToneTables)
+			m_numCachedToneTables = 0;
 
-	const AntiAliasTable &StandardPalette::GetBlackToneAATable() const
-	{
-		return m_blackToneAATable;
+		CachedToneTableEntry &entry = m_cachedToneTables[m_numCachedToneTables++];
+		entry.m_tone = tone;
+		entry.m_aaTable.GenerateForSimpleScale(tone);
+
+		return entry.m_aaTable;
 	}
 
 	StandardPalette StandardPalette::ms_instance;

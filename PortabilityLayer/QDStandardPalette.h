@@ -20,22 +20,38 @@ namespace PortabilityLayer
 		static uint8_t MapColorAnalytic(const RGBAColor &color);
 		uint8_t MapColorLUT(uint8_t r, uint8_t g, uint8_t b) const;
 		uint8_t MapColorLUT(const RGBAColor &color) const;
-		const AntiAliasTable &GetWhiteAATable() const;
-		const AntiAliasTable &GetBlackAATable() const;
 
-		const AntiAliasTable &GetWhiteToneAATable() const;
-		const AntiAliasTable &GetBlackToneAATable() const;
+		const AntiAliasTable &GetCachedPaletteAATable(const RGBAColor &color);
+		const AntiAliasTable &GetCachedToneAATable(uint8_t tone);
 
-		static const StandardPalette *GetInstance();
+		static StandardPalette *GetInstance();
 
 	private:
 		static StandardPalette ms_instance;
 
+		struct CachedPaletteTableEntry
+		{
+			uint8_t m_rgb[3];
+			AntiAliasTable m_aaTable;
+		};
+
+		struct CachedToneTableEntry
+		{
+			uint8_t m_tone;
+			AntiAliasTable m_aaTable;
+		};
+
+		static const size_t kMaxCachedPaletteTables = 16;
+		static const size_t kMaxCachedToneTables = 16;
+
+		CachedPaletteTableEntry m_cachedPaletteTables[kMaxCachedPaletteTables];
+		size_t m_numCachedPaletteTables;
+
+		CachedToneTableEntry m_cachedToneTables[kMaxCachedToneTables];
+		size_t m_numCachedToneTables;
+
 		RGBAColor m_colors[kSize];
-		AntiAliasTable m_whiteAATable;
-		AntiAliasTable m_blackAATable;
-		AntiAliasTable m_whiteToneAATable;
-		AntiAliasTable m_blackToneAATable;
+
 		uint8_t m_lut[16 * 16 * 16];
 	};
 }
