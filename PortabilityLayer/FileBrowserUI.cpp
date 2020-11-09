@@ -37,11 +37,13 @@ static const int kCancelButton = 2;
 static const int kFileList = 3;
 static const int kFileListScrollBar = 4;
 static const int kFileNameEditBox = 5;
+static const int kDeleteButton = 5;
 static const int kFileBrowserUIOpenDialogTemplateID = 2001;
 static const int kFileBrowserUISaveDialogTemplateID = 2002;
 static const int kFileBrowserUIOverwriteDialogTemplateID = 2003;
 static const int kFileBrowserUIBadNameDialogTemplateID = 2004;
 static const int kFileBrowserUISaveDialogUnobstructiveTemplateID = 2007;
+static const int kFileBrowserUIDeleteDialogTemplateID = 2008;
 
 
 static const int kOverwriteNoButton = 1;
@@ -71,6 +73,8 @@ namespace PortabilityLayer
 		void SetUIComponents(Window *window, DrawSurface *surface, const Rect &fileListRect, EditboxWidget *editBox);
 
 		PLPasStr GetSelectedFileName() const;
+
+		void RemoveSelectedFile();
 
 		static int16_t PopUpAlert(const Rect &rect, int dialogResID, const DialogTextSubstitutions *substitutions);
 
@@ -248,6 +252,22 @@ namespace PortabilityLayer
 			return (*m_names)[m_selectedIndex].ToShortStr();
 	}
 
+	void FileBrowserUIImpl::RemoveSelectedFile()
+	{
+		if (m_selectedIndex < 0)
+			return;
+
+		NameStr_t *names = *m_names;
+		for (size_t i = m_selectedIndex; i < m_numNames - 1; i++)
+			names[i] = names[i + 1];
+
+		m_numNames--;
+		PortabilityLayer::MemoryManager::GetInstance()->ResizeHandle(m_names.MMBlock(), sizeof(NameStr_t) * m_numNames);
+
+		m_selectedIndex = -1;
+		DrawFileList();
+	}
+
 	void FileBrowserUIImpl::ScrollBarCallback(Widget *control, int part)
 	{
 		const int pageStepping = 5;
@@ -272,6 +292,8 @@ namespace PortabilityLayer
 
 		SetScrollOffset(control->GetState());
 	}
+
+	static FileBrowserUI::Mode gs_currentFileBrowserUIMode;
 
 	int16_t FileBrowserUIImpl::FileBrowserUIFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt)
 	{
@@ -372,6 +394,9 @@ namespace PortabilityLayer
 											m_selectedIndex = selection;
 
 											dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(selection >= 0);
+
+											if (gs_currentFileBrowserUIMode == FileBrowserUI::Mode_Open)
+												dialog->GetItems()[kDeleteButton - 1].GetWidget()->SetEnabled(selection >= 0);
 
 											DrawFileList();
 										}
@@ -633,6 +658,8 @@ namespace PortabilityLayer
 
 		WindowManager::GetInstance()->SwapExclusiveWindow(exclWindow);
 
+		gs_currentFileBrowserUIMode = mode;
+
 		do
 		{
 			hit = dialog->ExecuteModal(&uiImpl, FileBrowserUIImpl::PubFileBrowserUIFilter);
@@ -663,6 +690,23 @@ namespace PortabilityLayer
 					if (subHit == kOverwriteNoButton)
 						hit = -1;
 				}
+			}
+
+			if (mode == Mode_Open && hit == kDeleteButton)
+			{
+				PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+				int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIDeleteDialogTemplateID, &substitutions);
+
+				if (subHit == kOverwriteYesButton)
+				{
+					PLPasStr uiFileName = uiImpl.GetSelectedFileName();
+
+					PortabilityLayer::FileManager::GetInstance()->DeleteFile(dirID, uiFileName);
+					uiImpl.RemoveSelectedFile();
+					dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(false);
+					dialog->GetItems()[kDeleteButton - 1].GetWidget()->SetEnabled(false);
+				}
+				hit = -1;
 			}
 		} while (hit != kOkayButton && hit != kCancelButton);
 

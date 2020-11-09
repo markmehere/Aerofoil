@@ -1,0 +1,29 @@
+{
+	"items" :
+	[
+		{
+			"name" : "No",
+			"itemType" : "Button",
+			"pos" : [ 253, 99 ],
+			"size" : [ 58, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Yes",
+			"itemType" : "Button",
+			"pos" : [ 184, 99 ],
+			"size" : [ 58, 20 ],
+			"id" : 2,
+			"enabled" : true
+		},
+		{
+			"name" : "Are you sure that you want to delete this file?",
+			"itemType" : "Label",
+			"pos" : [ 16, 16 ],
+			"size" : [ 295, 74 ],
+			"id" : 0,
+			"enabled" : false
+		}
+	]
+}

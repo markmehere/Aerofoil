@@ -22,7 +22,7 @@
 			"itemType" : "CustomControl",
 			"pos" : [ 17, 33 ],
 			"size" : [ 401, 190 ],
-			"id" : 2,
+			"id" : 3,
 			"enabled" : true
 		},
 		{
@@ -30,8 +30,16 @@
 			"itemType" : "CustomControl",
 			"pos" : [ 418, 32 ],
 			"size" : [ 16, 192 ],
-			"id" : 3,
+			"id" : 4,
 			"enabled" : true
+		},
+		{
+			"name" : "Delete",
+			"itemType" : "Button",
+			"pos" : [ 228, 240 ],
+			"size" : [ 58, 20 ],
+			"id" : 5,
+			"enabled" : false
 		},
 		{
 			"name" : "^0",
