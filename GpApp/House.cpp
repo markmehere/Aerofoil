@@ -12,7 +12,9 @@
 #include "PLSysCalls.h"
 #include "DialogUtils.h"
 #include "Externs.h"
+#include "FileBrowserUI.h"
 #include "FileManager.h"
+#include "FontFamily.h"
 #include "HostFileSystem.h"
 #include "House.h"
 #include "PLStandardColors.h"
@@ -48,6 +50,35 @@ extern	Boolean		houseOpen, noRoomAtAll;
 extern	Boolean		twoPlayerGame, wardBitSet, phoneBitSet;
 
 
+static void FBUI_DrawLabels(DrawSurface *surface, const Point &basePoint)
+{
+}
+
+static void FBUI_DrawFileDetails(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+{
+}
+
+static void *FBUI_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	return nullptr;
+}
+
+static void FBUI_FreeFileDetails(void *fileDetails)
+{
+}
+
+static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
+{
+	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
+
+	api.m_drawLabelsCallback = FBUI_DrawLabels;
+	api.m_drawFileDetailsCallback = FBUI_DrawFileDetails;
+	api.m_loadFileDetailsCallback = FBUI_LoadFileDetails;
+	api.m_freeFileDetailsCallback = FBUI_FreeFileDetails;
+
+	return api;
+}
+
 //==============================================================  Functions
 //--------------------------------------------------------------  CreateNewHouse
 // Called to create a new house file.
@@ -68,7 +99,7 @@ Boolean CreateNewHouse (void)
 	char savePath[sizeof(theSpec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House")))
+	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), GetHouseDetailsAPI()))
 		return false;
 
 	assert(savePathLength < sizeof(theSpec.m_name) - 1);

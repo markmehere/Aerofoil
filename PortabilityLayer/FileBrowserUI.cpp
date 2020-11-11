@@ -54,7 +54,7 @@ namespace PortabilityLayer
 	class FileBrowserUIImpl
 	{
 	public:
-		FileBrowserUIImpl();
+		explicit FileBrowserUIImpl(const FileBrowserUI_DetailsCallbackAPI &callbackAPI);
 		~FileBrowserUIImpl();
 
 		static void PubScrollBarCallback(void *captureContext, Widget *control, int part);
@@ -62,8 +62,9 @@ namespace PortabilityLayer
 		static int16_t PubFileBrowserUIFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 		static int16_t PubPopUpAlertUIFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
-		bool AppendName(const char *name, size_t nameLength);
+		bool AppendName(const char *name, size_t nameLength, void *details);
 		void SortNames();
+		void DrawHeaders();
 		void DrawFileList();
 
 		void CaptureFileListDrag();
@@ -80,18 +81,25 @@ namespace PortabilityLayer
 
 	private:
 		typedef PascalStr<255> NameStr_t;
+
+		struct FileEntry
+		{
+			NameStr_t m_nameStr;
+			void *m_fileDetails;
+		};
+
 		void ScrollBarCallback(Widget *control, int part);
 		int16_t FileBrowserUIFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 		int16_t PopUpAlertUIFilter(Dialog *dialog, const TimeTaggedVOSEvent *evt);
 
-		static bool NameSortPred(const NameStr_t &a, const NameStr_t &b);
+		static bool FileEntrySortPred(const FileEntry &a, const FileEntry &b);
 
 		int m_offset;
 		int m_selectedIndex;
 		int32_t m_scrollOffset;
 		int32_t m_fontSpacing;
-		THandle<NameStr_t> m_names;
-		size_t m_numNames;
+		THandle<FileEntry> m_entries;
+		size_t m_numEntries;
 		DrawSurface *m_surface;
 		Window *m_window;
 		EditboxWidget *m_editBox;
@@ -100,9 +108,11 @@ namespace PortabilityLayer
 		Point m_doubleClickPos;
 		uint32_t m_doubleClickTime;
 		bool m_haveFirstClick;
+
+		const FileBrowserUI_DetailsCallbackAPI m_api;
 	};
 
-	FileBrowserUIImpl::FileBrowserUIImpl()
+	FileBrowserUIImpl::FileBrowserUIImpl(const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
 		: m_offset(0)
 		, m_surface(nullptr)
 		, m_window(nullptr)
@@ -111,16 +121,23 @@ namespace PortabilityLayer
 		, m_selectedIndex(-1)
 		, m_scrollOffset(0)
 		, m_fontSpacing(1)
-		, m_numNames(0)
+		, m_numEntries(0)
 		, m_doubleClickPos(Point::Create(0, 0))
 		, m_doubleClickTime(0)
 		, m_haveFirstClick(false)
+		, m_api(callbackAPI)
 	{
 	}
 
 	FileBrowserUIImpl::~FileBrowserUIImpl()
 	{
-		m_names.Dispose();
+		if (m_entries)
+		{
+			FileEntry *entries = *m_entries;
+			for (size_t i = 0; i < m_numEntries; i++)
+				m_api.m_freeFileDetailsCallback(entries[i].m_fileDetails);
+		}
+		m_entries.Dispose();
 	}
 
 	void FileBrowserUIImpl::PubScrollBarCallback(void *captureContext, Widget *control, int part)
@@ -145,39 +162,51 @@ namespace PortabilityLayer
 		return HostFileSystem::GetInstance()->ValidateFilePathUnicodeChar(unicodeChar);
 	}
 
-	bool FileBrowserUIImpl::AppendName(const char *name, size_t nameLen)
+	bool FileBrowserUIImpl::AppendName(const char *name, size_t nameLen, void *details)
 	{
 		MemoryManager *mm = MemoryManager::GetInstance();
-		if (!m_names)
+		if (!m_entries)
 		{
-			m_names = THandle<NameStr_t>(mm->AllocHandle(0));
-			if (!m_names)
+			m_entries = THandle<FileEntry>(mm->AllocHandle(0));
+			if (!m_entries)
 				return false;
 		}
 
-		size_t oldSize = m_names.MMBlock()->m_size;
+		size_t oldSize = m_entries.MMBlock()->m_size;
 
-		if (!mm->ResizeHandle(m_names.MMBlock(), oldSize + sizeof(NameStr_t)))
+		if (!mm->ResizeHandle(m_entries.MMBlock(), oldSize + sizeof(FileEntry)))
 			return false;
 
-		(*m_names)[m_numNames++] = NameStr_t(nameLen, name);
+		FileEntry &entry = (*m_entries)[m_numEntries++];
+		entry.m_nameStr = NameStr_t(nameLen, name);
+		entry.m_fileDetails = details;
 
 		return true;
 	}
 
 	void FileBrowserUIImpl::SortNames()
 	{
-		if (!m_names)
+		if (!m_entries)
 			return;
 
-		NameStr_t *names = *m_names;
+		FileEntry *entries = *m_entries;
 
-		std::sort(names, names + m_numNames, NameSortPred);
+		std::sort(entries, entries + m_numEntries, FileEntrySortPred);
+	}
+
+	void FileBrowserUIImpl::DrawHeaders()
+	{
+		PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
+
+		ResolveCachingColor blackColor = StdColors::Black();
+
+		const Point basePoint = Point::Create(16, 16 + font->GetMetrics().m_ascent);
+		m_api.m_drawLabelsCallback(m_surface, basePoint);
 	}
 
 	void FileBrowserUIImpl::DrawFileList()
 	{
-		if (!m_names.MMBlock())
+		if (!m_entries.MMBlock())
 			return;
 
 		PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
@@ -196,7 +225,7 @@ namespace PortabilityLayer
 
 		m_surface->FillRect(m_rect, whiteColor);
 
-		for (size_t i = 0; i < m_numNames; i++)
+		for (size_t i = 0; i < m_numEntries; i++)
 		{
 			if (m_selectedIndex >= 0 && static_cast<size_t>(m_selectedIndex) == i)
 			{
@@ -206,7 +235,9 @@ namespace PortabilityLayer
 			}
 
 			Point itemStringPoint = Point::Create(itemRect.left + 2, itemRect.top + glyphOffset);
-			m_surface->DrawStringConstrained(itemStringPoint, (*m_names)[i].ToShortStr(), m_rect, blackColor, font);
+			m_surface->DrawStringConstrained(itemStringPoint, (*m_entries)[i].m_nameStr.ToShortStr(), m_rect, blackColor, font);
+
+			m_api.m_drawFileDetailsCallback(m_surface, itemStringPoint, m_rect, (*m_entries)[i].m_fileDetails);
 
 			itemRect.top += spacing;
 			itemRect.bottom += spacing;
@@ -228,7 +259,7 @@ namespace PortabilityLayer
 	uint16_t FileBrowserUIImpl::GetScrollCapacity() const
 	{
 		int32_t boxHeight = m_rect.Height();
-		int32_t overCapacity = (static_cast<int32_t>(m_numNames) * m_fontSpacing - boxHeight);
+		int32_t overCapacity = (static_cast<int32_t>(m_numEntries) * m_fontSpacing - boxHeight);
 
 		if (overCapacity < 0)
 			return 0;
@@ -249,7 +280,7 @@ namespace PortabilityLayer
 		if (m_selectedIndex < 0)
 			return PSTR("");
 		else
-			return (*m_names)[m_selectedIndex].ToShortStr();
+			return (*m_entries)[m_selectedIndex].m_nameStr.ToShortStr();
 	}
 
 	void FileBrowserUIImpl::RemoveSelectedFile()
@@ -257,12 +288,17 @@ namespace PortabilityLayer
 		if (m_selectedIndex < 0)
 			return;
 
-		NameStr_t *names = *m_names;
-		for (size_t i = m_selectedIndex; i < m_numNames - 1; i++)
-			names[i] = names[i + 1];
 
-		m_numNames--;
-		PortabilityLayer::MemoryManager::GetInstance()->ResizeHandle(m_names.MMBlock(), sizeof(NameStr_t) * m_numNames);
+		FileEntry *entries = *m_entries;
+
+		FileEntry &removedEntry = entries[m_selectedIndex];
+		m_api.m_freeFileDetailsCallback(removedEntry.m_fileDetails);
+
+		for (size_t i = m_selectedIndex; i < m_numEntries - 1; i++)
+			entries[i] = entries[i + 1];
+
+		m_numEntries--;
+		PortabilityLayer::MemoryManager::GetInstance()->ResizeHandle(m_entries.MMBlock(), sizeof(FileEntry) * m_numEntries);
 
 		m_selectedIndex = -1;
 		DrawFileList();
@@ -384,7 +420,7 @@ namespace PortabilityLayer
 								{
 									int32_t selection = (mousePt.v - m_rect.top + m_scrollOffset) / m_fontSpacing;
 
-									if (selection < 0 || static_cast<size_t>(selection) >= m_numNames)
+									if (selection < 0 || static_cast<size_t>(selection) >= m_numEntries)
 										selection = -1;
 
 									if (selection >= 0)
@@ -403,7 +439,7 @@ namespace PortabilityLayer
 
 										if (m_editBox)
 										{
-											PLPasStr nameStr = (*m_names)[m_selectedIndex].ToShortStr();
+											PLPasStr nameStr = (*m_entries)[m_selectedIndex].m_nameStr.ToShortStr();
 											m_editBox->SetString(nameStr);
 											m_editBox->SetSelection(0, nameStr.Length());
 										}
@@ -480,14 +516,14 @@ namespace PortabilityLayer
 		return hit;
 	}
 
-	bool FileBrowserUIImpl::NameSortPred(const NameStr_t &a, const NameStr_t &b)
+	bool FileBrowserUIImpl::FileEntrySortPred(const FileEntry &a, const FileEntry &b)
 	{
-		const size_t lenA = a.Length();
-		const size_t lenB = b.Length();
+		const size_t lenA = a.m_nameStr.Length();
+		const size_t lenB = b.m_nameStr.Length();
 
 		const size_t shorterLength = std::min(lenA, lenB);
 
-		int comparison = memcmp(a.UnsafeCharPtr(), b.UnsafeCharPtr(), shorterLength);
+		int comparison = memcmp(a.m_nameStr.UnsafeCharPtr(), b.m_nameStr.UnsafeCharPtr(), shorterLength);
 		if (comparison > 0)
 			return false;
 
@@ -526,7 +562,7 @@ namespace PortabilityLayer
 		return hit;
 	}
 
-	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText)
+	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
 	{
 		int dialogID = 0;
 		bool isObstructive = false;
@@ -550,7 +586,7 @@ namespace PortabilityLayer
 			return false;
 		}
 
-		FileBrowserUIImpl uiImpl;
+		FileBrowserUIImpl uiImpl(callbackAPI);
 
 		// Enumerate files
 		PortabilityLayer::HostFileSystem *fs = PortabilityLayer::HostFileSystem::GetInstance();
@@ -571,7 +607,7 @@ namespace PortabilityLayer
 
 			if (!memcmp(nameExt, ".gpf", 4))
 			{
-				if (!uiImpl.AppendName(fileName, nameLength - 4))
+				if (!uiImpl.AppendName(fileName, nameLength - 4, callbackAPI.m_loadFileDetailsCallback(dirID, PLPasStr(nameLength - 4, fileName))))
 				{
 					dirCursor->Destroy();
 					return false;
@@ -651,6 +687,8 @@ namespace PortabilityLayer
 		dialog->ReplaceWidget(kFileListScrollBar - 1, scrollBar);
 
 		window->DrawControls();
+
+		uiImpl.DrawHeaders();
 
 		int16_t hit = 0;
 

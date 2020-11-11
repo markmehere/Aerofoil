@@ -9,15 +9,18 @@
 #include "PLStringCompare.h"
 #include "DialogManager.h"
 #include "Externs.h"
+#include "FileBrowserUI.h"
 #include "FileManager.h"
+#include "FontFamily.h"
 #include "House.h"
 #include "GpIOStream.h"
 #include "InputManager.h"
 #include "MacFileInfo.h"
 #include "MemoryManager.h"
+#include "PLStandardColors.h"
+#include "ResolveCachingColor.h"
 
 #include <assert.h>
-
 
 #define kSavedGameVersion		0x0200
 
@@ -33,6 +36,84 @@ extern	Boolean		twoPlayerGame;
 
 
 //==============================================================  Functions
+
+static const int kStarsOffset = 180;
+static const int kGlidersOffset = 260;
+static const int kScoreOffset = 320;
+
+static void FBUI_DrawLabels(DrawSurface *surface, const Point &basePoint)
+{
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	PortabilityLayer::RenderedFont *rfont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
+	surface->DrawString(basePoint + Point::Create(kStarsOffset, 0), PSTR("Stars Left"), blackColor, rfont);
+	surface->DrawString(basePoint + Point::Create(kGlidersOffset, 0), PSTR("Gliders"), blackColor, rfont);
+	surface->DrawString(basePoint + Point::Create(kScoreOffset, 0), PSTR("Score"), blackColor, rfont);
+}
+
+static void FBUI_DrawFileDetails(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+{
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	PortabilityLayer::RenderedFont *rfont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+
+	const game2Type *gameData = static_cast<const game2Type*>(fileDetails);
+
+	Str255 numStr;
+
+	NumToString(gameData->wasStarsLeft, numStr);
+	surface->DrawString(basePoint + Point::Create(kStarsOffset, 0), numStr, blackColor, rfont);
+
+	NumToString(gameData->numGliders, numStr);
+	surface->DrawString(basePoint + Point::Create(kGlidersOffset, 0), numStr, blackColor, rfont);
+
+	NumToString(gameData->score, numStr);
+	surface->DrawString(basePoint + Point::Create(kScoreOffset, 0), numStr, blackColor, rfont);
+}
+
+static void *FBUI_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	GpIOStream *stream = nullptr;
+	if (PortabilityLayer::FileManager::GetInstance()->OpenFileData(dirID, filename, PortabilityLayer::EFilePermission_Read, stream) != PLErrors::kNone)
+		return nullptr;
+
+	const size_t kPrefixSize = sizeof(game2Type) - sizeof(savedRoom);
+
+	game2Type *gameData = static_cast<game2Type*>(PortabilityLayer::MemoryManager::GetInstance()->Alloc(kPrefixSize));
+	if (!gameData)
+	{
+		stream->Close();
+		return nullptr;
+	}
+
+	if (stream->Read(gameData, kPrefixSize) != kPrefixSize)
+	{
+		PortabilityLayer::MemoryManager::GetInstance()->Release(gameData);
+		stream->Close();
+		return nullptr;
+	}
+
+	stream->Close();
+
+	return gameData;
+}
+
+static void FBUI_FreeFileDetails(void *fileDetails)
+{
+	PortabilityLayer::MemoryManager::GetInstance()->Release(fileDetails);
+}
+
+static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI()
+{
+	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
+
+	api.m_drawLabelsCallback = FBUI_DrawLabels;
+	api.m_drawFileDetailsCallback = FBUI_DrawFileDetails;
+	api.m_loadFileDetailsCallback = FBUI_LoadFileDetails;
+	api.m_freeFileDetailsCallback = FBUI_FreeFileDetails;
+
+	return api;
+}
+
 //--------------------------------------------------------------  SaveGame2
 
 void SaveGame2 (void)
@@ -82,7 +163,7 @@ void SaveGame2 (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game")))
+	if (!fm->PromptSaveFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game"), GetSavedGameDetailsAPI()))
 	{
 		mm->Release(savedGame);
 		return;
@@ -191,7 +272,7 @@ Boolean OpenSavedGame (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptOpenFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game")))
+	if (!fm->PromptOpenFile(spec.m_dir, savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), GetSavedGameDetailsAPI()))
 		return false;
 
 	assert(savePathLength < sizeof(spec.m_name) - 1);
