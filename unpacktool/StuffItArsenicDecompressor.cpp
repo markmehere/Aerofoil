@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <crtdbg.h>
-
 
 
 static const uint16_t RandomizationTable[] =
