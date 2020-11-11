@@ -17,8 +17,10 @@
 #include "FileManager.h"
 #include "FontFamily.h"
 #include "FontManager.h"
+#include "HostDisplayDriver.h"
 #include "HostSystemServices.h"
 #include "House.h"
+#include "IGpDisplayDriver.h"
 #include "GpIOStream.h"
 #include "MainWindow.h"
 #include "PLStandardColors.h"
@@ -27,6 +29,7 @@
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "Utilities.h"
+#include "Vec2i.h"
 #include "WindowManager.h"
 
 #define kHighScoresPictID		1994
@@ -499,6 +502,19 @@ int16_t NameFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 	return -1;
 }
 
+void MoveDialogToTopOfScreen(Dialog *dial)
+{
+	Window *window = dial->GetWindow();
+	PortabilityLayer::Vec2i pos = window->GetPosition();
+
+	unsigned int height = 0;
+	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &height);
+
+	pos.m_y = (height - window->GetDrawSurface()->m_port.GetRect().Height()) / 8;
+
+	dial->GetWindow()->SetPosition(pos);
+}
+
 //--------------------------------------------------------------  GetHighScoreName
 // Brings up a dialog to get player's name (due to a high score).
 
@@ -525,6 +541,9 @@ void GetHighScoreName (short place)
 	leaving = false;
 
 	UpdateNameDialog(theDial);
+
+	if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
+		MoveDialogToTopOfScreen(theDial);
 
 	Window *exclStack = theDial->GetWindow();
 	wm->SwapExclusiveWindow(exclStack);	// Push exclusive window for zooms
@@ -635,6 +654,9 @@ void GetHighScoreBanner (void)
 	leaving = false;
 
 	UpdateBannerDialog(theDial);
+
+	if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
+		MoveDialogToTopOfScreen(theDial);
 
 	Window *exclStack = theDial->GetWindow();
 	wm->SwapExclusiveWindow(exclStack);	// Push exclusive window for zooms
