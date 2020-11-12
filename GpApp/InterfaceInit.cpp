@@ -55,7 +55,6 @@ void InitializeMenus (void)
 		RedAlert(kErrFailedResourceLoad);
 	//AppendResMenu(appleMenu, 'DRVR');	// GP: We don't support this
 	AppendMenuItem(appleMenu, 0, 0, 0, 0, true, false, PSTR("About " GP_APPLICATION_NAME "\xc9"));
-	AppendMenuItem(appleMenu, 0, 0, 0, 0, true, false, PSTR("Export Source Code\xc9"));
 	InsertMenu(appleMenu, 0);
 	
 	gameMenu = GetMenu(kGameMenuID);
