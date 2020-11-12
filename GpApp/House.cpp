@@ -99,7 +99,7 @@ Boolean CreateNewHouse (void)
 	char savePath[sizeof(theSpec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(theSpec.m_dir, savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), GetHouseDetailsAPI()))
+	if (!fm->PromptSaveFile(theSpec.m_dir, 'gliH', savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), GetHouseDetailsAPI()))
 		return false;
 
 	assert(savePathLength < sizeof(theSpec.m_name) - 1);

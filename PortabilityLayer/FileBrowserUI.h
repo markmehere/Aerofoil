@@ -11,6 +11,8 @@ struct Rect;
 
 namespace PortabilityLayer
 {
+	class ResTypeID;
+
 	struct FileBrowserUI_DetailsCallbackAPI
 	{
 		void(*m_drawLabelsCallback)(DrawSurface *surface, const Point &basePoint);
@@ -30,6 +32,6 @@ namespace PortabilityLayer
 			Mode_Open,
 		};
 
-		static bool Prompt(Mode mode, VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI);
+		static bool Prompt(Mode mode, VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI);
 	};
 }

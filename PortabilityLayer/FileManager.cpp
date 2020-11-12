@@ -35,8 +35,8 @@ namespace PortabilityLayer
 		PLError_t RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 
-		bool PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) override;
-		bool PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) override;
+		bool PromptSaveFile(VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) override;
+		bool PromptOpenFile(VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) override;
 
 		static FileManagerImpl *GetInstance();
 
@@ -176,18 +176,18 @@ namespace PortabilityLayer
 		return RawOpenFileFork(dirID, filename, ".gpa", permission, ignoreMeta, createDisposition, outStream);
 	}
 
-	bool FileManagerImpl::PromptSaveFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &detailsAPI)
+	bool FileManagerImpl::PromptSaveFile(VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &detailsAPI)
 	{
 		ExtendedFileName_t extFN;
 		if (!ConstructFilename(extFN, initialFileName, ""))
 			return false;
 
-		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Save, dirID, path, outPathLength, pathCapacity, initialFileName, promptText, detailsAPI);
+		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Save, dirID, fileType, path, outPathLength, pathCapacity, initialFileName, promptText, detailsAPI);
 	}
 
-	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &detailsAPI)
+	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &detailsAPI)
 	{
-		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Open, dirID, path, outPathLength, pathCapacity, PSTR(""), promptText, detailsAPI);
+		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Open, dirID, fileType, path, outPathLength, pathCapacity, PSTR(""), promptText, detailsAPI);
 	}
 
 	FileManagerImpl *FileManagerImpl::GetInstance()

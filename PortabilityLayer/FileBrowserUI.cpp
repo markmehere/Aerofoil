@@ -6,12 +6,14 @@
 #include "FontFamily.h"
 #include "GpApplicationName.h"
 #include "GpBuildVersion.h"
+#include "GpIOStream.h"
 #include "GpRenderedFontMetrics.h"
 #include "HostFileSystem.h"
 #include "HostDirectoryCursor.h"
 #include "HostSystemServices.h"
 #include "IGpFont.h"
 #include "WindowManager.h"
+#include "MacFileInfo.h"
 #include "MemoryManager.h"
 #include "PLStandardColors.h"
 #include "RenderedFont.h"
@@ -562,7 +564,7 @@ namespace PortabilityLayer
 		return hit;
 	}
 
-	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
+	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
 	{
 		int dialogID = 0;
 		bool isObstructive = false;
@@ -607,6 +609,27 @@ namespace PortabilityLayer
 
 			if (!memcmp(nameExt, ".gpf", 4))
 			{
+				GpIOStream *metadataStream = fs->OpenFile(dirID, fileName, false, GpFileCreationDispositions::kOpenExisting);
+				if (!metadataStream)
+					continue;
+
+				MacFilePropertiesSerialized serializedMetadata;
+				if (metadataStream->Read(&serializedMetadata, sizeof(serializedMetadata)) != sizeof(serializedMetadata))
+				{
+					metadataStream->Close();
+					continue;
+				}
+
+				metadataStream->Close();
+
+				MacFileProperties metadata;
+				serializedMetadata.Deserialize(metadata);
+
+				char ftype[4];
+				fileType.ExportAsChars(ftype);
+				if (memcmp(metadata.m_fileType, ftype, 4))
+					continue;
+
 				if (!uiImpl.AppendName(fileName, nameLength - 4, callbackAPI.m_loadFileDetailsCallback(dirID, PLPasStr(nameLength - 4, fileName))))
 				{
 					dirCursor->Destroy();
