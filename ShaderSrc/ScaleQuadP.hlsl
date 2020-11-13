@@ -5,7 +5,7 @@ Texture2D<float3> surfaceTexture : register(t0);
 
 cbuffer SScaleQuadPixelConstants : register(b0)
 {
-	float4 dxdy_Unused;
+	float4 dxdy_InvPixelScale;
 };
 
 struct SDrawQuadPixelOutput
@@ -20,10 +20,10 @@ float3 SamplePixel(int2 coord)
 
 SDrawQuadPixelOutput PSMain(SDrawQuadPixelInput input)
 {
-	float dx = dxdy_Unused.x;
-	float dy = dxdy_Unused.y;
+	float dx = dxdy_InvPixelScale.x;
+	float dy = dxdy_InvPixelScale.y;
 
-	float2 pixelTopLeftCoord = max(0.0, input.texCoord.xy - float2(dx, dy) * 0.5);
+	float2 pixelTopLeftCoord = max(0.0, (input.pos.xy - float2(0.5, 0.5)) * dxdy_InvPixelScale.zw);
 	float2 pixelBottomRightCoord = pixelTopLeftCoord + min(float2(1.0, 1.0), float2(dx, dy));
 
 	int2 topLeftCoordInteger = int2(floor(pixelTopLeftCoord));

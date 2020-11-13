@@ -99,7 +99,8 @@ private:
 	{
 		float m_dx;
 		float m_dy;
-		float m_unused[2];
+		float m_invScaleX;
+		float m_invScaleY;
 	};
 
 	struct CompactedPresentHistoryItem

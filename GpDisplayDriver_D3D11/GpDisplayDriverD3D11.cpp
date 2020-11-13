@@ -814,10 +814,10 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 		float fHeight = static_cast<float>(m_windowHeightVirtual) * m_pixelScaleY;
 
 		DrawQuadVertexConstants vConstantsData;
-		vConstantsData.m_ndcOriginX = twoDivWidth - 1.0f;
-		vConstantsData.m_ndcOriginY = negativeTwoDivHeight + 1.0f;
-		vConstantsData.m_ndcWidth = fWidth * twoDivWidth;
-		vConstantsData.m_ndcHeight = fHeight * negativeTwoDivHeight;
+		vConstantsData.m_ndcOriginX = - 1.0f;
+		vConstantsData.m_ndcOriginY = 1.0f;
+		vConstantsData.m_ndcWidth = 2.0;
+		vConstantsData.m_ndcHeight = -2.0;
 
 		vConstantsData.m_surfaceDimensionX = static_cast<float>(m_windowWidthVirtual);
 		vConstantsData.m_surfaceDimensionY = static_cast<float>(m_windowHeightVirtual);
@@ -832,6 +832,8 @@ void GpDisplayDriverD3D11::ScaleVirtualScreen()
 		ScaleQuadPixelConstants pConstantsData;
 		pConstantsData.m_dx = static_cast<float>(static_cast<double>(m_windowWidthVirtual) / static_cast<double>(m_windowWidthPhysical));
 		pConstantsData.m_dy = static_cast<float>(static_cast<double>(m_windowHeightVirtual) / static_cast<double>(m_windowHeightPhysical));
+		pConstantsData.m_invScaleX = static_cast<float>(1.0f / m_pixelScaleX);
+		pConstantsData.m_invScaleY = static_cast<float>(1.0f / m_pixelScaleY);
 
 		D3D11_MAPPED_SUBRESOURCE mappedPConstants;
 		if (m_deviceContext->Map(m_scaleQuadPixelConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedPConstants) == S_OK)
