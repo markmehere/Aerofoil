@@ -819,8 +819,8 @@ void QuerySaveGame (Boolean &save, Boolean &cancel)
 {
 	#define		kSaveGameAlert		1041
 	#define		kYesSaveGameButton	1
-	#define		kNoButton			2
-	#define		kCancelButton		3
+	#define		kNoSaveGameButton			2
+	#define		kCancelSaveGameButton		3
 	short		hitWhat;
 
 	InitCursor();
@@ -828,6 +828,6 @@ void QuerySaveGame (Boolean &save, Boolean &cancel)
 //	CenterAlert(kSaveGameAlert);
 	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveGameAlert, nullptr);
 	save = (hitWhat == kYesSaveGameButton);
-	cancel = (hitWhat == kCancelButton);
+	cancel = (hitWhat == kCancelSaveGameButton);
 }
 
