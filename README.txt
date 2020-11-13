@@ -1,6 +1,6 @@
 Aerofoil is a port of John Calhoun's Glider PRO
 
-Currently, only Windows is supported, but the code has been significantly
+It currently supports Windows and Android, and the code has been significantly
 rewritten to keep the OS-specific code to a minimum and isolated to a few
 specific projects.
 
@@ -14,6 +14,9 @@ Project structure:
 
 Core application binaries:
 - Aerofoil: Base application, loads drivers and the application.
+- AerofoilSDL: SDL version.  This is not normally included with releases, its
+  main purpose is to ease porting.
+- AerofoilAndroid: Android project.
 - GpApp: Glider PRO application DLL.
 - GpAudioDriver_XAudio2: XAudio2 audio driver.
 - GpDisplayDriver_D3D11: Direct3D 11 display driver.
