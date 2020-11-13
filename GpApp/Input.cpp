@@ -42,7 +42,7 @@ void DoPause (void);
 void DoTouchScreenMenu (void);
 void DoBatteryEngaged (gliderPtr);
 void DoHeliumEngaged (gliderPtr);
-Boolean QuerySaveGame (void);
+void QuerySaveGame (Boolean &save, Boolean &cancel);
 
 
 demoPtr		demoData;
@@ -75,13 +75,24 @@ void DoCommandKey (void)
 
 	if (theKeys->IsSet(PL_KEY_ASCII('Q')))
 	{
+		Boolean wantCancel = false;
 		playing = false;
 		paused = false;
 		if ((!twoPlayerGame) && (!demoGoing))
 		{
-			if (QuerySaveGame())
-				SaveGame2();		// New save game.
+			Boolean wantSave = false;
+			QuerySaveGame(wantSave, wantCancel);
+
+			if (wantSave)
+			{
+				// New save game.
+				if (!SaveGame2())
+					wantCancel = true;
+			}
 		}
+
+		if (wantCancel)
+			playing = true;
 	}
 	else if ((theKeys->IsSet(PL_KEY_ASCII('S'))) && (!twoPlayerGame))
 	{
@@ -326,12 +337,23 @@ void DoTouchScreenMenu(void)
 	switch (highlightedItem)
 	{
 	case TouchScreenMenuItems::kQuit:
-		playing = false;
-		paused = false;
-		if ((!twoPlayerGame) && (!demoGoing))
 		{
-			if (QuerySaveGame())
-				SaveGame2();		// New save game.
+			Boolean wantCancel = false;
+			playing = false;
+			paused = false;
+			if ((!twoPlayerGame) && (!demoGoing))
+			{
+				Boolean wantSave = false;
+				QuerySaveGame(wantSave, wantCancel);
+				if (wantSave)
+				{
+					if (!SaveGame2())		// New save game.
+						wantCancel = true;
+				}
+			}
+
+			if (wantCancel)
+				playing = true;
 		}
 		break;
 	case TouchScreenMenuItems::kSave:
@@ -793,19 +815,19 @@ void GetInput (gliderPtr thisGlider)
 
 //--------------------------------------------------------------  QuerySaveGame
 
-Boolean QuerySaveGame (void)
+void QuerySaveGame (Boolean &save, Boolean &cancel)
 {
 	#define		kSaveGameAlert		1041
 	#define		kYesSaveGameButton	1
+	#define		kNoButton			2
+	#define		kCancelButton		3
 	short		hitWhat;
 
 	InitCursor();
 	FlushEvents();
 //	CenterAlert(kSaveGameAlert);
 	hitWhat = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kSaveGameAlert, nullptr);
-	if (hitWhat == kYesSaveGameButton)
-		return (true);
-	else
-		return (false);
+	save = (hitWhat == kYesSaveGameButton);
+	cancel = (hitWhat == kCancelButton);
 }
 

@@ -1,0 +1,45 @@
+{
+	"items" :
+	[
+		{
+			"name" : "Save First",
+			"itemType" : "Button",
+			"pos" : [ 174, 48 ],
+			"size" : [ 80, 20 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "Don't Save",
+			"itemType" : "Button",
+			"pos" : [ 82, 48 ],
+			"size" : [ 80, 20 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "Cancel",
+			"itemType" : "Button",
+			"pos" : [ 20, 48 ],
+			"size" : [ 50, 20 ],
+			"id" : 0,
+			"enabled" : true
+		},
+		{
+			"name" : "Do you want to save the state of the game before quitting?",
+			"itemType" : "Label",
+			"pos" : [ 8, 8 ],
+			"size" : [ 201, 32 ],
+			"id" : 0,
+			"enabled" : false
+		},
+		{
+			"name" : "",
+			"itemType" : "Icon",
+			"pos" : [ 222, 8 ],
+			"size" : [ 32, 32 ],
+			"id" : 1072,
+			"enabled" : false
+		}
+	]
+}

@@ -2,6 +2,7 @@
 	"add" :
 	{
 		"DITL/1017.json" : "ApplicationResourcePatches/DITL/1017.json",
+		"DITL/1041.json" : "ApplicationResourcePatches/DITL/1041.json",
 		"DITL/2000.json" : "ApplicationResourcePatches/DITL/2000.json",
 		"DITL/2001.json" : "ApplicationResourcePatches/DITL/2001.json",
 		"DITL/2002.json" : "ApplicationResourcePatches/DITL/2002.json",

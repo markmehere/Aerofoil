@@ -425,7 +425,7 @@ void HandleBands (void);								// --- RubberBands.c
 Boolean AddBand (gliderPtr, SInt16, SInt16, Boolean);
 void KillAllBands (void);
 
-void SaveGame2 (void);									// --- SavedGames.c
+Boolean SaveGame2 (void);									// --- SavedGames.c
 Boolean OpenSavedGame (void);
 //void SaveGame (Boolean);
 

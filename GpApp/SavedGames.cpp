@@ -116,7 +116,7 @@ static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI
 
 //--------------------------------------------------------------  SaveGame2
 
-void SaveGame2 (void)
+Boolean SaveGame2 (void)
 {
 	// Bringing up the save file UI can cause key/mouse events to be missed, resulting in state being stuck when this comes back.
 	// To avoid that, clear all state here.
@@ -146,7 +146,7 @@ void SaveGame2 (void)
 	if (savedGame == nil)
 	{
 		YellowAlert(kYellowFailedSaveGame, PLErrors::kOutOfMemory);
-		return;
+		return false;
 	}
 
 	memset(savedGame, 0, byteCount);
@@ -166,7 +166,7 @@ void SaveGame2 (void)
 	if (!fm->PromptSaveFile(spec.m_dir, 'gliG', savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game"), GetSavedGameDetailsAPI()))
 	{
 		mm->Release(savedGame);
-		return;
+		return false;
 	}
 
 	assert(savePathLength < sizeof(spec.m_name) - 1);
@@ -179,7 +179,7 @@ void SaveGame2 (void)
 		if (!fm->DeleteFile(spec.m_dir, spec.m_name))
 		{
 			CheckFileError(PLErrors::kAccessDenied, PSTR("Saved Game"));
-			return;
+			return false;
 		}
 	}
 	
@@ -233,6 +233,8 @@ void SaveGame2 (void)
 	}
 
 	mm->Release(savedGame);
+
+	return true;
 }
 
 //--------------------------------------------------------------  SavedGameMismatchError
