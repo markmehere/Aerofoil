@@ -21,7 +21,8 @@ const D3D_SHADER_MACRO drawQuadDefs[] =
 
 const D3D_SHADER_MACRO drawQuadICCProfileDefs[] =
 {
-	{ "USE_ICC_PROFILE", nullptr }
+	{ "USE_ICC_PROFILE", nullptr },
+	{ nullptr }
 };
 
 const CompileJob kCompileJobs[] =
@@ -108,7 +109,7 @@ int main(int argc, const char **argv)
 
 		if (result != S_OK)
 		{
-			fprintf(stderr, "Compile failure error: %x", static_cast<int>(result));
+			fprintf(stderr, "Compile failure error: %x\n", static_cast<int>(result));
 		}
 
 		if (errorMsgs)
