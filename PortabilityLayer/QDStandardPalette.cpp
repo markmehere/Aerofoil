@@ -250,7 +250,7 @@ namespace PortabilityLayer
 		entry.m_rgb[0] = rgb[0];
 		entry.m_rgb[1] = rgb[1];
 		entry.m_rgb[2] = rgb[2];
-		entry.m_aaTable.GenerateForPalette(color, m_colors, 256);
+		entry.m_aaTable.GenerateForPalette(color, m_colors, 256, true);
 
 		return entry.m_aaTable;
 	}
@@ -269,7 +269,7 @@ namespace PortabilityLayer
 
 		CachedToneTableEntry &entry = m_cachedToneTables[m_numCachedToneTables++];
 		entry.m_tone = tone;
-		entry.m_aaTable.GenerateForSimpleScale(tone);
+		entry.m_aaTable.GenerateForSimpleScale(tone, true);
 
 		return entry.m_aaTable;
 	}
