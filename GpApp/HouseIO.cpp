@@ -854,6 +854,10 @@ void YellowAlert (short whichAlert, short identifier)
 
 Boolean IsFileReadOnly (const VFileSpec &spec)
 {
+	// Kind of annoying, but itch.io doesn't preserve read-only flags and there doesn't seem to be any way around that.
+	if (spec.m_dir == PortabilityLayer::VirtualDirectories::kApplicationData || spec.m_dir == PortabilityLayer::VirtualDirectories::kGameData)
+		return true;
+
 	return PortabilityLayer::FileManager::GetInstance()->FileLocked(spec.m_dir, spec.m_name);
 }
 
