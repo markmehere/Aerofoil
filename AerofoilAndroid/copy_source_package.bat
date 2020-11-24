@@ -6,3 +6,4 @@ git archive -0 --format zip -o AerofoilAndroid\app\src\main\assets\Packaged\Sour
 tools\7z.exe d AerofoilAndroid\app\src\main\assets\Packaged\SourceCode.zip GliderProData\
 cd AerofoilAndroid\app\src\main\assets\Packaged
 rename SourceCode.zip SourceCode.pkg
+pause
