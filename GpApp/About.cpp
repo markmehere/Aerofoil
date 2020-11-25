@@ -335,10 +335,10 @@ void DoAboutFramework (void)
 	DrawSurface *surface = window->GetDrawSurface();
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 0), PSTR(GP_APPLICATION_NAME " " GP_APPLICATION_VERSION_STRING "   \xa9" GP_APPLICATION_COPYRIGHT_STRING), blackColor, font);
 	
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 2), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO\xaa."), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 2), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO."), blackColor, font);
 
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 4), PSTR("This software is not maintained by, supported by, endorsed by, or"), blackColor, font);
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 5), PSTR("otherwise associated with the authors and publishers of Glider PRO\xaa."), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 5), PSTR("otherwise associated with the authors and publishers of Glider PRO."), blackColor, font);
 
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 7), PSTR("Please do not contact any of them regarding issues that you have"), blackColor, font);
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 8), PSTR("with " GP_APPLICATION_NAME "."), blackColor, font);
