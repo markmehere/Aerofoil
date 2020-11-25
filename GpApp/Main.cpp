@@ -11,6 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
+#include "GpApplicationName.h"
 #include "GpRenderedFontMetrics.h"
 #include "IGpMutex.h"
 #include "IGpThreadEvent.h"
@@ -26,7 +27,9 @@
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "ResourceManager.h"
+#include "PLTimeTaggedVOSEvent.h"
 #include "Utilities.h"
+#include "Vec2i.h"
 #include "WindowManager.h"
 #include "WorkerThread.h"
 
@@ -46,7 +49,7 @@ int loadScreenProgress;
 DrawSurface *loadScreenRingSurface;
 
 
-#define kPrefsVersion			0x0038
+#define kPrefsVersion			0x0039
 
 
 void ReadInPrefs (void);
@@ -895,6 +898,155 @@ void PreloadAATables()
 	}
 }
 
+void ShowInitialLaunchDisclaimer()
+{
+	const char *disclaimerLines[] =
+	{
+		GP_APPLICATION_NAME " is a port of John Calhoun's Glider PRO, based",
+		"on the 2016 release of the game's source code and assets.",
+		"",
+		"Glider PRO, a sequel to the original Glider, was released",
+		"in 1994 for the Apple Macintosh, and is widely recognized",
+		"as one of the most iconic Macintosh-exclusive games.",
+		"",
+		"I hope that by adapting it to be playable on modern systems, more",
+		"people can appreciate this important piece of video game history.",
+		"",
+		"This software is an adaptation and contains some differences",
+		"from the original.  Some fonts, graphics, and sounds have been",
+		"substituted or removed for copyright reasons.  This software",
+		"is not developed by, maintained by, supported by, endorsed by,",
+		"or otherwise associated with the authors or publishers of Glider PRO."
+	};
+
+	const size_t numLines = sizeof(disclaimerLines) / sizeof(disclaimerLines[0]);
+
+	PortabilityLayer::RenderedFont *rfont = GetApplicationFont(18, 0, true);
+
+	const int kButtonSpacing = 16;
+	const int kButtonHeight = 32;
+
+	const PLPasStr buttonText = PLDrivers::GetSystemServices()->IsTouchscreen() ? PLPasStr(PSTR("Tap to Continue...")) : PLPasStr(PSTR("Click to Continue..."));
+	const int32_t buttonTextWidth = rfont->MeasureString(buttonText.UChars(), buttonText.Length());
+	const int32_t buttonWidth = buttonTextWidth + 16;
+
+	const int32_t linegap = rfont->GetMetrics().m_linegap;
+	const int32_t ascent = rfont->GetMetrics().m_ascent;
+	int32_t windowHeight = linegap * numLines + kButtonSpacing + kButtonHeight;
+
+	size_t widestLine = 0;
+	for (size_t i = 0; i < numLines; i++)
+	{
+		const size_t lineWidth = rfont->MeasureCharStr(disclaimerLines[i], strlen(disclaimerLines[i]));
+		if (lineWidth > widestLine)
+			widestLine = lineWidth;
+	}
+
+	if (widestLine > 640)
+		widestLine = 640;
+
+	Rect windowRect = Rect::Create(0, 0, windowHeight, widestLine);
+
+	PortabilityLayer::WindowDef def = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, 0, 0, PSTR(""));
+
+	Window *disclaimerWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
+	PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(disclaimerWindow, PL_GetPutInFrontWindowPtr());
+
+	DrawSurface *surface = disclaimerWindow->GetDrawSurface();
+	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+	PortabilityLayer::ResolveCachingColor whiteColor(StdColors::White());
+
+	surface->FillRect(windowRect, blackColor);
+
+	int32_t wx = (static_cast<int32_t>(thisMac.fullScreen.Width()) - static_cast<int32_t>(surface->m_port.GetRect().Width())) / 2;
+	int32_t wy = (static_cast<int32_t>(thisMac.fullScreen.Height()) - static_cast<int32_t>(surface->m_port.GetRect().Height())) / 2;
+
+	disclaimerWindow->SetPosition(PortabilityLayer::Vec2i(wx, wy));
+
+
+	for (size_t i = 0; i < numLines; i++)
+	{
+		const size_t lineWidth = rfont->MeasureCharStr(disclaimerLines[i], strlen(disclaimerLines[i]));
+		if (lineWidth > widestLine)
+			widestLine = lineWidth;
+
+		int32_t xOffset = static_cast<int32_t>((widestLine - lineWidth) / 2);
+
+		Point drawPt = Point::Create(xOffset, linegap * i + (linegap + ascent) / 2);
+		surface->DrawString(drawPt, PLPasStr(strlen(disclaimerLines[i]), disclaimerLines[i]), whiteColor, rfont);
+	}
+
+	const int numTicksToEnable = 10 * 60;
+	const int borderThickness = 2;
+
+	Rect buttonRect = Rect::Create(windowRect.bottom - kButtonHeight, windowRect.right - buttonWidth, windowRect.bottom, windowRect.right);
+
+	{
+		int topYOffset = (buttonRect.Height() - borderThickness) / 2;
+		surface->FillRect(Rect::Create(buttonRect.top + topYOffset, buttonRect.left, buttonRect.top + topYOffset + borderThickness, buttonRect.left + borderThickness), whiteColor);
+		surface->FillRect(Rect::Create(buttonRect.top + topYOffset, buttonRect.right - borderThickness, buttonRect.top + topYOffset + borderThickness, buttonRect.right), whiteColor);
+	}
+
+
+	for (int i = 0; i < numTicksToEnable; i++)
+	{
+		int bar = (buttonWidth - borderThickness * 6) * i / numTicksToEnable;
+
+		int topYOffset = (buttonRect.Height() - borderThickness) / 2;
+		surface->FillRect(Rect::Create(buttonRect.top + topYOffset, buttonRect.left + borderThickness * 3, buttonRect.top + topYOffset + borderThickness, buttonRect.left + borderThickness * 3 + bar), whiteColor);
+
+		Delay(1, nullptr);
+	}
+
+	const int numTicksToExpand = 15;
+	for (int i = 0; i < numTicksToExpand; i++)
+	{
+		int height = buttonRect.Height() * i / numTicksToExpand;
+		int topYOffset = (buttonRect.Height() - height) / 2;
+		surface->FillRect(Rect::Create(buttonRect.top + topYOffset, buttonRect.left, buttonRect.top + topYOffset + height, buttonRect.right), whiteColor);
+
+		Delay(1, nullptr);
+	}
+
+	Point textPoint;
+	textPoint.h = (buttonRect.left + buttonRect.right - buttonTextWidth) / 2;
+	textPoint.v = (buttonRect.top + buttonRect.bottom + ascent) / 2;
+
+	const int numTicksToFade = 15;
+	for (int i = 0; i <= numTicksToFade; i++)
+	{
+		int intensity = 255 - (i * 255 / numTicksToFade);
+		PortabilityLayer::ResolveCachingColor backgroundColor(PortabilityLayer::RGBAColor::Create(intensity, intensity, intensity, 255));
+
+		surface->FillRect(buttonRect, whiteColor);
+		surface->FillRect(buttonRect.Inset(borderThickness, borderThickness), backgroundColor);
+
+		surface->DrawString(textPoint, buttonText, whiteColor, rfont);
+
+		Delay(1, nullptr);
+	}
+
+	bool dismiss = false;
+
+	FlushEvents();
+
+	while (!dismiss)
+	{
+		TimeTaggedVOSEvent evt;
+		while (WaitForEvent(&evt, 1))
+		{
+			if (evt.IsLMouseDownEvent())
+				dismiss = true;
+		}
+	}
+
+	Delay(1, nullptr);
+
+	PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(disclaimerWindow);
+
+	Delay(60, nullptr);
+}
+
 void gpAppInit()
 {
 	// This is called before the display driver is initialized
@@ -978,7 +1130,9 @@ int gpAppMain()
 	if (!isPrefsLoaded)
 	{
 		WriteOutPrefs();
+
 	}
+	ShowInitialLaunchDisclaimer();
 
 	OpenMainWindow();
 
