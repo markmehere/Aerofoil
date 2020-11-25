@@ -6,3 +6,5 @@ cd ..
 rmdir /S /Q ReleasePkg\Aerofoil
 rmdir /S /Q ReleasePkg\en-us
 rmdir /S /Q ReleasePkg\PDBs
+
+git archive --format zip -o ReleasePkg\Aerofoil-src.zip HEAD
