@@ -3,6 +3,8 @@
 #include "AntiAliasTable.h"
 #include "RGBAColor.h"
 
+struct IGpMutex;
+
 namespace PortabilityLayer
 {
 	struct AntiAliasTable;
@@ -21,8 +23,8 @@ namespace PortabilityLayer
 		uint8_t MapColorLUT(uint8_t r, uint8_t g, uint8_t b) const;
 		uint8_t MapColorLUT(const RGBAColor &color) const;
 
-		const AntiAliasTable &GetCachedPaletteAATable(const RGBAColor &color);
-		const AntiAliasTable &GetCachedToneAATable(uint8_t tone);
+		const AntiAliasTable &GetCachedPaletteAATable(const RGBAColor &color, IGpMutex *mutex = nullptr);
+		const AntiAliasTable &GetCachedToneAATable(uint8_t tone, IGpMutex *mutex = nullptr);
 
 		static StandardPalette *GetInstance();
 

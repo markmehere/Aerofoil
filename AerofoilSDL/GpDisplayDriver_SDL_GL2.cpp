@@ -1215,7 +1215,7 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	m_bgColor[3] = 1.f;
 
 	// Stupid hack to detect mobile...
-	m_isFullScreenDesired = m_properties.m_systemServices->IsTouchscreen() && !m_properties.m_systemServices->IsUsingMouseAsTouch();
+	m_isFullScreenDesired = m_properties.m_systemServices->IsFullscreenPreferred();
 
 	const intmax_t periodNum = std::chrono::high_resolution_clock::period::num;
 	const intmax_t periodDen = std::chrono::high_resolution_clock::period::den;

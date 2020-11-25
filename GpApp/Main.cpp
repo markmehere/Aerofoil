@@ -12,6 +12,7 @@
 #include "Environ.h"
 #include "FontFamily.h"
 #include "GpRenderedFontMetrics.h"
+#include "IGpMutex.h"
 #include "IGpThreadEvent.h"
 #include "IGpDisplayDriver.h"
 #include "IGpSystemServices.h"
@@ -37,7 +38,7 @@
 
 #include <atomic>
 
-
+int loadScreenWindowPhase;
 int loadScreenRingStep;
 WindowPtr loadScreenWindow;
 Rect loadScreenProgressBarRect;
@@ -249,7 +250,7 @@ void ReadInPrefs (void)
 		doComplainDialogs = true;
 
 		IGpDisplayDriver *displayDriver = PLDrivers::GetDisplayDriver();
-		if (!displayDriver->IsFullScreen())
+		if (PLDrivers::GetSystemServices()->IsFullscreenPreferred() != displayDriver->IsFullScreen())
 			displayDriver->RequestToggleFullScreen(0);
 
 		modulePrefs.Dispose();
@@ -371,8 +372,148 @@ void StepLoadScreenRing()
 		Rect ringDestRect = Rect::Create(8, 8, 24, 24);
 		Rect ringSrcRect = Rect::Create(0, 0, 16, 16) + Point::Create((loadScreenRingStep / loadScreenStepGranularity) * 16, 0);
 
+		if (loadScreenWindowPhase == 0)
+		{
+			ringDestRect = Rect::Create(0, 0, 64, 64);
+
+			const int progression = (loadScreenRingStep / loadScreenStepGranularity);
+			ringSrcRect = Rect::Create(0, 0, 64, 64) + Point::Create((progression % 6) * 64, (progression / 6) * 64);
+		}
+
 		CopyBits(*loadScreenRingSurface->m_port.GetPixMap(), *loadScreenWindow->GetDrawSurface()->m_port.GetPixMap(), &ringSrcRect, &ringDestRect, srcCopy);
 		loadScreenWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
+	}
+}
+
+
+void CreateLoadScreenWindow(int phase)
+{
+	if (loadScreenRingSurface)
+	{
+		DisposeGWorld(loadScreenRingSurface);
+		loadScreenRingSurface = nullptr;
+	}
+
+	if (loadScreenWindow)
+	{
+		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(loadScreenWindow);
+		loadScreenWindow = nullptr;
+	}
+
+	if (phase == 0)
+	{
+		static const int kLoadScreenHeight = 64;
+		static const int kLoadScreenWidth = 64;
+		static const int kLoadRingResource = 1303;
+
+		ForceSyncFrame();
+		PLSysCalls::Sleep(1);
+
+		THandle<BitmapImage> loadRingImageH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kLoadRingResource).StaticCast<BitmapImage>();
+		BitmapImage *loadRingImage = *loadRingImageH;
+
+		DrawSurface *loadRingSurface = nullptr;
+		Rect loadRingRect = loadRingImage->GetRect();
+		loadRingRect.right *= 2;
+		loadRingRect.bottom *= 2;
+		CreateOffScreenGWorld(&loadRingSurface, &loadRingRect);
+		loadRingSurface->DrawPicture(loadRingImageH, loadRingRect);
+
+		int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
+		int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
+
+
+		const Rect loadScreenRect = Rect::Create(lsY, lsX, lsY + kLoadScreenHeight, lsX + kLoadScreenWidth);
+		const Rect loadScreenLocalRect = Rect::Create(0, 0, loadScreenRect.Height(), loadScreenRect.Width());
+
+		PortabilityLayer::WindowDef def = PortabilityLayer::WindowDef::Create(loadScreenRect, PortabilityLayer::WindowStyleFlags::kBorderless, true, 0, 0, PSTR(""));
+
+		loadScreenWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(loadScreenWindow, PL_GetPutInFrontWindowPtr());
+
+		DrawSurface *surface = loadScreenWindow->GetDrawSurface();
+		PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+
+		surface->FillRect(loadScreenLocalRect, blackColor);
+
+		loadScreenProgressBarRect = Rect::Create(0, 0, 0, 0);
+		loadScreenProgress = 0;
+
+		Rect ringDestRect = Rect::Create(0, 0, 64, 64);
+		Rect ringSrcRect = Rect::Create(0, 0, 64, 64);
+		CopyBits(*loadRingSurface->m_port.GetPixMap(), *surface->m_port.GetPixMap(), &ringSrcRect, &ringDestRect, srcCopy);
+
+		loadRingImageH.Dispose();
+
+		loadScreenRingSurface = loadRingSurface;
+	}
+	else if (phase == 1)
+	{
+		static const int kLoadScreenHeight = 32;
+		static const int kLoadRingResource = 1302;
+
+		int kLoadScreenWidth = 296;
+		PLPasStr loadingText = PSTR("Loading...");
+
+		if (!isPrefsLoaded)
+		{
+			loadingText = PSTR("Getting some things ready...");
+			kLoadScreenWidth = 440;
+		}
+
+		ForceSyncFrame();
+		PLSysCalls::Sleep(1);
+
+		THandle<BitmapImage> loadRingImageH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kLoadRingResource).StaticCast<BitmapImage>();
+		BitmapImage *loadRingImage = *loadRingImageH;
+
+		DrawSurface *loadRingSurface = nullptr;
+		Rect loadRingRect = loadRingImage->GetRect();
+		CreateOffScreenGWorld(&loadRingSurface, &loadRingRect);
+		loadRingSurface->DrawPicture(loadRingImageH, loadRingRect);
+
+		int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
+		int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
+
+
+		const Rect loadScreenRect = Rect::Create(lsY, lsX, lsY + kLoadScreenHeight, lsX + kLoadScreenWidth);
+		const Rect loadScreenLocalRect = Rect::Create(0, 0, loadScreenRect.Height(), loadScreenRect.Width());
+
+		PortabilityLayer::WindowDef def = PortabilityLayer::WindowDef::Create(loadScreenRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
+
+		loadScreenWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
+		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(loadScreenWindow, PL_GetPutInFrontWindowPtr());
+
+		DrawSurface *surface = loadScreenWindow->GetDrawSurface();
+		PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
+		PortabilityLayer::ResolveCachingColor whiteColor(StdColors::White());
+
+		surface->FillRect(loadScreenLocalRect, whiteColor);
+
+		PortabilityLayer::WindowManager::GetInstance()->FlickerWindowIn(loadScreenWindow, 32);
+
+		PortabilityLayer::RenderedFont *font = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
+		int32_t textY = (kLoadScreenHeight + font->GetMetrics().m_ascent) / 2;
+		surface->DrawString(Point::Create(4 + 16 + 8, textY), loadingText, blackColor, font);
+
+		static const int32_t loadBarPadding = 16;
+		static const int32_t loadBarHeight = 10;
+		int32_t loadBarStartX = static_cast<int32_t>(font->MeasureString(loadingText.UChars(), loadingText.Length())) + 4 + 16 + 8 + loadBarPadding;
+		int32_t loadBarEndX = loadScreenLocalRect.right - loadBarPadding;
+
+		loadScreenProgressBarRect = Rect::Create((loadScreenLocalRect.Height() - loadBarHeight) / 2, loadBarStartX, (loadScreenLocalRect.Height() + loadBarHeight) / 2, loadBarEndX);
+
+		PortabilityLayer::ResolveCachingColor partialFillColor(PortabilityLayer::RGBAColor::Create(255, 255, 204, 255));
+		surface->FrameRect(loadScreenProgressBarRect, blackColor);
+		surface->FillRect(loadScreenProgressBarRect.Inset(1, 1), partialFillColor);
+
+		Rect ringDestRect = Rect::Create(8, 8, 24, 24);
+		Rect ringSrcRect = Rect::Create(0, 0, 16, 16);
+		CopyBits(*loadRingSurface->m_port.GetPixMap(), *surface->m_port.GetPixMap(), &ringSrcRect, &ringDestRect, srcCopy);
+
+		loadRingImageH.Dispose();
+
+		loadScreenRingSurface = loadRingSurface;
 	}
 }
 
@@ -380,9 +521,22 @@ void StepLoadScreen(int steps)
 {
 	if (loadScreenWindow)
 	{
-		Rect loadScreenProgressBarFillRect = loadScreenProgressBarRect.Inset(1, 1);
+		static const int kLoadScreenPhaseSwitchBreakpoint = 20;
+
 		int oldProgress = loadScreenProgress;
-		int loadScreenMax = 32;
+
+		if (loadScreenProgress + steps >= kLoadScreenPhaseSwitchBreakpoint && loadScreenWindowPhase == 0)
+		{
+			loadScreenWindowPhase = 1;
+			CreateLoadScreenWindow(loadScreenWindowPhase);
+
+			// Reset old progress since the progress bar was redrawn
+			oldProgress = 0;
+		}
+
+		const Rect loadScreenProgressBarFillRect = loadScreenProgressBarRect.Inset(1, 1);
+
+		int loadScreenMax = 42;
 		loadScreenProgress = loadScreenProgress + steps;
 		if (loadScreenProgress > loadScreenMax)
 			loadScreenProgress = loadScreenMax;
@@ -411,72 +565,12 @@ void InitLoadingWindow()
 	if (!thisMac.isTouchscreen)
 		return;
 
-	static const int kLoadScreenHeight = 32;
-	static const int kLoadRingResource = 1302;
+	if (isPrefsLoaded)
+		loadScreenWindowPhase = 1;
+	else
+		loadScreenWindowPhase = 0;
 
-	int kLoadScreenWidth = 296;
-	PLPasStr loadingText = PSTR("Loading...");
-
-	if (!isPrefsLoaded)
-	{
-		loadingText = PSTR("Getting some things ready...");
-		kLoadScreenWidth = 440;
-	}
-
-	ForceSyncFrame();
-	PLSysCalls::Sleep(1);
-
-	THandle<BitmapImage> loadRingImageH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kLoadRingResource).StaticCast<BitmapImage>();
-	BitmapImage *loadRingImage = *loadRingImageH;
-
-	DrawSurface *loadRingSurface = nullptr;
-	Rect loadRingRect = loadRingImage->GetRect();
-	CreateOffScreenGWorld(&loadRingSurface, &loadRingRect);
-	loadRingSurface->DrawPicture(loadRingImageH, loadRingRect);
-
-	int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
-	int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
-
-
-	const Rect loadScreenRect = Rect::Create(lsY, lsX, lsY + kLoadScreenHeight, lsX + kLoadScreenWidth);
-	const Rect loadScreenLocalRect = Rect::Create(0, 0, loadScreenRect.Height(), loadScreenRect.Width());
-
-	PortabilityLayer::WindowDef def = PortabilityLayer::WindowDef::Create(loadScreenRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
-
-	loadScreenWindow = PortabilityLayer::WindowManager::GetInstance()->CreateWindow(def);
-	PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(loadScreenWindow, PL_GetPutInFrontWindowPtr());
-
-	DrawSurface *surface = loadScreenWindow->GetDrawSurface();
-	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
-	PortabilityLayer::ResolveCachingColor whiteColor(StdColors::White());
-
-	surface->FillRect(loadScreenLocalRect, whiteColor);
-
-	PortabilityLayer::WindowManager::GetInstance()->FlickerWindowIn(loadScreenWindow, 32);
-
-	PortabilityLayer::RenderedFont *font = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
-	int32_t textY = (kLoadScreenHeight + font->GetMetrics().m_ascent) / 2;
-	surface->DrawString(Point::Create(4+16+8, textY), loadingText, blackColor, font);
-
-	static const int32_t loadBarPadding = 16;
-	static const int32_t loadBarHeight = 10;
-	int32_t loadBarStartX = static_cast<int32_t>(font->MeasureString(loadingText.UChars(), loadingText.Length())) + 4 + 16 + 8 + loadBarPadding;
-	int32_t loadBarEndX = loadScreenLocalRect.right - loadBarPadding;
-
-	loadScreenProgressBarRect = Rect::Create((loadScreenLocalRect.Height() - loadBarHeight) / 2, loadBarStartX, (loadScreenLocalRect.Height() + loadBarHeight) / 2, loadBarEndX);
-	loadScreenProgress = 0;
-
-	PortabilityLayer::ResolveCachingColor partialFillColor(PortabilityLayer::RGBAColor::Create(255, 255, 204, 255));
-	surface->FrameRect(loadScreenProgressBarRect, blackColor);
-	surface->FillRect(loadScreenProgressBarRect.Inset(1, 1), partialFillColor);
-
-	Rect ringDestRect = Rect::Create(8, 8, 24, 24);
-	Rect ringSrcRect = Rect::Create(0, 0, 16, 16);
-	CopyBits(*loadRingSurface->m_port.GetPixMap(), *surface->m_port.GetPixMap(), &ringSrcRect, &ringDestRect, srcCopy);
-
-	loadRingImageH.Dispose();
-
-	loadScreenRingSurface = loadRingSurface;
+	CreateLoadScreenWindow(loadScreenWindowPhase);
 }
 
 enum PreloadFontCategory
@@ -542,12 +636,12 @@ void PreloadSingleFont (const PreloadFontSpec &spec)
 	}
 }
 
-void PreloadThreadFunc(void *context)
+void PreloadFontThreadFunc(void *context)
 {
 	PreloadFontWorkSlot *wSlot = static_cast<PreloadFontWorkSlot*>(context);
 
 	PreloadSingleFont(*wSlot->m_spec);
-	++wSlot->m_singleJobCompleted;
+	wSlot->m_singleJobCompleted.fetch_add(1, std::memory_order_release);
 	wSlot->m_completedEvent->Signal();
 }
 
@@ -555,6 +649,9 @@ void PreloadFonts()
 {
 	static PreloadFontSpec specs[] =
 	{
+		// First entry should be the one needed to show the load screen
+		{ FontCategory_Application, 18, PortabilityLayer::FontFamilyFlag_None, true },
+
 		{ FontCategory_System, 9, PortabilityLayer::FontFamilyFlag_Bold, true },
 		{ FontCategory_System, 10, PortabilityLayer::FontFamilyFlag_Bold, true },
 		{ FontCategory_System, 12, PortabilityLayer::FontFamilyFlag_None, true },
@@ -563,7 +660,6 @@ void PreloadFonts()
 		{ FontCategory_Application, 9, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Application, 12, PortabilityLayer::FontFamilyFlag_Bold, true },
 		{ FontCategory_Application, 14, PortabilityLayer::FontFamilyFlag_Bold, true },
-		{ FontCategory_Application, 18, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Application, 40, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Handwriting, 24, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Handwriting, 48, PortabilityLayer::FontFamilyFlag_None, true },
@@ -588,7 +684,7 @@ void PreloadFonts()
 	{
 		if (slot.m_queued)
 		{
-			if (slot.m_singleJobCompleted.load(std::memory_order_relaxed) != 0)
+			if (slot.m_singleJobCompleted.load(std::memory_order_acquire) != 0)
 			{
 				slot.m_completedEvent->Wait();
 				slot.m_queued = false;
@@ -603,9 +699,9 @@ void PreloadFonts()
 			if (queuedSpecs < numFontSpecs)
 			{
 				slot.m_queued = true;
-				slot.m_singleJobCompleted.store(0);
 				slot.m_spec = specs + queuedSpecs;
-				slot.m_workerThread->AsyncExecuteTask(PreloadThreadFunc, &slot);
+				slot.m_singleJobCompleted.store(0, std::memory_order_release);
+				slot.m_workerThread->AsyncExecuteTask(PreloadFontThreadFunc, &slot);
 
 				queuedSpecs++;
 			}
@@ -614,6 +710,55 @@ void PreloadFonts()
 		StepLoadScreenRing();
 		Delay(1, nullptr);
 	}
+}
+
+struct PreloadAATableSpec
+{
+	PortabilityLayer::RGBAColor m_color;
+	bool m_isTone;
+};
+
+struct PreloadAATableWorkSlot
+{
+	IGpThreadEvent *m_completedEvent;
+	IGpMutex *m_mutex;
+	PortabilityLayer::WorkerThread *m_workerThread;
+	std::atomic<int> m_singleJobCompleted;
+	const PreloadAATableSpec *m_spec;
+	bool m_queued;
+
+	PreloadAATableWorkSlot();
+	~PreloadAATableWorkSlot();
+};
+
+PreloadAATableWorkSlot::PreloadAATableWorkSlot()
+	: m_completedEvent(nullptr)
+	, m_workerThread(nullptr)
+	, m_spec(nullptr)
+	, m_queued(false)
+{
+}
+
+PreloadAATableWorkSlot::~PreloadAATableWorkSlot()
+{
+	if (m_workerThread)
+		m_workerThread->Destroy();
+}
+
+
+void PreloadAATableThreadFunc(void *context)
+{
+	PreloadAATableWorkSlot *wSlot = static_cast<PreloadAATableWorkSlot*>(context);
+
+	PortabilityLayer::StandardPalette *sp = PortabilityLayer::StandardPalette::GetInstance();
+
+	if (wSlot->m_spec->m_isTone)
+		sp->GetCachedToneAATable(wSlot->m_spec->m_color.r, wSlot->m_mutex);
+	else
+		sp->GetCachedPaletteAATable(wSlot->m_spec->m_color, wSlot->m_mutex);
+
+	wSlot->m_singleJobCompleted.fetch_add(1, std::memory_order_release);
+	wSlot->m_completedEvent->Signal();
 }
 
 void PreloadAATables()
@@ -630,15 +775,119 @@ void PreloadAATables()
 		PortabilityLayer::RGBAColor::Create(204, 102, 51, 255),
 	};
 
-	const size_t numPreloads = sizeof(preloadColors) / sizeof(preloadColors[0]);
+	const size_t numPalettePreloads = sizeof(preloadColors) / sizeof(preloadColors[0]);
+	const size_t maxTonePreloads = numPalettePreloads * 3;
 
-	for (size_t i = 0; i < numPreloads; i++)
+	PreloadAATableSpec specs[numPalettePreloads + maxTonePreloads];
+	for (size_t i = 0; i < numPalettePreloads; i++)
 	{
-		sp->GetCachedPaletteAATable(preloadColors[i]);
-		sp->GetCachedToneAATable(preloadColors[i].r);
-		sp->GetCachedToneAATable(preloadColors[i].g);
-		sp->GetCachedToneAATable(preloadColors[i].b);
-		StepLoadScreen(1);
+		specs[i].m_color = preloadColors[i];
+		specs[i].m_isTone = false;
+	}
+
+	size_t numTonePreloads = 0;
+	for (size_t i = 0; i < numPalettePreloads; i++)
+	{
+		const uint8_t rgb[3] = { preloadColors[i].r, preloadColors[i].g, preloadColors[i].b };
+
+		for (int ch = 0; ch < 3; ch++)
+		{
+			uint8_t tone = rgb[ch];
+
+			bool toneAlreadyQueued = false;
+			for (size_t j = 0; j < numTonePreloads; j++)
+			{
+				if (specs[numPalettePreloads + j].m_color.r == tone)
+				{
+					toneAlreadyQueued = true;
+					break;
+				}
+			}
+
+			if (!toneAlreadyQueued)
+			{
+				PreloadAATableSpec &spec = specs[i + numTonePreloads];
+				numTonePreloads++;
+
+				spec.m_color = PortabilityLayer::RGBAColor::Create(tone, tone, tone, 255);
+				spec.m_isTone = true;
+			}
+		}
+	}
+
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+	const int numAASpecs = numPalettePreloads + numTonePreloads;
+
+	unsigned int cpus = PLDrivers::GetSystemServices()->GetCPUCount();
+	if (cpus < 2)
+	{
+		for (size_t i = 0; i < numAASpecs; i++)
+		{
+			PreloadAATableThreadFunc(specs + i);
+			StepLoadScreen(1);
+		}
+	}
+	else
+	{
+		cpus -= 1;
+
+		int queuedSpecs = 0;
+		int completedSpecs = 0;
+
+		PreloadAATableWorkSlot *slots = static_cast<PreloadAATableWorkSlot*>(mm->Alloc(sizeof(PreloadAATableWorkSlot) * cpus));
+
+		IGpMutex *mutex = PLDrivers::GetSystemServices()->CreateMutex();
+
+		for (unsigned int i = 0; i < cpus; i++)
+		{
+			PreloadAATableWorkSlot *slot = new (slots + i) PreloadAATableWorkSlot();
+			slot->m_workerThread = PortabilityLayer::WorkerThread::Create();
+			slot->m_completedEvent = PLDrivers::GetSystemServices()->CreateThreadEvent(true, false);
+			slot->m_mutex = mutex;
+		}
+
+		while (completedSpecs < numAASpecs)
+		{
+			for (unsigned int i = 0; i < cpus; i++)
+			{
+				PreloadAATableWorkSlot &slot = slots[i];
+
+				if (slot.m_queued)
+				{
+					if (slot.m_singleJobCompleted.load(std::memory_order_acquire) != 0)
+					{
+						slot.m_completedEvent->Wait();
+						slot.m_queued = false;
+						completedSpecs++;
+
+						StepLoadScreen(1);
+					}
+				}
+
+				if (!slot.m_queued)
+				{
+					if (queuedSpecs < numAASpecs)
+					{
+						slot.m_queued = true;
+						slot.m_spec = specs + queuedSpecs;
+						slot.m_singleJobCompleted.store(0, std::memory_order_release);
+						slot.m_workerThread->AsyncExecuteTask(PreloadAATableThreadFunc, &slot);
+
+						queuedSpecs++;
+					}
+				}
+			}
+
+			StepLoadScreenRing();
+			Delay(1, nullptr);
+		}
+
+		for (unsigned int i = 0; i < cpus; i++)
+			slots[i].~PreloadAATableWorkSlot();
+
+		mm->Release(slots);
+		mutex->Destroy();
 	}
 }
 
@@ -681,8 +930,9 @@ int gpAppMain()
 	FlushResolutionChange();
 
 	InitLoadingWindow();	StepLoadScreen(2);
-	PreloadFonts();		StepLoadScreen(2);
 	PreloadAATables();
+	assert(isPrefsLoaded || loadScreenWindowPhase == 0);
+	PreloadFonts();		StepLoadScreen(2);
 
 #if defined COMPILEDEMO
 	copyGood = true;

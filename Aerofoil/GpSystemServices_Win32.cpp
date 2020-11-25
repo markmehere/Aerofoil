@@ -144,6 +144,11 @@ bool GpSystemServices_Win32::IsTextInputObstructive() const
 	return false;
 }
 
+bool GpSystemServices_Win32::IsFullscreenPreferred() const
+{
+	return !m_isTouchscreenSimulation;
+}
+
 unsigned int GpSystemServices_Win32::GetCPUCount() const
 {
 	SYSTEM_INFO sysInfo;

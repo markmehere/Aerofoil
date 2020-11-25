@@ -31,6 +31,7 @@ public:
 	bool IsTouchscreen() const override;
 	bool IsUsingMouseAsTouch() const override;
 	bool IsTextInputObstructive() const override;
+	bool IsFullscreenPreferred() const override;
 	unsigned int GetCPUCount() const override;
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;

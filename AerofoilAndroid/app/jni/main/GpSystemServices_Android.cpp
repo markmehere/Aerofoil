@@ -265,6 +265,11 @@ bool GpSystemServices_Android::IsTextInputObstructive() const
 	return true;
 }
 
+bool GpSystemServices_Android::IsFullscreenPreferred() const
+{
+	return true;
+}
+
 unsigned int GpSystemServices_Android::GetCPUCount() const
 {
 	return SDL_GetCPUCount();

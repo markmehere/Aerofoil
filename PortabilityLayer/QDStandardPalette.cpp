@@ -1,4 +1,5 @@
 #include "QDStandardPalette.h"
+#include "IGpMutex.h"
 
 #include <string.h>
 
@@ -232,15 +233,22 @@ namespace PortabilityLayer
 		return &ms_instance;
 	}
 
-	const AntiAliasTable &StandardPalette::GetCachedPaletteAATable(const RGBAColor &color)
+	const AntiAliasTable &StandardPalette::GetCachedPaletteAATable(const RGBAColor &color, IGpMutex *mutex)
 	{
 		uint8_t rgb[3] = { color.r, color.g, color.b };
+
+		if (mutex)
+			mutex->Lock();
 
 		for (size_t i = 0; i < m_numCachedPaletteTables; i++)
 		{
 			const CachedPaletteTableEntry &entry = m_cachedPaletteTables[i];
 			if (entry.m_rgb[0] == rgb[0] && entry.m_rgb[1] == rgb[1] && entry.m_rgb[2] == rgb[2])
+			{
+				if (mutex)
+					mutex->Unlock();
 				return entry.m_aaTable;
+			}
 		}
 
 		if (m_numCachedPaletteTables == kMaxCachedPaletteTables)
@@ -250,18 +258,29 @@ namespace PortabilityLayer
 		entry.m_rgb[0] = rgb[0];
 		entry.m_rgb[1] = rgb[1];
 		entry.m_rgb[2] = rgb[2];
+
+		if (mutex)
+			mutex->Unlock();
+
 		entry.m_aaTable.GenerateForPalette(color, m_colors, 256, true);
 
 		return entry.m_aaTable;
 	}
 
-	const AntiAliasTable &StandardPalette::GetCachedToneAATable(uint8_t tone)
+	const AntiAliasTable &StandardPalette::GetCachedToneAATable(uint8_t tone, IGpMutex *mutex)
 	{
+		if (mutex)
+			mutex->Lock();
+
 		for (size_t i = 0; i < m_numCachedToneTables; i++)
 		{
 			const CachedToneTableEntry &entry = m_cachedToneTables[i];
 			if (entry.m_tone == tone)
+			{
+				if (mutex)
+					mutex->Unlock();
 				return entry.m_aaTable;
+			}
 		}
 
 		if (m_numCachedToneTables == kMaxCachedToneTables)
@@ -269,6 +288,10 @@ namespace PortabilityLayer
 
 		CachedToneTableEntry &entry = m_cachedToneTables[m_numCachedToneTables++];
 		entry.m_tone = tone;
+
+		if (mutex)
+			mutex->Unlock();
+
 		entry.m_aaTable.GenerateForSimpleScale(tone, true);
 
 		return entry.m_aaTable;
