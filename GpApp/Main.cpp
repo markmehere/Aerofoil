@@ -1131,8 +1131,8 @@ int gpAppMain()
 	{
 		WriteOutPrefs();
 
+		ShowInitialLaunchDisclaimer();
 	}
-	ShowInitialLaunchDisclaimer();
 
 	OpenMainWindow();
 
