@@ -20,7 +20,6 @@ LOCAL_SRC_FILES := \
 	GpGlobalConfig.cpp	\
 	GpInputDriverFactory.cpp	\
 	GpMain.cpp	\
-	GpMemoryBuffer.cpp	\
 	GpVOSEventQueue.cpp
 
 include $(BUILD_STATIC_LIBRARY)

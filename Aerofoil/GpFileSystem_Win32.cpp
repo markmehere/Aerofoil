@@ -3,8 +3,7 @@
 #include "GpApplicationName.h"
 #include "GpFileStream_Win32.h"
 #include "GpWindows.h"
-#include "GpMemoryBuffer.h"
-#include "HostDirectoryCursor.h"
+#include "IGpDirectoryCursor.h"
 
 #include <string>
 #include <Shlwapi.h>
@@ -15,7 +14,7 @@
 
 extern GpWindowsGlobals g_gpWindowsGlobals;
 
-class GpDirectoryCursor_Win32 final : public PortabilityLayer::HostDirectoryCursor
+class GpDirectoryCursor_Win32 final : public IGpDirectoryCursor
 {
 public:
 	static GpDirectoryCursor_Win32 *Create(const HANDLE &handle, const WIN32_FIND_DATAW &findData);
@@ -273,7 +272,7 @@ bool GpFileSystem_Win32::DeleteFile(PortabilityLayer::VirtualDirectory_t virtual
 	return false;
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Win32::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
+IGpDirectoryCursor *GpFileSystem_Win32::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
 {
 	wchar_t winPath[MAX_PATH + 2];
 

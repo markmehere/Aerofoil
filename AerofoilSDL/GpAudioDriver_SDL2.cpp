@@ -1,12 +1,12 @@
 #include "IGpAudioDriver.h"
 #include "IGpAudioChannel.h"
 #include "IGpAudioChannelCallbacks.h"
+#include "IGpMutex.h"
 #include "IGpPrefsHandler.h"
+#include "IGpSystemServices.h"
 #include "GpAudioDriverProperties.h"
 #include "CoreDefs.h"
 
-#include "HostMutex.h"
-#include "HostSystemServices.h"
 
 #include "SDL_audio.h"
 #include "GpRingBuffer.h"
@@ -93,7 +93,7 @@ private:
 	bool Init(GpAudioDriver_SDL2 *driver);
 
 	IGpAudioChannelCallbacks *m_callbacks;
-	PortabilityLayer::HostMutex *m_mutex;
+	IGpMutex *m_mutex;
 	GpAudioDriver_SDL2 *m_owner;
 
 	SDL_atomic_t m_refCount;
@@ -131,8 +131,8 @@ private:
 	void RefillMixChunk(GpAudioChannel_SDL2 *const*channels, size_t numChannels);
 
 	GpAudioDriverProperties m_properties;
-	PortabilityLayer::HostMutex *m_mutex;
-	PortabilityLayer::HostMutex *m_mixState;
+	IGpMutex *m_mutex;
+	IGpMutex *m_mixState;
 
 	static const size_t kMaxChannels = 16;
 	static const size_t kMixChunkSize = 256;

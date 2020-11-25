@@ -15,7 +15,6 @@
 #include "FileBrowserUI.h"
 #include "FileManager.h"
 #include "FontFamily.h"
-#include "HostFileSystem.h"
 #include "House.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"

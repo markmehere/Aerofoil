@@ -1,13 +1,13 @@
 #pragma once
 
-#include "HostFileSystem.h"
+#include "IGpFileSystem.h"
 
 #include "GpCoreDefs.h"
 #include "GpWindows.h"
 
 #include <string>
 
-class GpFileSystem_Win32 final : public PortabilityLayer::HostFileSystem
+class GpFileSystem_Win32 final : public IGpFileSystem
 {
 public:
 	GpFileSystem_Win32();
@@ -16,7 +16,7 @@ public:
 	bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists) override;
 	GpIOStream *OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition) override;
 	bool DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed) override;
-	PortabilityLayer::HostDirectoryCursor *ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths) override;
+	IGpDirectoryCursor *ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths) override;
 
 	bool ValidateFilePath(const char *path, size_t sz) const override;
 	bool ValidateFilePathUnicodeChar(uint32_t ch) const override;

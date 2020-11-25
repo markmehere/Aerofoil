@@ -14,8 +14,8 @@
 #include "IGpVOSEventQueue.h"
 #include "IGpLogDriver.h"
 
-#include "HostFileSystem.h"
-#include "HostThreadEvent.h"
+#include "IGpFileSystem.h"
+#include "IGpThreadEvent.h"
 
 #include "GpAndroid.h"
 
@@ -81,9 +81,10 @@ int main(int argc, char* argv[])
 
 	GpFileSystem_Android::GetInstance()->InitJNI();
 
-	GpAppInterface_Get()->PL_HostFileSystem_SetInstance(GpFileSystem_Android::GetInstance());
-	GpAppInterface_Get()->PL_HostSystemServices_SetInstance(GpSystemServices_Android::GetInstance());
-	GpAppInterface_Get()->PL_HostLogDriver_SetInstance(GpLogDriver_Android::GetInstance());
+	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_Android::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kSystemServices>(GpSystemServices_Android::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kLog>(GpLogDriver_Android::GetInstance());
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;
 

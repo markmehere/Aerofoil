@@ -1,10 +1,10 @@
 #pragma once
 
-#include "HostMutex.h"
+#include "IGpMutex.h"
 
 #include "GpWindows.h"
 
-class GpMutex_Win32 final : public PortabilityLayer::HostMutex
+class GpMutex_Win32 final : public IGpMutex
 {
 public:
 	void Destroy() override;

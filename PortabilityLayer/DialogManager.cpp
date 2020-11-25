@@ -1,13 +1,21 @@
 #include "DialogManager.h"
-#include "HostDisplayDriver.h"
-#include "HostSystemServices.h"
 #include "IconLoader.h"
 #include "IGpDisplayDriver.h"
+#include "IGpSystemServices.h"
 #include "ResourceManager.h"
+#include "QDPixMap.h"
+#include "Rect2i.h"
+#include "ResTypeID.h"
+#include "SharedTypes.h"
+#include "UTF8.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
+
 #include "PLArrayView.h"
 #include "PLBigEndian.h"
 #include "PLButtonWidget.h"
 #include "PLDialogs.h"
+#include "PLDrivers.h"
 #include "PLEditboxWidget.h"
 #include "PLIconWidget.h"
 #include "PLImageWidget.h"
@@ -18,13 +26,6 @@
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
-#include "QDPixMap.h"
-#include "Rect2i.h"
-#include "ResTypeID.h"
-#include "SharedTypes.h"
-#include "UTF8.h"
-#include "WindowDef.h"
-#include "WindowManager.h"
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
@@ -388,7 +389,7 @@ namespace PortabilityLayer
 						Rect2i windowFullRect = WindowManager::GetInstance()->GetWindowFullRect(window);
 						if (!windowFullRect.Contains(Vec2i(mouseEvent.m_x, mouseEvent.m_y)))
 						{
-							PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+							PLDrivers::GetSystemServices()->Beep();
 							continue;
 						}
 					}
@@ -759,7 +760,7 @@ namespace PortabilityLayer
 		// If sound index is 0, play no sound
 
 		if (soundIndexes[0] != 0)
-			PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+			PLDrivers::GetSystemServices()->Beep();
 
 		const Rect dialogRect = alertResData.m_rect.ToRect();
 
@@ -830,7 +831,7 @@ namespace PortabilityLayer
 	void DialogManagerImpl::PositionWindow(Window *window, const Rect &rect) const
 	{
 		unsigned int displayWidth, displayHeight;
-		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight);
+		PLDrivers::GetDisplayDriver()->GetDisplayResolution(&displayWidth, &displayHeight);
 
 		const unsigned int halfDisplayHeight = displayHeight / 2;
 		const unsigned int quarterDisplayWidth = displayHeight / 4;

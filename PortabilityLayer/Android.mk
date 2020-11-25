@@ -33,15 +33,7 @@ LOCAL_SRC_FILES := \
 	FontManager.cpp	\
 	FontRenderer.cpp	\
 	GPArchive.cpp	\
-	HostAudioDriver.cpp	\
-	HostDisplayDriver.cpp	\
-	HostFileSystem.cpp	\
-	HostFontHandler.cpp	\
-	HostInputDriver.cpp	\
-	HostLogDriver.cpp	\
 	HostSuspendHook.cpp	\
-	HostSystemServices.cpp	\
-	HostVOSEventQueue.cpp	\
 	IconLoader.cpp	\
 	InputManager.cpp	\
 	LinePlotter.cpp	\
@@ -59,6 +51,7 @@ LOCAL_SRC_FILES := \
 	PLCore.cpp	\
 	PLCTabReducer.cpp	\
 	PLDialogs.cpp	\
+	PLDrivers.cpp	\
 	PLEditboxWidget.cpp	\
 	PLEventQueue.cpp	\
 	PLHacks.cpp	\

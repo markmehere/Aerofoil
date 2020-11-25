@@ -2,19 +2,11 @@
 #include "DisplayDeviceManager.h"
 #include "FontFamily.h"
 #include "FontManager.h"
-#include "HostDisplayDriver.h"
 #include "IGpFont.h"
 #include "IGpDisplayDriver.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"
 #include "SimpleGraphic.h"
-#include "PLBigEndian.h"
-#include "PLCore.h"
-#include "PLPasStr.h"
-#include "PLResources.h"
-#include "PLStandardColors.h"
-#include "PLTimeTaggedVOSEvent.h"
-#include "PLQDOffscreen.h"
 #include "RenderedFont.h"
 #include "QDGraf.h"
 #include "QDManager.h"
@@ -22,6 +14,15 @@
 #include "RGBAColor.h"
 #include "ResolveCachingColor.h"
 #include "Vec2i.h"
+
+#include "PLBigEndian.h"
+#include "PLCore.h"
+#include "PLDrivers.h"
+#include "PLPasStr.h"
+#include "PLResources.h"
+#include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
+#include "PLQDOffscreen.h"
 
 #include <stdint.h>
 #include <assert.h>
@@ -840,7 +841,7 @@ namespace PortabilityLayer
 		}
 
 		unsigned int width;
-		HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, nullptr);
+		PLDrivers::GetDisplayDriver()->GetDisplayResolution(&width, nullptr);
 
 		GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
@@ -1307,7 +1308,7 @@ namespace PortabilityLayer
 		if (m_isTouchScreen)
 		{
 			unsigned int displayHeight = 0;
-			PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+			PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
 			return y >= (static_cast<int32_t>(displayHeight - kTouchscreenMenuBarHeight)) && y < static_cast<int32_t>(displayHeight);
 		}
 		else
@@ -1388,7 +1389,7 @@ namespace PortabilityLayer
 					int32_t popupBottom = static_cast<int32_t>(m_popupPosition.m_y + menu->layoutFinalHeight);
 
 					unsigned int displayHeight = 0;
-					PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+					PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
 					if (popupBottom > static_cast<int32_t>(displayHeight))
 						m_popupPosition.m_y -= popupBottom - static_cast<int32_t>(displayHeight);
 				}

@@ -12,15 +12,13 @@
 #include "FontFamily.h"
 #include "FontManager.h"
 #include "GpVOSEvent.h"
-#include "HostDirectoryCursor.h"
-#include "HostFileSystem.h"
+#include "IGpDirectoryCursor.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
-#include "HostDisplayDriver.h"
-#include "HostSystemServices.h"
-#include "HostVOSEventQueue.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriver.h"
+#include "IGpFileSystem.h"
+#include "IGpSystemServices.h"
 #include "IGpThreadRelay.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
@@ -33,17 +31,19 @@
 #include "RenderedFont.h"
 #include "ResTypeID.h"
 #include "RandomNumberGenerator.h"
+#include "QDManager.h"
+#include "Vec2i.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
+
 #include "PLArrayViewIterator.h"
 #include "PLBigEndian.h"
+#include "PLDrivers.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
-#include "QDManager.h"
-#include "Vec2i.h"
-#include "WindowDef.h"
-#include "WindowManager.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -96,7 +96,7 @@ static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 
 void InitCursor()
 {
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kArrow);
+	PLDrivers::GetDisplayDriver()->SetStandardCursor(EGpStandardCursors::kArrow);
 }
 
 Rect BERect::ToRect() const
@@ -121,7 +121,7 @@ Point BEPoint::ToPoint() const
 
 void HideCursor()
 {
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kHidden);
+	PLDrivers::GetDisplayDriver()->SetStandardCursor(EGpStandardCursors::kHidden);
 }
 
 void Delay(int ticks, UInt32 *endTickCount)
@@ -437,8 +437,8 @@ PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfo)
 DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
-	PortabilityLayer::HostFileSystem *fs = PortabilityLayer::HostFileSystem::GetInstance();
-	PortabilityLayer::HostDirectoryCursor *dirCursor = fs->ScanDirectory(dirID);
+	IGpFileSystem *fs = PLDrivers::GetFileSystem();
+	IGpDirectoryCursor *dirCursor = fs->ScanDirectory(dirID);
 
 	DirectoryFileListEntry *firstDFL = nullptr;
 	DirectoryFileListEntry *lastDFL = nullptr;
@@ -568,7 +568,7 @@ void GetTime(DateTimeRec *dateTime)
 	unsigned int hour;
 	unsigned int minute;
 	unsigned int second;
-	PortabilityLayer::HostSystemServices::GetInstance()->GetLocalDateTime(year, month, day, hour, minute, second);
+	PLDrivers::GetSystemServices()->GetLocalDateTime(year, month, day, hour, minute, second);
 
 	dateTime->month = month;
 	dateTime->hour = hour;
@@ -678,8 +678,8 @@ void PL_Init()
 	PortabilityLayer::QDManager::GetInstance()->Init();
 	PortabilityLayer::MenuManager::GetInstance()->Init();
 
-	PortabilityLayer::HostFileSystem::GetInstance()->SetMainThreadRelay(PLMainThreadRelay::GetInstance());
-	PortabilityLayer::HostFileSystem::GetInstance()->SetDelayCallback(PLSysCalls::Sleep);
+	PLDrivers::GetFileSystem()->SetMainThreadRelay(PLMainThreadRelay::GetInstance());
+	PLDrivers::GetFileSystem()->SetDelayCallback(PLSysCalls::Sleep);
 }
 
 WindowPtr PL_GetPutInFrontWindowPtr()

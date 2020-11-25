@@ -1,8 +1,8 @@
 #include "GpFiberStarter.h"
 #include "GpFiber_SDL.h"
 
-#include "HostSystemServices.h"
-#include "HostThreadEvent.h"
+#include "IGpSystemServices.h"
+#include "IGpThreadEvent.h"
 
 #include "SDL_thread.h"
 
@@ -13,8 +13,8 @@ namespace GpFiberStarter_SDL
 	struct FiberStartState
 	{
 		GpFiberStarter::ThreadFunc_t m_threadFunc;
-		PortabilityLayer::HostThreadEvent *m_creatingReturnEvent;
-		PortabilityLayer::HostThreadEvent *m_creatingWakeEvent;
+		IGpThreadEvent *m_creatingReturnEvent;
+		IGpThreadEvent *m_creatingWakeEvent;
 		void *m_context;
 	};
 
@@ -23,8 +23,8 @@ namespace GpFiberStarter_SDL
 		const FiberStartState *tss = static_cast<const FiberStartState*>(lpThreadParameter);
 
 		GpFiberStarter::ThreadFunc_t threadFunc = tss->m_threadFunc;
-		PortabilityLayer::HostThreadEvent *creatingReturnEvent = tss->m_creatingReturnEvent;
-		PortabilityLayer::HostThreadEvent *wakeEvent = tss->m_creatingWakeEvent;
+		IGpThreadEvent *creatingReturnEvent = tss->m_creatingReturnEvent;
+		IGpThreadEvent *wakeEvent = tss->m_creatingWakeEvent;
 		void *context = tss->m_context;
 		creatingReturnEvent->Signal();
 
@@ -36,13 +36,13 @@ namespace GpFiberStarter_SDL
 	}
 }
 
-IGpFiber *GpFiberStarter::StartFiber(PortabilityLayer::HostSystemServices *systemServices, ThreadFunc_t threadFunc, void *context, IGpFiber *creatingFiber)
+IGpFiber *GpFiberStarter::StartFiber(IGpSystemServices *systemServices, ThreadFunc_t threadFunc, void *context, IGpFiber *creatingFiber)
 {
-	PortabilityLayer::HostThreadEvent *returnEvent = systemServices->CreateThreadEvent(true, false);
+	IGpThreadEvent *returnEvent = systemServices->CreateThreadEvent(true, false);
 	if (!returnEvent)
 		return nullptr;
 
-	PortabilityLayer::HostThreadEvent *wakeEvent = systemServices->CreateThreadEvent(true, false);
+	IGpThreadEvent *wakeEvent = systemServices->CreateThreadEvent(true, false);
 	if (!wakeEvent)
 	{
 		returnEvent->Destroy();

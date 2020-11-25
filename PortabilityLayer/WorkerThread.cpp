@@ -1,6 +1,8 @@
 #include "WorkerThread.h"
-#include "HostSystemServices.h"
-#include "HostThreadEvent.h"
+#include "IGpThreadEvent.h"
+#include "IGpSystemServices.h"
+
+#include "PLDrivers.h"
 
 #include <stdlib.h>
 #include <new>
@@ -23,8 +25,8 @@ namespace PortabilityLayer
 		static int StaticThreadFuncThunk(void *context);
 		int ThreadFunc();
 
-		HostThreadEvent *m_wakeSignal;
-		HostThreadEvent *m_wakeConsumedSignal;
+		IGpThreadEvent *m_wakeSignal;
+		IGpThreadEvent *m_wakeConsumedSignal;
 
 		Callback_t m_waitingCallback;
 		void *m_waitingContext;
@@ -106,7 +108,7 @@ int PortabilityLayer::WorkerThreadImpl::ThreadFunc()
 
 bool PortabilityLayer::WorkerThreadImpl::Init()
 {
-	HostSystemServices *sysServices = HostSystemServices::GetInstance();
+	IGpSystemServices *sysServices = PLDrivers::GetSystemServices();
 
 	m_wakeSignal = sysServices->CreateThreadEvent(true, false);
 	if (!m_wakeSignal)

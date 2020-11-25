@@ -16,9 +16,8 @@
 #include "IGpPrefsHandler.h"
 #include "GpIOStream.h"
 #include "MemoryManager.h"
-#include "HostAudioDriver.h"
-#include "HostDisplayDriver.h"
-#include "HostInputDriver.h"
+
+#include "PLDrivers.h"
 
 
 #define	kPrefCreatorType	'ozm5'
@@ -333,23 +332,23 @@ Boolean DeletePrefs ()
 //--------------------------------------------------------------  RunFunctionOnAllPrefsHandlers
 bool RunFunctionOnAllPrefsHandlers (void *context, bool (*func) (void *context, IGpPrefsHandler *handler))
 {
-	IGpPrefsHandler *ddHandler = PortabilityLayer::HostDisplayDriver::GetInstance()->GetPrefsHandler();
+	IGpPrefsHandler *ddHandler = PLDrivers::GetDisplayDriver()->GetPrefsHandler();
 	if (ddHandler && !func(context, ddHandler))
 		return false;
 
 
-	if (IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance())
+	if (IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver())
 	{
 		IGpPrefsHandler *adHandler = audioDriver->GetPrefsHandler();
 		if (adHandler && !func(context, adHandler))
 			return false;
 	}
 
-	size_t numInputDrivers = PortabilityLayer::HostInputDriver::NumInstances();
+	size_t numInputDrivers = PLDrivers::GetNumInputDrivers();
 
 	for (size_t i = 0; i < numInputDrivers; i++)
 	{
-		IGpPrefsHandler *idHandler = PortabilityLayer::HostInputDriver::GetInstance(i)->GetPrefsHandler();
+		IGpPrefsHandler *idHandler = PLDrivers::GetInputDriver(i)->GetPrefsHandler();
 		if (idHandler && !func(context, idHandler))
 			return false;
 	}

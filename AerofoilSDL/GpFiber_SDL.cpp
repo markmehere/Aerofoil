@@ -1,8 +1,7 @@
 #include "GpFiber_SDL.h"
-#include "HostSystemServices.h"
-#include "HostThreadEvent.h"
+#include "IGpThreadEvent.h"
 
-GpFiber_SDL::GpFiber_SDL(SDL_Thread *thread, PortabilityLayer::HostThreadEvent *threadEvent)
+GpFiber_SDL::GpFiber_SDL(SDL_Thread *thread, IGpThreadEvent *threadEvent)
 	: m_event(threadEvent)
 	, m_thread(thread)
 {

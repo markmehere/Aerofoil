@@ -6,11 +6,11 @@
 #include "GpDisplayDriverProperties.h"
 #include "GpVOSEvent.h"
 #include "GpRingBuffer.h"
-#include "HostSystemServices.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriverSurface.h"
 #include "IGpLogDriver.h"
 #include "IGpPrefsHandler.h"
+#include "IGpSystemServices.h"
 #include "IGpVOSEventQueue.h"
 
 #include "SDL_events.h"
@@ -897,7 +897,7 @@ private:
 	bool m_mouseIsInClientArea;
 
 	IGpFiber *m_vosFiber;
-	PortabilityLayer::HostThreadEvent *m_vosEvent;
+	IGpThreadEvent *m_vosEvent;
 
 	float m_bgColor[4];
 	bool m_bgIsDark;

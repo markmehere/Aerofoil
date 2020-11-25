@@ -2,10 +2,10 @@
 
 #include <stdint.h>
 
-#include "HostVOSEventQueue.h"
+#include "IGpVOSEventQueue.h"
 #include "GpVOSEvent.h"
 
-class GpVOSEventQueue final : public PortabilityLayer::HostVOSEventQueue
+class GpVOSEventQueue final : public IGpVOSEventQueue
 {
 public:
 	GpVOSEventQueue();

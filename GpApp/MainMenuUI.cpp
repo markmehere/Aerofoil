@@ -2,14 +2,9 @@
 
 #include "FontFamily.h"
 #include "GpApplicationName.h"
-#include "HostDisplayDriver.h"
 #include "GliderProtos.h"
 #include "Externs.h"
 #include "IGpDisplayDriver.h"
-#include "PLCore.h"
-#include "PLQDraw.h"
-#include "PLStandardColors.h"
-#include "PLSysCalls.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
 #include "MainMenuUI.h"
@@ -18,6 +13,12 @@
 #include "WindowDef.h"
 #include "WindowManager.h"
 #include "Vec2i.h"
+
+#include "PLCore.h"
+#include "PLDrivers.h"
+#include "PLQDraw.h"
+#include "PLStandardColors.h"
+#include "PLSysCalls.h"
 
 struct MainMenuControlState
 {
@@ -169,7 +170,7 @@ static void DrawMainMenuControl(DrawSurface *surface, MainMenuUIState::ControlID
 void StartScrollForPage()
 {
 	unsigned int displayHeight = 0;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
 
 	DismissMainMenuUI();
 
@@ -263,7 +264,7 @@ void StartMainMenuUI()
 static void DismissMainMenuUIPage()
 {
 	unsigned int displayHeight = 0;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
 
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
@@ -293,7 +294,7 @@ void TickMainMenuUI()
 		PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
 		unsigned int displayHeight = 0;
-		PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+		PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
 
 		mainMenu.m_scrollInStep -= MainMenuUIState::kControlScrollInDecay;
 		mainMenu.m_scrollInOffset -= (mainMenu.m_scrollInStep >> MainMenuUIState::kControlScrollInDecayFalloffBits);
@@ -328,7 +329,7 @@ void HandleMainMenuUIResolutionChange()
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
 	unsigned int displayHeight = 0;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &displayHeight);
+	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
 
 	for (int i = 0; i < MainMenuUIState::Control_Count; i++)
 	{

@@ -2,19 +2,21 @@
 
 #include "FontFamily.h"
 #include "FontManager.h"
-#include "HostSystemServices.h"
+#include "IGpSystemServices.h"
 #include "InputManager.h"
 #include "MacRomanConversion.h"
 #include "MemoryManager.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
+#include "ResolveCachingColor.h"
+#include "TextPlacer.h"
+#include "Rect2i.h"
+
+#include "PLDrivers.h"
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
-#include "ResolveCachingColor.h"
-#include "TextPlacer.h"
-#include "Rect2i.h"
 
 #include <algorithm>
 
@@ -44,7 +46,7 @@ namespace PortabilityLayer
 	EditboxWidget::~EditboxWidget()
 	{
 		if (m_hasFocus)
-			PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(false);
+			PLDrivers::GetSystemServices()->SetTextInputEnabled(false);
 
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 
@@ -160,13 +162,13 @@ namespace PortabilityLayer
 			DrawControl(surface);
 		}
 
-		PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(true);
+		PLDrivers::GetSystemServices()->SetTextInputEnabled(true);
 	}
 
 	void EditboxWidget::LoseFocus()
 	{
 		if (m_hasFocus)
-			PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(false);
+			PLDrivers::GetSystemServices()->SetTextInputEnabled(false);
 
 		m_hasFocus = false;
 		m_selStartChar = 0;
@@ -782,7 +784,7 @@ namespace PortabilityLayer
 				if (mouseEvent.m_eventType == GpMouseEventTypes::kUp)
 				{
 					// Re-enable text input if it was dismissed
-					PortabilityLayer::HostSystemServices::GetInstance()->SetTextInputEnabled(true);
+					PLDrivers::GetSystemServices()->SetTextInputEnabled(true);
 
 					m_caratScrollLocked = false;
 					m_isDraggingSelection = false;

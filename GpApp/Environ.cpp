@@ -5,17 +5,17 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
-#include "PLResources.h"
-#include "PLPasStr.h"
 #include "DisplayDeviceManager.h"
 #include "Externs.h"
 #include "Environ.h"
-#include "HostDisplayDriver.h"
-#include "HostSystemServices.h"
 #include "MenuManager.h"
 #include "IGpDisplayDriver.h"
+#include "IGpSystemServices.h"
 #include "WindowManager.h"
+
+#include "PLDrivers.h"
+#include "PLResources.h"
+#include "PLPasStr.h"
 
 #include <algorithm>
 
@@ -301,8 +301,8 @@ void CheckOurEnvirons (void)
 	thisMac.numScreens = HowManyUsableScreens(false, true, true);
 
 	thisMac.isResolutionDirty = true;
-	thisMac.isTouchscreen = PortabilityLayer::HostSystemServices::GetInstance()->IsTouchscreen();
-	thisMac.isMouseTouchscreen = PortabilityLayer::HostSystemServices::GetInstance()->IsUsingMouseAsTouch();
+	thisMac.isTouchscreen = PLDrivers::GetSystemServices()->IsTouchscreen();
+	thisMac.isMouseTouchscreen = PLDrivers::GetSystemServices()->IsUsingMouseAsTouch();
 
 	FlushResolutionChange();
 }
@@ -415,14 +415,14 @@ void HandleDepthSwitching (void)
 
 	thisMac.isDepth = isDepthPref;
 
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetUseICCProfile(isUseICCProfile != 0);
+	PLDrivers::GetDisplayDriver()->SetUseICCProfile(isUseICCProfile != 0);
 }
 
 void GetDeviceRect(Rect *rect)
 {
 	unsigned int width;
 	unsigned int height;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&width, &height);
+	PLDrivers::GetDisplayDriver()->GetDisplayResolution(&width, &height);
 
 	SetRect(rect, 0, 0, static_cast<short>(width), static_cast<short>(height));
 }

@@ -5,12 +5,9 @@
 //============================================================================
 
 
-#include "PLNumberFormatting.h"
-#include "PLPasStr.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
-#include "HostDisplayDriver.h"
 #include "House.h"
 #include "IGpDisplayDriver.h"
 #include "InputManager.h"
@@ -23,6 +20,9 @@
 #include "WindowDef.h"
 #include "WindowManager.h"
 
+#include "PLDrivers.h"
+#include "PLNumberFormatting.h"
+#include "PLPasStr.h"
 
 #define kMainWindowID			128
 #define kEditWindowID			129

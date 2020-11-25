@@ -1,6 +1,6 @@
 #include "GpSystemServices_Android.h"
-#include "HostMutex.h"
-#include "HostThreadEvent.h"
+#include "IGpMutex.h"
+#include "IGpThreadEvent.h"
 #include "SDL.h"
 
 #include <time.h>
@@ -12,7 +12,7 @@ struct GpSystemServices_Android_ThreadStartParams
 {
 	GpSystemServices_Android::ThreadFunc_t m_threadFunc;
 	void *m_threadContext;
-	PortabilityLayer::HostThreadEvent *m_threadStartEvent;
+	IGpThreadEvent *m_threadStartEvent;
 };
 
 static int SDLCALL StaticStartThread(void *lpThreadParameter)
@@ -21,7 +21,7 @@ static int SDLCALL StaticStartThread(void *lpThreadParameter)
 
 	GpSystemServices_Android::ThreadFunc_t threadFunc = threadParams->m_threadFunc;
 	void *threadContext = threadParams->m_threadContext;
-	PortabilityLayer::HostThreadEvent *threadStartEvent = threadParams->m_threadStartEvent;
+	IGpThreadEvent *threadStartEvent = threadParams->m_threadStartEvent;
 
 	threadStartEvent->Signal();
 
@@ -29,7 +29,7 @@ static int SDLCALL StaticStartThread(void *lpThreadParameter)
 }
 
 template<class TMutex>
-class GpMutex_Cpp11 final : public PortabilityLayer::HostMutex
+class GpMutex_Cpp11 final : public IGpMutex
 {
 public:
 	GpMutex_Cpp11();
@@ -77,7 +77,7 @@ typedef GpMutex_Cpp11<std::mutex> GpMutex_Cpp11_Vanilla;
 typedef GpMutex_Cpp11<std::recursive_mutex> GpMutex_Cpp11_Recursive;
 
 
-class GpThreadEvent_Cpp11 final : public PortabilityLayer::HostThreadEvent
+class GpThreadEvent_Cpp11 final : public IGpThreadEvent
 {
 public:
 	GpThreadEvent_Cpp11(bool autoReset, bool startSignaled);
@@ -187,7 +187,7 @@ void GpSystemServices_Android::GetLocalDateTime(unsigned int &year, unsigned int
 	second = static_cast<unsigned int>(tmObject->tm_sec);
 }
 
-PortabilityLayer::HostMutex *GpSystemServices_Android::CreateMutex()
+IGpMutex *GpSystemServices_Android::CreateMutex()
 {
 	GpMutex_Cpp11_Vanilla *mutex = static_cast<GpMutex_Cpp11_Vanilla*>(malloc(sizeof(GpMutex_Cpp11_Vanilla)));
 	if (!mutex)
@@ -199,7 +199,7 @@ PortabilityLayer::HostMutex *GpSystemServices_Android::CreateMutex()
 
 void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *context)
 {
-	PortabilityLayer::HostThreadEvent *evt = CreateThreadEvent(true, false);
+	IGpThreadEvent *evt = CreateThreadEvent(true, false);
 	if (!evt)
 		return nullptr;
 
@@ -221,7 +221,7 @@ void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *cont
 	return thread;
 }
 
-PortabilityLayer::HostMutex *GpSystemServices_Android::CreateRecursiveMutex()
+IGpMutex *GpSystemServices_Android::CreateRecursiveMutex()
 {
 	GpMutex_Cpp11_Recursive *mutex = static_cast<GpMutex_Cpp11_Recursive*>(malloc(sizeof(GpMutex_Cpp11_Recursive)));
 	if (!mutex)
@@ -230,7 +230,7 @@ PortabilityLayer::HostMutex *GpSystemServices_Android::CreateRecursiveMutex()
 	return new (mutex) GpMutex_Cpp11_Recursive();
 }
 
-PortabilityLayer::HostThreadEvent *GpSystemServices_Android::CreateThreadEvent(bool autoReset, bool startSignaled)
+IGpThreadEvent *GpSystemServices_Android::CreateThreadEvent(bool autoReset, bool startSignaled)
 {
 	GpThreadEvent_Cpp11 *evt = static_cast<GpThreadEvent_Cpp11*>(malloc(sizeof(GpThreadEvent_Cpp11)));
 	if (!evt)

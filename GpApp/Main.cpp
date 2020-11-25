@@ -8,18 +8,13 @@
 
 #include "WindowDef.h"
 #include "BitmapImage.h"
-#include "PLApplication.h"
-#include "PLKeyEncoding.h"
-#include "PLStandardColors.h"
-#include "PLSysCalls.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
 #include "GpRenderedFontMetrics.h"
-#include "HostDisplayDriver.h"
-#include "HostSystemServices.h"
-#include "HostThreadEvent.h"
+#include "IGpThreadEvent.h"
 #include "IGpDisplayDriver.h"
+#include "IGpSystemServices.h"
 #include "GpIOStream.h"
 #include "House.h"
 #include "MainMenuUI.h"
@@ -33,6 +28,12 @@
 #include "Utilities.h"
 #include "WindowManager.h"
 #include "WorkerThread.h"
+
+#include "PLApplication.h"
+#include "PLDrivers.h"
+#include "PLKeyEncoding.h"
+#include "PLStandardColors.h"
+#include "PLSysCalls.h"
 
 #include <atomic>
 
@@ -247,7 +248,7 @@ void ReadInPrefs (void)
 		doPrettyMap = false;
 		doComplainDialogs = true;
 
-		IGpDisplayDriver *displayDriver = PortabilityLayer::HostDisplayDriver::GetInstance();
+		IGpDisplayDriver *displayDriver = PLDrivers::GetDisplayDriver();
 		if (!displayDriver->IsFullScreen())
 			displayDriver->RequestToggleFullScreen(0);
 
@@ -496,7 +497,7 @@ struct PreloadFontSpec
 
 struct PreloadFontWorkSlot
 {
-	PortabilityLayer::HostThreadEvent *m_completedEvent;
+	IGpThreadEvent *m_completedEvent;
 	PortabilityLayer::WorkerThread *m_workerThread;
 	std::atomic<int> m_singleJobCompleted;
 	const PreloadFontSpec *m_spec;
@@ -581,7 +582,7 @@ void PreloadFonts()
 	// but we can do this to unclog the render thread.
 	PreloadFontWorkSlot slot;
 	slot.m_workerThread = PortabilityLayer::WorkerThread::Create();
-	slot.m_completedEvent = PortabilityLayer::HostSystemServices::GetInstance()->CreateThreadEvent(true, false);
+	slot.m_completedEvent = PLDrivers::GetSystemServices()->CreateThreadEvent(true, false);
 
 	while (completedSpecs < numFontSpecs)
 	{

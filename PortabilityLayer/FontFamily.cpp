@@ -1,9 +1,10 @@
 #include "FontFamily.h"
 #include "GpIOStream.h"
-#include "HostFileSystem.h"
+#include "IGpFileSystem.h"
 #include "IGpFontHandler.h"
-#include "HostFontHandler.h"
 #include "IGpFont.h"
+
+#include "PLDrivers.h"
 
 #include <stdlib.h>
 #include <new>
@@ -12,11 +13,11 @@ namespace PortabilityLayer
 {
 	void FontFamily::AddFont(int flags, const char *path, FontHacks fontHacks)
 	{
-		GpIOStream *sysFontStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, GpFileCreationDispositions::kOpenExisting);
+		GpIOStream *sysFontStream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, GpFileCreationDispositions::kOpenExisting);
 		if (!sysFontStream)
 			return;
 
-		IGpFontHandler *fontHandler = PortabilityLayer::HostFontHandler::GetInstance();
+		IGpFontHandler *fontHandler = PLDrivers::GetFontHandler();
 
 		IGpFont *font = fontHandler->LoadFont(sysFontStream);
 

@@ -6,13 +6,14 @@
 
 
 #include "Externs.h"
-#include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
 #include "InputManager.h"
 #include "Marquee.h"
 #include "Objects.h"
 #include "ObjectEdit.h"
 #include "RectUtils.h"
+
+#include "PLDrivers.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -222,7 +223,7 @@ void DragMarqueeRect (Window *window, DrawSurface *surface, Point start, Rect *t
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
 	
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(handCursor);
+	PLDrivers::GetDisplayDriver()->SetCursor(handCursor);
 	StopMarquee();
 
 	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
@@ -265,9 +266,9 @@ void DragMarqueeHandle (Window *window, DrawSurface *surface, Point start, short
 	short		deltaH, deltaV;
 	
 	if ((theMarquee.direction == kAbove) || (theMarquee.direction == kBelow))
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(vertCursor);
+		PLDrivers::GetDisplayDriver()->SetCursor(vertCursor);
 	else
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(horiCursor);
+		PLDrivers::GetDisplayDriver()->SetCursor(horiCursor);
 	StopMarquee();
 
 	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
@@ -349,7 +350,7 @@ void DragMarqueeCorner (Window *window, DrawSurface *surface, Point start, short
 	Point		wasPt, newPt;
 	short		deltaH, deltaV;
 	
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(diagCursor);
+	PLDrivers::GetDisplayDriver()->SetCursor(diagCursor);
 	StopMarquee();
 
 	const uint8_t *pattern = theMarquee.pats[theMarquee.index];

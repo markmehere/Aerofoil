@@ -8,11 +8,7 @@
 #include <stdint.h>
 
 struct IGpLogDriver;
-
-namespace PortabilityLayer
-{
-	class HostSystemServices;
-}
+struct IGpSystemServices;
 
 struct GpGlobalConfig
 {
@@ -24,7 +20,7 @@ struct GpGlobalConfig
 	size_t m_numInputDrivers;
 
 	IGpLogDriver *m_logger;
-	PortabilityLayer::HostSystemServices *m_systemServices;
+	IGpSystemServices *m_systemServices;
 	void *m_osGlobals;
 };
 

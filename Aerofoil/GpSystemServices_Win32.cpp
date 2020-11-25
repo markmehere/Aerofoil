@@ -13,7 +13,7 @@ struct GpSystemServices_Win32_ThreadStartParams
 {
 	GpSystemServices_Win32::ThreadFunc_t m_threadFunc;
 	void *m_threadContext;
-	PortabilityLayer::HostThreadEvent *m_threadStartEvent;
+	IGpThreadEvent *m_threadStartEvent;
 };
 
 static DWORD WINAPI StaticStartThread(LPVOID lpThreadParameter)
@@ -22,7 +22,7 @@ static DWORD WINAPI StaticStartThread(LPVOID lpThreadParameter)
 
 	GpSystemServices_Win32::ThreadFunc_t threadFunc = threadParams->m_threadFunc;
 	void *threadContext = threadParams->m_threadContext;
-	PortabilityLayer::HostThreadEvent *threadStartEvent = threadParams->m_threadStartEvent;
+	IGpThreadEvent *threadStartEvent = threadParams->m_threadStartEvent;
 
 	threadStartEvent->Signal();
 
@@ -72,24 +72,24 @@ void GpSystemServices_Win32::GetLocalDateTime(unsigned int &year, unsigned int &
 	second = localTime.wSecond;
 }
 
-PortabilityLayer::HostMutex *GpSystemServices_Win32::CreateMutex()
+IGpMutex *GpSystemServices_Win32::CreateMutex()
 {
 	return GpMutex_Win32::Create();
 }
 
-PortabilityLayer::HostMutex *GpSystemServices_Win32::CreateRecursiveMutex()
+IGpMutex *GpSystemServices_Win32::CreateRecursiveMutex()
 {
 	return GpMutex_Win32::Create();
 }
 
-PortabilityLayer::HostThreadEvent *GpSystemServices_Win32::CreateThreadEvent(bool autoReset, bool startSignaled)
+IGpThreadEvent *GpSystemServices_Win32::CreateThreadEvent(bool autoReset, bool startSignaled)
 {
 	return GpThreadEvent_Win32::Create(autoReset, startSignaled);
 }
 
 void *GpSystemServices_Win32::CreateThread(ThreadFunc_t threadFunc, void *context)
 {
-	PortabilityLayer::HostThreadEvent *evt = CreateThreadEvent(true, false);
+	IGpThreadEvent *evt = CreateThreadEvent(true, false);
 	if (!evt)
 		return nullptr;
 

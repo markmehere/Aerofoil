@@ -1,15 +1,9 @@
 #include "WindowManager.h"
 
 #include "DisplayDeviceManager.h"
-#include "HostDisplayDriver.h"
-#include "HostLogDriver.h"
 #include "IGpDisplayDriver.h"
 #include "IGpDisplayDriverSurface.h"
 #include "IGpLogDriver.h"
-#include "PLCore.h"
-#include "PLEventQueue.h"
-#include "PLStandardColors.h"
-#include "PLSysCalls.h"
 #include "FontFamily.h"
 #include "MemoryManager.h"
 #include "MenuManager.h"
@@ -23,6 +17,12 @@
 #include "ResolveCachingColor.h"
 #include "Vec2i.h"
 #include "WindowDef.h"
+
+#include "PLCore.h"
+#include "PLDrivers.h"
+#include "PLEventQueue.h"
+#include "PLStandardColors.h"
+#include "PLSysCalls.h"
 
 #include <algorithm>
 
@@ -1301,7 +1301,7 @@ namespace PortabilityLayer
 		const bool haveExclusiveWindow = (m_exclusiveWindow != nullptr);
 
 		if (hadExclusiveWindow != haveExclusiveWindow)
-			HostDisplayDriver::GetInstance()->SetBackgroundDarkenEffect(haveExclusiveWindow);
+			PLDrivers::GetDisplayDriver()->SetBackgroundDarkenEffect(haveExclusiveWindow);
 	}
 
 	void WindowManagerImpl::FlickerWindowIn(Window *window, int32_t velocity)
@@ -1436,7 +1436,7 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight)
 	{
-		IGpLogDriver *logger = PortabilityLayer::HostLogDriver::GetInstance();
+		IGpLogDriver *logger = PLDrivers::GetLogDriver();
 
 		if (logger)
 			logger->Printf(IGpLogDriver::Category_Information, "WindowManagerImpl: Resizing from %ix%i to %ix%i", static_cast<int>(prevWidth), static_cast<int>(prevHeight), static_cast<int>(newWidth), static_cast<int>(newHeight));
@@ -1530,7 +1530,7 @@ namespace PortabilityLayer
 
 	void WindowManagerImpl::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b)
 	{
-		HostDisplayDriver::GetInstance()->SetBackgroundColor(r, g, b, 255);
+		PLDrivers::GetDisplayDriver()->SetBackgroundColor(r, g, b, 255);
 	}
 
 	void WindowManagerImpl::ResizeWindow(Window *window, int width, int height)

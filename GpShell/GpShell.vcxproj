@@ -81,7 +81,6 @@
     <ClCompile Include="GpGlobalConfig.cpp" />
     <ClCompile Include="GpInputDriverFactory.cpp" />
     <ClCompile Include="GpMain.cpp" />
-    <ClCompile Include="GpMemoryBuffer.cpp" />
     <ClCompile Include="GpVOSEventQueue.cpp" />
   </ItemGroup>
   <ItemGroup>

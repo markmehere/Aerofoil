@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HostSystemServices.h"
+#include "IGpSystemServices.h"
 #include "GpCoreDefs.h"
 #include "GpWindows.h"
 
@@ -15,17 +15,17 @@
 #endif
 
 
-class GpSystemServices_Win32 final : public PortabilityLayer::HostSystemServices
+class GpSystemServices_Win32 final : public IGpSystemServices
 {
 public:
 	GpSystemServices_Win32();
 
 	int64_t GetTime() const override;
 	void GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const override;
-	PortabilityLayer::HostMutex *CreateMutex() override;
-	PortabilityLayer::HostMutex *CreateRecursiveMutex() override;
+	IGpMutex *CreateMutex() override;
+	IGpMutex *CreateRecursiveMutex() override;
 	void *CreateThread(ThreadFunc_t threadFunc, void *context) override;
-	PortabilityLayer::HostThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
+	IGpThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
 	uint64_t GetFreeMemoryCosmetic() const override;
 	void Beep() const override;
 	bool IsTouchscreen() const override;

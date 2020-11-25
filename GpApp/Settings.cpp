@@ -5,22 +5,22 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-#include "PLArrayView.h"
-#include "PLKeyEncoding.h"
-#include "PLSound.h"
-#include "PLStandardColors.h"
-#include "PLTimeTaggedVOSEvent.h"
-#include "PLWidgets.h"
 #include "ResolveCachingColor.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
 #include "Environ.h"
-#include "HostDisplayDriver.h"
 #include "House.h"
 #include "IGpDisplayDriver.h"
 #include "WindowManager.h"
 
+#include "PLArrayView.h"
+#include "PLDrivers.h"
+#include "PLKeyEncoding.h"
+#include "PLSound.h"
+#include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
+#include "PLWidgets.h"
 
 #define kMainPrefsDialID		1012
 #define kDisplayPrefsDialID		1017
@@ -1285,7 +1285,7 @@ void DoSettingsMain (void)
 	leaving = false;
 	nextRestartChange = false;
 
-	wasFullscreenPref = PortabilityLayer::HostDisplayDriver::GetInstance()->IsFullScreen();
+	wasFullscreenPref = PLDrivers::GetDisplayDriver()->IsFullScreen();
 
 	Window* exclWindow = prefDlg->GetWindow();
 
@@ -1344,7 +1344,7 @@ void DoSettingsMain (void)
 		nextRestartChange = false;
 	}
 
-	IGpDisplayDriver *displayDriver = PortabilityLayer::HostDisplayDriver::GetInstance();
+	IGpDisplayDriver *displayDriver = PLDrivers::GetDisplayDriver();
 
 	if (displayDriver->IsFullScreen() != (wasFullscreenPref != 0))
 	{
@@ -1354,11 +1354,11 @@ void DoSettingsMain (void)
 
 	if (needResolutionReset)
 	{
-		PortabilityLayer::HostDisplayDriver::GetInstance()->RequestResetVirtualResolution();
+		displayDriver->RequestResetVirtualResolution();
 		needResolutionReset = false;
 	}
 
-	PortabilityLayer::HostDisplayDriver::GetInstance()->SetUseICCProfile(isUseICCProfile);
+	displayDriver->SetUseICCProfile(isUseICCProfile);
 
 	WriteOutPrefs();
 }

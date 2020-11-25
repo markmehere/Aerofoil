@@ -8,17 +8,17 @@
 
 #include "Externs.h"
 #include "Environ.h"
-#include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
 #include "GpApplicationName.h"
 #include "Map.h"
 #include "MenuManager.h"
-#include "PLKeyEncoding.h"
-#include "PLPasStr.h"
 #include "RectUtils.h"
 #include "ResourceManager.h"
 #include "Tools.h"
 
+#include "PLDrivers.h"
+#include "PLKeyEncoding.h"
+#include "PLPasStr.h"
 
 #define kHandCursorID		128
 #define kVertCursorID		129
@@ -101,7 +101,7 @@ IGpCursor *LoadBWCursor(int resID)
 
 	const BWCursor *cursorData = static_cast<const BWCursor *>(*resHdl);
 
-	IGpCursor *cursor = PortabilityLayer::HostDisplayDriver::GetInstance()->CreateBWCursor(16, 16, cursorData->m_pixels, cursorData->m_mask, cursorData->m_hotSpotX, cursorData->m_hotSpotY);
+	IGpCursor *cursor = PLDrivers::GetDisplayDriver()->CreateBWCursor(16, 16, cursorData->m_pixels, cursorData->m_mask, cursorData->m_hotSpotX, cursorData->m_hotSpotY);
 	resHdl.Dispose();
 
 	return cursor;

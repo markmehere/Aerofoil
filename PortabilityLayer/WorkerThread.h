@@ -4,8 +4,6 @@
 
 namespace PortabilityLayer
 {
-	class HostThreadEvent;
-
 	class WorkerThread
 	{
 	public:

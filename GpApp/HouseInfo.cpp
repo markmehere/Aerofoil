@@ -6,16 +6,17 @@
 //============================================================================
 
 
-#include "PLNumberFormatting.h"
-#include "PLKeyEncoding.h"
-#include "PLPasStr.h"
 #include "Externs.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
-#include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
+
 #include "PLArrayView.h"
+#include "PLDrivers.h"
 #include "PLEditboxWidget.h"
+#include "PLNumberFormatting.h"
+#include "PLKeyEncoding.h"
+#include "PLPasStr.h"
 #include "PLTimeTaggedVOSEvent.h"
 
 
@@ -179,7 +180,7 @@ int16_t HouseFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 				{
 					if (houseCursorIs != kBeamCursor)
 					{
-						PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kIBeam);
+						PLDrivers::GetDisplayDriver()->SetStandardCursor(EGpStandardCursors::kIBeam);
 						houseCursorIs = kBeamCursor;
 					}
 				}

@@ -8,13 +8,13 @@
 #include "DisplayDeviceManager.h"
 #include "GpVOSEvent.h"
 #include "IGpDisplayDriver.h"
+#include "IGpVOSEventQueue.h"
 #include "InputManager.h"
-#include "HostDisplayDriver.h"
-#include "HostFileSystem.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
-#include "HostVOSEventQueue.h"
 #include "MacRomanConversion.h"
+
+#include "PLDrivers.h"
 
 static void TranslateMouseInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
@@ -84,7 +84,7 @@ static void TranslateKeyboardInputEvent(const GpVOSEvent &vosEventBase, uint32_t
 		const KeyDownStates *keyStates = inputManager->GetKeys();
 		if (keyStates->m_special.Get(GpKeySpecials::kLeftAlt) || keyStates->m_special.Get(GpKeySpecials::kRightAlt))
 		{
-			IGpDisplayDriver *dd = PortabilityLayer::HostDisplayDriver::GetInstance();
+			IGpDisplayDriver *dd = PLDrivers::GetDisplayDriver();
 			if (dd)
 				dd->RequestToggleFullScreen(timestamp);
 		}
@@ -160,7 +160,7 @@ static void ImportVOSEvents(uint32_t timestamp)
 {
 	PortabilityLayer::EventQueue *plQueue = PortabilityLayer::EventQueue::GetInstance();
 
-	PortabilityLayer::HostVOSEventQueue *evtQueue = PortabilityLayer::HostVOSEventQueue::GetInstance();
+	IGpVOSEventQueue *evtQueue = PLDrivers::GetVOSEventQueue();
 	while (const GpVOSEvent *evt = evtQueue->GetNext())
 	{
 		TranslateVOSEvent(evt, timestamp, plQueue);

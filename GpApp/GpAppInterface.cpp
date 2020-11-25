@@ -1,19 +1,14 @@
 #include "GpAppInterface.h"
 
 #include "DisplayDeviceManager.h"
-#include "HostAudioDriver.h"
-#include "HostFileSystem.h"
-#include "HostFontHandler.h"
-#include "HostDisplayDriver.h"
-#include "HostLogDriver.h"
-#include "HostSystemServices.h"
-#include "HostInputDriver.h"
-#include "HostVOSEventQueue.h"
 #include "MenuManager.h"
 #include "WindowManager.h"
 
+#include "PLDrivers.h"
+
 int gpAppMain();
 void gpAppInit();
+
 
 class GpAppInterfaceImpl final : public GpAppInterface
 {
@@ -23,14 +18,7 @@ public:
 
 	void PL_IncrementTickCounter(uint32_t count) override;
 	void PL_Render(IGpDisplayDriver *displayDriver) override;
-	void PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance) override;
-	void PL_HostDisplayDriver_SetInstance(IGpDisplayDriver *instance) override;
-	void PL_HostInputDriver_SetInstances(IGpInputDriver *const* instances, size_t numInstances) override;
-	void PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance) override;
-	void PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance) override;
-	void PL_HostLogDriver_SetInstance(IGpLogDriver *instance) override;
-	void PL_HostFontHandler_SetInstance(IGpFontHandler *instance) override;
-	void PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance) override;
+	GpDriverCollection *PL_GetDriverCollection() override;
 	void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) override;
 	bool PL_AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY) override;
 };
@@ -56,44 +44,9 @@ void GpAppInterfaceImpl::PL_Render(IGpDisplayDriver *displayDriver)
 	PortabilityLayer::MenuManager::GetInstance()->RenderFrame(displayDriver);
 }
 
-void GpAppInterfaceImpl::PL_HostFileSystem_SetInstance(PortabilityLayer::HostFileSystem *instance)
+GpDriverCollection *GpAppInterfaceImpl::PL_GetDriverCollection()
 {
-	PortabilityLayer::HostFileSystem::SetInstance(instance);
-}
-
-void GpAppInterfaceImpl::PL_HostDisplayDriver_SetInstance(IGpDisplayDriver *instance)
-{
-	PortabilityLayer::HostDisplayDriver::SetInstance(instance);
-}
-
-void GpAppInterfaceImpl::PL_HostLogDriver_SetInstance(IGpLogDriver *instance)
-{
-	PortabilityLayer::HostLogDriver::SetInstance(instance);
-}
-
-void GpAppInterfaceImpl::PL_HostSystemServices_SetInstance(PortabilityLayer::HostSystemServices *instance)
-{
-	PortabilityLayer::HostSystemServices::SetInstance(instance);
-}
-
-void GpAppInterfaceImpl::PL_HostAudioDriver_SetInstance(IGpAudioDriver *instance)
-{
-	PortabilityLayer::HostAudioDriver::SetInstance(instance);
-}
-
-void GpAppInterfaceImpl::PL_HostInputDriver_SetInstances(IGpInputDriver *const* instances, size_t numInstances)
-{
-	PortabilityLayer::HostInputDriver::SetInstances(instances, numInstances);
-}
-
-void GpAppInterfaceImpl::PL_HostFontHandler_SetInstance(IGpFontHandler *instance)
-{
-	PortabilityLayer::HostFontHandler::SetInstance(instance);
-}
-
-void GpAppInterfaceImpl::PL_HostVOSEventQueue_SetInstance(PortabilityLayer::HostVOSEventQueue *instance)
-{
-	PortabilityLayer::HostVOSEventQueue::SetInstance(instance);
+	return PLDrivers::GetDriverCollection();
 }
 
 void GpAppInterfaceImpl::PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context)

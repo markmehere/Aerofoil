@@ -13,10 +13,10 @@
 #include "GpAppInterface.h"
 #include "GpSystemServices_Win32.h"
 #include "GpVOSEvent.h"
-#include "IGpVOSEventQueue.h"
 
-#include "HostFileSystem.h"
-#include "HostThreadEvent.h"
+#include "IGpFileSystem.h"
+#include "IGpThreadEvent.h"
+#include "IGpVOSEventQueue.h"
 
 #include "GpWindows.h"
 
@@ -56,10 +56,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	IGpLogDriver *logger = GpLogDriver_Win32::GetInstance();
+	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
 
-	GpAppInterface_Get()->PL_HostFileSystem_SetInstance(GpFileSystem_Win32::GetInstance());
-	GpAppInterface_Get()->PL_HostSystemServices_SetInstance(GpSystemServices_Win32::GetInstance());
-	GpAppInterface_Get()->PL_HostLogDriver_SetInstance(GpLogDriver_Win32::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_Win32::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kSystemServices>(GpSystemServices_Win32::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kLog>(GpLogDriver_Win32::GetInstance());
 
 	g_gpWindowsGlobals.m_hInstance = hInstance;
 	g_gpWindowsGlobals.m_hPrevInstance = hPrevInstance;

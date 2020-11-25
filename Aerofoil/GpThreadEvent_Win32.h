@@ -1,10 +1,10 @@
 #pragma once
 
-#include "HostThreadEvent.h"
+#include "IGpThreadEvent.h"
 
 #include "GpWindows.h"
 
-class GpThreadEvent_Win32 final : public PortabilityLayer::HostThreadEvent
+class GpThreadEvent_Win32 final : public IGpThreadEvent
 {
 public:
 	void Wait() override;

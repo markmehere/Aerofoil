@@ -1,6 +1,5 @@
 #include "PLResources.h"
 
-#include "HostFileSystem.h"
 #include "MemoryManager.h"
 #include "MMHandleBlock.h"
 #include "PLPasStr.h"

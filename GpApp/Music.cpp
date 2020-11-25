@@ -4,18 +4,18 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
-#include "PLResources.h"
-#include "PLSound.h"
 #include "DialogManager.h"
 #include "Environ.h"
 #include "Externs.h"
 #include "SoundSync.h"
-#include "HostMutex.h"
-#include "HostSystemServices.h"
+#include "IGpMutex.h"
+#include "IGpSystemServices.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"
 
+#include "PLDrivers.h"
+#include "PLResources.h"
+#include "PLSound.h"
 
 #define kBaseBufferMusicID			2000
 #define kMaxMusic					7
@@ -47,7 +47,7 @@ struct MusicState
 };
 
 MusicState musicState;
-PortabilityLayer::HostMutex *musicMutex;
+IGpMutex *musicMutex;
 
 
 extern	Boolean		isSoundOn;
@@ -337,7 +337,7 @@ void InitMusic (void)
 	musicState.musicSoundID = musicScore[musicState.musicCursor];
 	musicState.musicMode = kPlayWholeScoreMode;
 
-	musicMutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
+	musicMutex = PLDrivers::GetSystemServices()->CreateMutex();
 
 	PL_NotYetImplemented_TODO("MusicSync");
 

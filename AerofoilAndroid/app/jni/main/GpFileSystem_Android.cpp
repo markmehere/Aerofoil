@@ -1,11 +1,13 @@
 #define _LARGEFILE64_SOURCE
 #include "GpFileSystem_Android.h"
 #include "GpIOStream.h"
-#include "HostDirectoryCursor.h"
-#include "HostSystemServices.h"
-#include "HostMutex.h"
+#include "IGpDirectoryCursor.h"
+#include "IGpSystemServices.h"
+#include "IGpMutex.h"
 #include "IGpThreadRelay.h"
 #include "VirtualDirectory.h"
+
+#include "PLDrivers.h"
 
 #include "SDL.h"
 #include "SDL_rwops.h"
@@ -380,7 +382,7 @@ void GpFileStream_Android_File::Flush()
 bool GpFileSystem_Android::OpenSourceExportFD(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths, int &fd, jobject &pfd)
 {
 	if (!m_sourceExportMutex)
-		m_sourceExportMutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateMutex();
+		m_sourceExportMutex = PLDrivers::GetSystemServices()->CreateMutex();
 
 	m_sourceExportWaiting = true;
 	m_sourceExportCancelled = false;
@@ -696,7 +698,7 @@ bool GpFileSystem_Android::DeleteFile(PortabilityLayer::VirtualDirectory_t virtu
 	return true;
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
+IGpDirectoryCursor *GpFileSystem_Android::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
 {
 	ScanDirectoryNestedContext ctx;
 	ctx.m_this = this;
@@ -715,7 +717,7 @@ void GpFileSystem_Android::ScanDirectoryNestedThunk(void *context)
 	ctx->m_returnValue = ctx->m_this->ScanDirectoryNestedInternal(ctx->m_virtualDirectory, ctx->m_paths, ctx->m_numPaths);
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanDirectoryNestedInternal(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
+IGpDirectoryCursor *GpFileSystem_Android::ScanDirectoryNestedInternal(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
 {
 	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kGameData || virtualDirectory == PortabilityLayer::VirtualDirectories::kApplicationData)
 		return ScanAssetDirectory(virtualDirectory, paths, numPaths);
@@ -809,7 +811,7 @@ GpFileSystem_Android *GpFileSystem_Android::GetInstance()
 	return &ms_instance;
 }
 
-class GpDirectoryCursor_StringList final : public PortabilityLayer::HostDirectoryCursor
+class GpDirectoryCursor_StringList final : public IGpDirectoryCursor
 {
 public:
 	explicit GpDirectoryCursor_StringList(std::vector<std::string> &paths);
@@ -847,7 +849,7 @@ void GpDirectoryCursor_StringList::Destroy()
 	delete this;
 }
 
-class GpDirectoryCursor_POSIX final : public PortabilityLayer::HostDirectoryCursor
+class GpDirectoryCursor_POSIX final : public IGpDirectoryCursor
 {
 public:
 	explicit GpDirectoryCursor_POSIX(DIR *dir);
@@ -885,7 +887,7 @@ void GpDirectoryCursor_POSIX::Destroy()
 	delete this;
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
+IGpDirectoryCursor *GpFileSystem_Android::ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
 {
 
 	std::string resolvedPath;
@@ -919,7 +921,7 @@ PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanAssetDirectory(
 	return new GpDirectoryCursor_StringList(subPaths);
 }
 
-PortabilityLayer::HostDirectoryCursor *GpFileSystem_Android::ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
+IGpDirectoryCursor *GpFileSystem_Android::ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths)
 {
 	std::string resolvedPath;
 	std::vector<std::string> subPaths;

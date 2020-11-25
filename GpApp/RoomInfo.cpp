@@ -5,16 +5,9 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-#include "PLKeyEncoding.h"
-#include "PLNumberFormatting.h"
-#include "PLResources.h"
-#include "PLSound.h"
-#include "PLPasStr.h"
-#include "PLStandardColors.h"
 #include "DialogManager.h"
 #include "DialogUtils.h"
 #include "Externs.h"
-#include "HostDisplayDriver.h"
 #include "IGpDisplayDriver.h"
 #include "RectUtils.h"
 #include "PLPopupMenuWidget.h"
@@ -25,6 +18,13 @@
 #include "ResourceManager.h"
 #include "Utilities.h"
 
+#include "PLDrivers.h"
+#include "PLKeyEncoding.h"
+#include "PLNumberFormatting.h"
+#include "PLResources.h"
+#include "PLSound.h"
+#include "PLPasStr.h"
+#include "PLStandardColors.h"
 
 #define kRoomInfoDialogID			1003
 #define kOriginalArtDialogID		1016
@@ -271,7 +271,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 	{
 		if (cursorIs != kHandCursor)
 		{
-			PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(handCursor);
+			PLDrivers::GetDisplayDriver()->SetCursor(handCursor);
 			cursorIs = kHandCursor;
 		}
 		
@@ -325,7 +325,7 @@ void HiliteTileOver (DrawSurface *surface, Point mouseIs)
 		{
 			if (cursorIs != kBeamCursor)
 			{
-				PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kIBeam);
+				PLDrivers::GetDisplayDriver()->SetStandardCursor(EGpStandardCursors::kIBeam);
 				cursorIs = kBeamCursor;
 			}
 		}

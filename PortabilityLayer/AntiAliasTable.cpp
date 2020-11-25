@@ -1,8 +1,10 @@
 #include "AntiAliasTable.h"
 #include "RGBAColor.h"
-#include "HostFileSystem.h"
 #include "GpIOStream.h"
+#include "IGpFileSystem.h"
+
 #include "PLBigEndian.h"
+#include "PLDrivers.h"
 
 #include <algorithm>
 #include <math.h>
@@ -63,7 +65,7 @@ namespace PortabilityLayer
 #else
 	bool AntiAliasTable::LoadFromCache(const char *cacheFileName)
 	{
-		GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, cacheFileName, false, GpFileCreationDispositions::kOpenExisting);
+		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, cacheFileName, false, GpFileCreationDispositions::kOpenExisting);
 		if (!stream)
 			return false;
 
@@ -83,7 +85,7 @@ namespace PortabilityLayer
 
 	void AntiAliasTable::SaveToCache(const char *cacheFileName)
 	{
-		GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, cacheFileName, true, GpFileCreationDispositions::kCreateOrOverwrite);
+		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, cacheFileName, true, GpFileCreationDispositions::kCreateOrOverwrite);
 		if (!stream)
 			return;
 

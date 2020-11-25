@@ -36,9 +36,6 @@
     <ClCompile Include="GpMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GpMemoryBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpVOSEventQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

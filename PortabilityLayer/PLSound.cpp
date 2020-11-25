@@ -1,14 +1,15 @@
 #include "PLSound.h"
 
-#include "HostAudioDriver.h"
 #include "MemoryManager.h"
-#include "HostMutex.h"
-#include "HostSystemServices.h"
-#include "HostThreadEvent.h"
+#include "IGpMutex.h"
+#include "IGpThreadEvent.h"
 #include "IGpAudioChannel.h"
 #include "IGpAudioChannelCallbacks.h"
 #include "IGpAudioDriver.h"
+#include "IGpSystemServices.h"
 #include "WaveFormat.h"
+
+#include "PLDrivers.h"
 
 #include <assert.h>
 
@@ -40,7 +41,7 @@ namespace PortabilityLayer
 	class AudioChannelImpl final : public AudioChannel, public IGpAudioChannelCallbacks
 	{
 	public:
-		explicit AudioChannelImpl(IGpAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex);
+		explicit AudioChannelImpl(IGpAudioChannel *channel, IGpThreadEvent *threadEvent, IGpMutex *mutex);
 		~AudioChannelImpl();
 
 		void Destroy(bool wait) override;
@@ -73,8 +74,8 @@ namespace PortabilityLayer
 
 		IGpAudioChannel *m_audioChannel;
 
-		HostMutex *m_mutex;
-		HostThreadEvent *m_threadEvent;
+		IGpMutex *m_mutex;
+		IGpThreadEvent *m_threadEvent;
 
 		AudioCommand m_commandQueue[kMaxQueuedCommands];
 		size_t m_numQueuedCommands;
@@ -84,7 +85,7 @@ namespace PortabilityLayer
 		bool m_isIdle;
 	};
 
-	AudioChannelImpl::AudioChannelImpl(IGpAudioChannel *channel, HostThreadEvent *threadEvent, HostMutex *mutex)
+	AudioChannelImpl::AudioChannelImpl(IGpAudioChannel *channel, IGpThreadEvent *threadEvent, IGpMutex *mutex)
 		: m_audioChannel(channel)
 		, m_threadEvent(threadEvent)
 		, m_mutex(mutex)
@@ -353,7 +354,7 @@ namespace PortabilityLayer
 
 	AudioChannel *SoundSystemImpl::CreateChannel()
 	{
-		IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
+		IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver();
 		if (!audioDriver)
 			return nullptr;
 
@@ -369,7 +370,7 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		PortabilityLayer::HostMutex *mutex = PortabilityLayer::HostSystemServices::GetInstance()->CreateRecursiveMutex();
+		IGpMutex *mutex = PLDrivers::GetSystemServices()->CreateRecursiveMutex();
 		if (!mutex)
 		{
 			audioChannel->Destroy();
@@ -377,7 +378,7 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		PortabilityLayer::HostThreadEvent *threadEvent = PortabilityLayer::HostSystemServices::GetInstance()->CreateThreadEvent(true, false);
+		IGpThreadEvent *threadEvent = PLDrivers::GetSystemServices()->CreateThreadEvent(true, false);
 		if (!threadEvent)
 		{
 			mutex->Destroy();
@@ -391,7 +392,7 @@ namespace PortabilityLayer
 
 	void SoundSystemImpl::SetVolume(uint8_t vol)
 	{
-		IGpAudioDriver *audioDriver = PortabilityLayer::HostAudioDriver::GetInstance();
+		IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver();
 
 		if (!audioDriver)
 			return;

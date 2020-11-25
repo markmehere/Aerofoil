@@ -2,12 +2,13 @@
 #include "FontFamily.h"
 #include "FontRenderer.h"
 
-#include "HostFileSystem.h"
-#include "IGpFont.h"
-#include "HostFontHandler.h"
 #include "GpIOStream.h"
+#include "IGpFileSystem.h"
+#include "IGpFont.h"
 #include "RenderedFont.h"
+
 #include "PLBigEndian.h"
+#include "PLDrivers.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -111,7 +112,7 @@ namespace PortabilityLayer
 		if (m_monospaceFont)
 			m_monospaceFont->Destroy();
 
-		IGpFontHandler *hfh = HostFontHandler::GetInstance();
+		IGpFontHandler *hfh = PLDrivers::GetFontHandler();
 
 		for (int i = 0; i < sizeof(m_cachedRenderedFonts) / sizeof(m_cachedRenderedFonts[0]); i++)
 		{
@@ -220,7 +221,7 @@ namespace PortabilityLayer
 		char filename[kFontCacheNameSize];
 		GenerateCacheFileName(filename, cacheID, size, aa, flags);
 
-		GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, false, GpFileCreationDispositions::kOpenExisting);
+		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, false, GpFileCreationDispositions::kOpenExisting);
 		if (!stream)
 			return nullptr;
 
@@ -242,7 +243,7 @@ namespace PortabilityLayer
 		char filename[kFontCacheNameSize];
 		GenerateCacheFileName(filename, cacheID, size, aa, flags);
 
-		GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, true, GpFileCreationDispositions::kCreateOrOverwrite);
+		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, true, GpFileCreationDispositions::kCreateOrOverwrite);
 		if (!stream)
 			return;
 

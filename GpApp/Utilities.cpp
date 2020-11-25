@@ -17,7 +17,6 @@
 #include "DialogManager.h"
 #include "DisplayDeviceManager.h"
 #include "Externs.h"
-#include "HostSystemServices.h"
 #include "IconLoader.h"
 #include "InputManager.h"
 #include "ResourceManager.h"

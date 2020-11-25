@@ -1,16 +1,17 @@
 #include "FileManager.h"
 
 #include "FileBrowserUI.h"
-#include "HostFileSystem.h"
-#include "HostMemoryBuffer.h"
+#include "IGpFileSystem.h"
+#include "IGpSystemServices.h"
 #include "MemReaderStream.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
+#include "ResTypeID.h"
+
+#include "PLDrivers.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
 #include "PLSysCalls.h"
-#include "ResTypeID.h"
-#include "HostSystemServices.h"
 
 #include <vector>
 
@@ -57,7 +58,7 @@ namespace PortabilityLayer
 		if (!ConstructFilename(extFN, filename, ".gpf"))
 			return false;
 
-		return HostFileSystem::GetInstance()->FileExists(dirID, extFN);
+		return PLDrivers::GetFileSystem()->FileExists(dirID, extFN);
 	}
 
 	bool FileManagerImpl::FileLocked(VirtualDirectory_t dirID, const PLPasStr &filename)
@@ -71,7 +72,7 @@ namespace PortabilityLayer
 				return true;
 
 			bool exists = false;
-			if (HostFileSystem::GetInstance()->FileLocked(dirID, extFN, &exists) && exists)
+			if (PLDrivers::GetFileSystem()->FileLocked(dirID, extFN, &exists) && exists)
 				return true;
 		}
 
@@ -92,7 +93,7 @@ namespace PortabilityLayer
 				return true;
 
 			bool existed = false;
-			if (!PortabilityLayer::HostFileSystem::GetInstance()->DeleteFile(dirID, extFN, existed))
+			if (!PLDrivers::GetFileSystem()->DeleteFile(dirID, extFN, existed))
 			{
 				if (extMayNotExist[extIndex] && !existed)
 					continue;
@@ -134,7 +135,7 @@ namespace PortabilityLayer
 		MacFileProperties mfp;
 		fileCreator.ExportAsChars(mfp.m_fileCreator);
 		fileType.ExportAsChars(mfp.m_fileType);
-		mfp.m_creationDate = mfp.m_modifiedDate = PortabilityLayer::HostSystemServices::GetInstance()->GetTime();
+		mfp.m_creationDate = mfp.m_modifiedDate = PLDrivers::GetSystemServices()->GetTime();
 
 		return CreateFile(dirID, filename, mfp);
 	}
@@ -222,7 +223,7 @@ namespace PortabilityLayer
 			if (!ConstructFilename(gpfExtFN, filename, ".gpf"))
 				return PLErrors::kBadFileName;
 
-			if (!HostFileSystem::GetInstance()->FileExists(dirID, gpfExtFN))
+			if (!PLDrivers::GetFileSystem()->FileExists(dirID, gpfExtFN))
 				return PLErrors::kFileNotFound;
 		}
 
@@ -233,21 +234,21 @@ namespace PortabilityLayer
 		switch (permission)
 		{
 		case EFilePermission_Any:
-			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, createDisposition);
+			fstream = PLDrivers::GetFileSystem()->OpenFile(dirID, extFN, true, createDisposition);
 			if (fstream)
 				permission = EFilePermission_ReadWrite;
 			else
 			{
 				permission = EFilePermission_Read;
-				fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, createDisposition);
+				fstream = PLDrivers::GetFileSystem()->OpenFile(dirID, extFN, false, createDisposition);
 			}
 			break;
 		case EFilePermission_Read:
-			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, false, createDisposition);
+			fstream = PLDrivers::GetFileSystem()->OpenFile(dirID, extFN, false, createDisposition);
 			break;
 		case EFilePermission_ReadWrite:
 		case EFilePermission_Write:
-			fstream = HostFileSystem::GetInstance()->OpenFile(dirID, extFN, true, createDisposition);
+			fstream = PLDrivers::GetFileSystem()->OpenFile(dirID, extFN, true, createDisposition);
 			break;
 		}
 
@@ -268,7 +269,7 @@ namespace PortabilityLayer
 		memcpy(extFN, fn.Chars(), fnameSize);
 		memcpy(extFN + fnameSize, extension, strlen(extension) + 1);
 
-		if (!PortabilityLayer::HostFileSystem::GetInstance()->ValidateFilePath(extFN, fnameSize))
+		if (!PLDrivers::GetFileSystem()->ValidateFilePath(extFN, fnameSize))
 			return false;
 
 		return true;

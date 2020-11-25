@@ -136,7 +136,7 @@ void GpAppEnvironment::SetVOSEventQueue(GpVOSEventQueue *eventQueue)
 	m_vosEventQueue = eventQueue;
 }
 
-void GpAppEnvironment::SetSystemServices(PortabilityLayer::HostSystemServices *systemServices)
+void GpAppEnvironment::SetSystemServices(IGpSystemServices *systemServices)
 {
 	m_systemServices = systemServices;
 }
@@ -156,13 +156,14 @@ void GpAppEnvironment::AppThreadFunc()
 
 void GpAppEnvironment::InitializeApplicationState()
 {
-	GpAppInterface_Get()->PL_HostDisplayDriver_SetInstance(m_displayDriver);
-	GpAppInterface_Get()->PL_HostAudioDriver_SetInstance(m_audioDriver);
-	GpAppInterface_Get()->PL_HostInputDriver_SetInstances(m_inputDrivers, m_numInputDrivers);
-	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
+	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kDisplay>(m_displayDriver);
+	drivers->SetDriver<GpDriverIDs::kAudio>(m_audioDriver);
+	drivers->SetDrivers<GpDriverIDs::kInput>(m_inputDrivers, m_numInputDrivers);
+	drivers->SetDriver<GpDriverIDs::kFont>(m_fontHandler);
+	drivers->SetDriver<GpDriverIDs::kEventQueue>(m_vosEventQueue);
 
-	GpAppInterface_Get()->PL_HostFontHandler_SetInstance(m_fontHandler);
-	GpAppInterface_Get()->PL_HostVOSEventQueue_SetInstance(m_vosEventQueue);
+	GpAppInterface_Get()->PL_InstallHostSuspendHook(GpAppEnvironment::StaticSuspendHookFunc, this);
 }
 
 void GpAppEnvironment::SynchronizeState()

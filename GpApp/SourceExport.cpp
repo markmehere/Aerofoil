@@ -3,14 +3,11 @@
 #include "Environ.h"
 #include "GpBuildVersion.h"
 #include "GpIOStream.h"
-#include "HostDirectoryCursor.h"
-#include "HostDisplayDriver.h"
-#include "HostFileSystem.h"
+#include "GpFileCreationDisposition.h"
+#include "IGpDirectoryCursor.h"
 #include "IGpDisplayDriver.h"
+#include "IGpFileSystem.h"
 #include "MemoryManager.h"
-#include "PLCore.h"
-#include "PLStandardColors.h"
-#include "PLSysCalls.h"
 #include "RenderedFont.h"
 #include "GpApplicationName.h"
 #include "GpRenderedFontMetrics.h"
@@ -19,6 +16,11 @@
 #include "WindowDef.h"
 #include "WindowManager.h"
 #include "FontFamily.h"
+
+#include "PLCore.h"
+#include "PLDrivers.h"
+#include "PLStandardColors.h"
+#include "PLSysCalls.h"
 
 #include <vector>
 #include <string>
@@ -140,7 +142,7 @@ static void InitSourceExportWindow(SourceExportState *state)
 	// the status bar dismissal causes a major change in the virtual resolution.
 	unsigned int displayWidth = 0;
 	unsigned int displayHeight = 0;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(&displayWidth, &displayHeight);
+	PLDrivers::GetDisplayDriver()->GetDisplayResolution(&displayWidth, &displayHeight);
 
 	int32_t lsX = (static_cast<int32_t>(displayWidth) - kLoadScreenWidth) / 2;
 	int32_t lsY = (static_cast<int32_t>(displayHeight) - kLoadScreenHeight) / 2;
@@ -183,7 +185,7 @@ static void InitSourceExportWindow(SourceExportState *state)
 
 static bool RetrieveSingleFileSize(PortabilityLayer::VirtualDirectory_t virtualDir, char const* const* paths, size_t numPaths, size_t &outSize)
 {
-	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFileNested(virtualDir, paths, numPaths, false, GpFileCreationDispositions::kOpenExisting);
+	GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFileNested(virtualDir, paths, numPaths, false, GpFileCreationDispositions::kOpenExisting);
 	if (!stream)
 		return false;
 
@@ -199,7 +201,7 @@ static bool RetrieveCompositeDirSize(PortabilityLayer::VirtualDirectory_t virtua
 	size_t totalSize = 0;
 	totalSizeOut = 0;
 
-	PortabilityLayer::HostDirectoryCursor *dirCursor = PortabilityLayer::HostFileSystem::GetInstance()->ScanDirectory(virtualDir);
+	IGpDirectoryCursor *dirCursor = PLDrivers::GetFileSystem()->ScanDirectory(virtualDir);
 	if (!dirCursor)
 		return false;
 
@@ -402,7 +404,7 @@ static bool RepackDirectory(SourceExportState &state, GpIOStream *outStream, std
 	uint16_t dosTime = 0;
 	ConvertToMSDOSTimestamp(state.m_ts, dosDate, dosTime);
 
-	PortabilityLayer::HostDirectoryCursor *dirCursor = PortabilityLayer::HostFileSystem::GetInstance()->ScanDirectory(virtualDir);
+	IGpDirectoryCursor *dirCursor = PLDrivers::GetFileSystem()->ScanDirectory(virtualDir);
 	if (!dirCursor)
 		return false;
 
@@ -425,7 +427,7 @@ static bool RepackDirectory(SourceExportState &state, GpIOStream *outStream, std
 
 		const bool shouldStore = (extension[3] == 'a');
 
-		state.m_fStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(virtualDir, fpath, false, GpFileCreationDispositions::kOpenExisting);
+		state.m_fStream = PLDrivers::GetFileSystem()->OpenFile(virtualDir, fpath, false, GpFileCreationDispositions::kOpenExisting);
 		if (!state.m_fStream)
 			return false;
 
@@ -664,7 +666,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 	SourceExportState state;
 	InitSourceExportWindow(&state);
 
-	state.m_tsStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kApplicationData, "DefaultTimestamp.timestamp", false, GpFileCreationDispositions::kOpenExisting);
+	state.m_tsStream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kApplicationData, "DefaultTimestamp.timestamp", false, GpFileCreationDispositions::kOpenExisting);
 	if (!state.m_tsStream)
 		return false;
 
@@ -673,7 +675,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 	state.m_tsStream->Close();
 	state.m_tsStream = nullptr;
 
-	state.m_sourcePkgStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kApplicationData, "SourceCode.pkg", false, GpFileCreationDispositions::kOpenExisting);
+	state.m_sourcePkgStream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kApplicationData, "SourceCode.pkg", false, GpFileCreationDispositions::kOpenExisting);
 	if (!state.m_sourcePkgStream)
 		return false;
 
@@ -730,7 +732,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 
 void DoExportSourceCode (void)
 {
-	GpIOStream *stream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, GP_APPLICATION_NAME "-" GP_APPLICATION_VERSION_STRING "-SourceCode.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
+	GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kSourceExport, GP_APPLICATION_NAME "-" GP_APPLICATION_VERSION_STRING "-SourceCode.zip", true, GpFileCreationDispositions::kCreateOrOverwrite);
 	if (!stream)
 		return;
 

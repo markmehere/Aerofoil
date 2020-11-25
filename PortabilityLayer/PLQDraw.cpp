@@ -9,9 +9,6 @@
 #include "MMHandleBlock.h"
 #include "MemoryManager.h"
 #include "MemReaderStream.h"
-#include "HostFontHandler.h"
-#include "PLPasStr.h"
-#include "PLStandardColors.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
 #include "GpRenderedGlyphMetrics.h"
@@ -30,6 +27,9 @@
 #include "QDGraf.h"
 #include "QDPixMap.h"
 #include "Vec2i.h"
+
+#include "PLPasStr.h"
+#include "PLStandardColors.h"
 
 #include <algorithm>
 #include <assert.h>

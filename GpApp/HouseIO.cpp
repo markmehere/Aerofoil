@@ -5,23 +5,23 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-#include "PLDialogs.h"
-#include "PLMovies.h"
-#include "PLResources.h"
-#include "PLStringCompare.h"
-#include "PLPasStr.h"
 #include "BitmapImage.h"
 #include "DialogManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FileManager.h"
-#include "HostFileSystem.h"
-#include "HostSystemServices.h"
-#include "House.h"
 #include "GpIOStream.h"
+#include "House.h"
+#include "IGpSystemServices.h"
 #include "ObjectEdit.h"
 #include "ResourceManager.h"
 
+#include "PLDialogs.h"
+#include "PLDrivers.h"
+#include "PLMovies.h"
+#include "PLResources.h"
+#include "PLStringCompare.h"
+#include "PLPasStr.h"
 
 #define kSaveChangesAlert		1002
 #define kSaveChanges			1
@@ -675,7 +675,7 @@ Boolean WriteHouse (Boolean checkIt)
 	
 	if (fileDirty)
 	{
-		int64_t currentTime = PortabilityLayer::HostSystemServices::GetInstance()->GetTime();
+		int64_t currentTime = PLDrivers::GetSystemServices()->GetTime();
 		if (currentTime > 0x7fffffff)
 			currentTime = 0x7fffffff;
 

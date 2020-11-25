@@ -17,20 +17,21 @@
 #include "FileManager.h"
 #include "FontFamily.h"
 #include "FontManager.h"
-#include "HostDisplayDriver.h"
-#include "HostSystemServices.h"
 #include "House.h"
 #include "IGpDisplayDriver.h"
+#include "IGpSystemServices.h"
 #include "GpIOStream.h"
 #include "MainWindow.h"
-#include "PLStandardColors.h"
-#include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
 #include "RenderedFont.h"
 #include "ResolveCachingColor.h"
 #include "Utilities.h"
 #include "Vec2i.h"
 #include "WindowManager.h"
+
+#include "PLDrivers.h"
+#include "PLStandardColors.h"
+#include "PLTimeTaggedVOSEvent.h"
 
 #define kHighScoresPictID		1994
 #define kHighScoresMaskID		1998
@@ -383,7 +384,7 @@ Boolean TestHighScore (void)
 	
 	if (placing != -1)
 	{
-		int64_t scoreTimestamp = PortabilityLayer::HostSystemServices::GetInstance()->GetTime();
+		int64_t scoreTimestamp = PLDrivers::GetSystemServices()->GetTime();
 		if (scoreTimestamp < 0)
 			scoreTimestamp = 0;
 		else if (scoreTimestamp > 0xffffffff)
@@ -508,7 +509,7 @@ void MoveDialogToTopOfScreen(Dialog *dial)
 	PortabilityLayer::Vec2i pos = window->GetPosition();
 
 	unsigned int height = 0;
-	PortabilityLayer::HostDisplayDriver::GetInstance()->GetDisplayResolution(nullptr, &height);
+	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &height);
 
 	pos.m_y = (height - window->GetDrawSurface()->m_port.GetRect().Height()) / 8;
 
@@ -542,7 +543,7 @@ void GetHighScoreName (short place)
 
 	UpdateNameDialog(theDial);
 
-	if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
+	if (PLDrivers::GetSystemServices()->IsTextInputObstructive())
 		MoveDialogToTopOfScreen(theDial);
 
 	Window *exclStack = theDial->GetWindow();
@@ -655,7 +656,7 @@ void GetHighScoreBanner (void)
 
 	UpdateBannerDialog(theDial);
 
-	if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
+	if (PLDrivers::GetSystemServices()->IsTextInputObstructive())
 		MoveDialogToTopOfScreen(theDial);
 
 	Window *exclStack = theDial->GetWindow();

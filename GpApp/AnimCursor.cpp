@@ -5,16 +5,16 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
-
-#include "PLResources.h"
-#include "PLBigEndian.h"
 #include "Externs.h"
 #include "Environ.h"
-#include "HostDisplayDriver.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriver.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"
+
+#include "PLDrivers.h"
+#include "PLResources.h"
+#include "PLBigEndian.h"
 
 #include <assert.h>
 
@@ -219,7 +219,7 @@ IGpCursor *LoadColorCursor(int16_t resID)
 
 	mm->Release(colorValues);
 
-	IGpCursor *cursor = PortabilityLayer::HostDisplayDriver::GetInstance()->CreateColorCursor(width, height, pixelDataRGBA, cursorHeader->m_hotSpotX, cursorHeader->m_hotSpotY);
+	IGpCursor *cursor = PLDrivers::GetDisplayDriver()->CreateColorCursor(width, height, pixelDataRGBA, cursorHeader->m_hotSpotX, cursorHeader->m_hotSpotY);
 
 	mm->Release(pixelDataRGBA);
 
@@ -251,7 +251,7 @@ Boolean GetColorCursors (acurHandle ballCursH, compiledAcurHandle compiledBallCu
 			else							// But, if the cursor loaded ok
 			{								// add it to our list or cursor handles
 				(*compiledBallCursH)->frame[i].hwCursor = hwCursor;
-				PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor(hwCursor);
+				PLDrivers::GetDisplayDriver()->SetCursor(hwCursor);
 			}
 		}
 		InitCursor();						// Show the cursor again (as arrow)
@@ -343,10 +343,10 @@ void IncrementCursor (void)
 		acur->index++;
 		acur->index %= acur->n;
 
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
+		PLDrivers::GetDisplayDriver()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}
 	else
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kWait);
+		PLDrivers::GetDisplayDriver()->SetStandardCursor(EGpStandardCursors::kWait);
 }
 
 //--------------------------------------------------------------  DecrementCursor
@@ -363,10 +363,10 @@ void DecrementCursor (void)
 		if (((*animCursorH)->index) < 0)
 			(*animCursorH)->index = ((*animCursorH)->n) - 1;
 
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
+		PLDrivers::GetDisplayDriver()->SetCursor((*compiledAnimCursorH)->frame[(*animCursorH)->index].hwCursor);
 	}
 	else
-		PortabilityLayer::HostDisplayDriver::GetInstance()->SetStandardCursor(EGpStandardCursors::kWait);
+		PLDrivers::GetDisplayDriver()->SetStandardCursor(EGpStandardCursors::kWait);
 }
 
 //--------------------------------------------------------------  SpinCursor

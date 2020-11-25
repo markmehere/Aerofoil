@@ -3,14 +3,15 @@
 #include "CoreDefs.h"
 #include "IGpFont.h"
 #include "GpIOStream.h"
-#include "HostFontHandler.h"
 #include "IGpFontRenderedGlyph.h"
 #include "MacRomanConversion.h"
-#include "PLBigEndian.h"
-#include "PLPasStr.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
 #include "GpRenderedGlyphMetrics.h"
+
+#include "PLBigEndian.h"
+#include "PLDrivers.h"
+#include "PLPasStr.h"
 
 #include <assert.h>
 #include <string.h>

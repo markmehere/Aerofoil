@@ -8,10 +8,10 @@
 #include "GpBuildVersion.h"
 #include "GpIOStream.h"
 #include "GpRenderedFontMetrics.h"
-#include "HostFileSystem.h"
-#include "HostDirectoryCursor.h"
-#include "HostSystemServices.h"
+#include "IGpDirectoryCursor.h"
+#include "IGpFileSystem.h"
 #include "IGpFont.h"
+#include "IGpSystemServices.h"
 #include "WindowManager.h"
 #include "MacFileInfo.h"
 #include "MemoryManager.h"
@@ -25,6 +25,7 @@
 #include "PLControlDefinitions.h"
 #include "PLCore.h"
 #include "PLDialogs.h"
+#include "PLDrivers.h"
 #include "PLEditboxWidget.h"
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
@@ -161,7 +162,7 @@ namespace PortabilityLayer
 	{
 		uint16_t unicodeChar = MacRoman::ToUnicode(ch);
 
-		return HostFileSystem::GetInstance()->ValidateFilePathUnicodeChar(unicodeChar);
+		return PLDrivers::GetFileSystem()->ValidateFilePathUnicodeChar(unicodeChar);
 	}
 
 	bool FileBrowserUIImpl::AppendName(const char *name, size_t nameLen, void *details)
@@ -537,7 +538,7 @@ namespace PortabilityLayer
 
 	int16_t FileBrowserUIImpl::PopUpAlert(const Rect &rect, int dialogResID, const DialogTextSubstitutions *substitutions)
 	{
-		PortabilityLayer::HostSystemServices *sysServices = PortabilityLayer::HostSystemServices::GetInstance();
+		IGpSystemServices *sysServices = PLDrivers::GetSystemServices();
 
 		// Disable text input temporarily and restore it after
 		const bool wasTextInput = sysServices->IsTextInputEnabled();
@@ -573,7 +574,7 @@ namespace PortabilityLayer
 			dialogID = kFileBrowserUIOpenDialogTemplateID;
 		else if (mode == Mode_Save)
 		{
-			if (PortabilityLayer::HostSystemServices::GetInstance()->IsTextInputObstructive())
+			if (PLDrivers::GetSystemServices()->IsTextInputObstructive())
 			{
 				dialogID = kFileBrowserUISaveDialogUnobstructiveTemplateID;
 				windowHeight = 208;
@@ -591,8 +592,8 @@ namespace PortabilityLayer
 		FileBrowserUIImpl uiImpl(callbackAPI);
 
 		// Enumerate files
-		PortabilityLayer::HostFileSystem *fs = PortabilityLayer::HostFileSystem::GetInstance();
-		PortabilityLayer::HostDirectoryCursor *dirCursor = fs->ScanDirectory(dirID);
+		IGpFileSystem *fs = PLDrivers::GetFileSystem();
+		IGpDirectoryCursor *dirCursor = fs->ScanDirectory(dirID);
 
 		if (!dirCursor)
 			return false;
@@ -730,14 +731,14 @@ namespace PortabilityLayer
 
 			if (hit == kOkayButton && mode == Mode_Save)
 			{
-				HostFileSystem *fs = HostFileSystem::GetInstance();
+				IGpFileSystem *fs = PLDrivers::GetFileSystem();
 
 				EditboxWidget *editBox = static_cast<EditboxWidget*>(dialog->GetItems()[kFileNameEditBox - 1].GetWidget());
 
 				PLPasStr nameStr = editBox->GetString();
 				if (nameStr.Length() == 0 || !fs->ValidateFilePath(nameStr.Chars(), nameStr.Length()))
 				{
-					PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+					PLDrivers::GetSystemServices()->Beep();
 					FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIBadNameDialogTemplateID, nullptr);
 					hit = -1;
 				}
@@ -745,7 +746,7 @@ namespace PortabilityLayer
 				{
 					DialogTextSubstitutions substitutions(nameStr);
 
-					PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+					PLDrivers::GetSystemServices()->Beep();
 					int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIOverwriteDialogTemplateID, &substitutions);
 
 					if (subHit == kOverwriteNoButton)
@@ -755,7 +756,7 @@ namespace PortabilityLayer
 
 			if (mode == Mode_Open && hit == kDeleteButton)
 			{
-				PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+				PLDrivers::GetSystemServices()->Beep();
 				int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIDeleteDialogTemplateID, &substitutions);
 
 				if (subHit == kOverwriteYesButton)

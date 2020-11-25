@@ -9,11 +9,7 @@ struct IGpDisplayDriver;
 struct IGpFiber;
 struct IGpVOSEventQueue;
 struct IGpLogDriver;
-
-namespace PortabilityLayer
-{
-	class HostSystemServices;
-}
+struct IGpSystemServices;
 
 struct GpDisplayDriverProperties
 {
@@ -46,5 +42,5 @@ struct GpDisplayDriverProperties
 
 	IGpVOSEventQueue *m_eventQueue;
 	IGpLogDriver *m_logger;
-	PortabilityLayer::HostSystemServices *m_systemServices;
+	IGpSystemServices *m_systemServices;
 };

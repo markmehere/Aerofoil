@@ -1,6 +1,8 @@
+#include "IGpSystemServices.h"
+
 #include "PLApplication.h"
 #include "PLCore.h"
-#include "HostSystemServices.h"
+#include "PLDrivers.h"
 
 #include <string.h>
 #include <assert.h>
@@ -20,5 +22,5 @@ namespace PortabilityLayer
 
 void SysBeep(int duration)
 {
-	PortabilityLayer::HostSystemServices::GetInstance()->Beep();
+	PLDrivers::GetSystemServices()->Beep();
 }

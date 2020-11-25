@@ -4,9 +4,8 @@
 #include "BMPFormat.h"
 #include "FileManager.h"
 #include "GPArchive.h"
-#include "HostDirectoryCursor.h"
-#include "HostFileSystem.h"
-#include "HostMemoryBuffer.h"
+#include "IGpDirectoryCursor.h"
+#include "IGpFileSystem.h"
 #include "GpIOStream.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
@@ -15,12 +14,14 @@
 #include "MMHandleBlock.h"
 #include "ResourceCompiledTypeList.h"
 #include "ResourceFile.h"
-#include "PLPasStr.h"
-#include "PLErrorCodes.h"
 #include "VirtualDirectory.h"
 #include "WaveFormat.h"
 #include "ZipFileProxy.h"
 #include "ZipFile.h"
+
+#include "PLDrivers.h"
+#include "PLPasStr.h"
+#include "PLErrorCodes.h"
 
 #include <stdio.h>
 #include <algorithm>
@@ -189,7 +190,7 @@ namespace PortabilityLayer
 
 	IResourceArchive *ResourceManagerImpl::LoadResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) const
 	{
-		if (PortabilityLayer::HostFileSystem::GetInstance()->IsVirtualDirectoryLooseResources(virtualDir))
+		if (PLDrivers::GetFileSystem()->IsVirtualDirectoryLooseResources(virtualDir))
 			return LoadResDirectory(virtualDir, filename);
 
 		GpIOStream *fStream = nullptr;
@@ -581,11 +582,11 @@ namespace PortabilityLayer
 
 	bool ResourceArchiveDirectory::Init()
 	{
-		PortabilityLayer::HostFileSystem *fs = PortabilityLayer::HostFileSystem::GetInstance();
+		IGpFileSystem *fs = PLDrivers::GetFileSystem();
 
 		const char *typePaths[1] = { this->m_subdirectory };
 
-		PortabilityLayer::HostDirectoryCursor *typeDirCursor = fs->ScanDirectoryNested(m_directory, typePaths, 1);
+		IGpDirectoryCursor *typeDirCursor = fs->ScanDirectoryNested(m_directory, typePaths, 1);
 		if (!typeDirCursor)
 			return false;
 
@@ -621,7 +622,7 @@ namespace PortabilityLayer
 			rte.m_lastRes = m_numResources;
 
 			const char *idScanFilenames[2] = { this->m_subdirectory, typeScanFilename };
-			PortabilityLayer::HostDirectoryCursor *typeIDCursor = fs->ScanDirectoryNested(m_directory, idScanFilenames, 2);
+			IGpDirectoryCursor *typeIDCursor = fs->ScanDirectoryNested(m_directory, idScanFilenames, 2);
 			if (!typeIDCursor)
 				continue;
 
@@ -779,7 +780,7 @@ namespace PortabilityLayer
 
 			const char *paths[3] = { m_subdirectory, resTypeTag.m_id, fileName };
 
-			GpIOStream *ioStream = PortabilityLayer::HostFileSystem::GetInstance()->OpenFileNested(m_directory, paths, 3, false, GpFileCreationDispositions::kOpenExisting);
+			GpIOStream *ioStream = PLDrivers::GetFileSystem()->OpenFileNested(m_directory, paths, 3, false, GpFileCreationDispositions::kOpenExisting);
 			if (!ioStream)
 				return THandle<void>();
 

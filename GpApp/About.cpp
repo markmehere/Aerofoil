@@ -4,7 +4,24 @@
 //----------------------------------------------------------------------------
 //============================================================================
 
+#include "About.h"
+#include "DialogManager.h"
+#include "DialogUtils.h"
+#include "Environ.h"
+#include "Externs.h"
+#include "GpApplicationName.h"
+#include "GpBuildVersion.h"
+#include "IGpSystemServices.h"
+#include "RenderedFont.h"
+#include "GpRenderedFontMetrics.h"
+#include "ResolveCachingColor.h"
+#include "ResourceManager.h"
+#include "ScanlineMask.h"
+#include "WindowDef.h"
+#include "WindowManager.h"
+
 #include "PLArrayView.h"
+#include "PLDrivers.h"
 #include "PLKeyEncoding.h"
 #include "PLControlDefinitions.h"
 #include "FontFamily.h"
@@ -19,21 +36,6 @@
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
-#include "About.h"
-#include "DialogManager.h"
-#include "DialogUtils.h"
-#include "Environ.h"
-#include "Externs.h"
-#include "GpApplicationName.h"
-#include "GpBuildVersion.h"
-#include "HostSystemServices.h"
-#include "RenderedFont.h"
-#include "GpRenderedFontMetrics.h"
-#include "ResolveCachingColor.h"
-#include "ResourceManager.h"
-#include "ScanlineMask.h"
-#include "WindowDef.h"
-#include "WindowManager.h"
 
 
 static void HiLiteOkayButton (DrawSurface *surface);
@@ -418,7 +420,7 @@ static void UpdateMainPict (Dialog *theDial)
 	Str255		theStr, theStr2;
 	uint64_t	freeMemory;
 
-	freeMemory = PortabilityLayer::HostSystemServices::GetInstance()->GetFreeMemoryCosmetic();
+	freeMemory = PLDrivers::GetSystemServices()->GetFreeMemoryCosmetic();
 	
 	PasStringCopy(PSTR("Memory:   "), theStr);		// display free memory
 
