@@ -296,6 +296,7 @@ void DoDemoGame (void)
 	if (OpenHouse())
 		whoCares = ReadHouse();
 	incrementModeTime = TickCount() + kIdleSplashTicks;
+	RedrawSplashScreen();
 }
 
 //--------------------------------------------------------------  InitGlider
