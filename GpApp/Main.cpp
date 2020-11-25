@@ -517,7 +517,7 @@ void CreateLoadScreenWindow(int phase)
 	}
 }
 
-void StepLoadScreen(int steps)
+void StepLoadScreen(int steps, bool insertDelay)
 {
 	if (loadScreenWindow)
 	{
@@ -549,7 +549,7 @@ void StepLoadScreen(int steps)
 		loadScreenWindow->GetDrawSurface()->FillRect(Rect::Create(loadScreenProgressBarFillRect.top, loadScreenProgressBarFillRect.left + prevStep, loadScreenProgressBarFillRect.bottom, loadScreenProgressBarFillRect.left + thisStep), fillColor);
 		ForceSyncFrame();
 
-		for (int i = 0; i < steps; i++)
+		if (insertDelay)
 		{
 			StepLoadScreenRing();
 			Delay(1, nullptr);
@@ -690,7 +690,7 @@ void PreloadFonts()
 				slot.m_queued = false;
 				completedSpecs++;
 
-				StepLoadScreen(1);
+				StepLoadScreen(1, false);
 			}
 		}
 
@@ -825,7 +825,7 @@ void PreloadAATables()
 		for (size_t i = 0; i < numAASpecs; i++)
 		{
 			PreloadAATableThreadFunc(specs + i);
-			StepLoadScreen(1);
+			StepLoadScreen(1, false);
 		}
 	}
 	else
@@ -849,6 +849,7 @@ void PreloadAATables()
 
 		while (completedSpecs < numAASpecs)
 		{
+			int completedThisStep = 0;
 			for (unsigned int i = 0; i < cpus; i++)
 			{
 				PreloadAATableWorkSlot &slot = slots[i];
@@ -861,7 +862,7 @@ void PreloadAATables()
 						slot.m_queued = false;
 						completedSpecs++;
 
-						StepLoadScreen(1);
+						completedThisStep++;
 					}
 				}
 
@@ -878,6 +879,9 @@ void PreloadAATables()
 					}
 				}
 			}
+
+			if (completedThisStep > 0)
+				StepLoadScreen(completedThisStep, false);
 
 			StepLoadScreenRing();
 			Delay(1, nullptr);
@@ -929,10 +933,10 @@ int gpAppMain()
 	SpinCursor(2);	// Tick once to let the display driver flush any resolution changes from prefs
 	FlushResolutionChange();
 
-	InitLoadingWindow();	StepLoadScreen(2);
+	InitLoadingWindow();	StepLoadScreen(2, true);
 	PreloadAATables();
 	assert(isPrefsLoaded || loadScreenWindowPhase == 0);
-	PreloadFonts();		StepLoadScreen(2);
+	PreloadFonts();		StepLoadScreen(2, true);
 
 #if defined COMPILEDEMO
 	copyGood = true;
@@ -951,12 +955,12 @@ int gpAppMain()
 //	if ((thisMac.numScreens > 1) && (isUseSecondScreen))
 //		ReflectSecondMonitorEnvirons(false, true, true);
 	HandleDepthSwitching();
-	VariableInit();						StepLoadScreen(2);
-	GetExtraCursors();					StepLoadScreen(2);
+	VariableInit();						StepLoadScreen(2, true);
+	GetExtraCursors();					StepLoadScreen(2, true);
 	InitMarquee();
-	CreatePointers();					StepLoadScreen(2);
+	CreatePointers();					StepLoadScreen(2, true);
 	InitSrcRects();
-	CreateOffscreens();					StepLoadScreen(2);
+	CreateOffscreens();					StepLoadScreen(2, true);
 
 	if (loadScreenWindow)
 	{
