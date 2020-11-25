@@ -1353,6 +1353,33 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 				return false;
 			}
 
+			const char *itemNameStr = itemName.GetString();
+			for (size_t i = 0; itemNameStr[i] != '\0'; i++)
+			{
+				if (itemNameStr[i] == '/')
+				{
+					PlannedEntry *directoryEntry = nullptr;
+					std::string dirName = std::string(itemNameStr, i);
+
+					for (std::vector<PlannedEntry>::iterator it = archive.begin(), itEnd = archive.end(); it != itEnd; ++it)
+					{
+						if (it->m_name == dirName)
+						{
+							directoryEntry = &(*it);
+							break;
+						}
+					}
+
+					if (!directoryEntry)
+					{
+						archive.push_back(PlannedEntry());
+						directoryEntry = &archive.back();
+						directoryEntry->m_name = dirName;
+						directoryEntry->m_isDirectory = true;
+					}
+				}
+			}
+
 			PlannedEntry *entry = nullptr;
 			for (std::vector<PlannedEntry>::iterator it = archive.begin(), itEnd = archive.end(); it != itEnd; ++it)
 			{
