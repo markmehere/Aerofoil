@@ -420,7 +420,7 @@ void CreateLoadScreenWindow(int phase)
 		loadRingRect.right *= 2;
 		loadRingRect.bottom *= 2;
 		CreateOffScreenGWorld(&loadRingSurface, &loadRingRect);
-		loadRingSurface->DrawPicture(loadRingImageH, loadRingRect);
+		loadRingSurface->DrawPicture(loadRingImageH, loadRingRect, false);
 
 		int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
 		int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
@@ -473,7 +473,7 @@ void CreateLoadScreenWindow(int phase)
 		DrawSurface *loadRingSurface = nullptr;
 		Rect loadRingRect = loadRingImage->GetRect();
 		CreateOffScreenGWorld(&loadRingSurface, &loadRingRect);
-		loadRingSurface->DrawPicture(loadRingImageH, loadRingRect);
+		loadRingSurface->DrawPicture(loadRingImageH, loadRingRect, false);
 
 		int32_t lsX = (thisMac.fullScreen.Width() - kLoadScreenWidth) / 2;
 		int32_t lsY = (thisMac.fullScreen.Height() - kLoadScreenHeight) / 2;
@@ -539,7 +539,7 @@ void StepLoadScreen(int steps, bool insertDelay)
 
 		const Rect loadScreenProgressBarFillRect = loadScreenProgressBarRect.Inset(1, 1);
 
-		int loadScreenMax = 42;
+		int loadScreenMax = 43;
 		loadScreenProgress = loadScreenProgress + steps;
 		if (loadScreenProgress > loadScreenMax)
 			loadScreenProgress = loadScreenMax;
@@ -663,6 +663,7 @@ void PreloadFonts()
 		{ FontCategory_Application, 9, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Application, 12, PortabilityLayer::FontFamilyFlag_Bold, true },
 		{ FontCategory_Application, 14, PortabilityLayer::FontFamilyFlag_Bold, true },
+		{ FontCategory_Application, 14, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Application, 40, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Handwriting, 24, PortabilityLayer::FontFamilyFlag_None, true },
 		{ FontCategory_Handwriting, 48, PortabilityLayer::FontFamilyFlag_None, true },
@@ -902,32 +903,37 @@ void ShowInitialLaunchDisclaimer()
 {
 	const char *disclaimerLines[] =
 	{
-		GP_APPLICATION_NAME " is a port of John Calhoun's Glider PRO, based",
-		"on the 2016 release of the game's source code and assets.",
+		GP_APPLICATION_NAME " is a port of John Calhoun\xd5s Glider PRO, based",
+		"on the 2016 release of the game\xd5s source code and assets.",
 		"",
-		"Glider PRO, a sequel to the original Glider, was released",
-		"in 1994 for the Apple Macintosh, and is widely recognized",
-		"as one of the most iconic Macintosh-exclusive games.",
+		"Glider PRO, a sequel to the original Glider, was released in 1994",
+		"for the Apple Macintosh, and is widely recognized as one of",
+		"of the most iconic Macintosh-exclusive games of the 1990\xd5s.",
 		"",
 		"I hope that by adapting it to be playable on modern systems, more",
 		"people can appreciate this important piece of video game history.",
 		"",
-		"This software is an adaptation and contains some differences",
-		"from the original.  Some fonts, graphics, and sounds have been",
-		"substituted or removed for copyright reasons.  This software",
-		"is not developed by, maintained by, supported by, endorsed by,",
-		"or otherwise associated with the authors or publishers of Glider PRO."
+		"This software is an adaptation that attempts to portray the original work",
+		"as accurately as possible, but some fonts, graphics, and sounds have been",
+		"substituted or removed for copyright reasons, and some user interface",
+		"components have been added or changed to improve compatibility.",
+		"",
+		"This software is not developed by, maintained by, supported by, endorsed by,",
+		"or otherwise associated with the authors or publishers of Glider PRO.",
+		"Any references to Glider PRO in this software are historic and",
+		"should not be interpreted as implying any form of association."
 	};
 
 	const size_t numLines = sizeof(disclaimerLines) / sizeof(disclaimerLines[0]);
 
-	PortabilityLayer::RenderedFont *rfont = GetApplicationFont(18, 0, true);
+	PortabilityLayer::RenderedFont *rfont = GetApplicationFont(14, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *buttonFont = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
 
 	const int kButtonSpacing = 16;
 	const int kButtonHeight = 32;
 
 	const PLPasStr buttonText = PLDrivers::GetSystemServices()->IsTouchscreen() ? PLPasStr(PSTR("Tap to Continue...")) : PLPasStr(PSTR("Click to Continue..."));
-	const int32_t buttonTextWidth = rfont->MeasureString(buttonText.UChars(), buttonText.Length());
+	const int32_t buttonTextWidth = buttonFont->MeasureString(buttonText.UChars(), buttonText.Length());
 	const int32_t buttonWidth = buttonTextWidth + 16;
 
 	const int32_t linegap = rfont->GetMetrics().m_linegap;
@@ -1021,7 +1027,7 @@ void ShowInitialLaunchDisclaimer()
 		surface->FillRect(buttonRect, whiteColor);
 		surface->FillRect(buttonRect.Inset(borderThickness, borderThickness), backgroundColor);
 
-		surface->DrawString(textPoint, buttonText, whiteColor, rfont);
+		surface->DrawString(textPoint, buttonText, whiteColor, buttonFont);
 
 		Delay(1, nullptr);
 	}
