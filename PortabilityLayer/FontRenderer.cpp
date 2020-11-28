@@ -5,6 +5,7 @@
 #include "GpIOStream.h"
 #include "IGpFontRenderedGlyph.h"
 #include "MacRomanConversion.h"
+#include "MemoryManager.h"
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
 #include "GpRenderedGlyphMetrics.h"
@@ -12,6 +13,7 @@
 #include "PLBigEndian.h"
 #include "PLDrivers.h"
 #include "PLPasStr.h"
+#include "DeflateCodec.h"
 
 #include <assert.h>
 #include <string.h>
@@ -42,7 +44,8 @@ namespace PortabilityLayer
 		struct CacheHeader
 		{
 			BEUInt32_t m_cacheVersion;
-			BEUInt32_t m_glyphDataSize;
+			BEUInt32_t m_glyphDataUncompressedSize;
+			BEUInt32_t m_glyphDataCompressedSize;
 			BEUInt32_t m_sizeSize;
 
 			BEUInt32_t m_isAA;
@@ -53,7 +56,7 @@ namespace PortabilityLayer
 		RenderedFontImpl(void *data, size_t dataSize, bool aa);
 		~RenderedFontImpl();
 
-		bool LoadInternal(GpIOStream *stream);
+		bool LoadInternal(GpIOStream *stream, size_t compressedDataSize);
 
 		size_t m_dataOffsets[256];
 		GpRenderedGlyphMetrics m_glyphMetrics[256];
@@ -143,11 +146,11 @@ namespace PortabilityLayer
 		if (header.m_sizeSize != sizeof(size_t))
 			return nullptr;
 
-		RenderedFontImpl *rfont = RenderedFontImpl::Create(header.m_glyphDataSize, header.m_isAA != 0);
+		RenderedFontImpl *rfont = RenderedFontImpl::Create(header.m_glyphDataUncompressedSize, header.m_isAA != 0);
 		if (!rfont)
 			return nullptr;
 
-		if (!rfont->LoadInternal(stream))
+		if (!rfont->LoadInternal(stream, header.m_glyphDataCompressedSize))
 		{
 			rfont->Destroy();
 			return nullptr;
@@ -160,15 +163,31 @@ namespace PortabilityLayer
 	{
 		CacheHeader header;
 		header.m_cacheVersion = kRFontCacheVersion;
-		header.m_glyphDataSize = static_cast<uint32_t>(this->m_dataSize);
+		header.m_glyphDataUncompressedSize = static_cast<uint32_t>(this->m_dataSize);
+		header.m_glyphDataCompressedSize = 0;
 		header.m_isAA = m_isAntiAliased;
 		header.m_sizeSize = sizeof(size_t);
+
+		GpUFilePos_t headerPos = stream->Tell();
 
 		if (stream->Write(&header, sizeof(header)) != sizeof(header))
 			return false;
 
-		if (stream->Write(m_data, m_dataSize) != m_dataSize)
+		DeflateContext *deflateContext = DeflateContext::Create(stream, 9);
+		if (!deflateContext)
 			return false;
+
+		GpUFilePos_t dataStartPos = stream->Tell();
+
+		if (!deflateContext->Append(m_data, m_dataSize) || !deflateContext->Flush())
+		{
+			deflateContext->Destroy();
+			return false;
+		}
+
+		deflateContext->Destroy();
+
+		GpUFilePos_t dataEndPos = stream->Tell();
 
 		if (stream->Write(m_dataOffsets, sizeof(m_dataOffsets)) != sizeof(m_dataOffsets))
 			return false;
@@ -177,6 +196,18 @@ namespace PortabilityLayer
 			return false;
 
 		if (stream->Write(&m_fontMetrics, sizeof(m_fontMetrics)) != sizeof(m_fontMetrics))
+			return false;
+
+		GpUFilePos_t endPos = stream->Tell();
+
+		if (!stream->SeekStart(headerPos))
+			return false;
+
+		header.m_glyphDataCompressedSize = dataEndPos - dataStartPos;
+		if (stream->Write(&header, sizeof(header)) != sizeof(header))
+			return false;
+
+		if (!stream->SeekStart(headerPos))
 			return false;
 
 		return true;
@@ -215,9 +246,11 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool RenderedFontImpl::LoadInternal(GpIOStream *stream)
+	bool RenderedFontImpl::LoadInternal(GpIOStream *stream, size_t compressedDataSize)
 	{
-		if (stream->Read(m_data, m_dataSize) != m_dataSize)
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+		if (!DeflateCodec::DecompressStream(stream, compressedDataSize, m_data, m_dataSize))
 			return false;
 
 		if (stream->Read(m_dataOffsets, sizeof(m_dataOffsets)) != sizeof(m_dataOffsets))
