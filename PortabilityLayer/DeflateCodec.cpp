@@ -64,6 +64,7 @@ bool PortabilityLayer::DeflateCodec::DecompressStream(GpIOStream *stream, size_t
 
 			zstream.avail_in = sizeToRead;
 			zstream.next_in = buffer;
+			inSize -= sizeToRead;
 		}
 
 		int result = inflate(&zstream, Z_NO_FLUSH);
