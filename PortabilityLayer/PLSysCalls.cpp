@@ -16,6 +16,9 @@
 
 #include "PLDrivers.h"
 
+#include <assert.h>
+#include <setjmp.h>
+
 static void TranslateMouseInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
 	const GpMouseInputEvent &vosEvent = vosEventBase.m_event.m_mouseInputEvent;
@@ -197,5 +200,25 @@ namespace PLSysCalls
 		args[1].m_pointer = context;
 
 		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_CallOnVOSThread, args, nullptr);
+	}
+
+	static jmp_buf gs_mainExitWrapper;
+	static int gs_exitCode = 0;
+
+	void Exit(int exitCode)
+	{
+		gs_exitCode = exitCode;
+		longjmp(gs_mainExitWrapper, 1);
+	}
+
+	int MainExitWrapper(int (*mainFunc)())
+	{
+		if (!setjmp(gs_mainExitWrapper))
+		{
+			int returnCode = mainFunc();
+			return returnCode;
+		}
+		else
+			return gs_exitCode;
 	}
 }

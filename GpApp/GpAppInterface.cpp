@@ -5,6 +5,7 @@
 #include "WindowManager.h"
 
 #include "PLDrivers.h"
+#include "PLSysCalls.h"
 
 int gpAppMain();
 void gpAppInit();
@@ -30,7 +31,7 @@ void GpAppInterfaceImpl::ApplicationInit()
 
 int GpAppInterfaceImpl::ApplicationMain()
 {
-	return gpAppMain();
+	return PLSysCalls::MainExitWrapper(gpAppMain);
 }
 
 void GpAppInterfaceImpl::PL_IncrementTickCounter(uint32_t count)

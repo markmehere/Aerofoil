@@ -9,4 +9,7 @@ namespace PLSysCalls
 	void Sleep(uint32_t ticks);
 	void ForceSyncFrame();
 	void RunOnVOSThread(void(*callback)(void *context), void *context);
+	void Exit(int exitCode);
+
+	int MainExitWrapper(int (*mainFunc)());
 }

@@ -11,6 +11,7 @@
 #include "PLPasStr.h"
 #include "PLResources.h"
 #include "PLSound.h"
+#include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "QDPixMap.h"
 #include "BitmapImage.h"
@@ -114,9 +115,7 @@ void RedAlert (short errorNumber)
 //	CenterAlert(rDeathAlertID);
 
 	dummyInt = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(rDeathAlertID, &substitutions);
-	//ExitToShell();
-
-	PL_NotYetImplemented_TODO("Exit");
+	PLSysCalls::Exit(-1);
 }
 
 //--------------------------------------------------------------  CreateOffScreenBitMap
