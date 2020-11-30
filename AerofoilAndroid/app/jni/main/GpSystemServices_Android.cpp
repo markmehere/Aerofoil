@@ -285,6 +285,11 @@ bool GpSystemServices_Android::IsTextInputEnabled() const
 	return m_textInputEnabled;
 }
 
+bool GpSystemServices_Android::AreFontResourcesSeekable() const
+{
+	return false;
+}
+
 GpSystemServices_Android *GpSystemServices_Android::GetInstance()
 {
 	return &ms_instance;

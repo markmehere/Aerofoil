@@ -166,6 +166,12 @@ bool GpSystemServices_Win32::IsTextInputEnabled() const
 	return true;
 }
 
+bool GpSystemServices_Win32::AreFontResourcesSeekable() const
+{
+	return true;
+}
+
+
 void GpSystemServices_Win32::SetTouchscreenSimulation(bool isTouchscreenSimulation)
 {
 	m_isTouchscreenSimulation = isTouchscreenSimulation;

@@ -35,6 +35,7 @@ public:
 	unsigned int GetCPUCount() const override;
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;
+	bool AreFontResourcesSeekable() const override;
 
 	void SetTouchscreenSimulation(bool isTouchscreenSimulation);
 

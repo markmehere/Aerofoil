@@ -26,6 +26,8 @@ namespace PortabilityLayer
 		virtual RenderedFont *LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const = 0;
 		virtual void SaveCachedRenderedFont(const RenderedFont *rfont, int cacheID, int size, bool aa, int flags) const = 0;
 
+		virtual void PurgeCache() = 0;
+
 		static FontManager *GetInstance();
 	};
 }

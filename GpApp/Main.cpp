@@ -11,6 +11,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
+#include "FontManager.h"
 #include "GpApplicationName.h"
 #include "GpRenderedFontMetrics.h"
 #include "IGpMutex.h"
@@ -672,7 +673,6 @@ void PreloadFonts()
 
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 
-
 	const int numFontSpecs = sizeof(specs) / sizeof(specs[0]);
 
 	int queuedSpecs = 0;
@@ -714,6 +714,8 @@ void PreloadFonts()
 		StepLoadScreenRing();
 		Delay(1, nullptr);
 	}
+
+	PortabilityLayer::FontManager::GetInstance()->PurgeCache();
 }
 
 struct PreloadAATableSpec

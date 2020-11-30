@@ -26,17 +26,28 @@ namespace PortabilityLayer
 		void SetDefaultVariation(int defaultVariation);
 
 		int GetVariationForFlags(int variation) const;
-		IGpFont *GetFontForVariation(int variation) const;
+		IGpFont *GetFontForVariation(int variation);
 		FontHacks GetHacksForVariation(int variation) const;
 
 		int GetCacheID() const;
+
+		void PurgeCache();
 
 		static FontFamily *Create(int cacheID);
 		void Destroy();
 
 	private:
-		FontHacks m_hacks[kNumVariations];
-		IGpFont *m_fonts[kNumVariations];
+		struct FontSpec
+		{
+			FontSpec();
+
+			IGpFont *m_font;
+			FontHacks m_hacks;
+			const char *m_fontPath;
+			bool m_isRegistered;
+		};
+
+		FontSpec m_fontSpecs[kNumVariations];
 		uint8_t m_defaultVariation;
 		int m_cacheID;
 

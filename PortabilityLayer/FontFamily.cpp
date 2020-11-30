@@ -3,7 +3,10 @@
 #include "IGpFileSystem.h"
 #include "IGpFontHandler.h"
 #include "IGpFont.h"
+#include "IGpSystemServices.h"
 
+#include "MemReaderStream.h"
+#include "MemoryManager.h"
 #include "PLDrivers.h"
 
 #include <stdlib.h>
@@ -11,11 +14,82 @@
 
 namespace PortabilityLayer
 {
+	FontFamily::FontSpec::FontSpec()
+		: m_fontPath(nullptr)
+		, m_font(nullptr)
+		, m_hacks(FontHacks_None)
+		, m_isRegistered(false)
+	{
+	}
+
 	void FontFamily::AddFont(int flags, const char *path, FontHacks fontHacks)
 	{
-		GpIOStream *sysFontStream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, path, false, GpFileCreationDispositions::kOpenExisting);
+		m_fontSpecs[flags].m_fontPath = path;
+		m_fontSpecs[flags].m_hacks = fontHacks;
+		m_fontSpecs[flags].m_isRegistered = true;
+
+		if (!m_fontSpecs[0].m_isRegistered)
+			m_defaultVariation = flags;
+	}
+
+	void FontFamily::SetDefaultVariation(int defaultVariation)
+	{
+		if (m_fontSpecs[defaultVariation].m_isRegistered)
+			m_defaultVariation = defaultVariation;
+	}
+
+	int FontFamily::GetVariationForFlags(int variation) const
+	{
+		if (m_fontSpecs[variation].m_isRegistered)
+			return variation;
+
+		if (m_fontSpecs[0].m_isRegistered)
+			return 0;
+
+		return m_defaultVariation;
+	}
+
+	IGpFont *FontFamily::GetFontForVariation(int variation)
+	{
+		FontSpec &spec = m_fontSpecs[variation];
+		if (spec.m_font)
+			return spec.m_font;
+
+		GpIOStream *sysFontStream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, spec.m_fontPath, false, GpFileCreationDispositions::kOpenExisting);
 		if (!sysFontStream)
-			return;
+			return nullptr;
+
+		if (!PLDrivers::GetSystemServices()->AreFontResourcesSeekable())
+		{
+			PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+			size_t fontSize = sysFontStream->Size();
+			void *buffer = mm->Alloc(fontSize);
+			if (!buffer)
+			{
+				sysFontStream->Close();
+				return nullptr;
+			}
+
+			MemBufferReaderStream *bufferStream = MemBufferReaderStream::Create(buffer, fontSize);
+			if (!bufferStream)
+			{
+				mm->Release(buffer);
+				sysFontStream->Close();
+				return nullptr;
+			}
+
+			if (sysFontStream->Read(buffer, fontSize) != fontSize)
+			{
+				mm->Release(buffer);
+				sysFontStream->Close();
+				return nullptr;
+			}
+
+			sysFontStream->Close();
+
+			sysFontStream = bufferStream;
+		}
 
 		IGpFontHandler *fontHandler = PLDrivers::GetFontHandler();
 
@@ -25,45 +99,33 @@ namespace PortabilityLayer
 			sysFontStream->Close();
 
 		if (!font)
-			return;
+			return nullptr;
 
-		m_fonts[flags] = font;
-		m_hacks[flags] = fontHacks;
+		spec.m_font = font;
 
-		if (m_fonts[0] == nullptr)
-			m_defaultVariation = flags;
-	}
-
-	void FontFamily::SetDefaultVariation(int defaultVariation)
-	{
-		if (m_fonts[defaultVariation])
-			m_defaultVariation = defaultVariation;
-	}
-
-	int FontFamily::GetVariationForFlags(int variation) const
-	{
-		if (m_fonts[variation])
-			return variation;
-
-		if (m_fonts[0])
-			return 0;
-
-		return m_defaultVariation;
-	}
-
-	IGpFont *FontFamily::GetFontForVariation(int variation) const
-	{
-		return m_fonts[variation];
+		return font;
 	}
 
 	PortabilityLayer::FontHacks FontFamily::GetHacksForVariation(int variation) const
 	{
-		return m_hacks[variation];
+		return m_fontSpecs[variation].m_hacks;
 	}
 
 	int FontFamily::GetCacheID() const
 	{
 		return m_cacheID;
+	}
+
+	void FontFamily::PurgeCache()
+	{
+		for (unsigned int i = 0; i < kNumVariations; i++)
+		{
+			if (IGpFont *font = m_fontSpecs[i].m_font)
+			{
+				font->Destroy();
+				m_fontSpecs[i].m_font = nullptr;
+			}
+		}
 	}
 
 	FontFamily *FontFamily::Create(int cacheID)
@@ -85,19 +147,10 @@ namespace PortabilityLayer
 		: m_defaultVariation(0)
 		, m_cacheID(cacheID)
 	{
-		for (unsigned int i = 0; i < kNumVariations; i++)
-		{
-			m_fonts[i] = nullptr;
-			m_hacks[i] = FontHacks_None;
-		}
 	}
 
 	FontFamily::~FontFamily()
 	{
-		for (unsigned int i = 0; i < kNumVariations; i++)
-		{
-			if (IGpFont *font = m_fonts[i])
-				font->Destroy();
-		}
+		PurgeCache();
 	}
 }

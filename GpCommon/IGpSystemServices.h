@@ -33,4 +33,5 @@ public:
 	virtual unsigned int GetCPUCount() const = 0;
 	virtual void SetTextInputEnabled(bool isEnabled) = 0;
 	virtual bool IsTextInputEnabled() const = 0;
+	virtual bool AreFontResourcesSeekable() const = 0;
 };

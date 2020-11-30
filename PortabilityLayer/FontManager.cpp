@@ -35,6 +35,8 @@ namespace PortabilityLayer
 		RenderedFont *LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const override;
 		void SaveCachedRenderedFont(const RenderedFont *rfont, int cacheID, int size, bool aa, int flags) const override;
 
+		void PurgeCache() override;
+
 		static FontManagerImpl *GetInstance();
 
 	private:
@@ -262,6 +264,14 @@ namespace PortabilityLayer
 		}
 
 		stream->Close();
+	}
+
+	void FontManagerImpl::PurgeCache()
+	{
+		m_systemFont->PurgeCache();
+		m_applicationFont->PurgeCache();
+		m_handwritingFont->PurgeCache();
+		m_monospaceFont->PurgeCache();
 	}
 
 	FontManagerImpl *FontManagerImpl::GetInstance()
