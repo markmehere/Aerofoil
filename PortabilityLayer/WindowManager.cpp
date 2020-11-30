@@ -1043,6 +1043,11 @@ namespace PortabilityLayer
 		PLDrivers::GetDisplayDriver()->GetInitialDisplayResolution(&displayWidth, &displayHeight);
 
 		m_displayResolution = Vec2i(displayWidth, displayHeight);
+
+		IGpLogDriver *logger = PLDrivers::GetLogDriver();
+
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Information, "WindowManagerImpl: Initialized at resolution %ix%i", static_cast<int>(displayWidth), static_cast<int>(displayHeight));
 	}
 
 	Window *WindowManagerImpl::CreateWindow(const WindowDef &windowDef)
