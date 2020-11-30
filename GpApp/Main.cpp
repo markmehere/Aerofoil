@@ -913,15 +913,15 @@ void ShowInitialLaunchDisclaimer()
 		"I hope that by adapting it to be playable on modern systems, more",
 		"people can appreciate this important piece of video game history.",
 		"",
-		"This software is an adaptation that attempts to portray the original work",
+		"This software is an adaptation that attempts to restore the original work",
 		"as accurately as possible, but some fonts, graphics, and sounds have been",
 		"substituted or removed for copyright reasons, and some user interface",
 		"components have been added or changed to improve compatibility.",
 		"",
 		"This software is not developed by, maintained by, supported by, endorsed by,",
 		"or otherwise associated with the authors or publishers of Glider PRO.",
-		"Any references to Glider PRO in this software are historic and",
-		"should not be interpreted as implying any form of association."
+		"Any references to Glider PRO in this software are for historical accuracy",
+		"and should not be interpreted as implying any form of endorsement."
 	};
 
 	const size_t numLines = sizeof(disclaimerLines) / sizeof(disclaimerLines[0]);
