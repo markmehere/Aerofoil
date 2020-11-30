@@ -22,6 +22,7 @@ namespace PortabilityLayer
 	class WindowManager
 	{
 	public:
+		virtual void Init() = 0;
 		virtual Window *GetPutInFrontSentinel() const = 0;
 		virtual Window *CreateWindow(const WindowDef &windowDef) = 0;
 		virtual void ResizeWindow(Window *window, int width, int height) = 0;
@@ -51,6 +52,8 @@ namespace PortabilityLayer
 		virtual void HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) = 0;
 
 		virtual void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b) = 0;
+
+		virtual Vec2i GetDisplayResolution() const = 0;
 
 		static WindowManager *GetInstance();
 	};

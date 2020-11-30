@@ -171,6 +171,8 @@ namespace PortabilityLayer
 		WindowManagerImpl();
 		~WindowManagerImpl();
 
+		void Init() override;
+
 		Window *CreateWindow(const WindowDef &windowDef) override;
 		void ResizeWindow(Window *window, int width, int height) override;
 		void MoveWindow(Window *window, int x, int y) override;
@@ -197,6 +199,8 @@ namespace PortabilityLayer
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
 
 		void HandleScreenResolutionChange(uint32_t prevWidth, uint32_t prevHeight, uint32_t newWidth, uint32_t newHeight) override;
+
+		Vec2i GetDisplayResolution() const override;
 
 		void SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b) override;
 
@@ -228,6 +232,8 @@ namespace PortabilityLayer
 		DrawSurface m_resizeInProgressHorizontalBar;
 		DrawSurface m_resizeInProgressVerticalBar;
 		bool m_isResizeInProgress;
+
+		Vec2i m_displayResolution;
 
 		static WindowManagerImpl ms_instance;
 
@@ -1011,8 +1017,6 @@ namespace PortabilityLayer
 		return m_effects;
 	}
 
-
-
 	WindowManagerImpl::WindowManagerImpl()
 		: m_windowStackTop(nullptr)
 		, m_windowStackBottom(nullptr)
@@ -1025,11 +1029,20 @@ namespace PortabilityLayer
 		, m_flickerZoneSize(0)
 		, m_flickerBasisCoordinateDistance(0)
 		, m_flickerChromeDistanceOffset(0)
+		, m_displayResolution(0, 0)
 	{
 	}
 
 	WindowManagerImpl::~WindowManagerImpl()
 	{
+	}
+
+	void WindowManagerImpl::Init()
+	{
+		unsigned int displayWidth, displayHeight;
+		PLDrivers::GetDisplayDriver()->GetInitialDisplayResolution(&displayWidth, &displayHeight);
+
+		m_displayResolution = Vec2i(displayWidth, displayHeight);
 	}
 
 	Window *WindowManagerImpl::CreateWindow(const WindowDef &windowDef)
@@ -1526,6 +1539,11 @@ namespace PortabilityLayer
 
 			window->SetPosition(Vec2i(newX, newY));
 		}
+	}
+
+	Vec2i WindowManagerImpl::GetDisplayResolution() const
+	{
+		return m_displayResolution;
 	}
 
 	void WindowManagerImpl::SetBackgroundColor(uint8_t r, uint8_t g, uint8_t b)

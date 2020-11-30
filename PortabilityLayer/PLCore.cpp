@@ -677,6 +677,7 @@ void PL_Init()
 	PortabilityLayer::DisplayDeviceManager::GetInstance()->Init();
 	PortabilityLayer::QDManager::GetInstance()->Init();
 	PortabilityLayer::MenuManager::GetInstance()->Init();
+	PortabilityLayer::WindowManager::GetInstance()->Init();
 
 	PLDrivers::GetFileSystem()->SetMainThreadRelay(PLMainThreadRelay::GetInstance());
 	PLDrivers::GetFileSystem()->SetDelayCallback(PLSysCalls::Sleep);

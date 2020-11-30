@@ -508,8 +508,7 @@ void MoveDialogToTopOfScreen(Dialog *dial)
 	Window *window = dial->GetWindow();
 	PortabilityLayer::Vec2i pos = window->GetPosition();
 
-	unsigned int height = 0;
-	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &height);
+	unsigned int height = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution().m_y;
 
 	pos.m_y = (height - window->GetDrawSurface()->m_port.GetRect().Height()) / 8;
 

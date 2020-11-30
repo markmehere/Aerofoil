@@ -1143,6 +1143,9 @@ void GpDisplayDriverD3D11::Run()
 	LARGE_INTEGER lastTimestamp;
 	memset(&lastTimestamp, 0, sizeof(lastTimestamp));
 
+	m_initialWidth = m_windowWidthVirtual;
+	m_initialHeight = m_windowHeightVirtual;
+
 	MSG msg;
 	for (;;)
 	{
@@ -1242,12 +1245,12 @@ void GpDisplayDriverD3D11::Shutdown()
 	free(this);
 }
 
-void GpDisplayDriverD3D11::GetDisplayResolution(unsigned int *width, unsigned int *height)
+void GpDisplayDriverD3D11::GetInitialDisplayResolution(unsigned int *width, unsigned int *height)
 {
 	if (width)
-		*width = m_windowWidthVirtual;
+		*width = m_initialWidth;
 	if (height)
-		*height = m_windowHeightVirtual;
+		*height = m_initialHeight;
 }
 
 IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext)
@@ -1516,6 +1519,8 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_windowHeightPhysical(480)
 	, m_windowWidthVirtual(640)
 	, m_windowHeightVirtual(480)
+	, m_initialWidth(640)
+	, m_initialHeight(480)
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
 	, m_vosFiber(nullptr)

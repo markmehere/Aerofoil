@@ -1,6 +1,7 @@
 #include "CombinedTimestamp.h"
 #include "DeflateCodec.h"
 #include "Environ.h"
+#include "FontFamily.h"
 #include "GpBuildVersion.h"
 #include "GpIOStream.h"
 #include "GpFileCreationDisposition.h"
@@ -12,10 +13,10 @@
 #include "GpApplicationName.h"
 #include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
-#include "ZipFile.h"
+#include "Vec2i.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
-#include "FontFamily.h"
+#include "ZipFile.h"
 
 #include "PLCore.h"
 #include "PLDrivers.h"
@@ -140,9 +141,9 @@ static void InitSourceExportWindow(SourceExportState *state)
 
 	// We have to use this instead of thisMac.fullScreen because the resolution may change during the sleep call, especially on Android displays where
 	// the status bar dismissal causes a major change in the virtual resolution.
-	unsigned int displayWidth = 0;
-	unsigned int displayHeight = 0;
-	PLDrivers::GetDisplayDriver()->GetDisplayResolution(&displayWidth, &displayHeight);
+	PortabilityLayer::Vec2i displaySize = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution();
+	unsigned int displayWidth = displaySize.m_x;
+	unsigned int displayHeight = displaySize.m_y;
 
 	int32_t lsX = (static_cast<int32_t>(displayWidth) - kLoadScreenWidth) / 2;
 	int32_t lsY = (static_cast<int32_t>(displayHeight) - kLoadScreenHeight) / 2;

@@ -731,7 +731,7 @@ public:
 
 	void Run() override;
 	void Shutdown() override;
-	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
+	void GetInitialDisplayResolution(unsigned int *width, unsigned int *height) override;
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
 	IGpCursor *CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY) override;
@@ -886,6 +886,8 @@ private:
 	uint32_t m_windowHeightPhysical;
 	uint32_t m_windowWidthVirtual;		// Virtual resolution is the resolution reported to the game
 	uint32_t m_windowHeightVirtual;
+	uint32_t m_initialWidthVirtual;		// Virtual resolution is the resolution reported to the game
+	uint32_t m_initialHeightVirtual;
 	float m_pixelScaleX;
 	float m_pixelScaleY;
 	bool m_useUpscaleFilter;
@@ -1178,6 +1180,8 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_windowHeightPhysical(480)
 	, m_windowWidthVirtual(640)
 	, m_windowHeightVirtual(480)
+	, m_initialWidthVirtual(640)
+	, m_initialHeightVirtual(480)
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
 	, m_useUpscaleFilter(false)
@@ -1897,6 +1901,9 @@ void GpDisplayDriver_SDL_GL2::Run()
 	if (!m_gl.LookUpFunctions())
 		return;
 
+	m_initialWidthVirtual = m_windowWidthVirtual;
+	m_initialHeightVirtual = m_windowHeightVirtual;
+
 	for (;;)
 	{
 		SDL_Event msg;
@@ -2052,13 +2059,13 @@ void GpDisplayDriver_SDL_GL2::Shutdown()
 	free(this);
 }
 
-void GpDisplayDriver_SDL_GL2::GetDisplayResolution(unsigned int *width, unsigned int *height)
+void GpDisplayDriver_SDL_GL2::GetInitialDisplayResolution(unsigned int *width, unsigned int *height)
 {
 	if (width)
-		*width = m_windowWidthVirtual;
+		*width = m_initialWidthVirtual;
 
 	if (height)
-		*height = m_windowHeightVirtual;
+		*height = m_initialHeightVirtual;
 }
 
 IGpDisplayDriverSurface *GpDisplayDriver_SDL_GL2::CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext)

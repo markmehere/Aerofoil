@@ -11,6 +11,7 @@
 #include "MenuManager.h"
 #include "IGpDisplayDriver.h"
 #include "IGpSystemServices.h"
+#include "Vec2i.h"
 #include "WindowManager.h"
 
 #include "PLDrivers.h"
@@ -420,11 +421,9 @@ void HandleDepthSwitching (void)
 
 void GetDeviceRect(Rect *rect)
 {
-	unsigned int width;
-	unsigned int height;
-	PLDrivers::GetDisplayDriver()->GetDisplayResolution(&width, &height);
+	PortabilityLayer::Vec2i displayResolution = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution();
 
-	SetRect(rect, 0, 0, static_cast<short>(width), static_cast<short>(height));
+	SetRect(rect, 0, 0, static_cast<short>(displayResolution.m_x), static_cast<short>(displayResolution.m_y));
 }
 
 Boolean AreWeColorOrGrayscale()

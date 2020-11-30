@@ -39,7 +39,7 @@ public:
 	void Run() override;
 	void Shutdown() override;
 
-	void GetDisplayResolution(unsigned int *width, unsigned int *height) override;
+	void GetInitialDisplayResolution(unsigned int *width, unsigned int *height) override;
 
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
@@ -177,6 +177,9 @@ private:
 	DWORD m_windowHeightVirtual;
 	float m_pixelScaleX;
 	float m_pixelScaleY;
+
+	unsigned int m_initialWidth;
+	unsigned int m_initialHeight;
 
 	IGpCursor_Win32 *m_activeCursor;
 	IGpCursor_Win32 *m_pendingCursor;

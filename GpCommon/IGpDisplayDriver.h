@@ -31,7 +31,8 @@ struct IGpDisplayDriver
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
 
-	virtual void GetDisplayResolution(unsigned int *width, unsigned int *height) = 0;
+	// Returns the initial resolution before any display resolution events are posted
+	virtual void GetInitialDisplayResolution(unsigned int *width, unsigned int *height) = 0;
 
 	virtual IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext) = 0;
 	virtual void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) = 0;

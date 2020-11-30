@@ -1,6 +1,7 @@
 #include "DialogManager.h"
 #include "IconLoader.h"
 #include "IGpDisplayDriver.h"
+#include "IGpLogDriver.h"
 #include "IGpSystemServices.h"
 #include "ResourceManager.h"
 #include "QDPixMap.h"
@@ -830,8 +831,11 @@ namespace PortabilityLayer
 
 	void DialogManagerImpl::PositionWindow(Window *window, const Rect &rect) const
 	{
-		unsigned int displayWidth, displayHeight;
-		PLDrivers::GetDisplayDriver()->GetDisplayResolution(&displayWidth, &displayHeight);
+		IGpLogDriver *logger = PLDrivers::GetLogDriver();
+
+		Vec2i displayResolution = WindowManager::GetInstance()->GetDisplayResolution();
+		unsigned int displayWidth = displayResolution.m_x;
+		unsigned int displayHeight = displayResolution.m_y;
 
 		const unsigned int halfDisplayHeight = displayHeight / 2;
 		const unsigned int quarterDisplayWidth = displayHeight / 4;
@@ -839,6 +843,9 @@ namespace PortabilityLayer
 
 		const uint16_t dialogWidth = rect.Width();
 		const uint16_t dialogHeight = rect.Height();
+
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Information, "Auto positioning window size %ix%i on display size %ix%i", static_cast<int>(dialogWidth), static_cast<int>(dialogHeight), static_cast<int>(displayWidth), static_cast<int>(displayHeight));
 
 		Vec2i newPosition;
 
@@ -859,6 +866,9 @@ namespace PortabilityLayer
 			newPosition.m_y = displayHeight / 4;
 		else
 			newPosition.m_y = (static_cast<int32_t>(displayHeight) - static_cast<int32_t>(dialogHeight)) / 2;
+
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Information, "Positioned at %i,%i", static_cast<int>(newPosition.m_x), static_cast<int>(newPosition.m_y));
 
 		window->SetPosition(newPosition);
 	}

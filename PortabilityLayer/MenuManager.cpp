@@ -14,6 +14,7 @@
 #include "RGBAColor.h"
 #include "ResolveCachingColor.h"
 #include "Vec2i.h"
+#include "WindowManager.h"
 
 #include "PLBigEndian.h"
 #include "PLCore.h"
@@ -840,8 +841,7 @@ namespace PortabilityLayer
 			m_haveIcon = true;
 		}
 
-		unsigned int width;
-		PLDrivers::GetDisplayDriver()->GetDisplayResolution(&width, nullptr);
+		unsigned int width = WindowManager::GetInstance()->GetDisplayResolution().m_x;
 
 		GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
@@ -1036,8 +1036,7 @@ namespace PortabilityLayer
 
 				if (m_isTouchScreen)
 				{
-					unsigned int displayHeight = 0;
-					displayDriver->GetDisplayResolution(nullptr, &displayHeight);
+					unsigned int displayHeight = WindowManager::GetInstance()->GetDisplayResolution().m_y;
 					y = static_cast<int32_t>(displayHeight) - kTouchscreenMenuBarHeight;
 				}
 
@@ -1307,8 +1306,7 @@ namespace PortabilityLayer
 	{
 		if (m_isTouchScreen)
 		{
-			unsigned int displayHeight = 0;
-			PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
+			unsigned int displayHeight = WindowManager::GetInstance()->GetDisplayResolution().m_y;
 			return y >= (static_cast<int32_t>(displayHeight - kTouchscreenMenuBarHeight)) && y < static_cast<int32_t>(displayHeight);
 		}
 		else
@@ -1388,8 +1386,7 @@ namespace PortabilityLayer
 				{
 					int32_t popupBottom = static_cast<int32_t>(m_popupPosition.m_y + menu->layoutFinalHeight);
 
-					unsigned int displayHeight = 0;
-					PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
+					unsigned int displayHeight = WindowManager::GetInstance()->GetDisplayResolution().m_y;
 					if (popupBottom > static_cast<int32_t>(displayHeight))
 						m_popupPosition.m_y -= popupBottom - static_cast<int32_t>(displayHeight);
 				}

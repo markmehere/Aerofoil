@@ -169,8 +169,7 @@ static void DrawMainMenuControl(DrawSurface *surface, MainMenuUIState::ControlID
 
 void StartScrollForPage()
 {
-	unsigned int displayHeight = 0;
-	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
+	unsigned int displayHeight = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution().m_y;
 
 	DismissMainMenuUI();
 
@@ -263,8 +262,7 @@ void StartMainMenuUI()
 
 static void DismissMainMenuUIPage()
 {
-	unsigned int displayHeight = 0;
-	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
+	unsigned int displayHeight = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution().m_y;
 
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
@@ -293,8 +291,7 @@ void TickMainMenuUI()
 	{
 		PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-		unsigned int displayHeight = 0;
-		PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
+		unsigned int displayHeight = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution().m_y;
 
 		mainMenu.m_scrollInStep -= MainMenuUIState::kControlScrollInDecay;
 		mainMenu.m_scrollInOffset -= (mainMenu.m_scrollInStep >> MainMenuUIState::kControlScrollInDecayFalloffBits);
@@ -328,8 +325,7 @@ void HandleMainMenuUIResolutionChange()
 {
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
 
-	unsigned int displayHeight = 0;
-	PLDrivers::GetDisplayDriver()->GetDisplayResolution(nullptr, &displayHeight);
+	unsigned int displayHeight = PortabilityLayer::WindowManager::GetInstance()->GetDisplayResolution().m_y;
 
 	for (int i = 0; i < MainMenuUIState::Control_Count; i++)
 	{
