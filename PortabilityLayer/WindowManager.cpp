@@ -1539,6 +1539,8 @@ namespace PortabilityLayer
 
 			window->SetPosition(Vec2i(newX, newY));
 		}
+
+		m_displayResolution = Vec2i(newWidth, newHeight);
 	}
 
 	Vec2i WindowManagerImpl::GetDisplayResolution() const
