@@ -1,4 +1,5 @@
 #include "MemReaderStream.h"
+#include "MemoryManager.h"
 
 #include <string.h>
 
@@ -8,6 +9,10 @@ namespace PortabilityLayer
 		: m_bytes(static_cast<const uint8_t*>(memStream))
 		, m_size(size)
 		, m_loc(0)
+	{
+	}
+
+	MemReaderStream::~MemReaderStream()
 	{
 	}
 
@@ -109,6 +114,34 @@ namespace PortabilityLayer
 	}
 
 	void MemReaderStream::Flush()
+	{
+	}
+
+
+	MemBufferReaderStream::~MemBufferReaderStream()
+	{
+		if (m_buffer)
+			MemoryManager::GetInstance()->Release(m_buffer);
+	}
+
+	MemBufferReaderStream *MemBufferReaderStream::Create(void *buffer, size_t size)
+	{
+		void *storage = MemoryManager::GetInstance()->Alloc(sizeof(MemBufferReaderStream));
+		if (!storage)
+			return nullptr;
+
+		return new (storage) MemBufferReaderStream(buffer, size);
+	}
+
+	void MemBufferReaderStream::Close()
+	{
+		this->~MemBufferReaderStream();
+		MemoryManager::GetInstance()->Release(this);
+	}
+
+	MemBufferReaderStream::MemBufferReaderStream(void *buffer, size_t size)
+		: MemReaderStream(buffer, size)
+		, m_buffer(buffer)
 	{
 	}
 }

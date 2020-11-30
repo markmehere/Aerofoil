@@ -7,10 +7,11 @@
 
 namespace PortabilityLayer
 {
-	class MemReaderStream final : public GpIOStream
+	class MemReaderStream : public GpIOStream
 	{
 	public:
 		MemReaderStream(const void *memStream, size_t size);
+		virtual ~MemReaderStream();
 
 		size_t Read(void *bytesOut, size_t size) override;
 		size_t Write(const void *bytes, size_t size) override;
@@ -32,6 +33,22 @@ namespace PortabilityLayer
 		const uint8_t *m_bytes;
 		size_t m_size;
 		size_t m_loc;
+	};
+
+	class MemBufferReaderStream final : public MemReaderStream
+	{
+	public:
+		~MemBufferReaderStream() override;
+
+		static MemBufferReaderStream *Create(void *buffer, size_t size);
+
+		void Close() override;
+
+	private:
+		MemBufferReaderStream() GP_DELETED;
+		MemBufferReaderStream(void *buffer, size_t size);
+
+		void *m_buffer;
 	};
 }
 
