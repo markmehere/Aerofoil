@@ -392,6 +392,8 @@ void StepLoadScreenRing()
 
 void CreateLoadScreenWindow(int phase)
 {
+	FlushResolutionChange();
+
 	if (loadScreenRingSurface)
 	{
 		DisposeGWorld(loadScreenRingSurface);
@@ -1139,8 +1141,11 @@ int gpAppMain()
 	{
 		WriteOutPrefs();
 
+		FlushResolutionChange();
 		ShowInitialLaunchDisclaimer();
 	}
+
+	FlushResolutionChange();
 
 	OpenMainWindow();
 
