@@ -361,7 +361,7 @@ namespace PortabilityLayer
 
 			const bool haveEvent = WaitForEvent(&evt, 1);
 
-			if (window->IsHandlingTickEvents())
+			if (!haveEvent && window->IsHandlingTickEvents())
 				window->OnTick();
 
 			const int16_t selection = (filterFunc != nullptr) ? filterFunc(captureContext, this, haveEvent ? &evt : nullptr) : -1;
