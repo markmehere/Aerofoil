@@ -11,5 +11,7 @@ namespace PortabilityLayer
 		static void EncodeCodePoint(uint8_t *characters, size_t &outCharactersEmitted, uint32_t codePoint);
 
 		static bool DecodeToMacRomanPascalStr(const uint8_t *inChars, size_t inSize, uint8_t *outChars, size_t maxOutSize, size_t &outSize);
+
+		static const unsigned int kMaxEncodedBytes = 4;
 	};
 }

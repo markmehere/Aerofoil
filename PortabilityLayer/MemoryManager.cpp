@@ -109,7 +109,8 @@ namespace PortabilityLayer
 		uint8_t *bytes = static_cast<uint8_t*>(buf);
 		const MMBlock *mmBlock = reinterpret_cast<const MMBlock*>(bytes - MMBlock::AlignedSize());
 
-		free(bytes - MMBlock::AlignedSize() - mmBlock->m_offsetFromAllocLocation);
+		void *freeLoc = bytes - MMBlock::AlignedSize() - mmBlock->m_offsetFromAllocLocation;
+		free(freeLoc);
 	}
 
 	MMHandleBlock *MemoryManagerImpl::AllocHandle(size_t size)

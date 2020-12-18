@@ -90,6 +90,9 @@ namespace PortabilityLayer
 
 		void HandleHome(bool shiftHeld);
 		void HandleEnd(bool shiftHeld);
+		void HandleCopy();
+		void HandleCut();
+		void HandlePaste(size_t repeatCount);
 
 		size_t FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange, CaratCharacterAlignment *optOutAlignment) const;
 		void ExpandSelectionToWords(size_t caratPos, size_t &outStartChar, size_t &outEndChar);
@@ -137,5 +140,10 @@ namespace PortabilityLayer
 		void *m_characterFilterContext;
 
 		static const CharacterCategorySpan gs_characterCategorySpans[];
+
+		static const int kCopyShortcutKey = 'C';
+		static const int kCutShortcutKey = 'X';
+		static const int kPasteShortcutKey = 'V';
+		static const int kSelectAllShortcutKey = 'A';
 	};
 }

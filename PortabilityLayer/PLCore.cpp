@@ -15,6 +15,7 @@
 #include "IGpDirectoryCursor.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
+#include "IGpClipboardContents.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriver.h"
 #include "IGpFileSystem.h"
@@ -44,6 +45,8 @@
 #include "PLSysCalls.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
+
+#include "UTF8.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -686,6 +689,141 @@ void PL_Init()
 WindowPtr PL_GetPutInFrontWindowPtr()
 {
 	return PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel();
+}
+
+class PLClipboardContentsText : public IGpClipboardContentsText
+{
+public:
+	static PLClipboardContentsText *CreateFromMacRomanStr(const uint8_t *chars, size_t size);
+
+	GpClipboardContentsType_t GetContentsType() const override;
+	void Destroy() override;
+	IGpClipboardContents *Clone() const override;
+	const uint8_t *GetBytes() const override;
+	size_t GetSize() const override;
+
+private:
+	PLClipboardContentsText(uint8_t *utf8Bytes, size_t size);
+	~PLClipboardContentsText();
+
+	uint8_t *m_utf8Bytes;
+	size_t m_size;
+};
+
+
+PLClipboardContentsText *PLClipboardContentsText::CreateFromMacRomanStr(const uint8_t *chars, size_t length)
+{
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+	size_t numUTF8Bytes = 0;
+
+	for (size_t i = 0; i < length; i++)
+	{
+		uint8_t utf8Bytes[PortabilityLayer::UTF8Processor::kMaxEncodedBytes];
+
+		uint16_t codePoint = MacRoman::ToUnicode(chars[i]);
+
+		size_t numBytesEmitted = 0;
+		PortabilityLayer::UTF8Processor::EncodeCodePoint(utf8Bytes, numBytesEmitted, codePoint);
+
+		numUTF8Bytes += numBytesEmitted;
+	}
+
+	uint8_t *utf8Bytes = nullptr;
+
+	if (numUTF8Bytes)
+	{
+		utf8Bytes = static_cast<uint8_t*>(mm->Alloc(numUTF8Bytes));
+		if (!utf8Bytes)
+			return nullptr;
+
+		numUTF8Bytes = 0;
+		for (size_t i = 0; i < length; i++)
+		{
+			uint16_t codePoint = MacRoman::ToUnicode(chars[i]);
+
+			size_t numBytesEmitted = 0;
+			PortabilityLayer::UTF8Processor::EncodeCodePoint(utf8Bytes + numUTF8Bytes, numBytesEmitted, codePoint);
+
+			numUTF8Bytes += numBytesEmitted;
+		}
+	}
+
+	void *storage = mm->Alloc(sizeof(PLClipboardContentsText));
+	if (!storage)
+	{
+		mm->Release(utf8Bytes);
+		return nullptr;
+	}
+
+	return new (storage) PLClipboardContentsText(utf8Bytes, numUTF8Bytes);
+}
+
+PLClipboardContentsText::PLClipboardContentsText(uint8_t *utf8Bytes, size_t size)
+	: m_utf8Bytes(utf8Bytes)
+	, m_size(size)
+{
+}
+
+PLClipboardContentsText::~PLClipboardContentsText()
+{
+	PortabilityLayer::MemoryManager::GetInstance()->Release(m_utf8Bytes);
+}
+
+GpClipboardContentsType_t PLClipboardContentsText::GetContentsType() const
+{
+	return GpClipboardContentsTypes::kText;
+}
+
+void PLClipboardContentsText::Destroy()
+{
+	this->~PLClipboardContentsText();
+	PortabilityLayer::MemoryManager::GetInstance()->Release(this);
+}
+
+IGpClipboardContents *PLClipboardContentsText::Clone() const
+{
+	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+	uint8_t *bytesCopy = nullptr;
+	if (m_size)
+	{
+		bytesCopy = static_cast<uint8_t*>(mm->Alloc(m_size));
+		if (!bytesCopy)
+			return nullptr;
+
+		memcpy(bytesCopy, m_utf8Bytes, m_size);
+	}
+
+	void *storage = mm->Alloc(sizeof(PLClipboardContentsText));
+	if (!storage)
+	{
+		if (bytesCopy)
+			mm->Release(bytesCopy);
+
+		return nullptr;
+	}
+
+	return new (storage) PLClipboardContentsText(bytesCopy, m_size);
+}
+
+const uint8_t *PLClipboardContentsText::GetBytes() const
+{
+	return m_utf8Bytes;
+}
+
+size_t PLClipboardContentsText::GetSize() const
+{
+	return m_size;
+}
+
+
+void PL_CopyStringToClipboard(const uint8_t *chars, size_t length)
+{
+	if (IGpClipboardContentsText *clipboardText = PLClipboardContentsText::CreateFromMacRomanStr(chars, length))
+	{
+		PLDrivers::GetSystemServices()->SetClipboardContents(clipboardText);
+		clipboardText->Destroy();
+	}
 }
 
 Window::Window()

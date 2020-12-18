@@ -19,6 +19,7 @@ class GpSystemServices_Win32 final : public IGpSystemServices
 {
 public:
 	GpSystemServices_Win32();
+	~GpSystemServices_Win32();
 
 	int64_t GetTime() const override;
 	void GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const override;
@@ -36,6 +37,8 @@ public:
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;
 	bool AreFontResourcesSeekable() const override;
+	IGpClipboardContents *GetClipboardContents() const override;
+	void SetClipboardContents(IGpClipboardContents *contents) override;
 
 	void SetTouchscreenSimulation(bool isTouchscreenSimulation);
 

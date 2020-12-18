@@ -279,3 +279,5 @@ void PL_NotYetImplemented();
 void PL_NotYetImplemented_Minor();
 void PL_NotYetImplemented_TODO(const char *category);
 void PL_Init();
+
+void PL_CopyStringToClipboard(const uint8_t *chars, size_t length);

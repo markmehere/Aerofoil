@@ -24,6 +24,8 @@ public:
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;
 	bool AreFontResourcesSeekable() const override;
+	IGpClipboardContents *GetClipboardContents() const override;
+	void SetClipboardContents(IGpClipboardContents *contents) override;
 
 	void FlushTextInputEnabled();
 

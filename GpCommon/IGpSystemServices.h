@@ -12,6 +12,7 @@
 
 struct IGpMutex;
 struct IGpThreadEvent;
+struct IGpClipboardContents;
 
 struct IGpSystemServices
 {
@@ -34,4 +35,6 @@ public:
 	virtual void SetTextInputEnabled(bool isEnabled) = 0;
 	virtual bool IsTextInputEnabled() const = 0;
 	virtual bool AreFontResourcesSeekable() const = 0;
+	virtual IGpClipboardContents *GetClipboardContents() const = 0;
+	virtual void SetClipboardContents(IGpClipboardContents *contents) = 0;
 };

@@ -2,6 +2,7 @@
 
 #include "FontFamily.h"
 #include "FontManager.h"
+#include "IGpClipboardContents.h"
 #include "IGpSystemServices.h"
 #include "InputManager.h"
 #include "MacRomanConversion.h"
@@ -9,14 +10,16 @@
 #include "RenderedFont.h"
 #include "GpRenderedFontMetrics.h"
 #include "ResolveCachingColor.h"
-#include "TextPlacer.h"
 #include "Rect2i.h"
+#include "TextPlacer.h"
+#include "UTF8.h"
 
 #include "PLDrivers.h"
 #include "PLKeyEncoding.h"
 #include "PLQDraw.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
+#include "PLCore.h"
 
 #include <algorithm>
 
@@ -237,6 +240,7 @@ namespace PortabilityLayer
 				const KeyDownStates *downStates = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 				const bool isShiftHeld = downStates->m_special.Get(GpKeySpecials::kLeftShift) || downStates->m_special.Get(GpKeySpecials::kRightShift);
 				const bool isWords = downStates->m_special.Get(GpKeySpecials::kLeftCtrl) || downStates->m_special.Get(GpKeySpecials::kRightCtrl);
+				const bool isCtrlHeld = downStates->m_special.Get(GpKeySpecials::kLeftCtrl) || downStates->m_special.Get(GpKeySpecials::kRightCtrl);
 
 				if (keyEvent.m_keyIDSubset == GpKeyIDSubsets::kSpecial)
 				{
@@ -279,6 +283,39 @@ namespace PortabilityLayer
 					{
 						HandleEnd(isShiftHeld);
 						return WidgetHandleStates::kDigested;
+					}
+				}
+
+				if (isCtrlHeld && keyEvent.m_keyIDSubset == GpKeyIDSubsets::kASCII)
+				{
+					if (keyEvent.m_key.m_asciiChar == kCopyShortcutKey)
+					{
+						if (m_selStartChar != m_selEndChar)
+							HandleCopy();
+						return WidgetHandleStates::kDigested;
+					}
+					if (keyEvent.m_key.m_asciiChar == kCutShortcutKey)
+					{
+						if (m_selStartChar != m_selEndChar)
+							HandleCut();
+						return WidgetHandleStates::kDigested;
+					}
+					else if (keyEvent.m_key.m_asciiChar == kPasteShortcutKey)
+					{
+						HandlePaste(keyEvent.m_repeatCount);
+						return WidgetHandleStates::kDigested;
+					}
+					else if (keyEvent.m_key.m_asciiChar == kSelectAllShortcutKey)
+					{
+						m_selStartChar = 0;
+						m_selEndChar = m_length;
+
+						m_caratSelectionAnchor = CaratSelectionAnchor_Start;
+						m_caratScrollLocked = false;
+						AdjustScrollToCarat();
+
+						m_caratTimer = 0;
+						Redraw();
 					}
 				}
 			}
@@ -642,7 +679,91 @@ namespace PortabilityLayer
 			Redraw();
 		}
 	}
+	
+	void EditboxWidget::HandleCopy()
+	{
+		if (m_selStartChar == m_selEndChar)
+			return;
 
+		PL_CopyStringToClipboard(m_chars + m_selStartChar, m_selEndChar - m_selStartChar);
+	}
+
+	void EditboxWidget::HandleCut()
+	{
+		HandleCopy();
+		HandleBackspace(1);
+	}
+
+	void EditboxWidget::HandlePaste(size_t repeatCount)
+	{
+		IGpClipboardContents *clipboardContents = PLDrivers::GetSystemServices()->GetClipboardContents();
+
+		if (clipboardContents == nullptr)
+			return;
+
+		if (clipboardContents->GetContentsType() != GpClipboardContentsTypes::kText)
+		{
+			clipboardContents->Destroy();
+			return;
+		}
+
+		IGpClipboardContentsText *textContents = static_cast<IGpClipboardContentsText*>(clipboardContents);
+		const size_t utf8Size = textContents->GetSize();
+		const uint8_t *utf8Bytes = textContents->GetBytes();
+
+		size_t numCodePoints = 0;
+		for (size_t i = 0; i < utf8Size; )
+		{
+			uint32_t codePoint = 0;
+			size_t numDigested = 0;
+			if (!UTF8Processor::DecodeCodePoint(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
+			{
+				clipboardContents->Destroy();
+				return;
+			}
+
+			i += numDigested;
+			numCodePoints++;
+		}
+
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+		uint8_t *decodedChars = static_cast<uint8_t*>(mm->Alloc(numCodePoints));
+
+		if (!decodedChars)
+		{
+			clipboardContents->Destroy();
+			return;
+		}
+
+		numCodePoints = 0;
+		for (size_t i = 0; i < utf8Size; )
+		{
+			uint32_t codePoint = 0;
+			size_t numDigested = 0;
+			if (!UTF8Processor::DecodeCodePoint(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
+			{
+				clipboardContents->Destroy();
+				return;
+			}
+
+			if (codePoint > 0xffff || !MacRoman::FromUnicode(decodedChars[numCodePoints], static_cast<uint16_t>(codePoint)))
+				decodedChars[numCodePoints] = '?';
+
+			numCodePoints++;
+
+			i += numDigested;
+		}
+
+		// This is extremely suboptimal due to the embedded redraw...
+		for (size_t i = 0; i < repeatCount; i++)
+		{
+			for (size_t j = 0; j < numCodePoints; j++)
+				HandleCharacter(decodedChars[j], 1);
+		}
+
+		mm->Release(decodedChars);
+		clipboardContents->Destroy();
+	}
 
 	void EditboxWidget::HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld, bool wholeWords)
 	{

@@ -290,6 +290,15 @@ bool GpSystemServices_Android::AreFontResourcesSeekable() const
 	return false;
 }
 
+IGpClipboardContents *GpSystemServices_Android::GetClipboardContents() const
+{
+	return nullptr;
+}
+
+void GpSystemServices_Android::SetClipboardContents(IGpClipboardContents *contents)
+{
+}
+
 GpSystemServices_Android *GpSystemServices_Android::GetInstance()
 {
 	return &ms_instance;
