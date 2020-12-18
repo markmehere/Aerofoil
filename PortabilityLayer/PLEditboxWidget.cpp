@@ -36,7 +36,10 @@ namespace PortabilityLayer
 		, m_caratTimer(0)
 		, m_isMultiLine(false)
 		, m_isDraggingSelection(false)
+		, m_isDraggingWords(false)
 		, m_dragSelectionStartChar(false)
+		, m_doubleClickTime(0)
+		, m_doubleClickPoint(Point::Create(0, 0))
 		, m_scrollOffset(0, 0)
 		, m_characterFilter(nullptr)
 		, m_characterFilterContext(nullptr)
@@ -233,6 +236,7 @@ namespace PortabilityLayer
 			{
 				const KeyDownStates *downStates = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 				const bool isShiftHeld = downStates->m_special.Get(GpKeySpecials::kLeftShift) || downStates->m_special.Get(GpKeySpecials::kRightShift);
+				const bool isWords = downStates->m_special.Get(GpKeySpecials::kLeftCtrl) || downStates->m_special.Get(GpKeySpecials::kRightCtrl);
 
 				if (keyEvent.m_keyIDSubset == GpKeyIDSubsets::kSpecial)
 				{
@@ -248,12 +252,12 @@ namespace PortabilityLayer
 					}
 					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kLeftArrow)
 					{
-						HandleLeftArrow(keyEvent.m_repeatCount, isShiftHeld);
+						HandleLeftArrow(keyEvent.m_repeatCount, isShiftHeld, isWords);
 						return WidgetHandleStates::kDigested;
 					}
 					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kRightArrow)
 					{
-						HandleRightArrow(keyEvent.m_repeatCount, isShiftHeld);
+						HandleRightArrow(keyEvent.m_repeatCount, isShiftHeld, isWords);
 						return WidgetHandleStates::kDigested;
 					}
 					else if (keyEvent.m_key.m_specialKey == GpKeySpecials::kDownArrow)
@@ -289,8 +293,17 @@ namespace PortabilityLayer
 
 				if (m_rect.Contains(pt))
 				{
+					const uint32_t doubleTime = 30;	// PL_NotYetImplemented_TODO: Get this from the system settings
+
 					m_window->FocusWidget(this);
 					m_isDraggingSelection = true;
+					m_isDraggingWords = false;
+					if (evt.m_timestamp >= m_doubleClickTime && evt.m_timestamp - m_doubleClickTime <= doubleTime)
+					{
+						if (pt == m_doubleClickPoint)
+							m_isDraggingWords = true;
+					}
+
 					return HandleDragSelection(evt);
 				}
 				else
@@ -493,7 +506,7 @@ namespace PortabilityLayer
 		{
 			bool isOutOfRange = false;
 			m_caratScrollPosition.m_y -= lineGap;
-			caratChar = FindVerticalMovementCaratPos(m_caratScrollPosition, isOutOfRange);
+			caratChar = FindVerticalMovementCaratPos(m_caratScrollPosition, isOutOfRange, nullptr);
 			HandleKeyMoveCarat(caratChar, shiftHeld);
 
 			if (isOutOfRange)
@@ -534,7 +547,7 @@ namespace PortabilityLayer
 		{
 			bool isOutOfRange = false;
 			m_caratScrollPosition.m_y += lineGap;
-			caratChar = FindVerticalMovementCaratPos(m_caratScrollPosition, isOutOfRange);
+			caratChar = FindVerticalMovementCaratPos(m_caratScrollPosition, isOutOfRange, nullptr);
 			HandleKeyMoveCarat(caratChar, shiftHeld);
 
 			if (isOutOfRange)
@@ -550,7 +563,7 @@ namespace PortabilityLayer
 		Redraw();
 	}
 
-	void EditboxWidget::HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
+	void EditboxWidget::HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld, bool wholeWords)
 	{
 		size_t caratChar = ResolveCaratChar();
 
@@ -559,7 +572,13 @@ namespace PortabilityLayer
 			if (!shiftHeld && m_selStartChar != m_selEndChar)
 				m_selEndChar = m_selStartChar;
 			else if (caratChar > 0)
-				HandleKeyMoveCarat(caratChar - 1, shiftHeld);
+			{
+				size_t spanLength = 1;
+				if (wholeWords)
+					spanLength = IdentifySpanLength(caratChar - 1, SpanScanDirection_Left);
+
+				HandleKeyMoveCarat(caratChar - spanLength, shiftHeld);
+			}
 		}
 
 		m_caratScrollLocked = false;
@@ -625,7 +644,7 @@ namespace PortabilityLayer
 	}
 
 
-	void EditboxWidget::HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld)
+	void EditboxWidget::HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld, bool wholeWords)
 	{
 		size_t caratChar = ResolveCaratChar();
 
@@ -634,7 +653,13 @@ namespace PortabilityLayer
 			if (!shiftHeld && m_selStartChar != m_selEndChar)
 				m_selStartChar = m_selEndChar;
 			else if (caratChar < m_length)
-				HandleKeyMoveCarat(caratChar + 1, shiftHeld);
+			{
+				size_t spanLength = 1;
+				if (wholeWords)
+					spanLength = IdentifySpanLength(caratChar, SpanScanDirection_Right);
+
+				HandleKeyMoveCarat(caratChar + spanLength, shiftHeld);
+			}
 		}
 
 		m_caratScrollLocked = false;
@@ -645,12 +670,15 @@ namespace PortabilityLayer
 		Redraw();
 	}
 
-	size_t EditboxWidget::FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange) const
+	size_t EditboxWidget::FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange, CaratCharacterAlignment *optOutAlignment) const
 	{
 		Vec2i basePoint = Vec2i(0, 0);
 
 		if (desiredPos.m_y < basePoint.m_y)
 		{
+			if (optOutAlignment)
+				*optOutAlignment = CaratCharacterAlignment_Start;
+
 			isOutOfRange = true;
 			return 0;
 		}
@@ -658,6 +686,7 @@ namespace PortabilityLayer
 		PortabilityLayer::TextPlacer placer(basePoint, m_rect.Width(), GetRenderedFont(), GetString());
 
 		bool foundLine = false;
+		bool foundChar = false;
 		size_t caratChar = 0;
 
 		PortabilityLayer::GlyphPlacementCharacteristics characteristics;
@@ -675,22 +704,42 @@ namespace PortabilityLayer
 				if (desiredPos.m_x <= 0)
 					break;
 
-				if (characteristics.m_character != '\r')
-					caratChar++;
+				if (characteristics.m_character == '\r')
+					break;
+
+				caratChar++;
 
 				if (characteristics.m_glyphStartPos.m_x <= desiredPos.m_x && characteristics.m_glyphEndPos.m_x > desiredPos.m_x)
 				{
 					int32_t distanceToEnd = characteristics.m_glyphEndPos.m_x - desiredPos.m_x;
 					int32_t distanceToStart = desiredPos.m_x - characteristics.m_glyphStartPos.m_x;
 
+					foundChar = true;
+
 					if (distanceToStart <= distanceToEnd)
+					{
+						if (optOutAlignment)
+							*optOutAlignment = CaratCharacterAlignment_BeforeChar;
+
 						caratChar = characteristics.m_characterIndex;
+					}
 					else
+					{
+						if (optOutAlignment)
+							*optOutAlignment = CaratCharacterAlignment_AfterChar;
+
 						caratChar = characteristics.m_characterIndex + 1;
+					}
 
 					break;
 				}
 			}
+		}
+
+		if (!foundChar)
+		{
+			if (optOutAlignment)
+				*optOutAlignment = CaratCharacterAlignment_EndOfLine;
 		}
 
 		if (foundLine)
@@ -698,10 +747,52 @@ namespace PortabilityLayer
 			isOutOfRange = false;
 			return caratChar;
 		}
-
-		isOutOfRange = true;
-		return m_length;
+		else
+		{
+			isOutOfRange = true;
+			return m_length;
+		}
 	}
+
+	void EditboxWidget::ExpandSelectionToWords(size_t rootChar, size_t &outStartChar, size_t &outEndChar)
+	{
+		assert(rootChar < m_length);
+
+		CharacterCategory charCategory = CategorizeCharacter(m_chars[rootChar]);
+
+		if (charCategory == CharacterCategory_LineBreak)
+		{
+			outStartChar = rootChar;
+			outEndChar = rootChar;
+		}
+		else
+		{
+			size_t selStart = rootChar;
+			size_t selEnd = rootChar + 1;
+
+			while (selStart > 0)
+			{
+				CharacterCategory candidateCategory = CategorizeCharacter(m_chars[selStart - 1]);
+				if (candidateCategory != charCategory)
+					break;
+
+				selStart--;
+			}
+
+			while (selEnd < m_length)
+			{
+				CharacterCategory candidateCategory = CategorizeCharacter(m_chars[selEnd]);
+				if (candidateCategory != charCategory)
+					break;
+
+				selEnd++;
+			}
+
+			outStartChar = selStart;
+			outEndChar = selEnd;
+		}
+	}
+
 
 	// Handles adjustment of the selection range and anchor when the carat is moved with shift held
 	void EditboxWidget::HandleKeyMoveCarat(size_t newPos, bool shiftHeld)
@@ -749,13 +840,67 @@ namespace PortabilityLayer
 				paragraph = -((-relativeY + (linegap - 1)) / linegap);
 
 			bool isOutOfRange = false;
-			const size_t caratPos = FindVerticalMovementCaratPos(Vec2i(relativePoint.m_x, paragraph * linegap), isOutOfRange);
+			CaratCharacterAlignment cca;
+			const size_t caratPos = FindVerticalMovementCaratPos(Vec2i(relativePoint.m_x, paragraph * linegap), isOutOfRange, &cca);
 
 			if (mouseEvent.m_eventType == GpMouseEventTypes::kDown)
 			{
-				m_dragSelectionStartChar = caratPos;
-				m_selStartChar = caratPos;
-				m_selEndChar = caratPos;
+				if (m_isDraggingWords)
+				{
+					FindVerticalMovementCaratPos(Vec2i(relativePoint.m_x, paragraph * linegap), isOutOfRange, &cca);
+
+					bool hasRootChar = false;
+					size_t rootChar = 0;
+
+					switch (cca)
+					{
+					case CaratCharacterAlignment_Start:
+						if (m_length > 0)
+						{
+							hasRootChar = true;
+							rootChar = caratPos;
+						}
+						break;
+					case CaratCharacterAlignment_AfterChar:
+						assert(caratPos >= 1);
+						hasRootChar = true;
+						rootChar = caratPos - 1;
+						break;
+					case CaratCharacterAlignment_BeforeChar:
+						hasRootChar = true;
+						rootChar = caratPos;
+						break;
+					case CaratCharacterAlignment_EndOfLine:
+						if (m_length > 0 && (caratPos == 0 || m_chars[caratPos - 1] != '\r'))
+						{
+							hasRootChar = true;
+							rootChar = caratPos - 1;
+						}
+						break;
+					}
+
+					if (hasRootChar)
+					{
+						size_t startChar, endChar;
+						ExpandSelectionToWords(rootChar, startChar, endChar);
+
+						m_dragSelectionStartChar = startChar;
+						m_dragSelectionEndChar = endChar;
+					}
+					else
+					{
+						m_dragSelectionStartChar = caratPos;
+						m_dragSelectionEndChar = caratPos;
+					}
+				}
+				else
+				{
+					m_dragSelectionStartChar = caratPos;
+					m_dragSelectionEndChar = caratPos;
+				}
+
+				m_selStartChar = m_dragSelectionStartChar;
+				m_selEndChar = m_dragSelectionEndChar;
 				m_caratSelectionAnchor = CaratSelectionAnchor_End;
 
 				m_caratTimer = 0;
@@ -763,17 +908,40 @@ namespace PortabilityLayer
 			}
 			else
 			{
-				if (caratPos < m_dragSelectionStartChar)
+				size_t selExpandMin = caratPos;
+				size_t selExpandMax = caratPos;
+
+				if (m_isDraggingWords && (caratPos < m_dragSelectionStartChar || caratPos > m_dragSelectionEndChar))
+				{
+					size_t rootChar = 0;
+					if (caratPos < m_dragSelectionStartChar)
+						rootChar = caratPos;
+					else
+					{
+						assert(caratPos > m_dragSelectionEndChar);
+						rootChar = caratPos - 1;
+					}
+
+					ExpandSelectionToWords(rootChar, selExpandMin, selExpandMax);
+				}
+
+				if (selExpandMin < m_dragSelectionStartChar)
 				{
 					m_caratSelectionAnchor = CaratSelectionAnchor_Start;
-					m_selStartChar = caratPos;
-					m_selEndChar = m_dragSelectionStartChar;
+					m_selStartChar = selExpandMin;
+					m_selEndChar = m_dragSelectionEndChar;
+				}
+				else if (selExpandMax > m_dragSelectionEndChar)
+				{
+					m_caratSelectionAnchor = CaratSelectionAnchor_End;
+					m_selEndChar = selExpandMax;
+					m_selStartChar = m_dragSelectionStartChar;
 				}
 				else
 				{
 					m_caratSelectionAnchor = CaratSelectionAnchor_End;
-					m_selEndChar = caratPos;
 					m_selStartChar = m_dragSelectionStartChar;
+					m_selEndChar = m_dragSelectionEndChar;
 				}
 
 				AdjustScrollToCarat();
@@ -788,6 +956,10 @@ namespace PortabilityLayer
 
 					m_caratScrollLocked = false;
 					m_isDraggingSelection = false;
+
+					m_doubleClickTime = evt.m_timestamp;
+					m_doubleClickPoint = pt;
+
 					return WidgetHandleStates::kDigested;
 				}
 			}
@@ -986,6 +1158,52 @@ namespace PortabilityLayer
 		}
 	}
 
+	size_t EditboxWidget::IdentifySpanLength(size_t startChar, SpanScanDirection scanDirection) const
+	{
+		assert(startChar < m_length);
+
+		CharacterCategory contiguousCategory = CategorizeCharacter(m_chars[startChar]);
+		size_t spanLength = 1;
+
+		for (;;)
+		{
+			if (scanDirection == SpanScanDirection_Left && (startChar + 1 - spanLength) == 0)
+				break;
+			if (scanDirection == SpanScanDirection_Right && startChar + spanLength == m_length)
+				break;
+
+			size_t nextCharPos = startChar;
+			if (scanDirection == SpanScanDirection_Left)
+				nextCharPos -= spanLength;
+			else if (scanDirection == SpanScanDirection_Right)
+				nextCharPos += spanLength;
+
+			const CharacterCategory thisCategory = CategorizeCharacter(m_chars[nextCharPos]);
+
+			if (thisCategory != contiguousCategory)
+			{
+				// If span starts with whitespace, it can continue to the next category, otherwise stop
+				if (contiguousCategory == CharacterCategory_Whitespace)
+					contiguousCategory = thisCategory;
+				else
+					break;
+			}
+
+			spanLength++;
+		}
+
+		return spanLength;
+	}
+
+	EditboxWidget::CharacterCategory EditboxWidget::CategorizeCharacter(uint8_t character)
+	{
+		const CharacterCategorySpan *ccs = gs_characterCategorySpans;
+		while (character > ccs->m_lastCharacterPosInclusive)
+			ccs++;
+
+		return ccs->m_category;
+	}
+
 	FontFamily *EditboxWidget::GetFontFamily() const
 	{
 		return PortabilityLayer::FontManager::GetInstance()->GetSystemFont(12, FontFamilyFlag_None);
@@ -1015,4 +1233,42 @@ namespace PortabilityLayer
 	{
 		m_capacity = std::min<size_t>(255, capacity);
 	}
+
+	const EditboxWidget::CharacterCategorySpan EditboxWidget::gs_characterCategorySpans[] =
+	{
+		{ 0x20, EditboxWidget::CharacterCategory_Whitespace },
+		{ 0x2f, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0x39, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0x40, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0x5a, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0x60, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0x7a, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0x7e, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0x7f, EditboxWidget::CharacterCategory_Whitespace },
+		{ 0x9f, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xa6, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xa7, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xad, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xaf, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xb4, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xb5, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xb8, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xb9, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xbc, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xbf, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xc3, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xc4, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xc9, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xca, EditboxWidget::CharacterCategory_Whitespace },
+		{ 0xcf, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xd7, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xd9, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xdd, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xdf, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xe4, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xef, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xf0, EditboxWidget::CharacterCategory_Punctuation },
+		{ 0xf5, EditboxWidget::CharacterCategory_AlphaNumeric },
+		{ 0xff, EditboxWidget::CharacterCategory_Punctuation },
+	};
 }

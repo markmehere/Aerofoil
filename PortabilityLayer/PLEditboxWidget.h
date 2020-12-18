@@ -42,10 +42,38 @@ namespace PortabilityLayer
 		static const unsigned int kCaratBlinkRate = 20;
 		static const unsigned int kMouseScrollRate = 20;
 
+		enum SpanScanDirection
+		{
+			SpanScanDirection_Left,
+			SpanScanDirection_Right,
+		};
+
 		enum CaratSelectionAnchor
 		{
 			CaratSelectionAnchor_Start,
 			CaratSelectionAnchor_End
+		};
+
+		enum CharacterCategory
+		{
+			CharacterCategory_AlphaNumeric,
+			CharacterCategory_Whitespace,
+			CharacterCategory_LineBreak,
+			CharacterCategory_Punctuation,
+		};
+
+		struct CharacterCategorySpan
+		{
+			uint8_t m_lastCharacterPosInclusive;
+			CharacterCategory m_category;
+		};
+
+		enum CaratCharacterAlignment
+		{
+			CaratCharacterAlignment_Start,		// Before the start of the text
+			CaratCharacterAlignment_AfterChar,	// Carat is after the character that was clicked
+			CaratCharacterAlignment_BeforeChar,	// Carat is before the character that was clicked
+			CaratCharacterAlignment_EndOfLine,	// Carat is at the end of a line
 		};
 
 		void OnTick() override;
@@ -57,13 +85,14 @@ namespace PortabilityLayer
 
 		void HandleUpArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
 		void HandleDownArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
-		void HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
-		void HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld);
+		void HandleLeftArrow(const uint32_t numRepeatsRequested, bool shiftHeld, bool wholeWords);
+		void HandleRightArrow(const uint32_t numRepeatsRequested, bool shiftHeld, bool wholeWords);
 
 		void HandleHome(bool shiftHeld);
 		void HandleEnd(bool shiftHeld);
 
-		size_t FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange) const;
+		size_t FindVerticalMovementCaratPos(const Vec2i &desiredPos, bool &isOutOfRange, CaratCharacterAlignment *optOutAlignment) const;
+		void ExpandSelectionToWords(size_t caratPos, size_t &outStartChar, size_t &outEndChar);
 		void HandleKeyMoveCarat(size_t newPos, bool shiftHeld);
 
 		WidgetHandleState_t HandleDragSelection(const TimeTaggedVOSEvent &evt);
@@ -75,6 +104,8 @@ namespace PortabilityLayer
 		size_t ResolveCaratChar() const;
 		void AdjustScrollToCarat();
 		void AdjustScrollToTextBounds();
+		size_t IdentifySpanLength(size_t startChar, SpanScanDirection scanDirection) const;
+		static CharacterCategory CategorizeCharacter(uint8_t character);
 
 		PortabilityLayer::FontFamily *GetFontFamily() const;
 		PortabilityLayer::RenderedFont *GetRenderedFont() const;
@@ -94,11 +125,17 @@ namespace PortabilityLayer
 		bool m_hasFocus;
 		bool m_isMultiLine;
 		bool m_isDraggingSelection;
+		bool m_isDraggingWords;
 		size_t m_dragSelectionStartChar;
+		size_t m_dragSelectionEndChar;
+		uint32_t m_doubleClickTime;
+		Point m_doubleClickPoint;
 
 		uint16_t m_caratTimer;
 
 		CharacterFilterCallback_t m_characterFilter;
 		void *m_characterFilterContext;
+
+		static const CharacterCategorySpan gs_characterCategorySpans[];
 	};
 }
