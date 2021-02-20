@@ -1202,6 +1202,12 @@ void GpDisplayDriverD3D11::Run()
 				float pixelScaleX = 1.0f;
 				float pixelScaleY = 1.0f;
 
+				if (desiredWidth < 640)
+					desiredWidth = 640;
+
+				if (desiredHeight < 480)
+					desiredHeight = 480;
+
 				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
 				{
 					bool resizedOK = ResizeD3DWindow(m_osGlobals->m_hwnd, m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, windowStyle, menus, logger);
