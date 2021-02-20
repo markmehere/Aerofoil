@@ -43,16 +43,23 @@ void DoMarquee (void)
 {	
 	if ((!theMarquee.active) || (theMarquee.paused))
 		return;
-	
-	DrawSurface *surface = mainWindow->GetDrawSurface();
-	const uint8_t *pattern = theMarquee.pats[theMarquee.index];
-	DrawMarquee(surface, pattern);
-	theMarquee.index++;
-	if (theMarquee.index >= kNumMarqueePats)
-		theMarquee.index = 0;
 
-	pattern = theMarquee.pats[theMarquee.index];
-	DrawMarquee(surface, pattern);
+	theMarquee.step++;
+
+	if (theMarquee.step >= theMarquee.interval)
+	{
+		DrawSurface *surface = mainWindow->GetDrawSurface();
+		const uint8_t *pattern = theMarquee.pats[theMarquee.index];
+		DrawMarquee(surface, pattern);
+		theMarquee.index++;
+		if (theMarquee.index >= kNumMarqueePats)
+			theMarquee.index = 0;
+
+		pattern = theMarquee.pats[theMarquee.index];
+		DrawMarquee(surface, pattern);
+
+		theMarquee.step = 0;
+	}
 }
 
 //--------------------------------------------------------------  StartMarquee
@@ -515,6 +522,8 @@ void InitMarquee (void)
 	theMarquee.active = false;
 	theMarquee.paused = false;
 	theMarquee.handled = false;
+	theMarquee.step = 0;
+	theMarquee.interval = 2;
 	gliderMarqueeUp = false;
 }
 

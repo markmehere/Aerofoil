@@ -15,7 +15,7 @@ typedef struct
 {
 	Pattern		pats[kNumMarqueePats];
 	Rect		bounds, handle;
-	short		index, direction, dist;
+	short		index, direction, dist, step, interval;
 	Boolean		active, paused, handled;
 } marquee;
 
