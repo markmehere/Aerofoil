@@ -55,6 +55,7 @@ DrawSurface *loadScreenRingSurface;
 
 void ReadInPrefs (void);
 void WriteOutPrefs (void);
+void HandleSplashResolutionChange (void);
 int main(int argc, const char **argv);
 
 
@@ -1137,17 +1138,28 @@ int gpAppMain()
 		loadScreenRingSurface = nullptr;
 	}
 
+	bool resolutionChanged = false;
+
 	if (!isPrefsLoaded)
 	{
 		WriteOutPrefs();
 
-		FlushResolutionChange();
+		if (thisMac.isResolutionDirty)
+		{
+			resolutionChanged = true;
+			FlushResolutionChange();
+		}
+
 		ShowInitialLaunchDisclaimer();
 	}
 
-	FlushResolutionChange();
+	if (thisMac.isResolutionDirty)
+		resolutionChanged = true;
 
-	OpenMainWindow();
+	if (resolutionChanged)
+		HandleSplashResolutionChange();
+	else
+		OpenMainWindow();
 
 	if (isDoColorFade)
 		PortabilityLayer::WindowManager::GetInstance()->SetWindowDesaturation(mainWindow, 1.0);
