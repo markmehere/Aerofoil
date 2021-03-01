@@ -23,6 +23,7 @@ LOCAL_SRC_FILES := \
 	GpFiberStarter_SDL.cpp	\
 	ShaderCode/CopyQuadP.cpp	\
 	ShaderCode/DrawQuadPaletteP.cpp	\
+	ShaderCode/DrawQuad32P.cpp	\
 	ShaderCode/DrawQuadV.cpp	\
 	ShaderCode/ScaleQuadP.cpp
 

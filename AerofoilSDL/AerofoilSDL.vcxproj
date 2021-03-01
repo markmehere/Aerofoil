@@ -97,6 +97,7 @@
     <ClCompile Include="GpFiber_SDL.cpp" />
     <ClCompile Include="GpMain_SDL_Win32.cpp" />
     <ClCompile Include="ShaderCode\CopyQuadP.cpp" />
+    <ClCompile Include="ShaderCode\DrawQuad32P.cpp" />
     <ClCompile Include="ShaderCode\DrawQuadPaletteP.cpp" />
     <ClCompile Include="ShaderCode\DrawQuadV.cpp" />
     <ClCompile Include="ShaderCode\ScaleQuadP.cpp" />

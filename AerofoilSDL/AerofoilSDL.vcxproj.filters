@@ -66,6 +66,9 @@
     <ClCompile Include="ShaderCode\CopyQuadP.cpp">
       <Filter>Source Files\ShaderCode</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderCode\DrawQuad32P.cpp">
+      <Filter>Source Files\ShaderCode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderCode\Functions.h">

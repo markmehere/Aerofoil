@@ -108,17 +108,13 @@ namespace GpBinarizedShaders
 
 	extern const char *g_drawQuadPalettePF_GL2;
 	extern const char *g_drawQuadPalettePNF_GL2;
-	extern const char *g_drawQuadRGBPF_GL2;
-	extern const char *g_drawQuadRGBPNF_GL2;
-	extern const char *g_drawQuad15BitPF_GL2;
-	extern const char *g_drawQuad15BitPNF_GL2;
+	extern const char *g_drawQuad32PF_GL2;
+	extern const char *g_drawQuad32PNF_GL2;
 
 	extern const char *g_drawQuadPaletteICCPF_GL2;
 	extern const char *g_drawQuadPaletteICCPNF_GL2;
-	extern const char *g_drawQuadRGBICCPF_GL2;
-	extern const char *g_drawQuadRGBICCPNF_GL2;
-	extern const char *g_drawQuad15BitICCPF_GL2;
-	extern const char *g_drawQuad15BitICCPNF_GL2;
+	extern const char *g_drawQuad32ICCPF_GL2;
+	extern const char *g_drawQuad32ICCPNF_GL2;
 
 	extern const char *g_copyQuadP_GL2;
 	extern const char *g_scaleQuadP_GL2;
@@ -849,12 +845,16 @@ private:
 
 		DrawQuadProgram m_drawQuadPaletteNoFlickerProgram;
 		DrawQuadProgram m_drawQuadPaletteFlickerProgram;
-		DrawQuadProgram m_drawQuadRGBProgram;
-		DrawQuadProgram m_drawQuad15BitProgram;
+		DrawQuadProgram m_drawQuad15NoFlickerProgram;
+		DrawQuadProgram m_drawQuad15FlickerProgram;
+		DrawQuadProgram m_drawQuad32NoFlickerProgram;
+		DrawQuadProgram m_drawQuad32FlickerProgram;
 		DrawQuadProgram m_drawQuadPaletteICCNoFlickerProgram;
 		DrawQuadProgram m_drawQuadPaletteICCFlickerProgram;
-		DrawQuadProgram m_drawQuadRGBICCProgram;
-		DrawQuadProgram m_drawQuad15BitICCProgram;
+		DrawQuadProgram m_drawQuad15ICCNoFlickerProgram;
+		DrawQuadProgram m_drawQuad15ICCFlickerProgram;
+		DrawQuadProgram m_drawQuad32ICCNoFlickerProgram;
+		DrawQuadProgram m_drawQuad32ICCFlickerProgram;
 	};
 
 	InstancedResources m_res;
@@ -2117,7 +2117,20 @@ void GpDisplayDriver_SDL_GL2::DrawSurface(IGpDisplayDriverSurface *surface, int3
 	}
 	else if (pixelFormat == GpPixelFormats::kRGB32)
 	{
-		return;
+		if (m_useICCProfile)
+		{
+			if (effects->m_flicker)
+				program = &m_res.m_drawQuad32ICCFlickerProgram;
+			else
+				program = &m_res.m_drawQuad32ICCNoFlickerProgram;
+		}
+		else
+		{
+			if (effects->m_flicker)
+				program = &m_res.m_drawQuad32FlickerProgram;
+			else
+				program = &m_res.m_drawQuad32NoFlickerProgram;
+		}
 	}
 	else
 	{
@@ -2496,23 +2509,29 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t physicalWidth, uint32_t phy
 	}
 
 	GpComPtr<GpGLShader<GL_VERTEX_SHADER>> drawQuadVertexShader = CreateShader<GL_VERTEX_SHADER>(GpBinarizedShaders::g_drawQuadV_GL2);
+
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPalettePF_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteNoFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPalettePNF_GL2);
-	//m_drawQuadRGBPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadRGBP_GL2);
-	//m_drawQuad15BitPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad15BitP_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32FlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32PF_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32NoFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32PNF_GL2);
+
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCPF_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCNFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCPNF_GL2);
-	//m_drawQuadRGBICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadRGBICCP_GL2);
-	//m_drawQuad15BitICCPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad15BitICCP_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32ICCFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32ICCPF_GL2);
+	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32ICCNFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32ICCPNF_GL2);
+
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> scaleQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_scaleQuadP_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> copyQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_copyQuadP_GL2);
 
 	if (!m_res.m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
-		|| !m_res.m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
-		//|| !m_drawQuadRGBProgram.Link(this, drawQuadVertexShader, drawQuadRGBPixelShader)
-		//|| !m_drawQuad15BitProgram.Link(this, drawQuadVertexShader, drawQuad15BitPixelShader)
+		|| !m_res.m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteNoFlickerPixelShader)
+		|| !m_res.m_drawQuad32FlickerProgram.Link(this, drawQuadVertexShader, drawQuad32FlickerPixelShader)
+		|| !m_res.m_drawQuad32NoFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32NoFlickerPixelShader)
 		|| !m_res.m_drawQuadPaletteICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCFPixelShader)
 		|| !m_res.m_drawQuadPaletteICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCNFPixelShader)
+		|| !m_res.m_drawQuad32ICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32ICCFPixelShader)
+		|| !m_res.m_drawQuad32ICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32ICCNFPixelShader)
+
 		//|| !m_drawQuadRGBICCProgram.Link(this, drawQuadVertexShader, drawQuadRGBICCPixelShader)
 		//|| !m_drawQuad15BitICCProgram.Link(this, drawQuadVertexShader, drawQuad15BitICCPixelShader)
 		|| !m_res.m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader)
