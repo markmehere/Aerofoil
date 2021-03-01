@@ -912,7 +912,7 @@ void ShowInitialLaunchDisclaimer()
 		"on the 2016 release of the game\xd5s source code and assets.",
 		"",
 		"Glider PRO, a sequel to the original Glider, was released in 1994",
-		"for the Apple Macintosh, and is widely recognized as one of",
+		"for Apple Macintosh computers, and is widely recognized as one of",
 		"of the most iconic Macintosh-exclusive games of the 1990\xd5s.",
 		"",
 		"I hope that by adapting it to be playable on modern systems, more",
