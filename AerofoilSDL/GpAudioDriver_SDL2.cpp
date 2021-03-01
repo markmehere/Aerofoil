@@ -136,6 +136,7 @@ private:
 
 	static const size_t kMaxChannels = 16;
 	static const size_t kMixChunkSize = 256;
+	static const int16_t kMaxAudioVolumeScale = 25;
 
 	GpAudioChannel_SDL2 *m_channels[kMaxChannels];
 	size_t m_numChannels;
@@ -144,6 +145,8 @@ private:
 
 	GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) int16_t m_mixChunk[kMixChunkSize];
 	size_t m_mixChunkReadOffset;
+
+	int16_t m_audioVolumeScale;
 };
 
 GpAudioChannelBufferChain_SDL2::GpAudioChannelBufferChain_SDL2()
@@ -353,6 +356,7 @@ GpAudioDriver_SDL2::GpAudioDriver_SDL2(const GpAudioDriverProperties &properties
 	, m_numChannels(0)
 	, m_sdlAudioRunning(false)
 	, m_mixChunkReadOffset(kMixChunkSize)
+	, m_audioVolumeScale(kMaxAudioVolumeScale)
 
 {
 	for (size_t i = 0; i < kMaxChannels; i++)
@@ -395,6 +399,9 @@ IGpAudioChannel *GpAudioDriver_SDL2::CreateChannel()
 
 void GpAudioDriver_SDL2::SetMasterVolume(uint32_t vol, uint32_t maxVolume)
 {
+	double scale = vol * static_cast<uint64_t>(kMaxAudioVolumeScale) / maxVolume;
+
+	m_audioVolumeScale = static_cast<int16_t>(scale);
 }
 
 void GpAudioDriver_SDL2::Shutdown()
@@ -527,6 +534,8 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 
 	bool noAudio = true;
 
+	const int16_t audioVolumeScale = m_audioVolumeScale;
+
 	for (size_t i = 0; i < numChannels; i++)
 	{
 		channels[i]->Consume(audioMixBuffer, kMixChunkSize);
@@ -535,12 +544,12 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 		{
 			noAudio = false;
 			for (size_t j = 0; j < kMixChunkSize; j++)
-				m_mixChunk[j] = (audioMixBuffer[j] - 0x80) * 25;
+				m_mixChunk[j] = (static_cast<int16_t>(audioMixBuffer[j]) - 0x80) * audioVolumeScale;
 		}
 		else
 		{
 			for (size_t j = 0; j < kMixChunkSize; j++)
-				m_mixChunk[j] += (audioMixBuffer[j] - 0x80) * 25;
+				m_mixChunk[j] += (static_cast<int16_t>(audioMixBuffer[j]) - 0x80) * audioVolumeScale;
 		}
 	}
 
