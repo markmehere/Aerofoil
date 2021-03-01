@@ -21,6 +21,7 @@ LOCAL_SRC_FILES := \
 	GpDisplayDriver_SDL_GL2.cpp	\
 	GpFiber_SDL.cpp	\
 	GpFiberStarter_SDL.cpp	\
+	GpThreadEvent_Cpp11.cpp	\
 	ShaderCode/CopyQuadP.cpp	\
 	ShaderCode/DrawQuadPaletteP.cpp	\
 	ShaderCode/DrawQuad32P.cpp	\
