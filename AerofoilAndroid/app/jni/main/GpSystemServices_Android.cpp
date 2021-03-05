@@ -79,6 +79,11 @@ bool GpSystemServices_Android::IsFullscreenPreferred() const
 	return true;
 }
 
+bool GpSystemServices_Android::IsFullscreenOnStartup() const
+{
+	return true;
+}
+
 unsigned int GpSystemServices_Android::GetCPUCount() const
 {
 	return SDL_GetCPUCount();

@@ -154,6 +154,7 @@ void GpInputDriverXInput::ProcessButtonStateChange(DWORD prevState, DWORD newSta
 		evt->m_event.m_keyboardInputEvent.m_keyIDSubset = GpKeyIDSubsets::kGamepadButton;
 		evt->m_event.m_keyboardInputEvent.m_key.m_gamepadKey.m_button = gamepadButton;
 		evt->m_event.m_keyboardInputEvent.m_key.m_gamepadKey.m_player = playerNum;
+		evt->m_event.m_keyboardInputEvent.m_repeatCount = 0;
 	}
 }
 

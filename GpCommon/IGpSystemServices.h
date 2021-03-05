@@ -30,6 +30,7 @@ public:
 	virtual bool IsTouchscreen() const = 0;
 	virtual bool IsUsingMouseAsTouch() const = 0;
 	virtual bool IsFullscreenPreferred() const = 0;
+	virtual bool IsFullscreenOnStartup() const = 0;
 	virtual bool IsTextInputObstructive() const = 0;
 	virtual unsigned int GetCPUCount() const = 0;
 	virtual void SetTextInputEnabled(bool isEnabled) = 0;

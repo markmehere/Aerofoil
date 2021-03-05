@@ -69,6 +69,9 @@
     <ClCompile Include="ShaderCode\DrawQuad32P.cpp">
       <Filter>Source Files\ShaderCode</Filter>
     </ClCompile>
+    <ClCompile Include="GpInputDriver_SDL_Gamepad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderCode\Functions.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GpFiber_SDL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GpInputDriver_SDL_Gamepad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

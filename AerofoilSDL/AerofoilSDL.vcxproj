@@ -95,6 +95,7 @@
     <ClCompile Include="GpDisplayDriver_SDL_GL2.cpp" />
     <ClCompile Include="GpFiberStarter_SDL.cpp" />
     <ClCompile Include="GpFiber_SDL.cpp" />
+    <ClCompile Include="GpInputDriver_SDL_Gamepad.cpp" />
     <ClCompile Include="GpMain_SDL_Win32.cpp" />
     <ClCompile Include="ShaderCode\CopyQuadP.cpp" />
     <ClCompile Include="ShaderCode\DrawQuad32P.cpp" />
@@ -112,15 +113,13 @@
     <ProjectReference Include="..\GpFontHandler_FreeType2\GpFontHandler_FreeType2.vcxproj">
       <Project>{4b564030-8985-4975-91e1-e1b2c16ae2a1}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\GpInputDriver_XInput\GpInputDriver_XInput.vcxproj">
-      <Project>{17b96f07-ef92-47cd-95a5-8e6ee38ab564}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\GpShell\GpShell.vcxproj">
       <Project>{10cf9b5f-61d0-4b5b-89f4-810b58fc053d}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GpFiber_SDL.h" />
+    <ClInclude Include="GpInputDriver_SDL_Gamepad.h" />
     <ClInclude Include="ShaderCode\DrawQuadPixelConstants.h" />
     <ClInclude Include="ShaderCode\Functions.h" />
   </ItemGroup>

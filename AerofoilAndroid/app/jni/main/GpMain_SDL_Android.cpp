@@ -8,6 +8,7 @@
 #include "GpFileSystem_Android.h"
 #include "GpFontHandlerFactory.h"
 #include "GpInputDriverFactory.h"
+#include "GpInputDriver_SDL_Gamepad.h"
 #include "GpAppInterface.h"
 #include "GpSystemServices_Android.h"
 #include "GpVOSEvent.h"
@@ -115,4 +116,9 @@ int main(int argc, char* argv[])
 	exit(returnCode);
 
 	return returnCode;
+}
+
+IGpInputDriverSDLGamepad *IGpInputDriverSDLGamepad::GetInstance()
+{
+	return nullptr;
 }

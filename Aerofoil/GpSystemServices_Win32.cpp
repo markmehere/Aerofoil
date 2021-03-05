@@ -256,6 +256,11 @@ bool GpSystemServices_Win32::IsFullscreenPreferred() const
 	return !m_isTouchscreenSimulation;
 }
 
+bool GpSystemServices_Win32::IsFullscreenOnStartup() const
+{
+	return false;
+}
+
 unsigned int GpSystemServices_Win32::GetCPUCount() const
 {
 	SYSTEM_INFO sysInfo;

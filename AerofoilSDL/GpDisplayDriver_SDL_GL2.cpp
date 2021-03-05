@@ -6,6 +6,7 @@
 #include "GpDisplayDriverProperties.h"
 #include "GpVOSEvent.h"
 #include "GpRingBuffer.h"
+#include "GpInputDriver_SDL_Gamepad.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriverSurface.h"
 #include "IGpLogDriver.h"
@@ -39,6 +40,13 @@ class GpDisplayDriver_SDL_GL2;
 
 static GpDisplayDriverSurfaceEffects gs_defaultEffects;
 
+static const char *kPrefsIdentifier = "GpDisplayDriverSDL_GL2";
+static uint32_t kPrefsVersion = 1;
+
+struct GpDisplayDriver_SDL_GL2_Prefs
+{
+	bool m_isFullScreen;
+};
 
 namespace DeleteMe
 {
@@ -1219,7 +1227,7 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	m_bgColor[3] = 1.f;
 
 	// Stupid hack to detect mobile...
-	m_isFullScreenDesired = m_properties.m_systemServices->IsFullscreenPreferred();
+	m_isFullScreenDesired = m_properties.m_systemServices->IsFullscreenOnStartup();
 
 	const intmax_t periodNum = std::chrono::high_resolution_clock::period::num;
 	const intmax_t periodDen = std::chrono::high_resolution_clock::period::den;
@@ -1842,7 +1850,7 @@ void GpDisplayDriver_SDL_GL2::Run()
 	m_vosFiber = new GpFiber_SDL(nullptr, m_vosEvent);
 
 	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-	if (m_isFullScreenDesired)
+	if (m_properties.m_systemServices->IsFullscreenOnStartup())
 	{
 		windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 		m_isFullScreen = true;
@@ -1909,19 +1917,35 @@ void GpDisplayDriver_SDL_GL2::Run()
 		SDL_Event msg;
 		if (SDL_PollEvent(&msg) != 0)
 		{
-			if (msg.type == SDL_MOUSEMOTION)
+			switch (msg.type)
 			{
-				if (!m_mouseIsInClientArea)
-					m_mouseIsInClientArea = true;
-			}
-			//else if (msg.type == SDL_MOUSELEAVE)	// Does SDL support this??
+			case SDL_MOUSEMOTION:
+				{
+					if (!m_mouseIsInClientArea)
+						m_mouseIsInClientArea = true;
+				}
+				break;
+			//case SDL_MOUSELEAVE:	// Does SDL support this??
 			//	m_mouseIsInClientArea = false;
-			else if (msg.type == SDL_RENDER_DEVICE_RESET || msg.type == SDL_RENDER_TARGETS_RESET)
-			{
-				if (logger)
-					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to device loss (Type: %i)", static_cast<int>(msg.type));
+			//	break;
+			case SDL_RENDER_DEVICE_RESET:
+			case SDL_RENDER_TARGETS_RESET:
+				{
+					if (logger)
+						logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to device loss (Type: %i)", static_cast<int>(msg.type));
 
-				m_contextLost = true;
+					m_contextLost = true;
+				}
+				break;
+			case SDL_CONTROLLERAXISMOTION:
+			case SDL_CONTROLLERBUTTONDOWN:
+			case SDL_CONTROLLERBUTTONUP:
+			case SDL_CONTROLLERDEVICEADDED:
+			case SDL_CONTROLLERDEVICEREMOVED:
+			case SDL_CONTROLLERDEVICEREMAPPED:
+				if (IGpInputDriverSDLGamepad *gamepadDriver = IGpInputDriverSDLGamepad::GetInstance())
+					gamepadDriver->ProcessSDLEvent(msg);
+				break;
 			}
 
 			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
@@ -2358,11 +2382,19 @@ bool GpDisplayDriver_SDL_GL2::SupportsSizedFormats() const
 
 void GpDisplayDriver_SDL_GL2::ApplyPrefs(const void *identifier, size_t identifierSize, const void *contents, size_t contentsSize, uint32_t version)
 {
+	if (version == kPrefsVersion && identifierSize == strlen(kPrefsIdentifier) && !memcmp(identifier, kPrefsIdentifier, identifierSize))
+	{
+		const GpDisplayDriver_SDL_GL2_Prefs *prefs = static_cast<const GpDisplayDriver_SDL_GL2_Prefs *>(contents);
+		m_isFullScreenDesired = prefs->m_isFullScreen;
+	}
 }
 
-bool GpDisplayDriver_SDL_GL2::SavePrefs(void *context, WritePrefsFunc_t writeFunc)
+bool GpDisplayDriver_SDL_GL2::SavePrefs(void *context, IGpPrefsHandler::WritePrefsFunc_t writeFunc)
 {
-	return true;
+	GpDisplayDriver_SDL_GL2_Prefs prefs;
+	prefs.m_isFullScreen = m_isFullScreenDesired;
+
+	return writeFunc(context, kPrefsIdentifier, strlen(kPrefsIdentifier), &prefs, sizeof(prefs), kPrefsVersion);
 }
 
 void GpDisplayDriver_SDL_GL2::UnlinkSurface(GpDisplayDriverSurface_GL2 *surface, GpDisplayDriverSurface_GL2 *prev, GpDisplayDriverSurface_GL2 *next)

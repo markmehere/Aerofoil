@@ -29,16 +29,16 @@
 
 GpWindowsGlobals g_gpWindowsGlobals;
 
-extern "C" __declspec(dllimport) IGpInputDriver *GpDriver_CreateInputDriver_XInput(const GpInputDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
 
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
 IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
+IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverProperties &properties);
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
 		return -1;
 
 	LPWSTR cmdLine = GetCommandLineW();
@@ -79,7 +79,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	EGpInputDriverType inputDrivers[] =
 	{
-		EGpInputDriverType_XInput
+		EGpInputDriverType_SDL2_Gamepad
 	};
 
 	g_gpGlobalConfig.m_inputDriverTypes = inputDrivers;
@@ -91,7 +91,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_SDL2, GpDriver_CreateAudioDriver_SDL);
-	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_XInput, GpDriver_CreateInputDriver_XInput);
+	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_SDL2_Gamepad, GpDriver_CreateInputDriver_SDL2_Gamepad);
 	GpFontHandlerFactory::RegisterFontHandlerFactory(EGpFontHandlerType_FreeType2, GpDriver_CreateFontHandler_FreeType2);
 
 	if (logger)

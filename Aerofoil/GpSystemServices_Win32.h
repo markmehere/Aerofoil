@@ -33,6 +33,7 @@ public:
 	bool IsUsingMouseAsTouch() const override;
 	bool IsTextInputObstructive() const override;
 	bool IsFullscreenPreferred() const override;
+	bool IsFullscreenOnStartup() const override;
 	unsigned int GetCPUCount() const override;
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;
