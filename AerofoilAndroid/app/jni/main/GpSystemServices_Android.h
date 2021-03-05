@@ -1,20 +1,14 @@
 #pragma once
 
-#include "IGpSystemServices.h"
+#include "GpSystemServices_POSIX.h"
 #include "GpCoreDefs.h"
 
-class GpSystemServices_Android final : public IGpSystemServices
+class GpSystemServices_Android final : public GpSystemServices_POSIX
 {
 public:
 	GpSystemServices_Android();
 
-	int64_t GetTime() const override;
-	void GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const override;
-	IGpMutex *CreateMutex() override;
-	IGpMutex *CreateRecursiveMutex() override;
 	void *CreateThread(ThreadFunc_t threadFunc, void *context) override;
-	IGpThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
-	uint64_t GetFreeMemoryCosmetic() const override;
 	void Beep() const override;
 	bool IsTouchscreen() const override;
 	bool IsUsingMouseAsTouch() const override;

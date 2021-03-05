@@ -9,6 +9,7 @@ SDL_PATH := ../SDL
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include	\
 	$(LOCAL_PATH)/../GpShell	\
 	$(LOCAL_PATH)/../GpCommon	\
+	$(LOCAL_PATH)/../AerofoilPortable	\
 	$(LOCAL_PATH)/../AerofoilSDL	\
 	$(LOCAL_PATH)/../Common	\
 	$(LOCAL_PATH)/../PortabilityLayer
@@ -23,7 +24,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_SHARED_LIBRARIES := SDL2
 
-LOCAL_STATIC_LIBRARIES := GpShell GpFontHandler_FreeType2 AerofoilSDL GpApp
+LOCAL_STATIC_LIBRARIES := GpShell GpFontHandler_FreeType2 AerofoilPortable AerofoilSDL GpApp
 
 LOCAL_LDLIBS := -lGLESv1_CM -lGLESv2 -llog
 

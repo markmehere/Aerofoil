@@ -2,6 +2,7 @@
 @cd /d "%~dp0"
 
 rmdir app\jni\AerofoilSDL
+rmdir app\jni\AerofoilPortable
 rmdir app\jni\Common
 rmdir app\jni\SDL2
 rmdir app\jni\GpShell

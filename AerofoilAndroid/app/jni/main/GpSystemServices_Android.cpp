@@ -1,7 +1,6 @@
 #include "GpSystemServices_Android.h"
 
-#include "GpMutex_Cpp11.h"
-#include "GpThreadEvent_Cpp11.h"
+#include "IGpThreadEvent.h"
 #include "SDL.h"
 
 #include <time.h>
@@ -32,29 +31,6 @@ GpSystemServices_Android::GpSystemServices_Android()
 {
 }
 
-int64_t GpSystemServices_Android::GetTime() const
-{
-	time_t t = time(nullptr);
-	return static_cast<int64_t>(t) - 2082844800;
-}
-
-void GpSystemServices_Android::GetLocalDateTime(unsigned int &year, unsigned int &month, unsigned int &day, unsigned int &hour, unsigned int &minute, unsigned int &second) const
-{
-	time_t t = time(nullptr);
-	tm *tmObject = localtime(&t);
-	year = static_cast<unsigned int>(tmObject->tm_year);
-	month = static_cast<unsigned int>(tmObject->tm_mon + 1);
-	hour = static_cast<unsigned int>(tmObject->tm_hour);
-	minute = static_cast<unsigned int>(tmObject->tm_min);
-	second = static_cast<unsigned int>(tmObject->tm_sec);
-}
-
-IGpMutex *GpSystemServices_Android::CreateMutex()
-{
-	return GpMutex_Cpp11_NonRecursive::Create();
-}
-
-
 void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *context)
 {
 	IGpThreadEvent *evt = CreateThreadEvent(true, false);
@@ -77,23 +53,6 @@ void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *cont
 	evt->Destroy();
 
 	return thread;
-}
-
-IGpMutex *GpSystemServices_Android::CreateRecursiveMutex()
-{
-	return GpMutex_Cpp11_Recursive::Create();
-}
-
-IGpThreadEvent *GpSystemServices_Android::CreateThreadEvent(bool autoReset, bool startSignaled)
-{
-	return GpThreadEvent_Cpp11::Create(autoReset, startSignaled);
-}
-
-uint64_t GpSystemServices_Android::GetFreeMemoryCosmetic() const
-{
-	long pages = sysconf(_SC_AVPHYS_PAGES);
-	long pageSize = sysconf(_SC_PAGE_SIZE);
-	return pages * pageSize;
 }
 
 void GpSystemServices_Android::Beep() const
