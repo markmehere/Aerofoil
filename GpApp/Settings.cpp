@@ -637,7 +637,7 @@ void HandleSoundMusicChange (short newVolume, Boolean sayIt)
 	
 	isSoundOn = (newVolume != 0);
 	
-	if (wasIdle)
+	if (wasIdle && theMode != kEditMode)
 	{
 		if (newVolume == 0)
 			StopTheMusic();
@@ -773,7 +773,7 @@ void DoSoundPrefs (void)
 			case kCancelButton:
 			UnivSetSoundVolume(wasLoudness, thisMac.hasSM3);
 			HandleSoundMusicChange(wasLoudness, false);
-			if (isPlayMusicIdle != wasIdle)
+			if (isPlayMusicIdle != wasIdle && theMode != kEditMode)
 			{
 				if (isPlayMusicIdle)
 				{
@@ -831,7 +831,7 @@ void DoSoundPrefs (void)
 			case kIdleMusicItem:
 			wasIdle = !wasIdle;
 			SetDialogItemValue(prefDlg, kIdleMusicItem, (short)wasIdle);
-			if (wasIdle)
+			if (wasIdle && theMode != kEditMode)
 			{
 				UnivGetSoundVolume(&tempVolume, thisMac.hasSM3);
 				if (tempVolume != 0)
