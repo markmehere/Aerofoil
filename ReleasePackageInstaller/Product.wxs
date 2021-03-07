@@ -111,6 +111,9 @@
       <Component Id="unpacktool.exe" Guid="*">
         <File Id="unpacktool.exe" Source="$(var.unpacktool.TargetPath)" KeyPath="yes" Checksum="yes"/>
       </Component>
+      <Component Id="MergeGPF.exe" Guid="*">
+        <File Id="MergeGPF.exe" Source="$(var.MergeGPF.TargetPath)" KeyPath="yes" Checksum="yes"/>
+      </Component>
     </DirectoryRef>
 
     <DirectoryRef Id="AEROFOILDOCUMENTATIONDIR">
@@ -183,6 +186,7 @@
         <ComponentRef Id="hqx2gp.exe" />
         <ComponentRef Id="MakeTimestamp.exe" />
         <ComponentRef Id="unpacktool.exe" />
+        <ComponentRef Id="MergeGPF.exe" />
       </Feature>
     </Feature>
 
