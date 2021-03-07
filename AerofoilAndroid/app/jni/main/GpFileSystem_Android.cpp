@@ -714,7 +714,7 @@ bool GpFileSystem_Android::ValidateFilePath(const char *path, size_t length) con
 		if (c >= '0' && c <= '9')
 			continue;
 
-		if (c == '_' || c == '.' || c == '\'')
+		if (c == '_' || c == '.' || c == '\'' || c == '!')
 			continue;
 
 		if (c == ' ' && i != 0 && i != length - 1)
