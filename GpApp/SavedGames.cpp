@@ -179,15 +179,6 @@ Boolean SaveGame2 (void)
 
 	spec.m_name[0] = static_cast<uint8_t>(savePathLength);
 	memcpy(spec.m_name + 1, savePath, savePathLength);
-
-	if (fm->FileExists(spec.m_dir, PLPasStr(spec.m_name)))
-	{
-		if (!fm->DeleteNonCompositeFile(spec.m_dir, spec.m_name, ".dat"))
-		{
-			CheckFileError(PLErrors::kAccessDenied, PSTR("Saved Game"));
-			return false;
-		}
-	}
 	
 	thisHousePtr = *thisHouse;
 	

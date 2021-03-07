@@ -595,7 +595,7 @@ void DoDirSearch (void)
 			{
 				theHousesSpecs[housesFound] = MakeVFileSpec(theDirs[currentDir], f->name);
 
-				if (fm->FileExists(theDirs[currentDir], f->name))
+				if (fm->CompositeFileExists(theDirs[currentDir], f->name))
 					housesFound++;
 			}
 		}

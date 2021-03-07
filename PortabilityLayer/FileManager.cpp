@@ -35,7 +35,8 @@ namespace PortabilityLayer
 		CompositeFile *OpenCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename) override;
 		PLError_t OpenNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension, EFilePermission filePermission, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 
-		bool FileExists(VirtualDirectory_t dirID, const PLPasStr &filename) override;
+		bool CompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename) override;
+		bool NonCompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension) override;
 
 		bool DeleteNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext) override;
 		bool DeleteCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename) override;
@@ -65,6 +66,8 @@ namespace PortabilityLayer
 		PLError_t OpenResources(GpIOStream *&outStream, ZipFileProxy *&outProxy, bool &outIsProxyShared) override;
 		const MacFileProperties &GetProperties() const override;
 
+		VirtualDirectory_t GetDirectory() const override;
+		PLPasStr GetFileName() const override;
 		bool IsDataReadOnly() const override;
 
 		void Close() override;
@@ -168,13 +171,18 @@ namespace PortabilityLayer
 		return RawOpenFileFork(dirID, filename, extension, filePermission, true, creationDisposition, outStream);
 	}
 
-	bool FileManagerImpl::FileExists(VirtualDirectory_t dirID, const PLPasStr &filename)
+	bool FileManagerImpl::NonCompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension)
 	{
 		ExtendedFileName_t extFN;
-		if (!FileManagerTools::ConstructFilename(extFN, filename, ".gpf"))
+		if (!FileManagerTools::ConstructFilename(extFN, filename, extension))
 			return false;
 
 		return PLDrivers::GetFileSystem()->FileExists(dirID, extFN);
+	}
+
+	bool FileManagerImpl::CompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename)
+	{
+		return NonCompositeFileExists(dirID, filename, ".gpf");
 	}
 
 	bool FileManagerImpl::DeleteNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext)
@@ -371,6 +379,8 @@ namespace PortabilityLayer
 		if (fnameSize >= 64)
 			return false;
 
+		assert(strlen(extension) <= 4);
+
 		memcpy(extFN, fn.Chars(), fnameSize);
 		memcpy(extFN + fnameSize, extension, strlen(extension) + 1);
 
@@ -435,6 +445,16 @@ namespace PortabilityLayer
 	const MacFileProperties &CompositeFileImpl::GetProperties() const
 	{
 		return m_mfp;
+	}
+
+	VirtualDirectory_t CompositeFileImpl::GetDirectory() const
+	{
+		return m_dirID;
+	}
+
+	PLPasStr CompositeFileImpl::GetFileName() const
+	{
+		return m_filename.ToShortStr();
 	}
 
 	bool CompositeFileImpl::IsDataReadOnly() const

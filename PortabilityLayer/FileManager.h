@@ -26,6 +26,8 @@ namespace PortabilityLayer
 		virtual PLError_t OpenResources(GpIOStream *&outStream, ZipFileProxy *&outProxy, bool &outIsProxyShared) = 0;
 		virtual const MacFileProperties &GetProperties() const = 0;
 
+		virtual VirtualDirectory_t GetDirectory() const = 0;
+		virtual PLPasStr GetFileName() const = 0;
 		virtual bool IsDataReadOnly() const = 0;
 
 		virtual void Close() = 0;
@@ -41,7 +43,8 @@ namespace PortabilityLayer
 		virtual CompositeFile *OpenCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;
 		virtual PLError_t OpenNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension, EFilePermission filePermission, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) = 0;
 
-		virtual bool FileExists(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;
+		virtual bool CompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;
+		virtual bool NonCompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension) = 0;
 
 		virtual bool DeleteNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext) = 0;
 		virtual bool DeleteCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename) = 0;

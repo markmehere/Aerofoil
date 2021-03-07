@@ -727,15 +727,24 @@ namespace PortabilityLayer
 					FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIBadNameDialogTemplateID, nullptr);
 					hit = -1;
 				}
-				else if (PortabilityLayer::FileManager::GetInstance()->FileExists(dirID, nameStr))
+				else
 				{
-					DialogTextSubstitutions substitutions(nameStr);
+					bool fileExists = false;
+					if (composites)
+						fileExists = PortabilityLayer::FileManager::GetInstance()->CompositeFileExists(dirID, nameStr);
+					else
+						fileExists = PortabilityLayer::FileManager::GetInstance()->NonCompositeFileExists(dirID, nameStr, extension);
 
-					PLDrivers::GetSystemServices()->Beep();
-					int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIOverwriteDialogTemplateID, &substitutions);
+					if (fileExists)
+					{
+						DialogTextSubstitutions substitutions(nameStr);
 
-					if (subHit == kOverwriteNoButton)
-						hit = -1;
+						PLDrivers::GetSystemServices()->Beep();
+						int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIOverwriteDialogTemplateID, &substitutions);
+
+						if (subHit == kOverwriteNoButton)
+							hit = -1;
+					}
 				}
 			}
 
