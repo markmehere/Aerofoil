@@ -94,11 +94,6 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	bool MemReaderStream::Truncate(GpUFilePos_t loc)
-	{
-		return false;
-	}
-
 	GpUFilePos_t MemReaderStream::Size() const
 	{
 		return m_size;

@@ -29,7 +29,6 @@ namespace PortabilityLayer
 		FontFamily *GetHandwritingFont(int textSize, int variationFlags) const override;
 		FontFamily *GetMonospaceFont(int textSize, int variationFlags) const override;
 
-		RenderedFont *GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) override;
 		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
 
 		RenderedFont *LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const override;
@@ -51,13 +50,16 @@ namespace PortabilityLayer
 		struct CachedRenderedFont
 		{
 			RenderedFont *m_rfont;
-			const IGpFont *m_font;
+			int m_fontCacheID;
 			int m_size;
 			uint32_t m_lastUsage;
 			bool m_aa;
 		};
 
 		FontManagerImpl();
+
+		bool FindOrReserveCacheSlot(int cacheID, int size, bool aa, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF);
+		void ReplaceCachedRenderedFont(CachedRenderedFont &cacheSlot, RenderedFont *rfont, int cacheID, int size, bool aa, int flags);
 
 		void ResetUsageCounter();
 		static int CRFSortPredicate(const void *a, const void *b);
@@ -147,7 +149,7 @@ namespace PortabilityLayer
 		return m_monospaceFont;
 	}
 
-	RenderedFont *FontManagerImpl::GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks)
+	bool FontManagerImpl::FindOrReserveCacheSlot(int cacheID, int size, bool aa, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF)
 	{
 		CachedRenderedFont *newCacheSlot = &m_cachedRenderedFonts[0];
 
@@ -160,7 +162,7 @@ namespace PortabilityLayer
 				break;
 			}
 
-			if (crf.m_font == font && crf.m_size == size && crf.m_aa == aa)
+			if (crf.m_fontCacheID == cacheID && crf.m_size == size && crf.m_aa == aa)
 			{
 				crf.m_lastUsage = m_usageCounter;
 				RenderedFont *rf = crf.m_rfont;
@@ -169,41 +171,52 @@ namespace PortabilityLayer
 				else
 					m_usageCounter++;
 
-				return rf;
+				outRF = rf;
+				return true;
 			}
 
 			if (newCacheSlot->m_rfont != nullptr && crf.m_lastUsage < newCacheSlot->m_lastUsage)
 				newCacheSlot = &crf;
 		}
 
-		RenderedFont *rfont = FontRenderer::GetInstance()->RenderFont(font, size, aa, fontHacks);
-		if (!rfont)
-			return nullptr;
+		outCacheSlot = newCacheSlot;
+		return false;
+	}
 
-		if (newCacheSlot->m_rfont)
-			newCacheSlot->m_rfont->Destroy();
+	void FontManagerImpl::ReplaceCachedRenderedFont(CachedRenderedFont &cacheSlot, RenderedFont *rfont, int cacheID, int size, bool aa, int flags)
+	{
+		if (cacheSlot.m_rfont)
+			cacheSlot.m_rfont->Destroy();
 
-		newCacheSlot->m_font = font;
-		newCacheSlot->m_lastUsage = m_usageCounter;
-		newCacheSlot->m_size = size;
-		newCacheSlot->m_rfont = rfont;
-		newCacheSlot->m_aa = aa;
+		cacheSlot.m_fontCacheID = cacheID;
+		cacheSlot.m_lastUsage = m_usageCounter;
+		cacheSlot.m_size = size;
+		cacheSlot.m_rfont = rfont;
+		cacheSlot.m_aa = aa;
 
 		if (m_usageCounter == UINT32_MAX)
 			ResetUsageCounter();
 		else
 			m_usageCounter++;
-
-		return rfont;
 	}
 
 	RenderedFont *FontManagerImpl::GetRenderedFontFromFamily(FontFamily *fontFamily, int size, bool aa, int flags)
 	{
 		PortabilityLayer::FontManager *fm = PortabilityLayer::FontManager::GetInstance();
 
-		RenderedFont *rfont = fm->LoadCachedRenderedFont(fontFamily->GetCacheID(), size, aa, flags);
-		if (rfont)
+		RenderedFont *rfont = nullptr;
+		CachedRenderedFont *cacheSlot = nullptr;
+		int cacheID = fontFamily->GetCacheID();
+
+		if (this->FindOrReserveCacheSlot(cacheID, size, aa, cacheSlot, rfont))
 			return rfont;
+
+		rfont = fm->LoadCachedRenderedFont(cacheID, size, aa, flags);
+		if (rfont)
+		{
+			ReplaceCachedRenderedFont(*cacheSlot, rfont, cacheID, size, aa, flags);
+			return rfont;
+		}
 
 		const int variation = fontFamily->GetVariationForFlags(flags);
 
@@ -211,9 +224,16 @@ namespace PortabilityLayer
 		if (!hostFont)
 			return nullptr;
 
-		rfont = fm->GetRenderedFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
+
+		rfont = FontRenderer::GetInstance()->RenderFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
 		if (rfont)
+		{
 			fm->SaveCachedRenderedFont(rfont, fontFamily->GetCacheID(), size, aa, flags);
+
+			ReplaceCachedRenderedFont(*cacheSlot, rfont, cacheID, size, aa, flags);
+
+			return rfont;
+		}
 
 		return rfont;
 	}

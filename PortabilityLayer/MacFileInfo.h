@@ -3,8 +3,12 @@
 #include "DataTypes.h"
 #include "PascalStr.h"
 
+class GpIOStream;
+
 namespace PortabilityLayer
 {
+	struct CombinedTimestamp;
+
 	enum FinderFileFlags
 	{
 		FINDER_FILE_FLAG_LOCKED = (1 << 15),
@@ -27,8 +31,8 @@ namespace PortabilityLayer
 		int16_t m_yPos;
 		uint16_t m_finderFlags;
 		uint8_t m_protected;
-		int64_t m_creationDate;
-		int64_t m_modifiedDate;
+		int64_t m_createdTimeMacEpoch;
+		int64_t m_modifiedTimeMacEpoch;
 	};
 
 	struct MacFilePropertiesSerialized
@@ -38,9 +42,9 @@ namespace PortabilityLayer
 		static const unsigned int kOffsetXPos = 8;
 		static const unsigned int kOffsetYPos = 10;
 		static const unsigned int kOffsetFinderFlags = 12;
-		static const unsigned int kProtected = 14;
-		static const unsigned int kCreationDate = 15;
-		static const unsigned int kModifiedDate = 23;
+		static const unsigned int kOffsetProtected = 14;
+		static const unsigned int kOffsetCreatedDate = 15;
+		static const unsigned int kOffsetModifiedDate = 23;
 
 		static const unsigned int kSize = 31;
 
@@ -48,6 +52,12 @@ namespace PortabilityLayer
 
 		void Deserialize(MacFileProperties &props) const;
 		void Serialize(const MacFileProperties &props);
+
+		bool WriteAsPackage(GpIOStream &stream, const CombinedTimestamp &ts) const;
+		bool WriteIsolated(GpIOStream &stream, const CombinedTimestamp &ts) const;
+		bool ReadFromPackage(GpIOStream &stream);
+
+		static const char *GetPackagedName();
 	};
 
 	struct MacFileInfo
@@ -70,8 +80,8 @@ namespace PortabilityLayer
 		, m_yPos(0)
 		, m_finderFlags(0)
 		, m_protected(0)
-		, m_creationDate(0)
-		, m_modifiedDate(0)
+		, m_createdTimeMacEpoch(0)
+		, m_modifiedTimeMacEpoch(0)
 	{
 		m_fileType[0] = m_fileType[1] = m_fileType[2] = m_fileType[3] = '\0';
 		m_fileCreator[0] = m_fileCreator[1] = m_fileCreator[2] = m_fileCreator[3] = '\0';

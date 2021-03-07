@@ -70,12 +70,7 @@ namespace PortabilityLayer
 		if (!m_file)
 			return false;
 
-		return fseek(m_file, static_cast<long>(loc), SEEK_END) == 0;
-	}
-
-	bool CFileStream::Truncate(GpUFilePos_t loc)
-	{
-		return false;
+		return fseek(m_file, -static_cast<long>(loc), SEEK_END) == 0;
 	}
 
 	GpUFilePos_t CFileStream::Tell() const

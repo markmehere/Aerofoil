@@ -20,7 +20,6 @@ namespace PortabilityLayer
 		virtual FontFamily *GetHandwritingFont(int fontSize, int variationFlags) const = 0;
 		virtual FontFamily *GetMonospaceFont(int fontSize, int variationFlags) const = 0;
 
-		virtual RenderedFont *GetRenderedFont(IGpFont *font, int size, bool aa, FontHacks fontHacks) = 0;
 		virtual RenderedFont *GetRenderedFontFromFamily(FontFamily *fontFamily, int fontSize, bool aa, int flags) = 0;
 
 		virtual RenderedFont *LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const = 0;

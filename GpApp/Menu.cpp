@@ -426,6 +426,7 @@ void DoOptionsMenu (short theItem)
 			}
 
 			OpenMainWindow();
+			RedrawSplashScreen();
 			incrementModeTime = TickCount() + kIdleSplashTicks;
 		}
 		else if (theMode == kSplashMode)	// switching to edit mode

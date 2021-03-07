@@ -191,24 +191,24 @@ bool GpFileSystem_Win32::FileExists(PortabilityLayer::VirtualDirectory_t virtual
 	return PathFileExistsW(winPath) != 0;
 }
 
-bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists)
+bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &exists)
 {
 	wchar_t winPath[MAX_PATH + 1];
 
 	if (!ResolvePath(virtualDirectory, &path, 1, winPath))
 	{
-		*exists = false;
+		exists = false;
 		return false;
 	}
 
 	DWORD attribs = GetFileAttributesW(winPath);
 	if (attribs == INVALID_FILE_ATTRIBUTES)
 	{
-		*exists = false;
+		exists = false;
 		return false;
 	}
 
-	*exists = true;
+	exists = true;
 	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
@@ -319,11 +319,6 @@ bool GpFileSystem_Win32::ValidateFilePathUnicodeChar(uint32_t c) const
 	return false;
 }
 
-bool GpFileSystem_Win32::IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const
-{
-	return false;
-}
-
 void GpFileSystem_Win32::SetMainThreadRelay(IGpThreadRelay *relay)
 {
 	(void)relay;
@@ -341,7 +336,7 @@ bool GpFileSystem_Win32::ValidateFilePath(const char *str, size_t length) const
 		if (c >= '0' && c <= '9')
 			continue;
 
-		if (c == '_' || c == '.' || c == '\'')
+		if (c == '_' || c == '.' || c == '\'' || c == '!')
 			continue;
 
 		if (c == ' ' && i != 0 && i != length - 1)

@@ -98,8 +98,8 @@ struct StuffItHeader
 
 void ParseMacFileInfo(ArchiveItem &item, const uint8_t *header, IFileReader::FilePos_t filePos)
 {
-	item.m_macProperties.m_creationDate = ParseUInt32BE(header + SITFH_CREATIONDATE);
-	item.m_macProperties.m_modifiedDate = ParseUInt32BE(header + SITFH_MODDATE);
+	item.m_macProperties.m_createdTimeMacEpoch = ParseUInt32BE(header + SITFH_CREATIONDATE);
+	item.m_macProperties.m_modifiedTimeMacEpoch = ParseUInt32BE(header + SITFH_MODDATE);
 	memcpy(item.m_macProperties.m_fileCreator, header + SITFH_CREATOR, 4);
 	memcpy(item.m_macProperties.m_fileType, header + SITFH_FTYPE, 4);
 	item.m_macProperties.m_finderFlags = ParseUInt16BE(header + SITFH_FNDRFLAGS);

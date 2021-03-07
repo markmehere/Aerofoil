@@ -7,6 +7,6 @@ mkdir Packaged
 cd Packaged
 rmdir /S /Q Houses
 mkdir Houses
-copy ..\..\..\..\..\..\Packaged\*.gpa .\
+copy ..\..\..\..\..\..\Packaged\*.gpf .\
 copy ..\..\..\..\..\..\Packaged\Houses\* Houses\
 cd ..

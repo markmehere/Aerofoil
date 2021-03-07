@@ -101,18 +101,26 @@ void UpdateLoadDialog (Dialog *theDialog)
 		
 		if (SectRect(&dialogRect, &tempRect, &dummyRect))
 		{
-			PortabilityLayer::IResourceArchive *resFile = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name);
-			if (resFile != nullptr)
+			PortabilityLayer::CompositeFile *cfile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(theHousesSpecs[i].m_dir, theHousesSpecs[i].m_name);
+
+			bool haveHouseIcon = false;
+			GpIOStream *resStream = nil;
+
+			if (cfile)
 			{
-				if (!LargeIconPlot(surface, resFile, -16455, tempRect))
+				PortabilityLayer::IResourceArchive *resFile = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(cfile);
+				if (resFile != nullptr)
 				{
-					LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage,
-						kDefaultHousePict8);
+					if (LargeIconPlot(surface, resFile, -16455, tempRect))
+						haveHouseIcon = true;
+
+					resFile->Destroy();
 				}
 
-				resFile->Destroy();
+				cfile->Close();
 			}
-			else
+
+			if (!haveHouseIcon)
 				LoadDialogPICT(theDialog, kLoadIconFirstItem + i - housePage, 
 						kDefaultHousePict8);
 		}
@@ -411,11 +419,8 @@ void DoLoadHouse (void)
 				whoCares = CloseHouse();
 				PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 						thisHouseName);
-				if (OpenHouse())
-				{
-					whoCares = ReadHouse();
+				if (OpenHouse(true))
 					houseNameDirty = true;
-				}
 			}
 			leaving = true;
 		}
@@ -452,11 +457,8 @@ void DoLoadHouse (void)
 					whoCares = CloseHouse();
 					PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 							thisHouseName);
-					if (OpenHouse())
-					{
-						whoCares = ReadHouse();
+					if (OpenHouse(true))
 						houseNameDirty = true;
-					}
 				}
 				leaving = true;
 			}
@@ -489,11 +491,8 @@ void DoLoadHouse (void)
 					whoCares = CloseHouse();
 					PasStringCopy(theHousesSpecs[thisHouseIndex].m_name,
 							thisHouseName);
-					if (OpenHouse())
-					{
-						whoCares = ReadHouse();
+					if (OpenHouse(true))
 						houseNameDirty = true;
-					}
 				}
 				leaving = true;
 			}

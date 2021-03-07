@@ -101,6 +101,7 @@
     <ClInclude Include="FileBrowserUI.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FilePermission.h" />
+    <ClInclude Include="FileSectionStream.h" />
     <ClInclude Include="FontFamily.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="FontRenderer.h" />
@@ -110,6 +111,7 @@
     <ClInclude Include="HostSuspendCallID.h" />
     <ClInclude Include="HostSuspendHook.h" />
     <ClInclude Include="IconLoader.h" />
+    <ClInclude Include="InflateStream.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="IPlotter.h" />
     <ClInclude Include="LinePlotter.h" />
@@ -230,12 +232,14 @@
     <ClCompile Include="EllipsePlotter.cpp" />
     <ClCompile Include="FileBrowserUI.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FileSectionStream.cpp" />
     <ClCompile Include="FontFamily.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="FontRenderer.cpp" />
     <ClCompile Include="GPArchive.cpp" />
     <ClCompile Include="HostSuspendHook.cpp" />
     <ClCompile Include="IconLoader.cpp" />
+    <ClCompile Include="InflateStream.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="LinePlotter.cpp" />
     <ClCompile Include="MacBinary2.cpp" />

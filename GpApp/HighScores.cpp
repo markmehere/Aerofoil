@@ -50,7 +50,7 @@ void GetHighScoreName (short);
 void UpdateBannerDialog (Dialog *);
 int16_t BannerFilter(void *context, Dialog *dialog, const TimeTaggedVOSEvent *evt);
 void GetHighScoreBanner (void);
-Boolean OpenHighScoresFile (const VFileSpec &spec, GpIOStream *&outStream);
+Boolean OpenHighScoresFile (const VFileSpec &spec, GpIOStream *&outStream, Boolean write);
 
 
 Str31		highBanner;
@@ -686,23 +686,18 @@ void GetHighScoreBanner (void)
 
 //--------------------------------------------------------------  OpenHighScoresFile
 
-Boolean OpenHighScoresFile (const VFileSpec &scoreSpec, GpIOStream *&scoresStream)
+Boolean OpenHighScoresFile (const VFileSpec &spec, GpIOStream *&outStream, Boolean write)
 {
-	PLError_t		theErr;
-
 	PortabilityLayer::FileManager *fm = PortabilityLayer::FileManager::GetInstance();
-	
-	theErr = fm->OpenFileData(scoreSpec.m_dir, scoreSpec.m_name, PortabilityLayer::EFilePermission_Any, scoresStream);
+
+	PLError_t theErr = fm->OpenNonCompositeFile(spec.m_dir, spec.m_name, ".dat", write ? PortabilityLayer::EFilePermission_Write : PortabilityLayer::EFilePermission_Read, write ? GpFileCreationDispositions::kCreateOrOverwrite : GpFileCreationDispositions::kOpenExisting, outStream);
 	if (theErr == PLErrors::kFileNotFound)
 	{
-		theErr = fm->CreateFileAtCurrentTime(scoreSpec.m_dir, scoreSpec.m_name, 'ozm5', 'gliS');
-		if (!CheckFileError(theErr, PSTR("New High Scores File")))
-			return (false);
-		theErr = fm->OpenFileData(scoreSpec.m_dir, scoreSpec.m_name, PortabilityLayer::EFilePermission_Any, scoresStream);
-		if (!CheckFileError(theErr, PSTR("High Score")))
-			return (false);
+		outStream = nil;
+		return (true);
 	}
-	else if (!CheckFileError(theErr, PSTR("High Score")))
+
+	if (!CheckFileError(theErr, PSTR("High Score")))
 		return (false);
 	
 	return (true);
@@ -721,30 +716,16 @@ Boolean WriteScoresToDisk (void)
 	GpIOStream	*scoresStream = nil;
 	
 	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
-	if (!OpenHighScoresFile(scoreSpec, scoresStream))
+	if (!OpenHighScoresFile(scoreSpec, scoresStream, true))
 	{
 		SysBeep(1);
 		return (false);
-	}
-
-	if (!scoresStream->SeekStart(0))
-	{
-		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
-		scoresStream->Close();
-		return(false);
 	}
 	
 	byteCount = sizeof(scoresType);
 	theScores = &((*thisHouse)->highScores);
 
 	if (scoresStream->Write(theScores, byteCount) != byteCount)
-	{
-		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
-		scoresStream->Close();
-		return(false);
-	}
-
-	if (!scoresStream->Truncate(byteCount))
 	{
 		CheckFileError(PLErrors::kIOError, PSTR("High Scores File"));
 		scoresStream->Close();
@@ -777,15 +758,22 @@ Boolean ReadScoresFromDisk (void)
 	short		volRefNum;
 	char		wasState;
 	GpIOStream *scoresStream = nil;
-	
+
 	VFileSpec	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
-	if (!OpenHighScoresFile(scoreSpec, scoresStream))
+	if (!OpenHighScoresFile(scoreSpec, scoresStream, false))
 	{
-		SysBeep(1);
 		return (false);
 	}
+
+	if (!scoresStream)
+		return (false);
 	
 	byteCount = scoresStream->Size();
+	if (byteCount != sizeof(scoresType))
+	{
+		scoresStream->Close();
+		return (false);
+	}
 	
 	theScores = &((*thisHouse)->highScores);
 

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "CFileStream.h"
+#include "CombinedTimestamp.h"
 #include "ScopedPtr.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
@@ -33,9 +34,9 @@ using namespace PortabilityLayer;
 
 int main(int argc, const char **argv)
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
-		fprintf(stderr, "Usage: bin2gp <input.bin> <output>");
+		fprintf(stderr, "Usage: bin2gp <input.bin> <input.ts> <output>");
 		return -1;
 	}
 
@@ -53,13 +54,34 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
+#ifdef _CRT_INSECURE_DEPRECATE
+	FILE *tsF = nullptr;
+	if (fopen_s(&tsF, argv[2], "rb"))
+		tsF = nullptr;
+#else
+	FILE *tsF = fopen(argv[2], "rb");
+#endif
+
+	if (!tsF)
+	{
+		fprintf(stderr, "Could not open timestamp file");
+		return -1;
+	}
+
+	PortabilityLayer::CombinedTimestamp ts;
+	if (!fread(&ts, sizeof(ts), 1, tsF))
+	{
+		fprintf(stderr, "Could not read timestamp");
+		return -1;
+	}
+
 	CFileStream fs(f, true, false, true);
 
 	ScopedPtr<MacFileMem> memFile = MacBinary2::ReadBin(&fs);
 
 	fs.Close();
 
-	std::string fname = argv[2];
+	std::string fname = argv[3];
 
 	const char* extensions[] = { ".gpf", ".gpr", ".gpd", ".gpc" };
 
@@ -107,8 +129,17 @@ int main(int argc, const char **argv)
 		if (!outF)
 			continue;
 
-		fwrite(bufferToWrite, 1, sizeToWrite, outF);
-		fclose(outF);
+		if (i == 0)
+		{
+			CFileStream stream(outF);
+			sp.WriteAsPackage(stream, ts);
+			stream.Close();
+		}
+		else
+		{
+			fwrite(bufferToWrite, 1, sizeToWrite, outF);
+			fclose(outF);
+		}
 	}
 
 	return 0;

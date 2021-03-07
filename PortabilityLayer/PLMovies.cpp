@@ -1,6 +1,7 @@
 #include "PLMovies.h"
 
 #include "BitmapImage.h"
+#include "FileManager.h"
 #include "MemoryManager.h"
 #include "PLQDraw.h"
 #include "PLResources.h"
@@ -56,15 +57,19 @@ void AnimationPackage::Destroy()
 	PortabilityLayer::MemoryManager::GetInstance()->Release(this);
 }
 
-bool AnimationPackage::Load(PortabilityLayer::VirtualDirectory_t virtualDir, const PLPasStr &path)
+PLError_t AnimationPackage::Load(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name)
 {
-	m_resArchive = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(virtualDir, path);
+	m_compositeFile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(dirID, name);
+	if (!m_compositeFile)
+		return PLErrors::kFileNotFound;
+
+	m_resArchive = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(m_compositeFile);
 	if (!m_resArchive)
-		return false;
+		return PLErrors::kResourceError;
 
 	THandle<void> movieMetadataRes = m_resArchive->LoadResource('muvi', 0);
 	if (!movieMetadataRes)
-		return false;
+		return PLErrors::kResourceError;
 
 	const void *movieMetadata = *movieMetadataRes;
 
@@ -74,25 +79,25 @@ bool AnimationPackage::Load(PortabilityLayer::VirtualDirectory_t virtualDir, con
 	movieMetadataRes.Dispose();
 
 	if (document.HasParseError() || !document.IsObject())
-		return false;
+		return PLErrors::kResourceError;
 
 	if (!document.HasMember("frameRateNumerator") || !document.HasMember("frameRateDenominator"))
-		return false;
+		return PLErrors::kResourceError;
 
 	const rapidjson::Value &frameRateNumeratorJSON = document["frameRateNumerator"];
 	const rapidjson::Value &frameRateDenominatorJSON = document["frameRateDenominator"];
 
 	if (!frameRateNumeratorJSON.IsInt() && !frameRateDenominatorJSON.IsInt())
-		return false;
+		return PLErrors::kResourceError;
 
 	const int frameRateNumerator = frameRateNumeratorJSON.GetInt();
 	const int frameRateDenominator = frameRateDenominatorJSON.GetInt();
 
 	if (frameRateNumerator < 1 || frameRateDenominator < 1)
-		return false;
+		return PLErrors::kResourceError;
 
 	if (frameRateDenominator > INT_MAX / 60 || frameRateDenominator * 60 < frameRateNumerator)
-		return false;	// We only support up to 60fps
+		return PLErrors::kResourceError;	// We only support up to 60fps
 
 	m_frameRateNumerator = frameRateNumerator;
 	m_frameRateDenominator = frameRateDenominator;
@@ -101,7 +106,7 @@ bool AnimationPackage::Load(PortabilityLayer::VirtualDirectory_t virtualDir, con
 	for (;;)
 	{
 		if (numFrames + 1 > 0x7fff)
-			return false;
+			return PLErrors::kResourceError;
 
 		THandle<void> frameRes = m_resArchive->LoadResource('PICT', numFrames + 1);
 		if (!frameRes)
@@ -109,18 +114,18 @@ bool AnimationPackage::Load(PortabilityLayer::VirtualDirectory_t virtualDir, con
 		else
 		{
 			if (frameRes.MMBlock()->m_size < sizeof(BitmapImage))
-				return false;
+				return PLErrors::kResourceError;
 
 			numFrames++;
 		}
 	}
 
 	if (numFrames == 0)
-		return false;
+		return PLErrors::kResourceError;
 
 	void *imageListStorage = PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(THandle<BitmapImage>) * numFrames);
 	if (!imageListStorage)
-		return false;
+		return PLErrors::kResourceError;
 
 	m_images = static_cast<THandle<BitmapImage>*>(imageListStorage);
 
@@ -132,7 +137,7 @@ bool AnimationPackage::Load(PortabilityLayer::VirtualDirectory_t virtualDir, con
 
 	m_numImages = numFrames;
 
-	return true;
+	return PLErrors::kNone;
 }
 
 const THandle<BitmapImage> &AnimationPackage::GetFrame(size_t index) const
@@ -159,6 +164,7 @@ uint32_t AnimationPackage::GetFrameRateDenominator() const
 AnimationPackage::AnimationPackage()
 	: m_images(nullptr)
 	, m_resArchive(nullptr)
+	, m_compositeFile(nullptr)
 	, m_numImages(0)
 {
 }
@@ -167,6 +173,10 @@ AnimationPackage::~AnimationPackage()
 {
 	if (m_resArchive)
 		m_resArchive->Destroy();
+
+	if (m_compositeFile)
+		m_compositeFile->Close();
+
 	PortabilityLayer::MemoryManager::GetInstance()->Release(m_images);
 }
 

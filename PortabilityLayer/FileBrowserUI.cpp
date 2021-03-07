@@ -565,8 +565,10 @@ namespace PortabilityLayer
 		return hit;
 	}
 
-	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, const ResTypeID &fileType, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
+	bool FileBrowserUI::Prompt(Mode mode, VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
 	{
+		size_t extensionLength = strlen(extension);
+
 		int dialogID = 0;
 		bool isObstructive = false;
 		int windowHeight = 272;
@@ -603,35 +605,18 @@ namespace PortabilityLayer
 		{
 			size_t nameLength = strlen(fileName);
 
-			if (nameLength < 4)
+			if (nameLength < extensionLength)
 				continue;
 
-			const char *nameExt = fileName + (nameLength - 4);
+			const char *nameExt = fileName + (nameLength - extensionLength);
 
-			if (!memcmp(nameExt, ".gpf", 4))
+			if (!memcmp(nameExt, extension, extensionLength))
 			{
-				GpIOStream *metadataStream = fs->OpenFile(dirID, fileName, false, GpFileCreationDispositions::kOpenExisting);
-				if (!metadataStream)
+				PLPasStr fnamePStr = PLPasStr(nameLength - extensionLength, fileName);
+				if (!callbackAPI.m_filterFileCallback(dirID, fnamePStr))
 					continue;
 
-				MacFilePropertiesSerialized serializedMetadata;
-				if (metadataStream->Read(&serializedMetadata, sizeof(serializedMetadata)) != sizeof(serializedMetadata))
-				{
-					metadataStream->Close();
-					continue;
-				}
-
-				metadataStream->Close();
-
-				MacFileProperties metadata;
-				serializedMetadata.Deserialize(metadata);
-
-				char ftype[4];
-				fileType.ExportAsChars(ftype);
-				if (memcmp(metadata.m_fileType, ftype, 4))
-					continue;
-
-				if (!uiImpl.AppendName(fileName, nameLength - 4, callbackAPI.m_loadFileDetailsCallback(dirID, PLPasStr(nameLength - 4, fileName))))
+				if (!uiImpl.AppendName(fileName, nameLength - extensionLength, callbackAPI.m_loadFileDetailsCallback(dirID, fnamePStr)))
 				{
 					dirCursor->Destroy();
 					return false;
@@ -763,7 +748,11 @@ namespace PortabilityLayer
 				{
 					PLPasStr uiFileName = uiImpl.GetSelectedFileName();
 
-					PortabilityLayer::FileManager::GetInstance()->DeleteFile(dirID, uiFileName);
+					if (composites)
+						PortabilityLayer::FileManager::GetInstance()->DeleteCompositeFile(dirID, uiFileName);
+					else
+						PortabilityLayer::FileManager::GetInstance()->DeleteNonCompositeFile(dirID, uiFileName, extension);
+
 					uiImpl.RemoveSelectedFile();
 					dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(false);
 					dialog->GetItems()[kDeleteButton - 1].GetWidget()->SetEnabled(false);

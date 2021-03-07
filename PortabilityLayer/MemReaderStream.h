@@ -21,7 +21,6 @@ namespace PortabilityLayer
 		bool SeekStart(GpUFilePos_t loc) override;
 		bool SeekCurrent(GpFilePos_t loc) override;
 		bool SeekEnd(GpUFilePos_t loc) override;
-		bool Truncate(GpUFilePos_t loc) override;
 		GpUFilePos_t Size() const override;
 		GpUFilePos_t Tell() const override;
 		void Close() override;

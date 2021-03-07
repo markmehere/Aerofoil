@@ -121,10 +121,10 @@ void ShiftWholeHouse (SInt16);
 
 void DoHouseInfo (void);								// --- HouseInfo.c
 
-Boolean OpenHouse (void);								// --- HouseIO.c
+Boolean OpenHouse (Boolean load);						// --- HouseIO.c
 Boolean OpenSpecificHouse (const VFileSpec &);
 Boolean SaveHouseAs (void);
-Boolean ReadHouse (void);
+Boolean ReadHouse (GpIOStream *houseStream);
 Boolean WriteHouse (Boolean);
 Boolean CloseHouse (void);
 void OpenHouseResFork (void);

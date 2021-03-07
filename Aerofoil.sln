@@ -60,6 +60,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GpFontHandler_FreeType2", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AerofoilSDL", "AerofoilSDL\AerofoilSDL.vcxproj", "{33542FF0-0473-4802-BC79-3B8261790F65}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MergeGPF", "MergeGPF\MergeGPF.vcxproj", "{36DAF5FA-6ADB-4F20-9810-1610DE0AE653}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -168,6 +170,10 @@ Global
 		{33542FF0-0473-4802-BC79-3B8261790F65}.Debug|x64.Build.0 = Debug|x64
 		{33542FF0-0473-4802-BC79-3B8261790F65}.Release|x64.ActiveCfg = Release|x64
 		{33542FF0-0473-4802-BC79-3B8261790F65}.Release|x64.Build.0 = Release|x64
+		{36DAF5FA-6ADB-4F20-9810-1610DE0AE653}.Debug|x64.ActiveCfg = Debug|x64
+		{36DAF5FA-6ADB-4F20-9810-1610DE0AE653}.Debug|x64.Build.0 = Debug|x64
+		{36DAF5FA-6ADB-4F20-9810-1610DE0AE653}.Release|x64.ActiveCfg = Release|x64
+		{36DAF5FA-6ADB-4F20-9810-1610DE0AE653}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

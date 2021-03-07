@@ -29,12 +29,14 @@ LOCAL_SRC_FILES := \
 	EllipsePlotter.cpp	\
 	FileBrowserUI.cpp	\
 	FileManager.cpp	\
+	FileSectionStream.cpp	\
 	FontFamily.cpp	\
 	FontManager.cpp	\
 	FontRenderer.cpp	\
 	GPArchive.cpp	\
 	HostSuspendHook.cpp	\
 	IconLoader.cpp	\
+	InflateStream.cpp	\
 	InputManager.cpp	\
 	LinePlotter.cpp	\
 	MacBinary2.cpp	\

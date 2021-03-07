@@ -237,8 +237,8 @@ static void ConvertItem(const StuffIt5Block &block, ArchiveItem &item)
 		item.m_children = ConvertToItemList(block.m_children);
 	else
 	{
-		item.m_macProperties.m_creationDate = block.m_header.m_creationDate;
-		item.m_macProperties.m_modifiedDate = block.m_header.m_modificationDate;
+		item.m_macProperties.m_createdTimeMacEpoch = block.m_header.m_creationDate;
+		item.m_macProperties.m_modifiedTimeMacEpoch = block.m_header.m_modificationDate;
 		memcpy(item.m_macProperties.m_fileCreator, block.m_annex1.m_fileCreator, 4);
 		memcpy(item.m_macProperties.m_fileType, block.m_annex1.m_fileType, 4);
 		item.m_macProperties.m_finderFlags = block.m_annex1.m_finderFlags;

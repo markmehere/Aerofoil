@@ -243,13 +243,10 @@ void GetIndString(unsigned char *str, int stringsID, int fnameIndex);	// Fetches
 
 VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr &fileName);
 
-PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfoOut);
-
 DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID);
 void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL);
 
 void GetMouse(Window *window, Point *point);
-Boolean Button();	// Returns true if there's a mouse down event in the queue
 Boolean StillDown();
 Boolean WaitMouseUp();
 

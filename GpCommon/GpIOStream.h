@@ -13,9 +13,23 @@ public:
 	virtual bool SeekStart(GpUFilePos_t loc) = 0;
 	virtual bool SeekCurrent(GpFilePos_t loc) = 0;
 	virtual bool SeekEnd(GpUFilePos_t loc) = 0;
-	virtual bool Truncate(GpUFilePos_t loc) = 0;
 	virtual GpUFilePos_t Size() const = 0;
 	virtual GpUFilePos_t Tell() const = 0;
 	virtual void Close() = 0;
 	virtual void Flush() = 0;
+
+	bool ReadExact(void *bytesOut, size_t size);
+	bool WriteExact(const void *bytesOut, size_t size);
 };
+
+inline bool GpIOStream::ReadExact(void *bytesOut, size_t size)
+{
+	const size_t nRead = this->Read(bytesOut, size);
+	return nRead == size;
+}
+
+inline bool GpIOStream::WriteExact(const void *bytes, size_t size)
+{
+	const size_t nWritten = this->Write(bytes, size);
+	return nWritten == size;
+}

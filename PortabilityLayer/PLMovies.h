@@ -8,6 +8,8 @@
 namespace PortabilityLayer
 {
 	struct IResourceArchive;
+	class MultiStreamFile;
+	class CompositeFile;
 }
 
 struct DrawSurface;
@@ -40,7 +42,7 @@ public:
 	static AnimationPackage *Create();
 	void Destroy();
 
-	bool Load(PortabilityLayer::VirtualDirectory_t virtualDir, const PLPasStr &path);
+	PLError_t Load(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &name);
 
 	const THandle<BitmapImage> &GetFrame(size_t index) const;
 	size_t NumFrames() const;
@@ -53,6 +55,7 @@ private:
 
 	THandle<BitmapImage> *m_images;
 	PortabilityLayer::IResourceArchive *m_resArchive;
+	PortabilityLayer::CompositeFile *m_compositeFile;
 	size_t m_numImages;
 
 	uint32_t m_frameRateNumerator;

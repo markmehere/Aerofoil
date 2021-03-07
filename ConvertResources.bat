@@ -2,14 +2,17 @@ rmdir /S /Q Packaged
 
 mkdir Packaged
 mkdir Packaged\Houses
-mkdir Packaged\WinCursors
 
 x64\Release\MiniRez.exe "GliderProData\Glider PRO.r" Packaged\ApplicationResources.gpr
 
 x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpa" "ApplicationResourcePatches\manifest.json"
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpf" data ozm5 0 0 locked
+
+x64\Release\MergeGPF.exe "Packaged\ApplicationResources.gpf"
 
 x64\Release\ConvertColorCursors.exe
 
+attrib -R Packaged\ApplicationResources.gpf
 attrib -R Packaged\Houses\*
 
 x64\Release\hqx2gp.exe "GliderProData\Houses\Art Museum.binhex" "DefaultTimestamp.timestamp" "Packaged\Houses\Art Museum"
@@ -70,11 +73,52 @@ x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\SpacePods
 x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Teddy World.mov.gpf" MooV ozm5 0 0 locked
 x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Titanic.mov.gpf" MooV ozm5 0 0 locked
 
-del /Q Packaged\Houses\*.gpr
-del /Q Packaged\ApplicationResources.gpr
-
 copy /Y GliderProData\ConvertedMovies\*.mov.gpa Packaged\Houses\
 
+x64\Release\MergeGPF.exe "Packaged\Houses\Art Museum.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\California or Bust!.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Castle o' the Air.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\CD Demo House.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Davis Station.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Demo House.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Fun House.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Grand Prix.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\ImagineHouse PRO II.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\In The Mirror.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Land of Illusion.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Leviathan.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Metropolis.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Nemo's Market.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Rainbow's End.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Slumberland.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\SpacePods.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Teddy World.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\The Asylum Pro.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Titanic.gpf"
+
+x64\Release\MergeGPF.exe "Packaged\Houses\Art Museum.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Castle o' the Air.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\CD Demo House.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Davis Station.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Demo House.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Grand Prix.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\ImagineHouse PRO II.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Land of Illusion.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Leviathan.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Nemo's Market.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Rainbow's End.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Slumberland.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\SpacePods.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Teddy World.mov.gpf"
+x64\Release\MergeGPF.exe "Packaged\Houses\Titanic.mov.gpf"
+
+del /Q Packaged\Houses\*.gpr
+del /Q Packaged\Houses\*.gpa
+del /Q Packaged\Houses\*.gpd
+del /Q Packaged\ApplicationResources.gpr
+del /Q Packaged\ApplicationResources.gpa
+
 attrib +R Packaged\Houses\*
+attrib +R Packaged\ApplicationResources.gpf
 
 pause

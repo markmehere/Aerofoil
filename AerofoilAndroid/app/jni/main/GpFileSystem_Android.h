@@ -19,15 +19,13 @@ public:
 	void ShutdownJNI();
 
 	bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) override;
-	bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists) override;
+	bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &exists) override;
 	GpIOStream *OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition) override;
 	bool DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed) override;
 	IGpDirectoryCursor *ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths) override;
 
 	bool ValidateFilePath(const char *path, size_t pathLen) const override;
 	bool ValidateFilePathUnicodeChar(uint32_t ch) const override;
-
-	bool IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const override;
 
 	void SetMainThreadRelay(IGpThreadRelay *relay) override;
 	void SetDelayCallback(DelayCallback_t delayCallback) override;

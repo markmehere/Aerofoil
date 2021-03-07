@@ -82,7 +82,7 @@
 
     <DirectoryRef Id="AEROFOILPACKAGEDDIR">
       <Component Id="ApplicationResources" Guid="*">
-        <File Id="ApplicationResources.gpa" Source="$(var.PackagedDataDir)\ApplicationResources.gpa" KeyPath="yes" Checksum="yes"/>
+        <File Id="ApplicationResources.gpf" Source="$(var.PackagedDataDir)\ApplicationResources.gpf" KeyPath="yes" Checksum="yes"/>
       </Component>
     </DirectoryRef>
 

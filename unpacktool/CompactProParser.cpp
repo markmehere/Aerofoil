@@ -201,8 +201,8 @@ ArchiveItemList *CompactProParser::ParseDirectory(uint32_t numEntries, IFileRead
 				item.m_dataForkDesc.m_compressionMethod = (fileEntry.m_flags & 4) ? CompressionMethods::kCompactProLZHRLE : CompressionMethods::kCompactProRLE;
 			}
 
-			item.m_macProperties.m_creationDate = fileEntry.m_creationDate;
-			item.m_macProperties.m_modifiedDate = fileEntry.m_modificationDate;
+			item.m_macProperties.m_createdTimeMacEpoch = fileEntry.m_creationDate;
+			item.m_macProperties.m_modifiedTimeMacEpoch = fileEntry.m_modificationDate;
 			memcpy(item.m_macProperties.m_fileCreator, fileEntry.m_fileCreator, 4);
 			memcpy(item.m_macProperties.m_fileType, fileEntry.m_fileType, 4);
 			item.m_macProperties.m_finderFlags = fileEntry.m_finderFlags;

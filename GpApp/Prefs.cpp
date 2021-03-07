@@ -22,7 +22,7 @@
 
 #define	kPrefCreatorType	'ozm5'
 #define	kPrefFileType		'gliP'
-#define	kPrefFileName		PSTR("Glider Prefs v2")
+#define	kPrefFileName		PSTR("Glider Prefs")
 #define	kDefaultPrefFName	PSTR("Preferences")
 #define kPrefsStringsID		160
 #define kNewPrefsAlertID	160
@@ -67,16 +67,8 @@ Boolean WritePrefs (const prefsInfo *thePrefs, short versionNow, THandle<moduleP
 	PasStringCopy(kPrefFileName, fileName);
 
 	VFileSpec theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
-	if (!fm->FileExists(PortabilityLayer::VirtualDirectories::kPrefs, fileName))
-	{
-		theErr = fm->CreateFileAtCurrentTime(theSpecs.m_dir, theSpecs.m_name, kPrefCreatorType, kPrefFileType);
-		if (theErr != PLErrors::kNone)
-		{
-			CheckFileError(theErr, PSTR("Preferences"));
-			return(false);
-		}
-	}
-	theErr = fm->OpenFileData(theSpecs.m_dir, theSpecs.m_name, PortabilityLayer::EFilePermission_Write, fileStream);
+
+	theErr = fm->OpenNonCompositeFile(theSpecs.m_dir, theSpecs.m_name, ".dat", PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOverwrite, fileStream);
 	if (theErr != PLErrors::kNone)
 	{
 		CheckFileError(theErr, PSTR("Preferences"));
@@ -201,10 +193,10 @@ PLError_t ReadPrefs (prefsInfo *thePrefs, short versionNeed, Boolean *isOldVersi
 
 	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectory_t::kPrefs, fileName);
 
-	if (!PortabilityLayer::FileManager::GetInstance()->FileExists(theSpecs.m_dir, theSpecs.m_name))
-		return PLErrors::kFileNotFound;
+	theErr = fm->OpenNonCompositeFile(theSpecs.m_dir, theSpecs.m_name, ".dat", PortabilityLayer::EFilePermission_Read, GpFileCreationDispositions::kOpenExisting, fileStream);
+	if (theErr == PLErrors::kFileNotFound)
+		return theErr;
 
-	theErr = fm->OpenFileData(theSpecs.m_dir, theSpecs.m_name, PortabilityLayer::EFilePermission_Read, fileStream);
 	if (theErr != PLErrors::kNone)
 	{
 		CheckFileError(theErr, PSTR("Preferences"));
@@ -326,7 +318,7 @@ Boolean DeletePrefs ()
 
 	theSpecs = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kPrefs, fileName);
 
-	return PortabilityLayer::FileManager::GetInstance()->DeleteFile(theSpecs.m_dir, theSpecs.m_name);
+	return PortabilityLayer::FileManager::GetInstance()->DeleteNonCompositeFile(theSpecs.m_dir, theSpecs.m_name, ".dat");
 }
 
 //--------------------------------------------------------------  RunFunctionOnAllPrefsHandlers

@@ -5,6 +5,7 @@
 #include "StuffItParser.h"
 #include "StuffIt5Parser.h"
 #include "CompactProParser.h"
+#include "CFileStream.h"
 
 #include "UTF8.h"
 #include "UTF16.h"
@@ -23,6 +24,8 @@
 
 #include "CSInputBuffer.h"
 #include "WindowsUnicodeToolShim.h"
+
+#include "CombinedTimestamp.h"
 
 #include <string.h>
 
@@ -207,7 +210,7 @@ void MakeIntermediateDirectories(const std::string &path)
 	}
 }
 
-int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader);
+int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts);
 
 int ExtractSingleFork(const ArchiveCompressedChunkDesc &chunkDesc, const std::string &path, IFileReader &reader)
 {
@@ -321,7 +324,7 @@ int ExtractSingleFork(const ArchiveCompressedChunkDesc &chunkDesc, const std::st
 	return 0;
 }
 
-int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &reader)
+int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	PortabilityLayer::MacFilePropertiesSerialized mfps;
 	mfps.Serialize(item.m_macProperties);
@@ -337,14 +340,16 @@ int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &r
 		return -1;
 	}
 
-	if (fwrite(mfps.m_data, 1, PortabilityLayer::MacFilePropertiesSerialized::kSize, metadataF) != PortabilityLayer::MacFilePropertiesSerialized::kSize)
+	PortabilityLayer::CFileStream metadataStream(metadataF);
+
+	if (mfps.WriteAsPackage(metadataStream, ts))
 	{
 		fprintf(stderr, "A problem occurred writing metadata");
-		fclose(metadataF);
+		metadataStream.Close();
 		return -1;
 	}
 
-	fclose(metadataF);
+	metadataStream.Close();
 
 	int returnCode = ExtractSingleFork(item.m_dataForkDesc, dataPath, reader);
 	if (returnCode)
@@ -357,7 +362,7 @@ int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &r
 	return 0;
 }
 
-int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, IFileReader &reader)
+int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	std::string path(reinterpret_cast<const char*>(item.m_fileNameUTF8.data()), item.m_fileNameUTF8.size());
 
@@ -377,24 +382,24 @@ int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, 
 
 		path.append("\\");
 
-		int returnCode = RecursiveExtractFiles(depth + 1, item.m_children, path, reader);
+		int returnCode = RecursiveExtractFiles(depth + 1, item.m_children, path, reader, ts);
 		if (returnCode)
 			return returnCode;
 
 		return 0;
 	}
 	else
-		return ExtractFile(item, path, reader);
+		return ExtractFile(item, path, reader, ts);
 }
 
-int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader)
+int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	const std::vector<ArchiveItem> &items = itemList->m_items;
 
 	const size_t numChildren = items.size();
 	for (size_t i = 0; i < numChildren; i++)
 	{
-		int returnCode = ExtractItem(depth, items[i], path, reader);
+		int returnCode = ExtractItem(depth, items[i], path, reader, ts);
 		if (returnCode)
 			return returnCode;
 	}
@@ -404,9 +409,9 @@ int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::strin
 
 int toolMain(int argc, const char **argv)
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
-		fprintf(stderr, "Usage: unpacktool <archive file> <destination>");
+		fprintf(stderr, "Usage: unpacktool <archive file> <timestamp.ts> <destination>");
 		return -1;
 	}
 
@@ -417,6 +422,24 @@ int toolMain(int argc, const char **argv)
 		fprintf(stderr, "Could not open input archive");
 		return -1;
 	}
+
+
+	FILE *tsFile = fopen_utf8(argv[2], "rb");
+
+	if (!tsFile)
+	{
+		fprintf(stderr, "Could not open timestamp file");
+		return -1;
+	}
+
+	PortabilityLayer::CombinedTimestamp ts;
+	if (!fread(&ts, sizeof(ts), 1, tsFile))
+	{
+		fprintf(stderr, "Could not read timestamp");
+		return -1;
+	}
+
+	fclose(tsFile);
 
 	CFileReader reader(inputArchive);
 
@@ -448,12 +471,12 @@ int toolMain(int argc, const char **argv)
 
 	printf("Decompressing files...\n");
 
-	std::string currentPath = argv[2];
+	std::string currentPath = argv[3];
 	TerminateDirectoryPath(currentPath);
 
 	MakeIntermediateDirectories(currentPath);
 
-	int returnCode = RecursiveExtractFiles(0, archiveItemList, currentPath, reader);
+	int returnCode = RecursiveExtractFiles(0, archiveItemList, currentPath, reader, ts);
 
 	delete archiveItemList;
 

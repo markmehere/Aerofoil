@@ -2,6 +2,8 @@
 #include <string>
 #include <Windows.h>
 #include "MacFileInfo.h"
+#include "CFileStream.h"
+#include "CombinedTimestamp.h"
 
 int main(int argc, const char **argv)
 {
@@ -29,18 +31,15 @@ int main(int argc, const char **argv)
 	FILE *tsF = nullptr;
 	errno_t ferr = fopen_s(&tsF, timestampPath.c_str(), "rb");
 	int64_t timestamp = 0;
+	PortabilityLayer::CombinedTimestamp ts;
 
 	if (!ferr)
 	{
-		uint8_t encodedTimestamp[8];
-		if (fread(encodedTimestamp, 1, 8, tsF) != 8)
+		if (fread(&ts, 1, sizeof(ts), tsF) != sizeof(ts))
 		{
 			fprintf(stderr, "Error reading timestamp file");
 			return -1;
 		}
-
-		for (int i = 0; i < 8; i++)
-			timestamp |= static_cast<int64_t>(encodedTimestamp[i]) << (i * 8);
 
 		fclose(tsF);
 	}
@@ -52,7 +51,7 @@ int main(int argc, const char **argv)
 	mfp.m_yPos = atoi(argv[6]);
 	mfp.m_finderFlags = 0;
 	mfp.m_protected = 0;
-	mfp.m_modifiedDate = mfp.m_creationDate = timestamp;
+	mfp.m_modifiedTimeMacEpoch = mfp.m_createdTimeMacEpoch = timestamp;
 
 	for (int i = 7; i < argc; i++)
 	{
@@ -82,8 +81,11 @@ int main(int argc, const char **argv)
 	errno_t err = fopen_s(&file, outPath.c_str(), "wb");
 	if (!err)
 	{
-		fwrite(mps.m_data, PortabilityLayer::MacFilePropertiesSerialized::kSize, 1, file);
-		fclose(file);
+		PortabilityLayer::CFileStream stream(file);
+
+		mps.WriteAsPackage(stream, ts);
+
+		stream.Close();
 	}
 
 	return 0;

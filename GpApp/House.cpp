@@ -16,6 +16,7 @@
 #include "FileManager.h"
 #include "FontFamily.h"
 #include "House.h"
+#include "MacFileInfo.h"
 #include "PLStandardColors.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
@@ -66,6 +67,13 @@ static void FBUI_FreeFileDetails(void *fileDetails)
 {
 }
 
+static bool FBUI_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	PortabilityLayer::CompositeFile *cfile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(dirID, filename);
+
+	return PortabilityLayer::ResTypeIDCodec::Decode(cfile->GetProperties().m_fileType) == 'gliH';
+}
+
 static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
@@ -74,6 +82,7 @@ static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
 	api.m_drawFileDetailsCallback = FBUI_DrawFileDetails;
 	api.m_loadFileDetailsCallback = FBUI_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_FreeFileDetails;
+	api.m_filterFileCallback = FBUI_FilterFile;
 
 	return api;
 }
@@ -98,7 +107,7 @@ Boolean CreateNewHouse (void)
 	char savePath[sizeof(theSpec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(theSpec.m_dir, 'gliH', savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), GetHouseDetailsAPI()))
+	if (!fm->PromptSaveFile(theSpec.m_dir, ".gpf", savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), true, GetHouseDetailsAPI()))
 		return false;
 
 	assert(savePathLength < sizeof(theSpec.m_name) - 1);
@@ -108,7 +117,7 @@ Boolean CreateNewHouse (void)
 
 	if (fm->FileExists(theSpec.m_dir, theSpec.m_name))
 	{
-		if (!fm->DeleteFile(theSpec.m_dir, theSpec.m_name))
+		if (!fm->DeleteCompositeFile(theSpec.m_dir, theSpec.m_name))
 		{
 			CheckFileError(PLErrors::kAccessDenied, theSpec.m_name);
 			return (false);
@@ -133,7 +142,7 @@ Boolean CreateNewHouse (void)
 	AddExtraHouse(theSpec);
 	BuildHouseList();
 	InitCursor();
-	if (!OpenHouse())
+	if (!OpenHouse(false))
 		return (false);
 
 	WriteOutPrefs();

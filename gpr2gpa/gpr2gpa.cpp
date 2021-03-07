@@ -185,41 +185,6 @@ bool TryDeflate(const std::vector<uint8_t> &uncompressed, std::vector<uint8_t> &
 	return true;
 }
 
-void ConvertToMSDOSTimestamp(const PortabilityLayer::CombinedTimestamp &ts, uint16_t &msdosDate, uint16_t &msdosTime)
-{
-	int32_t yearsSince1980 = ts.GetLocalYear() - 1980;
-	uint8_t month = ts.m_localMonth;
-	uint8_t day = ts.m_localDay;
-
-	uint8_t hour = ts.m_localHour;
-	uint8_t minute = ts.m_localMinute;
-	uint8_t second = ts.m_localSecond;
-
-	if (yearsSince1980 < 0)
-	{
-		// Time machine
-		yearsSince1980 = 0;
-		second = 0;
-		minute = 0;
-		hour = 0;
-		day = 1;
-		month = 1;
-	}
-	else if (yearsSince1980 > 127)
-	{
-		// I was promised flying cars, but it's 2107 and you're still flying paper airplanes...
-		yearsSince1980 = 127;
-		second = 59;
-		minute = 59;
-		hour = 23;
-		day = 31;
-		month = 12;
-	}
-
-	msdosTime = (second / 2) | (minute << 5) | (hour << 11);
-	msdosDate = day | (month << 5) | (yearsSince1980 << 9);
-}
-
 void ExportZipFile(const char *path, std::vector<PlannedEntry> &entries, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	FILE *outF = fopen_utf8(path, "wb");
@@ -232,7 +197,7 @@ void ExportZipFile(const char *path, std::vector<PlannedEntry> &entries, const P
 	uint16_t msdosModificationTime = 0;
 	uint16_t msdosModificationDate = 0;
 
-	ConvertToMSDOSTimestamp(ts, msdosModificationDate, msdosModificationTime);
+	ts.GetAsMSDOSTimestamp(msdosModificationDate, msdosModificationTime);
 
 	std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> cdirRecords;
 

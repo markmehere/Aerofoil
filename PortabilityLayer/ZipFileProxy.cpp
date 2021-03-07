@@ -1,7 +1,9 @@
 #include "ZipFileProxy.h"
 
 #include "BinarySearch.h"
+#include "FileSectionStream.h"
 #include "GpIOStream.h"
+#include "InflateStream.h"
 #include "MemoryManager.h"
 #include "ZipFile.h"
 
@@ -225,6 +227,38 @@ namespace PortabilityLayer
 		}
 		else
 			return false;
+	}
+
+	GpIOStream *ZipFileProxy::OpenFile(size_t index) const
+	{
+		ZipCentralDirectoryFileHeader centralDirHeader = m_sortedFiles[index].Get();
+
+		if (!m_stream->SeekStart(centralDirHeader.m_localHeaderOffset))
+			return nullptr;
+
+		ZipFileLocalHeader localHeader;
+		if (m_stream->Read(&localHeader, sizeof(ZipFileLocalHeader)) != sizeof(ZipFileLocalHeader))
+			return nullptr;
+
+		if (!m_stream->SeekCurrent(localHeader.m_fileNameLength + localHeader.m_extraFieldLength))
+			return nullptr;
+
+		if (localHeader.m_compressedSize != centralDirHeader.m_compressedSize || localHeader.m_uncompressedSize != centralDirHeader.m_uncompressedSize || localHeader.m_method != centralDirHeader.m_method)
+			return nullptr;
+
+		const size_t compressedSize = centralDirHeader.m_compressedSize;
+		const size_t uncompressedSize = centralDirHeader.m_uncompressedSize;
+		if (localHeader.m_method == PortabilityLayer::ZipConstants::kStoredMethod)
+		{
+			if (uncompressedSize != compressedSize)
+				return nullptr;
+
+			return FileSectionStream::Create(m_stream, m_stream->Tell(), uncompressedSize);
+		}
+		else if (localHeader.m_method == PortabilityLayer::ZipConstants::kDeflatedMethod)
+			return InflateStream::Create(m_stream, m_stream->Tell(), compressedSize, uncompressedSize);
+		else
+			return nullptr;
 	}
 
 	size_t ZipFileProxy::NumFiles() const

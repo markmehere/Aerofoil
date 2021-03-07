@@ -23,10 +23,13 @@ SOFTWARE.
 */
 
 #include "CFileStream.h"
+#include "CombinedTimestamp.h"
+#include "DeflateCodec.h"
 #include "ScopedPtr.h"
 #include "BinHex4.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
+#include "ZipFile.h"
 
 #include <string>
 
@@ -68,18 +71,14 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
-	int64_t timestamp = 0;
+	PortabilityLayer::CombinedTimestamp ts;
 
 	{
-		uint8_t encodedTimestamp[8];
-		if (fread(encodedTimestamp, 1, 8, tsF) != 8)
+		if (fread(&ts, 1, sizeof(ts), tsF) != sizeof(ts))
 		{
 			fprintf(stderr, "Error reading timestamp file");
 			return -1;
 		}
-
-		for (int i = 0; i < 8; i++)
-			timestamp |= static_cast<int64_t>(encodedTimestamp[i]) << (i * 8);
 
 	}
 
@@ -96,7 +95,7 @@ int main(int argc, const char **argv)
 	const char* extensions[] = { ".gpf", ".gpr", ".gpd", ".gpc" };
 
 	MacFileProperties mfp = memFile->FileInfo().m_properties;
-	mfp.m_creationDate = mfp.m_modifiedDate = timestamp;
+	mfp.m_createdTimeMacEpoch = mfp.m_modifiedTimeMacEpoch = ts.GetMacEpochTime();
 
 	MacFilePropertiesSerialized sp;
 	sp.Serialize(mfp);
@@ -142,8 +141,17 @@ int main(int argc, const char **argv)
 		if (!outF)
 			continue;
 
-		fwrite(bufferToWrite, 1, sizeToWrite, outF);
-		fclose(outF);
+		if (i == 0)
+		{
+			CFileStream stream(outF);
+			sp.WriteAsPackage(stream, ts);
+			stream.Close();
+		}
+		else
+		{
+			fwrite(bufferToWrite, 1, sizeToWrite, outF);
+			fclose(outF);
+		}
 	}
 
 	return 0;

@@ -8,6 +8,7 @@
 
 #include "WindowDef.h"
 #include "BitmapImage.h"
+#include "FileManager.h"
 #include "Externs.h"
 #include "Environ.h"
 #include "FontFamily.h"
@@ -70,7 +71,7 @@ extern Str15		leftName, rightName, batteryName, bandName;
 extern Str15		highName;
 //extern long		encryptedNumber;
 extern short		maxFiles, numNeighbors, willMaxFiles;
-extern GpIOStream	*houseStream;
+extern PortabilityLayer::CompositeFile *houseCFile;
 extern short		isEditH, isEditV, isMapH, isMapV;
 extern short		isToolsH, isToolsV, isCoordH, isCoordV;
 extern short		isLinkH, isLinkV, toolMode, mapLeftRoom, mapTopRoom;
@@ -225,12 +226,12 @@ void ReadInPrefs (void)
 		isEditV = 41;
 		isMapH = 3;
 //		isMapV = qd.screenBits.bounds.bottom - 100;
-		isMapV = 100;
+		isMapV = 385;
 		mapRoomsWide = 15;
 		mapRoomsHigh = 4;
 //		isToolsH = qd.screenBits.bounds.right - 120;
-		isToolsH = 100;
-		isToolsV = 35;
+		isToolsH = 525;
+		isToolsV = 41;
 		isLinkH = 50;
 		isLinkV = 80;
 //		isCoordH = qd.screenBits.bounds.right - 55;
@@ -361,8 +362,6 @@ void WriteOutPrefs (void)
 		SysBeep(1);
 
 	modulePrefs.Dispose();
-
-	UnivSetSoundVolume(wasVolume, thisMac.hasSM3);
 }
 
 void StepLoadScreenRing()
@@ -1167,8 +1166,7 @@ int gpAppMain()
 	InitSound();						SpinCursor(2);
 	InitMusic();						SpinCursor(2);
 	BuildHouseList();
-	if (OpenHouse())
-		whoCares = ReadHouse();
+	OpenHouse(true);
 
 	PlayPrioritySound(kBirdSound, kBirdPriority);
 	DelayTicks(6);
@@ -1201,7 +1199,8 @@ int gpAppMain()
 		if (!CloseHouse())
 		{
 			CloseHouseResFork();
-			houseStream->Close();
+			if (houseCFile)
+				houseCFile->Close();
 			houseOpen = false;
 		}
 	}

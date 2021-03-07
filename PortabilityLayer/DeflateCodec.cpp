@@ -109,6 +109,32 @@ namespace PortabilityLayer
 
 		uint8_t m_flushBuffer[1024];
 	};
+
+	class InflateContextImpl final : public InflateContext
+	{
+	public:
+		static InflateContext *Create();
+
+		void Destroy() override;
+
+		bool Append(const void *buffer, size_t size, size_t &sizeConsumed) override;
+		bool Read(void *buffer, size_t size, size_t &sizeRead) override;
+
+		bool Reset() override;
+
+		bool Init();
+
+	private:
+		InflateContextImpl();
+		~InflateContextImpl();
+
+		bool m_streamInitialized;
+		bool m_isEndOfStream;
+		z_stream m_zStream;
+
+		uint8_t m_flushBuffer[1024];
+		const uint8_t *m_readPos;
+	};
 }
 
 PortabilityLayer::DeflateContextImpl::DeflateContextImpl(GpIOStream *stream, int compressionLevel)
@@ -197,6 +223,131 @@ bool PortabilityLayer::DeflateContextImpl::Flush()
 }
 
 
+
+PortabilityLayer::InflateContext *PortabilityLayer::InflateContextImpl::Create()
+{
+	void *storage = PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::InflateContextImpl));
+	if (!storage)
+		return nullptr;
+
+	InflateContextImpl *obj = new (storage) InflateContextImpl();
+	if (!obj->Init())
+	{
+		obj->Destroy();
+		return nullptr;
+	}
+
+	return obj;
+}
+
+void PortabilityLayer::InflateContextImpl::Destroy()
+{
+	this->~InflateContextImpl();
+	PortabilityLayer::MemoryManager::GetInstance()->Release(this);
+}
+
+bool PortabilityLayer::InflateContextImpl::Append(const void *buffer, size_t size, size_t &sizeConsumed)
+{
+	size_t consumed = 0;
+
+	m_zStream.avail_in = size;
+	m_zStream.next_in = static_cast<Bytef*>(const_cast<void*>(buffer));
+
+	for (;;)
+	{
+		if (m_isEndOfStream)
+		{
+			m_zStream.avail_in = 0;
+			m_zStream.next_in = nullptr;
+		}
+
+		if (m_zStream.avail_in == 0 || m_zStream.avail_out == 0)
+		{
+			sizeConsumed = consumed;
+			return true;
+		}
+
+		size_t lastAvailIn = m_zStream.avail_in;
+
+		int result = inflate(&m_zStream, Z_NO_FLUSH);
+		if (result == Z_STREAM_END)
+			m_isEndOfStream = true;
+		else if (result != Z_OK)
+			return false;
+
+		consumed += lastAvailIn - m_zStream.avail_in;
+	}
+}
+
+bool PortabilityLayer::InflateContextImpl::Read(void *buffer, size_t size, size_t &sizeRead)
+{
+	size_t amountInOutputBuffer = static_cast<const uint8_t*>(m_zStream.next_out) - m_readPos;
+
+	if (size > amountInOutputBuffer)
+		size = amountInOutputBuffer;
+
+	if (size > 0)
+	{
+		if (buffer)
+			memcpy(buffer, m_readPos, size);
+
+		m_readPos += size;
+
+		if (m_readPos == m_zStream.next_out)
+		{
+			m_zStream.avail_out = sizeof(m_flushBuffer);
+			m_zStream.next_out = m_flushBuffer;
+			m_readPos = m_flushBuffer;
+		}
+	}
+
+	sizeRead = size;
+	return true;
+}
+
+bool PortabilityLayer::InflateContextImpl::Reset()
+{
+	if (inflateReset2(&m_zStream, -15) != Z_OK)
+		return false;
+
+	m_isEndOfStream = false;
+	m_zStream.avail_out = sizeof(m_flushBuffer);
+	m_zStream.next_out = m_flushBuffer;
+	m_readPos = m_flushBuffer;
+
+	return true;
+}
+
+bool PortabilityLayer::InflateContextImpl::Init()
+{
+	m_zStream.zalloc = ZlibAllocShim;
+	m_zStream.zfree = ZlibFreeShim;
+	m_zStream.opaque = MemoryManager::GetInstance();
+
+	if (inflateInit2(&m_zStream, -15) != Z_OK)
+		return false;
+
+	m_zStream.next_out = m_flushBuffer;
+	m_zStream.avail_out = sizeof(m_flushBuffer);
+
+	m_streamInitialized = true;
+	return true;
+}
+
+PortabilityLayer::InflateContextImpl::InflateContextImpl()
+	: m_streamInitialized(false)
+	, m_isEndOfStream(false)
+	, m_readPos(m_flushBuffer)
+{
+	memset(&m_zStream, 0, sizeof(m_zStream));
+}
+
+PortabilityLayer::InflateContextImpl::~InflateContextImpl()
+{
+	if (m_streamInitialized)
+		inflateEnd(&m_zStream);
+}
+
 PortabilityLayer::DeflateContext *PortabilityLayer::DeflateContext::Create(GpIOStream *stream, int compressionLevel)
 {
 	void *storage = PortabilityLayer::MemoryManager::GetInstance()->Alloc(sizeof(PortabilityLayer::DeflateContextImpl));
@@ -216,4 +367,10 @@ PortabilityLayer::DeflateContext *PortabilityLayer::DeflateContext::Create(GpIOS
 uint32_t PortabilityLayer::DeflateContext::CRC32(uint32_t inputValue, const void *buffer, size_t bufferLength)
 {
 	return crc32(inputValue, static_cast<const Bytef*>(buffer), bufferLength);
+}
+
+
+PortabilityLayer::InflateContext *PortabilityLayer::InflateContext::Create()
+{
+	return InflateContextImpl::Create();
 }

@@ -28,20 +28,18 @@
 #define kDiscardChanges			2
 
 
-void LoopMovie (void);
 void OpenHouseMovie (void);
 void CloseHouseMovie (void);
-Boolean IsFileReadOnly (const VFileSpec &);
 
 
 AnimationPlayer		theMovie;
 Rect		movieRect;
 PortabilityLayer::IResourceArchive	*houseResFork;
 short		wasHouseVersion;
-GpIOStream *houseStream;
 Boolean		houseOpen, fileDirty;
 Boolean		changeLockStateOfHouse, saveHouseLocked, houseIsReadOnly;
 Boolean		hasMovie, tvInRoom;
+PortabilityLayer::CompositeFile *houseCFile;
 
 
 extern	VFileSpec	*theHousesSpecs;
@@ -59,9 +57,7 @@ void OpenHouseMovie (void)
 {
 #ifdef COMPILEQT
 	VFileSpec	theSpec;
-	VFileInfo	finderInfo;
 	Handle		spaceSaver;
-	PLError_t		theErr;
 	short		movieRefNum;
 	Boolean		dataRefWasChanged;
 	
@@ -69,19 +65,20 @@ void OpenHouseMovie (void)
 	{
 		theSpec = theHousesSpecs[thisHouseIndex];
 		PasStringConcat(theSpec.m_name, PSTR(".mov"));
-		
-		theErr = FSpGetFInfo(theSpec, finderInfo);
-		if (theErr != PLErrors::kNone)
-			return;
 
 		AnimationPackage *anim = AnimationPackage::Create();
 		if (!anim)
 			return;
 
-		if (!anim->Load(theSpec.m_dir, theSpec.m_name))
+		PLError_t theErr = anim->Load(theSpec.m_dir, theSpec.m_name);
+
+		if (theErr != PLErrors::kNone)
 		{
 			anim->Destroy();
-			YellowAlert(kYellowQTMovieNotLoaded, theErr);
+
+			if (theErr != PLErrors::kFileNotFound)
+				YellowAlert(kYellowQTMovieNotLoaded, theErr);
+
 			return;
 		}
 
@@ -116,7 +113,7 @@ void CloseHouseMovie (void)
 //--------------------------------------------------------------  OpenHouse
 // Opens a house (whatever current selection is).  Returns true if all went well.
 
-Boolean OpenHouse (void)
+Boolean OpenHouse (Boolean read)
 {
 	PLError_t		theErr;
 	
@@ -132,12 +129,21 @@ Boolean OpenHouse (void)
 	if (!StrCmp::EqualCaseInsensitive(theHousesSpecs[thisHouseIndex].name, "\pDemo House"))
 		return (false);
 	#endif
-	
-	houseIsReadOnly = IsFileReadOnly(theHousesSpecs[thisHouseIndex]);
-	
-	theErr = PortabilityLayer::FileManager::GetInstance()->OpenFileData(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name, PortabilityLayer::EFilePermission_Any, houseStream);
-	if (!CheckFileError(theErr, thisHouseName))
+
+	houseCFile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name);
+	if (!houseCFile)
 		return (false);
+
+	houseIsReadOnly = houseCFile->IsDataReadOnly();
+
+	GpIOStream *houseStream = nil;
+	theErr = houseCFile->OpenData(PortabilityLayer::EFilePermission_Any, GpFileCreationDispositions::kCreateOrOpen, houseStream);
+	if (!CheckFileError(theErr, thisHouseName))
+	{
+		houseCFile->Close();
+		houseCFile = nil;
+		return (false);
+	}
 	
 	houseOpen = true;
 	OpenHouseResFork();
@@ -148,6 +154,16 @@ Boolean OpenHouse (void)
 	tvInRoom = false;
 	tvWithMovieNumber = -1;
 	OpenHouseMovie();
+
+	if (read)
+	{
+		Boolean readOK = ReadHouse(houseStream);
+		houseStream->Close();
+
+		return readOK;
+	}
+
+	houseStream->Close();
 	
 	return (true);
 }
@@ -173,9 +189,7 @@ Boolean OpenSpecificHouse (const VFileSpec &specs)
 		{
 			thisHouseIndex = i;
 			PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
-			if (OpenHouse())
-				itOpened = ReadHouse();
-			else
+			if (!OpenHouse(true))
 				itOpened = false;
 			break;
 		}
@@ -527,7 +541,7 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes, bool isSwappedAfter)
 	return true;
 }
 
-Boolean ReadHouse (void)
+Boolean ReadHouse (GpIOStream *houseStream)
 {
 	long		byteCount;
 	PLError_t		theErr;
@@ -653,19 +667,27 @@ Boolean WriteHouse (Boolean checkIt)
 	UInt32			timeStamp;
 	long			byteCount;
 	PLError_t			theErr;
-	
+
+	if ((housesFound < 1) || (thisHouseIndex == -1))
+		return(false);
+
 	if (!houseOpen)
 	{
 		YellowAlert(kYellowUnaccounted, 4);
 		return (false);
 	}
 
-	if (!houseStream->SeekStart(0))
+	if (!houseCFile)
 	{
-		CheckFileError(PLErrors::kIOError, thisHouseName);
-		return(false);
+		YellowAlert(kYellowUnaccounted, 4);
+		return (false);
 	}
-	
+
+	GpIOStream *houseStream = nil;
+	theErr = houseCFile->OpenData(PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOpen, houseStream);
+	if (theErr != PLErrors::kNone)
+		return (false);
+
 	CopyThisRoomToRoom();
 	
 	if (checkIt)
@@ -699,6 +721,7 @@ Boolean WriteHouse (Boolean checkIt)
 	{
 		CheckFileError(PLErrors::kIOError, thisHouseName);
 		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
+		houseStream->Close();
 		return(false);
 	}
 
@@ -706,16 +729,13 @@ Boolean WriteHouse (Boolean checkIt)
 	{
 		CheckFileError(PLErrors::kIOError, thisHouseName);
 		ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
+		houseStream->Close();
 		return(false);
 	}
 
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 
-	if (!houseStream->Truncate(byteCount))
-	{
-		CheckFileError(PLErrors::kIOError, thisHouseName);
-		return(false);
-	}
+	houseStream->Close();
 	
 	if (changeLockStateOfHouse)
 	{
@@ -749,7 +769,11 @@ Boolean CloseHouse (void)
 	CloseHouseResFork();
 	CloseHouseMovie();
 
-	houseStream->Close();
+	if (houseCFile)
+	{
+		houseCFile->Close();
+		houseCFile = nil;
+	}
 	
 	houseOpen = false;
 	
@@ -764,7 +788,7 @@ void OpenHouseResFork (void)
 	PortabilityLayer::ResourceManager *rm = PortabilityLayer::ResourceManager::GetInstance();
 	if (houseResFork == nullptr)
 	{
-		houseResFork = rm->LoadResFile(theHousesSpecs[thisHouseIndex].m_dir, theHousesSpecs[thisHouseIndex].m_name);
+		houseResFork = rm->LoadResFile(houseCFile);
 		if (!houseResFork)
 			YellowAlert(kYellowFailedResOpen, PLErrors::kResourceError);
 	}
@@ -817,8 +841,7 @@ Boolean QuerySaveChanges (void)
 		if (!quitting)
 		{
 			whoCares = CloseHouse();
-			if (OpenHouse())
-				whoCares = ReadHouse();
+			OpenHouse(true);
 		}
 		UpdateMenus(false);
 		return (true);
@@ -848,17 +871,6 @@ void YellowAlert (short whichAlert, short identifier)
 	DialogTextSubstitutions substitutions(errStr, errNumStr);
 	
 	whoCares = PortabilityLayer::DialogManager::GetInstance()->DisplayAlert(kYellowAlert, &substitutions);
-}
-
-//--------------------------------------------------------------  IsFileReadOnly
-
-Boolean IsFileReadOnly (const VFileSpec &spec)
-{
-	// Kind of annoying, but itch.io doesn't preserve read-only flags and there doesn't seem to be any way around that.
-	if (spec.m_dir == PortabilityLayer::VirtualDirectories::kApplicationData || spec.m_dir == PortabilityLayer::VirtualDirectories::kGameData)
-		return true;
-
-	return PortabilityLayer::FileManager::GetInstance()->FileLocked(spec.m_dir, spec.m_name);
 }
 
 //--------------------------------------------------------------  LoadHousePicture

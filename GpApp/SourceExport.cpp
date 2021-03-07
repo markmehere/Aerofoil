@@ -96,41 +96,6 @@ SortableEntry SortableEntry::Create(const char *zipLocation, PortabilityLayer::V
 	return entry;
 }
 
-static void ConvertToMSDOSTimestamp(const PortabilityLayer::CombinedTimestamp &ts, uint16_t &msdosDate, uint16_t &msdosTime)
-{
-	int32_t yearsSince1980 = ts.GetLocalYear() - 1980;
-	uint8_t month = ts.m_localMonth;
-	uint8_t day = ts.m_localDay;
-
-	uint8_t hour = ts.m_localHour;
-	uint8_t minute = ts.m_localMinute;
-	uint8_t second = ts.m_localSecond;
-
-	if (yearsSince1980 < 0)
-	{
-		// Time machine
-		yearsSince1980 = 0;
-		second = 0;
-		minute = 0;
-		hour = 0;
-		day = 1;
-		month = 1;
-	}
-	else if (yearsSince1980 > 127)
-	{
-		// I was promised flying cars, but it's 2107 and you're still flying paper airplanes...
-		yearsSince1980 = 127;
-		second = 59;
-		minute = 59;
-		hour = 23;
-		day = 31;
-		month = 12;
-	}
-
-	msdosTime = (second / 2) | (minute << 5) | (hour << 11);
-	msdosDate = day | (month << 5) | (yearsSince1980 << 9);
-}
-
 static void InitSourceExportWindow(SourceExportState *state)
 {
 	static const int kLoadScreenHeight = 32;
@@ -403,7 +368,7 @@ static bool RepackDirectory(SourceExportState &state, GpIOStream *outStream, std
 
 	uint16_t dosDate = 0;
 	uint16_t dosTime = 0;
-	ConvertToMSDOSTimestamp(state.m_ts, dosDate, dosTime);
+	state.m_ts.GetAsMSDOSTimestamp(dosDate, dosTime);
 
 	IGpDirectoryCursor *dirCursor = PLDrivers::GetFileSystem()->ScanDirectory(virtualDir);
 	if (!dirCursor)
@@ -610,7 +575,7 @@ static bool AddZipDirectory(GpIOStream *stream, std::vector<PortabilityLayer::Zi
 
 	uint16_t dosDate = 0;
 	uint16_t dosTime = 0;
-	ConvertToMSDOSTimestamp(ts, dosDate, dosTime);
+	ts.GetAsMSDOSTimestamp(dosDate, dosTime);
 
 	GpUFilePos_t localHeaderPos = stream->Tell();
 

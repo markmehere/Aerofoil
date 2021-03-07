@@ -42,7 +42,6 @@ public:
 	bool SeekStart(GpUFilePos_t loc) override;
 	bool SeekCurrent(GpFilePos_t loc) override;
 	bool SeekEnd(GpUFilePos_t loc) override;
-	bool Truncate(GpUFilePos_t loc) override;
 	GpUFilePos_t Size() const override;
 	GpUFilePos_t Tell() const override;
 	void Close() override;
@@ -70,7 +69,6 @@ public:
 	bool SeekStart(GpUFilePos_t loc) override;
 	bool SeekCurrent(GpFilePos_t loc) override;
 	bool SeekEnd(GpUFilePos_t loc) override;
-	bool Truncate(GpUFilePos_t loc) override;
 	GpUFilePos_t Size() const override;
 	GpUFilePos_t Tell() const override;
 	void Close() override;
@@ -96,7 +94,6 @@ public:
 	bool SeekStart(GpUFilePos_t loc) override;
 	bool SeekCurrent(GpFilePos_t loc) override;
 	bool SeekEnd(GpUFilePos_t loc) override;
-	bool Truncate(GpUFilePos_t loc) override;
 	GpUFilePos_t Size() const override;
 	GpUFilePos_t Tell() const override;
 	void Close() override;
@@ -166,11 +163,6 @@ bool GpFileStream_PFD::SeekCurrent(GpFilePos_t loc)
 bool GpFileStream_PFD::SeekEnd(GpUFilePos_t loc)
 {
 	return lseek64(m_fd, loc, SEEK_END) >= 0;
-}
-
-bool GpFileStream_PFD::Truncate(GpUFilePos_t loc)
-{
-	return ftruncate64(m_fd, static_cast<off64_t>(loc)) >= 0;
 }
 
 GpUFilePos_t GpFileStream_PFD::Size() const
@@ -249,11 +241,6 @@ bool GpFileStream_SDLRWops::SeekCurrent(GpFilePos_t loc)
 bool GpFileStream_SDLRWops::SeekEnd(GpUFilePos_t loc)
 {
 	return m_rw->seek(m_rw, -static_cast<Sint64>(loc), RW_SEEK_END) >= 0;
-}
-
-bool GpFileStream_SDLRWops::Truncate(GpUFilePos_t loc)
-{
-	return false;
 }
 
 GpUFilePos_t GpFileStream_SDLRWops::Size() const
@@ -344,12 +331,6 @@ bool GpFileStream_Android_File::SeekEnd(GpUFilePos_t loc)
 
 	fflush(m_f);
 	return lseek64(m_fd, -static_cast<off64_t>(loc), SEEK_END) >= 0;
-}
-
-bool GpFileStream_Android_File::Truncate(GpUFilePos_t loc)
-{
-	fflush(m_f);
-	return ftruncate64(m_fd, static_cast<off64_t>(loc)) >= 0;
 }
 
 GpUFilePos_t GpFileStream_Android_File::Size() const
@@ -552,26 +533,26 @@ bool GpFileSystem_Android::FileExists(PortabilityLayer::VirtualDirectory_t virtu
 	return stat(resolvedPath.c_str(), &s) == 0;
 }
 
-bool GpFileSystem_Android::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool *exists)
+bool GpFileSystem_Android::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &exists)
 {
 	std::string resolvedPath;
 	bool isAsset;
 	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath, isAsset))
 	{
 		if (exists)
-			*exists = false;
+			exists = false;
 		return false;
 	}
 
 	if (isAsset)
 	{
 		if (exists)
-			*exists = this->FileExists(virtualDirectory, path);
+			exists = this->FileExists(virtualDirectory, path);
 		return true;
 	}
 
 	int permissions = access(resolvedPath.c_str(), W_OK | F_OK);
-	*exists = ((permissions & F_OK) != 0);
+	exists = ((permissions & F_OK) != 0);
 	return ((permissions & W_OK) != 0);
 }
 
@@ -768,11 +749,6 @@ bool GpFileSystem_Android::ValidateFilePathUnicodeChar(uint32_t c) const
 	if (c >= 'A' && c <= 'Z')
 		return true;
 
-	return false;
-}
-
-bool GpFileSystem_Android::IsVirtualDirectoryLooseResources(PortabilityLayer::VirtualDirectory_t virtualDir) const
-{
 	return false;
 }
 

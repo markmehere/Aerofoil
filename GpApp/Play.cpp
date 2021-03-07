@@ -278,12 +278,11 @@ void DoDemoGame (void)
 	whoCares = CloseHouse();
 	thisHouseIndex = demoHouseIndex;
 	PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
-	if (OpenHouse())
+	if (OpenHouse(true))
 	{
 		if (thisMac.isTouchscreen)
 			DismissMainMenuUI();
 
-		whoCares = ReadHouse();
 		demoGoing = true;
 		NewGame(kNewGameMode);
 
@@ -293,8 +292,7 @@ void DoDemoGame (void)
 	whoCares = CloseHouse();
 	thisHouseIndex = wasHouseIndex;
 	PasStringCopy(theHousesSpecs[thisHouseIndex].m_name, thisHouseName);
-	if (OpenHouse())
-		whoCares = ReadHouse();
+	OpenHouse(true);
 	incrementModeTime = TickCount() + kIdleSplashTicks;
 	RedrawSplashScreen();
 }

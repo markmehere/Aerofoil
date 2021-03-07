@@ -420,6 +420,12 @@
     <ClInclude Include="PLDrivers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileSectionStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InflateStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">
@@ -675,6 +681,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLDrivers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSectionStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InflateStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

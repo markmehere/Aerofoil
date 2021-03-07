@@ -24,7 +24,7 @@ namespace
 		const unsigned int Protected = 81;
 		const unsigned int DataForkSize = 83;
 		const unsigned int ResourceForkSize = 87;
-		const unsigned int CreationDate = 91;
+		const unsigned int CreatedDate = 91;
 		const unsigned int ModifiedDate = 95;
 		const unsigned int CommentLength = 99;
 		const unsigned int FinderFlagsLow = 101;
@@ -75,8 +75,8 @@ namespace PortabilityLayer
 		mb2Header[MB2FileOffsets::Protected] = fileInfo.m_properties.m_protected;
 		BytePack::BigUInt32(mb2Header + MB2FileOffsets::DataForkSize, fileInfo.m_dataForkSize);
 		BytePack::BigUInt32(mb2Header + MB2FileOffsets::ResourceForkSize, fileInfo.m_resourceForkSize);
-		BytePack::BigUInt32(mb2Header + MB2FileOffsets::CreationDate, static_cast<uint32_t>(fileInfo.m_properties.m_creationDate));
-		BytePack::BigUInt32(mb2Header + MB2FileOffsets::ModifiedDate, static_cast<uint32_t>(fileInfo.m_properties.m_modifiedDate));
+		BytePack::BigUInt32(mb2Header + MB2FileOffsets::CreatedDate, static_cast<uint32_t>(fileInfo.m_properties.m_createdTimeMacEpoch));
+		BytePack::BigUInt32(mb2Header + MB2FileOffsets::ModifiedDate, static_cast<uint32_t>(fileInfo.m_properties.m_modifiedTimeMacEpoch));
 
 		BytePack::BigUInt16(mb2Header + MB2FileOffsets::CommentLength, fileInfo.m_commentSize);
 		mb2Header[MB2FileOffsets::FinderFlagsLow] = static_cast<uint8_t>(fileInfo.m_properties.m_finderFlags & 0xff);
@@ -130,8 +130,8 @@ namespace PortabilityLayer
 		fileInfo.m_properties.m_protected = mb2Header[MB2FileOffsets::Protected];
 		fileInfo.m_dataForkSize = ByteUnpack::BigUInt32(mb2Header + MB2FileOffsets::DataForkSize);
 		fileInfo.m_resourceForkSize = ByteUnpack::BigUInt32(mb2Header + MB2FileOffsets::ResourceForkSize);
-		fileInfo.m_properties.m_creationDate = ByteUnpack::BigUInt32(mb2Header + MB2FileOffsets::CreationDate);
-		fileInfo.m_properties.m_modifiedDate = ByteUnpack::BigUInt32(mb2Header + MB2FileOffsets::ModifiedDate);
+		fileInfo.m_properties.m_createdTimeMacEpoch = ByteUnpack::BigUInt32(mb2Header + MB2FileOffsets::CreatedDate);
+		fileInfo.m_properties.m_modifiedTimeMacEpoch = ByteUnpack::BigUInt32(mb2Header + MB2FileOffsets::ModifiedDate);
 
 		fileInfo.m_commentSize = ByteUnpack::BigUInt16(mb2Header + MB2FileOffsets::CommentLength);
 		fileInfo.m_properties.m_finderFlags |= mb2Header[MB2FileOffsets::FinderFlagsLow];

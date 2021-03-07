@@ -27,7 +27,11 @@ static const char *gs_forbiddenNames[] =
 
 static bool IsCharForbidden(char c)
 {
-	return (c < ' ' || c == '<' || c == '>' || c == ':' || c == '\"' || c == '/' || c == '\\' || c == '|' || c == '?' || c == '*' || c > '~' || c == '$' || c == '#');
+	if ((c & 0x80) != 0)
+		return true;
+
+	// <= '$' includes space, ! " # $
+	return (c <= '$' || c == '<' || c == '>' || c == ':' || c == '\"' || c == '/' || c == '\\' || c == '|' || c == '?' || c == '*' || c > '~');
 }
 
 namespace PortabilityLayer

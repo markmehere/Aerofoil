@@ -99,24 +99,6 @@ bool GpFileStream_Win32::SeekEnd(GpUFilePos_t loc)
 	return SetFilePointerEx(m_handle, li, nullptr, FILE_END) != 0;
 }
 
-bool GpFileStream_Win32::Truncate(GpUFilePos_t loc)
-{
-	if (!m_writeable)
-		return false;
-
-	GpUFilePos_t oldPos = Tell();
-	if (!SeekStart(loc))
-		return false;
-
-	if (!SetEndOfFile(m_handle))
-		return false;
-
-	if (!SeekStart(oldPos))
-		return false;
-
-	return true;
-}
-
 GpUFilePos_t GpFileStream_Win32::Size() const
 {
 	LARGE_INTEGER fsize;

@@ -81,7 +81,7 @@ static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 	{
 		const char c = *str++;
 
-		if (c == '.' || c == ' ' || c == '_' || c == '\'' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+		if (c == '.' || c == ' ' || c == '_' || c == '!' || c == '\'' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 			continue;
 		else
 			return false;
@@ -425,18 +425,6 @@ VFileSpec MakeVFileSpec(PortabilityLayer::VirtualDirectory_t dir, const PLPasStr
 	return spec;
 }
 
-PLError_t FSpGetFInfo(const VFileSpec &spec, VFileInfo &finfo)
-{
-	PortabilityLayer::MacFileProperties mfp;
-	if (!PortabilityLayer::FileManager::GetInstance()->ReadFileProperties(spec.m_dir, spec.m_name, mfp))
-		return PLErrors::kFileNotFound;
-
-	finfo.m_type = PortabilityLayer::ResTypeID(mfp.m_fileType);
-	finfo.m_creator = PortabilityLayer::ResTypeID(mfp.m_fileCreator);
-
-	return PLErrors::kNone;
-}
-
 DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t dirID)
 {
 	PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
@@ -469,10 +457,10 @@ DirectoryFileListEntry *GetDirectoryFiles(PortabilityLayer::VirtualDirectory_t d
 			PortabilityLayer::MacFileProperties mfp;
 			PortabilityLayer::MacFilePropertiesSerialized mfs;
 
-			const size_t gpfSize = stream->Read(mfs.m_data, PortabilityLayer::MacFilePropertiesSerialized::kSize);
+			bool deserializedOK = mfs.ReadFromPackage(*stream);
 			stream->Close();
 
-			if (gpfSize != PortabilityLayer::MacFilePropertiesSerialized::kSize)
+			if (!deserializedOK)
 				continue;
 
 			mfs.Deserialize(mfp);

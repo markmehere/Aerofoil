@@ -51,7 +51,7 @@ int main(int argc, const char **argv)
 	SystemTimeToTzSpecificLocalTime(&tz, &utcST, &localST);
 
 	PortabilityLayer::CombinedTimestamp ts;
-	ts.SetUTCTime(timeDelta);
+	ts.SetMacEpochTime(timeDelta);
 
 	ts.SetLocalYear(localST.wYear);
 	ts.m_localMonth = localST.wMonth;

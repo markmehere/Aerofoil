@@ -73,7 +73,7 @@ static void FBUI_DrawFileDetails(DrawSurface *surface, const Point &basePoint, c
 static void *FBUI_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	GpIOStream *stream = nullptr;
-	if (PortabilityLayer::FileManager::GetInstance()->OpenFileData(dirID, filename, PortabilityLayer::EFilePermission_Read, stream) != PLErrors::kNone)
+	if (PortabilityLayer::FileManager::GetInstance()->OpenNonCompositeFile(dirID, filename, ".sav", PortabilityLayer::EFilePermission_Read, GpFileCreationDispositions::kOpenExisting, stream) != PLErrors::kNone)
 		return nullptr;
 
 	const size_t kPrefixSize = sizeof(game2Type) - sizeof(savedRoom);
@@ -102,6 +102,11 @@ static void FBUI_FreeFileDetails(void *fileDetails)
 	PortabilityLayer::MemoryManager::GetInstance()->Release(fileDetails);
 }
 
+static bool FBUI_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	return true;
+}
+
 static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI()
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
@@ -110,6 +115,7 @@ static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI
 	api.m_drawFileDetailsCallback = FBUI_DrawFileDetails;
 	api.m_loadFileDetailsCallback = FBUI_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_FreeFileDetails;
+	api.m_filterFileCallback = FBUI_FilterFile;
 
 	return api;
 }
@@ -163,7 +169,7 @@ Boolean SaveGame2 (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(spec.m_dir, 'gliG', savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game"), GetSavedGameDetailsAPI()))
+	if (!fm->PromptSaveFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game"), false, GetSavedGameDetailsAPI()))
 	{
 		mm->Release(savedGame);
 		return false;
@@ -176,7 +182,7 @@ Boolean SaveGame2 (void)
 
 	if (fm->FileExists(spec.m_dir, PLPasStr(spec.m_name)))
 	{
-		if (!fm->DeleteFile(spec.m_dir, spec.m_name))
+		if (!fm->DeleteNonCompositeFile(spec.m_dir, spec.m_name, ".dat"))
 		{
 			CheckFileError(PLErrors::kAccessDenied, PSTR("Saved Game"));
 			return false;
@@ -216,20 +222,15 @@ Boolean SaveGame2 (void)
 			destRoom->objects[i] = srcRoom->objects[i];
 	}
 
-	PLError_t theErr = fm->CreateFileAtCurrentTime(spec.m_dir, spec.m_name, 'ozm5', 'gliG');
+	PLError_t theErr = fm->OpenNonCompositeFile(spec.m_dir, spec.m_name, ".sav", PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOverwrite, gameStream);
 	if (CheckFileError(theErr, PSTR("Saved Game")))
 	{
-		theErr = fm->OpenFileData(spec.m_dir, spec.m_name, PortabilityLayer::EFilePermission_Write, gameStream);
-
-		if (CheckFileError(theErr, PSTR("Saved Game")))
+		if (gameStream->Write(savedGame, byteCount) != byteCount)
 		{
-			if (gameStream->Write(savedGame, byteCount) != byteCount)
-			{
-				CheckFileError(PLErrors::kIOError, PSTR("Saved Game"));
-			}
-
-			gameStream->Close();
+			CheckFileError(PLErrors::kIOError, PSTR("Saved Game"));
 		}
+
+		gameStream->Close();
 	}
 
 	mm->Release(savedGame);
@@ -274,7 +275,7 @@ Boolean OpenSavedGame (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptOpenFile(spec.m_dir, 'gliG', savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), GetSavedGameDetailsAPI()))
+	if (!fm->PromptOpenFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), true, GetSavedGameDetailsAPI()))
 		return false;
 
 	assert(savePathLength < sizeof(spec.m_name) - 1);
@@ -282,15 +283,8 @@ Boolean OpenSavedGame (void)
 	spec.m_name[0] = static_cast<uint8_t>(savePathLength);
 	memcpy(spec.m_name + 1, savePath, savePathLength);
 
-	PortabilityLayer::MacFileProperties props;
-	if (!fm->ReadFileProperties(spec.m_dir, spec.m_name, props))
-		return false;
-
-	if (memcmp(props.m_fileType, "gliG", 4))
-		return false;
-
 	GpIOStream *gameStream = nullptr;
-	PLError_t theErr = fm->OpenFileData(spec.m_dir, spec.m_name, PortabilityLayer::EFilePermission_Read, gameStream);
+	PLError_t theErr = fm->OpenNonCompositeFile(spec.m_dir, spec.m_name, ".sav", PortabilityLayer::EFilePermission_Read, GpFileCreationDispositions::kOpenExisting, gameStream);
 
 	if (!CheckFileError(theErr, PSTR("Saved Game")))
 		return(false);
