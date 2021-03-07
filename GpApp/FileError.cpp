@@ -48,6 +48,9 @@ Boolean CheckFileError (short resultCode, const PLPasStr &fileName)
 		case PLErrors::kOutOfMemory:
 			stringIndex = 7;
 			break;
+		case PLErrors::kFileIsBusy:
+			stringIndex = 12;
+			break;
 		default:
 			stringIndex = 1;
 			break;

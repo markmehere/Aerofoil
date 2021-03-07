@@ -18,6 +18,7 @@
 #include "House.h"
 #include "MacFileInfo.h"
 #include "PLStandardColors.h"
+#include "PLStringCompare.h"
 #include "PLTimeTaggedVOSEvent.h"
 #include "RectUtils.h"
 #include "ResourceManager.h"
@@ -32,6 +33,7 @@ void UpdateGoToDialog (Dialog *);
 int16_t GoToFilter (void *context, Dialog *dial, const TimeTaggedVOSEvent *evt);
 
 extern PortabilityLayer::IResourceArchive	*houseResFork;
+extern PortabilityLayer::CompositeFile		*houseCFile;
 
 
 houseHand	thisHouse;
@@ -115,7 +117,14 @@ Boolean CreateNewHouse (void)
 	theSpec.m_name[0] = static_cast<uint8_t>(savePathLength);
 	memcpy(theSpec.m_name + 1, savePath, savePathLength);
 
-	if (fm->FileExists(theSpec.m_dir, theSpec.m_name))
+	// Don't try to overwrite the current house - The GPF will probably be locked anyway
+	if (houseCFile && theSpec.m_dir == houseCFile->GetDirectory() && !StrCmp::CompareCaseInsensitive(theSpec.m_name, houseCFile->GetFileName()))
+	{
+		CheckFileError(PLErrors::kFileIsBusy, theSpec.m_name);
+		return (false);
+	}
+
+	if (fm->CompositeFileExists(theSpec.m_dir, theSpec.m_name))
 	{
 		if (!fm->DeleteCompositeFile(theSpec.m_dir, theSpec.m_name))
 		{

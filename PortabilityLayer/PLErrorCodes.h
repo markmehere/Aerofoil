@@ -15,6 +15,7 @@ namespace PLErrors
 		kBadFileName,
 		kFileNotFound,
 		kAccessDenied,
+		kFileIsBusy,
 
 		kOutOfMemory,
 
