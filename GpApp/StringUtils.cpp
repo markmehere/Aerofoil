@@ -70,9 +70,9 @@ short WhichStringFirst (StringPtr p1, StringPtr p2)
 		{
 			if (!foundIt)
 			{
-				if (p1[0] < p2[0])	// shortest string wins
+				if (p1[0] > p2[0])	// shortest string wins
 					greater = 1;
-				else if (p1[0] > p2[0])
+				else if (p1[0] < p2[0])
 					greater = 2;
 			}
 			foundIt = true;
