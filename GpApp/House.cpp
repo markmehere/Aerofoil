@@ -117,7 +117,7 @@ Boolean CreateNewHouse (void)
 	theSpec.m_name[0] = static_cast<uint8_t>(savePathLength);
 	memcpy(theSpec.m_name + 1, savePath, savePathLength);
 
-	// Don't try to overwrite the current house - The GPF will probably be locked anyway
+	// Don't try to overwrite the current house
 	if (houseCFile && theSpec.m_dir == houseCFile->GetDirectory() && !StrCmp::CompareCaseInsensitive(theSpec.m_name, houseCFile->GetFileName()))
 	{
 		CheckFileError(PLErrors::kFileIsBusy, theSpec.m_name);
@@ -173,7 +173,7 @@ Boolean InitializeEmptyHouse (void)
 	if (thisHouse != nil)
 		thisHouse.Dispose();
 	
-	thisHouse = NewHandle(sizeof(houseType)).StaticCast<houseType>();
+	thisHouse = NewHandle(sizeof(houseType) - sizeof(roomType)).StaticCast<houseType>();
 	
 	if (thisHouse == nil)
 	{

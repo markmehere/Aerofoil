@@ -616,7 +616,7 @@ void ValidateNumberOfRooms (void)
 	
 	reportsRooms = (long)(*thisHouse)->nRooms;
 	countedRooms = (GetHandleSize(thisHouse.StaticCast<void>()) - 
-			sizeof(houseType)) / sizeof(roomType);
+			sizeof(houseType)) / sizeof(roomType) + 1;
 	if (reportsRooms != countedRooms)
 	{
 		(*thisHouse)->nRooms = (short)countedRooms;
