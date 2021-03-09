@@ -567,8 +567,7 @@ void StepLoadScreen(int steps, bool insertDelay)
 
 void InitLoadingWindow()
 {
-	// Only phones are slow enough for this to matter
-	if (!thisMac.isTouchscreen)
+	if (!thisMac.isTouchscreen && isPrefsLoaded)
 		return;
 
 	if (isPrefsLoaded)
@@ -781,6 +780,10 @@ void PreloadAATables()
 		PortabilityLayer::RGBAColor::Create(0, 255, 255, 255),
 		PortabilityLayer::RGBAColor::Create(0, 0, 255, 255),
 		PortabilityLayer::RGBAColor::Create(204, 102, 51, 255),
+		PortabilityLayer::RGBAColor::Create(102, 102, 102, 255),
+		PortabilityLayer::RGBAColor::Create(51, 51, 102, 255),
+		PortabilityLayer::RGBAColor::Create(255, 255, 51, 255),
+		PortabilityLayer::RGBAColor::Create(0, 0, 0, 255),
 	};
 
 	const size_t numPalettePreloads = sizeof(preloadColors) / sizeof(preloadColors[0]);
@@ -814,7 +817,7 @@ void PreloadAATables()
 
 			if (!toneAlreadyQueued)
 			{
-				PreloadAATableSpec &spec = specs[i + numTonePreloads];
+				PreloadAATableSpec &spec = specs[numPalettePreloads + numTonePreloads];
 				numTonePreloads++;
 
 				spec.m_color = PortabilityLayer::RGBAColor::Create(tone, tone, tone, 255);
