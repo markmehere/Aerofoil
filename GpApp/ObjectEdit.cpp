@@ -1963,6 +1963,12 @@ void GetThisRoomsObjRects (void)
 	
 	if ((noRoomAtAll) || (!houseUnlocked))
 	{
+		// clear object handles so they're not draggable
+		QSetRect(&leftStartGliderDest, 0, 0, 0, 0);
+		QSetRect(&rightStartGliderDest, 0, 0, 0, 0);
+		for (i = 0; i < kMaxRoomObs; i++)
+			QSetRect(&roomObjectRects[i], 0, 0, 0, 0);
+
 		return;
 	}
 	else
