@@ -266,7 +266,7 @@ Boolean OpenSavedGame (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptOpenFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), true, GetSavedGameDetailsAPI()))
+	if (!fm->PromptOpenFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), false, GetSavedGameDetailsAPI()))
 		return false;
 
 	assert(savePathLength < sizeof(spec.m_name) - 1);
