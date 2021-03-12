@@ -9,6 +9,7 @@
 
 #include "MacBinary2.h"
 #include "MacFileMem.h"
+#include "WindowsUnicodeToolShim.h"
 
 // Very simplified resource compiler
 
@@ -117,7 +118,7 @@ void DefError()
 	exit(-1);
 }
 
-int main(int argc, const char **argv)
+int toolMain(int argc, const char **argv)
 {
 	if (argc != 3)
 	{
@@ -125,8 +126,8 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
-	FILE *f = nullptr;
-	if (fopen_s(&f, argv[1], "rb"))
+	FILE *f = fopen_utf8(argv[1], "rb");
+	if (!f)
 	{
 		fprintf(stderr, "Failed to open input file");
 		return -1;
@@ -524,8 +525,8 @@ int main(int argc, const char **argv)
 
 	printf("Writing to %s...", argv[2]);
 
-	FILE *outF = nullptr;
-	if (fopen_s(&outF, argv[2], "wb"))
+	FILE *outF = fopen_utf8(argv[2], "wb");
+	if (!outF)
 	{
 		fprintf(stderr, "Failed to open output file");
 		return -1;
