@@ -5,7 +5,9 @@
 #include "CFileStream.h"
 #include "CombinedTimestamp.h"
 
-int main(int argc, const char **argv)
+#include "WindowsUnicodeToolShim.h"
+
+int toolMain(int argc, const char **argv)
 {
 	if (argc < 7)
 	{
@@ -28,12 +30,11 @@ int main(int argc, const char **argv)
 		return -3;
 	}
 
-	FILE *tsF = nullptr;
-	errno_t ferr = fopen_s(&tsF, timestampPath.c_str(), "rb");
+	FILE *tsF = fopen_utf8(timestampPath.c_str(), "rb");
 	int64_t timestamp = 0;
 	PortabilityLayer::CombinedTimestamp ts;
 
-	if (!ferr)
+	if (tsF)
 	{
 		if (fread(&ts, 1, sizeof(ts), tsF) != sizeof(ts))
 		{
@@ -77,9 +78,8 @@ int main(int argc, const char **argv)
 	PortabilityLayer::MacFilePropertiesSerialized mps;
 	mps.Serialize(mfp);
 
-	FILE *file = nullptr;
-	errno_t err = fopen_s(&file, outPath.c_str(), "wb");
-	if (!err)
+	FILE *file = fopen_utf8(outPath.c_str(), "wb");
+	if (file)
 	{
 		PortabilityLayer::CFileStream stream(file);
 
