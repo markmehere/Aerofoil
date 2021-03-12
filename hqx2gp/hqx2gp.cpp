@@ -30,12 +30,13 @@ SOFTWARE.
 #include "MacBinary2.h"
 #include "MacFileMem.h"
 #include "ZipFile.h"
+#include "WindowsUnicodeToolShim.h"
 
 #include <string>
 
 using namespace PortabilityLayer;
 
-int main(int argc, const char **argv)
+int toolMain(int argc, const char **argv)
 {
 	if (argc != 4)
 	{
@@ -43,13 +44,7 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
-#ifdef _CRT_INSECURE_DEPRECATE
-	FILE *f = nullptr;
-	if (fopen_s(&f, argv[1], "rb"))
-		f = nullptr;
-#else
-	FILE *f = fopen(argv[1], "rb");
-#endif
+	FILE *f = fopen_utf8(argv[1], "rb");
 
 	if (!f)
 	{
@@ -57,13 +52,7 @@ int main(int argc, const char **argv)
 		return -1;
 	}
 
-#ifdef _CRT_INSECURE_DEPRECATE
-	FILE *tsF = nullptr;
-	if (fopen_s(&tsF, argv[2], "rb"))
-		tsF = nullptr;
-#else
-	FILE *tsF = fopen(argv[2], "rb");
-#endif
+	FILE *tsF = fopen_utf8(argv[2], "rb");
 
 	if (!tsF)
 	{
@@ -130,13 +119,7 @@ int main(int argc, const char **argv)
 
 		std::string path = fname + extensions[i];
 
-#ifdef _CRT_INSECURE_DEPRECATE
-		FILE *outF = nullptr;
-		if (fopen_s(&outF, path.c_str(), "wb"))
-			outF = nullptr;
-#else
-		FILE *outF = fopen(path.c_str(), "wb");
-#endif
+		FILE *outF = fopen_utf8(path.c_str(), "wb");
 
 		if (!outF)
 			continue;
