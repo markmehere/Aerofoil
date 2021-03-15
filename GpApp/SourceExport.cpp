@@ -637,7 +637,9 @@ bool ExportSourceToStream (GpIOStream *stream)
 		return false;
 
 	// Read timestamp
-	const bool readTSOK = (state.m_tsStream->Read(&state.m_ts, sizeof(state.m_ts)) != sizeof(state.m_ts));
+	const size_t tsSize = state.m_tsStream->Read(&state.m_ts, sizeof(state.m_ts));
+	const size_t expectedTSSize = sizeof(state.m_ts);
+	const bool readTSOK = (tsSize == expectedTSSize);
 	state.m_tsStream->Close();
 	state.m_tsStream = nullptr;
 
@@ -657,7 +659,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 	PLSysCalls::Sleep(1);
 
 	size_t applicationDataSize = 0;
-	const char *appResourcesPath = "ApplicationResources.gpa";
+	const char *appResourcesPath = "ApplicationResources.gpf";
 	if (!RetrieveSingleFileSize(PortabilityLayer::VirtualDirectories::kApplicationData, &appResourcesPath, 1, applicationDataSize))
 		return false;
 
