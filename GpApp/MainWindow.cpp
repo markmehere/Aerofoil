@@ -52,6 +52,7 @@ extern	short		toolSelected;
 extern	Boolean		noRoomAtAll, isUseSecondScreen;
 extern	Boolean		quickerTransitions, houseIsReadOnly;
 extern	Boolean		menusUp;
+extern	Boolean		houseOpen;
 
 //==============================================================  Functions
 //--------------------------------------------------------------  DrawOnSplash
@@ -61,6 +62,9 @@ extern	Boolean		menusUp;
 void DrawOnSplash(DrawSurface *surface)
 {
 	Str255		houseLoadedStr;
+
+	if (!houseOpen)
+		return;
 	
 	PasStringCopy(PSTR("House: "), houseLoadedStr);
 	PasStringConcat(houseLoadedStr, thisHouseName);
@@ -260,13 +264,13 @@ void OpenMainWindow (void)
 //			fadeGraysOut = false;
 //			ForceCTSeed((CGrafPtr)mainWindow, wasSeed);
 //		}
-		
-		UpdateMainWindow();
 	}
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
 		GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
 		&mainWindowRect, &mainWindowRect, srcCopy);
+
+	UpdateMainWindow();
 
 	mainWindow->GetDrawSurface()->m_port.SetDirty(PortabilityLayer::QDPortDirtyFlag_Contents);
 }
