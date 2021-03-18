@@ -84,6 +84,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\AerofoilPortable\GpFiberStarter_Thread.cpp" />
+    <ClCompile Include="..\AerofoilPortable\GpFiber_Thread.cpp" />
     <ClCompile Include="..\Aerofoil\GpColorCursor_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileStream_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileSystem_Win32.cpp" />
@@ -93,8 +95,6 @@
     <ClCompile Include="..\Aerofoil\GpThreadEvent_Win32.cpp" />
     <ClCompile Include="GpAudioDriver_SDL2.cpp" />
     <ClCompile Include="GpDisplayDriver_SDL_GL2.cpp" />
-    <ClCompile Include="GpFiberStarter_SDL.cpp" />
-    <ClCompile Include="GpFiber_SDL.cpp" />
     <ClCompile Include="GpInputDriver_SDL_Gamepad.cpp" />
     <ClCompile Include="GpMain_SDL_Win32.cpp" />
     <ClCompile Include="ShaderCode\CopyQuadP.cpp" />

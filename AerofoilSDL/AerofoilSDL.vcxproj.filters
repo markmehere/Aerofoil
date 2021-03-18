@@ -48,12 +48,6 @@
     <ClCompile Include="ShaderCode\ScaleQuadP.cpp">
       <Filter>Source Files\ShaderCode</Filter>
     </ClCompile>
-    <ClCompile Include="GpFiber_SDL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpFiberStarter_SDL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpDisplayDriver_SDL_GL2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -70,6 +64,12 @@
       <Filter>Source Files\ShaderCode</Filter>
     </ClCompile>
     <ClCompile Include="GpInputDriver_SDL_Gamepad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AerofoilPortable\GpFiber_Thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AerofoilPortable\GpFiberStarter_Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

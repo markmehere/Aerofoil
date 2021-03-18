@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)SDL2-2.0.12\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)SDL2-2.0.12\include;$(SolutionDir)AerofoilPortable;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)SDL2-2.0.12\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
