@@ -1,0 +1,18 @@
+Linux support is IN ALPHA and may or may not work.  Only Cygwin has been
+tested so far.
+
+You can attempt the following:
+- Install CMake (https://cmake.org/download/)
+- Install SDL 2.0.12 or higher, or build it from the included source
+- Run "cmake ." in the Aerofoil source directory
+- Run "make install" to build the AerofoilX program
+- Unzip the the Windows build
+- Copy the "Packaged" and "Resources" directories from the Windows build into
+  the "lib" folder above the "bin" folder that the AerofoilX program installed
+  to.  For example, if it installed to /usr/local/bin/, then the data files
+  should go in /usr/local/lib/aerofoil/
+- Run AerofoilX
+
+
+Please report any issues that you experience with this to the issue tracker on
+GitHub.
