@@ -19,6 +19,7 @@
 #include "PLPasStr.h"
 
 #include <algorithm>
+#include <cmath>
 
 #define	kSwitchDepthAlert		130
 #define kSetMemoryAlert			180

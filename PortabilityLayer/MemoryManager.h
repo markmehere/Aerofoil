@@ -3,6 +3,7 @@
 #define __PL_MEMORY_MANAGER_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 namespace PortabilityLayer
 {

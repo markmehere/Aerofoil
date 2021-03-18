@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #if __cplusplus >= 199711L
 #define GP_IS_CPP11 1

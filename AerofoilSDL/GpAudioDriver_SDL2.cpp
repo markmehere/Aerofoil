@@ -1,3 +1,4 @@
+#include "CoreDefs.h"
 #include "IGpAudioDriver.h"
 #include "IGpAudioChannel.h"
 #include "IGpAudioChannelCallbacks.h"
@@ -5,8 +6,7 @@
 #include "IGpPrefsHandler.h"
 #include "IGpSystemServices.h"
 #include "GpAudioDriverProperties.h"
-#include "CoreDefs.h"
-
+#include "GpSDL.h"
 
 #include "SDL_audio.h"
 #include "GpRingBuffer.h"

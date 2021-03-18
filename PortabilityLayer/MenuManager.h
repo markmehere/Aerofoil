@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
+
 #include "PLErrorCodes.h"
 
 template<class T>

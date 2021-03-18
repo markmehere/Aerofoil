@@ -1,6 +1,7 @@
 #include "GpClipboardContentsType.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct IGpClipboardContents
 {

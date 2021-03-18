@@ -2,11 +2,12 @@
 
 #include "GpApplicationName.h"
 #include "GpComPtr.h"
-#include "GpFiber_SDL.h"
+#include "GpFiber_Thread.h"
 #include "GpDisplayDriverProperties.h"
 #include "GpVOSEvent.h"
 #include "GpRingBuffer.h"
 #include "GpInputDriver_SDL_Gamepad.h"
+#include "GpSDL.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriverSurface.h"
 #include "IGpLogDriver.h"
@@ -1847,7 +1848,7 @@ void GpDisplayDriver_SDL_GL2::Run()
 	IGpLogDriver *logger = m_properties.m_logger;
 
 	m_vosEvent = m_properties.m_systemServices->CreateThreadEvent(true, false);
-	m_vosFiber = new GpFiber_SDL(nullptr, m_vosEvent);
+	m_vosFiber = new GpFiber_Thread(nullptr, m_vosEvent);
 
 	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	if (m_properties.m_systemServices->IsFullscreenOnStartup())

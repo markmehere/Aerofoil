@@ -4,6 +4,7 @@
 #include "EGpStandardCursor.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct IGpDisplayDriverSurface;
 struct IGpCursor;

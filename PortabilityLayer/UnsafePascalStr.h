@@ -6,6 +6,8 @@
 #include "DataTypes.h"
 #include "SmallestInt.h"
 
+#include <stddef.h>
+
 class PLPasStr;
 
 namespace PortabilityLayer

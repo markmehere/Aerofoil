@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 struct IGpAudioChannelCallbacks;
 
 struct IGpAudioChannel

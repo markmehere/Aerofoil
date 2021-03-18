@@ -1,24 +1,23 @@
 #pragma once
 
 #include "IGpFiber.h"
-#include "SDL_thread.h"
 
 struct IGpThreadEvent;
 
-class GpFiber_SDL final : public IGpFiber
+class GpFiber_Thread final : public IGpFiber
 {
 public:
-	explicit GpFiber_SDL(SDL_Thread *thread, IGpThreadEvent *threadEvent);
-	~GpFiber_SDL();
+	explicit GpFiber_Thread(void *thread, IGpThreadEvent *threadEvent);
+	~GpFiber_Thread();
 
 	void YieldTo(IGpFiber *fromFiber) override;
 	void YieldToTerminal(IGpFiber *fromFiber) override;
 	void Destroy() override;
 
 private:
-	static int SDLCALL InternalThreadFunction(void *data);
+	static int InternalThreadFunction(void *data);
 
 	bool m_isDestroying;
 	IGpThreadEvent *m_event;
-	SDL_Thread *m_thread;
+	void *m_thread;
 };

@@ -6,6 +6,7 @@
 #include "EGpInputDriverType.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct IGpLogDriver;
 struct IGpSystemServices;

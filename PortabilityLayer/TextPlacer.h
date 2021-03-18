@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 #include "Vec2i.h"
 
 class PLPasStr;

@@ -50,6 +50,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <limits.h>
 
 class PLMainThreadRelay final : public IGpThreadRelay
 {

@@ -4,6 +4,7 @@
 #include "VirtualDirectory.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 class GpIOStream;
 struct IGpThreadRelay;

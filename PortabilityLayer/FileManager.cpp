@@ -16,6 +16,7 @@
 #include "PLSysCalls.h"
 
 #include <vector>
+#include <stdlib.h>
 
 namespace PortabilityLayer
 {

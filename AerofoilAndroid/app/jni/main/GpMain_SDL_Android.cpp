@@ -4,7 +4,7 @@
 #include "GpAudioDriverFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpGlobalConfig.h"
-#include "GpFiber_SDL.h"
+#include "GpFiber_Thread.h"
 #include "GpFileSystem_Android.h"
 #include "GpFontHandlerFactory.h"
 #include "GpInputDriverFactory.h"

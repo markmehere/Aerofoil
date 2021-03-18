@@ -1,14 +1,12 @@
 #include "GpFiberStarter.h"
-#include "GpFiber_SDL.h"
+#include "GpFiber_Thread.h"
 
 #include "IGpSystemServices.h"
 #include "IGpThreadEvent.h"
 
-#include "SDL_thread.h"
-
 #include <assert.h>
 
-namespace GpFiberStarter_SDL
+namespace GpFiberStarter_Thread
 {
 	struct FiberStartState
 	{
@@ -18,7 +16,7 @@ namespace GpFiberStarter_SDL
 		void *m_context;
 	};
 
-	static int SDLCALL FiberStartRoutine(void *lpThreadParameter)
+	static int FiberStartRoutine(void *lpThreadParameter)
 	{
 		const FiberStartState *tss = static_cast<const FiberStartState*>(lpThreadParameter);
 
@@ -49,13 +47,13 @@ IGpFiber *GpFiberStarter::StartFiber(IGpSystemServices *systemServices, ThreadFu
 		return nullptr;
 	}
 
-	GpFiberStarter_SDL::FiberStartState startState;
+	GpFiberStarter_Thread::FiberStartState startState;
 	startState.m_context = context;
 	startState.m_creatingReturnEvent = returnEvent;
 	startState.m_creatingWakeEvent = wakeEvent;
 	startState.m_threadFunc = threadFunc;
 
-	SDL_Thread *thread = SDL_CreateThread(GpFiberStarter_SDL::FiberStartRoutine, "Fiber", &startState);
+	void *thread = systemServices->CreateThread(GpFiberStarter_Thread::FiberStartRoutine, &startState);
 	if (!thread)
 	{
 		returnEvent->Destroy();
@@ -66,5 +64,5 @@ IGpFiber *GpFiberStarter::StartFiber(IGpSystemServices *systemServices, ThreadFu
 	returnEvent->Wait();
 	returnEvent->Destroy();
 
-	return new GpFiber_SDL(thread, wakeEvent);
+	return new GpFiber_Thread(thread, wakeEvent);
 }
