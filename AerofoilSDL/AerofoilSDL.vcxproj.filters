@@ -66,12 +66,6 @@
     <ClCompile Include="GpInputDriver_SDL_Gamepad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\AerofoilPortable\GpFiber_Thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\AerofoilPortable\GpFiberStarter_Thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderCode\Functions.h">

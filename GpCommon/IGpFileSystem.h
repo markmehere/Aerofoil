@@ -7,7 +7,6 @@
 #include <stddef.h>
 
 class GpIOStream;
-struct IGpThreadRelay;
 struct IGpDirectoryCursor;
 
 struct IGpFileSystem
@@ -24,7 +23,6 @@ public:
 	virtual bool ValidateFilePath(const char *path, size_t pathLen) const = 0;
 	virtual bool ValidateFilePathUnicodeChar(uint32_t ch) const = 0;
 
-	virtual void SetMainThreadRelay(IGpThreadRelay *relay) = 0;
 	virtual void SetDelayCallback(DelayCallback_t delayCallback) = 0;
 
 	// Helpers

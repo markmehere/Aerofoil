@@ -319,11 +319,6 @@ bool GpFileSystem_Win32::ValidateFilePathUnicodeChar(uint32_t c) const
 	return false;
 }
 
-void GpFileSystem_Win32::SetMainThreadRelay(IGpThreadRelay *relay)
-{
-	(void)relay;
-}
-
 void GpFileSystem_Win32::SetDelayCallback(GpFileSystem_Win32::DelayCallback_t delayCallback)
 {
 }

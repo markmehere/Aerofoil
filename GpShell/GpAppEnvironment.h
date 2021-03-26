@@ -26,8 +26,8 @@ public:
 	~GpAppEnvironment();
 
 	void Init();
+	void Run();
 
-	GpDisplayDriverTickStatus_t Tick(IGpFiber *vosFiber);
 	void Render();
 	bool AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY);
 
@@ -39,34 +39,16 @@ public:
 	void SetSystemServices(IGpSystemServices *systemServices);
 
 private:
-	enum ApplicationState
-	{
-		ApplicationState_NotStarted,
-		ApplicationState_WaitingForEvents,
-		ApplicationState_Running,
-		ApplicationState_Terminated,
-		ApplicationState_SystemCall,
-		ApplicationState_TimedSuspend,
-		ApplicationState_Synchronizing,
-	};
-
 	static void StaticAppThreadFunc(void *context);
-	void AppThreadFunc();
 	void InitializeApplicationState();
 	void SynchronizeState();
 
-	static void StaticSuspendHookFunc(void *context, PortabilityLayer::HostSuspendCallID callID, const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue);
-	void DispatchSystemCall(PortabilityLayer::HostSuspendCallID callID, const PortabilityLayer::HostSuspendCallArgument *args, PortabilityLayer::HostSuspendCallArgument *returnValue);
-
-	ApplicationState m_applicationState;
 	IGpDisplayDriver *m_displayDriver;
 	IGpAudioDriver *m_audioDriver;
 	IGpInputDriver *const* m_inputDrivers;
 	IGpFontHandler *m_fontHandler;
 	GpVOSEventQueue *m_vosEventQueue;
 	IGpSystemServices *m_systemServices;
-	IGpFiber *m_applicationFiber;
-	IGpFiber *m_vosFiber;
 
 	uint32_t m_delaySuspendTicks;
 	size_t m_numInputDrivers;

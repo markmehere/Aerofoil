@@ -36,6 +36,8 @@ struct ID3D11VertexShader;
 class GpDisplayDriverD3D11 : public IGpDisplayDriver, public IGpPrefsHandler
 {
 public:
+	bool Init() override;
+	void ServeTicks(int tickCount) override;
 	void Run() override;
 	void Shutdown() override;
 
@@ -116,6 +118,7 @@ private:
 	bool InitBackBuffer(uint32_t virtualWidth, uint32_t virtualHeight);
 	bool InitResources(uint32_t virtualWidth, uint32_t virtualHeight);
 	GpDisplayDriverTickStatus_t PresentFrameAndSync();
+	bool SyncRender();
 	void ScaleVirtualScreen();
 
 	void SynchronizeCursors();
@@ -156,6 +159,8 @@ private:
 
 	GpRingBuffer<CompactedPresentHistoryItem, 60> m_presentHistory;
 	GpDisplayDriverProperties m_properties;
+
+	LONG m_windowStyle;
 
 	LARGE_INTEGER m_syncTimeBase;
 	LARGE_INTEGER m_QPFrequency;

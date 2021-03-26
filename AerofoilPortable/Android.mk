@@ -15,8 +15,7 @@ LOCAL_CFLAGS := -DGP_DEBUG_CONFIG=0
 # Add your application source files here...
 LOCAL_SRC_FILES := \
 	GpThreadEvent_Cpp11.cpp	\
-	GpSystemServices_POSIX.cpp	\
-	GpFiber_Thread.cpp	\
-	GpFiberStarter_Thread.cpp	\
+	GpSystemServices_POSIX.cpp
+
 
 include $(BUILD_STATIC_LIBRARY)

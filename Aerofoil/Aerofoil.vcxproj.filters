@@ -7,9 +7,6 @@
     <ClCompile Include="GpFiber_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GpFiberStarter_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpFileStream_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

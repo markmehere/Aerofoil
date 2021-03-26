@@ -1,8 +1,8 @@
 #include "IGpDisplayDriver.h"
 
+#include "CoreDefs.h"
 #include "GpApplicationName.h"
 #include "GpComPtr.h"
-#include "GpFiber_Thread.h"
 #include "GpDisplayDriverProperties.h"
 #include "GpVOSEvent.h"
 #include "GpRingBuffer.h"
@@ -730,12 +730,13 @@ public:
 	explicit GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
 	~GpDisplayDriver_SDL_GL2();
 
-	bool Init();
+	bool Init() override;
+	void ServeTicks(int tickCount) override;
+	void ForceSync() override;
+	void Shutdown() override;
 
 	void TranslateSDLMessage(const SDL_Event *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY, bool obstructiveTextInput);
 
-	void Run() override;
-	void Shutdown() override;
 	void GetInitialDisplayResolution(unsigned int *width, unsigned int *height) override;
 	IGpDisplayDriverSurface *CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext) override;
 	void DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects) override;
@@ -798,7 +799,7 @@ private:
 
 	void ScaleVirtualScreen();
 
-	GpDisplayDriverTickStatus_t PresentFrameAndSync();
+	bool SyncRender();
 
 	GpGLFunctions m_gl;
 	GpDisplayDriverProperties m_properties;
@@ -906,9 +907,6 @@ private:
 	EGpStandardCursor_t m_currentStandardCursor;
 	EGpStandardCursor_t m_pendingStandardCursor;
 	bool m_mouseIsInClientArea;
-
-	IGpFiber *m_vosFiber;
-	IGpThreadEvent *m_vosEvent;
 
 	float m_bgColor[4];
 	bool m_bgIsDark;
@@ -1194,8 +1192,6 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
 	, m_useUpscaleFilter(false)
-	, m_vosFiber(nullptr)
-	, m_vosEvent(nullptr)
 	, m_pendingCursor(nullptr)
 	, m_activeCursor(nullptr)
 	, m_currentStandardCursor(EGpStandardCursors::kArrow)
@@ -1340,7 +1336,245 @@ GpDisplayDriver_SDL_GL2::~GpDisplayDriver_SDL_GL2()
 
 bool GpDisplayDriver_SDL_GL2::Init()
 {
+#if GP_GL_IS_OPENGL_4_CONTEXT
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+#else
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+#endif
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+	IGpLogDriver *logger = m_properties.m_logger;
+
+	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+	if (m_properties.m_systemServices->IsFullscreenOnStartup())
+	{
+		windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		m_isFullScreen = true;
+	}
+	else
+		windowFlags |= SDL_WINDOW_RESIZABLE;
+
+	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, windowFlags);
+
+	if (m_isFullScreen)
+	{
+		m_windowModeRevertWidth = m_windowWidthPhysical;
+		m_windowModeRevertHeight = m_windowHeightPhysical;
+
+		int windowWidth = 0;
+		int windowHeight = 0;
+		SDL_GetWindowSize(m_window, &windowWidth, &windowHeight);
+
+		if (logger)
+			logger->Printf(IGpLogDriver::Category_Information, "Initialized fullscreen SDL window %i x %i", windowWidth, windowHeight);
+
+		m_windowWidthPhysical = windowWidth;
+		m_windowHeightPhysical = windowHeight;
+
+		uint32_t desiredWidth = windowWidth;
+		uint32_t desiredHeight = windowHeight;
+		uint32_t virtualWidth = m_windowWidthVirtual;
+		uint32_t virtualHeight = m_windowHeightVirtual;
+		float pixelScaleX = m_pixelScaleX;
+		float pixelScaleY = m_pixelScaleY;
+
+		if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
+		{
+			m_windowWidthVirtual = virtualWidth;
+			m_windowHeightVirtual = virtualHeight;
+			m_pixelScaleX = pixelScaleX;
+			m_pixelScaleY = pixelScaleY;
+
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Information, "AdjustedRequestedResolution succeeded.  Virtual dimensions %i x %i  Pixel scale %f x %f", static_cast<int>(virtualWidth), static_cast<int>(virtualHeight), static_cast<float>(pixelScaleX), static_cast<float>(pixelScaleY));
+		}
+		else
+		{
+			if (logger)
+				logger->Printf(IGpLogDriver::Category_Error, "AdjustedRequestedResolution failed!");
+		}
+	}
+
+	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
+
+	if (!obstructiveTextInput)
+		SDL_StartTextInput();
+
+	StartOpenGLForWindow(logger);
+
+	if (!m_gl.LookUpFunctions())
+		return false;
+
+	m_initialWidthVirtual = m_windowWidthVirtual;
+	m_initialHeightVirtual = m_windowHeightVirtual;
+
 	return true;
+}
+
+void GpDisplayDriver_SDL_GL2::ServeTicks(int ticks)
+{
+	IGpLogDriver *logger = m_properties.m_logger;
+	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
+
+	for (;;)
+	{
+		SDL_Event msg;
+		if (SDL_PollEvent(&msg) != 0)
+		{
+			switch (msg.type)
+			{
+			case SDL_MOUSEMOTION:
+			{
+				if (!m_mouseIsInClientArea)
+					m_mouseIsInClientArea = true;
+			}
+			break;
+			//case SDL_MOUSELEAVE:	// Does SDL support this??
+			//	m_mouseIsInClientArea = false;
+			//	break;
+			case SDL_RENDER_DEVICE_RESET:
+			case SDL_RENDER_TARGETS_RESET:
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to device loss (Type: %i)", static_cast<int>(msg.type));
+
+				m_contextLost = true;
+			}
+			break;
+			case SDL_CONTROLLERAXISMOTION:
+			case SDL_CONTROLLERBUTTONDOWN:
+			case SDL_CONTROLLERBUTTONUP:
+			case SDL_CONTROLLERDEVICEADDED:
+			case SDL_CONTROLLERDEVICEREMOVED:
+			case SDL_CONTROLLERDEVICEREMAPPED:
+				if (IGpInputDriverSDLGamepad *gamepadDriver = IGpInputDriverSDLGamepad::GetInstance())
+					gamepadDriver->ProcessSDLEvent(msg);
+				break;
+			}
+
+			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
+		}
+		else
+		{
+			if (m_isFullScreen != m_isFullScreenDesired)
+			{
+				if (m_isFullScreenDesired)
+					BecomeFullScreen();
+				else
+					BecomeWindowed();
+
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to fullscreen state change");
+
+				m_contextLost = true;
+				continue;
+			}
+
+			int clientWidth = 0;
+			int clientHeight = 0;
+			SDL_GetWindowSize(m_window, &clientWidth, &clientHeight);
+
+			unsigned int desiredWidth = clientWidth;
+			unsigned int desiredHeight = clientHeight;
+			if (desiredWidth != m_windowWidthPhysical || desiredHeight != m_windowHeightPhysical || m_isResolutionResetDesired)
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Detected window size change");
+
+				uint32_t prevWidthPhysical = m_windowWidthPhysical;
+				uint32_t prevHeightPhysical = m_windowHeightPhysical;
+				uint32_t prevWidthVirtual = m_windowWidthVirtual;
+				uint32_t prevHeightVirtual = m_windowHeightVirtual;
+				uint32_t virtualWidth = m_windowWidthVirtual;
+				uint32_t virtualHeight = m_windowHeightVirtual;
+				float pixelScaleX = 1.0f;
+				float pixelScaleY = 1.0f;
+
+				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
+				{
+					bool resizedOK = ResizeOpenGLWindow(m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, logger);
+
+					if (!resizedOK)
+						break;	// Critical video driver error, exit
+
+					m_windowWidthVirtual = virtualWidth;
+					m_windowHeightVirtual = virtualHeight;
+					m_pixelScaleX = pixelScaleX;
+					m_pixelScaleY = pixelScaleY;
+					m_isResolutionResetDesired = false;
+
+					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
+					{
+						resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidthVirtual;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeightVirtual;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidthVirtual;
+						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
+					}
+
+					if (logger)
+						logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to window size change");
+
+					m_contextLost = true;
+					continue;
+				}
+			}
+
+			if (m_contextLost)
+			{
+				if (logger)
+					logger->Printf(IGpLogDriver::Category_Information, "Resetting OpenGL context.  Physical: %i x %i   Virtual %i x %i", static_cast<int>(m_windowWidthPhysical), static_cast<int>(m_windowHeightPhysical), static_cast<int>(m_windowWidthVirtual), static_cast<int>(m_windowHeightVirtual));
+
+				// Drop everything and reset
+				m_res.~InstancedResources();
+				new (&m_res) InstancedResources();
+
+				if (m_firstSurface)
+					m_firstSurface->DestroyAll();
+
+				if (!InitResources(m_windowWidthPhysical, m_windowHeightPhysical, m_windowWidthVirtual, m_windowHeightVirtual))
+				{
+					if (logger)
+						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to InitResources failing");
+
+					break;
+				}
+
+				if (m_firstSurface)
+					m_firstSurface->RecreateAll();
+
+				m_contextLost = false;
+				continue;
+			}
+
+			bool wantTextInput = m_properties.m_systemServices->IsTextInputEnabled();
+			if (wantTextInput != m_textInputEnabled)
+			{
+				m_textInputEnabled = wantTextInput;
+				if (m_textInputEnabled)
+					SDL_StartTextInput();
+				else
+					SDL_StopTextInput();
+			}
+
+			// Handle dismissal of on-screen keyboard
+			const bool isTextInputActuallyActive = SDL_IsTextInputActive();
+			m_textInputEnabled = isTextInputActuallyActive;
+			m_properties.m_systemServices->SetTextInputEnabled(isTextInputActuallyActive);
+
+			if (SyncRender())
+			{
+				ticks--;
+				if (ticks <= 0)
+					break;
+			}
+		}
+	}
+}
+
+void GpDisplayDriver_SDL_GL2::ForceSync()
+{
+	m_frameTimeAccumulated = std::chrono::nanoseconds::zero();
 }
 
 static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
@@ -1834,248 +2068,6 @@ void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEv
 	default:
 		break;
 	}
-}
-
-void GpDisplayDriver_SDL_GL2::Run()
-{
-#if GP_GL_IS_OPENGL_4_CONTEXT
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-#else
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-#endif
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-	IGpLogDriver *logger = m_properties.m_logger;
-
-	m_vosEvent = m_properties.m_systemServices->CreateThreadEvent(true, false);
-	m_vosFiber = new GpFiber_Thread(nullptr, m_vosEvent);
-
-	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-	if (m_properties.m_systemServices->IsFullscreenOnStartup())
-	{
-		windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-		m_isFullScreen = true;
-	}
-	else
-		windowFlags |= SDL_WINDOW_RESIZABLE;
-
-	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, windowFlags);
-
-	if (m_isFullScreen)
-	{
-		m_windowModeRevertWidth = m_windowWidthPhysical;
-		m_windowModeRevertHeight = m_windowHeightPhysical;
-
-		int windowWidth = 0;
-		int windowHeight = 0;
-		SDL_GetWindowSize(m_window, &windowWidth, &windowHeight);
-
-		if (logger)
-			logger->Printf(IGpLogDriver::Category_Information, "Initialized fullscreen SDL window %i x %i", windowWidth, windowHeight);
-
-		m_windowWidthPhysical = windowWidth;
-		m_windowHeightPhysical = windowHeight;
-
-		uint32_t desiredWidth = windowWidth;
-		uint32_t desiredHeight = windowHeight;
-		uint32_t virtualWidth = m_windowWidthVirtual;
-		uint32_t virtualHeight = m_windowHeightVirtual;
-		float pixelScaleX = m_pixelScaleX;
-		float pixelScaleY = m_pixelScaleY;
-
-		if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
-		{
-			m_windowWidthVirtual = virtualWidth;
-			m_windowHeightVirtual = virtualHeight;
-			m_pixelScaleX = pixelScaleX;
-			m_pixelScaleY = pixelScaleY;
-
-			if (logger)
-				logger->Printf(IGpLogDriver::Category_Information, "AdjustedRequestedResolution succeeded.  Virtual dimensions %i x %i  Pixel scale %f x %f", static_cast<int>(virtualWidth), static_cast<int>(virtualHeight), static_cast<float>(pixelScaleX), static_cast<float>(pixelScaleY));
-		}
-		else
-		{
-			if (logger)
-				logger->Printf(IGpLogDriver::Category_Error, "AdjustedRequestedResolution failed!");
-		}
-	}
-
-	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
-
-	if (!obstructiveTextInput)
-		SDL_StartTextInput();
-
-	StartOpenGLForWindow(logger);
-
-	if (!m_gl.LookUpFunctions())
-		return;
-
-	m_initialWidthVirtual = m_windowWidthVirtual;
-	m_initialHeightVirtual = m_windowHeightVirtual;
-
-	for (;;)
-	{
-		SDL_Event msg;
-		if (SDL_PollEvent(&msg) != 0)
-		{
-			switch (msg.type)
-			{
-			case SDL_MOUSEMOTION:
-				{
-					if (!m_mouseIsInClientArea)
-						m_mouseIsInClientArea = true;
-				}
-				break;
-			//case SDL_MOUSELEAVE:	// Does SDL support this??
-			//	m_mouseIsInClientArea = false;
-			//	break;
-			case SDL_RENDER_DEVICE_RESET:
-			case SDL_RENDER_TARGETS_RESET:
-				{
-					if (logger)
-						logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to device loss (Type: %i)", static_cast<int>(msg.type));
-
-					m_contextLost = true;
-				}
-				break;
-			case SDL_CONTROLLERAXISMOTION:
-			case SDL_CONTROLLERBUTTONDOWN:
-			case SDL_CONTROLLERBUTTONUP:
-			case SDL_CONTROLLERDEVICEADDED:
-			case SDL_CONTROLLERDEVICEREMOVED:
-			case SDL_CONTROLLERDEVICEREMAPPED:
-				if (IGpInputDriverSDLGamepad *gamepadDriver = IGpInputDriverSDLGamepad::GetInstance())
-					gamepadDriver->ProcessSDLEvent(msg);
-				break;
-			}
-
-			TranslateSDLMessage(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY, obstructiveTextInput);
-		}
-		else
-		{
-			if (m_isFullScreen != m_isFullScreenDesired)
-			{
-				if (m_isFullScreenDesired)
-					BecomeFullScreen();
-				else
-					BecomeWindowed();
-
-				if (logger)
-					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to fullscreen state change");
-
-				m_contextLost = true;
-				continue;
-			}
-
-			int clientWidth = 0;
-			int clientHeight = 0;
-			SDL_GetWindowSize(m_window, &clientWidth, &clientHeight);
-
-			unsigned int desiredWidth = clientWidth;
-			unsigned int desiredHeight = clientHeight;
-			if (desiredWidth != m_windowWidthPhysical || desiredHeight != m_windowHeightPhysical || m_isResolutionResetDesired)
-			{
-				if (logger)
-					logger->Printf(IGpLogDriver::Category_Information, "Detected window size change");
-
-				uint32_t prevWidthPhysical = m_windowWidthPhysical;
-				uint32_t prevHeightPhysical = m_windowHeightPhysical;
-				uint32_t prevWidthVirtual = m_windowWidthVirtual;
-				uint32_t prevHeightVirtual = m_windowHeightVirtual;
-				uint32_t virtualWidth = m_windowWidthVirtual;
-				uint32_t virtualHeight = m_windowHeightVirtual;
-				float pixelScaleX = 1.0f;
-				float pixelScaleY = 1.0f;
-
-				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
-				{
-					bool resizedOK = ResizeOpenGLWindow(m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, logger);
-
-					if (!resizedOK)
-						break;	// Critical video driver error, exit
-
-					m_windowWidthVirtual = virtualWidth;
-					m_windowHeightVirtual = virtualHeight;
-					m_pixelScaleX = pixelScaleX;
-					m_pixelScaleY = pixelScaleY;
-					m_isResolutionResetDesired = false;
-
-					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
-					{
-						resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidthVirtual;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeightVirtual;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidthVirtual;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
-					}
-
-					if (logger)
-						logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to window size change");
-
-					m_contextLost = true;
-					continue;
-				}
-			}
-
-			if (m_contextLost)
-			{
-				if (logger)
-					logger->Printf(IGpLogDriver::Category_Information, "Resetting OpenGL context.  Physical: %i x %i   Virtual %i x %i", static_cast<int>(m_windowWidthPhysical), static_cast<int>(m_windowHeightPhysical), static_cast<int>(m_windowWidthVirtual), static_cast<int>(m_windowHeightVirtual));
-
-				// Drop everything and reset
-				m_res.~InstancedResources();
-				new (&m_res) InstancedResources();
-
-				if (m_firstSurface)
-					m_firstSurface->DestroyAll();
-
-				if (!InitResources(m_windowWidthPhysical, m_windowHeightPhysical, m_windowWidthVirtual, m_windowHeightVirtual))
-				{
-					if (logger)
-						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to InitResources failing");
-
-					break;
-				}
-
-				if (m_firstSurface)
-					m_firstSurface->RecreateAll();
-
-				m_contextLost = false;
-				continue;
-			}
-
-			bool wantTextInput = m_properties.m_systemServices->IsTextInputEnabled();
-			if (wantTextInput != m_textInputEnabled)
-			{
-				m_textInputEnabled = wantTextInput;
-				if (m_textInputEnabled)
-					SDL_StartTextInput();
-				else
-					SDL_StopTextInput();
-			}
-
-			// Handle dismissal of on-screen keyboard
-			const bool isTextInputActuallyActive = SDL_IsTextInputActive();
-			m_textInputEnabled = isTextInputActuallyActive;
-			m_properties.m_systemServices->SetTextInputEnabled(isTextInputActuallyActive);
-
-			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
-			if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault || tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
-			{
-				if (logger)
-				{
-					if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault)
-						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to fatal fault");
-					if (tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
-						logger->Printf(IGpLogDriver::Category_Information, "Terminating display driver due to application termination");
-				}
-
-				break;
-			}
-		}
-	}
-
-	// Exit
 }
 
 void GpDisplayDriver_SDL_GL2::Shutdown()
@@ -3059,8 +3051,15 @@ bool GpDisplayDriver_SDL_GL2::BlitQuadProgram::Link(GpDisplayDriver_SDL_GL2 *dri
 	return true;
 }
 
-GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
+bool GpDisplayDriver_SDL_GL2::SyncRender()
 {
+	if (m_frameTimeAccumulated >= m_frameTimeSliceSize)
+	{
+		m_frameTimeAccumulated -= m_frameTimeSliceSize;
+
+		return true;
+	}
+
 	SynchronizeCursors();
 
 	float bgColor[4];
@@ -3182,22 +3181,9 @@ GpDisplayDriverTickStatus_t GpDisplayDriver_SDL_GL2::PresentFrameAndSync()
 		}
 
 		m_frameTimeAccumulated += frameTimeStep;
-		while (m_frameTimeAccumulated >= m_frameTimeSliceSize)
-		{
-			GpDisplayDriverTickStatus_t tickStatus = m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
-			m_frameTimeAccumulated -= m_frameTimeSliceSize;
-
-			if (tickStatus == GpDisplayDriverTickStatuses::kSynchronizing)
-			{
-				m_frameTimeAccumulated = std::chrono::high_resolution_clock::duration::zero();
-				break;
-			}
-			else if (tickStatus != GpDisplayDriverTickStatuses::kOK)
-				return tickStatus;
-		}
 	}
 
-	return GpDisplayDriverTickStatuses::kOK;
+	return false;
 }
 
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties)
@@ -3206,17 +3192,8 @@ IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProp
 	if (!driver)
 		return nullptr;
 
-	new (driver) GpDisplayDriver_SDL_GL2(properties);
-
-	if (!driver->Init())
-	{
-		driver->Shutdown();
-		return nullptr;
-	}
-
-	return driver;
+	return new (driver) GpDisplayDriver_SDL_GL2(properties);
 }
-
 
 template<class T>
 T *GpGLObjectImpl<T>::Create(GpDisplayDriver_SDL_GL2 *driver)

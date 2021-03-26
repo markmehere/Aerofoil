@@ -27,7 +27,6 @@ public:
 	bool ValidateFilePath(const char *path, size_t pathLen) const override;
 	bool ValidateFilePathUnicodeChar(uint32_t ch) const override;
 
-	void SetMainThreadRelay(IGpThreadRelay *relay) override;
 	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
 	void PostSourceExportRequest(bool cancelled, int fd, jobject pfd);
@@ -36,26 +35,12 @@ public:
 	static GpFileSystem_Android *GetInstance();
 
 private:
-	struct ScanDirectoryNestedContext
-	{
-		GpFileSystem_Android *m_this;
-
-		IGpDirectoryCursor *m_returnValue;
-		PortabilityLayer::VirtualDirectory_t m_virtualDirectory;
-		char const *const *m_paths;
-		size_t m_numPaths;
-	};
-
-	static void ScanDirectoryNestedThunk(void *context);
-	IGpDirectoryCursor *ScanDirectoryNestedInternal(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
-
 	IGpDirectoryCursor *ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 	IGpDirectoryCursor *ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 
 	bool OpenSourceExportFD(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, int &fd, jobject &pfd);
 	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset);
 
-	IGpThreadRelay *m_relay;
 	DelayCallback_t m_delayCallback;
 
 	jobject m_activity;

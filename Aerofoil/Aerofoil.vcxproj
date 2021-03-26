@@ -91,7 +91,6 @@
     <ClCompile Include="GpMain_Win32.cpp" />
     <ClCompile Include="GpMutex_Win32.cpp" />
     <ClCompile Include="GpSystemServices_Win32.cpp" />
-    <ClCompile Include="GpFiberStarter_Win32.cpp" />
     <ClCompile Include="GpThreadEvent_Win32.cpp" />
   </ItemGroup>
   <ItemGroup>

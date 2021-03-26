@@ -21,7 +21,6 @@ public:
 	bool ValidateFilePath(const char *path, size_t sz) const override;
 	bool ValidateFilePathUnicodeChar(uint32_t ch) const override;
 
-	void SetMainThreadRelay(IGpThreadRelay *relay) override;
 	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
 	const wchar_t *GetBasePath() const;

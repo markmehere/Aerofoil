@@ -52,28 +52,6 @@
 #include <algorithm>
 #include <limits.h>
 
-class PLMainThreadRelay final : public IGpThreadRelay
-{
-public:
-	void Invoke(Callback_t callback, void *context) const override;
-
-	static PLMainThreadRelay *GetInstance();
-
-private:
-	static PLMainThreadRelay ms_instance;
-};
-
-void PLMainThreadRelay::Invoke(Callback_t callback, void *context) const
-{
-	PLSysCalls::RunOnVOSThread(callback, context);
-}
-
-PLMainThreadRelay *PLMainThreadRelay::GetInstance()
-{
-	return &ms_instance;
-}
-
-PLMainThreadRelay PLMainThreadRelay::ms_instance;
 
 static bool ConvertFilenameToSafePStr(const char *str, uint8_t *pstr)
 {
@@ -138,7 +116,7 @@ void Delay(int ticks, UInt32 *endTickCount)
 
 void ForceSyncFrame()
 {
-	PLSysCalls::ForceSyncFrame();
+	PLDrivers::GetDisplayDriver()->ForceSync();
 }
 
 short FindWindow(Point point, WindowPtr *window)
@@ -671,7 +649,6 @@ void PL_Init()
 	PortabilityLayer::MenuManager::GetInstance()->Init();
 	PortabilityLayer::WindowManager::GetInstance()->Init();
 
-	PLDrivers::GetFileSystem()->SetMainThreadRelay(PLMainThreadRelay::GetInstance());
 	PLDrivers::GetFileSystem()->SetDelayCallback(PLSysCalls::Sleep);
 }
 

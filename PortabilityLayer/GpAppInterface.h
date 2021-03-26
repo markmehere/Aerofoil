@@ -38,7 +38,6 @@ public:
 	virtual void PL_Render(IGpDisplayDriver *displayDriver) = 0;
 	virtual GpDriverCollection *PL_GetDriverCollection() = 0;
 
-	virtual void PL_InstallHostSuspendHook(PortabilityLayer::HostSuspendHook_t hook, void *context) = 0;
 	virtual bool PL_AdjustRequestedResolution(uint32_t &physicalWidth, uint32_t &physicalHeight, uint32_t &virtualWidth, uint32_t &virtualheight, float &pixelScaleX, float &pixelScaleY) = 0;
 };
 

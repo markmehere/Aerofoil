@@ -450,7 +450,6 @@ bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virt
 
 GpFileSystem_Android::GpFileSystem_Android()
 	: m_activity(nullptr)
-	, m_relay(nullptr)
 	, m_delayCallback(nullptr)
 	, m_sourceExportMutex(nullptr)
 	, m_sourceExportFD(0)
@@ -681,25 +680,6 @@ bool GpFileSystem_Android::DeleteFile(PortabilityLayer::VirtualDirectory_t virtu
 
 IGpDirectoryCursor *GpFileSystem_Android::ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
 {
-	ScanDirectoryNestedContext ctx;
-	ctx.m_this = this;
-	ctx.m_returnValue = nullptr;
-	ctx.m_virtualDirectory = virtualDirectory;
-	ctx.m_paths = paths;
-	ctx.m_numPaths = numPaths;
-	m_relay->Invoke(ScanDirectoryNestedThunk, &ctx);
-
-	return ctx.m_returnValue;
-}
-
-void GpFileSystem_Android::ScanDirectoryNestedThunk(void *context)
-{
-	ScanDirectoryNestedContext *ctx = static_cast<ScanDirectoryNestedContext*>(context);
-	ctx->m_returnValue = ctx->m_this->ScanDirectoryNestedInternal(ctx->m_virtualDirectory, ctx->m_paths, ctx->m_numPaths);
-}
-
-IGpDirectoryCursor *GpFileSystem_Android::ScanDirectoryNestedInternal(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths)
-{
 	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kGameData || virtualDirectory == PortabilityLayer::VirtualDirectories::kApplicationData)
 		return ScanAssetDirectory(virtualDirectory, paths, numPaths);
 
@@ -750,11 +730,6 @@ bool GpFileSystem_Android::ValidateFilePathUnicodeChar(uint32_t c) const
 		return true;
 
 	return false;
-}
-
-void GpFileSystem_Android::SetMainThreadRelay(IGpThreadRelay *relay)
-{
-	m_relay = relay;
 }
 
 void GpFileSystem_Android::SetDelayCallback(DelayCallback_t delayCallback)

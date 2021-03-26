@@ -1,4 +1,5 @@
 #include "GpMain.h"
+#include "GpAppInterface.h"
 #include "GpAudioDriverFactory.h"
 #include "GpAudioDriverProperties.h"
 #include "GpDisplayDriverFactory.h"
@@ -20,11 +21,6 @@
 
 namespace
 {
-	GpDisplayDriverTickStatus_t TickAppEnvironment(void *context, IGpFiber *vosFiber)
-	{
-		return static_cast<GpAppEnvironment*>(context)->Tick(vosFiber);
-	}
-
 	void RenderAppEnvironment(void *context)
 	{
 		static_cast<GpAppEnvironment*>(context)->Render();
@@ -52,9 +48,6 @@ int GpMain::Run()
 	ddProps.m_frameTimeLockMinDenominator = 6000;
 	ddProps.m_frameTimeLockMaxNumerator = 101;
 	ddProps.m_frameTimeLockMaxDenominator = 6000;
-
-	ddProps.m_tickFunc = TickAppEnvironment;
-	ddProps.m_tickFuncContext = appEnvironment;
 
 	ddProps.m_renderFunc = RenderAppEnvironment;
 	ddProps.m_renderFuncContext = appEnvironment;
@@ -120,7 +113,9 @@ int GpMain::Run()
 	appEnvironment->SetSystemServices(g_gpGlobalConfig.m_systemServices);
 
 	// Start the display loop
-	displayDriver->Run();
+	displayDriver->Init();
+
+	appEnvironment->Run();
 
 	// Clean up
 	if (inputDrivers)

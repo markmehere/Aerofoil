@@ -647,7 +647,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 	if (!state.m_sourcePkgStream)
 		return false;
 
-	PLSysCalls::ForceSyncFrame();
+	ForceSyncFrame();
 	PLSysCalls::Sleep(1);
 
 	size_t sourcePkgSize = state.m_sourcePkgStream->Size();
@@ -655,7 +655,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 	if (!RetrieveCompositeDirSize(PortabilityLayer::VirtualDirectories::kGameData, looseFilesSize))
 		return false;
 
-	PLSysCalls::ForceSyncFrame();
+	ForceSyncFrame();
 	PLSysCalls::Sleep(1);
 
 	size_t applicationDataSize = 0;
@@ -663,7 +663,7 @@ bool ExportSourceToStream (GpIOStream *stream)
 	if (!RetrieveSingleFileSize(PortabilityLayer::VirtualDirectories::kApplicationData, &appResourcesPath, 1, applicationDataSize))
 		return false;
 
-	PLSysCalls::ForceSyncFrame();
+	ForceSyncFrame();
 	PLSysCalls::Sleep(1);
 
 	state.m_dataTotal = applicationDataSize + looseFilesSize + sourcePkgSize;

@@ -177,29 +177,12 @@ namespace PLSysCalls
 	{
 		if (ticks > 0)
 		{
-			PortabilityLayer::HostSuspendCallArgument args[1];
-			args[0].m_uint = static_cast<uint32_t>(ticks);
-
-			PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_Delay, args, nullptr);
+			PortabilityLayer::RenderFrames(ticks);
 
 			ImportVOSEvents(PortabilityLayer::DisplayDeviceManager::GetInstance()->GetTickCount());
 
 			AnimationManager::GetInstance()->TickPlayers(ticks);
 		}
-	}
-
-	void ForceSyncFrame()
-	{
-		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_ForceSyncFrame, nullptr, nullptr);
-	}
-
-	void RunOnVOSThread(void(*callback)(void *context), void *context)
-	{
-		PortabilityLayer::HostSuspendCallArgument args[2];
-		args[0].m_functionPtr = callback;
-		args[1].m_pointer = context;
-
-		PortabilityLayer::SuspendApplication(PortabilityLayer::HostSuspendCallID_CallOnVOSThread, args, nullptr);
 	}
 
 	static jmp_buf gs_mainExitWrapper;

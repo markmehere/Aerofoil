@@ -84,8 +84,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\AerofoilPortable\GpFiberStarter_Thread.cpp" />
-    <ClCompile Include="..\AerofoilPortable\GpFiber_Thread.cpp" />
     <ClCompile Include="..\Aerofoil\GpColorCursor_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileStream_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileSystem_Win32.cpp" />

@@ -29,7 +29,9 @@ struct IGpDisplayDriver
 {
 	typedef void (*SurfaceInvalidateCallback_t) (void *context);
 
-	virtual void Run() = 0;
+	virtual bool Init() = 0;
+	virtual void ServeTicks(int tickCount) = 0;
+	virtual void ForceSync() = 0;
 	virtual void Shutdown() = 0;
 
 	// Returns the initial resolution before any display resolution events are posted
