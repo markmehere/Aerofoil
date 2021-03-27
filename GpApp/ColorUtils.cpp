@@ -7,7 +7,6 @@
 
 
 #include "Externs.h"
-#include "PLPalettes.h"
 #include "PLPasStr.h"
 #include "QDStandardPalette.h"
 #include "ResolveCachingColor.h"
