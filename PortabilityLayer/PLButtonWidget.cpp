@@ -445,7 +445,7 @@ namespace PortabilityLayer
 
 		ResolveCachingColor textCacheColor = textColor;
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(FontPresets::kSystem12Bold);
 
 		int32_t x = (m_rect.left + m_rect.right - static_cast<int32_t>(sysFont->MeasureString(reinterpret_cast<const uint8_t*>(m_text.UnsafeCharPtr()), m_text.Length()))) / 2;
 		int32_t y = (m_rect.top + m_rect.bottom + static_cast<int32_t>(sysFont->GetMetrics().m_ascent)) / 2;
@@ -535,7 +535,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(FontPresets::kSystem12Bold);
 		int32_t textV = (m_rect.top + m_rect.bottom + sysFont->GetMetrics().m_ascent) / 2;
 		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), *textColor, sysFont);
 	}
@@ -596,7 +596,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(FontPresets::kSystem12Bold);
 		int32_t textV = (m_rect.top + m_rect.bottom + sysFont->GetMetrics().m_ascent) / 2;
 		surface->DrawString(Point::Create(m_rect.left + checkFrameSize + 2, textV), m_text.ToShortStr(), *textColor, sysFont);
 	}

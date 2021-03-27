@@ -103,7 +103,7 @@ namespace PortabilityLayer
 		Rect textRect = innerRect;
 		textRect.right -= 11;
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(FontPresets::kSystem12Bold);
 		Point basePoint = Point::Create(textRect.left + 2, (textRect.top + textRect.bottom + sysFont->GetMetrics().m_ascent + 1) / 2 - 1);
 
 		surface->DrawStringConstrained(basePoint, GetString(), textRect, blackColor, sysFont);

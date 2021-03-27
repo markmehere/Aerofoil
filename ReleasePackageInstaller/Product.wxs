@@ -34,7 +34,6 @@
       <!-- Installation directory -->
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="AEROFOILPRODUCTDIR" Name="Aerofoil">
-          <Directory Id="AEROFOILRESOURCESDIR" Name="Resources" />
           <Directory Id="AEROFOILPACKAGEDDIR" Name="Packaged">
             <Directory Id="AEROFOILHOUSESDIR" Name="Houses" />
           </Directory>
@@ -83,6 +82,9 @@
     <DirectoryRef Id="AEROFOILPACKAGEDDIR">
       <Component Id="ApplicationResources" Guid="*">
         <File Id="ApplicationResources.gpf" Source="$(var.PackagedDataDir)\ApplicationResources.gpf" KeyPath="yes" Checksum="yes"/>
+      </Component>
+      <Component Id="Fonts" Guid="*">
+        <File Id="Fonts.gpf" Source="$(var.PackagedDataDir)\Fonts.gpf" KeyPath="yes" Checksum="yes"/>
       </Component>
     </DirectoryRef>
 

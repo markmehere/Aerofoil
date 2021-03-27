@@ -4,7 +4,6 @@
 #include "GpAudioDriverFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpGlobalConfig.h"
-#include "GpFiber_Win32.h"
 #include "GpFileSystem_Win32.h"
 #include "GpLogDriver_Win32.h"
 #include "GpFontHandlerFactory.h"

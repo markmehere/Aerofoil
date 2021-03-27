@@ -107,7 +107,7 @@ void SetUpFinalScreen (void)
 	{
 		GetLineOfText(tempStr, count, subStr);
 
-		PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 		offset = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) -
 				appFont->MeasurePStr(subStr)) / 2;
 

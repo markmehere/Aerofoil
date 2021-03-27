@@ -209,8 +209,6 @@ namespace PortabilityLayer
 		static bool ItemIsSeparator(const Menu &menu, const MenuItem &item);
 
 		static const unsigned int kIconResID = 128;
-		static const unsigned int kMenuFontSize = 12;
-		static const unsigned int kTouchScreenMenuFontSize = 40;
 		static const unsigned int kMenuBarIconYOffset = 2;
 		static const unsigned int kMenuBarTextYOffset = 14;
 		static const unsigned int kTouchScreenMenuBarTextYOffset = 40;
@@ -234,6 +232,9 @@ namespace PortabilityLayer
 
 		static const int kMenuFontFlags = PortabilityLayer::FontFamilyFlag_Bold;
 		static const int kTouchScreenMenuFontFlags = PortabilityLayer::FontFamilyFlag_None;
+
+		static const FontPreset_t kMenuFontPreset = FontPresets::kSystem12Bold;
+		static const FontPreset_t kTouchScreenMenuFontPreset = FontPresets::kApplication40;
 
 		DrawSurface *m_menuBarGraf;
 
@@ -954,12 +955,12 @@ namespace PortabilityLayer
 		unsigned int textYOffset = 0;
 		if (m_isTouchScreen)
 		{
-			sysFont = GetApplicationFont(kTouchScreenMenuFontSize, kTouchScreenMenuFontFlags, true);
+			sysFont = GetFont(kTouchScreenMenuFontPreset);
 			textYOffset = kTouchScreenMenuBarTextYOffset;
 		}
 		else
 		{
-			sysFont = GetSystemFont(kMenuFontSize, kMenuFontFlags, true);
+			sysFont = GetFont(kMenuFontPreset);
 			textYOffset = kMenuBarTextYOffset;
 		}
 
@@ -1086,29 +1087,17 @@ namespace PortabilityLayer
 
 		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
+		PortabilityLayer::RenderedFont *rfont = nullptr;
 		PortabilityLayer::FontFamily *fontFamily = nullptr;
 
 		unsigned int fontSize = 0;
 		unsigned int fontFlags = 0;
 
 		if (m_isTouchScreen)
-		{
-			fontSize = kTouchScreenMenuFontSize;
-			fontFlags = PortabilityLayer::FontFamilyFlag_None;
-			fontFamily = PortabilityLayer::FontManager::GetInstance()->GetApplicationFont(kTouchScreenMenuFontSize, PortabilityLayer::FontFamilyFlag_None);
-		}
+			rfont = GetFont(kTouchScreenMenuFontPreset);
 		else
-		{
-			fontSize = kMenuFontSize;
-			fontFlags = kMenuFontFlags;
-			fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(kMenuFontSize, kMenuFontFlags);
-		}
+			rfont = GetFont(kMenuFontPreset);
 
-		
-		if (!fontFamily)
-			return;
-
-		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, fontSize, true, fontFlags);
 		if (!rfont)
 			return;
 
@@ -1148,11 +1137,7 @@ namespace PortabilityLayer
 
 		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-		PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(kMenuFontSize, kMenuFontFlags);
-		if (!fontFamily)
-			return;
-
-		PortabilityLayer::RenderedFont *rfont = PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, kMenuFontSize, true, kMenuFontFlags);
+		PortabilityLayer::RenderedFont *rfont = GetFont(kMenuFontPreset);
 		if (!rfont)
 			return;
 
@@ -1498,7 +1483,7 @@ namespace PortabilityLayer
 			surface->FillRect(Rect::Create(static_cast<int16_t>(menu->layoutFinalHeight - 1), 1, static_cast<int16_t>(menu->layoutFinalHeight), static_cast<int16_t>(menu->layoutWidth - 1)), darkGrayColor);
 		}
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(kMenuFontSize, PortabilityLayer::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(kMenuFontPreset);
 
 		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
 

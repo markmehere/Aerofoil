@@ -3,6 +3,7 @@
 #include "PLCore.h"
 #include "QDGraf.h"
 #include "SharedTypes.h"
+#include "FontManager.h"
 
 namespace PortabilityLayer
 {
@@ -91,10 +92,7 @@ PixMap *GetPortBitMapForCopyBits(DrawSurface *grafPtr);
 
 Boolean SectRect(const Rect *rectA, const Rect *rectB, Rect *outIntersection);
 
-PortabilityLayer::RenderedFont *GetApplicationFont(int size, int variationFlags, bool aa);
-PortabilityLayer::RenderedFont *GetSystemFont(int size, int variationFlags, bool aa);
-PortabilityLayer::RenderedFont *GetHandwritingFont(int size, int variationFlags, bool aa);
-PortabilityLayer::RenderedFont *GetMonospaceFont(int size, int variationFlags, bool aa);
+PortabilityLayer::RenderedFont *GetFont(PortabilityLayer::FontPreset_t fontPreset);
 
 
 inline RGBColor::RGBColor(uint8_t r, uint8_t g, uint8_t b)

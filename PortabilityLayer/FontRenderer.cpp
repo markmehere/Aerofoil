@@ -44,19 +44,42 @@ namespace PortabilityLayer
 		struct CacheHeader
 		{
 			BEUInt32_t m_cacheVersion;
-			BEUInt32_t m_glyphDataUncompressedSize;
-			BEUInt32_t m_glyphDataCompressedSize;
-			BEUInt32_t m_sizeSize;
+			BEUInt32_t m_glyphDataSize;
 
 			BEUInt32_t m_isAA;
 		};
 
-		static const uint32_t kRFontCacheVersion = 2;
+		struct SerializedGlyphMetrics
+		{
+			BEUInt32_t m_glyphDataPitch;
+
+			BEUInt32_t m_glyphWidth;
+			BEUInt32_t m_glyphHeight;
+
+			BEInt16_t m_bearingX;
+			BEInt16_t m_bearingY;
+			BEInt16_t m_advanceX;
+		};
+
+		struct SerializedFontMetrics
+		{
+			BEInt32_t m_ascent;
+			BEInt32_t m_descent;
+			BEInt32_t m_linegap;
+		};
+
+		static const uint32_t kRFontCacheVersion = 3;
 
 		RenderedFontImpl(void *data, size_t dataSize, bool aa);
 		~RenderedFontImpl();
 
-		bool LoadInternal(GpIOStream *stream, size_t compressedDataSize);
+		bool LoadInternal(GpIOStream *stream, size_t dataSize);
+
+		static SerializedGlyphMetrics SerializeGlyphMetrics(const GpRenderedGlyphMetrics &metrics);
+		static GpRenderedGlyphMetrics DeserializeGlyphMetrics(const SerializedGlyphMetrics &metrics);
+
+		static SerializedFontMetrics SerializeFontMetrics(const GpRenderedFontMetrics &metrics);
+		static GpRenderedFontMetrics DeserializeFontMetrics(const SerializedFontMetrics &metrics);
 
 		size_t m_dataOffsets[256];
 		GpRenderedGlyphMetrics m_glyphMetrics[256];
@@ -143,14 +166,11 @@ namespace PortabilityLayer
 		if (header.m_cacheVersion != kRFontCacheVersion)
 			return nullptr;
 
-		if (header.m_sizeSize != sizeof(size_t))
-			return nullptr;
-
-		RenderedFontImpl *rfont = RenderedFontImpl::Create(header.m_glyphDataUncompressedSize, header.m_isAA != 0);
+		RenderedFontImpl *rfont = RenderedFontImpl::Create(header.m_glyphDataSize, header.m_isAA != 0);
 		if (!rfont)
 			return nullptr;
 
-		if (!rfont->LoadInternal(stream, header.m_glyphDataCompressedSize))
+		if (!rfont->LoadInternal(stream, header.m_glyphDataSize))
 		{
 			rfont->Destroy();
 			return nullptr;
@@ -163,51 +183,35 @@ namespace PortabilityLayer
 	{
 		CacheHeader header;
 		header.m_cacheVersion = kRFontCacheVersion;
-		header.m_glyphDataUncompressedSize = static_cast<uint32_t>(this->m_dataSize);
-		header.m_glyphDataCompressedSize = 0;
-		header.m_isAA = m_isAntiAliased;
-		header.m_sizeSize = sizeof(size_t);
+		header.m_glyphDataSize = static_cast<uint32_t>(this->m_dataSize);
+		header.m_isAA = m_isAntiAliased ? 1 : 0;
 
 		GpUFilePos_t headerPos = stream->Tell();
 
 		if (stream->Write(&header, sizeof(header)) != sizeof(header))
 			return false;
 
-		DeflateContext *deflateContext = DeflateContext::Create(stream, 9);
-		if (!deflateContext)
+		if (!stream->WriteExact(m_data, m_dataSize))
 			return false;
 
-		GpUFilePos_t dataStartPos = stream->Tell();
-
-		if (!deflateContext->Append(m_data, m_dataSize) || !deflateContext->Flush())
+		for (size_t i = 0; i < sizeof(m_dataOffsets) / sizeof(m_dataOffsets[0]); i++)
 		{
-			deflateContext->Destroy();
-			return false;
+			BEUInt32_t dataOffset = BEUInt32_t(static_cast<uint32_t>(m_dataOffsets[i]));
+			if (!stream->WriteExact(&dataOffset, sizeof(dataOffset)))
+				return false;
 		}
 
-		deflateContext->Destroy();
+		for (size_t i = 0; i < sizeof(m_glyphMetrics) / sizeof(m_glyphMetrics[0]); i++)
+		{
+			SerializedGlyphMetrics serialized = SerializeGlyphMetrics(m_glyphMetrics[i]);
 
-		GpUFilePos_t dataEndPos = stream->Tell();
+			if (!stream->WriteExact(&serialized, sizeof(serialized)))
+				return false;
+		}
 
-		if (stream->Write(m_dataOffsets, sizeof(m_dataOffsets)) != sizeof(m_dataOffsets))
-			return false;
+		SerializedFontMetrics fontMetrics = SerializeFontMetrics(m_fontMetrics);
 
-		if (stream->Write(m_glyphMetrics, sizeof(m_glyphMetrics)) != sizeof(m_glyphMetrics))
-			return false;
-
-		if (stream->Write(&m_fontMetrics, sizeof(m_fontMetrics)) != sizeof(m_fontMetrics))
-			return false;
-
-		GpUFilePos_t endPos = stream->Tell();
-
-		if (!stream->SeekStart(headerPos))
-			return false;
-
-		header.m_glyphDataCompressedSize = dataEndPos - dataStartPos;
-		if (stream->Write(&header, sizeof(header)) != sizeof(header))
-			return false;
-
-		if (!stream->SeekStart(headerPos))
+		if (!stream->WriteExact(&fontMetrics, sizeof(fontMetrics)))
 			return false;
 
 		return true;
@@ -246,23 +250,84 @@ namespace PortabilityLayer
 	{
 	}
 
-	bool RenderedFontImpl::LoadInternal(GpIOStream *stream, size_t compressedDataSize)
+	bool RenderedFontImpl::LoadInternal(GpIOStream *stream, size_t dataSize)
 	{
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
 
-		if (!DeflateCodec::DecompressStream(stream, compressedDataSize, m_data, m_dataSize))
+		if (!stream->ReadExact(m_data, m_dataSize))
 			return false;
 
-		if (stream->Read(m_dataOffsets, sizeof(m_dataOffsets)) != sizeof(m_dataOffsets))
+		for (size_t i = 0; i < sizeof(m_dataOffsets) / sizeof(m_dataOffsets[0]); i++)
+		{
+			BEUInt32_t dataOffset;
+			if (!stream->ReadExact(&dataOffset, sizeof(dataOffset)))
+				return false;
+
+			m_dataOffsets[i] = dataOffset;
+		}
+
+		for (size_t i = 0; i < sizeof(m_glyphMetrics) / sizeof(m_glyphMetrics[0]); i++)
+		{
+			SerializedGlyphMetrics glyphMetrics;
+			if (!stream->ReadExact(&glyphMetrics, sizeof(glyphMetrics)))
+				return false;
+
+			m_glyphMetrics[i] = DeserializeGlyphMetrics(glyphMetrics);
+		}
+
+		SerializedFontMetrics fontMetrics;
+		if (!stream->ReadExact(&fontMetrics, sizeof(fontMetrics)))
 			return false;
 
-		if (stream->Read(m_glyphMetrics, sizeof(m_glyphMetrics)) != sizeof(m_glyphMetrics))
-			return false;
-
-		if (stream->Read(&m_fontMetrics, sizeof(m_fontMetrics)) != sizeof(m_fontMetrics))
-			return false;
+		m_fontMetrics = DeserializeFontMetrics(fontMetrics);
 
 		return true;
+	}
+
+	RenderedFontImpl::SerializedGlyphMetrics RenderedFontImpl::SerializeGlyphMetrics(const GpRenderedGlyphMetrics &metrics)
+	{
+		SerializedGlyphMetrics result;
+		result.m_advanceX = metrics.m_advanceX;
+		result.m_bearingX = metrics.m_bearingX;
+		result.m_bearingY = metrics.m_bearingY;
+		result.m_glyphDataPitch = static_cast<uint32_t>(metrics.m_glyphDataPitch);
+		result.m_glyphHeight = metrics.m_glyphHeight;
+		result.m_glyphWidth = metrics.m_glyphWidth;
+
+		return result;
+	}
+
+	GpRenderedGlyphMetrics RenderedFontImpl::DeserializeGlyphMetrics(const SerializedGlyphMetrics &metrics)
+	{
+		GpRenderedGlyphMetrics result;
+		result.m_advanceX = metrics.m_advanceX;
+		result.m_bearingX = metrics.m_bearingX;
+		result.m_bearingY = metrics.m_bearingY;
+		result.m_glyphDataPitch = static_cast<uint32_t>(metrics.m_glyphDataPitch);
+		result.m_glyphHeight = metrics.m_glyphHeight;
+		result.m_glyphWidth = metrics.m_glyphWidth;
+
+		return result;
+	}
+
+	RenderedFontImpl::SerializedFontMetrics RenderedFontImpl::SerializeFontMetrics(const GpRenderedFontMetrics &metrics)
+	{
+		SerializedFontMetrics result;
+		result.m_ascent = metrics.m_ascent;
+		result.m_descent = metrics.m_descent;
+		result.m_linegap = metrics.m_linegap;
+
+		return result;
+	}
+
+	GpRenderedFontMetrics RenderedFontImpl::DeserializeFontMetrics(const SerializedFontMetrics &metrics)
+	{
+		GpRenderedFontMetrics result;
+		result.m_ascent = metrics.m_ascent;
+		result.m_descent = metrics.m_descent;
+		result.m_linegap = metrics.m_linegap;
+
+		return result;
 	}
 
 

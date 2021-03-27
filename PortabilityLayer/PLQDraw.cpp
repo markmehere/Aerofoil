@@ -2003,41 +2003,20 @@ void BitMap::Init(const Rect &rect, GpPixelFormat_t pixelFormat, size_t pitch, v
 	m_data = dataPtr;
 }
 
-
-PortabilityLayer::RenderedFont *GetApplicationFont(int size, int variationFlags, bool aa)
+PortabilityLayer::RenderedFont *GetFont(PortabilityLayer::FontPreset_t fontPreset)
 {
-	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetApplicationFont(size, variationFlags);
-	if (!fontFamily)
+	PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
+
+	int size = 0;
+	int variationFlags = 0;
+	bool aa = false;
+	PortabilityLayer::FontFamilyID_t familyID = PortabilityLayer::FontFamilyIDs::kCount;
+
+	fontManager->GetFontPreset(fontPreset, &familyID, &size, &variationFlags, &aa);
+	if (familyID == PortabilityLayer::FontFamilyIDs::kCount)
 		return nullptr;
 
-	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
-}
-
-PortabilityLayer::RenderedFont *GetSystemFont(int size, int variationFlags, bool aa)
-{
-	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetSystemFont(size, variationFlags);
-	if (!fontFamily)
-		return nullptr;
-
-	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
-}
-
-PortabilityLayer::RenderedFont *GetHandwritingFont(int size, int variationFlags, bool aa)
-{
-	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetHandwritingFont(size, variationFlags);
-	if (!fontFamily)
-		return nullptr;
-
-	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
-}
-
-PortabilityLayer::RenderedFont *GetMonospaceFont(int size, int variationFlags, bool aa)
-{
-	PortabilityLayer::FontFamily *fontFamily = PortabilityLayer::FontManager::GetInstance()->GetMonospaceFont(size, variationFlags);
-	if (!fontFamily)
-		return nullptr;
-
-	return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(fontFamily, size, aa, variationFlags);
+	return fontManager->GetRenderedFontFromFamily(fontManager->GetFont(familyID), size, aa, variationFlags);
 }
 
 #include "stb_image_write.h"

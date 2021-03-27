@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef __PL_CFILESTREAM_H__
-#define __PL_CFILESTREAM_H__
-
 #include <stdio.h>
 
 #include "CoreDefs.h"
@@ -38,5 +35,3 @@ namespace PortabilityLayer
 		bool m_seekable;
 	};
 }
-
-#endif

@@ -44,7 +44,7 @@ static const int kScoreOffset = 320;
 static void FBUI_DrawLabels(DrawSurface *surface, const Point &basePoint)
 {
 	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
-	PortabilityLayer::RenderedFont *rfont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *rfont = GetFont(PortabilityLayer::FontPresets::kSystem12Bold);
 
 	surface->DrawString(basePoint + Point::Create(kStarsOffset, 0), PSTR("Stars Left"), blackColor, rfont);
 	surface->DrawString(basePoint + Point::Create(kGlidersOffset, 0), PSTR("Gliders"), blackColor, rfont);
@@ -54,7 +54,7 @@ static void FBUI_DrawLabels(DrawSurface *surface, const Point &basePoint)
 static void FBUI_DrawFileDetails(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
 {
 	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
-	PortabilityLayer::RenderedFont *rfont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *rfont = GetFont(PortabilityLayer::FontPresets::kSystem12Bold);
 
 	const game2Type *gameData = static_cast<const game2Type*>(fileDetails);
 

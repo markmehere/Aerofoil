@@ -39,7 +39,7 @@ namespace PortabilityLayer
 
 		surface->FillRect(m_rect, whiteColor);
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(FontPresets::kSystem12Bold);
 
 		const Point topLeftCorner = Point::Create(m_rect.left, m_rect.top);
 		const Point textStartPoint = topLeftCorner + Point::Create(0, sysFont->GetMetrics().m_ascent);

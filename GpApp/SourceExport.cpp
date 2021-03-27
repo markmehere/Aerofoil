@@ -135,7 +135,7 @@ static void InitSourceExportWindow(SourceExportState *state)
 	PortabilityLayer::WindowManager::GetInstance()->FlickerWindowIn(state->m_window, 32);
 
 	const PLPasStr loadingText = PSTR("Exporting...");
-	PortabilityLayer::RenderedFont *font = GetApplicationFont(18, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *font = GetFont(PortabilityLayer::FontPresets::kApplication18);
 	int32_t textY = (kLoadScreenHeight + font->GetMetrics().m_ascent) / 2;
 	surface->DrawString(Point::Create(4 + 16, textY), loadingText, blackColor, font);
 

@@ -2,13 +2,18 @@
 #include "FontFamily.h"
 #include "FontRenderer.h"
 
+#include "FileManager.h"
 #include "GpIOStream.h"
 #include "IGpFileSystem.h"
 #include "IGpFont.h"
-#include "RenderedFont.h"
 
+#include "MemReaderStream.h"
 #include "PLBigEndian.h"
 #include "PLDrivers.h"
+#include "RenderedFontCatalog.h"
+#include "RenderedFont.h"
+#include "ResTypeID.h"
+#include "ResourceManager.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -24,15 +29,12 @@ namespace PortabilityLayer
 		void Init() override;
 		void Shutdown() override;
 
-		FontFamily *GetSystemFont(int textSize, int variationFlags) const override;
-		FontFamily *GetApplicationFont(int textSize, int variationFlags) const override;
-		FontFamily *GetHandwritingFont(int textSize, int variationFlags) const override;
-		FontFamily *GetMonospaceFont(int textSize, int variationFlags) const override;
+		FontFamily *GetFont(FontFamilyID_t fontFamilyID) const override;
+		void GetFontPreset(FontPreset_t fontPreset, FontFamilyID_t *outFamilyID, int *outSize, int *outVariationFlags, bool *outAA) const override;
 
 		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
 
-		RenderedFont *LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const override;
-		void SaveCachedRenderedFont(const RenderedFont *rfont, int cacheID, int size, bool aa, int flags) const override;
+		RenderedFont *LoadCachedRenderedFont(FontFamilyID_t familyID, int size, bool aa, int flags) override;
 
 		void PurgeCache() override;
 
@@ -40,12 +42,6 @@ namespace PortabilityLayer
 
 	private:
 		static const unsigned int kNumCachedRenderedFonts = 32;
-		static const int kSystemFontCacheID = 1;
-		static const int kApplicationFontCacheID = 2;
-		static const int kHandwritingFontCacheID = 3;
-		static const int kMonospaceFontCacheID = 4;
-		static const int kFontCacheVersion = 2;
-		static const int kFontCacheNameSize = 64;
 
 		struct CachedRenderedFont
 		{
@@ -53,6 +49,14 @@ namespace PortabilityLayer
 			int m_fontCacheID;
 			int m_size;
 			uint32_t m_lastUsage;
+			bool m_aa;
+		};
+
+		struct FontPreset
+		{
+			FontFamilyID_t m_familyID;
+			int m_textSize;
+			int m_variationFlags;
 			bool m_aa;
 		};
 
@@ -64,57 +68,49 @@ namespace PortabilityLayer
 		void ResetUsageCounter();
 		static int CRFSortPredicate(const void *a, const void *b);
 
-		static void GenerateCacheFileName(char(&str)[kFontCacheNameSize], int cacheID, int size, bool aa, int flags);
-
-		FontFamily *m_systemFont;
-		FontFamily *m_applicationFont;
-		FontFamily *m_handwritingFont;
-		FontFamily *m_monospaceFont;
+		FontFamily *m_fontFamilies[FontFamilyIDs::kCount];
 		uint32_t m_usageCounter;
 
 		CachedRenderedFont m_cachedRenderedFonts[kNumCachedRenderedFonts];
 
+		IResourceArchive *m_fontArchive;
+		PortabilityLayer::CompositeFile *m_fontArchiveFile;
+		THandle<void> m_fontArchiveCatalogData;
+
 		static FontManagerImpl ms_instance;
+		static FontPreset ms_fontPresets[FontPresets::kCount];
 	};
 
 	void FontManagerImpl::Init()
 	{
-		m_systemFont = FontFamily::Create(kSystemFontCacheID);
-		m_applicationFont = FontFamily::Create(kApplicationFontCacheID);
-		m_handwritingFont = FontFamily::Create(kHandwritingFontCacheID);
-		m_monospaceFont = FontFamily::Create(kMonospaceFontCacheID);
+		for (int i = 0; i < FontFamilyIDs::kCount; i++)
+			m_fontFamilies[static_cast<FontFamilyID_t>(i)] = FontFamily::Create(static_cast<FontFamilyID_t>(i));
 
-		if (m_systemFont)
-			m_systemFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", FontHacks_None);
+		if (m_fontFamilies[FontFamilyIDs::kSystem])
+			m_fontFamilies[FontFamilyIDs::kSystem]->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", FontHacks_None);
 
-		if (m_applicationFont)
+		if (m_fontFamilies[FontFamilyIDs::kApplication])
 		{
-			m_applicationFont->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-SemiBold.ttf", FontHacks_None);
-			m_applicationFont->AddFont(FontFamilyFlag_Bold, "Fonts/OpenSans/OpenSans-Bold.ttf", FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-SemiBold.ttf", FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_Bold, "Fonts/OpenSans/OpenSans-Bold.ttf", FontHacks_None);
 		}
 
-		if (m_handwritingFont)
-			m_handwritingFont->AddFont(FontFamilyFlag_None, "Fonts/GochiHand/GochiHand-Regular.ttf", FontHacks_None);
+		if (m_fontFamilies[FontFamilyIDs::kHandwriting])
+			m_fontFamilies[FontFamilyIDs::kHandwriting]->AddFont(FontFamilyFlag_None, "Fonts/GochiHand/GochiHand-Regular.ttf", FontHacks_None);
 
-		if (m_monospaceFont)
-			m_monospaceFont->AddFont(FontFamilyFlag_None, "Fonts/Roboto/RobotoMono-Regular.ttf", FontHacks_None);
+		if (m_fontFamilies[FontFamilyIDs::kMonospace])
+			m_fontFamilies[FontFamilyIDs::kMonospace]->AddFont(FontFamilyFlag_None, "Fonts/Roboto/RobotoMono-Regular.ttf", FontHacks_None);
 
 		memset(m_cachedRenderedFonts, 0, sizeof(m_cachedRenderedFonts));
 	}
 
 	void FontManagerImpl::Shutdown()
 	{
-		if (m_systemFont)
-			m_systemFont->Destroy();
-
-		if (m_applicationFont)
-			m_applicationFont->Destroy();
-
-		if (m_handwritingFont)
-			m_handwritingFont->Destroy();
-
-		if (m_monospaceFont)
-			m_monospaceFont->Destroy();
+		for (int fid = 0; fid < FontFamilyIDs::kCount; fid++)
+		{
+			if (m_fontFamilies[fid])
+				m_fontFamilies[fid]->Destroy();
+		}
 
 		IGpFontHandler *hfh = PLDrivers::GetFontHandler();
 
@@ -126,27 +122,37 @@ namespace PortabilityLayer
 		}
 	}
 
-	FontFamily *FontManagerImpl::GetSystemFont(int textSize, int variationFlags) const
+	FontFamily *FontManagerImpl::GetFont(FontFamilyID_t fontFamilyID) const
 	{
-		return m_systemFont;
+		return m_fontFamilies[fontFamilyID];
 	}
 
-	FontFamily *FontManagerImpl::GetApplicationFont(int textSize, int variationFlags) const
+	void FontManagerImpl::GetFontPreset(FontPreset_t preset, FontFamilyID_t *outFamilyID, int *outSize, int *outVariationFlags, bool *outAA) const
 	{
-		if (textSize < 11 && (variationFlags & FontFamilyFlag_Bold) != 0)
-			return m_systemFont;	// Use heavier font below 11pt
+		if (outSize)
+			*outSize = ms_fontPresets[preset].m_textSize;
 
-		return m_applicationFont;
-	}
+		if (outVariationFlags)
+			*outVariationFlags = ms_fontPresets[preset].m_variationFlags;
 
-	FontFamily *FontManagerImpl::GetHandwritingFont(int textSize, int variationFlags) const
-	{
-		return m_handwritingFont;
-	}
+		if (outAA)
+			*outAA = ms_fontPresets[preset].m_aa;
 
-	FontFamily *FontManagerImpl::GetMonospaceFont(int textSize, int variationFlags) const
-	{
-		return m_monospaceFont;
+		if (outFamilyID)
+		{
+			switch (ms_fontPresets[preset].m_familyID)
+			{
+			case FontFamilyIDs::kApplication:
+				if (ms_fontPresets[preset].m_textSize < 11 && (ms_fontPresets[preset].m_variationFlags & FontFamilyFlag_Bold) != 0)
+					*outFamilyID = FontFamilyIDs::kSystem;	// Use heavier font below 11pt
+				else
+					*outFamilyID = FontFamilyIDs::kApplication;
+				break;
+			default:
+				*outFamilyID = ms_fontPresets[preset].m_familyID;
+				break;
+			}
+		}
 	}
 
 	bool FontManagerImpl::FindOrReserveCacheSlot(int cacheID, int size, bool aa, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF)
@@ -206,15 +212,15 @@ namespace PortabilityLayer
 
 		RenderedFont *rfont = nullptr;
 		CachedRenderedFont *cacheSlot = nullptr;
-		int cacheID = fontFamily->GetCacheID();
+		FontFamilyID_t familyID = fontFamily->GetFamilyID();
 
-		if (this->FindOrReserveCacheSlot(cacheID, size, aa, cacheSlot, rfont))
+		if (this->FindOrReserveCacheSlot(familyID, size, aa, cacheSlot, rfont))
 			return rfont;
 
-		rfont = fm->LoadCachedRenderedFont(cacheID, size, aa, flags);
+		rfont = fm->LoadCachedRenderedFont(familyID, size, aa, flags);
 		if (rfont)
 		{
-			ReplaceCachedRenderedFont(*cacheSlot, rfont, cacheID, size, aa, flags);
+			ReplaceCachedRenderedFont(*cacheSlot, rfont, familyID, size, aa, flags);
 			return rfont;
 		}
 
@@ -228,9 +234,7 @@ namespace PortabilityLayer
 		rfont = FontRenderer::GetInstance()->RenderFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
 		if (rfont)
 		{
-			fm->SaveCachedRenderedFont(rfont, fontFamily->GetCacheID(), size, aa, flags);
-
-			ReplaceCachedRenderedFont(*cacheSlot, rfont, cacheID, size, aa, flags);
+			ReplaceCachedRenderedFont(*cacheSlot, rfont, familyID, size, aa, flags);
 
 			return rfont;
 		}
@@ -238,60 +242,110 @@ namespace PortabilityLayer
 		return rfont;
 	}
 
-	RenderedFont *FontManagerImpl::LoadCachedRenderedFont(int cacheID, int size, bool aa, int flags) const
+	RenderedFont *FontManagerImpl::LoadCachedRenderedFont(FontFamilyID_t familyID, int size, bool aa, int flags)
 	{
-		char filename[kFontCacheNameSize];
-		GenerateCacheFileName(filename, cacheID, size, aa, flags);
-
-		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, false, GpFileCreationDispositions::kOpenExisting);
-		if (!stream)
-			return nullptr;
-
-		BEUInt32_t version;
-		if (stream->Read(&version, sizeof(version)) != sizeof(version) || version != kFontCacheVersion)
+		if (!m_fontArchive)
 		{
-			stream->Close();
-			return nullptr;
+			m_fontArchiveFile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(VirtualDirectories::kApplicationData, PSTR("Fonts"));
+			if (!m_fontArchiveFile)
+				return nullptr;
+
+			m_fontArchive = PortabilityLayer::ResourceManager::GetInstance()->LoadResFile(m_fontArchiveFile);
+			if (!m_fontArchive)
+			{
+				m_fontArchiveFile->Close();
+				return nullptr;
+			}
+
+			m_fontArchiveCatalogData = m_fontArchive->LoadResource('RFCT', 1000);
+			if (!m_fontArchiveCatalogData)
+			{
+				m_fontArchive->Destroy();
+				m_fontArchiveFile->Close();
+				return nullptr;
+			}
 		}
 
-		RenderedFont *rfont = PortabilityLayer::FontRenderer::GetInstance()->LoadCache(stream);
-		stream->Close();
+		FontFamily *fontFamily = this->GetFont(familyID);
+		int variation = fontFamily->GetVariationForFlags(flags);
+
+		FontHacks hacks = FontHacks_None;
+		const char *path = nullptr;
+		if (!fontFamily->GetFontSpec(variation, hacks, path))
+			return nullptr;
+
+		size_t pathLen = strlen(path);
+
+		// Parse font cache header
+		const uint8_t *catalogBytes = static_cast<const uint8_t*>(*m_fontArchiveCatalogData);
+
+		RenderedFontCatalogHeader catHeader;
+		memcpy(&catHeader, catalogBytes, sizeof(catHeader));
+
+		if (catHeader.m_version != RenderedFontCatalogHeader::kVersion)
+			return nullptr;
+
+		size_t numPaths = catHeader.m_numPaths;
+		size_t numFonts = catHeader.m_numRFonts;
+
+		const uint8_t *pathsBytes = catalogBytes + catHeader.m_pathsOffset;
+		const uint8_t *pathEntryBytes = catalogBytes + sizeof(RenderedFontCatalogHeader);
+		const uint8_t *fontEntryBytes = pathEntryBytes + sizeof(RenderedFontCatalogPathEntry) * numPaths;
+
+		size_t pathIndex = numPaths;
+		for (size_t i = 0; i < numPaths; i++)
+		{
+			RenderedFontCatalogPathEntry pathEntry;
+			memcpy(&pathEntry, pathEntryBytes + i * sizeof(RenderedFontCatalogPathEntry), sizeof(RenderedFontCatalogPathEntry));
+
+			if (pathEntry.m_pathSize != pathLen)
+				continue;
+
+			if (!memcmp(pathsBytes + pathEntry.m_pathOffset, path, pathLen))
+			{
+				pathIndex = i;
+				break;
+			}
+		}
+
+		if (pathIndex == numPaths)
+			return nullptr;
+
+		size_t fontIndex = numFonts;
+		for (size_t i = 0; i < numFonts; i++)
+		{
+			RenderedFontCatalogRFontEntry fontEntry;
+			memcpy(&fontEntry, fontEntryBytes + i * sizeof(RenderedFontCatalogRFontEntry), sizeof(RenderedFontCatalogRFontEntry));
+
+			if (fontEntry.m_pathIndex == pathIndex && static_cast<FontHacks>(fontEntry.m_hacks) == hacks && fontEntry.m_fontSize == size && (fontEntry.m_isAA != 0) == aa)
+			{
+				fontIndex = i;
+				break;
+			}
+		}
+
+		if (fontIndex == numFonts)
+			return nullptr;
+
+		THandle<void> res = m_fontArchive->LoadResource('RFNT', 1000 + static_cast<int>(fontIndex));
+		if (!res)
+			return nullptr;
+
+		PortabilityLayer::MemReaderStream stream(*res, res.MMBlock()->m_size);
+		
+		RenderedFont *rfont = PortabilityLayer::FontRenderer::GetInstance()->LoadCache(&stream);
+		res.Dispose();
 
 		return rfont;
 	}
 
-	void FontManagerImpl::SaveCachedRenderedFont(const RenderedFont *rfont, int cacheID, int size, bool aa, int flags) const
-	{
-		char filename[kFontCacheNameSize];
-		GenerateCacheFileName(filename, cacheID, size, aa, flags);
-
-		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, filename, true, GpFileCreationDispositions::kCreateOrOverwrite);
-		if (!stream)
-			return;
-
-		BEUInt32_t zero32(0);
-		if (stream->Write(&zero32, sizeof(zero32)) != sizeof(zero32))
-		{
-			stream->Close();
-			return;
-		}
-
-		if (PortabilityLayer::FontRenderer::GetInstance()->SaveCache(rfont, stream))
-		{
-			BEUInt32_t version(kFontCacheVersion);
-			stream->SeekStart(0);
-			stream->Write(&version, sizeof(version));
-		}
-
-		stream->Close();
-	}
-
 	void FontManagerImpl::PurgeCache()
 	{
-		m_systemFont->PurgeCache();
-		m_applicationFont->PurgeCache();
-		m_handwritingFont->PurgeCache();
-		m_monospaceFont->PurgeCache();
+		for (int fid = 0; fid < FontFamilyIDs::kCount; fid++)
+		{
+			if (m_fontFamilies[fid])
+				m_fontFamilies[fid]->PurgeCache();
+		}
 	}
 
 	FontManagerImpl *FontManagerImpl::GetInstance()
@@ -300,8 +354,11 @@ namespace PortabilityLayer
 	}
 
 	FontManagerImpl::FontManagerImpl()
-		: m_systemFont(nullptr)
+		: m_fontArchive(nullptr)
+		, m_fontArchiveFile(nullptr)
 	{
+		for (int fid = 0; fid < FontFamilyIDs::kCount; fid++)
+			m_fontFamilies[fid] = nullptr;
 	}
 
 	void FontManagerImpl::ResetUsageCounter()
@@ -345,10 +402,26 @@ namespace PortabilityLayer
 		return 0;
 	}
 
-	void FontManagerImpl::GenerateCacheFileName(char(&str)[kFontCacheNameSize], int cacheID, int size, bool aa, int flags)
+	FontManagerImpl::FontPreset FontManagerImpl::ms_fontPresets[FontPresets::kCount] =
 	{
-		sprintf(str, "rf_%i_%i_%s_%i.cache", cacheID, size, aa ? "aa" : "mc", flags);
-	}
+		{ FontFamilyIDs::kSystem, 12, FontFamilyFlag_None, true },
+		{ FontFamilyIDs::kSystem, 12, FontFamilyFlag_Bold, true },
+
+		{ FontFamilyIDs::kApplication, 8, FontFamilyFlag_None, true },
+		{ FontFamilyIDs::kApplication, 9, FontFamilyFlag_None, true },
+		{ FontFamilyIDs::kApplication, 9, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 10, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 12, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 14, FontFamilyFlag_None, true },
+		{ FontFamilyIDs::kApplication, 14, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 18, FontFamilyFlag_None, true },
+		{ FontFamilyIDs::kApplication, 40, FontFamilyFlag_None, true },
+
+		{ FontFamilyIDs::kMonospace, 10, FontFamilyFlag_None, true },
+
+		{ FontFamilyIDs::kHandwriting, 24, FontFamilyFlag_None, true },
+		{ FontFamilyIDs::kHandwriting, 48, FontFamilyFlag_None, true },
+	};
 
 	FontManagerImpl FontManagerImpl::ms_instance;
 

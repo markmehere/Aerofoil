@@ -251,7 +251,7 @@ void ReadyBackground (short theID, short *theTiles)
 
 		workSrcMap->FillRect(workSrcRect, ltGrayColor);
 
-		PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
+		PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9);
 
 		const Point textPoint = Point::Create(10, 20);
 		if (houseUnlocked)

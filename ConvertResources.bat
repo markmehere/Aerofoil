@@ -4,11 +4,22 @@ mkdir Packaged
 mkdir Packaged\Houses
 
 x64\Release\MiniRez.exe "GliderProData\Glider PRO.r" Packaged\ApplicationResources.gpr
-
 x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpa" "ApplicationResourcePatches\manifest.json"
 x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpf" data ozm5 0 0 locked
-
 x64\Release\MergeGPF.exe "Packaged\ApplicationResources.gpf"
+
+x64\Release\GenerateFonts.exe
+
+x64\Release\MiniRez.exe "Empty.r" Packaged\Fonts.gpr
+x64\Release\gpr2gpa.exe "Packaged\Fonts.gpr" "DefaultTimestamp.timestamp" "Packaged\Fonts.gpa" "Packaged\FontCacheManifest.json"
+x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Fonts.gpf" data ozm5 0 0 locked
+x64\Release\MergeGPF.exe "Packaged\Fonts.gpf"
+
+del /Q Packaged\CachedFont*.bin
+del Packaged\FontCacheCatalog.bin
+del Packaged\FontCacheManifest.json
+del Packaged\Fonts.gpr
+del Packaged\Fonts.gpa
 
 x64\Release\ConvertColorCursors.exe
 

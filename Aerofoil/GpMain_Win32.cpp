@@ -4,7 +4,6 @@
 #include "GpColorCursor_Win32.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpGlobalConfig.h"
-#include "GpFiber_Win32.h"
 #include "GpFileSystem_Win32.h"
 #include "GpLogDriver_Win32.h"
 #include "GpFontHandlerFactory.h"
@@ -28,7 +27,6 @@ GpWindowsGlobals g_gpWindowsGlobals;
 extern "C" __declspec(dllimport) IGpAudioDriver *GpDriver_CreateAudioDriver_XAudio2(const GpAudioDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpDisplayDriver *GpDriver_CreateDisplayDriver_D3D11(const GpDisplayDriverProperties &properties);
 extern "C" __declspec(dllimport) IGpInputDriver *GpDriver_CreateInputDriver_XInput(const GpInputDriverProperties &properties);
-extern "C" __declspec(dllimport) IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
 
 static void PostMouseEvent(IGpVOSEventQueue *eventQueue, GpMouseEventType_t eventType, GpMouseButton_t button, int32_t x, int32_t y, float pixelScaleX, float pixelScaleY)
 {
@@ -430,7 +428,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpWindowsGlobals.m_hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
 	g_gpWindowsGlobals.m_hIconSm = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON2));
 
-	g_gpWindowsGlobals.m_createFiberFunc = GpFiber_Win32::Create;
 	g_gpWindowsGlobals.m_createBWCursorFunc = GpBWCursor_Win32::Create;
 	g_gpWindowsGlobals.m_createColorCursorFunc = GpColorCursor_Win32::Create;
 	g_gpWindowsGlobals.m_translateWindowsMessageFunc = TranslateWindowsMessage;
@@ -439,7 +436,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_XAudio2;
 
-	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_FreeType2;
+	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_None;
 
 	EGpInputDriverType inputDrivers[] =
 	{
@@ -456,7 +453,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_D3D11, GpDriver_CreateDisplayDriver_D3D11);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);
 	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_XInput, GpDriver_CreateInputDriver_XInput);
-	GpFontHandlerFactory::RegisterFontHandlerFactory(EGpFontHandlerType_FreeType2, GpDriver_CreateFontHandler_FreeType2);
 
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "Windows environment configured, starting up");

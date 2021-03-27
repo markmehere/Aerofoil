@@ -75,7 +75,7 @@ void UpdateCoordWindow (void)
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 	PortabilityLayer::ResolveCachingColor blueColor = StdColors::Blue();
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, 0, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9);
 
 	DrawSurface *surface = coordWindow->GetDrawSurface();
 

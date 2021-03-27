@@ -4,7 +4,6 @@
 #include "GpVOSEvent.h"
 #include "GpWindows.h"
 #include "IGpCursor_Win32.h"
-#include "IGpFiber.h"
 #include "IGpVOSEventQueue.h"
 
 #include "IGpLogDriver.h"
@@ -624,8 +623,6 @@ bool GpDisplayDriverD3D11::InitResources(uint32_t virtualWidth, uint32_t virtual
 
 bool GpDisplayDriverD3D11::SyncRender()
 {
-	fprintf(stderr, "Test\n");
-
 	if (m_frameTimeAccumulated >= m_frameTimeSliceSize)
 	{
 		m_frameTimeAccumulated -= m_frameTimeSliceSize;
@@ -775,165 +772,6 @@ bool GpDisplayDriverD3D11::SyncRender()
 	}
 
 	return false;
-}
-
-GpDisplayDriverTickStatus_t GpDisplayDriverD3D11::PresentFrameAndSync()
-{
-	SynchronizeCursors();
-
-	FLOAT bgColor[4];
-
-	for (int i = 0; i < 4; i++)
-		bgColor[i] = m_bgColor[i];
-
-	if (m_bgIsDark)
-	{
-		for (int i = 0; i < 3; i++)
-			bgColor[i] *= 0.25f;
-	}
-
-	m_deviceContext->ClearRenderTargetView(m_virtualScreenTextureRTV, bgColor);
-
-	//ID3D11RenderTargetView *const rtv = m_backBufferRTV;
-	ID3D11RenderTargetView *const vsRTV = m_virtualScreenTextureRTV;
-	m_deviceContext->OMSetRenderTargets(1, &vsRTV, nullptr);
-
-	{
-		D3D11_VIEWPORT viewport;
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.Width = static_cast<FLOAT>(m_windowWidthVirtual);
-		viewport.Height = static_cast<FLOAT>(m_windowHeightVirtual);
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-
-		m_deviceContext->RSSetViewports(1, &viewport);
-	}
-
-	m_properties.m_renderFunc(m_properties.m_renderFuncContext);
-
-	ScaleVirtualScreen();
-
-	DXGI_PRESENT_PARAMETERS presentParams;
-
-	ZeroMemory(&presentParams, sizeof(presentParams));
-
-	UINT lastPresentCount = 0;
-
-	if (FAILED(m_swapChain->GetLastPresentCount(&lastPresentCount)))
-		return GpDisplayDriverTickStatuses::kNonFatalFault;
-
-	if (FAILED(m_swapChain->Present1(1, 0, &presentParams)))
-		return GpDisplayDriverTickStatuses::kNonFatalFault;
-
-	//DebugPrintf("r: %i\n", static_cast<int>(r));
-
-	DXGI_FRAME_STATISTICS stats;
-	if (FAILED(m_swapChain->GetFrameStatistics(&stats)))
-		return GpDisplayDriverTickStatuses::kNonFatalFault;
-
-	if (stats.SyncQPCTime.QuadPart != 0)
-	{
-		if (m_syncTimeBase.QuadPart == 0)
-			m_syncTimeBase = stats.SyncQPCTime;
-
-		LARGE_INTEGER timestamp;
-		timestamp.QuadPart = stats.SyncQPCTime.QuadPart - m_syncTimeBase.QuadPart;
-
-		bool compacted = false;
-		if (m_presentHistory.Size() > 0)
-		{
-			CompactedPresentHistoryItem &lastItem = m_presentHistory[m_presentHistory.Size() - 1];
-			LONGLONG timeDelta = timestamp.QuadPart - lastItem.m_timestamp.QuadPart;
-
-			if (timeDelta < 0)
-				timeDelta = 0;	// This should never happen
-
-			if (timeDelta * static_cast<LONGLONG>(m_properties.m_frameTimeLockDenominator) < m_QPFrequency.QuadPart * static_cast<LONGLONG>(m_properties.m_frameTimeLockNumerator))
-			{
-				lastItem.m_numFrames++;
-				compacted = true;
-			}
-		}
-
-		if (!compacted)
-		{
-			if (m_presentHistory.Size() == m_presentHistory.CAPACITY)
-				m_presentHistory.RemoveFromStart();
-
-			CompactedPresentHistoryItem *newItem = m_presentHistory.Append();
-			newItem->m_timestamp = timestamp;
-			newItem->m_numFrames = 1;
-		}
-	}
-
-	if (m_presentHistory.Size() >= 2)
-	{
-		const size_t presentHistorySizeMinusOne = m_presentHistory.Size() - 1;
-		unsigned int numFrames = 0;
-		for (size_t i = 0; i < presentHistorySizeMinusOne; i++)
-			numFrames += m_presentHistory[i].m_numFrames;
-
-		LONGLONG timeFrame = m_presentHistory[presentHistorySizeMinusOne].m_timestamp.QuadPart - m_presentHistory[0].m_timestamp.QuadPart;
-
-		unsigned int cancelledFrames = 0;
-		LONGLONG cancelledTime = 0;
-
-		const int overshootTolerance = 2;
-
-		for (size_t i = 0; i < presentHistorySizeMinusOne; i++)
-		{
-			LONGLONG blockTimeframe = m_presentHistory[i + 1].m_timestamp.QuadPart - m_presentHistory[i].m_timestamp.QuadPart;
-			unsigned int blockNumFrames = m_presentHistory[i].m_numFrames;
-
-			if (blockTimeframe * static_cast<LONGLONG>(numFrames) >= timeFrame * static_cast<LONGLONG>(blockNumFrames) * overshootTolerance)
-			{
-				cancelledTime += blockTimeframe;
-				cancelledFrames += blockNumFrames;
-			}
-		}
-
-		numFrames -= cancelledFrames;
-		timeFrame -= cancelledTime;
-
-		// timeFrame / numFrames = Frame timestep
-		// Unless Frame timestep is within the frame lock range, a.k.a.
-		// timeFrame / numFrames / qpFreq >= minFrameTimeNum / minFrameTimeDenom
-
-		bool isInFrameTimeLock = false;
-		if (timeFrame * static_cast<LONGLONG>(m_properties.m_frameTimeLockMinDenominator) >= static_cast<LONGLONG>(numFrames) * static_cast<LONGLONG>(m_properties.m_frameTimeLockMinNumerator) * m_QPFrequency.QuadPart
-			&& timeFrame * static_cast<LONGLONG>(m_properties.m_frameTimeLockMaxDenominator) <= static_cast<LONGLONG>(numFrames) * static_cast<LONGLONG>(m_properties.m_frameTimeLockMaxNumerator) * m_QPFrequency.QuadPart)
-		{
-			isInFrameTimeLock = true;
-		}
-
-		LONGLONG frameTimeStep = m_frameTimeSliceSize;
-		if (!isInFrameTimeLock)
-		{
-			const int MAX_FRAMES_PER_STEP = 4;
-
-			frameTimeStep = timeFrame / numFrames;
-			if (frameTimeStep > m_frameTimeSliceSize * MAX_FRAMES_PER_STEP)
-				frameTimeStep = m_frameTimeSliceSize * MAX_FRAMES_PER_STEP;
-		}
-
-		m_frameTimeAccumulated += frameTimeStep;
-		while (m_frameTimeAccumulated >= m_frameTimeSliceSize)
-		{
-			GpDisplayDriverTickStatus_t tickStatus = m_properties.m_tickFunc(m_properties.m_tickFuncContext, m_vosFiber);
-			m_frameTimeAccumulated -= m_frameTimeSliceSize;
-
-			if (tickStatus == GpDisplayDriverTickStatuses::kSynchronizing)
-			{
-				m_frameTimeAccumulated = 0;
-				break;
-			}
-			else if (tickStatus != GpDisplayDriverTickStatuses::kOK)
-				return tickStatus;
-		}
-	}
-
-	return GpDisplayDriverTickStatuses::kOK;
 }
 
 void GpDisplayDriverD3D11::ScaleVirtualScreen()
@@ -1294,6 +1132,11 @@ bool GpDisplayDriverD3D11::Init()
 	return true;
 }
 
+void GpDisplayDriverD3D11::ForceSync()
+{
+	m_frameTimeAccumulated = 0;
+}
+
 void GpDisplayDriverD3D11::ServeTicks(int tickCount)
 {
 	HMENU menus = NULL;
@@ -1396,157 +1239,6 @@ void GpDisplayDriverD3D11::ServeTicks(int tickCount)
 			}
 		}
 	}
-}
-
-void GpDisplayDriverD3D11::Run()
-{
-	IGpLogDriver *logger = m_properties.m_logger;
-
-	WNDCLASSEX wc;
-
-	LPVOID fiber = ConvertThreadToFiberEx(this, 0);
-	if (!fiber)
-	{
-		if (logger)
-			logger->Printf(IGpLogDriver::Category_Error, "ConvertThreadToFiberEx failed");
-
-		return;	// ???
-	}
-
-	m_vosFiber = m_osGlobals->m_createFiberFunc(fiber);
-
-	ZeroMemory(&wc, sizeof(wc));
-
-	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WinProc;
-	wc.hInstance = m_osGlobals->m_hInstance;
-	wc.hCursor = m_arrowCursor;
-	wc.hIcon = m_osGlobals->m_hIcon;
-	wc.hIconSm = m_osGlobals->m_hIconSm;
-	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-	wc.lpszClassName = "GPD3D11WindowClass";
-
-	RegisterClassEx(&wc);
-
-	LONG windowStyle = WS_OVERLAPPEDWINDOW;
-	HMENU menus = NULL;
-
-	// TODO: Fix the resolution here
-	RECT wr = { 0, 0, static_cast<DWORD>(m_windowWidthPhysical), static_cast<DWORD>(m_windowHeightPhysical) };
-	AdjustWindowRect(&wr, windowStyle, menus != NULL);
-
-	m_osGlobals->m_hwnd = CreateWindowExW(NULL, L"GPD3D11WindowClass", GP_APPLICATION_NAME_W, WS_OVERLAPPEDWINDOW, 300, 300, wr.right - wr.left, wr.bottom - wr.top, NULL, menus, m_osGlobals->m_hInstance, NULL);
-
-	ShowWindow(m_osGlobals->m_hwnd, m_osGlobals->m_nCmdShow);
-
-	StartD3DForWindow(m_osGlobals->m_hwnd, m_swapChain, m_device, m_deviceContext, logger);
-
-	InitResources(m_windowWidthVirtual, m_windowHeightVirtual);
-
-	LARGE_INTEGER lastTimestamp;
-	memset(&lastTimestamp, 0, sizeof(lastTimestamp));
-
-	m_initialWidth = m_windowWidthVirtual;
-	m_initialHeight = m_windowHeightVirtual;
-
-	MSG msg;
-	for (;;)
-	{
-		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-		{
-			DispatchMessage(&msg);
-
-			{
-				if (msg.message == WM_MOUSEMOVE)
-				{
-					if (!m_mouseIsInClientArea)
-					{
-						m_mouseIsInClientArea = true;
-
-						TRACKMOUSEEVENT tme;
-						ZeroMemory(&tme, sizeof(tme));
-
-						tme.cbSize = sizeof(tme);
-						tme.dwFlags = TME_LEAVE;
-						tme.hwndTrack = m_osGlobals->m_hwnd;
-						tme.dwHoverTime = HOVER_DEFAULT;
-						TrackMouseEvent(&tme);
-					}
-				}
-				else if (msg.message == WM_MOUSELEAVE)
-					m_mouseIsInClientArea = false;
-
-				m_osGlobals->m_translateWindowsMessageFunc(&msg, m_properties.m_eventQueue, m_pixelScaleX, m_pixelScaleY);
-			}
-		}
-		else
-		{
-			if (m_isFullScreen != m_isFullScreenDesired)
-			{
-				if (m_isFullScreenDesired)
-					BecomeFullScreen(windowStyle);
-				else
-					BecomeWindowed(windowStyle);
-			}
-
-			RECT clientRect;
-			GetClientRect(m_osGlobals->m_hwnd, &clientRect);
-
-			unsigned int desiredWidth = clientRect.right - clientRect.left;
-			unsigned int desiredHeight = clientRect.bottom - clientRect.top;
-			if (clientRect.right - clientRect.left != m_windowWidthPhysical || clientRect.bottom - clientRect.top != m_windowHeightPhysical || m_isResolutionResetDesired)
-			{
-				uint32_t prevWidthPhysical = m_windowWidthPhysical;
-				uint32_t prevHeightPhysical = m_windowHeightPhysical;
-				uint32_t prevWidthVirtual = m_windowWidthVirtual;
-				uint32_t prevHeightVirtual = m_windowHeightVirtual;
-				uint32_t virtualWidth = m_windowWidthVirtual;
-				uint32_t virtualHeight = m_windowHeightVirtual;
-				float pixelScaleX = 1.0f;
-				float pixelScaleY = 1.0f;
-
-				if (desiredWidth < 640)
-					desiredWidth = 640;
-
-				if (desiredHeight < 480)
-					desiredHeight = 480;
-
-				if (m_properties.m_adjustRequestedResolutionFunc(m_properties.m_adjustRequestedResolutionFuncContext, desiredWidth, desiredHeight, virtualWidth, virtualHeight, pixelScaleX, pixelScaleY))
-				{
-					bool resizedOK = ResizeD3DWindow(m_osGlobals->m_hwnd, m_windowWidthPhysical, m_windowHeightPhysical, desiredWidth, desiredHeight, windowStyle, menus, logger);
-					resizedOK = resizedOK && DetachSwapChain();
-					resizedOK = resizedOK && ResizeSwapChain(m_swapChain, m_windowWidthPhysical, m_windowHeightPhysical);
-					resizedOK = resizedOK && InitBackBuffer(virtualWidth, virtualHeight);
-
-					if (!resizedOK)
-						break;	// Critical video driver error, exit
-
-					m_windowWidthVirtual = virtualWidth;
-					m_windowHeightVirtual = virtualHeight;
-					m_pixelScaleX = pixelScaleX;
-					m_pixelScaleY = pixelScaleY;
-					m_isResolutionResetDesired = false;
-
-					if (GpVOSEvent *resizeEvent = m_properties.m_eventQueue->QueueEvent())
-					{
-						resizeEvent->m_eventType = GpVOSEventTypes::kVideoResolutionChanged;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_prevWidth = prevWidthVirtual;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_prevHeight = prevHeightVirtual;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_newWidth = m_windowWidthVirtual;
-						resizeEvent->m_event.m_resolutionChangedEvent.m_newHeight = m_windowHeightVirtual;
-					}
-				}
-			}
-
-			GpDisplayDriverTickStatus_t tickStatus = PresentFrameAndSync();
-			if (tickStatus == GpDisplayDriverTickStatuses::kFatalFault || tickStatus == GpDisplayDriverTickStatuses::kApplicationTerminated)
-				break;
-		}
-	}
-
-	// Exit
-	ConvertFiberToThread();
 }
 
 void GpDisplayDriverD3D11::Shutdown()
@@ -1833,7 +1525,6 @@ GpDisplayDriverD3D11::GpDisplayDriverD3D11(const GpDisplayDriverProperties &prop
 	, m_initialHeight(480)
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
-	, m_vosFiber(nullptr)
 	, m_osGlobals(static_cast<GpWindowsGlobals*>(properties.m_osGlobals))
 	, m_pendingCursor(nullptr)
 	, m_activeCursor(nullptr)

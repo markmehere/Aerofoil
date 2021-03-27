@@ -156,7 +156,7 @@ void DrawToolName (DrawSurface *surface)
 
 	const Point textPoint = Point::Create(toolTextRect.left + 3, toolTextRect.bottom - 6);
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9Bold);
 	ColorText(surface, textPoint, theString, 171L, appFont);
 }
 #endif

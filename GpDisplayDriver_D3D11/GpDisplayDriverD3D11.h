@@ -16,7 +16,6 @@
 struct GpWindowsGlobals;
 struct IGpCursor_Win32;
 struct IGpCursor;
-struct IGpFiber;
 
 struct IDXGISwapChain1;
 struct ID3D11Buffer;
@@ -37,8 +36,8 @@ class GpDisplayDriverD3D11 : public IGpDisplayDriver, public IGpPrefsHandler
 {
 public:
 	bool Init() override;
+	void ForceSync() override;
 	void ServeTicks(int tickCount) override;
-	void Run() override;
 	void Shutdown() override;
 
 	void GetInitialDisplayResolution(unsigned int *width, unsigned int *height) override;
@@ -117,7 +116,6 @@ private:
 	bool DetachSwapChain();
 	bool InitBackBuffer(uint32_t virtualWidth, uint32_t virtualHeight);
 	bool InitResources(uint32_t virtualWidth, uint32_t virtualHeight);
-	GpDisplayDriverTickStatus_t PresentFrameAndSync();
 	bool SyncRender();
 	void ScaleVirtualScreen();
 
@@ -192,7 +190,6 @@ private:
 	EGpStandardCursor_t m_pendingStandardCursor;
 	bool m_mouseIsInClientArea;
 
-	IGpFiber *m_vosFiber;
 	GpWindowsGlobals *m_osGlobals;
 
 	HCURSOR m_arrowCursor;

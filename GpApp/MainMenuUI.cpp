@@ -64,13 +64,13 @@ struct MainMenuUIState
 	ControlID m_activeControl;
 
 	static const unsigned int kControlHeight = 40;
-	static const unsigned int kControlFontSize = 24;
 	static const unsigned int kControlLeftSpacing = 20;
 	static const unsigned int kControlBottomSpacing = 20;
 	static const unsigned int kControlIntermediateSpacing = 16;
 	static const unsigned int kControlInteriorSpacing = 6;
 	static const unsigned int kControlScrollInDecay = 32;
 	static const unsigned int kControlScrollInDecayFalloffBits = 0;
+	static const PortabilityLayer::FontPreset_t kControlFontPreset = PortabilityLayer::FontPresets::kHandwriting24;
 };
 
 static MainMenuUIState mainMenu;
@@ -135,7 +135,7 @@ static void DrawMainMenuControl(DrawSurface *surface, MainMenuUIState::ControlID
 	{
 	case MainMenuUIState::ControlStyle_Text:
 		{
-			PortabilityLayer::RenderedFont *rfont = GetHandwritingFont(MainMenuUIState::kControlFontSize, PortabilityLayer::FontFamilyFlag_None, true);
+			PortabilityLayer::RenderedFont *rfont = GetFont(MainMenuUIState::kControlFontPreset);
 			if (!rfont)
 				return;
 
@@ -219,7 +219,7 @@ void StartMainMenuUI()
 {
 	DismissMainMenuUI();
 
-	PortabilityLayer::RenderedFont *rfont = GetHandwritingFont(MainMenuUIState::kControlFontSize, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *rfont = GetFont(MainMenuUIState::kControlFontPreset);
 	if (!rfont)
 		return;
 

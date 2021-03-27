@@ -568,7 +568,7 @@ void DrawDialogUserText (Dialog *dial, short item, StringPtr text, Boolean inver
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9);
 	
 	PasStringCopy(text, stringCopy);
 
@@ -619,7 +619,7 @@ void DrawDialogUserText2 (Dialog *dial, short item, StringPtr text)
 	Str255			stringCopy;
 
 	DrawSurface *surface = dial->GetWindow()->GetDrawSurface();
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9);
 	
 	PasStringCopy(text, stringCopy);
 	const Rect iRect = dial->GetItems()[item - 1].GetWidget()->GetRect();

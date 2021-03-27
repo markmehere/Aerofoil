@@ -426,6 +426,12 @@
     <ClInclude Include="InflateStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderedFontCatalog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FontFamilyID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFileStream.cpp">

@@ -176,7 +176,7 @@ void RefreshRoomTitle (short mode)
 	const Point strShadowPoint = Point::Create(1, 10);
 	const Point strPoint = Point::Create(0, 9);
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	switch (mode)
 	{
@@ -221,7 +221,7 @@ void RefreshNumGliders (void)
 	long		displayMortals;
 	DrawSurface	*surface = boardGSrcMap;
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	PortabilityLayer::ResolveCachingColor theRGBColor = PortabilityLayer::ResolveCachingColor::FromStandardColor(kGrayBackgroundColor);
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
@@ -256,7 +256,7 @@ void RefreshPoints (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	surface->FillRect(boardPSrcRect, theRGBColor);
 	
@@ -286,7 +286,7 @@ void QuickGlidersRefresh (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	surface->FillRect(boardGSrcRect, theRGBColor);
 	
@@ -316,7 +316,7 @@ void QuickScoreRefresh (void)
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 	PortabilityLayer::ResolveCachingColor whiteColor = StdColors::White();
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	surface->FillRect(boardPSrcRect, theRGBColor);
 	

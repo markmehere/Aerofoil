@@ -1,6 +1,8 @@
 #pragma once
 
+#include "FontFamilyID.h"
 #include "FontHacks.h"
+
 #include <stdint.h>
 
 class PLPasStr;
@@ -24,16 +26,17 @@ namespace PortabilityLayer
 
 		void AddFont(int flags, const char *path, FontHacks fontHacks);
 		void SetDefaultVariation(int defaultVariation);
+		bool GetFontSpec(int variation, FontHacks &outHacks, const char *&outPath);
 
-		int GetVariationForFlags(int variation) const;
+		int GetVariationForFlags(int flags) const;
 		IGpFont *GetFontForVariation(int variation);
 		FontHacks GetHacksForVariation(int variation) const;
 
-		int GetCacheID() const;
+		FontFamilyID_t GetFamilyID() const;
 
 		void PurgeCache();
 
-		static FontFamily *Create(int cacheID);
+		static FontFamily *Create(FontFamilyID_t familyID);
 		void Destroy();
 
 	private:
@@ -49,9 +52,9 @@ namespace PortabilityLayer
 
 		FontSpec m_fontSpecs[kNumVariations];
 		uint8_t m_defaultVariation;
-		int m_cacheID;
+		FontFamilyID_t m_familyID;
 
-		explicit FontFamily(int cacheID);
+		explicit FontFamily(FontFamilyID_t familyID);
 		~FontFamily();
 	};
 }

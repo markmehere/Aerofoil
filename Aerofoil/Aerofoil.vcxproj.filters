@@ -4,9 +4,6 @@
     <ClCompile Include="GpColorCursor_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GpFiber_Win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GpFileStream_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,9 +40,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GpFiber_Win32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GpCommon\GpFileCreationDisposition.h">

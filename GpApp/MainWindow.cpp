@@ -71,7 +71,7 @@ void DrawOnSplash(DrawSurface *surface)
 	if ((thisMac.hasQT) && (hasMovie))
 		PasStringConcat(houseLoadedStr, PSTR(" (TV)"));
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(9, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9Bold);
 
 	const Point textPoint = Point::Create(splashOriginH + 436, splashOriginV + 314);
 	if (thisMac.isDepth == 4)

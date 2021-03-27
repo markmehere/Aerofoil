@@ -146,7 +146,7 @@ void SetMessageWindowMessage (StringPtr message, const PortabilityLayer::RGBACol
 	{
 		DrawSurface *surface = mssgWindow->GetDrawSurface();
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_None, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(PortabilityLayer::FontPresets::kSystem12);
 
 		SetRect(&mssgWindowRect, 0, 0, 256, kMessageWindowTall);
 		InsetRect(&mssgWindowRect, 16, 16);

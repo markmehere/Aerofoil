@@ -158,7 +158,7 @@ void DrawTouchScreenMenu (DrawSurface *surface, const THandle<BitmapImage> &back
 
 	const int numItems = sizeof(itemTexts) / sizeof(itemTexts[0]);
 
-	PortabilityLayer::RenderedFont *rfont = GetHandwritingFont(48, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *rfont = GetFont(PortabilityLayer::FontPresets::kHandwriting48);
 	if (!rfont)
 		return;
 

@@ -38,10 +38,10 @@ namespace PortabilityLayer
 			m_defaultVariation = defaultVariation;
 	}
 
-	int FontFamily::GetVariationForFlags(int variation) const
+	int FontFamily::GetVariationForFlags(int flags) const
 	{
-		if (m_fontSpecs[variation].m_isRegistered)
-			return variation;
+		if (m_fontSpecs[flags].m_isRegistered)
+			return flags;
 
 		if (m_fontSpecs[0].m_isRegistered)
 			return 0;
@@ -111,9 +111,20 @@ namespace PortabilityLayer
 		return m_fontSpecs[variation].m_hacks;
 	}
 
-	int FontFamily::GetCacheID() const
+	bool FontFamily::GetFontSpec(int variation, FontHacks &outHacks, const char *&outPath)
 	{
-		return m_cacheID;
+		if (!m_fontSpecs[variation].m_isRegistered)
+			return false;
+
+		outHacks = m_fontSpecs[variation].m_hacks;
+		outPath = m_fontSpecs[variation].m_fontPath;
+
+		return true;
+	}
+
+	FontFamilyID_t FontFamily::GetFamilyID() const
+	{
+		return m_familyID;
 	}
 
 	void FontFamily::PurgeCache()
@@ -128,13 +139,13 @@ namespace PortabilityLayer
 		}
 	}
 
-	FontFamily *FontFamily::Create(int cacheID)
+	FontFamily *FontFamily::Create(FontFamilyID_t familyID)
 	{
 		void *storage = malloc(sizeof(FontFamily));
 		if (!storage)
 			return nullptr;
 
-		return new (storage) FontFamily(cacheID);
+		return new (storage) FontFamily(familyID);
 	}
 
 	void FontFamily::Destroy()
@@ -143,9 +154,9 @@ namespace PortabilityLayer
 		free(this);
 	}
 
-	FontFamily::FontFamily(int cacheID)
+	FontFamily::FontFamily(FontFamilyID_t familyID)
 		: m_defaultVariation(0)
-		, m_cacheID(cacheID)
+		, m_familyID(familyID)
 	{
 	}
 

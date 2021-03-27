@@ -118,7 +118,7 @@ void DrawBannerMessage (Point topLeft)
 
 	PasStringCopy((*thisHouse)->banner, bannerStr);
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
 
@@ -221,7 +221,7 @@ void DisplayStarsRemaining(void)
 
 	DrawSurface *surface = starsWindow->GetDrawSurface();
 
-	PortabilityLayer::RenderedFont *appFont = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
 
 	NumToString((long)numStarsRemaining, theStr);
 

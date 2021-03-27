@@ -314,8 +314,8 @@ void DoAboutFramework (void)
 	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
-	PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
-	PortabilityLayer::RenderedFont *fontLight = GetApplicationFont(8, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *font = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
+	PortabilityLayer::RenderedFont *fontLight = GetFont(PortabilityLayer::FontPresets::kApplication8);
 
 	int16_t verticalPoint = 16 + font->GetMetrics().m_ascent;
 	int16_t horizontalOffset = 16;
@@ -578,7 +578,7 @@ static int16_t AboutFrameworkFilter(void *context, Dialog *dialog, const TimeTag
 
 void DrawLicenseReader(Window *window)
 {
-	PortabilityLayer::RenderedFont *rfont = GetMonospaceFont(10, PortabilityLayer::FontFamilyFlag_None, true);
+	PortabilityLayer::RenderedFont *rfont = GetFont(PortabilityLayer::FontPresets::kMono10);
 	if (!rfont)
 		return;
 

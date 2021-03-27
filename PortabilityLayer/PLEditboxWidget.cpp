@@ -87,7 +87,7 @@ namespace PortabilityLayer
 		surface->FillRect(outerRect, blackColor);
 		surface->FillRect(innerRect, whiteColor);
 
-		PortabilityLayer::RenderedFont *sysFont = GetSystemFont(12, PortabilityLayer::FontFamilyFlag_None, true);
+		PortabilityLayer::RenderedFont *sysFont = GetFont(FontPresets::kSystem12);
 		int32_t ascender = sysFont->GetMetrics().m_ascent;
 		int32_t lineGap = sysFont->GetMetrics().m_linegap;
 
@@ -1327,7 +1327,9 @@ namespace PortabilityLayer
 
 	FontFamily *EditboxWidget::GetFontFamily() const
 	{
-		return PortabilityLayer::FontManager::GetInstance()->GetSystemFont(12, FontFamilyFlag_None);
+		FontFamilyID_t preset = FontFamilyIDs::kCount;
+		PortabilityLayer::FontManager::GetInstance()->GetFontPreset(FontPresets::kSystem12, &preset, nullptr, nullptr, nullptr);
+		return PortabilityLayer::FontManager::GetInstance()->GetFont(preset);
 	}
 
 	RenderedFont *EditboxWidget::GetRenderedFont() const

@@ -199,7 +199,7 @@ namespace PortabilityLayer
 
 	void FileBrowserUIImpl::DrawHeaders()
 	{
-		PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *font = GetFont(FontPresets::kApplication12Bold);
 
 		ResolveCachingColor blackColor = StdColors::Black();
 
@@ -212,7 +212,7 @@ namespace PortabilityLayer
 		if (!m_entries.MMBlock())
 			return;
 
-		PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlags::FontFamilyFlag_Bold, true);
+		PortabilityLayer::RenderedFont *font = GetFont(FontPresets::kApplication12Bold);
 
 		GpRenderedFontMetrics metrics = font->GetMetrics();
 		int32_t spacing = metrics.m_linegap;
@@ -634,8 +634,8 @@ namespace PortabilityLayer
 		PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
 		PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
-		PortabilityLayer::RenderedFont *font = GetApplicationFont(12, PortabilityLayer::FontFamilyFlag_Bold, true);
-		PortabilityLayer::RenderedFont *fontLight = GetApplicationFont(8, PortabilityLayer::FontFamilyFlag_None, true);
+		PortabilityLayer::RenderedFont *font = GetFont(FontPresets::kApplication12Bold);
+		PortabilityLayer::RenderedFont *fontLight = GetFont(FontPresets::kApplication8);
 
 		int16_t verticalPoint = 16 + font->GetMetrics().m_ascent;
 		int16_t horizontalOffset = 16;

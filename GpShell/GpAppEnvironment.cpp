@@ -1,11 +1,9 @@
 #include "GpAppEnvironment.h"
-#include "GpFiberStarter.h"
 #include "GpAppInterface.h"
 #include "GpDisplayDriverTickStatus.h"
 #include "GpFontHandlerFactory.h"
 #include "HostSuspendCallArgument.h"
 #include "IGpDisplayDriver.h"
-#include "IGpFiber.h"
 #include "IGpInputDriver.h"
 
 #include <assert.h>

@@ -103,6 +103,7 @@
     <ClInclude Include="FilePermission.h" />
     <ClInclude Include="FileSectionStream.h" />
     <ClInclude Include="FontFamily.h" />
+    <ClInclude Include="FontFamilyID.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="GpAppInterface.h" />
@@ -151,6 +152,7 @@
     <ClInclude Include="PLScrollBarWidget.h" />
     <ClInclude Include="PLUnalignedPtr.h" />
     <ClInclude Include="PLWidgets.h" />
+    <ClInclude Include="RenderedFontCatalog.h" />
     <ClInclude Include="ResolveCachingColor.h" />
     <ClInclude Include="WorkerThread.h" />
     <ClInclude Include="TextPlacer.h" />
