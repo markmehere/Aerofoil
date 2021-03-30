@@ -437,7 +437,7 @@ bool GpAudioDriver_SDL2::Init()
 	requestedSpec.channels = 1;
 	requestedSpec.format = AUDIO_S16;
 	requestedSpec.freq = m_properties.m_sampleRate;
-	requestedSpec.samples = 512;
+	requestedSpec.samples = 1024;
 	requestedSpec.userdata = this;
 
 	if (SDL_OpenAudio(&requestedSpec, nullptr))

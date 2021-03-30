@@ -3095,7 +3095,7 @@ bool GpDisplayDriver_SDL_GL2::SyncRender()
 	SDL_GL_SwapWindow(m_window);
 
 #ifdef __EMSCRIPTEN__
-	emscripten_sleep(16);
+	emscripten_sleep(1);
 #endif
 
 	std::chrono::time_point<std::chrono::high_resolution_clock>::duration syncTime = std::chrono::high_resolution_clock::now().time_since_epoch();
