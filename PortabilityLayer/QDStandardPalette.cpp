@@ -262,6 +262,7 @@ namespace PortabilityLayer
 		if (mutex)
 			mutex->Unlock();
 
+		//entry.m_aaTable.GenerateForPalette(color, m_colors, 256, true);
 		entry.m_aaTable.GenerateForPaletteFast(color);
 
 		return entry.m_aaTable;
