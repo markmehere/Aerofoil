@@ -1419,8 +1419,6 @@ void GpDisplayDriver_SDL_GL2::ServeTicks(int ticks)
 	IGpLogDriver *logger = m_properties.m_logger;
 	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
 
-	logger->Printf(IGpLogDriver::Category_Information, "ServeTicks %i", ticks);
-
 	for (;;)
 	{
 		SDL_Event msg;
