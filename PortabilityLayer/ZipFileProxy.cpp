@@ -285,29 +285,17 @@ namespace PortabilityLayer
 		MemoryManager *mm = MemoryManager::GetInstance();
 
 		if (!stream->SeekEnd(sizeof(ZipEndOfCentralDirectoryRecord)))
-		{
-			fprintf(stderr, "Seek end failed\n");
 			return nullptr;
-		}
 
 		ZipEndOfCentralDirectoryRecord eocd;
 		if (stream->Read(&eocd, sizeof(eocd)) != sizeof(eocd))
-		{
-			fprintf(stderr, "EOCD read failed\n");
 			return nullptr;
-		}
 
 		if (eocd.m_signature != ZipEndOfCentralDirectoryRecord::kSignature)
-		{
-			fprintf(stderr, "EOCD sig check failed\n");
 			return nullptr;
-		}
 
 		if (!stream->SeekStart(eocd.m_centralDirStartOffset))
-		{
-			fprintf(stderr, "CDir seek failed\n");
 			return nullptr;
-		}
 
 		const size_t centralDirSize = eocd.m_centralDirectorySizeBytes;
 		void *centralDirImage = nullptr;
@@ -330,8 +318,6 @@ namespace PortabilityLayer
 
 			if (stream->Read(centralDirImage, centralDirSize) != centralDirSize)
 			{
-				fprintf(stderr, "CDir image read failed\n");
-
 				mm->Release(centralDirFiles);
 				mm->Release(centralDirImage);
 				return nullptr;
@@ -348,8 +334,6 @@ namespace PortabilityLayer
 		{
 			if (centralDirEnd - centralDirCursor < sizeof(ZipCentralDirectoryFileHeader))
 			{
-				fprintf(stderr, "CDir read failed point 1\n");
-
 				failed = true;
 				break;
 			}
@@ -361,24 +345,18 @@ namespace PortabilityLayer
 
 			if (centralDirHeader.m_signature != ZipCentralDirectoryFileHeader::kSignature)
 			{
-				fprintf(stderr, "CDir read failed point 2\n");
-
 				failed = true;
 				break;
 			}
 
 			if (centralDirEnd - centralDirCursor < centralDirHeader.m_fileNameLength)
 			{
-				fprintf(stderr, "CDir read failed point 3\n");
-
 				failed = true;
 				break;
 			}
 
 			if (!CheckAndFixFileName(centralDirCursor, centralDirHeader.m_fileNameLength))
 			{
-				fprintf(stderr, "CDir read failed point 4\n");
-
 				failed = true;
 				break;
 			}
@@ -387,8 +365,6 @@ namespace PortabilityLayer
 
 			if (centralDirEnd - centralDirCursor < centralDirHeader.m_extraFieldLength)
 			{
-				fprintf(stderr, "CDir read failed point 5\n");
-
 				failed = true;
 				break;
 			}
@@ -397,8 +373,6 @@ namespace PortabilityLayer
 
 			if (centralDirEnd - centralDirCursor < centralDirHeader.m_commentLength)
 			{
-				fprintf(stderr, "CDir read failed point 6\n");
-
 				failed = true;
 				break;
 			}
@@ -422,8 +396,6 @@ namespace PortabilityLayer
 		{
 			if (ZipDirectorySortPredicate(centralDirFiles + (i - 1), centralDirFiles + i) == 0)
 			{
-				fprintf(stderr, "File names were duplicated\n");
-
 				// Duplicate file names
 				mm->Release(centralDirFiles);
 				mm->Release(centralDirImage);

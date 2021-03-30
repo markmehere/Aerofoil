@@ -185,11 +185,9 @@ namespace PortabilityLayer
 		ZipFileProxy *proxy = nullptr;
 		bool proxyIsShared = false;
 
-		fprintf(stderr, "Trying to open resource file\n");
 		if (file->OpenResources(fStream, proxy, proxyIsShared) != PLErrors::kNone)
 			return nullptr;
 
-		fprintf(stderr, "Creating resource archive\n");
 		IResourceArchive *archive = ResourceArchiveZipFile::Create(proxy, proxyIsShared, fStream);
 		if (!archive)
 		{

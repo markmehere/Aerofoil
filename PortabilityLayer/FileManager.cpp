@@ -100,8 +100,6 @@ namespace PortabilityLayer
 		if (!stream)
 			return nullptr;
 
-		fprintf(stderr, "Composite file opened\n");
-
 		ZipFileProxy *zipFile = ZipFileProxy::Create(stream);
 		if (!zipFile)
 		{
@@ -109,16 +107,12 @@ namespace PortabilityLayer
 			return nullptr;
 		}
 
-		fprintf(stderr, "Zip proxy created\n");
-
 		size_t metaIndex = 0;
 		if (!zipFile->IndexFile("!!meta", metaIndex))
 		{
 			stream->Close();
 			return nullptr;
 		}
-
-		fprintf(stderr, "Meta file indexed\n");
 
 		MacFilePropertiesSerialized mfps;
 
@@ -129,8 +123,6 @@ namespace PortabilityLayer
 			stream->Close();
 			return nullptr;
 		}
-
-		fprintf(stderr, "Meta data deserialized\n");
 
 		if (!metaStream->ReadExact(mfps.m_data, sizeof(mfps.m_data)))
 		{
@@ -159,8 +151,6 @@ namespace PortabilityLayer
 			stream->Close();
 			stream = nullptr;
 		}
-
-		fprintf(stderr, "Composite constructed\n");
 
 		CompositeFile *compositeFile = CompositeFileImpl::Create(dirID, filename, stream, zipFile, mfp, hasResources, hasData, hasData ? dataIndex : 0);
 		if (!compositeFile)

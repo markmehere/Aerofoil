@@ -120,10 +120,7 @@ bool GpFileStream_Web_StaticMemFile::SeekCurrent(GpFilePos_t loc)
 bool GpFileStream_Web_StaticMemFile::SeekEnd(GpUFilePos_t loc)
 {
 	if (loc > m_size)
-	{
-		fprintf(stderr, "SeekEnd failed: Loc %i  size %i\n", static_cast<int>(loc), static_cast<int>(m_size));
 		return false;
-	}
 
 	m_offset = m_size - loc;
 	return true;
@@ -375,7 +372,6 @@ bool GpFileSystem_Web::FileExists(PortabilityLayer::VirtualDirectory_t virtualDi
 
 bool GpFileSystem_Web::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &exists)
 {
-	fprintf(stderr, "FileLocked %s\n", path);
 	if (const GpFileSystem_Web_Resources::FileCatalog *catalog = GetCatalogForVirtualDirectory(virtualDirectory))
 	{
 		for (size_t i = 0; i < catalog->m_numEntries; i++)
@@ -407,30 +403,20 @@ bool GpFileSystem_Web::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDi
 
 GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
-	fprintf(stderr, "OpenFileNested %i %s subPaths %i\n", static_cast<int>(virtualDirectory), subPaths[0], static_cast<int>(numSubPaths));
 	if (numSubPaths == 1)
 	{
-		fprintf(stderr, "Only one subpath\n");
 		if (const GpFileSystem_Web_Resources::FileCatalog *catalog = GetCatalogForVirtualDirectory(virtualDirectory))
 		{
-			fprintf(stderr, "Catalog matched. %i entries. %i size %i size0\n", static_cast<int>(catalog->m_numEntries), static_cast<int>(catalog->m_size), static_cast<int>(catalog->m_size0));
 			for (size_t i = 0; i < catalog->m_numEntries; i++)
 			{
 				const GpFileSystem_Web_Resources::FileCatalogEntry &entry = catalog->m_entries[i];
-				fprintf(stderr, "Comparing '%s' to '%s'\n", subPaths[0], entry.m_fileName);
 				if (!strcmp(subPaths[0], entry.m_fileName))
-				{
-					fprintf(stderr, "File name matched\n");
 					return new GpFileStream_Web_StaticMemFile(entry.m_data, entry.m_size);
-				}
 			}
 
-			fprintf(stderr, "Catalog had no match\n");
 			return nullptr;
 		}
 	}
-	
-	fprintf(stderr, "More paths, falling through...\n");
 
 	const char *mode = nullptr;
 	bool canWrite = false;
@@ -494,7 +480,6 @@ GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_
 
 bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
 {
-	fprintf(stderr, "Delete file %s\n", path);
 	if (const GpFileSystem_Web_Resources::FileCatalog *catalog = GetCatalogForVirtualDirectory(virtualDirectory))
 		return false;
 
@@ -620,20 +605,10 @@ IGpDirectoryCursor *GpFileSystem_Web::ScanDirectoryNested(PortabilityLayer::Virt
 const GpFileSystem_Web_Resources::FileCatalog *GpFileSystem_Web::GetCatalogForVirtualDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory)
 {
 	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kApplicationData)
-	{
-		fprintf(stderr, "%i == %i\n", static_cast<int>(virtualDirectory), static_cast<int>(PortabilityLayer::VirtualDirectories::kApplicationData));
-		fprintf(stderr, "%i size\n", GpFileSystem_Web_Resources::ApplicationData::GetCatalog().m_size);
-		fprintf(stderr, "First name: %s\n", GpFileSystem_Web_Resources::ApplicationData::GetCatalog().m_entries[0].m_fileName);
 		return &GpFileSystem_Web_Resources::ApplicationData::GetCatalog();
-	}
-	fprintf(stderr, "%i != %i\n", static_cast<int>(virtualDirectory), static_cast<int>(PortabilityLayer::VirtualDirectories::kApplicationData));
 
 	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kGameData)
-	{
-		fprintf(stderr, "%i == %i\n", static_cast<int>(virtualDirectory), static_cast<int>(PortabilityLayer::VirtualDirectories::kGameData));
 		return &GpFileSystem_Web_Resources::GameData::GetCatalog();
-	}
-	fprintf(stderr, "%i != %i\n", static_cast<int>(virtualDirectory), static_cast<int>(PortabilityLayer::VirtualDirectories::kGameData));
 
 	return nullptr;
 }
