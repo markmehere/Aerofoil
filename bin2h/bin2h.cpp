@@ -66,7 +66,7 @@ int toolMain(int argc, const char **argv)
 				int c = fgetc(inF);
 				fprintf(outF, "% 4i,", (c & 0xff));
 			}
-			fprintf(outF, "\n};\n\n", numFiles);
+			fprintf(outF, "\n};\n\n");
 
 			numFiles++;
 
