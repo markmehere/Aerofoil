@@ -8,7 +8,7 @@ struct DrawSurface;
 
 namespace PortabilityLayer
 {
-	class EditboxWidget final : public WidgetSpec<EditboxWidget>
+	class EditboxWidget final : public WidgetSpec<EditboxWidget, WidgetTypes::kEditbox>
 	{
 	public:
 		typedef bool (*CharacterFilterCallback_t)(void *context, uint8_t character);
@@ -25,7 +25,8 @@ namespace PortabilityLayer
 		void GainFocus() override;
 		void LoseFocus() override;
 
-		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt) override;
+		WidgetHandleState_t ProcessEvent(void *captureContext, const TimeTaggedVOSEvent &evt) GP_ASYNCIFY_PARANOID_OVERRIDE;
+		int16_t Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
 		Rect GetExpandedRect() const override;
 

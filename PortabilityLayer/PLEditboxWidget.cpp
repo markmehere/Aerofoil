@@ -26,7 +26,7 @@
 namespace PortabilityLayer
 {
 	EditboxWidget::EditboxWidget(const WidgetBasicState &state)
-		: WidgetSpec<EditboxWidget>(state)
+		: WidgetSpec<EditboxWidget, WidgetTypes::kEditbox>(state)
 		, m_capacity(255)
 		, m_length(0)
 		, m_chars(nullptr)
@@ -349,6 +349,11 @@ namespace PortabilityLayer
 		}
 
 		return WidgetHandleStates::kIgnored;
+	}
+
+	int16_t EditboxWidget::Capture(void *captureContext, const Point &pos, WidgetUpdateCallback_t callback)
+	{
+		return DefaultCapture(captureContext, pos, callback);
 	}
 
 	Rect EditboxWidget::GetExpandedRect() const
@@ -1394,4 +1399,7 @@ namespace PortabilityLayer
 		{ 0xf5, EditboxWidget::CharacterCategory_AlphaNumeric },
 		{ 0xff, EditboxWidget::CharacterCategory_Punctuation },
 	};
+
 }
+
+PL_IMPLEMENT_WIDGET_TYPE(PortabilityLayer::WidgetTypes::kEditbox, PortabilityLayer::EditboxWidget)
