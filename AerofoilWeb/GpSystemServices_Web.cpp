@@ -56,6 +56,9 @@ private:
 	static GpThreadEvent_Web_Null ms_instance;
 };
 
+GpThreadEvent_Web_Null GpThreadEvent_Web_Null::ms_instance;
+
+
 void GpThreadEvent_Web_Null::Wait()
 {
 }
