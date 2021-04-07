@@ -218,6 +218,7 @@ struct GpGLFunctions
 
 static void CheckGLError(const GpGLFunctions &gl, IGpLogDriver *logger)
 {
+#if GP_DEBUG_CONFIG
 	GLenum errorCode = gl.GetError();
 	if (errorCode != 0)
 	{
@@ -226,6 +227,7 @@ static void CheckGLError(const GpGLFunctions &gl, IGpLogDriver *logger)
 	}
 
 	assert(errorCode == 0);
+#endif
 }
 
 class GpGLObject
