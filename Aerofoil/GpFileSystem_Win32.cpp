@@ -158,7 +158,7 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 			continue;
 		}
 
-		if (wcscat_s(m_executablePath, L"Resources"))
+		if (wcscat_s(m_executablePath, L"Packaged"))
 		{
 			currentPathLength = 0;
 			break;
@@ -177,7 +177,6 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 	{
 		m_packagedDir = std::wstring(m_executablePath) + L"Packaged\\";
 		m_housesDir = std::wstring(m_executablePath) + L"Packaged\\Houses\\";
-		m_resourcesDir = std::wstring(m_executablePath) + L"Resources\\";
 	}
 }
 

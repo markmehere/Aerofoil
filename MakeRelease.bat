@@ -29,9 +29,7 @@ mkdir ReleasePkg\PDBs
 copy /Y x64\Release\Aerofoil.pdb ReleasePkg\PDBs
 copy /Y x64\Release\GpAudioDriver_XAudio2.pdb ReleasePkg\PDBs
 copy /Y x64\Release\GpDisplayDriver_D3D11.pdb ReleasePkg\PDBs
-copy /Y x64\Release\GpFontHandler_FreeType2.pdb ReleasePkg\PDBs
 copy /Y x64\Release\GpInputDriver_XInput.pdb ReleasePkg\PDBs
-copy /Y x64\Release\FreeType.pdb ReleasePkg\PDBs
 copy /Y x64\Release\GpApp.pdb ReleasePkg\PDBs
 
 copy /Y x64\Release\flattenmov.pdb ReleasePkg\PDBs
