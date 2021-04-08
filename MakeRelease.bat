@@ -4,7 +4,6 @@ mkdir ReleasePkg
 
 mkdir ReleasePkg\Aerofoil
 mkdir ReleasePkg\Aerofoil\Packaged
-mkdir ReleasePkg\Aerofoil\Resources
 mkdir ReleasePkg\Aerofoil\Tools
 
 copy /Y x64\Release\Aerofoil.exe ReleasePkg\Aerofoil
@@ -42,7 +41,6 @@ copy /Y x64\Release\gpr2gpa.pdb ReleasePkg\PDBs
 copy /Y x64\Release\unpacktool.pdb ReleasePkg\PDBs
 
 xcopy /I /E /Y /K Packaged ReleasePkg\Aerofoil\Packaged
-xcopy /I /E /Y /K Resources ReleasePkg\Aerofoil\Resources
 xcopy /I /E /Y /K Documentation ReleasePkg\Aerofoil\Documentation
 
 attrib +R Packaged\Houses\*
