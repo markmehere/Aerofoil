@@ -49,3 +49,4 @@ SDL2-2.0.12/Makefile.rules
 SDL2-2.0.12/sdl2.pc
 SDL2-2.0.12/sdl2-config
 install_manifest.txt
+AerofoilMac

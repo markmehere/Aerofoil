@@ -26,15 +26,17 @@ IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProp
 IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
 IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverProperties &properties);
 
-
+#ifdef __MACOS__
+int main(int argc, char *argv[])
+#else
 SDLMAIN_DECLSPEC int SDL_main(int argc, char *argv[])
+#endif
 {
-	GpLogDriver_X::Init();
-
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
 		return -1;
 
 	GpFileSystem_X::GetInstance()->Init();
+	GpLogDriver_X::Init();
 
 	IGpLogDriver *logger = GpLogDriver_X::GetInstance();
 	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();

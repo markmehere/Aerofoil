@@ -1,12 +1,22 @@
 cmake_minimum_required(VERSION 3.10)
-
 project (Aerofoil)
+SET(PLATFORM "X" CACHE STRING "Defines the target platform")
+SET(EXECNAME "AerofoilX" CACHE STRING "Defines the exec name")
 
 message(${CMAKE_BINARY_DIR})
 
 find_package(SDL2 REQUIRED)
 
+if(PLATFORM STREQUAL "MAC")
+	SET(EXECNAME "AerofoilMac" CACHE STRING "Defines the exec name" FORCE)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	add_definitions(-D__MACOS__)
+endif()
+
+message("Building ${EXECNAME} for: ${PLATFORM}")
+
 add_definitions(-DGP_DEBUG_CONFIG=0)
+
 
 add_library(stb STATIC
 	stb/stb_image_write.c
@@ -231,7 +241,7 @@ target_include_directories(GpApp PRIVATE
 target_link_libraries(GpApp PortabilityLayer)
 
 if(CMAKE_HOST_UNIX)
-	add_executable(AerofoilX
+	add_executable(${EXECNAME}
 		AerofoilPortable/GpSystemServices_POSIX.cpp
 		AerofoilPortable/GpThreadEvent_Cpp11.cpp
 		AerofoilSDL/GpAudioDriver_SDL2.cpp
@@ -248,7 +258,7 @@ if(CMAKE_HOST_UNIX)
 		AerofoilX/GpFileSystem_X.cpp
 		)
 		
-	target_include_directories(AerofoilX PRIVATE
+	target_include_directories(${EXECNAME} PRIVATE
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Common>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpCommon>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpShell>
@@ -258,8 +268,8 @@ if(CMAKE_HOST_UNIX)
 		${SDL2_INCLUDE_DIRS}
 		)
 
-	target_link_libraries(AerofoilX ${SDL2_LIBRARIES} GpApp GpShell)
+	target_link_libraries(${EXECNAME} ${SDL2_LIBRARIES} GpApp GpShell)
 endif()
 
 
-install (TARGETS AerofoilX)
+install (TARGETS ${EXECNAME})

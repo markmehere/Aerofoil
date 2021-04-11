@@ -6,6 +6,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __MACOS__
+#include <sys/sysctl.h>  
+#endif
+
 GpSystemServices_POSIX::GpSystemServices_POSIX()
 {
 }
@@ -44,7 +48,19 @@ IGpThreadEvent *GpSystemServices_POSIX::CreateThreadEvent(bool autoReset, bool s
 
 uint64_t GpSystemServices_POSIX::GetFreeMemoryCosmetic() const
 {
+	#ifdef __MACOS__
+	{ /* This works on *bsd and darwin.  */
+		unsigned int usermem;
+		size_t len = sizeof usermem;
+		static int mib[2] = { CTL_HW, HW_USERMEM };
+
+		if (sysctl (mib, 2, &usermem, &len, NULL, 0) == 0
+		&& len == sizeof (usermem))
+		return (long) usermem;
+	}
+	#else
 	long pages = sysconf(_SC_AVPHYS_PAGES);
 	long pageSize = sysconf(_SC_PAGE_SIZE);
 	return pages * pageSize;
+	#endif
 }

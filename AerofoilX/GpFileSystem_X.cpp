@@ -9,8 +9,13 @@
 
 #include "PLDrivers.h"
 
+#ifdef __MACOS__
+#include <SDL.h>
+#include <SDL_rwops.h>
+#else
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_rwops.h"
+#endif
 
 #include <string>
 #include <vector>
@@ -22,7 +27,7 @@
 
 #include "UTF8.h"
 
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__MACOS__)
 typedef off_t off64_t;
 #define fstat64 fstat
 #define fseek64 fseek
@@ -183,6 +188,9 @@ bool GpFileSystem_X::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDir
 	case PortabilityLayer::VirtualDirectories::kFontCache:
 		prefsAppend = "FontCache";
 		break;
+	case PortabilityLayer::VirtualDirectories::kLogs:
+		prefsAppend = "..";
+		break;
 	default:
 		return false;
 	};
@@ -289,6 +297,7 @@ GpIOStream *GpFileSystem_X::OpenFileNested(PortabilityLayer::VirtualDirectory_t 
 		return nullptr;
 
 	std::string resolvedPath;
+	
 	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, resolvedPath))
 		return nullptr;
 
