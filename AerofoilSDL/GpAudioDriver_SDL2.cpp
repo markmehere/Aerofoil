@@ -633,6 +633,7 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 		m_mixChunkReadOffset = 0;
 
 	int16_t *mixChunkStart = m_mixChunk + m_mixChunkReadOffset;
+	int16_t audioNormalizeShift = 0;
 
 	for (size_t i = 0; i < numChannels; i++)
 	{
@@ -641,18 +642,25 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 		if (i == 0)
 		{
 			noAudio = false;
+			audioNormalizeShift = 0x80;
 			for (size_t j = 0; j < samplesToFill; j++)
-				mixChunkStart[j] = (static_cast<int16_t>(audioMixBuffer[j]) - 0x80) * audioVolumeScale;
+				mixChunkStart[j] = static_cast<int16_t>(audioMixBuffer[j]);
 		}
 		else
 		{
+			audioNormalizeShift += 0x80;
 			for (size_t j = 0; j < samplesToFill; j++)
-				mixChunkStart[j] += (static_cast<int16_t>(audioMixBuffer[j]) - 0x80) * audioVolumeScale;
+				mixChunkStart[j] += static_cast<int16_t>(audioMixBuffer[j]);
 		}
 	}
 
 	if (noAudio)
 		memset(mixChunkStart, 0, samplesToFill * sizeof(mixChunkStart[0]));
+	else
+	{
+		for (size_t i = 0; i < samplesToFill; i++)
+			mixChunkStart[i] = (mixChunkStart[i] - audioNormalizeShift) * audioVolumeScale;
+	}
 }
 
 
