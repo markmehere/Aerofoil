@@ -143,8 +143,8 @@ private:
 	IGpMutex *m_mixState;
 
 	static const size_t kMaxChannels = 16;
-	static const size_t kMixChunkSize = 256;
-	static const int16_t kMaxAudioVolumeScale = 25;
+	static const size_t kMixChunkSize = 512;
+	static const int16_t kMaxAudioVolumeScale = 64;
 
 	GpAudioChannel_SDL2 *m_channels[kMaxChannels];
 	size_t m_numChannels;
@@ -508,7 +508,7 @@ bool GpAudioDriver_SDL2::Init()
 	requestedSpec.channels = 1;
 	requestedSpec.format = AUDIO_S16;
 	requestedSpec.freq = m_properties.m_sampleRate;
-	requestedSpec.samples = 512;
+	requestedSpec.samples = kMixChunkSize;
 	requestedSpec.userdata = this;
 
 	if (SDL_OpenAudio(&requestedSpec, nullptr))
