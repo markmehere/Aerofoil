@@ -12,7 +12,7 @@ public:
 	GpLogDriver_X();
 
 	static void Init();
-
+	
 	void VPrintf(Category category, const char *fmt, va_list args) override;
 	void Shutdown() override;
 

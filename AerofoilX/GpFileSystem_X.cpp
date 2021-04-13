@@ -205,7 +205,7 @@ bool GpFileSystem_X::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDir
 		resolution += "/";
 		resolution += paths[i];
 	}
-
+	
 	return true;
 }
 

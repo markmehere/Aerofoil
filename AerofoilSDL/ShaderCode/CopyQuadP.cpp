@@ -11,6 +11,11 @@
 "}\n"
 
 namespace GpBinarizedShaders
-{
+{	
+	//macos does not support precision in OpenGLES2
+	#ifdef __MACOS__
+	const char *g_copyQuadP_GL2 = GP_GL_SHADER_CODE_FUNCTIONS_H GP_GL_SHADER_CODE_COPYQUADP_GLSL;
+	#else
 	const char *g_copyQuadP_GL2 = GP_GL_SHADER_CODE_MEDIUM_PRECISION_PREFIX GP_GL_SHADER_CODE_FUNCTIONS_H GP_GL_SHADER_CODE_COPYQUADP_GLSL;
+	#endif
 }
