@@ -1330,16 +1330,19 @@ namespace PortabilityLayer
 		return ccs->m_category;
 	}
 
-	FontFamily *EditboxWidget::GetFontFamily() const
+	FontPreset_t EditboxWidget::GetFontPreset() const
 	{
-		FontFamilyID_t preset = FontFamilyIDs::kCount;
-		PortabilityLayer::FontManager::GetInstance()->GetFontPreset(FontPresets::kSystem12, &preset, nullptr, nullptr, nullptr);
-		return PortabilityLayer::FontManager::GetInstance()->GetFont(preset);
+		return FontPresets::kSystem12;
 	}
 
 	RenderedFont *EditboxWidget::GetRenderedFont() const
 	{
-		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(GetFontFamily(), 12, true, FontFamilyFlag_None);
+		PortabilityLayer::FontFamilyID_t fontFamilyID = FontFamilyIDs::kCount;
+		int size = 0;
+		int varFlags = 0;
+		bool aa = false;
+		PortabilityLayer::FontManager::GetInstance()->GetFontPreset(GetFontPreset(), &fontFamilyID, &size, &varFlags, &aa);
+		return PortabilityLayer::FontManager::GetInstance()->LoadCachedRenderedFont(fontFamilyID, size, aa, varFlags);
 	}
 
 	void EditboxWidget::SetMultiLine(bool isMultiLine)

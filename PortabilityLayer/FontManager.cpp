@@ -32,8 +32,6 @@ namespace PortabilityLayer
 		FontFamily *GetFont(FontFamilyID_t fontFamilyID) const override;
 		void GetFontPreset(FontPreset_t fontPreset, FontFamilyID_t *outFamilyID, int *outSize, int *outVariationFlags, bool *outAA) const override;
 
-		RenderedFont *GetRenderedFontFromFamily(FontFamily *font, int size, bool aa, int flags) override;
-
 		RenderedFont *LoadCachedRenderedFont(FontFamilyID_t familyID, int size, bool aa, int flags) override;
 
 		void PurgeCache() override;
@@ -41,6 +39,9 @@ namespace PortabilityLayer
 		static FontManagerImpl *GetInstance();
 
 	private:
+		RenderedFont *LoadAndRenderFontUsingFontHandler(FontFamily *font, int size, bool aa, int flags);
+		RenderedFont *LoadAndRenderFont(FontFamilyID_t familyID, int size, bool aa, int flags);
+
 		static const unsigned int kNumCachedRenderedFonts = 32;
 
 		struct CachedRenderedFont
@@ -206,23 +207,9 @@ namespace PortabilityLayer
 			m_usageCounter++;
 	}
 
-	RenderedFont *FontManagerImpl::GetRenderedFontFromFamily(FontFamily *fontFamily, int size, bool aa, int flags)
+	RenderedFont *FontManagerImpl::LoadAndRenderFontUsingFontHandler(FontFamily *fontFamily, int size, bool aa, int flags)
 	{
 		PortabilityLayer::FontManager *fm = PortabilityLayer::FontManager::GetInstance();
-
-		RenderedFont *rfont = nullptr;
-		CachedRenderedFont *cacheSlot = nullptr;
-		FontFamilyID_t familyID = fontFamily->GetFamilyID();
-
-		if (this->FindOrReserveCacheSlot(familyID, size, aa, cacheSlot, rfont))
-			return rfont;
-
-		rfont = fm->LoadCachedRenderedFont(familyID, size, aa, flags);
-		if (rfont)
-		{
-			ReplaceCachedRenderedFont(*cacheSlot, rfont, familyID, size, aa, flags);
-			return rfont;
-		}
 
 		const int variation = fontFamily->GetVariationForFlags(flags);
 
@@ -230,20 +217,39 @@ namespace PortabilityLayer
 		if (!hostFont)
 			return nullptr;
 
-
-		rfont = FontRenderer::GetInstance()->RenderFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
-		if (rfont)
-		{
-			ReplaceCachedRenderedFont(*cacheSlot, rfont, familyID, size, aa, flags);
-
-			return rfont;
-		}
+		RenderedFont *rfont = FontRenderer::GetInstance()->RenderFont(hostFont, size, aa, fontFamily->GetHacksForVariation(variation));
+		fontFamily->UnloadVariation(variation);
 
 		return rfont;
 	}
 
 	RenderedFont *FontManagerImpl::LoadCachedRenderedFont(FontFamilyID_t familyID, int size, bool aa, int flags)
 	{
+		CachedRenderedFont *cacheSlot = nullptr;
+		RenderedFont *rfont = nullptr;
+
+		if (this->FindOrReserveCacheSlot(familyID, size, aa, cacheSlot, rfont))
+			return rfont;
+
+		rfont = LoadAndRenderFont(familyID, size, aa, flags);
+		if (rfont)
+			ReplaceCachedRenderedFont(*cacheSlot, rfont, familyID, size, aa, flags);
+
+		return rfont;
+	}
+
+	RenderedFont *FontManagerImpl::LoadAndRenderFont(FontFamilyID_t familyID, int size, bool aa, int flags)
+	{
+		FontFamily *fontFamily = this->GetFont(familyID);
+
+		RenderedFont *rfont = nullptr;
+		if (PLDrivers::GetFontHandler() != nullptr)
+		{
+			rfont = LoadAndRenderFontUsingFontHandler(fontFamily, size, aa, flags);
+			if (rfont != nullptr)
+				return rfont;
+		}
+
 		if (!m_fontArchive)
 		{
 			m_fontArchiveFile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(VirtualDirectories::kApplicationData, PSTR("Fonts"));
@@ -266,7 +272,6 @@ namespace PortabilityLayer
 			}
 		}
 
-		FontFamily *fontFamily = this->GetFont(familyID);
 		int variation = fontFamily->GetVariationForFlags(flags);
 
 		FontHacks hacks = FontHacks_None;
@@ -328,13 +333,13 @@ namespace PortabilityLayer
 			return nullptr;
 
 		THandle<void> res = m_fontArchive->LoadResource('RFNT', 1000 + static_cast<int>(fontIndex));
-		if (!res)
-			return nullptr;
+		if (res)
+		{
+			PortabilityLayer::MemReaderStream stream(*res, res.MMBlock()->m_size);
 
-		PortabilityLayer::MemReaderStream stream(*res, res.MMBlock()->m_size);
-		
-		RenderedFont *rfont = PortabilityLayer::FontRenderer::GetInstance()->LoadCache(&stream);
-		res.Dispose();
+			rfont = PortabilityLayer::FontRenderer::GetInstance()->LoadCache(&stream);
+			res.Dispose();
+		}
 
 		return rfont;
 	}

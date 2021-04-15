@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FontPresets.h"
 #include "PascalStr.h"
 #include "PLWidgets.h"
 #include "Vec2i.h"
@@ -111,7 +112,7 @@ namespace PortabilityLayer
 		size_t IdentifySpanLength(size_t startChar, SpanScanDirection scanDirection) const;
 		static CharacterCategory CategorizeCharacter(uint8_t character);
 
-		PortabilityLayer::FontFamily *GetFontFamily() const;
+		PortabilityLayer::FontPreset_t GetFontPreset() const;
 		PortabilityLayer::RenderedFont *GetRenderedFont() const;
 
 		uint8_t *m_chars;

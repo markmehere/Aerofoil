@@ -30,6 +30,7 @@ namespace PortabilityLayer
 
 		int GetVariationForFlags(int flags) const;
 		IGpFont *GetFontForVariation(int variation);
+		void UnloadVariation(int variation);
 		FontHacks GetHacksForVariation(int variation) const;
 
 		FontFamilyID_t GetFamilyID() const;

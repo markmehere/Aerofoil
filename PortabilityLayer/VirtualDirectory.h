@@ -17,7 +17,6 @@ namespace PortabilityLayer
 			kCursors,
 			kHighScores,
 			kLogs,
-			kFontCache,
 
 			kSourceExport,
 		};

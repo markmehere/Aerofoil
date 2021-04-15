@@ -106,6 +106,16 @@ namespace PortabilityLayer
 		return font;
 	}
 
+	void FontFamily::UnloadVariation(int variation)
+	{
+		FontSpec &spec = m_fontSpecs[variation];
+		if (spec.m_font)
+		{
+			spec.m_font->Destroy();
+			spec.m_font = nullptr;
+		}
+	}
+
 	PortabilityLayer::FontHacks FontFamily::GetHacksForVariation(int variation) const
 	{
 		return m_fontSpecs[variation].m_hacks;
