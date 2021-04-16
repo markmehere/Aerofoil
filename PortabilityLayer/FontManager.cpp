@@ -6,6 +6,7 @@
 #include "GpIOStream.h"
 #include "IGpFileSystem.h"
 #include "IGpFont.h"
+#include "IGpSystemServices.h"
 
 #include "MemReaderStream.h"
 #include "PLBigEndian.h"
@@ -130,6 +131,8 @@ namespace PortabilityLayer
 
 	void FontManagerImpl::GetFontPreset(FontPreset_t preset, FontFamilyID_t *outFamilyID, int *outSize, int *outVariationFlags, bool *outAA) const
 	{
+		const bool preinstalledFonts = PLDrivers::GetSystemServices()->IsUsingPreinstalledFonts();
+
 		if (outSize)
 			*outSize = ms_fontPresets[preset].m_textSize;
 
@@ -137,14 +140,22 @@ namespace PortabilityLayer
 			*outVariationFlags = ms_fontPresets[preset].m_variationFlags;
 
 		if (outAA)
-			*outAA = ms_fontPresets[preset].m_aa;
+		{
+			bool aa = ms_fontPresets[preset].m_aa;
+			FontFamilyID_t fontFamily = ms_fontPresets[preset].m_familyID;
+
+			if (preinstalledFonts && (fontFamily == FontFamilyIDs::kApplication || fontFamily == FontFamilyIDs::kSystem))
+				*outAA = false;
+			else
+				*outAA = aa;
+		}
 
 		if (outFamilyID)
 		{
 			switch (ms_fontPresets[preset].m_familyID)
 			{
 			case FontFamilyIDs::kApplication:
-				if (ms_fontPresets[preset].m_textSize < 11 && (ms_fontPresets[preset].m_variationFlags & FontFamilyFlag_Bold) != 0)
+				if (!preinstalledFonts && ms_fontPresets[preset].m_textSize < 11 && (ms_fontPresets[preset].m_variationFlags & FontFamilyFlag_Bold) != 0)
 					*outFamilyID = FontFamilyIDs::kSystem;	// Use heavier font below 11pt
 				else
 					*outFamilyID = FontFamilyIDs::kApplication;
