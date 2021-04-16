@@ -185,6 +185,11 @@ bool GpSystemServices_Web::AreFontResourcesSeekable() const
 	return true;
 }
 
+bool GpSystemServices_Web::IsUsingPreinstalledFonts() const
+{
+	return false;
+}
+
 IGpClipboardContents *GpSystemServices_Web::GetClipboardContents() const
 {
 	return m_clipboardContents;

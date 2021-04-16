@@ -283,6 +283,11 @@ bool GpSystemServices_Win32::AreFontResourcesSeekable() const
 	return true;
 }
 
+bool GpSystemServices_Win32::IsUsingPreinstalledFonts() const
+{
+	return false;
+}
+
 IGpClipboardContents *GpSystemServices_Win32::GetClipboardContents() const
 {
 	IGpClipboardContents *cbObject = nullptr;
