@@ -40,8 +40,9 @@ class GpFont_FreeType2 final : public IGpFont
 {
 public:
 	void Destroy() override;
-	IGpFontRenderedGlyph *Render(uint32_t unicodeCodePoint, unsigned int size, bool aa) override;
+	IGpFontRenderedGlyph *Render(uint32_t unicodeCodePoint, unsigned int size, unsigned int xScale, unsigned int yScale, bool aa) override;
 	bool GetLineSpacing(unsigned int size, int32_t &outSpacing) override;
+	bool SupportScaling() const override;
 
 	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, GpIOStream *stream);
 
@@ -107,7 +108,7 @@ void GpFont_FreeType2::Destroy()
 	free(this);
 }
 
-IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, bool aa)
+IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, unsigned int xScale, unsigned int yScale, bool aa)
 {
 	if (m_currentSize != size)
 	{
@@ -116,6 +117,14 @@ IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsign
 
 		m_currentSize = size;
 	}
+
+	FT_Matrix transform;
+	transform.xx = xScale << 16;
+	transform.xy = 0;
+	transform.yx = 0;
+	transform.yy = yScale << 16;
+
+	FT_Set_Transform(m_face, &transform, nullptr);
 
 	FT_UInt glyphIndex = FT_Get_Char_Index(m_face, unicodeCodePoint);
 	if (!glyphIndex)
@@ -247,6 +256,10 @@ bool GpFont_FreeType2::GetLineSpacing(unsigned int size, int32_t &outSpacing)
 	return true;
 }
 
+bool GpFont_FreeType2::SupportScaling() const
+{
+	return true;
+}
 
 GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, GpIOStream *stream)
 {
@@ -267,6 +280,8 @@ bool GpFont_FreeType2::FTLoad(const FT_Library &library, int typeFaceIndex)
 	FT_Error errorCode = FT_Open_Face(library, &openArgs, typeFaceIndex, &m_face);
 	if (errorCode != 0)
 		return false;
+
+	FT_Matrix transform;
 
 	return true;
 }

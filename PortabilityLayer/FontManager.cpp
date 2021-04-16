@@ -140,15 +140,7 @@ namespace PortabilityLayer
 			*outVariationFlags = ms_fontPresets[preset].m_variationFlags;
 
 		if (outAA)
-		{
-			bool aa = ms_fontPresets[preset].m_aa;
-			FontFamilyID_t fontFamily = ms_fontPresets[preset].m_familyID;
-
-			if (m_hasPreinstalledFonts && (fontFamily == FontFamilyIDs::kApplication || fontFamily == FontFamilyIDs::kSystem))
-				*outAA = false;
-			else
-				*outAA = aa;
-		}
+			*outAA = ms_fontPresets[preset].m_aa;
 
 		if (outFamilyID)
 		{
