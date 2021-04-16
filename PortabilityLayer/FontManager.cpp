@@ -79,6 +79,8 @@ namespace PortabilityLayer
 		PortabilityLayer::CompositeFile *m_fontArchiveFile;
 		THandle<void> m_fontArchiveCatalogData;
 
+		bool m_hasPreinstalledFonts;
+
 		static FontManagerImpl ms_instance;
 		static FontPreset ms_fontPresets[FontPresets::kCount];
 	};
@@ -89,19 +91,19 @@ namespace PortabilityLayer
 			m_fontFamilies[static_cast<FontFamilyID_t>(i)] = FontFamily::Create(static_cast<FontFamilyID_t>(i));
 
 		if (m_fontFamilies[FontFamilyIDs::kSystem])
-			m_fontFamilies[FontFamilyIDs::kSystem]->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kSystem]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", 0, FontHacks_None);
 
 		if (m_fontFamilies[FontFamilyIDs::kApplication])
 		{
-			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_None, "Fonts/OpenSans/OpenSans-SemiBold.ttf", FontHacks_None);
-			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_Bold, "Fonts/OpenSans/OpenSans-Bold.ttf", FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-SemiBold.ttf", 0, FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_Bold, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-Bold.ttf", 0, FontHacks_None);
 		}
 
 		if (m_fontFamilies[FontFamilyIDs::kHandwriting])
-			m_fontFamilies[FontFamilyIDs::kHandwriting]->AddFont(FontFamilyFlag_None, "Fonts/GochiHand/GochiHand-Regular.ttf", FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kHandwriting]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/GochiHand/GochiHand-Regular.ttf", 0, FontHacks_None);
 
 		if (m_fontFamilies[FontFamilyIDs::kMonospace])
-			m_fontFamilies[FontFamilyIDs::kMonospace]->AddFont(FontFamilyFlag_None, "Fonts/Roboto/RobotoMono-Regular.ttf", FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kMonospace]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/Roboto/RobotoMono-Regular.ttf", 0, FontHacks_None);
 
 		memset(m_cachedRenderedFonts, 0, sizeof(m_cachedRenderedFonts));
 	}
@@ -131,8 +133,6 @@ namespace PortabilityLayer
 
 	void FontManagerImpl::GetFontPreset(FontPreset_t preset, FontFamilyID_t *outFamilyID, int *outSize, int *outVariationFlags, bool *outAA) const
 	{
-		const bool preinstalledFonts = PLDrivers::GetSystemServices()->IsUsingPreinstalledFonts();
-
 		if (outSize)
 			*outSize = ms_fontPresets[preset].m_textSize;
 
@@ -144,7 +144,7 @@ namespace PortabilityLayer
 			bool aa = ms_fontPresets[preset].m_aa;
 			FontFamilyID_t fontFamily = ms_fontPresets[preset].m_familyID;
 
-			if (preinstalledFonts && (fontFamily == FontFamilyIDs::kApplication || fontFamily == FontFamilyIDs::kSystem))
+			if (m_hasPreinstalledFonts && (fontFamily == FontFamilyIDs::kApplication || fontFamily == FontFamilyIDs::kSystem))
 				*outAA = false;
 			else
 				*outAA = aa;
@@ -155,7 +155,7 @@ namespace PortabilityLayer
 			switch (ms_fontPresets[preset].m_familyID)
 			{
 			case FontFamilyIDs::kApplication:
-				if (!preinstalledFonts && ms_fontPresets[preset].m_textSize < 11 && (ms_fontPresets[preset].m_variationFlags & FontFamilyFlag_Bold) != 0)
+				if (!m_hasPreinstalledFonts && ms_fontPresets[preset].m_textSize < 11 && (ms_fontPresets[preset].m_variationFlags & FontFamilyFlag_Bold) != 0)
 					*outFamilyID = FontFamilyIDs::kSystem;	// Use heavier font below 11pt
 				else
 					*outFamilyID = FontFamilyIDs::kApplication;
@@ -286,8 +286,14 @@ namespace PortabilityLayer
 		int variation = fontFamily->GetVariationForFlags(flags);
 
 		FontHacks hacks = FontHacks_None;
+		VirtualDirectory_t vDir = VirtualDirectories::kUnspecified;
 		const char *path = nullptr;
-		if (!fontFamily->GetFontSpec(variation, hacks, path))
+		int typeFaceIndex = 0;
+		if (!fontFamily->GetFontSpec(variation, hacks, vDir, path, typeFaceIndex))
+			return nullptr;
+
+		// Only single TTF fonts are supported by the prerendered font system currently
+		if (vDir != VirtualDirectories::kFonts || typeFaceIndex != 0)
 			return nullptr;
 
 		size_t pathLen = strlen(path);
@@ -372,6 +378,7 @@ namespace PortabilityLayer
 	FontManagerImpl::FontManagerImpl()
 		: m_fontArchive(nullptr)
 		, m_fontArchiveFile(nullptr)
+		, m_hasPreinstalledFonts(false)
 	{
 		for (int fid = 0; fid < FontFamilyIDs::kCount; fid++)
 			m_fontFamilies[fid] = nullptr;

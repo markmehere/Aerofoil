@@ -45,7 +45,7 @@ public:
 
 	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, GpIOStream *stream);
 
-	bool FTLoad(const FT_Library &library);
+	bool FTLoad(const FT_Library &library, int typeFaceIndex);
 
 private:
 	explicit GpFont_FreeType2(const FT_StreamRec_ &streamRec, GpIOStream *stream);
@@ -257,14 +257,14 @@ GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, GpIOS
 	return new (storage) GpFont_FreeType2(streamRec, stream);
 }
 
-bool GpFont_FreeType2::FTLoad(const FT_Library &library)
+bool GpFont_FreeType2::FTLoad(const FT_Library &library, int typeFaceIndex)
 {
 	FT_Open_Args openArgs;
 	memset(&openArgs, 0, sizeof(openArgs));
 	openArgs.flags = FT_OPEN_STREAM;
 	openArgs.stream = &m_ftStream;
 
-	FT_Error errorCode = FT_Open_Face(library, &openArgs, 0, &m_face);
+	FT_Error errorCode = FT_Open_Face(library, &openArgs, typeFaceIndex, &m_face);
 	if (errorCode != 0)
 		return false;
 
@@ -304,7 +304,7 @@ GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
 	return fh;
 }
 
-IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
+IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream, int typeFaceIndex)
 {
 	FT_StreamRec_ ftStream;
 	memset(&ftStream, 0, sizeof(ftStream));
@@ -321,7 +321,7 @@ IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
 		return nullptr;
 	}
 
-	if (!font->FTLoad(m_library))
+	if (!font->FTLoad(m_library, typeFaceIndex))
 	{
 		font->Destroy();
 		return nullptr;

@@ -13,6 +13,7 @@ namespace PortabilityLayer
 			kUserData,
 			kUserSaves,
 			kPrefs,
+			kPreinstalledFonts,
 			kFonts,
 			kCursors,
 			kHighScores,

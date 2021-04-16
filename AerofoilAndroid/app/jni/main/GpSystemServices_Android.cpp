@@ -104,11 +104,6 @@ bool GpSystemServices_Android::AreFontResourcesSeekable() const
 	return false;
 }
 
-bool GpSystemServices_Android::IsUsingPreinstalledFonts() const
-{
-	return false;
-}
-
 IGpClipboardContents *GpSystemServices_Android::GetClipboardContents() const
 {
 	return nullptr;

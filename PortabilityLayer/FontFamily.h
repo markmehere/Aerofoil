@@ -2,6 +2,7 @@
 
 #include "FontFamilyID.h"
 #include "FontHacks.h"
+#include "VirtualDirectory.h"
 
 #include <stdint.h>
 
@@ -24,9 +25,9 @@ namespace PortabilityLayer
 	public:
 		static const unsigned int kNumVariations = FontFamilyFlag_All + 1;
 
-		void AddFont(int flags, const char *path, FontHacks fontHacks);
+		void AddFont(int flags, VirtualDirectory_t vDir, const char *path, int typeFaceIndex, FontHacks fontHacks);
 		void SetDefaultVariation(int defaultVariation);
-		bool GetFontSpec(int variation, FontHacks &outHacks, const char *&outPath);
+		bool GetFontSpec(int variation, FontHacks &outHacks, VirtualDirectory_t &outVDir, const char *&outPath, int &outTypeFaceIndex);
 
 		int GetVariationForFlags(int flags) const;
 		IGpFont *GetFontForVariation(int variation);
@@ -47,7 +48,9 @@ namespace PortabilityLayer
 
 			IGpFont *m_font;
 			FontHacks m_hacks;
+			VirtualDirectory_t m_fontVDir;
 			const char *m_fontPath;
+			int m_typeFaceIndex;
 			bool m_isRegistered;
 		};
 
