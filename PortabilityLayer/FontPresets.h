@@ -11,11 +11,12 @@ namespace PortabilityLayer
 
 			kApplication8,
 			kApplication9,
-			kApplication9Bold,
-			kApplication10Bold,
+			kApplication9SyntheticBold,
+			kApplication10SyntheticBold,
 			kApplication12Bold,
+			kApplication12SyntheticBold,
 			kApplication14,
-			kApplication14Bold,
+			kApplication14SyntheticBold,
 			kApplication18,
 			kApplication40,
 

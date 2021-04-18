@@ -6,6 +6,6 @@ namespace PortabilityLayer
 	{
 		FontHacks_None,
 		FontHacks_Roboto,
-		FontHacks_SyntheticBold,
+		FontHacks_SyntheticBold_OpenSans,
 	};
 }

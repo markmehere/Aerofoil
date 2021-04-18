@@ -172,6 +172,8 @@ IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsign
 	metrics.m_glyphWidth = glyph->bitmap.width;
 	metrics.m_glyphHeight = glyph->bitmap.rows;
 	metrics.m_advanceX = glyph->metrics.horiAdvance / 64;
+	metrics.m_bitmapOffsetX = glyph->bitmap_left;
+	metrics.m_bitmapOffsetY = glyph->bitmap_top;
 
 	const size_t numRowsRequired = glyph->bitmap.rows;
 	size_t pitchRequired = 0;

@@ -593,7 +593,7 @@ namespace PortabilityLayer
 		if (window->GetStyleFlags() & WindowStyleFlags::kCloseBox)
 			RenderChromeCloseBox(surface, rect, false);
 
-		PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication10Bold);
+		PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication10SyntheticBold);
 		int32_t ascender = appFont->GetMetrics().m_ascent;
 
 		const PLPasStr titlePStr = window->GetTitle().ToShortStr();

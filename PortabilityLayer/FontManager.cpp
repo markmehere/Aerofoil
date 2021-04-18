@@ -50,8 +50,9 @@ namespace PortabilityLayer
 			RenderedFont *m_rfont;
 			int m_fontCacheID;
 			int m_size;
-			uint32_t m_lastUsage;
+			int m_flags;
 			bool m_aa;
+			uint32_t m_lastUsage;
 		};
 
 		struct FontPreset
@@ -64,7 +65,7 @@ namespace PortabilityLayer
 
 		FontManagerImpl();
 
-		bool FindOrReserveCacheSlot(int cacheID, int size, bool aa, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF);
+		bool FindOrReserveCacheSlot(int cacheID, int size, bool aa, int flags, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF);
 		void ReplaceCachedRenderedFont(CachedRenderedFont &cacheSlot, RenderedFont *rfont, int cacheID, int size, bool aa, int flags);
 
 		void ResetUsageCounter();
@@ -97,6 +98,7 @@ namespace PortabilityLayer
 		{
 			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-SemiBold.ttf", 0, FontHacks_None);
 			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_Bold, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-Bold.ttf", 0, FontHacks_None);
+			m_fontFamilies[FontFamilyIDs::kApplication]->AddFont(FontFamilyFlag_SyntheticBold, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-Regular.ttf", 0, FontHacks_SyntheticBold_OpenSans);
 		}
 
 		if (m_fontFamilies[FontFamilyIDs::kHandwriting])
@@ -143,23 +145,10 @@ namespace PortabilityLayer
 			*outAA = ms_fontPresets[preset].m_aa;
 
 		if (outFamilyID)
-		{
-			switch (ms_fontPresets[preset].m_familyID)
-			{
-			case FontFamilyIDs::kApplication:
-				if (!m_hasPreinstalledFonts && ms_fontPresets[preset].m_textSize < 11 && (ms_fontPresets[preset].m_variationFlags & FontFamilyFlag_Bold) != 0)
-					*outFamilyID = FontFamilyIDs::kSystem;	// Use heavier font below 11pt
-				else
-					*outFamilyID = FontFamilyIDs::kApplication;
-				break;
-			default:
-				*outFamilyID = ms_fontPresets[preset].m_familyID;
-				break;
-			}
-		}
+			*outFamilyID = ms_fontPresets[preset].m_familyID;
 	}
 
-	bool FontManagerImpl::FindOrReserveCacheSlot(int cacheID, int size, bool aa, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF)
+	bool FontManagerImpl::FindOrReserveCacheSlot(int cacheID, int size, bool aa, int flags, CachedRenderedFont *&outCacheSlot, RenderedFont *&outRF)
 	{
 		CachedRenderedFont *newCacheSlot = &m_cachedRenderedFonts[0];
 
@@ -172,7 +161,7 @@ namespace PortabilityLayer
 				break;
 			}
 
-			if (crf.m_fontCacheID == cacheID && crf.m_size == size && crf.m_aa == aa)
+			if (crf.m_fontCacheID == cacheID && crf.m_size == size && crf.m_aa == aa && crf.m_flags == flags)
 			{
 				crf.m_lastUsage = m_usageCounter;
 				RenderedFont *rf = crf.m_rfont;
@@ -203,6 +192,7 @@ namespace PortabilityLayer
 		cacheSlot.m_size = size;
 		cacheSlot.m_rfont = rfont;
 		cacheSlot.m_aa = aa;
+		cacheSlot.m_flags = flags;
 
 		if (m_usageCounter == UINT32_MAX)
 			ResetUsageCounter();
@@ -231,7 +221,7 @@ namespace PortabilityLayer
 		CachedRenderedFont *cacheSlot = nullptr;
 		RenderedFont *rfont = nullptr;
 
-		if (this->FindOrReserveCacheSlot(familyID, size, aa, cacheSlot, rfont))
+		if (this->FindOrReserveCacheSlot(familyID, size, aa, flags, cacheSlot, rfont))
 			return rfont;
 
 		rfont = LoadAndRenderFont(familyID, size, aa, flags);
@@ -424,11 +414,12 @@ namespace PortabilityLayer
 
 		{ FontFamilyIDs::kApplication, 8, FontFamilyFlag_None, true },
 		{ FontFamilyIDs::kApplication, 9, FontFamilyFlag_None, true },
-		{ FontFamilyIDs::kApplication, 9, FontFamilyFlag_Bold, true },
-		{ FontFamilyIDs::kApplication, 10, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 9, FontFamilyFlag_SyntheticBold, true },
+		{ FontFamilyIDs::kApplication, 10, FontFamilyFlag_SyntheticBold, true },
 		{ FontFamilyIDs::kApplication, 12, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 12, FontFamilyFlag_SyntheticBold, true },
 		{ FontFamilyIDs::kApplication, 14, FontFamilyFlag_None, true },
-		{ FontFamilyIDs::kApplication, 14, FontFamilyFlag_Bold, true },
+		{ FontFamilyIDs::kApplication, 14, FontFamilyFlag_SyntheticBold, true },
 		{ FontFamilyIDs::kApplication, 18, FontFamilyFlag_None, true },
 		{ FontFamilyIDs::kApplication, 40, FontFamilyFlag_None, true },
 

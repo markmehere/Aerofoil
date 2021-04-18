@@ -16,8 +16,9 @@ namespace PortabilityLayer
 		FontFamilyFlag_None = 0,
 
 		FontFamilyFlag_Bold = 1,
+		FontFamilyFlag_SyntheticBold = 2,
 
-		FontFamilyFlag_All = 1,
+		FontFamilyFlag_All = (FontFamilyFlag_Bold | FontFamilyFlag_SyntheticBold),
 	};
 
 	class FontFamily final

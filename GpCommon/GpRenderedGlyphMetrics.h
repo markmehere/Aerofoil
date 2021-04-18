@@ -12,4 +12,6 @@ struct GpRenderedGlyphMetrics
 	int16_t m_bearingX;
 	int16_t m_bearingY;
 	int16_t m_advanceX;
+	int16_t m_bitmapOffsetX;
+	int16_t m_bitmapOffsetY;
 };

@@ -59,6 +59,8 @@ namespace PortabilityLayer
 			BEInt16_t m_bearingX;
 			BEInt16_t m_bearingY;
 			BEInt16_t m_advanceX;
+			BEInt16_t m_bitmapOffsetX;
+			BEInt16_t m_bitmapOffsetY;
 		};
 
 		struct SerializedFontMetrics
@@ -101,7 +103,7 @@ namespace PortabilityLayer
 		static FontRendererImpl *GetInstance();
 
 	private:
-		static void SynthesizeBoldAA(IGpFontRenderedGlyph *&glyph, unsigned int xScale, unsigned int yScale, bool aa);
+		static void SynthesizeBoldAA(IGpFontRenderedGlyph *&glyph, unsigned int xScale, unsigned int yScale, bool aa, uint8_t character, int size, FontHacks fontHacks);
 
 		static FontRendererImpl ms_instance;
 	};
@@ -315,6 +317,8 @@ namespace PortabilityLayer
 		result.m_glyphDataPitch = static_cast<uint32_t>(metrics.m_glyphDataPitch);
 		result.m_glyphHeight = metrics.m_glyphHeight;
 		result.m_glyphWidth = metrics.m_glyphWidth;
+		result.m_bitmapOffsetX = metrics.m_bitmapOffsetX;
+		result.m_bitmapOffsetY = metrics.m_bitmapOffsetY;
 
 		return result;
 	}
@@ -328,6 +332,8 @@ namespace PortabilityLayer
 		result.m_glyphDataPitch = static_cast<uint32_t>(metrics.m_glyphDataPitch);
 		result.m_glyphHeight = metrics.m_glyphHeight;
 		result.m_glyphWidth = metrics.m_glyphWidth;
+		result.m_bitmapOffsetX = metrics.m_bitmapOffsetX;
+		result.m_bitmapOffsetY = metrics.m_bitmapOffsetY;
 
 		return result;
 	}
@@ -369,16 +375,20 @@ namespace PortabilityLayer
 		for (unsigned int i = 0; i < numCharacters; i++)
 			glyphs[i] = nullptr;
 
+		bool isSyntheticBold = false;
+		if (fontHacks == FontHacks_SyntheticBold_OpenSans)
+			isSyntheticBold = true;
+
 		unsigned int xScale = 1;
 		unsigned int yScale = 1;
 		bool syntheticBoldAA = false;
-		if (fontHacks == FontHacks_SyntheticBold)
+		if (isSyntheticBold)
 		{
 			if (aa)
 			{
 				syntheticBoldAA = true;
-				xScale = 16;
-				yScale = 16;
+				xScale = 8;
+				yScale = 8;
 			}
 		}
 
@@ -391,14 +401,14 @@ namespace PortabilityLayer
 			glyphs[i] = font->Render(unicodeCodePoint, size, xScale, yScale, aa);
 		}
 
-		if (fontHacks == FontHacks_SyntheticBold)
+		if (isSyntheticBold)
 		{
 			if (syntheticBoldAA)
 			{
 				for (unsigned int i = 0; i < numCharacters; i++)
 				{
 					if (glyphs[i])
-						SynthesizeBoldAA(glyphs[i], xScale, yScale, syntheticBoldAA);
+						SynthesizeBoldAA(glyphs[i], xScale, yScale, syntheticBoldAA, i, size, fontHacks);
 				}
 			}
 		}
@@ -447,6 +457,20 @@ namespace PortabilityLayer
 							}
 						}
 					}
+
+					/*
+					if (fontHacks == FontHacks_SyntheticBold_OpenSans && size == 12)
+					{
+						if (i == 'i')
+							metrics.m_bearingX++;
+					}
+
+					if (fontHacks == FontHacks_SyntheticBold_OpenSans && size == 9)
+					{
+						if (i == 'V')
+							metrics.m_advanceX++;
+					}
+					*/
 
 					rfont->SetCharData(i, data, fillOffset, metrics);
 
@@ -512,16 +536,45 @@ namespace PortabilityLayer
 		return true;
 	}
 
-	void FontRendererImpl::SynthesizeBoldAA(IGpFontRenderedGlyph *&glyph, unsigned int xScale, unsigned int yScale, bool aa)
+	void FontRendererImpl::SynthesizeBoldAA(IGpFontRenderedGlyph *&glyph, unsigned int xScale, unsigned int yScale, bool aa, uint8_t character, int size, FontHacks fontHacks)
 	{
+		unsigned int extraWidth = 1;
+
 		GpRenderedGlyphMetrics metrics = glyph->GetMetrics();
 		const void *existingData = glyph->GetData();
 
 		uint32_t existingWidth = metrics.m_glyphWidth;
 		uint32_t existingHeight = metrics.m_glyphHeight;
 
-		uint32_t newWidth = (existingWidth + xScale - 1) / xScale + 1;
-		uint32_t newHeight = (existingHeight + yScale - 1) / yScale;
+		uint32_t leftPadding = 0;
+		uint32_t topPadding = 0;
+
+		{
+			const int32_t leftCoord = metrics.m_bitmapOffsetX;
+			int32_t leftCoordRemainder = leftCoord % static_cast<int32_t>(xScale);
+
+			if (leftCoordRemainder > 0)
+				leftPadding = leftCoordRemainder;
+			else if (leftCoordRemainder < 0)
+				leftPadding = leftCoordRemainder + static_cast<int32_t>(xScale);
+
+			const int32_t topCoord = metrics.m_bitmapOffsetY;
+			int32_t topCoordRemainder = topCoord % static_cast<int32_t>(yScale);
+
+			if (topCoordRemainder != 0)
+			{
+				if (topCoordRemainder < 0)
+					topCoordRemainder += static_cast<int32_t>(yScale);
+
+				topPadding = static_cast<int32_t>(yScale) - topCoordRemainder;
+			}
+		}
+
+		uint32_t paddedWidth = existingWidth + leftPadding;
+		uint32_t paddedHeight = existingHeight + topPadding;
+
+		uint32_t newWidth = (paddedWidth + xScale - 1) / xScale + extraWidth;
+		uint32_t newHeight = (paddedHeight + yScale - 1) / yScale;
 
 		ReRenderedGlyph *newGlyph = ReRenderedGlyph::Create(newWidth, newHeight, aa);
 		if (!newGlyph)
@@ -535,9 +588,11 @@ namespace PortabilityLayer
 		}
 
 		GpRenderedGlyphMetrics &newMetrics = newGlyph->GetMutableMetrics();
-		newMetrics.m_advanceX = metrics.m_advanceX + 1;
-		newMetrics.m_bearingX = metrics.m_bearingX;
-		newMetrics.m_bearingY = metrics.m_bearingY;
+		newMetrics.m_advanceX = metrics.m_advanceX + static_cast<int16_t>(extraWidth);
+		newMetrics.m_bearingX = (metrics.m_bitmapOffsetX - static_cast<int16_t>(leftPadding)) / static_cast<int16_t>(xScale);
+		newMetrics.m_bearingY = (metrics.m_bitmapOffsetY + static_cast<int16_t>(topPadding)) / static_cast<int16_t>(yScale);
+		newMetrics.m_bitmapOffsetX = newMetrics.m_bearingX;
+		newMetrics.m_bitmapOffsetY = newMetrics.m_bearingY;
 
 		const size_t existingDataPitch = metrics.m_glyphDataPitch;
 		const size_t newPitch = newMetrics.m_glyphDataPitch;
@@ -549,7 +604,11 @@ namespace PortabilityLayer
 
 			for (unsigned int subY = 0; subY < yScale; subY++)
 			{
-				unsigned int originalY = subY + outY * yScale;
+				uint32_t originalY = subY + outY * yScale;
+				if (originalY < topPadding)
+					continue;
+
+				originalY -= topPadding;
 				if (originalY >= existingHeight)
 					break;
 
@@ -558,14 +617,19 @@ namespace PortabilityLayer
 				unsigned int streakCounter = 0;
 				unsigned int outX = 0;
 				unsigned int outSubX = 0;
-				for (unsigned int originalX = 0; originalX < newWidth * xScale; originalX++)
+				for (unsigned int unpaddedOriginalX = 0; unpaddedOriginalX < newWidth * xScale; unpaddedOriginalX++)
 				{
-					if (originalX < existingWidth)
+					if (unpaddedOriginalX > leftPadding)
 					{
-						//if (existingRow[originalX / 8] & (1 << (originalX & 7)))
-						uint8_t v = ((existingRow[originalX / 2] >> ((originalX & 1) * 4)) & 0xf);
-						if (v >= 8)
-							streakCounter = xScale + 1;
+						uint32_t originalX = unpaddedOriginalX - leftPadding;
+
+						if (originalX < existingWidth)
+						{
+							//if (existingRow[originalX / 8] & (1 << (originalX & 7)))
+							uint8_t v = ((existingRow[originalX / 2] >> ((originalX & 1) * 4)) & 0xf);
+							if (v >= 8)
+								streakCounter = xScale + 1;
+						}
 					}
 
 					if (streakCounter > 0)
