@@ -296,9 +296,6 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		prefsAppend = "Prefs";
 		break;
-	case PortabilityLayer::VirtualDirectories::kFontCache:
-		prefsAppend = "FontCache";
-		break;
 	default:
 		return false;
 	};
