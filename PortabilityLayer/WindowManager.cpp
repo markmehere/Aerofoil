@@ -181,8 +181,8 @@ namespace PortabilityLayer
 		void HideWindow(Window *window) override;
 		void FindWindow(const Point &point, Window **outWindow, short *outRegion) const override;
 		void DestroyWindow(Window *window) override;
-		void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) override;
-		bool HandleCloseBoxClick(Window *window, const Point &startPoint) override;
+		void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) GP_ASYNCIFY_PARANOID_OVERRIDE;
+		bool HandleCloseBoxClick(Window *window, const Point &startPoint) GP_ASYNCIFY_PARANOID_OVERRIDE;
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 		Rect2i GetWindowFullRect(Window *window) const override;
 		bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const override;
@@ -1198,7 +1198,14 @@ namespace PortabilityLayer
 		for (;;)
 		{
 			TimeTaggedVOSEvent evt;
-			if (WaitForEvent(&evt, 1))
+			bool haveEvent = false;
+
+			{
+				PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
+				haveEvent = WaitForEvent(&evt, 1);
+			}
+
+			if (haveEvent)
 			{
 				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 				{
@@ -1253,7 +1260,14 @@ namespace PortabilityLayer
 		for (;;)
 		{
 			TimeTaggedVOSEvent evt;
-			if (WaitForEvent(&evt, 1))
+
+			bool haveEvent = false;
+			{
+				PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
+				haveEvent = WaitForEvent(&evt, 1);
+			}
+
+			if (haveEvent)
 			{
 				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 				{
@@ -1693,6 +1707,16 @@ namespace PortabilityLayer
 	}
 
 #if GP_ASYNCIFY_PARANOID
+	void WindowManager::DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect)
+	{
+		static_cast<WindowManagerImpl*>(this)->DragWindow(window, startPoint, constraintRect);
+	}
+
+	bool WindowManager::HandleCloseBoxClick(Window *window, const Point &startPoint)
+	{
+		return static_cast<WindowManagerImpl*>(this)->HandleCloseBoxClick(window, startPoint);
+	}
+
 	void WindowManager::FlickerWindowIn(Window *window, int32_t velocity)
 	{
 		static_cast<WindowManagerImpl*>(this)->FlickerWindowIn(window, velocity);

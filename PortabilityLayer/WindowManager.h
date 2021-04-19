@@ -33,8 +33,8 @@ namespace PortabilityLayer
 		virtual void HideWindow(Window *window) = 0;
 		virtual void FindWindow(const Point &point, Window **outWindow, short *outRegion) const = 0;
 		virtual void DestroyWindow(Window *window) = 0;
-		virtual void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) = 0;
-		virtual bool HandleCloseBoxClick(Window *window, const Point &startPoint) = 0;
+		GP_ASYNCIFY_PARANOID_VIRTUAL void DragWindow(Window *window, const Point &startPoint, const Rect &constraintRect) GP_ASYNCIFY_PARANOID_PURE;
+		GP_ASYNCIFY_PARANOID_VIRTUAL bool HandleCloseBoxClick(Window *window, const Point &startPoint) GP_ASYNCIFY_PARANOID_PURE;
 		virtual void SetWindowTitle(Window *window, const PLPasStr &title) = 0;
 		virtual Rect2i GetWindowFullRect(Window *window) const = 0;
 		virtual bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const = 0;
