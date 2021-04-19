@@ -58,6 +58,8 @@ uint64_t GpSystemServices_POSIX::GetFreeMemoryCosmetic() const
 		&& len == sizeof (usermem))
 		return (long) usermem;
 	}
+
+    return 0;
 	#else
 	long pages = sysconf(_SC_AVPHYS_PAGES);
 	long pageSize = sysconf(_SC_PAGE_SIZE);

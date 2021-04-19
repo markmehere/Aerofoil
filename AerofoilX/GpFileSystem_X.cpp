@@ -238,6 +238,8 @@ void GpFileSystem_X::Init()
 		int created = mkdir(prefsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
 	SDL_free(prefsDir);
+
+    printf("Base path %s \n", m_basePath.c_str());
 }
 
 bool GpFileSystem_X::FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path)
