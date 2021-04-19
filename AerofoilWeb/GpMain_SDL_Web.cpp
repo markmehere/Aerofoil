@@ -19,18 +19,29 @@
 #include "IGpVOSEventQueue.h"
 
 #include <string>
+#include <emscripten.h>
 
 GpXGlobals g_gpXGlobals;
-
-extern "C" IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
 
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
 IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
 IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverProperties &properties);
 
+EM_JS(void, InitFileSystem, (), {
+	Asyncify.handleSleep(wakeUp => {
+		FS.mkdir('/aerofoil');
+		FS.mount(IDBFS, {}, '/aerofoil');
+		FS.syncfs(true, function (err) {
+			assert(!err);
+			wakeUp();
+		});
+	});
+});
 
 int main(int argc, char* argv[])
 {
+	InitFileSystem();
+	
 	GpLogDriver_Web::Init();
 	IGpLogDriver *logger = GpLogDriver_Web::GetInstance();
 

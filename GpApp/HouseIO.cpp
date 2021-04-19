@@ -602,6 +602,7 @@ Boolean ReadHouse (GpIOStream *houseStream)
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 	
 	numberRooms = (*thisHouse)->nRooms;
+
 	#ifdef COMPILEDEMO
 	if (numberRooms != 45)
 		return (false);
@@ -685,7 +686,7 @@ Boolean WriteHouse (Boolean checkIt)
 	}
 
 	GpIOStream *houseStream = nil;
-	theErr = houseCFile->OpenData(PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOpen, houseStream);
+	theErr = houseCFile->OpenData(PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOverwrite, houseStream);
 	if (theErr != PLErrors::kNone)
 		return (false);
 

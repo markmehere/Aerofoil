@@ -459,7 +459,13 @@ namespace PortabilityLayer
 								break;
 						}
 
-						if (WaitForEvent(&evtHolder, 1))
+						bool haveEvent = false;
+						{
+							PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
+							haveEvent = WaitForEvent(&evtHolder, 1);
+						}
+
+						if (haveEvent)
 							rcvEvt = &evtHolder;
 						else
 							rcvEvt = nullptr;

@@ -81,7 +81,7 @@ namespace PortabilityLayer
 		return static_cast<GpUFilePos_t>(ftell(m_file));
 	}
 
-	void CFileStream::Close()
+	void CFileStream::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 	{
 		if (m_file)
 		{

@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
+#include <emscripten.h>
 
 #include "UTF8.h"
 
@@ -29,6 +30,111 @@ typedef off_t off64_t;
 #define stat64 stat
 #endif
 
+EM_JS(void, FlushFileSystem, (), {
+	Asyncify.handleSleep(wakeUp => {
+		FS.syncfs(false, function (err) {
+			assert(!err);
+			wakeUp();
+		});
+	});
+});
+
+
+class GpDirectoryCursor_Web final : public IGpDirectoryCursor
+{
+public:
+	explicit GpDirectoryCursor_Web(DIR *dir, const std::string &prefix);
+	~GpDirectoryCursor_Web();
+
+	bool GetNext(const char *&outFileName) override;
+	void Destroy() override;
+
+private:
+	DIR *m_dir;
+	std::string m_prefix;
+	std::string m_decodedFileName;
+};
+
+GpDirectoryCursor_Web::GpDirectoryCursor_Web(DIR *dir, const std::string &prefix)
+	: m_dir(dir)
+	, m_prefix(prefix)
+{
+}
+
+GpDirectoryCursor_Web::~GpDirectoryCursor_Web()
+{
+	closedir(m_dir);
+}
+
+bool GpDirectoryCursor_Web::GetNext(const char *&outFileName)
+{
+	const size_t prefixLength = m_prefix.size();
+
+	for (;;)
+	{
+		struct dirent *dir = readdir(m_dir);
+		if (!dir)
+			return false;
+
+		const char *fname = dir->d_name;
+
+		const size_t fnameLen = strlen(fname);
+		if (fnameLen > prefixLength && (prefixLength == 0 || !memcmp(&m_prefix[0], fname, prefixLength)))
+		{
+			const char *encodedResult = fname + prefixLength;
+
+			m_decodedFileName.clear();
+			for (size_t i = 0; encodedResult[i] != 0; i++)
+			{
+				char c = encodedResult[i];
+				if (c == '%')
+				{
+					char highNibble = encodedResult[i + 1];
+					if ((highNibble >= '0' && highNibble <= '9') || (highNibble >= 'a' && highNibble <= 'f') || (highNibble >= 'A' && highNibble <= 'F'))
+					{
+						char lowNibble = encodedResult[i + 2];
+
+						if ((lowNibble >= '0' && lowNibble <= '9') || (lowNibble >= 'a' && lowNibble <= 'f') || (lowNibble >= 'A' && lowNibble <= 'F'))
+						{
+							bool failedNibble = false;
+							char nibbles[2] = { highNibble, lowNibble };
+							int decNibbles[2];
+							for (int ni = 0; ni < 2; ni++)
+							{
+								char nc = nibbles[ni];
+								if (nc >= '0' && nc <= '9')
+									decNibbles[ni] = nc - '0';
+								else if (nc >= 'a' && nc <= 'f')
+									decNibbles[ni] = 0xa + (nc - 'a');
+								else if (nc >= 'A' && nc <= 'F')
+									decNibbles[ni] = 0xa + (nc - 'A');
+								else
+									failedNibble = true;
+							}
+							
+							if (!failedNibble)
+							{
+								c = static_cast<char>((decNibbles[0] << 4) + decNibbles[1]);
+								i += 2;
+							}
+						}
+					}
+				}
+
+				m_decodedFileName += c;
+			}
+			
+			outFileName = m_decodedFileName.c_str();
+			return true;
+		}
+	}
+	return true;
+}
+
+void GpDirectoryCursor_Web::Destroy()
+{
+	delete this;
+}
 
 class GpFileStream_Web_StaticMemFile final : public GpIOStream
 {
@@ -46,7 +152,7 @@ public:
 	bool SeekEnd(GpUFilePos_t loc) override;
 	GpUFilePos_t Size() const override;
 	GpUFilePos_t Tell() const override;
-	void Close() override;
+	void GP_ASYNCIFY_PARANOID_NAMED(Close)() override;
 	void Flush() override;
 
 private:
@@ -136,7 +242,7 @@ GpUFilePos_t GpFileStream_Web_StaticMemFile::Tell() const
 	return m_offset;
 }
 
-void GpFileStream_Web_StaticMemFile::Close()
+void GpFileStream_Web_StaticMemFile::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 {
 	delete this;
 }
@@ -149,7 +255,7 @@ void GpFileStream_Web_StaticMemFile::Flush()
 class GpFileStream_Web_File final : public GpIOStream
 {
 public:
-	GpFileStream_Web_File(FILE *f, bool readOnly, bool writeOnly);
+	GpFileStream_Web_File(FILE *f, bool readOnly, bool writeOnly, bool synchronizeOnClose);
 	~GpFileStream_Web_File();
 
 	size_t Read(void *bytesOut, size_t size) override;
@@ -162,7 +268,7 @@ public:
 	bool SeekEnd(GpUFilePos_t loc) override;
 	GpUFilePos_t Size() const override;
 	GpUFilePos_t Tell() const override;
-	void Close() override;
+	void GP_ASYNCIFY_PARANOID_NAMED(Close)() override;
 	void Flush() override;
 
 private:
@@ -170,13 +276,15 @@ private:
 	bool m_seekable;
 	bool m_isReadOnly;
 	bool m_isWriteOnly;
+	bool m_synchronizeOnClose;
 };
 
 
-GpFileStream_Web_File::GpFileStream_Web_File(FILE *f, bool readOnly, bool writeOnly)
+GpFileStream_Web_File::GpFileStream_Web_File(FILE *f, bool readOnly, bool writeOnly, bool synchronizeOnClose)
 	: m_f(f)
 	, m_isReadOnly(readOnly)
 	, m_isWriteOnly(writeOnly)
+	, m_synchronizeOnClose(synchronizeOnClose)
 {
 	m_seekable = (fseek(m_f, 0, SEEK_CUR) == 0);
 }
@@ -184,6 +292,9 @@ GpFileStream_Web_File::GpFileStream_Web_File(FILE *f, bool readOnly, bool writeO
 GpFileStream_Web_File::~GpFileStream_Web_File()
 {
 	fclose(m_f);
+
+	if (m_synchronizeOnClose)
+		GpFileSystem_Web::MarkFSStateDirty();
 }
 
 size_t GpFileStream_Web_File::Read(void *bytesOut, size_t size)
@@ -258,7 +369,7 @@ GpUFilePos_t GpFileStream_Web_File::Tell() const
 	return static_cast<GpUFilePos_t>(ftell(m_f));
 }
 
-void GpFileStream_Web_File::Close()
+void GpFileStream_Web_File::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 {
 	this->~GpFileStream_Web_File();
 	free(this);
@@ -269,20 +380,25 @@ void GpFileStream_Web_File::Flush()
 	fflush(m_f);
 }
 
-bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution)
+
+bool GpFileSystem_Web::ms_fsStateDirty;
+
+
+bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool trailingSlash, std::string &resolution)
 {
 	const char *prefsAppend = nullptr;
+	std::string unsanitized;
 
 	switch (virtualDirectory)
 	{
 	case PortabilityLayer::VirtualDirectories::kApplicationData:
-		resolution = std::string("Packaged");
+		unsanitized = std::string("Packaged");
 		break;
 	case PortabilityLayer::VirtualDirectories::kGameData:
-		resolution = std::string("Packaged/Houses");
+		unsanitized = std::string("Packaged/Houses");
 		break;
 	case PortabilityLayer::VirtualDirectories::kFonts:
-		resolution = std::string("Resources");
+		unsanitized = std::string("Resources");
 		break;
 	case PortabilityLayer::VirtualDirectories::kHighScores:
 		prefsAppend = "HighScores";
@@ -301,14 +417,50 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 	};
 
 	if (prefsAppend)
-		resolution = m_prefsPath + prefsAppend;
-	else
-		resolution = m_basePath + resolution;
-
-	for (size_t i = 0; i < numPaths; i++)
 	{
-		resolution += "/";
-		resolution += paths[i];
+		unsanitized = prefsAppend;
+		
+		for (size_t i = 0; i < numPaths; i++)
+		{
+			unsanitized += "/";
+			unsanitized += paths[i];
+		}
+		
+		if (trailingSlash)
+			unsanitized += "/";
+		
+		std::string sanitized;
+		for (size_t i = 0; i < unsanitized.size(); i++)
+		{
+			char c = unsanitized[i];
+			if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
+				sanitized += c;
+			else
+			{
+				const char *nibbles = "0123456789abcdef";
+				char subPath[4];
+				subPath[0] = '%';
+				subPath[1] = nibbles[(c >> 4) & 0xf];
+				subPath[2] = nibbles[c & 0xf];
+				subPath[3] = 0;
+
+				sanitized += subPath;
+			}
+		}
+
+		resolution = m_prefsPath + "/" + sanitized;
+	}
+	else
+	{
+		std::string sanitized = m_basePath + unsanitized;
+		
+		for (size_t i = 0; i < numPaths; i++)
+		{
+			sanitized += "/";
+			sanitized += paths[i];
+		}
+
+		resolution = sanitized;
 	}
 
 	return true;
@@ -325,8 +477,7 @@ GpFileSystem_Web::~GpFileSystem_Web()
 
 void GpFileSystem_Web::Init()
 {
-	char *prefsDir = SDL_GetPrefPath("aerofoil", "aerofoil");
-	m_prefsPath = prefsDir;
+	m_prefsPath = "/aerofoil";
 
 	char *baseDir = SDL_GetBasePath();
 	m_basePath = baseDir;
@@ -335,14 +486,6 @@ void GpFileSystem_Web::Init()
 	char baseDirSeparator = m_basePath[m_basePath.size() - 1];
 	if (m_basePath.size() >= 4 && m_basePath.substr(m_basePath.size() - 4, 3) == "bin")
 		m_basePath = m_basePath.substr(0, m_basePath.size() - 4) + "lib" + baseDirSeparator + "aerofoil" + baseDirSeparator;
-
-	const char *extensions[] = { "HighScores", "Houses", "SavedGames", "Prefs", "FontCache" };
-	for (size_t i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++)
-	{
-		std::string prefsPath = std::string(prefsDir) + extensions[i];
-		int created = mkdir(prefsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	}
-	SDL_free(prefsDir);
 }
 
 bool GpFileSystem_Web::FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path)
@@ -360,7 +503,7 @@ bool GpFileSystem_Web::FileExists(PortabilityLayer::VirtualDirectory_t virtualDi
 	}
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath))
+	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath))
 		return false;
 
 	struct stat s;
@@ -386,7 +529,7 @@ bool GpFileSystem_Web::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDi
 	}
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath))
+	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath))
 	{
 		if (exists)
 			exists = false;
@@ -445,7 +588,7 @@ GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_
 		return nullptr;
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, resolvedPath))
+	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, false, resolvedPath))
 		return nullptr;
 
 	void *objStorage = malloc(sizeof(GpFileStream_Web_File));
@@ -472,7 +615,7 @@ GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_
 		}
 	}
 
-	return new (objStorage) GpFileStream_Web_File(f, !writeAccess, false);
+	return new (objStorage) GpFileStream_Web_File(f, !writeAccess, false, writeAccess);
 }
 
 bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
@@ -481,7 +624,7 @@ bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDi
 		return false;
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, &path, 1, resolvedPath))
+	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath))
 	{
 		existed = false;
 		return false;
@@ -490,6 +633,9 @@ bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDi
 	if (unlink(resolvedPath.c_str()) < 0)
 	{
 		existed = (errno != ENOENT);
+		if (existed)
+			FlushFileSystem();
+
 		return false;
 	}
 	existed = true;
@@ -596,7 +742,17 @@ IGpDirectoryCursor *GpFileSystem_Web::ScanDirectoryNested(PortabilityLayer::Virt
 	if (const GpFileSystem_Web_Resources::FileCatalog *catalog = GetCatalogForVirtualDirectory(virtualDirectory))
 		return ScanCatalog(*catalog);
 
-	return nullptr;
+	std::string resolvedPrefix;
+	if (!ResolvePath(virtualDirectory, paths, numPaths, true, resolvedPrefix))
+		return nullptr;
+
+	std::string trimmedPrefix = resolvedPrefix.substr(m_prefsPath.size() + 1);
+
+	DIR *d = opendir(m_prefsPath.c_str());
+	if (!d)
+		return nullptr;
+
+	return new GpDirectoryCursor_Web(d, trimmedPrefix);
 }
 
 const GpFileSystem_Web_Resources::FileCatalog *GpFileSystem_Web::GetCatalogForVirtualDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory)
@@ -619,5 +775,33 @@ IGpDirectoryCursor *GpFileSystem_Web::ScanCatalog(const GpFileSystem_Web_Resourc
 	return new GpDirectoryCursor_StringList(paths);
 }
 
+void GpFileSystem_Web::MarkFSStateDirty()
+{
+	ms_fsStateDirty = true;
+}
+
+void GpFileSystem_Web::FlushFS()
+{
+	if (ms_fsStateDirty)
+	{
+		ms_fsStateDirty = false;
+		FlushFileSystem();
+	}
+}
+
+
+#if GP_ASYNCIFY_PARANOID
+void GpIOStream::Close()
+{
+	this->GP_ASYNCIFY_PARANOID_NAMED(Close)();
+	GpFileSystem_Web::FlushFS();
+}
+
+bool IGpFileSystem::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
+{
+	return static_cast<GpFileSystem_Web*>(this)->DeleteFile(virtualDirectory, path, existed);
+}
+
+#endif
 
 GpFileSystem_Web GpFileSystem_Web::ms_instance;

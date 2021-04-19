@@ -116,7 +116,7 @@ namespace PortabilityLayer
 		IResourceArchive *GetAppResourceArchive() const override;
 
 		IResourceArchive *LoadResFile(CompositeFile *file) const override;
-		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
+		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
 		void DissociateHandle(MMHandleBlock *hdl) const override;
 		const ResourceArchiveRef *ResourceForHandle(MMHandleBlock *hdl) const override;
@@ -524,4 +524,11 @@ namespace PortabilityLayer
 		if (m_stream)
 			m_stream->Close();
 	}
+
+#if GP_ASYNCIFY_PARANOID
+	PLError_t ResourceManager::CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename)
+	{
+		return static_cast<ResourceManagerImpl*>(this)->CreateBlankResFile(virtualDir, filename);
+	}
+#endif
 }

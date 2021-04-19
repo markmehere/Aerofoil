@@ -19,6 +19,7 @@
 
 #include <assert.h>
 #include <setjmp.h>
+#include <stdlib.h>
 
 static void TranslateMouseInputEvent(const GpVOSEvent &vosEventBase, uint32_t timestamp, PortabilityLayer::EventQueue *queue)
 {
@@ -176,7 +177,7 @@ namespace PLSysCalls
 {
 	// Asyncify disarm checks are for manually checking that a stack has no indirect calls.
 	// They should not be nested!
-#if GP_DEBUG_CONFIG && GP_ASYNCIFY_PARANOID
+#if GP_DEBUG_CONFIG && GP_ASYNCIFY_PARANOID_VALIDATION
 	static bool g_asyncifyParanoidDisarmed = false;
 
 	void AsyncifyParanoidSetDisarmed(bool state)
@@ -198,7 +199,7 @@ namespace PLSysCalls
 
 	void Sleep(uint32_t ticks)
 	{
-#if GP_DEBUG_CONFIG && GP_ASYNCIFY_PARANOID
+#if GP_DEBUG_CONFIG && GP_ASYNCIFY_PARANOID_VALIDATION
 		assert(g_asyncifyParanoidDisarmed);
 #endif
 		if (ticks > 0)

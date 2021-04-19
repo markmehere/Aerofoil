@@ -153,9 +153,9 @@ void DragMiniTile (Window *window, DrawSurface *surface, Point mouseIs, short *n
 	surface->InvertFrameRect(dragRect, pattern);
 
 	mouseWas = mouseIs;
-	while (WaitMouseUp())							// loop until mouse button let up
+	while (WaitMouseUp_DisarmAsyncify())			// loop until mouse button let up
 	{
-		GetMouse(window, &mouseIs);							// get mouse coords
+		GetMouse(window, &mouseIs);					// get mouse coords
 		if (mouseWas != mouseIs)					// the mouse has moved
 		{
 			surface->InvertFrameRect(dragRect, pattern);

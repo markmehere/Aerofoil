@@ -515,6 +515,12 @@ Boolean WaitMouseUp()
 	return isDown;
 }
 
+Boolean WaitMouseUp_DisarmAsyncify()
+{
+	PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
+	return WaitMouseUp();
+}
+
 short Random()
 {
 	// Should return with range -32767..32767

@@ -208,7 +208,7 @@ void DragOutMarqueeRect (Window *window, Point start, Rect *theRect)
 	surface->InvertFrameRect(*theRect, pattern);
 	wasPt = start;
 	
-	while (WaitMouseUp())
+	while (WaitMouseUp_DisarmAsyncify())
 	{
 		GetMouse(window, &newPt);
 		if (wasPt != newPt)
@@ -238,7 +238,7 @@ void DragMarqueeRect (Window *window, DrawSurface *surface, Point start, Rect *t
 	surface->InvertFrameRect(theMarquee.bounds, pattern);
 	
 	wasPt = start;
-	while (WaitMouseUp())
+	while (WaitMouseUp_DisarmAsyncify())
 	{
 		GetMouse(window, &newPt);
 		if (wasPt != newPt)
@@ -283,7 +283,7 @@ void DragMarqueeHandle (Window *window, DrawSurface *surface, Point start, short
 	surface->InvertFillRect(theMarquee.handle, pattern);
 	
 	wasPt = start;
-	while (WaitMouseUp())
+	while (WaitMouseUp_DisarmAsyncify())
 	{
 		GetMouse(window, &newPt);
 		if (wasPt != newPt)
@@ -365,7 +365,7 @@ void DragMarqueeCorner (Window *window, DrawSurface *surface, Point start, short
 	surface->InvertFillRect(theMarquee.handle, pattern);
 	
 	wasPt = start;
-	while (WaitMouseUp())
+	while (WaitMouseUp_DisarmAsyncify())
 	{
 		GetMouse(window, &newPt);
 		if (wasPt != newPt)

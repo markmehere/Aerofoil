@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GpFileCreationDisposition.h"
+#include "CoreDefs.h"
 #include "VirtualDirectory.h"
 
 #include <stdint.h>
@@ -17,7 +18,7 @@ public:
 	virtual bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) = 0;
 	virtual bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &exists) = 0;
 	virtual GpIOStream *OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition) = 0;
-	virtual bool DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed) = 0;
+	GP_ASYNCIFY_PARANOID_VIRTUAL bool DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed) GP_ASYNCIFY_PARANOID_PURE;
 	virtual IGpDirectoryCursor *ScanDirectoryNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths) = 0;
 
 	virtual bool ValidateFilePath(const char *path, size_t pathLen) const = 0;

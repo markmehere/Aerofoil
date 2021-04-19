@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "GpFilePos.h"
+#include "CoreDefs.h"
 
 class GpIOStream
 {
@@ -17,11 +18,15 @@ public:
 	virtual bool SeekEnd(GpUFilePos_t loc) = 0;
 	virtual GpUFilePos_t Size() const = 0;
 	virtual GpUFilePos_t Tell() const = 0;
-	virtual void Close() = 0;
+	virtual void GP_ASYNCIFY_PARANOID_NAMED(Close)() = 0;
 	virtual void Flush() = 0;
 
 	bool ReadExact(void *bytesOut, size_t size);
 	bool WriteExact(const void *bytesOut, size_t size);
+
+#if GP_ASYNCIFY_PARANOID
+	void Close();
+#endif
 };
 
 inline bool GpIOStream::ReadExact(void *bytesOut, size_t size)
