@@ -53,5 +53,8 @@ install_manifest.txt
 
 ## Xcode projects
 AerofoilMac/xcuserdata/
+AerofoilMac/*.xcodeproj/xcuserdata/
 AerofoilMac/build/
 AerofoilMac/DerivedData/
+*.xcuserstate
+SDL2-2.0.12/Xcode/SDL/SDL.xcodeproj/xcuserdata/*

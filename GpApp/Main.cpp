@@ -529,11 +529,6 @@ int AppStartup()
 
 	PL_Init();
 
-	IGpLogDriver *logger = PLDrivers::GetLogDriver();
-
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Init phase 1...");
-
 	ToolBoxInit();
 	CheckOurEnvirons();
 
@@ -551,14 +546,8 @@ int AppStartup()
 	LoadCursors();
 	ReadInPrefs();
 
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Init phase 2...");
-
 	SpinCursor(2);	// Tick once to let the display driver flush any resolution changes from prefs
 	FlushResolutionChange();
-
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Init phase 3...");
 
 #if defined COMPILEDEMO
 	copyGood = true;
@@ -584,9 +573,6 @@ int AppStartup()
 	InitSrcRects();
 	CreateOffscreens();
 
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Init phase 3...");
-
 	bool resolutionChanged = false;
 
 	if (!isPrefsLoaded)
@@ -599,7 +585,7 @@ int AppStartup()
 			FlushResolutionChange();
 		}
 
-		//ShowInitialLaunchDisclaimer();
+        ShowInitialLaunchDisclaimer();
 	}
 
 	if (thisMac.isResolutionDirty)
@@ -613,14 +599,10 @@ int AppStartup()
 	if (isDoColorFade)
 		PortabilityLayer::WindowManager::GetInstance()->SetWindowDesaturation(mainWindow, 1.0);
 
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Init phase 4...");
 
 	InitSound();						SpinCursor(2);
 	InitMusic();						SpinCursor(2);
 
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Init phase 5...");
 
 	BuildHouseList();
 	OpenHouse(true);
@@ -635,9 +617,6 @@ int AppStartup()
 #if BUILD_ARCADE_VERSION
 	//	HideMenuBarOld();
 #endif
-
-	if (logger)
-		logger->Printf(IGpLogDriver::Category_Information, "Initialization completed");
 
 	if (isDoColorFade)
 		WashColorIn();

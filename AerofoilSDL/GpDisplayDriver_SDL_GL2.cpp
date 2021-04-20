@@ -2539,54 +2539,29 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t physicalWidth, uint32_t phy
 	}
 
 	GpComPtr<GpGLShader<GL_VERTEX_SHADER>> drawQuadVertexShader = CreateShader<GL_VERTEX_SHADER>(GpBinarizedShaders::g_drawQuadV_GL2);
-
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPalettePF_GL2);
-	if (drawQuadPaletteFlickerPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuadPaletteFlickerPixelShader");
-
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteNoFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPalettePNF_GL2);
-	if (drawQuadPaletteNoFlickerPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuadPaletteNoFlickerPixelShader");
-
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32FlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32PF_GL2);
-	if (drawQuad32FlickerPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuad32FlickerPixelShader");
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32NoFlickerPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32PNF_GL2);
-	if (drawQuad32NoFlickerPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuad32NoFlickerPixelShader");
-
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCPF_GL2);
-	if (drawQuadPaletteICCFPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuadPaletteICCFPixelShader");
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuadPaletteICCNFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuadPaletteICCPNF_GL2);
-	if (drawQuadPaletteICCNFPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuadPaletteICCNFPixelShader");
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32ICCFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32ICCPF_GL2);
-	if (drawQuad32ICCFPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuad32ICCFPixelShader");
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> drawQuad32ICCNFPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_drawQuad32ICCPNF_GL2);
-	if (drawQuad32ICCNFPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "drawQuad32ICCNFPixelShader");
-
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> scaleQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_scaleQuadP_GL2);
-	if (scaleQuadPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "scaleQuadPixelShader");
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> copyQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_copyQuadP_GL2);
-	if (copyQuadPixelShader == nullptr)
-		logger->Printf(IGpLogDriver::Category_Error, "GpDisplayDriver_SDL_GL2::InitResources: %s failed to create!", "copyQuadPixelShader");
+
 		
-	if (//!m_res.m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader)
-		//|| 
+	if (!m_res.m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader) ||
 		!m_res.m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteNoFlickerPixelShader)
-		//|| !m_res.m_drawQuad32FlickerProgram.Link(this, drawQuadVertexShader, drawQuad32FlickerPixelShader)
+		|| !m_res.m_drawQuad32FlickerProgram.Link(this, drawQuadVertexShader, drawQuad32FlickerPixelShader)
 		|| !m_res.m_drawQuad32NoFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32NoFlickerPixelShader)
-		//|| !m_res.m_drawQuadPaletteICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCFPixelShader)
+		|| !m_res.m_drawQuadPaletteICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCFPixelShader)
 		|| !m_res.m_drawQuadPaletteICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteICCNFPixelShader)
-		//|| !m_res.m_drawQuad32ICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32ICCFPixelShader)
+		|| !m_res.m_drawQuad32ICCFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32ICCFPixelShader)
 		|| !m_res.m_drawQuad32ICCNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuad32ICCNFPixelShader)
 
-		//|| !m_drawQuadRGBICCProgram.Link(this, drawQuadVertexShader, drawQuadRGBICCPixelShader)
-		//|| !m_drawQuad15BitICCProgram.Link(this, drawQuadVertexShader, drawQuad15BitICCPixelShader)
+//		|| !m_drawQuadRGBICCProgram.Link(this, drawQuadVertexShader, drawQuadRGBICCPixelShader)
+//		|| !m_drawQuad15BitICCProgram.Link(this, drawQuadVertexShader, drawQuad15BitICCPixelShader)
 		|| !m_res.m_scaleQuadProgram.Link(this, drawQuadVertexShader, scaleQuadPixelShader)
 		|| !m_res.m_copyQuadProgram.Link(this, drawQuadVertexShader, copyQuadPixelShader))
 		return false;
