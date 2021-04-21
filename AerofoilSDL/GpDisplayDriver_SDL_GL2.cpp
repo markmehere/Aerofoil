@@ -846,9 +846,6 @@ private:
 		GpComPtr<GpGLRenderTargetView> m_upscaleTextureRTV;
 		GpComPtr<GpGLTexture> m_upscaleTexture;
 
-		uint32_t m_upscaleTextureWidth;
-		uint32_t m_upscaleTextureHeight;
-
 		GpComPtr<GpGLVertexArray> m_quadVertexArray;
 		GpComPtr<GpGLBuffer> m_quadVertexBufferKeepalive;
 		GpComPtr<GpGLBuffer> m_quadIndexBuffer;
@@ -905,7 +902,10 @@ private:
 	uint32_t m_initialHeightVirtual;
 	float m_pixelScaleX;
 	float m_pixelScaleY;
+
 	bool m_useUpscaleFilter;
+	uint32_t m_upscaleTextureWidth;
+	uint32_t m_upscaleTextureHeight;
 
 	GpCursor_SDL2 *m_activeCursor;
 	GpCursor_SDL2 *m_pendingCursor;
@@ -1197,6 +1197,8 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
 	, m_useUpscaleFilter(false)
+	, m_upscaleTextureWidth(0)
+	, m_upscaleTextureHeight(0)
 	, m_pendingCursor(nullptr)
 	, m_activeCursor(nullptr)
 	, m_currentStandardCursor(EGpStandardCursors::kArrow)
@@ -1531,8 +1533,7 @@ void GpDisplayDriver_SDL_GL2::ServeTicks(int ticks)
 					logger->Printf(IGpLogDriver::Category_Information, "Resetting OpenGL context.  Physical: %i x %i   Virtual %i x %i", static_cast<int>(m_windowWidthPhysical), static_cast<int>(m_windowHeightPhysical), static_cast<int>(m_windowWidthVirtual), static_cast<int>(m_windowHeightVirtual));
 
 				// Drop everything and reset
-				m_res.~InstancedResources();
-				new (&m_res) InstancedResources();
+				m_res = InstancedResources();
 
 				if (m_firstSurface)
 					m_firstSurface->DestroyAll();
@@ -2458,11 +2459,6 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t physicalWidth, uint32_t phy
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "GpDisplayDriver_SDL_GL2::InitResources");
 
-	if ((m_pixelScaleX < 2.0f && m_pixelScaleX > 1.0f) || (m_pixelScaleY < 2.0f && m_pixelScaleY > 1.0f))
-		m_useUpscaleFilter = true;
-	else
-		m_useUpscaleFilter = false;
-
 	CheckGLError(m_gl, logger);
 
 	if (!InitBackBuffer(virtualWidth, virtualHeight))
@@ -2778,9 +2774,12 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 		m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	m_useUpscaleFilter = ((m_pixelScaleX < 2.0f && m_pixelScaleX > 1.0f) || (m_pixelScaleY < 2.0f && m_pixelScaleY > 1.0f));
 
-	if (m_pixelScaleX != floor(m_pixelScaleX) || m_pixelScaleY != floor(m_pixelScaleY))
+	if (m_useUpscaleFilter)
 	{
+		m_useUpscaleFilter = true;
+
 		uint32_t upscaleX = ceil(m_pixelScaleX);
 		uint32_t upscaleY = ceil(m_pixelScaleY);
 
@@ -2794,8 +2793,8 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 				return false;
 			}
 
-			m_res.m_upscaleTextureWidth = width * upscaleX;
-			m_res.m_upscaleTextureHeight = height * upscaleY;
+			m_upscaleTextureWidth = width * upscaleX;
+			m_upscaleTextureHeight = height * upscaleY;
 
 			GLenum internalFormat = SupportsSizedFormats() ? GL_RGBA8 : GL_RGBA;
 
@@ -2805,7 +2804,7 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			m_gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			m_gl.TexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_res.m_upscaleTextureWidth, m_res.m_upscaleTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			m_gl.TexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_upscaleTextureWidth, m_upscaleTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 			m_gl.BindTexture(GL_TEXTURE_2D, 0);
 
 			CheckGLError(m_gl, logger);
@@ -2850,7 +2849,7 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 	{
 		m_gl.BindFramebuffer(GL_FRAMEBUFFER, m_res.m_upscaleTextureRTV->GetID());
 
-		m_gl.Viewport(0, 0, m_res.m_upscaleTextureWidth, m_res.m_upscaleTextureHeight);
+		m_gl.Viewport(0, 0, m_upscaleTextureWidth, m_upscaleTextureHeight);
 
 		const BlitQuadProgram &program = m_res.m_scaleQuadProgram;
 

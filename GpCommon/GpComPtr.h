@@ -1,11 +1,16 @@
 #pragma once
 
+#include "CoreDefs.h"
+
 template<class T>
 class GpComPtr final
 {
 public:
 	GpComPtr();
 	GpComPtr(const GpComPtr<T> &other);
+#if GP_IS_CPP11
+	GpComPtr(GpComPtr<T> &&other);
+#endif
 	explicit GpComPtr(T *ptr);
 	~GpComPtr();
 
@@ -40,6 +45,23 @@ inline GpComPtr<T>::GpComPtr(const GpComPtr<T> &other)
 	if (m_ptr)
 		m_ptr->AddRef();
 }
+
+#if GP_IS_CPP11
+template<class T>
+inline GpComPtr<T>::GpComPtr(GpComPtr<T> &&other)
+	: m_ptr(other.m_ptr)
+{
+	if (m_ptr)
+		m_ptr->AddRef();
+
+	if (other.m_ptr)
+	{
+		other.m_ptr->Release();
+		other.m_ptr = nullptr;
+	}
+}
+#endif
+
 
 template<class T>
 inline GpComPtr<T>::GpComPtr(T *ptr)
