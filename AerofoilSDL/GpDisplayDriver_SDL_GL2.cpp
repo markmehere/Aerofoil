@@ -2778,8 +2778,6 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 
 	if (m_useUpscaleFilter)
 	{
-		m_useUpscaleFilter = true;
-
 		uint32_t upscaleX = ceil(m_pixelScaleX);
 		uint32_t upscaleY = ceil(m_pixelScaleY);
 
