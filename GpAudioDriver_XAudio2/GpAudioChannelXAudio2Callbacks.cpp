@@ -1,3 +1,4 @@
+#include "GpAudioBufferXAudio2.h"
 #include "GpAudioChannelXAudio2Callbacks.h"
 #include "GpAudioChannelXAudio2.h"
 
@@ -24,6 +25,7 @@ void GpAudioChannelXAudio2Callbacks::OnBufferStart(void* pBufferContext)
 
 void GpAudioChannelXAudio2Callbacks::OnBufferEnd(void* pBufferContext)
 {
+	static_cast<GpAudioBufferXAudio2*>(pBufferContext)->Release();
 	m_owner->OnBufferEnd();
 }
 

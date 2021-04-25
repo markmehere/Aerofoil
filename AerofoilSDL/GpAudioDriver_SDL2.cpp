@@ -1,4 +1,5 @@
 #include "CoreDefs.h"
+#include "IGpAudioBuffer.h"
 #include "IGpAudioDriver.h"
 #include "IGpAudioChannel.h"
 #include "IGpAudioChannelCallbacks.h"
@@ -13,6 +14,8 @@
 
 #include "SDL_atomic.h"
 
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <new>
@@ -52,21 +55,81 @@ static void AlignedFree(void *ptr)
 	free(storageLoc);
 }
 
-struct GpAudioChannelBufferChain_SDL2 final
+class GpAudioBuffer_SDL2 final : public IGpAudioBuffer
 {
-	GpAudioChannelBufferChain_SDL2();
+public:
+	static GpAudioBuffer_SDL2 *Create(const void *data, size_t size);
 
-	static GpAudioChannelBufferChain_SDL2 *Alloc();
-	void Release();
+	void AddRef() override;
+	void Release() override;
 
-	static const size_t kMaxCapacity = 65536;
+	const void *GetData() const;
+	size_t GetSize() const;
 
-	size_t m_consumed;
-	size_t m_used;
-	uint8_t m_data[kMaxCapacity];
-	GpAudioChannelBufferChain_SDL2 *m_next;
-	bool m_hasTrigger;
+private:
+	GpAudioBuffer_SDL2(const void *data, size_t size);
+	~GpAudioBuffer_SDL2();
+
+	void Destroy();
+
+	const void *m_data;
+	size_t m_size;
+	SDL_atomic_t m_count;
 };
+
+GpAudioBuffer_SDL2 *GpAudioBuffer_SDL2::Create(const void *data, size_t size)
+{
+	void *storage = malloc(size + sizeof(GpAudioBuffer_SDL2));
+	if (!storage)
+		return nullptr;
+
+	void *dataPos = static_cast<uint8_t*>(storage) + sizeof(GpAudioBuffer_SDL2);
+	memcpy(dataPos, data, size);
+
+	return new (storage) GpAudioBuffer_SDL2(dataPos, size);
+}
+
+
+void GpAudioBuffer_SDL2::AddRef()
+{
+	SDL_AtomicAdd(&m_count, 1);
+}
+
+void GpAudioBuffer_SDL2::Release()
+{
+	int prevCount = SDL_AtomicAdd(&m_count, -1);
+	if (prevCount == 1)
+		this->Destroy();
+}
+
+const void *GpAudioBuffer_SDL2::GetData() const
+{
+	return m_data;
+}
+
+size_t GpAudioBuffer_SDL2::GetSize() const
+{
+	return m_size;
+}
+
+
+GpAudioBuffer_SDL2::GpAudioBuffer_SDL2(const void *data, size_t size)
+	: m_data(data)
+	, m_size(size)
+{
+	SDL_AtomicSet(&m_count, 1);
+}
+
+GpAudioBuffer_SDL2::~GpAudioBuffer_SDL2()
+{
+}
+
+void GpAudioBuffer_SDL2::Destroy()
+{
+	this->~GpAudioBuffer_SDL2();
+	free(this);
+}
+
 
 class GpAudioChannel_SDL2 final : public IGpAudioChannel
 {
@@ -80,7 +143,7 @@ public:
 	void Release();
 
 	void SetAudioChannelContext(IGpAudioChannelCallbacks *callbacks) override;
-	void PostBuffer(const void *buffer, size_t bufferSize) override;
+	bool PostBuffer(IGpAudioBuffer *buffer) override;
 	void Stop() override;
 	void Destroy() override;
 
@@ -91,14 +154,19 @@ public:
 private:
 	bool Init(GpAudioDriver_SDL2 *driver);
 
+	static const size_t kMaxBuffers = 16;
+
 	IGpAudioChannelCallbacks *m_callbacks;
 	IGpMutex *m_mutex;
 	GpAudioDriver_SDL2 *m_owner;
 
 	SDL_atomic_t m_refCount;
 
-	GpAudioChannelBufferChain_SDL2 *m_firstPendingBuffer;
-	GpAudioChannelBufferChain_SDL2 *m_lastPendingBuffer;
+	GpAudioBuffer_SDL2 *m_pendingBuffers[kMaxBuffers];
+	size_t m_nextPendingBufferConsumePos;
+	size_t m_nextPendingBufferInsertionPos;
+	size_t m_numQueuedBuffers;
+	size_t m_firstBufferSamplesConsumed;
 
 	GpAudioDriver_SDL2_TimePoint_t m_timestamp;		// Time that audio will be consumed if posted to the channel, if m_hasTimestamp is true.
 	GpAudioDriver_SDL2_Duration_t m_latency;
@@ -118,6 +186,7 @@ public:
 	explicit GpAudioDriver_SDL2(const GpAudioDriverProperties &properties);
 	~GpAudioDriver_SDL2();
 
+	IGpAudioBuffer *CreateBuffer(const void *data, size_t size) override;
 	IGpAudioChannel *CreateChannel() override;
 	void SetMasterVolume(uint32_t vol, uint32_t maxVolume) override;
 	void Shutdown() override;
@@ -162,27 +231,6 @@ private:
 	int16_t m_audioVolumeScale;
 };
 
-GpAudioChannelBufferChain_SDL2::GpAudioChannelBufferChain_SDL2()
-	: m_used(0)
-	, m_consumed(0)
-	, m_next(nullptr)
-	, m_hasTrigger(false)
-{
-}
-
-
-GpAudioChannelBufferChain_SDL2 *GpAudioChannelBufferChain_SDL2::Alloc()
-{
-	void *storage = AlignedAlloc(sizeof(GpAudioChannelBufferChain_SDL2), GP_SYSTEM_MEMORY_ALIGNMENT);
-	return new (storage) GpAudioChannelBufferChain_SDL2();
-}
-
-void GpAudioChannelBufferChain_SDL2::Release()
-{
-	this->~GpAudioChannelBufferChain_SDL2();
-	AlignedFree(this);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // GpAudioChannel
 
@@ -190,8 +238,6 @@ GpAudioChannel_SDL2::GpAudioChannel_SDL2(GpAudioDriver_SDL2_Duration_t latency, 
 	: m_callbacks(nullptr)
 	, m_mutex(nullptr)
 	, m_owner(nullptr)
-	, m_firstPendingBuffer(nullptr)
-	, m_lastPendingBuffer(nullptr)
 	, m_latency(latency)
 	, m_bufferTime(bufferTime)
 	, m_bufferSamplesMax(bufferSamplesMax)
@@ -199,6 +245,10 @@ GpAudioChannel_SDL2::GpAudioChannel_SDL2(GpAudioDriver_SDL2_Duration_t latency, 
 	, m_sampleRate(sampleRate)
 	, m_isMixing(false)
 	, m_hasTimestamp(false)
+	, m_nextPendingBufferConsumePos(0)
+	, m_nextPendingBufferInsertionPos(0)
+	, m_numQueuedBuffers(0)
+	, m_firstBufferSamplesConsumed(0)
 {
 	SDL_AtomicSet(&m_refCount, 1);
 }
@@ -210,12 +260,7 @@ GpAudioChannel_SDL2::~GpAudioChannel_SDL2()
 	if (m_mutex)
 		m_mutex->Destroy();
 
-	while (m_firstPendingBuffer)
-	{
-		GpAudioChannelBufferChain_SDL2 *buffer = m_firstPendingBuffer;
-		m_firstPendingBuffer = buffer->m_next;
-		buffer->Release();
-	}
+	assert(m_numQueuedBuffers == 0);
 }
 
 void GpAudioChannel_SDL2::AddRef()
@@ -238,12 +283,21 @@ void GpAudioChannel_SDL2::SetAudioChannelContext(IGpAudioChannelCallbacks *callb
 	m_callbacks = callbacks;
 }
 
-void GpAudioChannel_SDL2::PostBuffer(const void *buffer, size_t bufferSize)
+bool GpAudioChannel_SDL2::PostBuffer(IGpAudioBuffer *buffer)
 {
+	buffer->AddRef();
+
 	m_mutex->Lock();
 
+	if (m_numQueuedBuffers == kMaxBuffers)
+	{
+		m_mutex->Unlock();
+		buffer->Release();
+		return false;
+	}
+
 	size_t leadingSilence = 0;
-	if (m_firstPendingBuffer == nullptr && m_hasTimestamp && !m_isMixing)
+	if (m_numQueuedBuffers == 0 && m_hasTimestamp && !m_isMixing)
 	{
 		GpAudioDriver_SDL2_TimePoint_t queueTime = GpAudioDriver_SDL2::GetCurrentTime() + m_latency;
 		if (queueTime > m_timestamp)
@@ -262,50 +316,37 @@ void GpAudioChannel_SDL2::PostBuffer(const void *buffer, size_t bufferSize)
 
 	m_leadingSilence = leadingSilence;
 
-	while (bufferSize > 0)
-	{
-		GpAudioChannelBufferChain_SDL2 *newBuffer = GpAudioChannelBufferChain_SDL2::Alloc();
-		if (newBuffer == nullptr)
-			break;
+	m_pendingBuffers[m_nextPendingBufferInsertionPos++] = static_cast<GpAudioBuffer_SDL2*>(buffer);
+	m_numQueuedBuffers++;
 
-		if (m_lastPendingBuffer == nullptr)
-			m_firstPendingBuffer = newBuffer;
-		else
-			m_lastPendingBuffer->m_next = newBuffer;
-		m_lastPendingBuffer = newBuffer;
-
-		size_t bufferable = newBuffer->kMaxCapacity;
-		if (bufferSize < bufferable)
-			bufferable = bufferSize;
-
-		memcpy(newBuffer->m_data, buffer, bufferable);
-
-		buffer = static_cast<const uint8_t*>(buffer) + bufferable;
-		bufferSize -= bufferable;
-		m_lastPendingBuffer->m_used = bufferable;
-		m_lastPendingBuffer->m_hasTrigger = (bufferSize == 0);
-	}
+	m_nextPendingBufferInsertionPos = m_nextPendingBufferInsertionPos % kMaxBuffers;
 
 	m_mutex->Unlock();
+
+	return true;
 }
 
 void GpAudioChannel_SDL2::Stop()
 {
 	m_mutex->Lock();
 
-	GpAudioChannelBufferChain_SDL2 *buffer = m_firstPendingBuffer;
-	m_firstPendingBuffer = nullptr;
-	m_lastPendingBuffer = nullptr;
+	m_leadingSilence = 0;
 
-	while (buffer)
+	size_t numBuffersToDischarge = m_numQueuedBuffers;
+
+	for (size_t i = 0; i < numBuffersToDischarge; i++)
 	{
-		if (buffer->m_hasTrigger && m_callbacks)
+		GpAudioBuffer_SDL2 *buffer = m_pendingBuffers[m_nextPendingBufferConsumePos];
+
+		m_nextPendingBufferConsumePos = (m_nextPendingBufferConsumePos + 1) % kMaxBuffers;
+		m_numQueuedBuffers--;
+
+		m_firstBufferSamplesConsumed = 0;
+
+		if (m_callbacks)
 			m_callbacks->NotifyBufferFinished();
 
-		GpAudioChannelBufferChain_SDL2 *nextBuffer = buffer->m_next;
 		buffer->Release();
-
-		buffer = nextBuffer;
 	}
 
 	m_mutex->Unlock();
@@ -359,21 +400,27 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 		}
 	}
 
-	while (m_firstPendingBuffer != nullptr)
+	while (m_numQueuedBuffers > 0)
 	{
-		GpAudioChannelBufferChain_SDL2 *buffer = m_firstPendingBuffer;
-		const size_t available = (buffer->m_used - buffer->m_consumed);
+		GpAudioBuffer_SDL2 *buffer = m_pendingBuffers[m_nextPendingBufferConsumePos];
+		const void *bufferData = buffer->GetData();
+		const size_t bufferSize = buffer->GetSize();
+
+		assert(m_firstBufferSamplesConsumed < bufferSize);
+
+		const size_t available = (bufferSize - m_firstBufferSamplesConsumed);
 		if (available <= sz)
 		{
-			memcpy(output, buffer->m_data + buffer->m_consumed, available);
+			memcpy(output, static_cast<const uint8_t*>(bufferData) + m_firstBufferSamplesConsumed, available);
 			sz -= available;
 			output += available;
 
-			m_firstPendingBuffer = buffer->m_next;
-			if (m_firstPendingBuffer == nullptr)
-				m_lastPendingBuffer = nullptr;
+			m_nextPendingBufferConsumePos = (m_nextPendingBufferConsumePos + 1) % kMaxBuffers;
+			m_numQueuedBuffers--;
 
-			if (buffer->m_hasTrigger && m_callbacks)
+			m_firstBufferSamplesConsumed = 0;
+
+			if (m_callbacks)
 				m_callbacks->NotifyBufferFinished();
 
 			buffer->Release();
@@ -383,9 +430,9 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 		}
 		else
 		{
-			memcpy(output, buffer->m_data + buffer->m_consumed, sz);
-			buffer->m_consumed += sz;
-			buffer += sz;
+			memcpy(output, static_cast<const uint8_t*>(bufferData) + m_firstBufferSamplesConsumed, sz);
+			m_firstBufferSamplesConsumed += sz;
+			output += sz;
 			sz = 0;
 			break;
 		}
@@ -444,6 +491,11 @@ GpAudioDriver_SDL2::~GpAudioDriver_SDL2()
 
 	if (m_mutex)
 		m_mutex->Destroy();
+}
+
+IGpAudioBuffer *GpAudioDriver_SDL2::CreateBuffer(const void *data, size_t size)
+{
+	return GpAudioBuffer_SDL2::Create(data, size);
 }
 
 IGpAudioChannel *GpAudioDriver_SDL2::CreateChannel()

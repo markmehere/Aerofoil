@@ -1,6 +1,7 @@
 #include "PLSound.h"
 
 #include "MemoryManager.h"
+#include "IGpAudioBuffer.h"
 #include "IGpMutex.h"
 #include "IGpThreadEvent.h"
 #include "IGpAudioChannel.h"
@@ -30,7 +31,7 @@ namespace PortabilityLayer
 	{
 		union AudioCommandParam
 		{
-			const void *m_ptr;
+			IGpAudioBuffer *m_buffer;
 			AudioChannelCallback_t m_callback;
 		};
 
@@ -45,7 +46,7 @@ namespace PortabilityLayer
 		~AudioChannelImpl();
 
 		void Destroy(bool wait) override;
-		bool AddBuffer(const void *lengthTaggedBuffer, bool blocking) override;
+		bool AddBuffer(IGpAudioBuffer *buffer, bool blocking) override;
 		bool AddCallback(AudioChannelCallback_t callback, bool blocking) override;
 		void ClearAllCommands() override;
 		void Stop() override;
@@ -70,7 +71,7 @@ namespace PortabilityLayer
 		static const unsigned int kMaxQueuedCommands = 64;
 
 		void DigestQueueItems();
-		void DigestBufferCommand(const void *dataPointer);
+		void DigestBufferCommand(IGpAudioBuffer *buffer);
 
 		IGpAudioChannel *m_audioChannel;
 
@@ -103,6 +104,16 @@ namespace PortabilityLayer
 		m_mutex->Destroy();
 		m_threadEvent->Destroy();
 		m_audioChannel->Destroy();
+
+		while (m_numQueuedCommands)
+		{
+			const AudioCommand &command = m_commandQueue[m_nextDequeueCommandPos];
+			m_numQueuedCommands--;
+			m_nextDequeueCommandPos = (m_nextDequeueCommandPos + 1) % static_cast<size_t>(kMaxQueuedCommands);
+
+			if (command.m_commandType == AudioCommandTypes::kBuffer)
+				command.m_param.m_buffer->Release();
+		}
 	}
 
 	void AudioChannelImpl::NotifyBufferFinished()
@@ -167,20 +178,26 @@ namespace PortabilityLayer
 		PortabilityLayer::MemoryManager::GetInstance()->Release(this);
 	}
 
-	bool AudioChannelImpl::AddBuffer(const void *lengthTaggedBuffer, bool blocking)
+	bool AudioChannelImpl::AddBuffer(IGpAudioBuffer *buffer, bool blocking)
 	{
+		buffer->AddRef();
+
 		AudioCommand cmd;
 		cmd.m_commandType = AudioCommandTypes::kBuffer;
-		cmd.m_param.m_ptr = lengthTaggedBuffer;
+		cmd.m_param.m_buffer = buffer;
 
-		return this->PushCommand(cmd, blocking);
+		bool pushedOK = this->PushCommand(cmd, blocking);
+		if (!pushedOK)
+			buffer->Release();
+
+		return pushedOK;
 	}
 
 	bool AudioChannelImpl::AddCallback(AudioChannelCallback_t callback, bool blocking)
 	{
 		AudioCommand cmd;
 		cmd.m_commandType = AudioCommandTypes::kCallback;
-		cmd.m_param.m_ptr = reinterpret_cast<void*>(callback);
+		cmd.m_param.m_callback = callback;
 
 		return this->PushCommand(cmd, blocking);
 	}
@@ -200,7 +217,7 @@ namespace PortabilityLayer
 			switch (command.m_commandType)
 			{
 			case AudioCommandTypes::kBuffer:
-				DigestBufferCommand(command.m_param.m_ptr);
+				DigestBufferCommand(command.m_param.m_buffer);
 				assert(m_state == State_PlayingAsync);
 				m_mutex->Unlock();
 				return;
@@ -222,16 +239,14 @@ namespace PortabilityLayer
 		m_mutex->Unlock();
 	}
 
-	void AudioChannelImpl::DigestBufferCommand(const void *dataPointer)
+	void AudioChannelImpl::DigestBufferCommand(IGpAudioBuffer *buffer)
 	{
 		assert(m_state == State_Idle);
 
-		// At this point, the buffer should already be validated and converted, and the data pointer should point at the data tag
-		uint32_t length;
-		memcpy(&length, dataPointer, 4);
+		if (m_audioChannel->PostBuffer(buffer))
+			m_state = State_PlayingAsync;
 
-		m_audioChannel->PostBuffer(static_cast<const uint8_t*>(dataPointer) + 4, length);
-		m_state = State_PlayingAsync;
+		buffer->Release();
 	}
 
 	bool AudioChannelImpl::PushCommand(const AudioCommand &command, bool blocking)

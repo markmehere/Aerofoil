@@ -1,9 +1,12 @@
 #include "GpAudioDriverXAudio2.h"
 
 #include "IGpLogDriver.h"
+#include "GpAudioBufferXAudio2.h"
 #include "GpAudioChannelXAudio2.h"
+#include "CoreDefs.h"
 
 #include <xaudio2.h>
+#include <malloc.h>
 
 void GpAudioDriverXAudio2::Shutdown()
 {
@@ -94,6 +97,11 @@ GpAudioDriverXAudio2 *GpAudioDriverXAudio2::Create(const GpAudioDriverProperties
 		logger->Printf(IGpLogDriver::Category_Information, "XAudio2 started OK", result);
 
 	return new GpAudioDriverXAudio2(properties, realSampleRate, xa, mv);
+}
+
+IGpAudioBuffer *GpAudioDriverXAudio2::CreateBuffer(const void *buffer, size_t bufferSize)
+{
+	return GpAudioBufferXAudio2::Create(buffer, bufferSize);
 }
 
 IGpAudioChannel *GpAudioDriverXAudio2::CreateChannel()

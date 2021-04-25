@@ -10,6 +10,7 @@ struct IXAudio2MasteringVoice;
 class GpAudioDriverXAudio2 : public IGpAudioDriver
 {
 public:
+	IGpAudioBuffer *CreateBuffer(const void *buffer, size_t bufferSize) override;
 	IGpAudioChannel *CreateChannel() override;
 	void SetMasterVolume(uint32_t vol, uint32_t maxVolume) override;
 	void Shutdown() override;

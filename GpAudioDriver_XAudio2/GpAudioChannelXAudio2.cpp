@@ -1,3 +1,4 @@
+#include "GpAudioBufferXAudio2.h"
 #include "GpAudioChannelXAudio2.h"
 #include "GpAudioDriverXAudio2.h"
 #include "IGpAudioChannelCallbacks.h"
@@ -77,25 +78,25 @@ void GpAudioChannelXAudio2::SetAudioChannelContext(IGpAudioChannelCallbacks *cal
 	m_contextCallbacks = callbacks;
 }
 
-void GpAudioChannelXAudio2::PostBuffer(const void *buffer, size_t bufferSize)
+bool GpAudioChannelXAudio2::PostBuffer(IGpAudioBuffer *buffer)
 {
-	XAUDIO2_BUFFER xa2Buffer;
-	xa2Buffer.Flags = 0;
-	xa2Buffer.AudioBytes = static_cast<UINT32>(bufferSize);
-	xa2Buffer.pAudioData = static_cast<const BYTE*>(buffer);
-	xa2Buffer.PlayBegin = 0;
-	xa2Buffer.PlayLength = 0;
-	xa2Buffer.LoopBegin = 0;
-	xa2Buffer.LoopLength = 0;
-	xa2Buffer.LoopCount = 0;
-	xa2Buffer.pContext = nullptr;
+	GpAudioBufferXAudio2 *xa2Buffer = static_cast<GpAudioBufferXAudio2*>(buffer);
+	xa2Buffer->AddRef();
 
-	m_sourceVoice->SubmitSourceBuffer(&xa2Buffer, nullptr);
+	HRESULT result = m_sourceVoice->SubmitSourceBuffer(xa2Buffer->GetXA2Buffer(), nullptr);
+	if (result != S_OK)
+	{
+		xa2Buffer->Release();
+		return false;
+	}
+
 	if (m_voiceState == VoiceState_Idle)
 	{
 		m_voiceState = VoiceState_Active;
 		m_sourceVoice->Start(0, 0);
 	}
+
+	return true;
 }
 
 void GpAudioChannelXAudio2::Stop()
