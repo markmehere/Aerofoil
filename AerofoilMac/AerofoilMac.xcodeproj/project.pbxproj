@@ -417,8 +417,8 @@
 		5C54D6F5262D8CE000AB55E0 /* Davis Station.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D6AB262D8AE600AB55E0 /* Davis Station.gpf */; };
 		5C54D6F6262D8CE000AB55E0 /* Slumberland.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D6AC262D8AE600AB55E0 /* Slumberland.gpf */; };
 		5C54D6F7262D8CE000AB55E0 /* Nemo's Market.mov.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D6AD262D8AE600AB55E0 /* Nemo's Market.mov.gpf */; };
-		5C54D6FA262D8D0D00AB55E0 /* ApplicationResources.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D689262D8AE600AB55E0 /* ApplicationResources.gpf */; };
-		5C54D6FB262D8D0D00AB55E0 /* Fonts.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D688262D8AE600AB55E0 /* Fonts.gpf */; };
+		5CAC542C26373C5C006AE5FB /* ApplicationResources.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D689262D8AE600AB55E0 /* ApplicationResources.gpf */; };
+		5CAC542E26373C60006AE5FB /* Fonts.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D688262D8AE600AB55E0 /* Fonts.gpf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -583,8 +583,8 @@
 			dstPath = Packaged;
 			dstSubfolderSpec = 7;
 			files = (
-				5C54D6FA262D8D0D00AB55E0 /* ApplicationResources.gpf in CopyFiles */,
-				5C54D6FB262D8D0D00AB55E0 /* Fonts.gpf in CopyFiles */,
+				5CAC542C26373C5C006AE5FB /* ApplicationResources.gpf in CopyFiles */,
+				5CAC542E26373C60006AE5FB /* Fonts.gpf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -977,8 +977,8 @@
 		5C54D675262D889D00AB55E0 /* ScaleQuadP.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScaleQuadP.cpp; sourceTree = "<group>"; };
 		5C54D676262D889D00AB55E0 /* DrawQuadV.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DrawQuadV.cpp; sourceTree = "<group>"; };
 		5C54D677262D889D00AB55E0 /* GpAudioDriver_SDL2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpAudioDriver_SDL2.cpp; path = ../../AerofoilSDL/GpAudioDriver_SDL2.cpp; sourceTree = "<group>"; };
-		5C54D688262D8AE600AB55E0 /* Fonts.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; name = Fonts.gpf; path = Packaged/Fonts.gpf; sourceTree = SOURCE_ROOT; };
-		5C54D689262D8AE600AB55E0 /* ApplicationResources.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; name = ApplicationResources.gpf; path = Packaged/ApplicationResources.gpf; sourceTree = SOURCE_ROOT; };
+		5C54D688262D8AE600AB55E0 /* Fonts.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; name = Fonts.gpf; path = Resources/Fonts.gpf; sourceTree = SOURCE_ROOT; };
+		5C54D689262D8AE600AB55E0 /* ApplicationResources.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; name = ApplicationResources.gpf; path = Resources/ApplicationResources.gpf; sourceTree = SOURCE_ROOT; };
 		5C54D68B262D8AE600AB55E0 /* Castle o' the Air.mov.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Castle o' the Air.mov.gpf"; sourceTree = "<group>"; };
 		5C54D68C262D8AE600AB55E0 /* ImagineHouse PRO II.mov.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ImagineHouse PRO II.mov.gpf"; sourceTree = "<group>"; };
 		5C54D68D262D8AE600AB55E0 /* Titanic.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Titanic.gpf; sourceTree = "<group>"; };
@@ -1610,7 +1610,7 @@
 				5C54D6AD262D8AE600AB55E0 /* Nemo's Market.mov.gpf */,
 			);
 			name = Houses;
-			path = Packaged/Houses;
+			path = Resources/Houses;
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
