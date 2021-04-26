@@ -16,13 +16,6 @@
 
 #define kNoMoreObjectsAlert		1008
 #define kNoMoreSpecialAlert		1028
-#define kMaxSoundTriggers		1
-#define kMaxStairs				1
-#define kMouseholeBottom		295
-#define kFireplaceBottom		297
-#define kManholeSits			322
-#define kGrecoVentTop			303
-#define kSewerBlowerTop			292
 
 
 short FindEmptyObjectSlot (void);

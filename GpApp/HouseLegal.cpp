@@ -129,27 +129,17 @@ Boolean KeepObjectLegal (void)
 			theObject->data.a.topLeft.v = kSewerGrateTop;
 			theObject->data.a.distance += 2;
 		}
-		if ((theObject->what == kFloorTrans) && 
-				(theObject->data.a.topLeft.v != kFloorTransTop))
-		{
-			theObject->data.a.topLeft.v = kFloorTransTop;
-			theObject->data.a.distance += 2;
-		}
 		if (ObjectHasHandle(&direction, &dist))
 		{
 			switch (direction)
 			{
 				case kAbove:
 				dist = bounds.top - dist;
-				if ((theObject->what == kFloorVent) || 
-						(theObject->what == kFloorBlower) ||
-						(theObject->what == kTaper) ||
-						(theObject->what == kCandle) ||
-						(theObject->what == kStubby))
+				if (BlowerTypeHasUpperLimit(theObject->what))
 				{
-					if (dist < 36)
+					if (dist < kUpwardVentMinY)
 					{
-						theObject->data.a.distance += dist - 36;
+						theObject->data.a.distance += dist - kUpwardVentMinY;
 						unchanged = false;
 					}
 				}

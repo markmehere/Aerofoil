@@ -15,6 +15,7 @@
 #include "IGpLogDriver.h"
 #include "IGpSystemServices.h"
 #include "ObjectEdit.h"
+#include "RectUtils.h"
 #include "ResourceManager.h"
 
 #include "PLDialogs.h"
@@ -158,7 +159,7 @@ Boolean OpenHouse (Boolean read)
 
 	if (read)
 	{
-		Boolean readOK = ReadHouse(houseStream);
+		Boolean readOK = ReadHouse(houseStream, theHousesSpecs[thisHouseIndex].m_dir != PortabilityLayer::VirtualDirectories::kGameData);
 		houseStream->Close();
 
 		return readOK;
@@ -523,7 +524,7 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes, bool isSwappedAfter)
 	SanitizePascalStr(house->banner);
 	SanitizePascalStr(house->trailer);
 	ByteSwapScores(&house->highScores);
-	ByteSwapSavedGame(&house->savedGame);
+	ByteSwapSavedGame(&house->savedGame_Unused);
 	PortabilityLayer::ByteSwap::BigInt16(house->firstRoom);
 	PortabilityLayer::ByteSwap::BigInt16(house->nRooms);
 
@@ -542,10 +543,1402 @@ bool ByteSwapHouse(housePtr house, size_t sizeInBytes, bool isSwappedAfter)
 	return true;
 }
 
-Boolean ReadHouse (GpIOStream *houseStream)
+static bool FailCheck(bool value)
+{
+	return value;
+}
+
+static bool SucceedCheck(bool value)
+{
+	return value;
+}
+
+static bool LCheck(bool value)
+{
+	if (!value)
+		return FailCheck(value);
+
+	return value;
+}
+
+static bool RCheck(bool value)
+{
+	if (value)
+		return SucceedCheck(value);
+
+	return value;
+}
+
+template<size_t TSize>
+bool LegalizePascalStr(uint8_t(&chars)[TSize], bool &anyRepairs)
+{
+	const size_t maxLength = TSize - 1;
+	if (chars[0] > maxLength)
+	{
+		chars[0] = static_cast<uint8_t>(maxLength);
+		anyRepairs = RCheck(true);
+		return true;
+	}
+
+	return true;
+}
+
+static void LegalizeBoolean(Boolean &b)
+{
+	if (b < 0 || b > 1)
+		b = 1;
+}
+
+static bool LegalizeScores(scoresType *scores, bool &anyRepairs)
+{
+	if (!LegalizePascalStr(scores->banner, anyRepairs))
+		return LCheck(false);
+
+	for (int i = 0; i < kMaxScores; i++)
+		if (!LegalizePascalStr(scores->names[i], anyRepairs))
+			return LCheck(false);
+
+	return true;
+}
+
+static bool LegalizeRoomLayout(houseType *house, size_t roomNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	if (room->suite == kRoomIsEmpty)
+		return true;
+
+	if (room->suite < 0 || room->suite >= kMaxNumRoomsH)
+	{
+		room->suite = kRoomIsEmpty;
+		anyRepairs = RCheck(true);
+		return true;
+	}
+
+	if (room->floor > (kMaxNumRoomsV - kNumUndergroundFloors) || room->floor <= -kNumUndergroundFloors)
+	{
+		room->suite = kRoomIsEmpty;
+		anyRepairs = RCheck(true);
+		return true;
+	}
+
+	for (size_t ori = 0; ori < roomNum; ori++)
+	{
+		const roomType *otherRoom = house->rooms + ori;
+		if (otherRoom->floor == room->floor && otherRoom->suite == room->suite)
+		{
+			room->suite = kRoomIsEmpty;
+			anyRepairs = RCheck(true);
+			return true;
+		}
+	}
+
+	return true;
+}
+
+static void LegalizeTopLeft(Point &topLeft, bool &anyRepairs)
+{
+	if (topLeft.h < 0)
+	{
+		anyRepairs = RCheck(true);
+		topLeft.h = 0;
+	}
+	else if (topLeft.h >= kRoomWide)
+	{
+		anyRepairs = RCheck(true);
+		topLeft.h = kRoomWide - 1;
+	}
+
+	if (topLeft.v < 0)
+	{
+		anyRepairs = RCheck(true);
+		topLeft.v = 0;
+	}
+	else if (topLeft.v >= kTileHigh)
+	{
+		anyRepairs = RCheck(true);
+		topLeft.v = kTileHigh - 1;
+	}
+}
+
+template<class TCondA, class TCondB, class TSet, class TSetTo>
+void LegalizeExpect(const TCondA &condA, const TCondB &condB, TSet &set, const TSetTo &setTo, bool &anyRepairs)
+{
+	if (condA == condB && set != setTo)
+	{
+		set = setTo;
+		anyRepairs = RCheck(true);
+	}
+}
+
+static Boolean ForceRectInRoomRect(Rect &rect)
+{
+	Rect roomRect;
+	QSetRect(&roomRect, 0, 0, kRoomWide, kTileHigh);
+
+	return ForceRectInRect(&rect, &roomRect);
+}
+
+
+static bool LegalizeBlower(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	blowerType *blower = &obj->data.a;
+
+	LegalizeBoolean(blower->initial);
+	LegalizeBoolean(blower->state);
+
+	int direction = -1;
+	for (int i = 0; i < 4; i++)
+	{
+		if (blower->vector & (1 << i))
+		{
+			if (direction >= 0)
+				anyRepairs = RCheck(true);
+			else
+				direction = i;
+		}
+	}
+
+	static const int kDirectionUp = 0;
+	static const int kDirectionRight = 1;
+	static const int kDirectionDown = 2;
+	static const int kDirectionLeft = 3;
+
+	if (direction < 0 || direction > 3)
+		direction = kDirectionUp;
+
+	LegalizeTopLeft(blower->topLeft, anyRepairs);
+
+	switch (obj->what)
+	{
+	case kFloorVent:
+	case kFloorBlower:
+	case kSewerGrate:
+	case kTaper:
+	case kCandle:
+	case kStubby:
+	case kTiki:
+	case kBBQ:
+	case kGrecoVent:
+	case kSewerBlower:
+		if (direction != kDirectionUp)
+			direction = kDirectionUp;
+		break;
+	case kCeilingVent:
+	case kCeilingBlower:
+		if (direction != kDirectionDown)
+			direction = kDirectionDown;
+		break;
+	case kRightFan:
+		if (direction != kDirectionRight)
+			direction = kDirectionRight;
+		break;
+	case kLeftFan:
+		if (direction != kDirectionLeft)
+			direction = kDirectionLeft;
+		break;
+	case kInvisBlower:
+	case kLiftArea:
+		break;
+	default:
+		return LCheck(false);
+	}
+
+	LegalizeExpect(obj->what, kFloorVent, blower->topLeft.v, kFloorVentTop, anyRepairs);
+	LegalizeExpect(obj->what, kFloorBlower, blower->topLeft.v, kFloorBlowerTop, anyRepairs);
+	LegalizeExpect(obj->what, kSewerGrate, blower->topLeft.v, kSewerGrateTop, anyRepairs);
+	LegalizeExpect(obj->what, kCeilingVent, blower->topLeft.v, kCeilingVentTop, anyRepairs);
+	LegalizeExpect(obj->what, kCeilingBlower, blower->topLeft.v, kCeilingBlowerTop, anyRepairs);
+
+	if (blower->vector != (1 << direction))
+	{
+		blower->vector = static_cast<Byte>(1 << direction);
+
+		// Unfortunately there's a lot of invalid directional data with fans, but because of how the code works, it has no effect
+		//anyRepairs = RCheck(true);
+	}
+
+	if (blower->distance < 0)
+	{
+		blower->distance = 0;
+		anyRepairs = RCheck(true);
+	}
+
+	if (obj->what == kLiftArea)
+	{
+		int maxWidth = kRoomWide - blower->topLeft.h;
+		int maxHeight = kTileHigh - blower->topLeft.v;
+
+		if (blower->distance > maxWidth)
+		{
+			blower->distance = maxWidth;
+			anyRepairs = RCheck(true);
+		}
+
+		if (blower->tall * 2 > maxHeight)
+		{
+			blower->tall = static_cast<Byte>(maxHeight / 2);
+			anyRepairs = RCheck(true);
+		}
+
+		return true;
+	}
+
+	Rect positionedRect = srcRects[obj->what];
+	ZeroRectCorner(&positionedRect);
+	OffsetRect(&positionedRect, blower->topLeft.h, blower->topLeft.v);
+
+	const Rect basePositionedRect = positionedRect;
+
+	if (ForceRectInRoomRect(positionedRect))
+	{
+		anyRepairs = RCheck(true);
+		blower->topLeft.h = positionedRect.left;
+		blower->topLeft.v = positionedRect.top;
+	}
+
+	int maxDistance = 0;
+	switch (direction)
+	{
+	case kDirectionUp:
+		{
+			int highestAllowed = BlowerTypeHasUpperLimit(obj->what) ? kUpwardVentMinY : 0;
+			maxDistance = blower->topLeft.v - highestAllowed;
+		}
+		break;
+	case kDirectionRight:
+		maxDistance = kRoomWide - positionedRect.right;
+		break;
+	case kDirectionDown:
+		maxDistance = kTileHigh - positionedRect.bottom;
+		break;
+	case kDirectionLeft:
+		maxDistance = positionedRect.left;
+		break;
+	default:
+		assert(false);
+		return LCheck(false);
+	}
+
+	if (blower->distance > maxDistance)
+	{
+		blower->distance = maxDistance;
+		anyRepairs = RCheck(true);
+	}
+
+	return true;
+}
+
+static bool LegalizeFurniture(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	furnitureType *furniture = &obj->data.b;
+
+	bool isVertConstrained = false;
+	bool isHorizConstrained = false;
+	bool isBottomConstrained = false;
+
+	int bottomConstraint = 0;
+
+	switch (obj->what)
+	{
+	default:
+		assert(false);
+		return LCheck(false);
+
+	case kTable:
+	case kShelf:
+	case kDeckTable:
+		isVertConstrained = true;
+		break;
+	case kBooks:
+	case kFilingCabinet:
+	case kWasteBasket:
+	case kMilkCrate:
+	case kStool:
+	case kTrunk:
+		isVertConstrained = true;
+		isHorizConstrained = true;
+		break;
+	case kCabinet:
+	case kInvisObstacle:
+	case kInvisBounce:
+		// No constraints
+		break;
+	case kCounter:
+		isBottomConstrained = true;
+		bottomConstraint = kCounterBottom;
+		break;
+	case kDresser:
+		isBottomConstrained = true;
+		bottomConstraint = kDresserBottom;
+		break;
+	case kManhole:
+		isVertConstrained = true;
+		isHorizConstrained = true;
+		isBottomConstrained = true;
+		bottomConstraint = kManholeSits;
+		break;
+	};
+
+	const Rect baseRect = srcRects[obj->what];
+
+	if (NormalizeRect(&furniture->bounds))
+		anyRepairs = RCheck(true);
+
+	Point topLeft = Point::Create(furniture->bounds.left, furniture->bounds.top);
+	LegalizeTopLeft(topLeft, anyRepairs);
+
+	if (obj->what == kManhole)
+	{
+		if (((topLeft.h - 3) % 64) != 0)
+		{
+			topLeft.h = (((topLeft.h + 29) / 64) * 64) + 3;
+			anyRepairs = RCheck(true);
+		}
+	}
+
+	uint16_t width = furniture->bounds.Width();
+	uint16_t height = furniture->bounds.Height();
+
+	if (width > kRoomWide)
+	{
+		width = kRoomWide;
+		anyRepairs = RCheck(true);
+	}
+
+	if (height > kTileHigh)
+	{
+		height = kTileHigh;
+		anyRepairs = RCheck(true);
+	}
+
+	LegalizeExpect(isVertConstrained, true, height, baseRect.Height(), anyRepairs);
+	LegalizeExpect(isHorizConstrained, true, width, baseRect.Width(), anyRepairs);
+
+	furniture->bounds.left = topLeft.h;
+	furniture->bounds.top = topLeft.v;
+	furniture->bounds.bottom = topLeft.v + static_cast<int16_t>(height);
+	furniture->bounds.right = topLeft.h + static_cast<int16_t>(width);
+
+	if (ForceRectInRoomRect(furniture->bounds))
+		anyRepairs = RCheck(true);
+
+	if (isBottomConstrained && furniture->bounds.bottom != bottomConstraint)
+	{
+		if (furniture->bounds.top > bottomConstraint)
+			furniture->bounds.top = bottomConstraint;
+
+		furniture->bounds.bottom = bottomConstraint;
+		anyRepairs = RCheck(true);
+	}
+
+	return true;
+}
+
+static bool LegalizeBonus(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	bonusType *bonus = &obj->data.c;
+
+	LegalizeBoolean(bonus->state);
+	LegalizeBoolean(bonus->initial);
+
+	if (obj->what == kInvisBonus && bonus->points < 0)
+	{
+		anyRepairs = RCheck(true);
+		bonus->points = 0;
+	}
+
+	LegalizeTopLeft(bonus->topLeft, anyRepairs);
+
+	switch (obj->what)
+	{
+	default:
+		return LCheck(false);
+
+	case kRedClock:
+	case kBlueClock:
+	case kYellowClock:
+	case kCuckoo:
+	case kPaper:
+	case kBattery:
+	case kBands:
+	case kGreaseRt:
+	case kGreaseLf:
+	case kFoil:
+	case kInvisBonus:
+	case kStar:
+	case kSparkle:
+	case kHelium:
+	case kSlider:
+		break;
+	};
+
+	Rect objRect = srcRects[obj->what];
+	ZeroRectCorner(&objRect);
+
+	if (obj->what == kSlider)
+	{
+		if (bonus->length < 0)
+		{
+			anyRepairs = RCheck(true);
+			bonus->length = 0;
+		}
+		else if (bonus->length > kRoomWide)
+		{
+			anyRepairs = RCheck(true);
+			bonus->length = kRoomWide;
+		}
+
+		objRect.right = bonus->length;
+	}
+
+	QOffsetRect(&objRect, bonus->topLeft.h, bonus->topLeft.v);
+
+	if (ForceRectInRoomRect(objRect))
+	{
+		anyRepairs = RCheck(true);
+		bonus->topLeft.h = objRect.left;
+		bonus->topLeft.v = objRect.top;
+	}
+
+	int maxLength = -1;
+	if (obj->what == kGreaseRt)
+		maxLength = kRoomWide - objRect.right;
+
+	if (obj->what == kGreaseLf)
+		maxLength = objRect.left;
+
+	if (obj->what == kSlider)
+		maxLength = kRoomWide - bonus->topLeft.h;
+
+	if (maxLength >= 0)
+	{
+		if (bonus->length < 0)
+		{
+			anyRepairs = RCheck(true);
+			bonus->length = 0;
+		}
+		else if (bonus->length > maxLength)
+		{
+			anyRepairs = RCheck(true);
+			bonus->length = maxLength;
+		}
+	}
+
+	return true;
+}
+
+static void LegalizeRoomLink(houseType *house, int16_t &where, bool &anyRepairs)
+{
+	// Leftover -1 from version conversion, these are generally valid
+	if (where == -100)
+		where = -1;
+
+	if (where < -1)
+	{
+		anyRepairs = RCheck(true);
+		where = -1;
+	}
+	else if (where >= 0)
+	{
+		SInt16 floor, suite;
+		ExtractFloorSuite(house, where, &floor, &suite);
+
+		if (suite < 0 || suite >= kMaxNumRoomsH)
+		{
+			anyRepairs = RCheck(true);
+			where = -1;
+		}
+
+		if (floor > (kMaxNumRoomsV - kNumUndergroundFloors) || floor <= -kNumUndergroundFloors)
+		{
+			anyRepairs = RCheck(true);
+			where = -1;
+		}
+	}
+}
+
+static bool LegalizeTransport(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	transportType *transport = &obj->data.d;
+
+	LegalizeTopLeft(transport->topLeft, anyRepairs);
+	LegalizeRoomLink(house, transport->where, anyRepairs);
+
+	Rect objRect = srcRects[obj->what];
+	ZeroRectCorner(&objRect);
+
+	if (obj->what == kInvisTrans)
+	{
+		if (transport->tall < 0)
+		{
+			anyRepairs = RCheck(true);
+			transport->tall = 0;
+		}
+		else if (transport->tall > kTileHigh)
+		{
+			anyRepairs = RCheck(true);
+			transport->tall = kTileHigh;
+		}
+
+		objRect.right = transport->wide;
+		objRect.bottom = transport->tall;
+	}
+
+
+	if (obj->what == kDeluxeTrans)
+	{
+		uint8_t codedWidth = static_cast<uint8_t>((transport->tall >> 8) & 0xff);
+		uint8_t codedHeight = static_cast<uint8_t>((transport->tall) & 0xff);
+
+		objRect.right = codedWidth * 4;
+		objRect.bottom = codedHeight * 4;
+	}
+
+	QOffsetRect(&objRect, transport->topLeft.h, transport->topLeft.v);
+
+	if (ForceRectInRoomRect(objRect))
+	{
+		anyRepairs = RCheck(true);
+		transport->topLeft.h = objRect.left;
+		transport->topLeft.v = objRect.top;
+
+		if (obj->what == kDeluxeTrans)
+			transport->tall = static_cast<int16_t>(((objRect.Width() / 4) << 8) + objRect.Height() / 4);
+		else if (obj->what == kInvisTrans)
+		{
+			transport->wide = objRect.Width();
+			transport->tall = objRect.Height();
+		}
+	}
+
+	switch (obj->what)
+	{
+	default:
+		return LCheck(false);
+
+	case kUpStairs:
+	case kDownStairs:
+		if (transport->topLeft.v != kStairsTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kStairsTop;
+		}
+		break;
+	case kFloorTrans:
+		if (transport->topLeft.v != kFloorTransTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kFloorTransTop;
+		}
+		break;
+	case kCeilingTrans:
+		if (transport->topLeft.v != kCeilingTransTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kCeilingTransTop;
+		}
+		break;
+	case kDoorInLf:
+		if (transport->topLeft.h != kDoorInLfLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kCeilingTransTop;
+		}
+		if (transport->topLeft.v != kDoorInTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kDoorInTop;
+		}
+		break;
+	case kDoorInRt:
+		if (transport->topLeft.h != kDoorInRtLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kDoorInRtLeft;
+		}
+		if (transport->topLeft.v != kDoorInTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kDoorInTop;
+		}
+		break;
+	case kDoorExRt:
+		if (transport->topLeft.h != kDoorExRtLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kDoorExRtLeft;
+		}
+		if (transport->topLeft.v != kDoorExTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kDoorExTop;
+		}
+		break;
+	case kDoorExLf:
+		if (transport->topLeft.h != kDoorExLfLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kDoorExLfLeft;
+		}
+		if (transport->topLeft.v != kDoorExTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kDoorExTop;
+		}
+		break;
+	case kWindowInLf:
+		if (transport->topLeft.h != kWindowInLfLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kWindowInLfLeft;
+		}
+		if (transport->topLeft.v != kWindowInTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kWindowInTop;
+		}
+		break;
+	case kWindowInRt:
+		if (transport->topLeft.h != kWindowInRtLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kWindowInRtLeft;
+		}
+		if (transport->topLeft.v != kWindowInTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kWindowInTop;
+		}
+		break;
+	case kWindowExRt:
+		if (transport->topLeft.h != kWindowExRtLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kWindowExRtLeft;
+		}
+		if (transport->topLeft.v != kWindowExTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kWindowExTop;
+		}
+		break;
+	case kWindowExLf:
+		if (transport->topLeft.h != kWindowExLfLeft)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.h = kWindowExLfLeft;
+		}
+		if (transport->topLeft.v != kWindowExTop)
+		{
+			anyRepairs = RCheck(true);
+			transport->topLeft.v = kWindowExTop;
+		}
+		break;
+	case kInvisTrans:
+	case kDeluxeTrans:
+	case kMailboxLf:
+	case kMailboxRt:
+		break;
+	}
+
+	return true;
+}
+
+static bool LegalizeSwitch(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	switchType *sw = &obj->data.e;
+
+	if (sw->delay < 0)
+	{
+		sw->delay = 0;
+		anyRepairs = RCheck(true);
+	}
+
+	bool isSwitch = false;
+	bool isTrigger = false;
+
+	switch (obj->what)
+	{
+	default:
+		return RCheck(false);
+
+	case kLightSwitch:
+	case kMachineSwitch:
+	case kThermostat:
+	case kPowerSwitch:
+	case kKnifeSwitch:
+	case kInvisSwitch:
+		isSwitch = true;
+		LegalizeRoomLink(house, sw->where, anyRepairs);
+		break;
+	case kTrigger:
+	case kLgTrigger:
+		LegalizeRoomLink(house, sw->where, anyRepairs);
+		break;
+	case kSoundTrigger:
+		break;
+	};
+
+	if (isSwitch)
+	{
+		switch (sw->type)
+		{
+		case kToggle:
+		case kForceOn:
+		case kForceOff:
+			break;
+		default:
+			anyRepairs = RCheck(true);
+			sw->type = kToggle;
+			break;
+		}
+	}
+
+	if (isTrigger)
+	{
+		if (sw->type != kOneShot)
+		{
+			anyRepairs = RCheck(true);
+			sw->type = kOneShot;
+		}
+	}
+
+	LegalizeTopLeft(sw->topLeft, anyRepairs);
+
+	Rect bounds = srcRects[obj->what];
+	ZeroRectCorner(&bounds);
+	QOffsetRect(&bounds, sw->topLeft.h, sw->topLeft.v);
+
+	if (ForceRectInRoomRect(bounds))
+	{
+		anyRepairs = RCheck(true);
+		sw->topLeft.h = bounds.left;
+		sw->topLeft.v = bounds.top;
+	}
+
+	return true;
+}
+
+static bool LegalizeLight(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	lightType *light = &obj->data.f;
+
+	LegalizeBoolean(light->initial);
+	LegalizeBoolean(light->state);
+
+	LegalizeTopLeft(light->topLeft, anyRepairs);
+
+	Rect bounds = srcRects[obj->what];
+	ZeroRectCorner(&bounds);
+
+	if (obj->what == kTrackLight || obj->what == kFlourescent)
+	{
+		if (light->length < 0)
+		{
+			anyRepairs = RCheck(true);
+			light->length = 0;
+		}
+		else if (light->length > kRoomWide)
+		{
+			anyRepairs = RCheck(true);
+			light->length = kRoomWide;
+		}
+
+		bounds.right = light->length;
+	}
+
+	QOffsetRect(&bounds, light->topLeft.h, light->topLeft.v);
+
+	if (ForceRectInRoomRect(bounds))
+	{
+		anyRepairs = RCheck(true);
+		light->topLeft.h = bounds.left;
+		light->topLeft.v = bounds.top;
+	}
+
+	switch (obj->what)
+	{
+	case kCeilingLight:
+		if (light->topLeft.v != kCeilingLightTop)
+		{
+			anyRepairs = RCheck(true);
+			light->topLeft.v = kCeilingLightTop;
+		}
+		break;
+	case kHipLamp:
+		if (light->topLeft.v != kHipLampTop)
+		{
+			anyRepairs = RCheck(true);
+			light->topLeft.v = kHipLampTop;
+		}
+		break;
+	case kDecoLamp:
+		if (light->topLeft.v != kDecoLampTop)
+		{
+			anyRepairs = RCheck(true);
+			light->topLeft.v = kDecoLampTop;
+		}
+		break;
+	case kFlourescent:
+		if (light->topLeft.v != kFlourescentTop)
+		{
+			anyRepairs = RCheck(true);
+			light->topLeft.v = kFlourescentTop;
+		}
+		break;
+	case kTrackLight:
+		if (light->topLeft.v != kTrackLightTop)
+		{
+			anyRepairs = RCheck(true);
+			light->topLeft.v = kTrackLightTop;
+		}
+		break;
+	case kLightBulb:
+	case kTableLamp:
+	case kInvisLight:
+		break;
+	}
+
+	return true;
+}
+
+static bool LegalizeAppliance(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	applianceType *appl = &obj->data.g;
+
+	LegalizeBoolean(appl->initial);
+	LegalizeBoolean(appl->state);
+
+	LegalizeTopLeft(appl->topLeft, anyRepairs);
+
+	if (obj->what != kCustomPict)
+	{
+		Rect bounds = srcRects[obj->what];
+		ZeroRectCorner(&bounds);
+		QOffsetRect(&bounds, appl->topLeft.h, appl->topLeft.v);
+
+		if (ForceRectInRoomRect(bounds))
+		{
+			anyRepairs = RCheck(true);
+			appl->topLeft.h = bounds.left;
+			appl->topLeft.v = bounds.top;
+		}
+
+		switch (obj->what)
+		{
+		case kToaster:
+			{
+				int maxHeight = bounds.top;
+				if (appl->height < 0)
+				{
+					anyRepairs = RCheck(true);
+					appl->height = 0;
+				}
+				else if (appl->height > maxHeight)
+				{
+					anyRepairs = RCheck(true);
+					appl->height = maxHeight;
+				}
+			}
+			break;
+		case kShredder:
+		case kMacPlus:
+		case kGuitar:
+		case kTV:
+		case kCoffee:
+		case kOutlet:
+		case kVCR:
+		case kStereo:
+		case kMicrowave:
+		case kCinderBlock:
+		case kFlowerBox:
+		case kCDs:
+			break;
+		}
+	}
+
+	return true;
+}
+
+static bool LegalizeEnemy(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	enemyType *enemy = &obj->data.h;
+
+	LegalizeBoolean(enemy->initial);
+	LegalizeBoolean(enemy->state);
+
+	LegalizeTopLeft(enemy->topLeft, anyRepairs);
+
+	Rect bounds = srcRects[obj->what];
+	ZeroRectCorner(&bounds);
+	QOffsetRect(&bounds, enemy->topLeft.h, enemy->topLeft.v);
+
+	if (ForceRectInRoomRect(bounds))
+	{
+		anyRepairs = RCheck(true);
+		enemy->topLeft.h = bounds.left;
+		enemy->topLeft.v = bounds.top;
+	}
+
+	switch (obj->what)
+	{
+	case kBalloon:
+	case kCopterLf:
+	case kCopterRt:
+		{
+			int expectedV = (kTileHigh / 2) - HalfRectTall(&bounds);
+			if (enemy->topLeft.v != expectedV)
+			{
+				anyRepairs = RCheck(true);
+				enemy->topLeft.v = expectedV;
+			}
+		}
+		break;
+	case kDartLf:
+		{
+			int expectedH = kRoomWide - RectWide(&bounds);
+			if (enemy->topLeft.h != expectedH)
+			{
+				anyRepairs = RCheck(true);
+				enemy->topLeft.h = expectedH;
+			}
+		}
+		break;
+	case kDartRt:
+		if (enemy->topLeft.h != 0)
+		{
+			anyRepairs = RCheck(true);
+			enemy->topLeft.h = 0;
+		}
+		break;
+	case kBall:
+	case kFish:
+		{
+			int maxLength = bounds.top;
+			if (enemy->length < 0)
+			{
+				anyRepairs = RCheck(true);
+				enemy->length = 0;
+			}
+			else if (enemy->length > maxLength)
+			{
+				anyRepairs = RCheck(true);
+				enemy->length = maxLength;
+			}
+		}
+		break;
+	case kDrip:
+		{
+			int maxLength = kTileHigh - bounds.bottom;
+			if (enemy->length < 0)
+			{
+				anyRepairs = RCheck(true);
+				enemy->length = 0;
+			}
+			else if (enemy->length > maxLength)
+			{
+				anyRepairs = RCheck(true);
+				enemy->length = maxLength;
+			}
+		}
+		break;
+	case kCobweb:
+		break;
+	}
+
+	return true;
+}
+
+static bool LegalizeClutter(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+	clutterType *blower = &obj->data.i;
+
+	PL_NotYetImplemented_TODO("Validate");
+	return true;
+}
+
+
+static bool LegalizeObject(houseType *house, size_t roomNum, size_t objectNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	objectType *obj = room->objects + objectNum;
+
+	switch (obj->what)
+	{
+	default:
+		obj->what = kObjectIsEmpty;
+		anyRepairs = RCheck(true);
+		break;
+	case kObjectIsEmpty:
+		break;
+
+	case kFloorVent:
+	case kCeilingVent:
+	case kFloorBlower:
+	case kCeilingBlower:
+	case kSewerGrate:
+	case kLeftFan:
+	case kRightFan:
+	case kTaper:
+	case kCandle:
+	case kStubby:
+	case kTiki:
+	case kBBQ:
+	case kInvisBlower:
+	case kGrecoVent:
+	case kSewerBlower:
+	case kLiftArea:
+		return LegalizeBlower(house, roomNum, objectNum, anyRepairs);
+
+	case kTable:
+	case kShelf:
+	case kCabinet:
+	case kFilingCabinet:
+	case kWasteBasket:
+	case kMilkCrate:
+	case kCounter:
+	case kDresser:
+	case kDeckTable:
+	case kStool:
+	case kTrunk:
+	case kInvisObstacle:
+	case kManhole:
+	case kBooks:
+	case kInvisBounce:
+		return LegalizeFurniture(house, roomNum, objectNum, anyRepairs);
+
+	case kRedClock:
+	case kBlueClock:
+	case kYellowClock:
+	case kCuckoo:
+	case kPaper:
+	case kBattery:
+	case kBands:
+	case kGreaseRt:
+	case kGreaseLf:
+	case kFoil:
+	case kInvisBonus:
+	case kStar:
+	case kSparkle:
+	case kHelium:
+	case kSlider:
+		return LegalizeBonus(house, roomNum, objectNum, anyRepairs);
+
+	case kUpStairs:
+	case kDownStairs:
+	case kMailboxLf:
+	case kMailboxRt:
+	case kFloorTrans:
+	case kCeilingTrans:
+	case kDoorInLf:
+	case kDoorInRt:
+	case kDoorExRt:
+	case kDoorExLf:
+	case kWindowInLf:
+	case kWindowInRt:
+	case kWindowExRt:
+	case kWindowExLf:
+	case kInvisTrans:
+	case kDeluxeTrans:
+		return LegalizeTransport(house, roomNum, objectNum, anyRepairs);
+
+	case kLightSwitch:
+	case kMachineSwitch:
+	case kThermostat:
+	case kPowerSwitch:
+	case kKnifeSwitch:
+	case kInvisSwitch:
+	case kTrigger:
+	case kLgTrigger:
+	case kSoundTrigger:
+		return LegalizeSwitch(house, roomNum, objectNum, anyRepairs);
+
+	case kCeilingLight:
+	case kLightBulb:
+	case kTableLamp:
+	case kHipLamp:
+	case kDecoLamp:
+	case kFlourescent:
+	case kTrackLight:
+	case kInvisLight:
+		return LegalizeLight(house, roomNum, objectNum, anyRepairs);
+
+	case kShredder:
+	case kToaster:
+	case kMacPlus:
+	case kGuitar:
+	case kTV:
+	case kCoffee:
+	case kOutlet:
+	case kVCR:
+	case kStereo:
+	case kMicrowave:
+	case kCinderBlock:
+	case kFlowerBox:
+	case kCDs:
+	case kCustomPict:
+		return LegalizeAppliance(house, roomNum, objectNum, anyRepairs);
+
+	case kBalloon:
+	case kCopterLf:
+	case kCopterRt:
+	case kDartLf:
+	case kDartRt:
+	case kBall:
+	case kDrip:
+	case kFish:
+	case kCobweb:
+		return LegalizeEnemy(house, roomNum, objectNum, anyRepairs);
+
+	case kOzma:
+	case kMirror:
+	case kMousehole:
+	case kFireplace:
+	case kFlower:
+	case kWallWindow:
+	case kBear:
+	case kCalendar:
+	case kVase1:
+	case kVase2:
+	case kBulletin:
+	case kCloud:
+	case kFaucet:
+	case kRug:
+	case kChimes:
+		return LegalizeClutter(house, roomNum, objectNum, anyRepairs);
+	}
+
+	return true;
+}
+
+static bool LegalizeRoom(houseType *house, size_t roomNum, bool &anyRepairs)
+{
+	roomType *room = house->rooms + roomNum;
+	if (room->suite == kRoomIsEmpty)
+		return true;
+
+	if (!LegalizePascalStr(room->name, anyRepairs))
+		return LCheck(false);
+
+	LegalizeBoolean(room->visited);
+
+	for (int i = 0; i < kNumTiles; i++)
+	{
+		if (room->tiles[i] < 0)
+		{
+			room->tiles[i] = 0;
+			anyRepairs = RCheck(true);
+		}
+		else if (room->tiles[i] >= kNumTiles)
+		{
+			room->tiles[i] = kNumTiles - 1;
+			anyRepairs = RCheck(true);
+		}
+	}
+
+	// Enforce object type caps
+	enum CapType
+	{
+		CapType_Candle,
+		CapType_Tiki,
+		CapType_Coals,
+		CapType_Pendulum,
+		CapType_RubberBands,
+		CapType_Star,
+		CapType_DynamicObj,
+		CapType_SoundTrigger,
+		CapType_UpStairs,
+		CapType_DownStairs,
+		CapType_Grease,
+
+		CapType_Count,
+	};
+
+	int caps[CapType_Count];
+	caps[CapType_Candle] = kMaxCandles;
+	caps[CapType_Tiki] = kMaxTikis;
+	caps[CapType_Coals] = kMaxCoals;
+	caps[CapType_Pendulum] = kMaxPendulums;
+	caps[CapType_RubberBands] = kMaxRubberBands;
+	caps[CapType_Star] = kMaxStars;
+	caps[CapType_DynamicObj] = kMaxDynamicObs;
+	caps[CapType_SoundTrigger] = kMaxSoundTriggers;
+	caps[CapType_UpStairs] = kMaxStairs;
+	caps[CapType_DownStairs] = kMaxStairs;
+	caps[CapType_Grease] = kMaxGrease;
+
+	int counts[CapType_Count];
+	for (int i = 0; i < CapType_Count; i++)
+		counts[i] = 0;
+
+	for (size_t i = 0; i < kMaxRoomObs; i++)
+	{
+		CapType capType = CapType_Count;
+
+		objectType *obj = room->objects + i;
+		switch (obj->what)
+		{
+		case kTaper:
+		case kCandle:
+		case kStubby:
+			capType = CapType_Candle;
+			break;
+		case kTiki:
+			capType = CapType_Tiki;
+			break;
+		case kBBQ:
+			capType = CapType_Coals;
+			break;
+		case kCuckoo:
+			capType = CapType_Pendulum;
+			break;
+		case kBands:
+			capType = CapType_RubberBands;
+			break;
+		case kStar:
+			capType = CapType_Star;
+			break;
+		case kSparkle:
+		case kToaster:
+		case kMacPlus:
+		case kTV:
+		case kCoffee:
+		case kOutlet:
+		case kVCR:
+		case kStereo:
+		case kMicrowave:
+		case kBalloon:
+		case kCopterLf:
+		case kCopterRt:
+		case kDartLf:
+		case kDartRt:
+		case kBall:
+		case kDrip:
+		case kFish:
+			capType = CapType_DynamicObj;
+			break;
+		case kSoundTrigger:
+			capType = CapType_SoundTrigger;
+			break;
+		case kUpStairs:
+			capType = CapType_UpStairs;
+			break;
+		case kDownStairs:
+			capType = CapType_DownStairs;
+			break;
+		case kGreaseLf:
+		case kGreaseRt:
+			capType = CapType_Grease;
+			break;
+		default:
+			break;
+		};
+
+		if (capType != CapType_Count)
+		{
+			if (counts[capType] == caps[capType])
+			{
+				obj->what = kObjectIsEmpty;
+				anyRepairs = RCheck(true);
+			}
+			else
+				counts[capType]++;
+		}
+	}
+
+	// Check all objects
+	for (size_t i = 0; i < kMaxRoomObs; i++)
+	{
+		if (!LegalizeObject(house, roomNum, i, anyRepairs))
+			return LCheck(false);
+	}
+
+	int16_t numObjects = kMaxRoomObs;
+	for (size_t i = 0; i < kMaxRoomObs; i++)
+	{
+		objectType *obj = room->objects + i;
+
+		if (obj->what == kObjectIsEmpty)
+			numObjects--;
+	}
+
+	if (numObjects != room->numObjects)
+	{
+		anyRepairs = RCheck(true);
+		room->numObjects = numObjects;
+	}
+
+	return true;
+}
+
+static bool LegalizeHouse(houseType *house, bool &anyRepairs)
+{
+	size_t nRooms = house->nRooms;
+
+	if (!LegalizeScores(&house->highScores, anyRepairs))
+		return false;
+
+	PL_NotYetImplemented_TODO("Validate initial pos");
+
+	// Repair room layout
+	for (size_t i = 0; i < nRooms; i++)
+	{
+		if (!LegalizeRoomLayout(house, i, anyRepairs))
+			return LCheck(false);
+	}
+
+	// Repair firstRoom
+	if (house->firstRoom < 0 || house->firstRoom >= house->nRooms || house->rooms[house->firstRoom].suite == kRoomIsEmpty)
+	{
+		if (nRooms != 0)
+		{
+			bool repairedOK = false;
+			for (size_t i = 0; i < nRooms; i++)
+			{
+				if (house->rooms[i].suite == kRoomIsEmpty)
+					continue;
+
+				house->firstRoom = static_cast<int16_t>(i);
+				repairedOK = true;
+				anyRepairs = RCheck(true);
+			}
+
+			if (!repairedOK)
+				return LCheck(false);
+		}
+	}
+
+	for (size_t i = 0; i < nRooms; i++)
+	{
+		if (!LegalizeRoom(house, i, anyRepairs))
+			return LCheck(false);
+	}
+
+	return true;
+}
+
+Boolean ReadHouse (GpIOStream *houseStream, bool untrusted)
 {
 	long		byteCount;
-	PLError_t		theErr;
+	PLError_t	theErr;
 	short		whichRoom;
 
 	// There should be no padding remaining the house type
@@ -566,6 +1959,21 @@ Boolean ReadHouse (GpIOStream *houseStream)
 	
 	if (thisHouse != nil)
 		thisHouse.Dispose();
+
+	if (byteCount < houseType::kBinaryDataSize)
+	{
+		YellowAlert(kYellowHouseDamaged, 1);
+		return (false);
+	}
+
+	const size_t roomDataSize = static_cast<size_t>(byteCount) - houseType::kBinaryDataSize;
+	if (roomDataSize % sizeof(roomType) != 0)
+	{
+		YellowAlert(kYellowHouseDamaged, 2);
+		return (false);
+	}
+
+	const size_t roomCountFromDataSize = roomDataSize / sizeof(roomType);
 
 	// GP: Correct for padding
 	const size_t alignmentPadding = sizeof(houseType) - sizeof(roomType) - houseType::kBinaryDataSize;
@@ -602,6 +2010,24 @@ Boolean ReadHouse (GpIOStream *houseStream)
 	ByteSwapHouse(*thisHouse, static_cast<size_t>(byteCount), false);
 	
 	numberRooms = (*thisHouse)->nRooms;
+	if (numberRooms < 0 || static_cast<size_t>(numberRooms) > roomCountFromDataSize)
+	{
+		YellowAlert(kYellowHouseDamaged, 3);
+		return (false);
+	}
+
+	bool anyRepairs = false;
+	if (untrusted)
+	{
+		if (!LegalizeHouse(*thisHouse, anyRepairs))
+		{
+			YellowAlert(kYellowHouseDamaged, 4);
+			return (false);
+		}
+
+		if (anyRepairs)
+			YellowAlert(kYellowHouseRepaired, 0);
+	}
 
 	#ifdef COMPILEDEMO
 	if (numberRooms != 45)
@@ -652,7 +2078,7 @@ Boolean ReadHouse (GpIOStream *houseStream)
 		{
 		}
 	}
-	
+
 	objActive = kNoObjectSelected;
 	ReflectCurrentRoom(true);
 	fileDirty = false;

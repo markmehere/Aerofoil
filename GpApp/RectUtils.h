@@ -17,7 +17,7 @@ namespace PortabilityLayer
 
 
 void FrameWHRect (short, short, short, short, PortabilityLayer::ResolveCachingColor &color);
-void NormalizeRect (Rect *);
+Boolean NormalizeRect (Rect *);
 void ZeroRectCorner (Rect *);
 void CenterRectOnPoint (Rect *, Point);
 short HalfRectWide (Rect *);

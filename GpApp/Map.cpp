@@ -28,7 +28,6 @@
 #define kMapScrollBarWidth		16
 #define kHScrollRef				5L
 #define kVScrollRef				27L
-#define kMapGroundValue			56
 #define kNewRoomAlert			1004
 #define kYesDoNewRoom			1
 #define kThumbnailPictID		1010

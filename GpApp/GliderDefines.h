@@ -39,6 +39,8 @@
 #define kYellowQTMovieNotLoaded		22
 #define kYellowNoRooms				23
 #define kYellowCantOrderLinks		24
+#define kYellowHouseDamaged			25
+#define kYellowHouseRepaired		26
 
 #define kSwitchIfNeeded				0
 
@@ -261,6 +263,8 @@
 #define kMaxStars					4
 #define kMaxShredded				4
 #define kMaxDynamicObs				18
+#define kMaxSoundTriggers			1
+#define kMaxStairs					1
 #define kMaxMasterObjects			216		// kMaxRoomObs * 9
 #define kMaxViewWidth				1536
 #define kMaxViewHeight				(kTileHigh*3+20)
@@ -626,3 +630,13 @@ static const Boolean kFaceLeft = FALSE;	// Conflicts with GP input driver
 #define kBBQCoalsComponent			1
 #define kPendulumComponent			1
 #define kStarComponent				1
+
+
+#define kMapGroundValue				56
+#define kUpwardVentMinY				36
+
+#define kMouseholeBottom			295
+#define kFireplaceBottom			297
+#define kManholeSits				322
+#define kGrecoVentTop				303
+#define kSewerBlowerTop				292

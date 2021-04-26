@@ -136,7 +136,7 @@ short GetRoomLinked (objectType *who)
 		compoundRoomNumber = who->data.d.where;
 		if (compoundRoomNumber != -1)	// is object linked
 		{
-			ExtractFloorSuite(compoundRoomNumber, &floor, &suite);
+			ExtractFloorSuite(*thisHouse, compoundRoomNumber, &floor, &suite);
 			whereLinked = GetRoomNumber(floor, suite);
 		}
 		else
@@ -154,7 +154,7 @@ short GetRoomLinked (objectType *who)
 		compoundRoomNumber = who->data.e.where;
 		if (compoundRoomNumber != -1)	// is object linked
 		{
-			ExtractFloorSuite(compoundRoomNumber, &floor, &suite);
+			ExtractFloorSuite(*thisHouse, compoundRoomNumber, &floor, &suite);
 			whereLinked = GetRoomNumber(floor, suite);
 		}
 		else
@@ -352,7 +352,7 @@ void AddTempManholeRect (Rect *manHole)
 
 //--------------------------------------------------------------  SetObjectState
 
-Boolean SetObjectState (short room, short object, short action, short local)
+Boolean SetObjectState (SInt16 room, SInt16 object, SInt16 action, SInt16 local)
 {
 	char		wasState;
 	Boolean		changed = false;

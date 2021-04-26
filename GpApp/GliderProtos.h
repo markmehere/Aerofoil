@@ -9,6 +9,7 @@
 #include "GliderStructs.h"
 
 struct GpMouseInputEvent;
+struct houseType;
 
 //--------------------------------------------------------------  Prototypes
 
@@ -124,7 +125,7 @@ void DoHouseInfo (void);								// --- HouseInfo.c
 Boolean OpenHouse (Boolean load);						// --- HouseIO.c
 Boolean OpenSpecificHouse (const VFileSpec &);
 Boolean SaveHouseAs (void);
-Boolean ReadHouse (GpIOStream *houseStream);
+Boolean ReadHouse (GpIOStream *houseStream, bool untrusted);
 Boolean WriteHouse (Boolean);
 Boolean CloseHouse (void);
 void OpenHouseResFork (void);
@@ -149,7 +150,7 @@ void GetDemoInput (gliderPtr);							// --- Input.c
 void GetInput (gliderPtr);
 
 SInt16 MergeFloorSuite (SInt16, SInt16);					// --- Link.c
-void ExtractFloorSuite (SInt16, SInt16 *, SInt16 *);
+void ExtractFloorSuite (const houseType *house, SInt16, SInt16 *, SInt16 *);
 void UpdateLinkControl (void);
 void UpdateLinkWindow (void);
 void OpenLinkWindow (void);
@@ -321,6 +322,7 @@ void DuplicateObject (void);
 void MoveObject (SInt16, Boolean);
 void DeselectObject (void);
 Boolean ObjectHasHandle (SInt16 *, SInt16 *);
+Boolean BlowerTypeHasUpperLimit (SInt16);
 void HandleBlowerGlider (void);
 void SelectNextObject (void);
 void SelectPrevObject (void);

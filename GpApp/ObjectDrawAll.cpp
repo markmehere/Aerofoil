@@ -534,7 +534,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				OffsetRectRoomRelative(&itsRect, neighbor);
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					room = GetRoomNumber(floor, suite);
 					obj = (short)thisObject.data.e.who;
 					DrawLightSwitch(&itsRect, GetObjectState(room, obj));
@@ -547,7 +547,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				OffsetRectRoomRelative(&itsRect, neighbor);
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					room = GetRoomNumber(floor, suite);
 					obj = (short)thisObject.data.e.who;
 					DrawMachineSwitch(&itsRect, GetObjectState(room, obj));
@@ -560,7 +560,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				OffsetRectRoomRelative(&itsRect, neighbor);
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					room = GetRoomNumber(floor, suite);
 					obj = (short)thisObject.data.e.who;
 					DrawThermostat(&itsRect, GetObjectState(room, obj));
@@ -573,7 +573,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				OffsetRectRoomRelative(&itsRect, neighbor);
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					room = GetRoomNumber(floor, suite);
 					obj = (short)thisObject.data.e.who;
 					DrawPowerSwitch(&itsRect, GetObjectState(room, obj));
@@ -586,7 +586,7 @@ void DrawARoomsObjects (short neighbor, Boolean redraw)
 				OffsetRectRoomRelative(&itsRect, neighbor);
 				if (SectRect(&itsRect, &testRect, &whoCares))
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					room = GetRoomNumber(floor, suite);
 					obj = (short)thisObject.data.e.who;
 					DrawKnifeSwitch(&itsRect, GetObjectState(room, obj));

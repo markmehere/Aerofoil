@@ -1,0 +1,26 @@
+A never-before-seen error has arisen.  Proceed with caution!  (Save and Quit immediately.)
+I failed to open the house's resource fork.  Any unique room backgrounds are not accessible.
+I failed to add a resource to the house's resource fork.  See error number.
+I failed to create a new resource fork for the house.  See error number for problem.
+There are no houses on this drive!  About your only option is to create your own new house with the Editor.
+This house is incompatible with us!  You'll need to upgrade Glider PRO to use this house.  Do not attempt to play/edit this house!
+The background specified by this room was not found!  Try re-selecting a new background (the Room Info menu).
+The room number is out of bounds.  I suspect the house file is corrupt.  Try deleting this "illegal" room though.
+The data is missing that specifies where the openings in this room are.  The house may be damaged.  Try selecting a new background though.
+There was a problem with the clipboard (Cut, Copy and Paste commands).  I couldn't guess why.
+I think we just ran out of memory.  Quit now and give Glider PROª more memory.
+We failed to write the house to disk.  (That shouldn't have happened.)
+Well, the music didn't load.  Glider PROª will still run, you'll just be musically challenged.
+Wow, there was a problem bringing sounds up.  You might try giving Glider PROª more memory - otherwise ... silence.
+Some kind of strange Apple Event error.  I think I would just ignore it.  Or call Casady & Greene with the error number.
+Did you save the house on the same volume Glider PRO is on?  I saved the house but had to re-open the old house because I couldn't find the new one.
+Wow, I couldn't find the old or new house.  Go to the Select House menu item and see if it's there.  If not, make sure they're on the same volume as Glider PRO.
+Couldn't create a saved game structure.  Memory is probably too low.
+The saved game doesn't match the house.  Either this game was saved for a different house or the house was modified recently.
+This saved game is an old version.  We cannot use this game with this house.
+The number of rooms saved doesn't match the number of house rooms.  We cannot use this game with this house.
+The QuickTimeª movie that goes with this house will not be used.  Glider PROª must have enough memory to easily load the entire movie into RAM.
+This house has no rooms!  Do not attempt to play this house!  Select a new house to play.
+There was an error generating or parsing a links list.  Memory may be tight.
+This house contains invalid data that couldn't be repaired.  Select a new house to play.
+This house contained invalid data, which was repaired.  Some things may be missing or not work correctly.

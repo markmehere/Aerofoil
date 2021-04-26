@@ -1075,7 +1075,7 @@ void DoSwitchObjectInfo (void)
 		PasStringCopy(PSTR("none"), roomStr);
 	else
 	{
-		ExtractFloorSuite(thisRoom->objects[objActive].data.e.where, &floor, &suite);
+		ExtractFloorSuite(*thisHouse, thisRoom->objects[objActive].data.e.where, &floor, &suite);
 		NumToString((long)floor, roomStr);
 		PasStringConcat(roomStr, PSTR(" / "));
 		NumToString((long)suite, tempStr);
@@ -1196,7 +1196,7 @@ void DoTriggerObjectInfo (void)
 		PasStringCopy(PSTR("none"), roomStr);
 	else
 	{
-		ExtractFloorSuite(thisRoom->objects[objActive].data.e.where, &floor, &suite);
+		ExtractFloorSuite(*thisHouse, thisRoom->objects[objActive].data.e.where, &floor, &suite);
 		NumToString((long)floor, roomStr);
 		PasStringConcat(roomStr, PSTR(" / "));
 		NumToString((long)suite, tempStr);
@@ -1869,7 +1869,7 @@ void DoTransObjectInfo (short what)
 		PasStringCopy(PSTR("none"), roomStr);
 	else
 	{
-		ExtractFloorSuite(thisRoom->objects[objActive].data.d.where, &floor, &suite);
+		ExtractFloorSuite(*thisHouse, thisRoom->objects[objActive].data.d.where, &floor, &suite);
 		NumToString((long)floor, roomStr);
 		PasStringConcat(roomStr, PSTR(" / "));
 		NumToString((long)suite, tempStr);

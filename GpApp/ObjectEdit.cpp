@@ -1680,6 +1680,24 @@ void DeselectObject (void)
 #endif
 }
 
+
+//--------------------------------------------------------------  ObjectHasHandle
+
+Boolean BlowerTypeHasUpperLimit (SInt16 what)
+{
+	switch (what)
+	{
+	case kFloorVent:
+	case kFloorBlower:
+	case kTaper:
+	case kCandle:
+	case kStubby:
+		return true;
+	default:
+		return false;
+	}
+}
+
 //--------------------------------------------------------------  ObjectHasHandle
 
 #ifndef COMPILEDEMO

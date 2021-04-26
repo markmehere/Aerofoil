@@ -385,7 +385,7 @@ void GenerateLinksList (void)
 				thisObject = thisHousePtr->rooms[r].objects[i];
 				if (thisObject.data.e.where != -1)
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					roomLinked = GetRoomNumber(floor, suite);
 					objectLinked = (short)thisObject.data.e.who;
 					linksList[numLinks].srcRoom = r;
@@ -405,7 +405,7 @@ void GenerateLinksList (void)
 				thisObject = thisHousePtr->rooms[r].objects[i];
 				if (thisObject.data.d.where != -1)
 				{
-					ExtractFloorSuite(thisObject.data.d.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.d.where, &floor, &suite);
 					roomLinked = GetRoomNumber(floor, suite);
 					objectLinked = (short)thisObject.data.d.who;
 					linksList[numLinks].srcRoom = r;
@@ -597,7 +597,7 @@ void GenerateRetroLinks (void)
 				thisObject = thisHousePtr->rooms[r].objects[i];
 				if (thisObject.data.e.where != -1)
 				{
-					ExtractFloorSuite(thisObject.data.e.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.e.where, &floor, &suite);
 					roomLinked = GetRoomNumber(floor, suite);
 					if (roomLinked == thisRoomNumber)
 					{
@@ -620,7 +620,7 @@ void GenerateRetroLinks (void)
 				thisObject = thisHousePtr->rooms[r].objects[i];
 				if (thisObject.data.d.where != -1)
 				{
-					ExtractFloorSuite(thisObject.data.d.where, &floor, &suite);
+					ExtractFloorSuite(*thisHouse, thisObject.data.d.where, &floor, &suite);
 					roomLinked = GetRoomNumber(floor, suite);
 					if (roomLinked == thisRoomNumber)
 					{
@@ -794,7 +794,7 @@ void ConvertHouseVer1To2 (void)
 					case kDeluxeTrans:
 					if (thisRoom->objects[h].data.d.where != -1)
 					{
-						ExtractFloorSuite(thisRoom->objects[h].data.d.where, &floor, &suite);
+						ExtractFloorSuite(*thisHouse, thisRoom->objects[h].data.d.where, &floor, &suite);
 						floor += kNumUndergroundFloors;
 						thisRoom->objects[h].data.d.where = MergeFloorSuite(floor, suite);
 					}
@@ -810,7 +810,7 @@ void ConvertHouseVer1To2 (void)
 					case kLgTrigger:
 					if (thisRoom->objects[h].data.e.where != -1)
 					{
-						ExtractFloorSuite(thisRoom->objects[h].data.e.where, &floor, &suite);
+						ExtractFloorSuite(*thisHouse, thisRoom->objects[h].data.e.where, &floor, &suite);
 						floor += kNumUndergroundFloors;
 						thisRoom->objects[h].data.e.where = MergeFloorSuite(floor, suite);
 					}
