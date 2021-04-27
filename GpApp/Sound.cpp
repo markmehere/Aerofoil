@@ -517,7 +517,7 @@ IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 		return nullptr;
 
 	uint32_t dataSize = dataTag.m_chunkSize;
-	if (dataSize > 0x1000000)
+	if (dataSize > 0x1000000 || dataSize < 1)
 		return nullptr;
 
 	IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver();
