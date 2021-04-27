@@ -424,9 +424,6 @@ bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virt
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		prefsAppend = "Prefs";
 		break;
-	case PortabilityLayer::VirtualDirectories::kFontCache:
-		prefsAppend = "FontCache";
-		break;
 	default:
 		return false;
 	};
