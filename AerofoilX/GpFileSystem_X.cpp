@@ -180,6 +180,9 @@ bool GpFileSystem_X::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDir
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		prefsAppend = "Prefs";
 		break;
+	case PortabilityLayer::VirtualDirectories::kLogs:
+		prefsAppend = "Logs";
+		break;
 	default:
 		return false;
 	};
@@ -220,7 +223,7 @@ void GpFileSystem_X::Init()
 	if (m_basePath.size() >= 4 && m_basePath.substr(m_basePath.size() - 4, 3) == "bin")
 		m_basePath = m_basePath.substr(0, m_basePath.size() - 4) + "lib" + baseDirSeparator + "aerofoil" + baseDirSeparator;
 
-	const char *extensions[] = { "HighScores", "Houses", "SavedGames", "Prefs", "FontCache" };
+	const char *extensions[] = { "HighScores", "Houses", "SavedGames", "Prefs", "Logs" };
 	for (size_t i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++)
 	{
 		std::string prefsPath = std::string(prefsDir) + extensions[i];
