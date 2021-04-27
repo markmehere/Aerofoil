@@ -13,13 +13,6 @@ LOCAL_CFLAGS := -DGP_DEBUG_CONFIG=0
 
 # Add your application source files here...
 LOCAL_SRC_FILES := \
-	GpAppEnvironment.cpp	\
-	GpAudioDriverFactory.cpp	\
-	GpDisplayDriverFactory.cpp	\
-	GpFontHandlerFactory.cpp	\
-	GpGlobalConfig.cpp	\
-	GpInputDriverFactory.cpp	\
-	GpMain.cpp	\
-	GpVOSEventQueue.cpp
+	GpShell_Combined.cpp
 
 include $(BUILD_STATIC_LIBRARY)
