@@ -81,8 +81,7 @@ namespace
 				if (infoHeader.m_thisStructureSize > sizeForInfoHeader)
 					return false;
 
-				// Dimensions need to fit in 16-bit signed space
-				if (infoHeader.m_width >= 0x8000 || infoHeader.m_height >= 0x8000)
+				if (infoHeader.m_width >= 0x1000 || infoHeader.m_height >= 0x1000 || infoHeader.m_width < 1 || infoHeader.m_height < 1)
 					return false;
 
 				return true;
