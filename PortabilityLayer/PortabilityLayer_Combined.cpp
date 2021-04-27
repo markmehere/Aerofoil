@@ -78,7 +78,6 @@
 #include "SimpleGraphic.cpp"
 #include "TextPlacer.cpp"
 #include "UTF8.cpp"
-#include "UTF16.cpp"
 #include "WindowDef.cpp"
 #include "WindowManager.cpp"
 #include "WorkerThread.cpp"

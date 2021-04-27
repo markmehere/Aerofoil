@@ -12,7 +12,7 @@
 #include "ResolveCachingColor.h"
 #include "Rect2i.h"
 #include "TextPlacer.h"
-#include "UTF8.h"
+#include "GpUnicode.h"
 
 #include "PLDrivers.h"
 #include "PLKeyEncoding.h"
@@ -721,7 +721,7 @@ namespace PortabilityLayer
 		{
 			uint32_t codePoint = 0;
 			size_t numDigested = 0;
-			if (!UTF8Processor::DecodeCodePoint(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
+			if (!GpUnicode::UTF8::Decode(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
 			{
 				clipboardContents->Destroy();
 				return;
@@ -745,7 +745,7 @@ namespace PortabilityLayer
 		{
 			uint32_t codePoint = 0;
 			size_t numDigested = 0;
-			if (!UTF8Processor::DecodeCodePoint(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
+			if (!GpUnicode::UTF8::Decode(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
 			{
 				clipboardContents->Destroy();
 				return;

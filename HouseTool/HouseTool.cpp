@@ -2,7 +2,7 @@
 #include "PLCore.h"
 #include "PLBigEndian.h"
 #include "MacRomanConversion.h"
-#include "UTF8.h"
+#include "GpUnicode.h"
 #include "WindowsUnicodeToolShim.h"
 
 #include <vector>
@@ -1124,7 +1124,7 @@ void PatchVisitor::VisitLPStr(uint8_t &length, uint8_t *chars, int capacity)
 	{
 		uint32_t codePoint = 0;
 		size_t charsDigested = 0;
-		if (!PortabilityLayer::UTF8Processor::DecodeCodePoint(replacementUTF8, rLen, charsDigested, codePoint))
+		if (!GpUnicode::UTF8::Decode(replacementUTF8, rLen, charsDigested, codePoint))
 			break;
 
 		rLen -= charsDigested;
@@ -1382,9 +1382,9 @@ bool PatchVisitor::DecodeQuotedString(const std::string &scopeStr, size_t startP
 				}
 
 				const uint16_t unicodeCodePoint = (nibbles[0] << 12) + (nibbles[1] << 8) + (nibbles[2] << 4) + nibbles[3];
-				uint8_t encoded[PortabilityLayer::UTF8Processor::kMaxEncodedBytes];
+				uint8_t encoded[GpUnicode::UTF8::kMaxEncodedBytes];
 				size_t emitted = 0;
-				PortabilityLayer::UTF8Processor::EncodeCodePoint(encoded, emitted, unicodeCodePoint);
+				GpUnicode::UTF8::Encode(encoded, emitted, unicodeCodePoint);
 
 				for (size_t ei = 0; ei < emitted; ei++)
 					decoded.push_back(static_cast<char>(encoded[ei]));

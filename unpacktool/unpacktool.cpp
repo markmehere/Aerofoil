@@ -7,8 +7,7 @@
 #include "CompactProParser.h"
 #include "CFileStream.h"
 
-#include "UTF8.h"
-#include "UTF16.h"
+#include "GpUnicode.h"
 
 #include "ArchiveDescription.h"
 #include "IDecompressor.h"

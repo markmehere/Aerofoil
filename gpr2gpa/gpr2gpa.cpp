@@ -14,6 +14,7 @@
 #include "UTF8.h"
 #include "ZipFile.h"
 #include "WaveFormat.h"
+#include "GpUnicode.h"
 
 #include "zlib.h"
 
@@ -116,7 +117,7 @@ void AppendUTF8(std::vector<uint8_t> &array, uint32_t codePoint)
 	uint8_t bytes[5];
 	size_t sz;
 
-	PortabilityLayer::UTF8Processor::EncodeCodePoint(bytes, sz, codePoint);
+	GpUnicode::UTF8::Encode(bytes, sz, codePoint);
 	for (size_t i = 0; i < sz; i++)
 		array.push_back(bytes[i]);
 }

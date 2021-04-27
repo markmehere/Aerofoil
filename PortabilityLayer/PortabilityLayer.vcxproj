@@ -157,7 +157,6 @@
     <ClInclude Include="ResolveCachingColor.h" />
     <ClInclude Include="WorkerThread.h" />
     <ClInclude Include="TextPlacer.h" />
-    <ClInclude Include="UTF16.h" />
     <ClInclude Include="UTF8.h" />
     <ClInclude Include="ZipFileProxy.h" />
     <ClInclude Include="SimpleImage.h" />
@@ -302,7 +301,6 @@
     <ClCompile Include="SimpleGraphic.cpp" />
     <ClCompile Include="PLHandle.cpp" />
     <ClCompile Include="TextPlacer.cpp" />
-    <ClCompile Include="UTF16.cpp" />
     <ClCompile Include="UTF8.cpp" />
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />

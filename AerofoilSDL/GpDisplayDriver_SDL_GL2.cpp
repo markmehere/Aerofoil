@@ -8,6 +8,7 @@
 #include "GpRingBuffer.h"
 #include "GpInputDriver_SDL_Gamepad.h"
 #include "GpSDL.h"
+#include "GpUnicode.h"
 #include "IGpCursor.h"
 #include "IGpDisplayDriverSurface.h"
 #include "IGpLogDriver.h"
@@ -51,68 +52,6 @@ struct GpDisplayDriver_SDL_GL2_Prefs
 {
 	bool m_isFullScreen;
 };
-
-namespace DeleteMe
-{
-	bool DecodeCodePoint(const uint8_t *characters, size_t availableCharacters, size_t &outCharactersDigested, uint32_t &outCodePoint)
-	{
-		if (availableCharacters <= 0)
-			return false;
-
-		if ((characters[0] & 0x80) == 0x00)
-		{
-			outCharactersDigested = 1;
-			outCodePoint = characters[0];
-			return true;
-		}
-
-		size_t sz = 0;
-		uint32_t codePoint = 0;
-		uint32_t minCodePoint = 0;
-		if ((characters[0] & 0xe0) == 0xc0)
-		{
-			sz = 2;
-			minCodePoint = 0x80;
-			codePoint = (characters[0] & 0x1f);
-		}
-		else if ((characters[0] & 0xf0) == 0xe0)
-		{
-			sz = 3;
-			minCodePoint = 0x800;
-			codePoint = (characters[0] & 0x0f);
-		}
-		else if ((characters[0] & 0xf8) == 0xf0)
-		{
-			sz = 4;
-			minCodePoint = 0x10000;
-			codePoint = (characters[0] & 0x07);
-		}
-		else
-			return false;
-
-		if (availableCharacters < sz)
-			return false;
-
-		for (size_t auxByte = 1; auxByte < sz; auxByte++)
-		{
-			if ((characters[auxByte] & 0xc0) != 0x80)
-				return false;
-
-			codePoint = (codePoint << 6) | (characters[auxByte] & 0x3f);
-		}
-
-		if (codePoint < minCodePoint || codePoint > 0x10ffff)
-			return false;
-
-		if (codePoint >= 0xd800 && codePoint <= 0xdfff)
-			return false;
-
-		outCodePoint = codePoint;
-		outCharactersDigested = sz;
-
-		return true;
-	}
-}
 
 namespace GpBinarizedShaders
 {
@@ -2041,7 +1980,7 @@ void GpDisplayDriver_SDL_GL2::TranslateSDLMessage(const SDL_Event *msg, IGpVOSEv
 			{
 				uint32_t codePoint;
 				size_t numDigested;
-				DeleteMe::DecodeCodePoint(reinterpret_cast<const uint8_t*>(teEvt->text) + parseOffset, lenUTF8 - parseOffset, numDigested, codePoint);
+				GpUnicode::UTF8::Decode(reinterpret_cast<const uint8_t*>(teEvt->text) + parseOffset, lenUTF8 - parseOffset, numDigested, codePoint);
 
 				parseOffset += numDigested;
 

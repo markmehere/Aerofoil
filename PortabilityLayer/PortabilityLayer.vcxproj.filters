@@ -399,9 +399,6 @@
     <ClInclude Include="AppEventHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UTF16.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLButtonWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -669,9 +666,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TextPlacer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UTF16.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLButtonWidget.cpp">

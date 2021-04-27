@@ -5,8 +5,7 @@
 
 #include "IGpClipboardContents.h"
 
-#include "UTF16.h"
-#include "UTF8.h"
+#include "GpUnicode.h"
 
 #include <assert.h>
 #include <vector>
