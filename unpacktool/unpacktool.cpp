@@ -342,7 +342,7 @@ int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &r
 
 	PortabilityLayer::CFileStream metadataStream(metadataF);
 
-	if (mfps.WriteAsPackage(metadataStream, ts))
+	if (!mfps.WriteAsPackage(metadataStream, ts))
 	{
 		fprintf(stderr, "A problem occurred writing metadata");
 		metadataStream.Close();
