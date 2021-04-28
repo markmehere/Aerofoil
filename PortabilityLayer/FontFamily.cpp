@@ -7,6 +7,7 @@
 
 #include "MemReaderStream.h"
 #include "MemoryManager.h"
+#include "PLCore.h"
 #include "PLDrivers.h"
 
 #include <stdlib.h>
@@ -158,7 +159,7 @@ namespace PortabilityLayer
 
 	FontFamily *FontFamily::Create(FontFamilyID_t familyID)
 	{
-		void *storage = malloc(sizeof(FontFamily));
+		void *storage = NewPtr(sizeof(FontFamily));
 		if (!storage)
 			return nullptr;
 
@@ -168,7 +169,7 @@ namespace PortabilityLayer
 	void FontFamily::Destroy()
 	{
 		this->~FontFamily();
-		free(this);
+		DisposePtr(this);
 	}
 
 	FontFamily::FontFamily(FontFamilyID_t familyID)

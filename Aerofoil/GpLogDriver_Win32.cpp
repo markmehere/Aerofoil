@@ -1,3 +1,4 @@
+#include "GpAllocator_C.h"
 #include "GpLogDriver_Win32.h"
 #include "GpFileSystem_Win32.h"
 
@@ -7,6 +8,7 @@
 GpLogDriver_Win32::GpLogDriver_Win32()
 	: m_stream(nullptr)
 	, m_isInitialized(false)
+	, m_alloc(GpAllocator_C::GetInstance())
 {
 }
 
@@ -58,14 +60,14 @@ void GpLogDriver_Win32::VPrintf(Category category, const char *fmt, va_list args
 		if (formattedSize <= 0)
 			return;
 
-		char *charBuff = static_cast<char*>(malloc(formattedSize + 1));
+		char *charBuff = static_cast<char*>(m_alloc->Alloc(formattedSize + 1));
 		if (!charBuff)
 			return;
 
 		vsnprintf(charBuff, formattedSize + 1, fmt, args);
 
 		m_stream->Write(charBuff, formattedSize);
-		free(charBuff);
+		m_alloc->Release(charBuff);
 	}
 
 	m_stream->Write("\n", 1);

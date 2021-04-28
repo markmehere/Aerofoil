@@ -1,11 +1,13 @@
 #include "CFileStream.h"
 #include "BMPFormat.h"
+#include "GpAllocator_C.h"
 #include "MMHandleBlock.h"
 #include "ResourceCompiledTypeList.h"
 #include "ResourceFile.h"
 #include "SharedTypes.h"
 #include "QDStandardPalette.h"
 #include "PLBigEndian.h"
+#include "PLDrivers.h"
 #include <assert.h>
 
 #include <string>
@@ -140,6 +142,9 @@ int main(int argc, const char **argv)
 		return err;
 
 	PortabilityLayer::CFileStream stream(f);
+
+	GpDriverCollection *drivers = PLDrivers::GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kAlloc>(GpAllocator_C::GetInstance());
 
 	PortabilityLayer::ResourceFile *resFile = PortabilityLayer::ResourceFile::Create();
 	if (!resFile->Load(&stream))

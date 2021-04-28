@@ -124,7 +124,6 @@
     <ClInclude Include="MacRsrcMap.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="MemReaderStream.h" />
-    <ClInclude Include="MMBlock.h" />
     <ClInclude Include="MMHandleBlock.h" />
     <ClInclude Include="PascalStr.h" />
     <ClInclude Include="PascalStrLiteral.h" />
@@ -250,7 +249,6 @@
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MemReaderStream.cpp" />
     <ClCompile Include="MenuManager.cpp" />
-    <ClCompile Include="MMBlock.cpp" />
     <ClCompile Include="MMHandleBlock.cpp" />
     <ClCompile Include="PLApplication.cpp" />
     <ClCompile Include="PLButtonWidget.cpp" />

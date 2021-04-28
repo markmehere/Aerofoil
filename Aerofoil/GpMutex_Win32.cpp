@@ -1,5 +1,6 @@
 #include "GpMutex_Win32.h"
 
+#include "IGpAllocator.h"
 #include "GpWindows.h"
 
 #include <stdlib.h>
@@ -7,8 +8,9 @@
 
 void GpMutex_Win32::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpMutex_Win32();
-	free(this);
+	alloc->Release(this);
 }
 
 void GpMutex_Win32::Lock()
@@ -22,16 +24,17 @@ void GpMutex_Win32::Unlock()
 }
 
 
-GpMutex_Win32 *GpMutex_Win32::Create()
+GpMutex_Win32 *GpMutex_Win32::Create(IGpAllocator *alloc)
 {
-	void *storage = malloc(sizeof(GpMutex_Win32));
+	void *storage = alloc->Alloc(sizeof(GpMutex_Win32));
 	if (!storage)
 		return nullptr;
 
-	return new (storage) GpMutex_Win32();
+	return new (storage) GpMutex_Win32(alloc);
 }
 
-GpMutex_Win32::GpMutex_Win32()
+GpMutex_Win32::GpMutex_Win32(IGpAllocator *alloc)
+	: m_alloc(alloc)
 {
 	InitializeCriticalSection(&m_critSection);
 }

@@ -1,4 +1,5 @@
 #include "FileSectionStream.h"
+#include "PLCore.h"
 
 #include <stdlib.h>
 #include <new>
@@ -151,7 +152,7 @@ namespace PortabilityLayer
 	void FileSectionStreamImpl::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 	{
 		this->~FileSectionStreamImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	void FileSectionStreamImpl::Flush()
@@ -161,7 +162,7 @@ namespace PortabilityLayer
 
 	GpIOStream *FileSectionStream::Create(GpIOStream *stream, GpUFilePos_t start, GpUFilePos_t size)
 	{
-		void *storage = malloc(sizeof(FileSectionStreamImpl));
+		void *storage = NewPtr(sizeof(FileSectionStreamImpl));
 
 		if (!storage)
 			return nullptr;

@@ -5,6 +5,8 @@
 #include "DeflateCodec.h"
 #include "MacFileInfo.h"
 #include "ZipFile.h"
+#include "GpAllocator_C.h"
+#include "PLDrivers.h"
 
 #include <stdio.h>
 #include <string>
@@ -12,6 +14,9 @@
 
 int toolMain(int argc, const char **argv)
 {
+	GpDriverCollection *drivers = PLDrivers::GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kAlloc>(GpAllocator_C::GetInstance());
+
 	if (argc != 2)
 	{
 		fprintf(stderr, "Usage: MergeGPF <file.gpf>");

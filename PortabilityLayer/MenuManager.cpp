@@ -288,7 +288,7 @@ namespace PortabilityLayer
 		if (m_iconGraphic)
 		{
 			m_iconGraphic->~SimpleGraphic();
-			free(m_iconGraphic);
+			DisposePtr(m_iconGraphic);
 		}
 
 		// GP TODO: Dispose of menus properly
@@ -834,7 +834,7 @@ namespace PortabilityLayer
 			{
 				typedef SimpleGraphicInstanceStandardPalette<16, 16> GraphicType_t;
 
-				void *storage = static_cast<GraphicType_t*>(malloc(sizeof(GraphicType_t)));
+				void *storage = static_cast<GraphicType_t*>(NewPtr(sizeof(GraphicType_t)));
 				if (storage)
 				{
 					memcpy(m_iconMask, static_cast<const uint8_t*>(*icsHandle) + 32, 32);

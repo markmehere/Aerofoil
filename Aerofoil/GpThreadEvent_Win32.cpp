@@ -1,4 +1,5 @@
 #include "GpThreadEvent_Win32.h"
+#include "IGpAllocator.h"
 
 #include <stdlib.h>
 #include <new>
@@ -20,28 +21,30 @@ void GpThreadEvent_Win32::Signal()
 
 void GpThreadEvent_Win32::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpThreadEvent_Win32();
-	free(this);
+	alloc->Release(this);
 }
 
-GpThreadEvent_Win32 *GpThreadEvent_Win32::Create(bool autoReset, bool startSignaled)
+GpThreadEvent_Win32 *GpThreadEvent_Win32::Create(IGpAllocator *alloc, bool autoReset, bool startSignaled)
 {
 	HANDLE handle = CreateEventA(nullptr, autoReset ? FALSE : TRUE, startSignaled ? TRUE : FALSE, nullptr);
 	if (handle == nullptr)
 		return nullptr;
 
-	void *storage = malloc(sizeof(GpThreadEvent_Win32));
+	void *storage = alloc->Alloc(sizeof(GpThreadEvent_Win32));
 	if (!storage)
 	{
 		CloseHandle(handle);
 		return nullptr;
 	}
 
-	return new (storage) GpThreadEvent_Win32(handle);
+	return new (storage) GpThreadEvent_Win32(alloc, handle);
 }
 
-GpThreadEvent_Win32::GpThreadEvent_Win32(const HANDLE &handle)
+GpThreadEvent_Win32::GpThreadEvent_Win32(IGpAllocator *alloc, const HANDLE &handle)
 	: m_event(handle)
+	, m_alloc(alloc)
 {
 }
 

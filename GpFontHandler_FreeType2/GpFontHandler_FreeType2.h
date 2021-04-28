@@ -7,6 +7,7 @@
 #include FT_FREETYPE_H
 
 class GpIOStream;
+struct IGpAllocator;
 
 namespace PortabilityLayer
 {
@@ -21,10 +22,10 @@ public:
 
 	bool KeepStreamOpen() const override;
 
-	static GpFontHandler_FreeType2 *Create();
+	static GpFontHandler_FreeType2 *Create(IGpAllocator *alloc);
 
 private:
-	GpFontHandler_FreeType2();
+	explicit GpFontHandler_FreeType2(IGpAllocator *alloc);
 	~GpFontHandler_FreeType2();
 
 	static void *FTAllocThunk(FT_Memory memory, long size);
@@ -44,4 +45,5 @@ private:
 	FT_Library m_library;
 	unsigned int m_currentSize;
 	bool m_ftIsInitialized;
+	IGpAllocator *m_alloc;
 };

@@ -1,5 +1,6 @@
 #include "GpDisplayDriverSurfaceD3D11.h"
 #include "GpComPtr.h"
+#include "IGpAllocator.h"
 
 #include <d3d11.h>
 #include <emmintrin.h>
@@ -55,8 +56,9 @@ void GpDisplayDriverSurfaceD3D11::UploadEntire(const void *data, size_t pitch)
 
 void GpDisplayDriverSurfaceD3D11::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpDisplayDriverSurfaceD3D11();
-	free(this);
+	alloc->Release(this);
 }
 
 ID3D11ShaderResourceView *GpDisplayDriverSurfaceD3D11::GetSRV() const
@@ -79,7 +81,7 @@ size_t GpDisplayDriverSurfaceD3D11::GetHeight() const
 	return m_height;
 }
 
-GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *device, ID3D11DeviceContext *deviceContext, size_t width, size_t height, GpPixelFormat_t pixelFormat)
+GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *device, ID3D11DeviceContext *deviceContext, size_t width, size_t height, GpPixelFormat_t pixelFormat, IGpAllocator *alloc)
 {
 	DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R8_UNORM;
 
@@ -127,17 +129,17 @@ GpDisplayDriverSurfaceD3D11 *GpDisplayDriverSurfaceD3D11::Create(ID3D11Device *d
 	if (device->CreateShaderResourceView(texture, &srvDesc, srv.GetMutablePtr()) != S_OK)
 		return nullptr;
 
-	void *storage = malloc(sizeof(GpDisplayDriverSurfaceD3D11));
+	void *storage = alloc->Alloc(sizeof(GpDisplayDriverSurfaceD3D11));
 	if (!storage)
 	{
 		texture->Release();
 		return nullptr;
 	}
 
-	return new (storage) GpDisplayDriverSurfaceD3D11(device, deviceContext, texture, srv, width, height, pixelFormat);
+	return new (storage) GpDisplayDriverSurfaceD3D11(device, deviceContext, texture, srv, width, height, pixelFormat, alloc);
 }
 
-GpDisplayDriverSurfaceD3D11::GpDisplayDriverSurfaceD3D11(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ID3D11Texture2D *texture, ID3D11ShaderResourceView *srv, size_t width, size_t height, GpPixelFormat_t pixelFormat)
+GpDisplayDriverSurfaceD3D11::GpDisplayDriverSurfaceD3D11(ID3D11Device *device, ID3D11DeviceContext *deviceContext, ID3D11Texture2D *texture, ID3D11ShaderResourceView *srv, size_t width, size_t height, GpPixelFormat_t pixelFormat, IGpAllocator *alloc)
 	: m_width(width)
 	, m_height(height)
 	, m_pixelFormat(pixelFormat)
@@ -145,6 +147,7 @@ GpDisplayDriverSurfaceD3D11::GpDisplayDriverSurfaceD3D11(ID3D11Device *device, I
 	, m_deviceContext(deviceContext)
 	, m_texture(texture)
 	, m_srv(srv)
+	, m_alloc(alloc)
 {
 }
 

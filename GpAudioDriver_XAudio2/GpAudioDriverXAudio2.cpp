@@ -6,7 +6,6 @@
 #include "CoreDefs.h"
 
 #include <xaudio2.h>
-#include <malloc.h>
 
 void GpAudioDriverXAudio2::Shutdown()
 {
@@ -101,12 +100,12 @@ GpAudioDriverXAudio2 *GpAudioDriverXAudio2::Create(const GpAudioDriverProperties
 
 IGpAudioBuffer *GpAudioDriverXAudio2::CreateBuffer(const void *buffer, size_t bufferSize)
 {
-	return GpAudioBufferXAudio2::Create(buffer, bufferSize);
+	return GpAudioBufferXAudio2::Create(m_properties.m_alloc, buffer, bufferSize);
 }
 
 IGpAudioChannel *GpAudioDriverXAudio2::CreateChannel()
 {
-	return GpAudioChannelXAudio2::Create(this);
+	return GpAudioChannelXAudio2::Create(m_properties.m_alloc, this);
 }
 
 void GpAudioDriverXAudio2::SetMasterVolume(uint32_t vol, uint32_t maxVolume)

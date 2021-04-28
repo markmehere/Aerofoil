@@ -2,6 +2,7 @@
 #include "IGpThreadEvent.h"
 #include "IGpSystemServices.h"
 
+#include "PLCore.h"
 #include "PLDrivers.h"
 
 #include <stdlib.h>
@@ -39,7 +40,7 @@ namespace PortabilityLayer
 void PortabilityLayer::WorkerThreadImpl::Destroy()
 {
 	this->~WorkerThreadImpl();
-	free(this);
+	DisposePtr(this);
 }
 
 void PortabilityLayer::WorkerThreadImpl::AsyncExecuteTask(PortabilityLayer::WorkerThread::Callback_t callback, void *context)
@@ -139,7 +140,7 @@ PortabilityLayer::WorkerThread::~WorkerThread()
 
 PortabilityLayer::WorkerThread *PortabilityLayer::WorkerThread::Create()
 {
-	void *storage = malloc(sizeof(PortabilityLayer::WorkerThreadImpl));
+	void *storage = NewPtr(sizeof(PortabilityLayer::WorkerThreadImpl));
 	if (!storage)
 		return nullptr;
 

@@ -48,6 +48,8 @@ public:
 private:
 	bool m_isTouchscreenSimulation;
 
+	IGpAllocator *m_alloc;
+
 	static GpSystemServices_Win32 ms_instance;
 };
 

@@ -21,6 +21,7 @@
 
 #include "GpBWCursor_Win32.h"
 #include "GpWindows.h"
+#include "IGpAllocator.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -34,19 +35,19 @@ void GpBWCursor_Win32::Destroy()
 	this->DecRef();
 }
 
-IGpCursor_Win32 *GpBWCursor_Win32::Create(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY)
+IGpCursor_Win32 *GpBWCursor_Win32::Create(IGpAllocator *alloc, size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY)
 {
 	size_t numBits = width * height;
-	size_t numBytes = (width * height + 7) / 8;
-	uint8_t *convertedAndData = static_cast<uint8_t*>(malloc(numBytes));
-	uint8_t *convertedXorData = static_cast<uint8_t*>(malloc(numBytes));
+	size_t numBytes = (numBits + 7) / 8;
+	uint8_t *convertedAndData = static_cast<uint8_t*>(alloc->Alloc(numBytes));
+	uint8_t *convertedXorData = static_cast<uint8_t*>(alloc->Alloc(numBytes));
 
 	if (!convertedAndData || !convertedXorData)
 	{
 		if (convertedAndData)
-			free(convertedAndData);
+			alloc->Release(convertedAndData);
 		if (convertedXorData)
-			free(convertedXorData);
+			alloc->Release(convertedXorData);
 
 		return nullptr;
 	}
@@ -62,25 +63,26 @@ IGpCursor_Win32 *GpBWCursor_Win32::Create(size_t width, size_t height, const voi
 
 	HCURSOR hcursor = CreateCursor(g_gpWindowsGlobals.m_hInstance, static_cast<int>(hotSpotX), static_cast<int>(hotSpotY), static_cast<int>(width), static_cast<int>(height), convertedAndData, convertedXorData);
 
-	free(convertedAndData);
-	free(convertedXorData);
+	alloc->Release(convertedAndData);
+	alloc->Release(convertedXorData);
 
 	if (!hcursor)
 		return nullptr;
 
-	void *storage = malloc(sizeof(GpBWCursor_Win32));
+	void *storage = alloc->Alloc(sizeof(GpBWCursor_Win32));
 	if (!storage)
 	{
 		DestroyCursor(hcursor);
 		return nullptr;
 	}
 
-	return new (storage) GpBWCursor_Win32(hcursor);
+	return new (storage) GpBWCursor_Win32(hcursor, alloc);
 }
 
-GpBWCursor_Win32::GpBWCursor_Win32(HCURSOR cursor)
+GpBWCursor_Win32::GpBWCursor_Win32(HCURSOR cursor, IGpAllocator *alloc)
 	: m_cursor(cursor)
 	, m_refCount(1)
+	, m_alloc(alloc)
 {
 }
 
@@ -104,7 +106,8 @@ void GpBWCursor_Win32::DecRef()
 	m_refCount--;
 	if (m_refCount == 0)
 	{
+		IGpAllocator *alloc = m_alloc;
 		this->~GpBWCursor_Win32();
-		free(this);
+		alloc->Release(this);
 	}
 }

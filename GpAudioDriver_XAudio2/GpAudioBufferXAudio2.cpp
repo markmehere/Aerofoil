@@ -1,12 +1,12 @@
 #include "GpAudioBufferXAudio2.h"
 #include "CoreDefs.h"
 #include "GpWindows.h"
+#include "IGpAllocator.h"
 
-#include <malloc.h>
 #include <string.h>
 #include <new>
 
-GpAudioBufferXAudio2 *GpAudioBufferXAudio2::Create(const void *buffer, size_t size)
+GpAudioBufferXAudio2 *GpAudioBufferXAudio2::Create(IGpAllocator *alloc, const void *buffer, size_t size)
 {
 	size_t baseSize = sizeof(GpAudioBufferXAudio2);
 	baseSize = baseSize + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
@@ -14,14 +14,14 @@ GpAudioBufferXAudio2 *GpAudioBufferXAudio2::Create(const void *buffer, size_t si
 
 	size_t totalSize = baseSize + size;
 
-	void *storage = _aligned_malloc(totalSize, GP_SYSTEM_MEMORY_ALIGNMENT);
+	void *storage = alloc->Realloc(nullptr, totalSize);
 	if (!storage)
 		return nullptr;
 
 	void *dataPos = static_cast<uint8_t*>(storage) + baseSize;
 
 	memcpy(dataPos, buffer, size);
-	return new (storage) GpAudioBufferXAudio2(dataPos, size);
+	return new (storage) GpAudioBufferXAudio2(alloc, dataPos, size);
 }
 
 void GpAudioBufferXAudio2::AddRef()
@@ -40,8 +40,9 @@ const XAUDIO2_BUFFER *GpAudioBufferXAudio2::GetXA2Buffer() const
 	return &m_xa2Buffer;
 }
 
-GpAudioBufferXAudio2::GpAudioBufferXAudio2(const void *data, size_t size)
-	: m_data(data)
+GpAudioBufferXAudio2::GpAudioBufferXAudio2(IGpAllocator *alloc, const void *data, size_t size)
+	: m_alloc(alloc)
+	, m_data(data)
 	, m_size(size)
 	, m_count(1)
 {
@@ -62,6 +63,7 @@ GpAudioBufferXAudio2::~GpAudioBufferXAudio2()
 
 void GpAudioBufferXAudio2::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpAudioBufferXAudio2();
-	_aligned_free(this);
+	m_alloc->Realloc(this, 0);
 }

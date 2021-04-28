@@ -10,6 +10,7 @@
 
 struct IGpLogDriver;
 struct IGpSystemServices;
+struct IGpAllocator;
 
 struct GpGlobalConfig
 {
@@ -22,6 +23,7 @@ struct GpGlobalConfig
 
 	IGpLogDriver *m_logger;
 	IGpSystemServices *m_systemServices;
+	IGpAllocator *m_allocator;
 	void *m_osGlobals;
 };
 

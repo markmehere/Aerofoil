@@ -3,6 +3,7 @@
 #include "FontRenderer.h"
 #include "IGpFont.h"
 #include "IGpFontHandler.h"
+#include "GpAllocator_C.h"
 #include "GpAppInterface.h"
 #include "GpDriverIndex.h"
 #include "GpFontHandlerProperties.h"
@@ -167,8 +168,14 @@ bool KnownFontSpec::operator!=(const KnownFontSpec &other) const
 
 int toolMain(int argc, const char **argv)
 {
+	IGpAllocator *alloc = GpAllocator_C::GetInstance();
+
 	GpFontHandlerProperties fhProperties;
 	fhProperties.m_type = EGpFontHandlerType_FreeType2;
+	fhProperties.m_alloc = alloc;
+
+	GpDriverCollection *drivers = PLDrivers::GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kAlloc>(alloc);
 
 	IGpFontHandler *ft2Handler = GpDriver_CreateFontHandler_FreeType2(fhProperties);
 

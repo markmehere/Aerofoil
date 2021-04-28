@@ -10,6 +10,7 @@
 #include "ResTypeID.h"
 #include "ZipFileProxy.h"
 
+#include "PLCore.h"
 #include "PLDrivers.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
@@ -474,12 +475,12 @@ namespace PortabilityLayer
 	void CompositeFileImpl::Close()
 	{
 		this->~CompositeFileImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	CompositeFileImpl *CompositeFileImpl::Create(VirtualDirectory_t dirID, const PLPasStr &filename, GpIOStream *stream, ZipFileProxy *zipFile, const MacFileProperties &mfp, bool resInline, bool dataInline, size_t inlineDataIndex)
 	{
-		void *storage = malloc(sizeof(CompositeFileImpl));
+		void *storage = NewPtr(sizeof(CompositeFileImpl));
 		if (!storage)
 			return nullptr;
 

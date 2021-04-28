@@ -1,8 +1,10 @@
 #include "GpFileSystem_Win32.h"
 
+#include "GpAllocator_C.h"
 #include "GpApplicationName.h"
 #include "GpFileStream_Win32.h"
 #include "GpWindows.h"
+#include "IGpAllocator.h"
 #include "IGpDirectoryCursor.h"
 
 #include <string>
@@ -12,33 +14,36 @@
 
 #include <assert.h>
 
+struct IGpAllocator;
+
 extern GpWindowsGlobals g_gpWindowsGlobals;
 
 class GpDirectoryCursor_Win32 final : public IGpDirectoryCursor
 {
 public:
-	static GpDirectoryCursor_Win32 *Create(const HANDLE &handle, const WIN32_FIND_DATAW &findData);
+	static GpDirectoryCursor_Win32 *Create(IGpAllocator *alloc, const HANDLE &handle, const WIN32_FIND_DATAW &findData);
 
 	bool GetNext(const char *&outFileName) override;
 	void Destroy() override;
 
 private:
-	GpDirectoryCursor_Win32(const HANDLE &handle, const WIN32_FIND_DATAW &findData);
+	GpDirectoryCursor_Win32(IGpAllocator *alloc, const HANDLE &handle, const WIN32_FIND_DATAW &findData);
 	~GpDirectoryCursor_Win32();
 
+	IGpAllocator *m_alloc;
 	HANDLE m_handle;
 	WIN32_FIND_DATAW m_findData;
 	char m_chars[MAX_PATH + 1];
 	bool m_haveNext;
 };
 
-GpDirectoryCursor_Win32 *GpDirectoryCursor_Win32::Create(const HANDLE &handle, const WIN32_FIND_DATAW &findData)
+GpDirectoryCursor_Win32 *GpDirectoryCursor_Win32::Create(IGpAllocator *alloc, const HANDLE &handle, const WIN32_FIND_DATAW &findData)
 {
-	void *storage = malloc(sizeof(GpDirectoryCursor_Win32));
+	void *storage = alloc->Alloc(sizeof(GpDirectoryCursor_Win32));
 	if (!storage)
 		return nullptr;
 
-	return new (storage) GpDirectoryCursor_Win32(handle, findData);
+	return new (storage) GpDirectoryCursor_Win32(alloc, handle, findData);
 }
 
 bool GpDirectoryCursor_Win32::GetNext(const char *&outFileName)
@@ -82,14 +87,16 @@ bool GpDirectoryCursor_Win32::GetNext(const char *&outFileName)
 
 void GpDirectoryCursor_Win32::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpDirectoryCursor_Win32();
-	free(this);
+	alloc->Release(this);
 }
 
-GpDirectoryCursor_Win32::GpDirectoryCursor_Win32(const HANDLE &handle, const WIN32_FIND_DATAW &findData)
+GpDirectoryCursor_Win32::GpDirectoryCursor_Win32(IGpAllocator *alloc, const HANDLE &handle, const WIN32_FIND_DATAW &findData)
 	: m_handle(handle)
 	, m_findData(findData)
 	, m_haveNext(true)
+	, m_alloc(alloc)
 {
 }
 
@@ -99,6 +106,7 @@ GpDirectoryCursor_Win32::~GpDirectoryCursor_Win32()
 }
 
 GpFileSystem_Win32::GpFileSystem_Win32()
+	: m_alloc(GpAllocator_C::GetInstance())
 {
 	// GP TODO: This shouldn't be static init since it allocates memory
 	m_executablePath[0] = 0;
@@ -277,7 +285,7 @@ IGpDirectoryCursor *GpFileSystem_Win32::ScanDirectoryNested(PortabilityLayer::Vi
 {
 	wchar_t winPath[MAX_PATH + 2];
 
-	const char **expandedPaths = static_cast<const char**>(malloc(sizeof(const char*) * (numPaths + 1)));
+	const char **expandedPaths = static_cast<const char**>(m_alloc->Alloc(sizeof(const char*) * (numPaths + 1)));
 	if (!expandedPaths)
 		return nullptr;
 
@@ -286,7 +294,7 @@ IGpDirectoryCursor *GpFileSystem_Win32::ScanDirectoryNested(PortabilityLayer::Vi
 	expandedPaths[numPaths] = "*";
 
 	const bool isPathResolved = ResolvePath(virtualDirectory, expandedPaths, numPaths + 1, winPath);
-	free(expandedPaths);
+	m_alloc->Release(expandedPaths);
 
 	if (!isPathResolved)
 		return nullptr;
@@ -297,7 +305,7 @@ IGpDirectoryCursor *GpFileSystem_Win32::ScanDirectoryNested(PortabilityLayer::Vi
 	if (ff == INVALID_HANDLE_VALUE)
 		return nullptr;
 
-	return GpDirectoryCursor_Win32::Create(ff, findData);
+	return GpDirectoryCursor_Win32::Create(m_alloc, ff, findData);
 }
 
 bool GpFileSystem_Win32::ValidateFilePathUnicodeChar(uint32_t c) const

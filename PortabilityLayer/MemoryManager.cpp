@@ -1,8 +1,9 @@
 #include "MemoryManager.h"
-#include "MMBlock.h"
 #include "MMHandleBlock.h"
 #include "ResourceCompiledRef.h"
 #include "ResourceManager.h"
+#include "IGpAllocator.h"
+#include "PLDrivers.h"
 
 #include <stdlib.h>
 #include <new>
@@ -28,7 +29,6 @@ namespace PortabilityLayer
 		static MemoryManagerImpl *GetInstance();
 
 	private:
-
 		static MemoryManagerImpl ms_instance;
 	};
 
@@ -42,75 +42,17 @@ namespace PortabilityLayer
 
 	void *MemoryManagerImpl::Realloc(void *buf, size_t newSize)
 	{
-		assert(buf != nullptr);
-
-		const size_t mmBlockSize = MMBlock::AlignedSize();
-		uint8_t *oldBufBytes = static_cast<uint8_t*>(buf);
-		const MMBlock *oldBufMMBlock = reinterpret_cast<const MMBlock*>(oldBufBytes - MMBlock::AlignedSize());
-
-		const size_t oldBufOffsetFromAlignLoc = oldBufMMBlock->m_offsetFromAllocLocation;
-		uint8_t *oldBufBase = oldBufBytes - MMBlock::AlignedSize() - oldBufOffsetFromAlignLoc;
-
-		const size_t mmBlockSizeWithMaxPadding = MMBlock::AlignedSize() + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
-		if (SIZE_MAX - newSize < mmBlockSizeWithMaxPadding)
-			return nullptr;
-
-		const size_t newBufferSize = newSize + mmBlockSizeWithMaxPadding;
-		uint8_t *newBuffer = static_cast<uint8_t*>(realloc(oldBufBase, newSize + mmBlockSizeWithMaxPadding));
-		if (!newBuffer)
-			return nullptr;
-
-		const intptr_t offsetFromAlignPoint = reinterpret_cast<intptr_t>(newBuffer) & static_cast<intptr_t>(GP_SYSTEM_MEMORY_ALIGNMENT - 1);
-		intptr_t alignPadding = 0;
-		if (offsetFromAlignPoint != 0)
-			alignPadding = static_cast<intptr_t>(GP_SYSTEM_MEMORY_ALIGNMENT) - offsetFromAlignPoint;
-
-		// Check if the alignment changed, if so relocate
-		if (static_cast<size_t>(alignPadding) != oldBufOffsetFromAlignLoc)
-			memmove(newBuffer + alignPadding, newBuffer + oldBufOffsetFromAlignLoc, MMBlock::AlignedSize() + newSize);
-
-		MMBlock *newMMBlock = reinterpret_cast<MMBlock*>(newBuffer + alignPadding);
-		newMMBlock->m_offsetFromAllocLocation = static_cast<SmallestUInt<GP_SYSTEM_MEMORY_ALIGNMENT>::ValueType_t>(alignPadding);
-
-		return newBuffer + alignPadding + MMBlock::AlignedSize();
+		return PLDrivers::GetAlloc()->Realloc(buf, newSize);
 	}
 
 	void *MemoryManagerImpl::Alloc(size_t size)
 	{
-		if (size == 0)
-			return nullptr;
-
-		const size_t mmBlockSizeWithMaxPadding = MMBlock::AlignedSize() + GP_SYSTEM_MEMORY_ALIGNMENT - 1;
-		if (SIZE_MAX - size < mmBlockSizeWithMaxPadding)
-			return nullptr;
-
-		uint8_t *buffer = static_cast<uint8_t*>(malloc(size + mmBlockSizeWithMaxPadding));
-		if (!buffer)
-			return nullptr;
-
-		const intptr_t offsetFromAlignPoint = reinterpret_cast<intptr_t>(buffer) & static_cast<intptr_t>(GP_SYSTEM_MEMORY_ALIGNMENT - 1);
-		intptr_t alignPadding = 0;
-		if (offsetFromAlignPoint != 0)
-			alignPadding = static_cast<intptr_t>(GP_SYSTEM_MEMORY_ALIGNMENT) - offsetFromAlignPoint;
-
-		MMBlock *mmBlock = reinterpret_cast<MMBlock*>(buffer + alignPadding);
-		mmBlock->m_offsetFromAllocLocation = static_cast<SmallestUInt<GP_SYSTEM_MEMORY_ALIGNMENT>::ValueType_t>(alignPadding);
-
-		return buffer + alignPadding + MMBlock::AlignedSize();
+		return PLDrivers::GetAlloc()->Realloc(nullptr, size);
 	}
 
 	void MemoryManagerImpl::Release(void *buf)
 	{
-		if (!buf)
-			return;
-
-		const size_t mmBlockSize = MMBlock::AlignedSize();
-
-		uint8_t *bytes = static_cast<uint8_t*>(buf);
-		const MMBlock *mmBlock = reinterpret_cast<const MMBlock*>(bytes - MMBlock::AlignedSize());
-
-		void *freeLoc = bytes - MMBlock::AlignedSize() - mmBlock->m_offsetFromAllocLocation;
-		free(freeLoc);
+		PLDrivers::GetAlloc()->Realloc(buf, 0);
 	}
 
 	MMHandleBlock *MemoryManagerImpl::AllocHandle(size_t size)

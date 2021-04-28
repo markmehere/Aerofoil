@@ -1,8 +1,10 @@
 #include "GpApplicationName.h"
 #include "GpDisplayDriverD3D11.h"
+#include "GpDisplayDriverProperties.h"
 #include "GpDisplayDriverSurfaceD3D11.h"
 #include "GpVOSEvent.h"
 #include "GpWindows.h"
+#include "IGpAllocator.h"
 #include "IGpCursor_Win32.h"
 #include "IGpVOSEventQueue.h"
 
@@ -1243,8 +1245,9 @@ void GpDisplayDriverD3D11::ServeTicks(int tickCount)
 
 void GpDisplayDriverD3D11::Shutdown()
 {
+	IGpAllocator *alloc = m_properties.m_alloc;
 	this->~GpDisplayDriverD3D11();
-	free(this);
+	alloc->Release(this);
 }
 
 void GpDisplayDriverD3D11::GetInitialDisplayResolution(unsigned int *width, unsigned int *height)
@@ -1257,7 +1260,7 @@ void GpDisplayDriverD3D11::GetInitialDisplayResolution(unsigned int *width, unsi
 
 IGpDisplayDriverSurface *GpDisplayDriverD3D11::CreateSurface(size_t width, size_t height, size_t pitch, GpPixelFormat_t pixelFormat, IGpDisplayDriver::SurfaceInvalidateCallback_t invalidateCallback, void *invalidateContext)
 {
-	return GpDisplayDriverSurfaceD3D11::Create(m_device, m_deviceContext, width, height, pixelFormat);
+	return GpDisplayDriverSurfaceD3D11::Create(m_device, m_deviceContext, width, height, pixelFormat, m_properties.m_alloc);
 }
 
 void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t x, int32_t y, size_t width, size_t height, const GpDisplayDriverSurfaceEffects *effects)
@@ -1385,12 +1388,12 @@ void GpDisplayDriverD3D11::DrawSurface(IGpDisplayDriverSurface *surface, int32_t
 
 IGpCursor *GpDisplayDriverD3D11::CreateColorCursor(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY)
 {
-	return m_osGlobals->m_createColorCursorFunc(width, height, pixelDataRGBA, hotSpotX, hotSpotY);
+	return m_osGlobals->m_createColorCursorFunc(m_properties.m_alloc, width, height, pixelDataRGBA, hotSpotX, hotSpotY);
 }
 
 IGpCursor *GpDisplayDriverD3D11::CreateBWCursor(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY)
 {
-	return m_osGlobals->m_createBWCursorFunc(width, height, pixelData, maskData, hotSpotX, hotSpotY);
+	return m_osGlobals->m_createBWCursorFunc(m_properties.m_alloc, width, height, pixelData, maskData, hotSpotX, hotSpotY);
 }
 
 // We can't just set the cursor because we want to post WM_SETCURSOR to keep it limited
@@ -1507,7 +1510,7 @@ bool GpDisplayDriverD3D11::SavePrefs(void *context, IGpPrefsHandler::WritePrefsF
 
 GpDisplayDriverD3D11 *GpDisplayDriverD3D11::Create(const GpDisplayDriverProperties &properties)
 {
-	void *storage = malloc(sizeof(GpDisplayDriverD3D11));
+	void *storage = properties.m_alloc->Alloc(sizeof(GpDisplayDriverD3D11));
 	if (!storage)
 		return nullptr;
 

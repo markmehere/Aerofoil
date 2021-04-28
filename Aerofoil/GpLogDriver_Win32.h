@@ -3,6 +3,7 @@
 #include "IGpLogDriver.h"
 
 class GpIOStream;
+struct IGpAllocator;
 
 class GpLogDriver_Win32 : public IGpLogDriver
 {
@@ -20,6 +21,7 @@ private:
 	void InitInternal();
 
 	GpIOStream *m_stream;
+	IGpAllocator *m_alloc;
 	bool m_isInitialized;
 
 	static GpLogDriver_Win32 ms_instance;

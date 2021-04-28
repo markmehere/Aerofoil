@@ -11,6 +11,7 @@
 #include "GpRenderedGlyphMetrics.h"
 
 #include "PLBigEndian.h"
+#include "PLCore.h"
 #include "PLDrivers.h"
 #include "PLPasStr.h"
 #include "DeflateCodec.h"
@@ -166,7 +167,7 @@ namespace PortabilityLayer
 	void RenderedFontImpl::Destroy()
 	{
 		this->~RenderedFontImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	void RenderedFontImpl::SetCharData(unsigned int charID, const void *data, size_t dataOffset, const GpRenderedGlyphMetrics &metrics)
@@ -251,7 +252,7 @@ namespace PortabilityLayer
 
 		const size_t allocSize = alignedPrefixSize + glyphDataSize;
 
-		void *storage = malloc(allocSize);
+		void *storage = NewPtr(allocSize);
 		if (!storage)
 			return nullptr;
 

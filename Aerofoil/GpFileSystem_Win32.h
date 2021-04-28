@@ -41,5 +41,7 @@ private:
 	std::wstring m_fontCacheDir;
 	wchar_t m_executablePath[MAX_PATH];
 
+	IGpAllocator *m_alloc;
+
 	static GpFileSystem_Win32 ms_instance;
 };
