@@ -30,7 +30,6 @@
 		5C54D2882629B8C600AB55E0 /* MacRomanConversion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2842629B8C600AB55E0 /* MacRomanConversion.cpp */; };
 		5C54D3742629BC6900AB55E0 /* BinHex4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2902629BC6700AB55E0 /* BinHex4.cpp */; };
 		5C54D3752629BC6A00AB55E0 /* PLWidgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2912629BC6700AB55E0 /* PLWidgets.cpp */; };
-		5C54D3762629BC6A00AB55E0 /* MMBlock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2922629BC6700AB55E0 /* MMBlock.cpp */; };
 		5C54D3772629BC6A00AB55E0 /* QDManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D2932629BC6700AB55E0 /* QDManager.h */; };
 		5C54D3782629BC6A00AB55E0 /* PLSound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2942629BC6700AB55E0 /* PLSound.cpp */; };
 		5C54D3792629BC6A00AB55E0 /* FileManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D2952629BC6700AB55E0 /* FileManager.h */; };
@@ -122,7 +121,6 @@
 		5C54D3CF2629BC6B00AB55E0 /* PLResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2EE2629BC6800AB55E0 /* PLResourceManager.cpp */; };
 		5C54D3D02629BC6B00AB55E0 /* QDPictEmitContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2EF2629BC6800AB55E0 /* QDPictEmitContext.cpp */; };
 		5C54D3D12629BC6B00AB55E0 /* PLStringCompare.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D2F02629BC6800AB55E0 /* PLStringCompare.h */; };
-		5C54D3D22629BC6B00AB55E0 /* MMBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D2F12629BC6800AB55E0 /* MMBlock.h */; };
 		5C54D3D32629BC6B00AB55E0 /* QDPictDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2F22629BC6800AB55E0 /* QDPictDecoder.cpp */; };
 		5C54D3D42629BC6B00AB55E0 /* DisplayDeviceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D2F32629BC6800AB55E0 /* DisplayDeviceManager.h */; };
 		5C54D3D52629BC6B00AB55E0 /* PLQDOffscreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D2F42629BC6800AB55E0 /* PLQDOffscreen.cpp */; };
@@ -190,7 +188,6 @@
 		5C54D4132629BC6C00AB55E0 /* IPlotter.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D3322629BC6900AB55E0 /* IPlotter.h */; };
 		5C54D4142629BC6C00AB55E0 /* AntiAliasTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D3332629BC6900AB55E0 /* AntiAliasTable.cpp */; };
 		5C54D4152629BC6C00AB55E0 /* PLMenus.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D3342629BC6900AB55E0 /* PLMenus.h */; };
-		5C54D4162629BC6C00AB55E0 /* UTF16.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D3352629BC6900AB55E0 /* UTF16.cpp */; };
 		5C54D4172629BC6C00AB55E0 /* GPArchive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D3362629BC6900AB55E0 /* GPArchive.cpp */; };
 		5C54D4182629BC6C00AB55E0 /* BytePack.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D3372629BC6900AB55E0 /* BytePack.h */; };
 		5C54D4192629BC6C00AB55E0 /* TextPlacer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D3382629BC6900AB55E0 /* TextPlacer.cpp */; };
@@ -226,7 +223,6 @@
 		5C54D4372629BC6D00AB55E0 /* HostSuspendCallID.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D3562629BC6900AB55E0 /* HostSuspendCallID.h */; };
 		5C54D4382629BC6D00AB55E0 /* QDPictDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D3572629BC6900AB55E0 /* QDPictDecoder.h */; };
 		5C54D4392629BC6D00AB55E0 /* UTF8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D3582629BC6900AB55E0 /* UTF8.cpp */; };
-		5C54D43A2629BC6D00AB55E0 /* UTF16.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D3592629BC6900AB55E0 /* UTF16.h */; };
 		5C54D43B2629BC6D00AB55E0 /* PLArrayView.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D35A2629BC6900AB55E0 /* PLArrayView.h */; };
 		5C54D43C2629BC6D00AB55E0 /* ResTypeID.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D35B2629BC6900AB55E0 /* ResTypeID.h */; };
 		5C54D43D2629BC6D00AB55E0 /* ResourceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D35C2629BC6900AB55E0 /* ResourceManager.h */; };
@@ -419,6 +415,10 @@
 		5C54D6F7262D8CE000AB55E0 /* Nemo's Market.mov.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D6AD262D8AE600AB55E0 /* Nemo's Market.mov.gpf */; };
 		5CAC542C26373C5C006AE5FB /* ApplicationResources.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D689262D8AE600AB55E0 /* ApplicationResources.gpf */; };
 		5CAC542E26373C60006AE5FB /* Fonts.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D688262D8AE600AB55E0 /* Fonts.gpf */; };
+		5CB787202639D1D800D8FDB6 /* GpAllocator_C.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB7871E2639D1D800D8FDB6 /* GpAllocator_C.cpp */; };
+		5CB787212639D1D800D8FDB6 /* GpAllocator_C.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB7871F2639D1D800D8FDB6 /* GpAllocator_C.h */; };
+		5CB787262639D86F00D8FDB6 /* GpFontHandler_FreeType2.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB787242639D86F00D8FDB6 /* GpFontHandler_FreeType2.h */; };
+		5CB787272639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB787252639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -618,7 +618,6 @@
 		5C54D2842629B8C600AB55E0 /* MacRomanConversion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MacRomanConversion.cpp; sourceTree = "<group>"; };
 		5C54D2902629BC6700AB55E0 /* BinHex4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BinHex4.cpp; sourceTree = "<group>"; };
 		5C54D2912629BC6700AB55E0 /* PLWidgets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PLWidgets.cpp; sourceTree = "<group>"; };
-		5C54D2922629BC6700AB55E0 /* MMBlock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MMBlock.cpp; sourceTree = "<group>"; };
 		5C54D2932629BC6700AB55E0 /* QDManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QDManager.h; sourceTree = "<group>"; };
 		5C54D2942629BC6700AB55E0 /* PLSound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PLSound.cpp; sourceTree = "<group>"; };
 		5C54D2952629BC6700AB55E0 /* FileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileManager.h; sourceTree = "<group>"; };
@@ -710,7 +709,6 @@
 		5C54D2EE2629BC6800AB55E0 /* PLResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PLResourceManager.cpp; sourceTree = "<group>"; };
 		5C54D2EF2629BC6800AB55E0 /* QDPictEmitContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QDPictEmitContext.cpp; sourceTree = "<group>"; };
 		5C54D2F02629BC6800AB55E0 /* PLStringCompare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLStringCompare.h; sourceTree = "<group>"; };
-		5C54D2F12629BC6800AB55E0 /* MMBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MMBlock.h; sourceTree = "<group>"; };
 		5C54D2F22629BC6800AB55E0 /* QDPictDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QDPictDecoder.cpp; sourceTree = "<group>"; };
 		5C54D2F32629BC6800AB55E0 /* DisplayDeviceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisplayDeviceManager.h; sourceTree = "<group>"; };
 		5C54D2F42629BC6800AB55E0 /* PLQDOffscreen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PLQDOffscreen.cpp; sourceTree = "<group>"; };
@@ -778,7 +776,6 @@
 		5C54D3322629BC6900AB55E0 /* IPlotter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPlotter.h; sourceTree = "<group>"; };
 		5C54D3332629BC6900AB55E0 /* AntiAliasTable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AntiAliasTable.cpp; sourceTree = "<group>"; };
 		5C54D3342629BC6900AB55E0 /* PLMenus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLMenus.h; sourceTree = "<group>"; };
-		5C54D3352629BC6900AB55E0 /* UTF16.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UTF16.cpp; sourceTree = "<group>"; };
 		5C54D3362629BC6900AB55E0 /* GPArchive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GPArchive.cpp; sourceTree = "<group>"; };
 		5C54D3372629BC6900AB55E0 /* BytePack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BytePack.h; sourceTree = "<group>"; };
 		5C54D3382629BC6900AB55E0 /* TextPlacer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextPlacer.cpp; sourceTree = "<group>"; };
@@ -814,7 +811,6 @@
 		5C54D3562629BC6900AB55E0 /* HostSuspendCallID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HostSuspendCallID.h; sourceTree = "<group>"; };
 		5C54D3572629BC6900AB55E0 /* QDPictDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QDPictDecoder.h; sourceTree = "<group>"; };
 		5C54D3582629BC6900AB55E0 /* UTF8.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UTF8.cpp; sourceTree = "<group>"; };
-		5C54D3592629BC6900AB55E0 /* UTF16.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTF16.h; sourceTree = "<group>"; };
 		5C54D35A2629BC6900AB55E0 /* PLArrayView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLArrayView.h; sourceTree = "<group>"; };
 		5C54D35B2629BC6900AB55E0 /* ResTypeID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResTypeID.h; sourceTree = "<group>"; };
 		5C54D35C2629BC6900AB55E0 /* ResourceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResourceManager.h; sourceTree = "<group>"; };
@@ -1014,6 +1010,10 @@
 		5C54D6AB262D8AE600AB55E0 /* Davis Station.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Davis Station.gpf"; sourceTree = "<group>"; };
 		5C54D6AC262D8AE600AB55E0 /* Slumberland.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Slumberland.gpf; sourceTree = "<group>"; };
 		5C54D6AD262D8AE600AB55E0 /* Nemo's Market.mov.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nemo's Market.mov.gpf"; sourceTree = "<group>"; };
+		5CB7871E2639D1D800D8FDB6 /* GpAllocator_C.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpAllocator_C.cpp; path = ../AerofoilPortable/GpAllocator_C.cpp; sourceTree = "<group>"; };
+		5CB7871F2639D1D800D8FDB6 /* GpAllocator_C.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GpAllocator_C.h; path = ../AerofoilPortable/GpAllocator_C.h; sourceTree = "<group>"; };
+		5CB787242639D86F00D8FDB6 /* GpFontHandler_FreeType2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GpFontHandler_FreeType2.h; path = ../GpFontHandler_FreeType2/GpFontHandler_FreeType2.h; sourceTree = "<group>"; };
+		5CB787252639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpFontHandler_FreeType2.cpp; path = ../GpFontHandler_FreeType2/GpFontHandler_FreeType2.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1079,6 +1079,7 @@
 		5C54D0B92629B6E900AB55E0 /* AerofoilShared */ = {
 			isa = PBXGroup;
 			children = (
+				5CB787232639D83A00D8FDB6 /* GpFontHandler_FreeType2 */,
 				5C54D59F262B3C6B00AB55E0 /* GpShell */,
 				5C54D4CE262B3C2D00AB55E0 /* GpApp */,
 				5C54D28F2629BC6700AB55E0 /* PortabilityLayer */,
@@ -1135,6 +1136,8 @@
 		5C54D28F2629BC6700AB55E0 /* PortabilityLayer */ = {
 			isa = PBXGroup;
 			children = (
+				5CB7871E2639D1D800D8FDB6 /* GpAllocator_C.cpp */,
+				5CB7871F2639D1D800D8FDB6 /* GpAllocator_C.h */,
 				5C54D3332629BC6900AB55E0 /* AntiAliasTable.cpp */,
 				5C54D3022629BC6800AB55E0 /* AntiAliasTable.h */,
 				5C54D2DD2629BC6800AB55E0 /* AppEventHandler.cpp */,
@@ -1206,8 +1209,6 @@
 				5C54D2C92629BC6800AB55E0 /* MemReaderStream.h */,
 				5C54D3092629BC6800AB55E0 /* MenuManager.cpp */,
 				5C54D29E2629BC6800AB55E0 /* MenuManager.h */,
-				5C54D2922629BC6700AB55E0 /* MMBlock.cpp */,
-				5C54D2F12629BC6800AB55E0 /* MMBlock.h */,
 				5C54D3672629BC6900AB55E0 /* MMHandleBlock.cpp */,
 				5C54D2CB2629BC6800AB55E0 /* MMHandleBlock.h */,
 				5C54D3622629BC6900AB55E0 /* PascalStr.h */,
@@ -1343,8 +1344,6 @@
 				5C54D29C2629BC6800AB55E0 /* UnsafePascalStr.h */,
 				5C54D3582629BC6900AB55E0 /* UTF8.cpp */,
 				5C54D3612629BC6900AB55E0 /* UTF8.h */,
-				5C54D3352629BC6900AB55E0 /* UTF16.cpp */,
-				5C54D3592629BC6900AB55E0 /* UTF16.h */,
 				5C54D2972629BC6700AB55E0 /* Vec2i.h */,
 				5C54D32E2629BC6900AB55E0 /* VirtualDirectory.h */,
 				5C54D2E12629BC6800AB55E0 /* WaveFormat.h */,
@@ -1613,6 +1612,15 @@
 			path = Resources/Houses;
 			sourceTree = SOURCE_ROOT;
 		};
+		5CB787232639D83A00D8FDB6 /* GpFontHandler_FreeType2 */ = {
+			isa = PBXGroup;
+			children = (
+				5CB787252639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp */,
+				5CB787242639D86F00D8FDB6 /* GpFontHandler_FreeType2.h */,
+			);
+			name = GpFontHandler_FreeType2;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -1621,6 +1629,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C54D44B2629BC6D00AB55E0 /* FontFamilyID.h in Headers */,
+				5CB787212639D1D800D8FDB6 /* GpAllocator_C.h in Headers */,
 				5C54D38C2629BC6A00AB55E0 /* EllipsePlotter.h in Headers */,
 				5C54D3B52629BC6B00AB55E0 /* ZipFileProxy.h in Headers */,
 				5C54D3F12629BC6B00AB55E0 /* PLPasStr.h in Headers */,
@@ -1676,7 +1685,6 @@
 				5C54D53F262B3C2E00AB55E0 /* About.h in Headers */,
 				5C54D3FC2629BC6C00AB55E0 /* FontManager.h in Headers */,
 				5C54D3CD2629BC6B00AB55E0 /* PLLittleEndian.h in Headers */,
-				5C54D43A2629BC6D00AB55E0 /* UTF16.h in Headers */,
 				5C54D3E32629BC6B00AB55E0 /* AntiAliasTable.h in Headers */,
 				5C54D40A2629BC6C00AB55E0 /* GPArchive.h in Headers */,
 				5C54D44A2629BC6D00AB55E0 /* WindowDef.h in Headers */,
@@ -1693,7 +1701,6 @@
 				5C54D5B8262B3C6B00AB55E0 /* GpFontHandlerFactory.h in Headers */,
 				5C54D3A72629BC6A00AB55E0 /* BMPFormat.h in Headers */,
 				5C54D39B2629BC6A00AB55E0 /* MacRsrcHeader.h in Headers */,
-				5C54D3D22629BC6B00AB55E0 /* MMBlock.h in Headers */,
 				5C54D3A52629BC6A00AB55E0 /* PLDrivers.h in Headers */,
 				5C54D4442629BC6D00AB55E0 /* ScopedPtr.h in Headers */,
 				5C54D4262629BC6C00AB55E0 /* PLWidgets.h in Headers */,
@@ -1773,6 +1780,7 @@
 				5C54D54B262B3C2E00AB55E0 /* Room.h in Headers */,
 				5C54D4152629BC6C00AB55E0 /* PLMenus.h in Headers */,
 				5C54D2732629B86700AB55E0 /* crc32.h in Headers */,
+				5CB787262639D86F00D8FDB6 /* GpFontHandler_FreeType2.h in Headers */,
 				5C54D2702629B86700AB55E0 /* inflate.h in Headers */,
 				5C54D57E262B3C2E00AB55E0 /* GliderStructs.h in Headers */,
 				5C54D42E2629BC6C00AB55E0 /* GpAppInterface.h in Headers */,
@@ -2020,12 +2028,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C54D570262B3C2E00AB55E0 /* MainWindow.cpp in Sources */,
-				5C54D3762629BC6A00AB55E0 /* MMBlock.cpp in Sources */,
 				5C54D26F2629B86700AB55E0 /* crc32.c in Sources */,
 				5C54D40E2629BC6C00AB55E0 /* PLKeyEncoding.cpp in Sources */,
 				5C54D552262B3C2E00AB55E0 /* ColorUtils.cpp in Sources */,
 				5C54D3C72629BC6B00AB55E0 /* PLLabelWidget.cpp in Sources */,
-				5C54D4162629BC6C00AB55E0 /* UTF16.cpp in Sources */,
 				5C54D44C2629BC6D00AB55E0 /* QDPixMap.cpp in Sources */,
 				5C54D57D262B3C2E00AB55E0 /* Triggers.cpp in Sources */,
 				5C54D3922629BC6A00AB55E0 /* CFileStream.cpp in Sources */,
@@ -2123,6 +2129,7 @@
 				5C54D2722629B86700AB55E0 /* trees.c in Sources */,
 				5C54D55C262B3C2E00AB55E0 /* Menu.cpp in Sources */,
 				5C54D58C262B3C2E00AB55E0 /* HighScores.cpp in Sources */,
+				5CB787202639D1D800D8FDB6 /* GpAllocator_C.cpp in Sources */,
 				5C54D56A262B3C2E00AB55E0 /* MainMenuUI.cpp in Sources */,
 				5C54D3B72629BC6B00AB55E0 /* DeflateCodec.cpp in Sources */,
 				5C54D54D262B3C2E00AB55E0 /* Play.cpp in Sources */,
@@ -2189,6 +2196,7 @@
 				5C54D3C92629BC6B00AB55E0 /* SimpleGraphic.cpp in Sources */,
 				5C54D4252629BC6C00AB55E0 /* PLIconWidget.cpp in Sources */,
 				5C54D4282629BC6C00AB55E0 /* RandomNumberGenerator.cpp in Sources */,
+				5CB787272639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp in Sources */,
 				5C54D550262B3C2E00AB55E0 /* DynamicMaps.cpp in Sources */,
 				5C54D4502629BC6D00AB55E0 /* PLButtonWidget.cpp in Sources */,
 				5C54D568262B3C2E00AB55E0 /* Scoreboard.cpp in Sources */,

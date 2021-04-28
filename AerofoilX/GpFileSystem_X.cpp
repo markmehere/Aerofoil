@@ -188,9 +188,6 @@ bool GpFileSystem_X::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDir
 	case PortabilityLayer::VirtualDirectories::kLogs:
 		prefsAppend = "Logs";
 		break;
-	case PortabilityLayer::VirtualDirectories::kLogs:
-		prefsAppend = "..";
-		break;
 	default:
 		return false;
 	};
