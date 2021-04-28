@@ -46,7 +46,7 @@
 #include "PLTimeTaggedVOSEvent.h"
 #include "PLWidgets.h"
 
-#include "UTF8.h"
+#include "GpUnicode.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -515,6 +515,12 @@ Boolean WaitMouseUp()
 	return isDown;
 }
 
+Boolean WaitMouseUp_DisarmAsyncify()
+{
+	PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
+	return WaitMouseUp();
+}
+
 short Random()
 {
 	// Should return with range -32767..32767
@@ -685,12 +691,12 @@ PLClipboardContentsText *PLClipboardContentsText::CreateFromMacRomanStr(const ui
 
 	for (size_t i = 0; i < length; i++)
 	{
-		uint8_t utf8Bytes[PortabilityLayer::UTF8Processor::kMaxEncodedBytes];
+		uint8_t utf8Bytes[GpUnicode::UTF8::kMaxEncodedBytes];
 
 		uint16_t codePoint = MacRoman::ToUnicode(chars[i]);
 
 		size_t numBytesEmitted = 0;
-		PortabilityLayer::UTF8Processor::EncodeCodePoint(utf8Bytes, numBytesEmitted, codePoint);
+		GpUnicode::UTF8::Encode(utf8Bytes, numBytesEmitted, codePoint);
 
 		numUTF8Bytes += numBytesEmitted;
 	}
@@ -709,7 +715,7 @@ PLClipboardContentsText *PLClipboardContentsText::CreateFromMacRomanStr(const ui
 			uint16_t codePoint = MacRoman::ToUnicode(chars[i]);
 
 			size_t numBytesEmitted = 0;
-			PortabilityLayer::UTF8Processor::EncodeCodePoint(utf8Bytes + numUTF8Bytes, numBytesEmitted, codePoint);
+			GpUnicode::UTF8::Encode(utf8Bytes + numUTF8Bytes, numBytesEmitted, codePoint);
 
 			numUTF8Bytes += numBytesEmitted;
 		}

@@ -1,25 +1,27 @@
+#include "GpAudioBufferXAudio2.h"
 #include "GpAudioChannelXAudio2.h"
 #include "GpAudioDriverXAudio2.h"
+#include "IGpAllocator.h"
 #include "IGpAudioChannelCallbacks.h"
 #include "IGpLogDriver.h"
 
 #include <stdlib.h>
 #include <new>
 
-GpAudioChannelXAudio2 *GpAudioChannelXAudio2::Create(GpAudioDriverXAudio2 *driver)
+GpAudioChannelXAudio2 *GpAudioChannelXAudio2::Create(IGpAllocator *alloc, GpAudioDriverXAudio2 *driver)
 {
 	IGpLogDriver *logger = driver->GetProperties().m_logger;
 
-	void *storage = malloc(sizeof(GpAudioChannelXAudio2));
+	void *storage = alloc->Realloc(nullptr, sizeof(GpAudioChannelXAudio2));
 	if (!storage)
 	{
 		if (!logger)
-			logger->Printf(IGpLogDriver::Category_Error, "GpAudioChannelXAudio2::Create failed, malloc failed");
+			logger->Printf(IGpLogDriver::Category_Error, "GpAudioChannelXAudio2::Create failed, alloc failed");
 
 		return nullptr;
 	}
 
-	GpAudioChannelXAudio2 *channel = new (storage) GpAudioChannelXAudio2(driver);
+	GpAudioChannelXAudio2 *channel = new (storage) GpAudioChannelXAudio2(alloc, driver);
 	if (!channel->Init())
 	{
 		if (!logger)
@@ -77,25 +79,25 @@ void GpAudioChannelXAudio2::SetAudioChannelContext(IGpAudioChannelCallbacks *cal
 	m_contextCallbacks = callbacks;
 }
 
-void GpAudioChannelXAudio2::PostBuffer(const void *buffer, size_t bufferSize)
+bool GpAudioChannelXAudio2::PostBuffer(IGpAudioBuffer *buffer)
 {
-	XAUDIO2_BUFFER xa2Buffer;
-	xa2Buffer.Flags = 0;
-	xa2Buffer.AudioBytes = static_cast<UINT32>(bufferSize);
-	xa2Buffer.pAudioData = static_cast<const BYTE*>(buffer);
-	xa2Buffer.PlayBegin = 0;
-	xa2Buffer.PlayLength = 0;
-	xa2Buffer.LoopBegin = 0;
-	xa2Buffer.LoopLength = 0;
-	xa2Buffer.LoopCount = 0;
-	xa2Buffer.pContext = nullptr;
+	GpAudioBufferXAudio2 *xa2Buffer = static_cast<GpAudioBufferXAudio2*>(buffer);
+	xa2Buffer->AddRef();
 
-	m_sourceVoice->SubmitSourceBuffer(&xa2Buffer, nullptr);
+	HRESULT result = m_sourceVoice->SubmitSourceBuffer(xa2Buffer->GetXA2Buffer(), nullptr);
+	if (result != S_OK)
+	{
+		xa2Buffer->Release();
+		return false;
+	}
+
 	if (m_voiceState == VoiceState_Idle)
 	{
 		m_voiceState = VoiceState_Active;
 		m_sourceVoice->Start(0, 0);
 	}
+
+	return true;
 }
 
 void GpAudioChannelXAudio2::Stop()
@@ -109,8 +111,9 @@ void GpAudioChannelXAudio2::Stop()
 
 void GpAudioChannelXAudio2::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpAudioChannelXAudio2();
-	free(this);
+	alloc->Realloc(this, 0);
 }
 
 void GpAudioChannelXAudio2::OnBufferEnd()
@@ -119,12 +122,13 @@ void GpAudioChannelXAudio2::OnBufferEnd()
 		m_contextCallbacks->NotifyBufferFinished();
 }
 
-GpAudioChannelXAudio2::GpAudioChannelXAudio2(GpAudioDriverXAudio2 *driver)
+GpAudioChannelXAudio2::GpAudioChannelXAudio2(IGpAllocator *alloc, GpAudioDriverXAudio2 *driver)
 	: m_driver(driver)
 	, m_xAudioCallbacks(this)
 	, m_sourceVoice(nullptr)
 	, m_contextCallbacks(nullptr)
 	, m_voiceState(VoiceState_Idle)
+	, m_alloc(alloc)
 {
 }
 

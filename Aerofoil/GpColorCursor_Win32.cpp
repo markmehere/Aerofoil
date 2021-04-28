@@ -20,6 +20,7 @@
 */
 
 #include "GpColorCursor_Win32.h"
+#include "IGpAllocator.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ void GpColorCursor_Win32::Destroy()
 	this->DecRef();
 }
 
-IGpCursor_Win32 *GpColorCursor_Win32::Create(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY)
+IGpCursor_Win32 *GpColorCursor_Win32::Create(IGpAllocator *alloc, size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY)
 {
 	const size_t paddingBits = (sizeof(void*) * 8);
 
@@ -52,7 +53,7 @@ IGpCursor_Win32 *GpColorCursor_Win32::Create(size_t width, size_t height, const 
 	size_t maskPitch = width + paddingBits - 1;
 	maskPitch -= maskPitch % paddingBits;
 
-	LPVOID maskBits = malloc(maskPitch * height);
+	LPVOID maskBits = alloc->Alloc(maskPitch * height);
 	if (!maskBits)
 		return nullptr;
 
@@ -70,6 +71,8 @@ IGpCursor_Win32 *GpColorCursor_Win32::Create(size_t width, size_t height, const 
 	ii.hbmColor = CreateDIBSection(hdc, (BITMAPINFO*)&bmp, DIB_RGB_COLORS, &pixels, NULL, 0);
 	ii.hbmMask = CreateBitmap(width, height, 1, 1, maskBits);
 	ReleaseDC(NULL, hdc);
+
+	alloc->Release(maskBits);
 
 	size_t cursorPitch = width * 4;
 
@@ -90,19 +93,20 @@ IGpCursor_Win32 *GpColorCursor_Win32::Create(size_t width, size_t height, const 
 	if (!hicon)
 		return nullptr;
 
-	void *storage = malloc(sizeof(GpColorCursor_Win32));
+	void *storage = alloc->Alloc(sizeof(GpColorCursor_Win32));
 	if (!storage)
 	{
 		DestroyIcon(hicon);
 		return nullptr;
 	}
 
-	return new (storage) GpColorCursor_Win32(reinterpret_cast<HCURSOR>(hicon));
+	return new (storage) GpColorCursor_Win32(alloc, reinterpret_cast<HCURSOR>(hicon));
 }
 
-GpColorCursor_Win32::GpColorCursor_Win32(HCURSOR cursor)
+GpColorCursor_Win32::GpColorCursor_Win32(IGpAllocator *alloc, HCURSOR cursor)
 	: m_cursor(cursor)
 	, m_refCount(1)
+	, m_alloc(alloc)
 {
 }
 
@@ -126,7 +130,8 @@ void GpColorCursor_Win32::DecRef()
 	m_refCount--;
 	if (m_refCount == 0)
 	{
+		IGpAllocator *alloc = m_alloc;
 		this->~GpColorCursor_Win32();
-		free(this);
+		alloc->Release(this);
 	}
 }

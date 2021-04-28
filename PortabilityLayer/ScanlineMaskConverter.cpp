@@ -7,6 +7,7 @@
 #include "LinePlotter.h"
 #include "ScanlineMaskBuilder.h"
 #include "IPlotter.h"
+#include "PLCore.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -135,7 +136,7 @@ namespace PortabilityLayer
 #else
 		const size_t storageSize = (numElements * 2 + 7) / 8;
 #endif
-		void *storage = malloc(storageSize);
+		void *storage = NewPtr(storageSize);
 
 		if (!storage)
 			return nullptr;
@@ -250,7 +251,7 @@ namespace PortabilityLayer
 		stbi_write_png(path, width, height, 4, flagBits, width * 4);
 #endif
 
-		free(storage);
+		DisposePtr(storage);
 
 		return ScanlineMask::Create(Rect::Create(minPoint.m_y, minPoint.m_x, minPoint.m_y + static_cast<int16_t>(height), minPoint.m_x + static_cast<int16_t>(width)), maskBuilder);
 	}

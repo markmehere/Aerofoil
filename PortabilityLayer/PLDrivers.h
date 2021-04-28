@@ -16,6 +16,7 @@ public:
 	static IGpSystemServices *GetSystemServices();
 	static IGpFontHandler *GetFontHandler();
 	static IGpVOSEventQueue *GetVOSEventQueue();
+	static IGpAllocator *GetAlloc();
 
 private:
 	static GpDriverCollection ms_drivers;

@@ -12,11 +12,12 @@ public:
 	void Signal() override;
 	void Destroy() override;
 
-	static GpThreadEvent_Win32 *Create(bool autoReset, bool startSignaled);
+	static GpThreadEvent_Win32 *Create(IGpAllocator *alloc, bool autoReset, bool startSignaled);
 
 private:
-	explicit GpThreadEvent_Win32(const HANDLE &handle);
+	explicit GpThreadEvent_Win32(IGpAllocator *alloc, const HANDLE &handle);
 	~GpThreadEvent_Win32();
 
 	HANDLE m_event;
+	IGpAllocator *m_alloc;
 };

@@ -7,6 +7,7 @@
 
 #include "MemReaderStream.h"
 #include "MemoryManager.h"
+#include "PLCore.h"
 #include "PLDrivers.h"
 
 #include <stdlib.h>
@@ -15,16 +16,20 @@
 namespace PortabilityLayer
 {
 	FontFamily::FontSpec::FontSpec()
-		: m_fontPath(nullptr)
+		: m_fontVDir(VirtualDirectories::kUnspecified)
+		, m_fontPath(nullptr)
 		, m_font(nullptr)
 		, m_hacks(FontHacks_None)
+		, m_typeFaceIndex(0)
 		, m_isRegistered(false)
 	{
 	}
 
-	void FontFamily::AddFont(int flags, const char *path, FontHacks fontHacks)
+	void FontFamily::AddFont(int flags, VirtualDirectory_t vDir, const char *path, int typeFaceIndex, FontHacks fontHacks)
 	{
+		m_fontSpecs[flags].m_fontVDir = vDir;
 		m_fontSpecs[flags].m_fontPath = path;
+		m_fontSpecs[flags].m_typeFaceIndex = typeFaceIndex;
 		m_fontSpecs[flags].m_hacks = fontHacks;
 		m_fontSpecs[flags].m_isRegistered = true;
 
@@ -55,7 +60,7 @@ namespace PortabilityLayer
 		if (spec.m_font)
 			return spec.m_font;
 
-		GpIOStream *sysFontStream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFonts, spec.m_fontPath, false, GpFileCreationDispositions::kOpenExisting);
+		GpIOStream *sysFontStream = PLDrivers::GetFileSystem()->OpenFile(spec.m_fontVDir, spec.m_fontPath, false, GpFileCreationDispositions::kOpenExisting);
 		if (!sysFontStream)
 			return nullptr;
 
@@ -93,7 +98,7 @@ namespace PortabilityLayer
 
 		IGpFontHandler *fontHandler = PLDrivers::GetFontHandler();
 
-		IGpFont *font = fontHandler->LoadFont(sysFontStream);
+		IGpFont *font = fontHandler->LoadFont(sysFontStream, spec.m_typeFaceIndex);
 
 		if (!fontHandler->KeepStreamOpen())
 			sysFontStream->Close();
@@ -106,18 +111,31 @@ namespace PortabilityLayer
 		return font;
 	}
 
+	void FontFamily::UnloadVariation(int variation)
+	{
+		FontSpec &spec = m_fontSpecs[variation];
+		if (spec.m_font)
+		{
+			spec.m_font->Destroy();
+			spec.m_font = nullptr;
+		}
+	}
+
 	PortabilityLayer::FontHacks FontFamily::GetHacksForVariation(int variation) const
 	{
 		return m_fontSpecs[variation].m_hacks;
 	}
 
-	bool FontFamily::GetFontSpec(int variation, FontHacks &outHacks, const char *&outPath)
+	bool FontFamily::GetFontSpec(int variation, FontHacks &outHacks, VirtualDirectory_t &outVDir, const char *&outPath, int &outTypeFaceIndex)
 	{
-		if (!m_fontSpecs[variation].m_isRegistered)
+		const FontSpec &spec = m_fontSpecs[variation];
+		if (!spec.m_isRegistered)
 			return false;
 
-		outHacks = m_fontSpecs[variation].m_hacks;
-		outPath = m_fontSpecs[variation].m_fontPath;
+		outHacks = spec.m_hacks;
+		outVDir = spec.m_fontVDir;
+		outPath = spec.m_fontPath;
+		outTypeFaceIndex = spec.m_typeFaceIndex;
 
 		return true;
 	}
@@ -141,7 +159,7 @@ namespace PortabilityLayer
 
 	FontFamily *FontFamily::Create(FontFamilyID_t familyID)
 	{
-		void *storage = malloc(sizeof(FontFamily));
+		void *storage = NewPtr(sizeof(FontFamily));
 		if (!storage)
 			return nullptr;
 
@@ -151,7 +169,7 @@ namespace PortabilityLayer
 	void FontFamily::Destroy()
 	{
 		this->~FontFamily();
-		free(this);
+		DisposePtr(this);
 	}
 
 	FontFamily::FontFamily(FontFamilyID_t familyID)

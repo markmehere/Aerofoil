@@ -86,6 +86,9 @@ x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\Houses\Titanic.m
 
 copy /Y GliderProData\ConvertedMovies\*.mov.gpa Packaged\Houses\
 
+rem Patch bad Castle 'o the Air start room
+x64\Release\HouseTool.exe patch "Packaged\Houses\Castle o' the Air.gpd" .firstRoom 77
+
 x64\Release\MergeGPF.exe "Packaged\Houses\Art Museum.gpf"
 x64\Release\MergeGPF.exe "Packaged\Houses\California or Bust!.gpf"
 x64\Release\MergeGPF.exe "Packaged\Houses\Castle o' the Air.gpf"

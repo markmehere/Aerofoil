@@ -36,6 +36,7 @@ void GetObjectRect (objectPtr who, Rect *itsRect)
 	
 	switch (who->what)
 	{
+		default:
 		case kObjectIsEmpty:
 		QSetRect(itsRect, 0, 0, 0, 0);
 		break;

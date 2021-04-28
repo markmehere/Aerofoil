@@ -32,13 +32,26 @@ int main(int argc, char *argv[])
 SDLMAIN_DECLSPEC int SDL_main(int argc, char *argv[])
 #endif
 {
+	bool enableLogging = false;
+	for (int i = 1; i < argc; i++)
+	{
+		if (!strcmp(argv[i], "-diagnostics"))
+			enableLogging = true;
+	}
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
 		return -1;
 
 	GpFileSystem_X::GetInstance()->Init();
-	GpLogDriver_X::Init();
 
-	IGpLogDriver *logger = GpLogDriver_X::GetInstance();
+	IGpLogDriver *logger = nullptr;
+	
+	if (enableLogging)
+	{
+		GpLogDriver_X::Init();
+		logger = GpLogDriver_X::GetInstance();
+	}
+
 	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
 
 	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_X::GetInstance());

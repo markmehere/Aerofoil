@@ -3,6 +3,7 @@
 #include "IGpDisplayDriver.h"
 #include "IGpLogDriver.h"
 #include "IGpSystemServices.h"
+#include "MemoryManager.h"
 #include "ResourceManager.h"
 #include "QDPixMap.h"
 #include "Rect2i.h"
@@ -361,7 +362,7 @@ namespace PortabilityLayer
 	void DialogTemplate::Destroy()
 	{
 		this->~DialogTemplate();
-		free(this);
+		DisposePtr(this);
 	}
 
 	ArrayView<const DialogTemplateItem> DialogTemplate::GetItems() const
@@ -374,7 +375,7 @@ namespace PortabilityLayer
 		PortabilityLayer::WindowManager::GetInstance()->DestroyWindow(m_window);
 
 		this->~DialogImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	Window *DialogImpl::GetWindow() const
@@ -646,7 +647,7 @@ namespace PortabilityLayer
 
 		const size_t itemsSize = sizeof(DialogItem) * numItems;
 
-		void *storage = malloc(alignedSize + itemsSize);
+		void *storage = NewPtr(alignedSize + itemsSize);
 		if (!storage)
 			return nullptr;
 
@@ -882,7 +883,7 @@ namespace PortabilityLayer
 
 		const size_t dtlItemSize = sizeof(DialogTemplateItem) * numItems;
 
-		void *storage = malloc(dtlAlignedSize + dtlItemSize);
+		void *storage = NewPtr(dtlAlignedSize + dtlItemSize);
 		if (!storage)
 		{
 			dtemplateH.Dispose();

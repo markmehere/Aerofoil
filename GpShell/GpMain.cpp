@@ -11,6 +11,7 @@
 #include "GpInputDriverProperties.h"
 #include "GpGlobalConfig.h"
 #include "GpAppEnvironment.h"
+#include "IGpAllocator.h"
 #include "IGpAudioDriver.h"
 #include "IGpDisplayDriver.h"
 #include "IGpFontHandler.h"
@@ -36,6 +37,7 @@ int GpMain::Run()
 {
 	GpVOSEventQueue *eventQueue = new GpVOSEventQueue();
 	GpAppEnvironment *appEnvironment = new GpAppEnvironment();
+	IGpAllocator *alloc = g_gpGlobalConfig.m_allocator;
 
 	GpDisplayDriverProperties ddProps;
 	memset(&ddProps, 0, sizeof(ddProps));
@@ -60,6 +62,7 @@ int GpMain::Run()
 	ddProps.m_eventQueue = eventQueue;
 	ddProps.m_logger = g_gpGlobalConfig.m_logger;
 	ddProps.m_systemServices = g_gpGlobalConfig.m_systemServices;
+	ddProps.m_alloc = g_gpGlobalConfig.m_allocator;
 
 	GpAudioDriverProperties adProps;
 	memset(&adProps, 0, sizeof(adProps));
@@ -68,6 +71,7 @@ int GpMain::Run()
 	memset(&fontProps, 0, sizeof(fontProps));
 
 	fontProps.m_type = g_gpGlobalConfig.m_fontHandlerType;
+	fontProps.m_alloc = g_gpGlobalConfig.m_allocator;
 
 	// The sample rate used in all of Glider PRO's sound is 0x56ee8ba3
 	// This appears to be the "standard" Mac sample rate, probably rounded from 244800/11.
@@ -80,8 +84,9 @@ int GpMain::Run()
 #endif
 	adProps.m_logger = g_gpGlobalConfig.m_logger;
 	adProps.m_systemServices = g_gpGlobalConfig.m_systemServices;
+	adProps.m_alloc = g_gpGlobalConfig.m_allocator;
 
-	IGpInputDriver **inputDrivers = static_cast<IGpInputDriver**>(malloc(sizeof(IGpInputDriver*) * g_gpGlobalConfig.m_numInputDrivers));
+	IGpInputDriver **inputDrivers = static_cast<IGpInputDriver**>(alloc->Alloc(sizeof(IGpInputDriver*) * g_gpGlobalConfig.m_numInputDrivers));
 
 	size_t numCreatedInputDrivers = 0;
 	if (inputDrivers)
@@ -93,6 +98,7 @@ int GpMain::Run()
 
 			inputProps.m_type = g_gpGlobalConfig.m_inputDriverTypes[i];
 			inputProps.m_eventQueue = eventQueue;
+			inputProps.m_alloc = g_gpGlobalConfig.m_allocator;
 
 			if (IGpInputDriver *driver = GpInputDriverFactory::CreateInputDriver(inputProps))
 				inputDrivers[numCreatedInputDrivers++] = driver;
@@ -123,7 +129,7 @@ int GpMain::Run()
 		for (size_t i = 0; i < numCreatedInputDrivers; i++)
 			inputDrivers[i]->Shutdown();
 
-		free(inputDrivers);
+		alloc->Release(inputDrivers);
 	}
 
 	return 0;

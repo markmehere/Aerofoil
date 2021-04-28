@@ -9,6 +9,7 @@
 #include "PLNumberFormatting.h"
 #include "PLStringCompare.h"
 #include "PLStandardColors.h"
+#include "PLSysCalls.h"
 #include "Externs.h"
 #include "ObjectEdit.h"
 #include "PLStandardColors.h"
@@ -128,27 +129,17 @@ Boolean KeepObjectLegal (void)
 			theObject->data.a.topLeft.v = kSewerGrateTop;
 			theObject->data.a.distance += 2;
 		}
-		if ((theObject->what == kFloorTrans) && 
-				(theObject->data.a.topLeft.v != kFloorTransTop))
-		{
-			theObject->data.a.topLeft.v = kFloorTransTop;
-			theObject->data.a.distance += 2;
-		}
 		if (ObjectHasHandle(&direction, &dist))
 		{
 			switch (direction)
 			{
 				case kAbove:
 				dist = bounds.top - dist;
-				if ((theObject->what == kFloorVent) || 
-						(theObject->what == kFloorBlower) ||
-						(theObject->what == kTaper) ||
-						(theObject->what == kCandle) ||
-						(theObject->what == kStubby))
+				if (BlowerTypeHasUpperLimit(theObject->what))
 				{
-					if (dist < 36)
+					if (dist < kUpwardVentMinY)
 					{
-						theObject->data.a.distance += dist - 36;
+						theObject->data.a.distance += dist - kUpwardVentMinY;
 						unchanged = false;
 					}
 				}
@@ -874,6 +865,7 @@ void KeepAllObjectsLegal (void)
 						GetLocalizedString(19, message);
 						SetMessageWindowMessage(message, StdColors::Red());
 						houseErrors++;
+						PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 						DelayTicks(60);
 					}
 				}
@@ -908,6 +900,7 @@ void CheckForStaircasePairs (void)
 					{
 						GetLocalizedString(20, message);
 						SetMessageWindowMessage(message, StdColors::Red());
+						PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 						DelayTicks(60);
 					}
 					else
@@ -923,6 +916,7 @@ void CheckForStaircasePairs (void)
 						{
 							GetLocalizedString(21, message);
 							SetMessageWindowMessage(message, StdColors::Red());
+							PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 							DelayTicks(60);
 						}
 					}
@@ -935,6 +929,7 @@ void CheckForStaircasePairs (void)
 					{
 						GetLocalizedString(22, message);
 						SetMessageWindowMessage(message, StdColors::Red());
+						PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 						DelayTicks(60);
 					}
 					else
@@ -950,6 +945,7 @@ void CheckForStaircasePairs (void)
 						{
 							GetLocalizedString(23, message);
 							SetMessageWindowMessage(message, StdColors::Red());
+							PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 							DelayTicks(60);
 						}
 					}
@@ -992,6 +988,7 @@ void CheckHouseForProblems (void)
 		{
 			GetLocalizedString(27, message);
 			SetMessageWindowMessage(message, StdColors::Black());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(60);
 			houseErrors = 0;
 		}
@@ -1008,6 +1005,7 @@ void CheckHouseForProblems (void)
 			GetLocalizedString(28, message2);
 			PasStringConcat(message, message2);
 			SetMessageWindowMessage(message, StdColors::Red());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(45);
 		}
 	}
@@ -1027,6 +1025,7 @@ void CheckHouseForProblems (void)
 			GetLocalizedString(29, message2);
 			PasStringConcat(message, message2);
 			SetMessageWindowMessage(message, StdColors::Red());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(60);
 		}
 	}
@@ -1042,6 +1041,7 @@ void CheckHouseForProblems (void)
 			GetLocalizedString(30, message2);
 			PasStringConcat(message, message2);
 			SetMessageWindowMessage(message, StdColors::Blue());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(45);
 		}
 	}
@@ -1057,6 +1057,7 @@ void CheckHouseForProblems (void)
 			GetLocalizedString(31, message2);
 			PasStringConcat(message, message2);
 			SetMessageWindowMessage(message, StdColors::Blue());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(45);
 		}
 	}
@@ -1072,6 +1073,7 @@ void CheckHouseForProblems (void)
 			GetLocalizedString(32, message2);
 			PasStringConcat(message, message2);
 			SetMessageWindowMessage(message, StdColors::Red());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(60);
 		}
 	}
@@ -1089,6 +1091,7 @@ void CheckHouseForProblems (void)
 			GetLocalizedString(34, message2);
 			PasStringConcat(message, message2);
 			SetMessageWindowMessage(message, StdColors::Red());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(60);
 		}
 	}
@@ -1107,6 +1110,7 @@ void CheckHouseForProblems (void)
 		{
 			GetLocalizedString(35, message);
 			SetMessageWindowMessage(message, StdColors::Red());
+			PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
 			DelayTicks(60);
 		}
 	}

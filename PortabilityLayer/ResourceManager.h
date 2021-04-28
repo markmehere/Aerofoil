@@ -78,7 +78,7 @@ namespace PortabilityLayer
 		virtual IResourceArchive *GetAppResourceArchive() const = 0;
 
 		virtual IResourceArchive *LoadResFile(CompositeFile *file) const = 0;
-		virtual PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) = 0;
+		GP_ASYNCIFY_PARANOID_VIRTUAL PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) GP_ASYNCIFY_PARANOID_PURE;
 
 		virtual void DissociateHandle(MMHandleBlock *hdl) const = 0;
 		virtual const ResourceArchiveRef *ResourceForHandle(MMHandleBlock *hdl) const = 0;

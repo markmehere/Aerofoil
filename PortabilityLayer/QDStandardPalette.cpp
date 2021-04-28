@@ -293,7 +293,7 @@ namespace PortabilityLayer
 		if (mutex)
 			mutex->Unlock();
 
-		entry.m_aaTable.GenerateForSimpleScale(tone, false);
+		entry.m_aaTable.GenerateForSimpleScale(tone);
 
 		return entry.m_aaTable;
 	}

@@ -1057,7 +1057,7 @@ void DrawCalendar (Rect *theRect)
 	backSrcMap->DrawPicture(thePicture, bounds);
 	thePicture.Dispose();
 
-	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9Bold);
+	PortabilityLayer::RenderedFont *appFont = GetFont(PortabilityLayer::FontPresets::kApplication9SyntheticBold);
 
 	GetTime(&timeRec);
 	GetIndString(monthStr, kMonthStringID, timeRec.month);

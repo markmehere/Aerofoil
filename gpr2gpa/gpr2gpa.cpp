@@ -2,6 +2,7 @@
 #include "CFileStream.h"
 #include "CombinedTimestamp.h"
 #include "GPArchive.h"
+#include "GpAllocator_C.h"
 #include "MacRomanConversion.h"
 #include "MemReaderStream.h"
 #include "QDPictDecoder.h"
@@ -14,6 +15,8 @@
 #include "UTF8.h"
 #include "ZipFile.h"
 #include "WaveFormat.h"
+#include "GpUnicode.h"
+#include "PLDrivers.h"
 
 #include "zlib.h"
 
@@ -116,7 +119,7 @@ void AppendUTF8(std::vector<uint8_t> &array, uint32_t codePoint)
 	uint8_t bytes[5];
 	size_t sz;
 
-	PortabilityLayer::UTF8Processor::EncodeCodePoint(bytes, sz, codePoint);
+	GpUnicode::UTF8::Encode(bytes, sz, codePoint);
 	for (size_t i = 0; i < sz; i++)
 		array.push_back(bytes[i]);
 }
@@ -1429,6 +1432,9 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 	}
 
 	PortabilityLayer::CFileStream cfs(inF);
+
+	GpDriverCollection *drivers = PLDrivers::GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kAlloc>(GpAllocator_C::GetInstance());
 
 	PortabilityLayer::ResourceFile *resFile = PortabilityLayer::ResourceFile::Create();
 	resFile->Load(&cfs);

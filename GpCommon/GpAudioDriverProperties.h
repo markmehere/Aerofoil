@@ -5,6 +5,7 @@
 struct IGpSystemServices;
 struct IGpAudioDriver;
 struct IGpLogDriver;
+struct IGpAllocator;
 
 struct GpAudioDriverProperties
 {
@@ -15,4 +16,5 @@ struct GpAudioDriverProperties
 
 	IGpLogDriver *m_logger;
 	IGpSystemServices *m_systemServices;
+	IGpAllocator *m_alloc;
 };

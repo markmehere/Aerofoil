@@ -18,5 +18,8 @@
     <ClCompile Include="MergeGPF.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\AerofoilPortable\GpAllocator_C.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

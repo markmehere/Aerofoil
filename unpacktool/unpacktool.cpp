@@ -7,8 +7,7 @@
 #include "CompactProParser.h"
 #include "CFileStream.h"
 
-#include "UTF8.h"
-#include "UTF16.h"
+#include "GpUnicode.h"
 
 #include "ArchiveDescription.h"
 #include "IDecompressor.h"
@@ -342,7 +341,7 @@ int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &r
 
 	PortabilityLayer::CFileStream metadataStream(metadataF);
 
-	if (mfps.WriteAsPackage(metadataStream, ts))
+	if (!mfps.WriteAsPackage(metadataStream, ts))
 	{
 		fprintf(stderr, "A problem occurred writing metadata");
 		metadataStream.Close();

@@ -8,6 +8,7 @@
 #include "Environ.h"
 #include "Externs.h"
 #include "SoundSync.h"
+#include "IGpAudioBuffer.h"
 #include "IGpMutex.h"
 #include "IGpSystemServices.h"
 #include "MemoryManager.h"
@@ -29,11 +30,11 @@ PLError_t DumpMusicSounds (void);
 PLError_t OpenMusicChannel (void);
 PLError_t CloseMusicChannel (void);
 
-THandle<void> ParseAndConvertSound(const THandle<void> &handle);
+IGpAudioBuffer *ParseAndConvertSound(const THandle<void> &handle);
 
 
 PortabilityLayer::AudioChannel	*musicChannel;
-Ptr				theMusicData[kMaxMusic];
+IGpAudioBuffer	*theMusicData[kMaxMusic];
 short			musicScore[kLastMusicPiece];
 short			gameScore[kLastGamePiece];
 Boolean			isMusicOn, isPlayMusicIdle, isPlayMusicGame;
@@ -208,22 +209,23 @@ PLError_t LoadMusicSounds (void)
 	theErr = PLErrors::kNone;
 
 	for (i = 0; i < kMaxMusic; i++)
-		theMusicData[i] = nil;
+	{
+		assert(theMusicData[i] == nil);
+	}
 
 	for (i = 0; i < kMaxMusic; i++)
 	{
-		theSound = ParseAndConvertSound(PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferMusicID));
+		theSound = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferMusicID);
 		if (theSound == nil)
 			return PLErrors::kOutOfMemory;
 
-		soundDataSize = GetHandleSize(theSound);
+		IGpAudioBuffer *buffer = ParseAndConvertSound(theSound);
+		theSound.Dispose();
 
-		theMusicData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
-		if (theMusicData[i] == nil)
+		if (buffer == nil)
 			return PLErrors::kOutOfMemory;
 
-		memcpy(theMusicData[i], static_cast<Byte*>(*theSound), soundDataSize);
-		theSound.Dispose();
+		theMusicData[i] = buffer;
 	}
 	return (theErr);
 }
@@ -240,7 +242,7 @@ PLError_t DumpMusicSounds (void)
 	for (i = 0; i < kMaxMusic; i++)
 	{
 		if (theMusicData[i] != nil)
-			PortabilityLayer::MemoryManager::GetInstance()->Release(theMusicData[i]);
+			theMusicData[i]->Release();
 		theMusicData[i] = nil;
 	}
 

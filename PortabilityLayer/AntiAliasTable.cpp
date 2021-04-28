@@ -35,40 +35,6 @@ namespace PortabilityLayer
 		return minIndexInclusive;
 	}
 
-
-	bool AntiAliasTable::LoadFromCache(const char *cacheFileName)
-	{
-		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, cacheFileName, false, GpFileCreationDispositions::kOpenExisting);
-		if (!stream)
-			return false;
-
-		BEUInt32_t cacheVersion;
-		if (stream->Read(&cacheVersion, sizeof(cacheVersion)) != sizeof(cacheVersion) || cacheVersion != kCacheVersion)
-		{
-			stream->Close();
-			return false;
-		}
-
-		const size_t readSize = sizeof(m_aaTranslate);
-		const bool readOK = (stream->Read(m_aaTranslate, readSize) == readSize);
-		stream->Close();
-
-		return readOK;
-	}
-
-	void AntiAliasTable::SaveToCache(const char *cacheFileName)
-	{
-		GpIOStream *stream = PLDrivers::GetFileSystem()->OpenFile(PortabilityLayer::VirtualDirectories::kFontCache, cacheFileName, true, GpFileCreationDispositions::kCreateOrOverwrite);
-		if (!stream)
-			return;
-
-		BEUInt32_t cacheVersion(static_cast<uint32_t>(kCacheVersion));
-		stream->Write(&cacheVersion, sizeof(cacheVersion));
-
-		stream->Write(m_aaTranslate, sizeof(m_aaTranslate));
-		stream->Close();
-	}
-
 	void AntiAliasTable::GenerateForPaletteFast(const RGBAColor &baseColorRef)
 	{
 		const RGBAColor baseColor = baseColorRef;
@@ -191,16 +157,8 @@ namespace PortabilityLayer
 		}
 	}
 
-	void AntiAliasTable::GenerateForPalette(const RGBAColor &baseColorRef, const RGBAColor *colors, size_t numColors, bool cacheable)
+	void AntiAliasTable::GenerateForPalette(const RGBAColor &baseColorRef, const RGBAColor *colors, size_t numColors)
 	{
-		char cacheFileName[256];
-		if (cacheable)
-		{
-			sprintf(cacheFileName, "aa_p_%02x%02x%02x%02x.cache", static_cast<int>(baseColorRef.r), static_cast<int>(baseColorRef.g), static_cast<int>(baseColorRef.b), static_cast<int>(baseColorRef.a));
-			if (LoadFromCache(cacheFileName))
-				return;
-		}
-
 		const RGBAColor baseColor = baseColorRef;
 
 		if (numColors > 256)
@@ -259,21 +217,10 @@ namespace PortabilityLayer
 				m_aaTranslate[i][b] = static_cast<uint8_t>(bestColor);
 			}
 		}
-
-		if (cacheable)
-			SaveToCache(cacheFileName);
 	}
 
-	void AntiAliasTable::GenerateForSimpleScale(uint8_t colorChannel, bool cacheable)
+	void AntiAliasTable::GenerateForSimpleScale(uint8_t colorChannel)
 	{
-		char cacheFileName[256];
-		if (cacheable)
-		{
-			sprintf(cacheFileName, "aa_t_%02x.cache", static_cast<int>(colorChannel));
-			if (LoadFromCache(cacheFileName))
-				return;
-		}
-
 		const double gamma = 1.8;
 		const double rcpGamma = 1.0 / gamma;
 		const double rcp255 = 1.0 / 255.0;
@@ -294,8 +241,5 @@ namespace PortabilityLayer
 				m_aaTranslate[baseColor][opacity] = static_cast<uint8_t>(floor(blendedColorGammaSpace * 255.0 + 0.5));
 			}
 		}
-
-		if (cacheable)
-			SaveToCache(cacheFileName);
 	}
 }

@@ -7,16 +7,17 @@
 class GpAudioDriverXAudio2;
 class GpAudioChannelXAudio2Callbacks;
 struct IXAudio2SourceVoice;
+struct IGpAllocator;
 
 class GpAudioChannelXAudio2 final : public IGpAudioChannel
 {
 public:
 	friend class GpAudioChannelXAudio2Callbacks;
 
-	static GpAudioChannelXAudio2 *Create(GpAudioDriverXAudio2 *driver);
+	static GpAudioChannelXAudio2 *Create(IGpAllocator *alloc, GpAudioDriverXAudio2 *driver);
 
 	void SetAudioChannelContext(IGpAudioChannelCallbacks *callbacks) override;
-	void PostBuffer(const void *buffer, size_t bufferSize) override;
+	bool PostBuffer(IGpAudioBuffer *buffer) override;
 	void Stop() override;
 	void Destroy() override;
 
@@ -32,12 +33,13 @@ private:
 		VoiceState_Active,
 	};
 
-	explicit GpAudioChannelXAudio2(GpAudioDriverXAudio2 *driver);
+	explicit GpAudioChannelXAudio2(IGpAllocator *alloc, GpAudioDriverXAudio2 *driver);
 	~GpAudioChannelXAudio2();
 
 	GpAudioDriverXAudio2 *m_driver;
 	IXAudio2SourceVoice *m_sourceVoice;
 	GpAudioChannelXAudio2Callbacks m_xAudioCallbacks;
 	IGpAudioChannelCallbacks *m_contextCallbacks;
+	IGpAllocator *m_alloc;
 	VoiceState m_voiceState;
 };

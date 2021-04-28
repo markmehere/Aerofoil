@@ -105,6 +105,7 @@
     <ClInclude Include="FontFamily.h" />
     <ClInclude Include="FontFamilyID.h" />
     <ClInclude Include="FontManager.h" />
+    <ClInclude Include="FontPresets.h" />
     <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="GpAppInterface.h" />
     <ClInclude Include="GPArchive.h" />
@@ -123,7 +124,6 @@
     <ClInclude Include="MacRsrcMap.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="MemReaderStream.h" />
-    <ClInclude Include="MMBlock.h" />
     <ClInclude Include="MMHandleBlock.h" />
     <ClInclude Include="PascalStr.h" />
     <ClInclude Include="PascalStrLiteral.h" />
@@ -156,7 +156,6 @@
     <ClInclude Include="ResolveCachingColor.h" />
     <ClInclude Include="WorkerThread.h" />
     <ClInclude Include="TextPlacer.h" />
-    <ClInclude Include="UTF16.h" />
     <ClInclude Include="UTF8.h" />
     <ClInclude Include="ZipFileProxy.h" />
     <ClInclude Include="SimpleImage.h" />
@@ -250,7 +249,6 @@
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="MemReaderStream.cpp" />
     <ClCompile Include="MenuManager.cpp" />
-    <ClCompile Include="MMBlock.cpp" />
     <ClCompile Include="MMHandleBlock.cpp" />
     <ClCompile Include="PLApplication.cpp" />
     <ClCompile Include="PLButtonWidget.cpp" />
@@ -301,7 +299,6 @@
     <ClCompile Include="SimpleGraphic.cpp" />
     <ClCompile Include="PLHandle.cpp" />
     <ClCompile Include="TextPlacer.cpp" />
-    <ClCompile Include="UTF16.cpp" />
     <ClCompile Include="UTF8.cpp" />
     <ClCompile Include="WindowDef.cpp" />
     <ClCompile Include="WindowManager.cpp" />

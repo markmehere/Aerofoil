@@ -3,6 +3,8 @@
 #include "ScanlineMaskBuilder.h"
 #include "ScanlineMaskIterator.h"
 
+#include "PLCore.h"
+
 #include <stdlib.h>
 #include <new>
 
@@ -11,7 +13,7 @@ namespace PortabilityLayer
 	void ScanlineMask::Destroy()
 	{
 		this->~ScanlineMask();
-		free(this);
+		DisposePtr(this);
 	}
 
 	const Rect &ScanlineMask::GetRect() const
@@ -50,7 +52,7 @@ namespace PortabilityLayer
 		else
 			return nullptr;
 
-		void *storage = malloc(alignedPrefixSize + storageSize);
+		void *storage = NewPtr(alignedPrefixSize + storageSize);
 		if (!storage)
 			return nullptr;
 

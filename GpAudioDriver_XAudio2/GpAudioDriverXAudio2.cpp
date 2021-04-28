@@ -1,7 +1,9 @@
 #include "GpAudioDriverXAudio2.h"
 
 #include "IGpLogDriver.h"
+#include "GpAudioBufferXAudio2.h"
 #include "GpAudioChannelXAudio2.h"
+#include "CoreDefs.h"
 
 #include <xaudio2.h>
 
@@ -96,9 +98,14 @@ GpAudioDriverXAudio2 *GpAudioDriverXAudio2::Create(const GpAudioDriverProperties
 	return new GpAudioDriverXAudio2(properties, realSampleRate, xa, mv);
 }
 
+IGpAudioBuffer *GpAudioDriverXAudio2::CreateBuffer(const void *buffer, size_t bufferSize)
+{
+	return GpAudioBufferXAudio2::Create(m_properties.m_alloc, buffer, bufferSize);
+}
+
 IGpAudioChannel *GpAudioDriverXAudio2::CreateChannel()
 {
-	return GpAudioChannelXAudio2::Create(this);
+	return GpAudioChannelXAudio2::Create(m_properties.m_alloc, this);
 }
 
 void GpAudioDriverXAudio2::SetMasterVolume(uint32_t vol, uint32_t maxVolume)

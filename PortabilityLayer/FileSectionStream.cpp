@@ -1,4 +1,5 @@
 #include "FileSectionStream.h"
+#include "PLCore.h"
 
 #include <stdlib.h>
 #include <new>
@@ -21,7 +22,7 @@ namespace PortabilityLayer
 		bool SeekEnd(GpUFilePos_t loc) override;
 		GpUFilePos_t Size() const override;
 		GpUFilePos_t Tell() const override;
-		void Close() override;
+		void GP_ASYNCIFY_PARANOID_NAMED(Close)() override;
 		void Flush() override;
 
 	private:
@@ -148,10 +149,10 @@ namespace PortabilityLayer
 		return m_expectedPosition - m_start;
 	}
 
-	void FileSectionStreamImpl::Close()
+	void FileSectionStreamImpl::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 	{
 		this->~FileSectionStreamImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	void FileSectionStreamImpl::Flush()
@@ -161,7 +162,7 @@ namespace PortabilityLayer
 
 	GpIOStream *FileSectionStream::Create(GpIOStream *stream, GpUFilePos_t start, GpUFilePos_t size)
 	{
-		void *storage = malloc(sizeof(FileSectionStreamImpl));
+		void *storage = NewPtr(sizeof(FileSectionStreamImpl));
 
 		if (!storage)
 			return nullptr;

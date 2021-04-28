@@ -339,6 +339,8 @@ void KeepWindowInBounds(Window *window)
 
 void HandleEditorResolutionChange(void)
 {
+	int oldRoom = thisRoomNumber;
+
 	FlushResolutionChange();
 
 	RecomputeInterfaceRects();
@@ -352,6 +354,9 @@ void HandleEditorResolutionChange(void)
 	InitScoreboardMap();
 	//RefreshScoreboard(wasScoreboardTitleMode);
 	//DumpScreenOn(&justRoomsRect);
+
+	CopyRoomToThisRoom(oldRoom);
+	ReflectCurrentRoom(false);
 
 	if (toolsWindow)
 		PortabilityLayer::WindowManager::GetInstance()->PutWindowBehind(toolsWindow, PortabilityLayer::WindowManager::GetInstance()->GetPutInFrontSentinel());

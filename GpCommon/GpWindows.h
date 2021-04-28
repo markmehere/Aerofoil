@@ -13,6 +13,7 @@
 
 struct IGpBWCursor_Win32;
 struct IGpCursor_Win32;
+struct IGpAllocator;
 struct IGpVOSEventQueue;
 
 struct GpWindowsGlobals
@@ -28,7 +29,7 @@ struct GpWindowsGlobals
 	HICON m_hIconSm;
 	int m_nCmdShow;
 
-	IGpCursor_Win32 *(*m_createColorCursorFunc)(size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY);
-	IGpCursor_Win32 *(*m_createBWCursorFunc)(size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY);
+	IGpCursor_Win32 *(*m_createColorCursorFunc)(IGpAllocator *alloc, size_t width, size_t height, const void *pixelDataRGBA, size_t hotSpotX, size_t hotSpotY);
+	IGpCursor_Win32 *(*m_createBWCursorFunc)(IGpAllocator *alloc, size_t width, size_t height, const void *pixelData, const void *maskData, size_t hotSpotX, size_t hotSpotY);
 	void (*m_translateWindowsMessageFunc)(const MSG *msg, IGpVOSEventQueue *eventQueue, float pixelScaleX, float pixelScaleY);
 };

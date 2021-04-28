@@ -31,15 +31,17 @@ void FrameWHRect (DrawSurface *surface, short left, short top, short wide, short
 // This function ensures that a rect's top is less than it's bottomÉ
 // and that left is less than right.
 
-void NormalizeRect (Rect *theRect)
+Boolean NormalizeRect (Rect *theRect)
 {
 	short		tempSide;
+	Boolean		changed = false;
 	
 	if (theRect->left > theRect->right)
 	{
 		tempSide = theRect->left;
 		theRect->left = theRect->right;
 		theRect->right = tempSide;
+		changed = true;
 	}
 	
 	if (theRect->top > theRect->bottom)
@@ -47,7 +49,10 @@ void NormalizeRect (Rect *theRect)
 		tempSide = theRect->top;
 		theRect->top = theRect->bottom;
 		theRect->bottom = tempSide;
+		changed = true;
 	}
+
+	return changed;
 }
 
 //--------------------------------------------------------------  ZeroRectCorner
@@ -198,7 +203,8 @@ Boolean ForceRectInRect (Rect *small, Rect *large)
 	
 	changed = false;
 	
-	NormalizeRect(small);
+	if (NormalizeRect(small))
+		changed = true;
 	
 	if ((small->bottom - small->top) > (large->bottom - large->top))
 	{

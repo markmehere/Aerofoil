@@ -1,4 +1,5 @@
 #include "GpMain.h"
+#include "GpAllocator_C.h"
 #include "GpAudioDriverFactory.h"
 #include "GpBWCursor_Win32.h"
 #include "GpColorCursor_Win32.h"
@@ -410,12 +411,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	IGpLogDriver *logger = GpLogDriver_Win32::GetInstance();
+	IGpAllocator *alloc = GpAllocator_C::GetInstance();
+	IGpSystemServices *sysServices = GpSystemServices_Win32::GetInstance();
 
 	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
 
 	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_Win32::GetInstance());
-	drivers->SetDriver<GpDriverIDs::kSystemServices>(GpSystemServices_Win32::GetInstance());
-	drivers->SetDriver<GpDriverIDs::kLog>(GpLogDriver_Win32::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kSystemServices>(sysServices);
+	drivers->SetDriver<GpDriverIDs::kLog>(logger);
+	drivers->SetDriver<GpDriverIDs::kAlloc>(alloc);
 
 	g_gpWindowsGlobals.m_hInstance = hInstance;
 	g_gpWindowsGlobals.m_hPrevInstance = hPrevInstance;
@@ -448,7 +452,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	g_gpGlobalConfig.m_osGlobals = &g_gpWindowsGlobals;
 	g_gpGlobalConfig.m_logger = logger;
-	g_gpGlobalConfig.m_systemServices = GpSystemServices_Win32::GetInstance();
+	g_gpGlobalConfig.m_systemServices = sysServices;
+	g_gpGlobalConfig.m_allocator = alloc;
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_D3D11, GpDriver_CreateDisplayDriver_D3D11);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_XAudio2, GpDriver_CreateAudioDriver_XAudio2);

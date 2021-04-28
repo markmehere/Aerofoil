@@ -149,7 +149,7 @@ void DrawHighScores (DrawSurface *surface)
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
 
-	PortabilityLayer::RenderedFont *appFont14 = GetFont(PortabilityLayer::FontPresets::kApplication14Bold);
+	PortabilityLayer::RenderedFont *appFont14 = GetFont(PortabilityLayer::FontPresets::kApplication14SyntheticBold);
 	
 	PasStringCopy(PSTR("\xa5 "), tempStr);
 	PasStringConcat(tempStr, thisHouseName);
@@ -161,7 +161,7 @@ void DrawHighScores (DrawSurface *surface)
 	const Point scoreTextPoint = Point::Create(scoreLeft + ((kScoreWide - appFont14->MeasurePStr(tempStr)) / 2), dropIt - 65);
 	surface->DrawString(scoreTextPoint, tempStr, cyanColor, appFont14);
 
-	PortabilityLayer::RenderedFont *appFont12 = GetFont(PortabilityLayer::FontPresets::kApplication12Bold);
+	PortabilityLayer::RenderedFont *appFont12 = GetFont(PortabilityLayer::FontPresets::kApplication12SyntheticBold);
 
 	thisHousePtr = *thisHouse;
 													// message for score #1
@@ -268,7 +268,7 @@ void DrawHighScores (DrawSurface *surface)
 		}
 	}
 
-	PortabilityLayer::RenderedFont *appFont9 = GetFont(PortabilityLayer::FontPresets::kApplication9Bold);
+	PortabilityLayer::RenderedFont *appFont9 = GetFont(PortabilityLayer::FontPresets::kApplication9SyntheticBold);
 
 	const Point textPos = Point::Create(scoreLeft + 80, dropIt - 1 + (10 * kScoreSpacing));
 	GetLocalizedString(8, tempStr);

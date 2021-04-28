@@ -10,6 +10,7 @@ struct IGpFiber;
 struct IGpVOSEventQueue;
 struct IGpLogDriver;
 struct IGpSystemServices;
+struct IGpAllocator;
 
 struct GpDisplayDriverProperties
 {
@@ -43,4 +44,5 @@ struct GpDisplayDriverProperties
 	IGpVOSEventQueue *m_eventQueue;
 	IGpLogDriver *m_logger;
 	IGpSystemServices *m_systemServices;
+	IGpAllocator *m_alloc;
 };

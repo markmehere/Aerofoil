@@ -12,7 +12,7 @@
 #include "ResolveCachingColor.h"
 #include "Rect2i.h"
 #include "TextPlacer.h"
-#include "UTF8.h"
+#include "GpUnicode.h"
 
 #include "PLDrivers.h"
 #include "PLKeyEncoding.h"
@@ -721,7 +721,7 @@ namespace PortabilityLayer
 		{
 			uint32_t codePoint = 0;
 			size_t numDigested = 0;
-			if (!UTF8Processor::DecodeCodePoint(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
+			if (!GpUnicode::UTF8::Decode(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
 			{
 				clipboardContents->Destroy();
 				return;
@@ -745,7 +745,7 @@ namespace PortabilityLayer
 		{
 			uint32_t codePoint = 0;
 			size_t numDigested = 0;
-			if (!UTF8Processor::DecodeCodePoint(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
+			if (!GpUnicode::UTF8::Decode(utf8Bytes + i, utf8Size - i, numDigested, codePoint))
 			{
 				clipboardContents->Destroy();
 				return;
@@ -1330,16 +1330,19 @@ namespace PortabilityLayer
 		return ccs->m_category;
 	}
 
-	FontFamily *EditboxWidget::GetFontFamily() const
+	FontPreset_t EditboxWidget::GetFontPreset() const
 	{
-		FontFamilyID_t preset = FontFamilyIDs::kCount;
-		PortabilityLayer::FontManager::GetInstance()->GetFontPreset(FontPresets::kSystem12, &preset, nullptr, nullptr, nullptr);
-		return PortabilityLayer::FontManager::GetInstance()->GetFont(preset);
+		return FontPresets::kSystem12;
 	}
 
 	RenderedFont *EditboxWidget::GetRenderedFont() const
 	{
-		return PortabilityLayer::FontManager::GetInstance()->GetRenderedFontFromFamily(GetFontFamily(), 12, true, FontFamilyFlag_None);
+		PortabilityLayer::FontFamilyID_t fontFamilyID = FontFamilyIDs::kCount;
+		int size = 0;
+		int varFlags = 0;
+		bool aa = false;
+		PortabilityLayer::FontManager::GetInstance()->GetFontPreset(GetFontPreset(), &fontFamilyID, &size, &varFlags, &aa);
+		return PortabilityLayer::FontManager::GetInstance()->LoadCachedRenderedFont(fontFamilyID, size, aa, varFlags);
 	}
 
 	void EditboxWidget::SetMultiLine(bool isMultiLine)

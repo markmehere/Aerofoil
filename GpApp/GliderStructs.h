@@ -191,7 +191,7 @@ struct houseType
 	Str255		banner;						// 256
 	Str255		trailer;					// 256
 	scoresType	highScores;					// 292
-	gameType	savedGame;					// 40
+	gameType	savedGame_Unused;			// 40
 	Boolean		hasGame;					// 1
 	Boolean		unusedBoolean;				// 1
 	int16_t		firstRoom;					// 2

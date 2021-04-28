@@ -10,7 +10,7 @@ namespace PLSysCalls
 	void Sleep(uint32_t ticks);
 	void Exit(int exitCode);
 
-#if GP_DEBUG_CONFIG && GP_ASYNCIFY_PARANOID
+#if GP_DEBUG_CONFIG && GP_ASYNCIFY_PARANOID_VALIDATION
 	class AsyncifyDisarmScope
 	{
 	public:

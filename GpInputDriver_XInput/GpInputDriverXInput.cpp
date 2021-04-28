@@ -2,6 +2,7 @@
 #include "GpVOSEvent.h"
 #include "GpWindows.h"
 #include "IGpVOSEventQueue.h"
+#include "IGpAllocator.h"
 
 #include <stdlib.h>
 #include <new>
@@ -72,8 +73,9 @@ void GpInputDriverXInput::ProcessInput()
 
 void GpInputDriverXInput::Shutdown()
 {
+	IGpAllocator *alloc = m_properties.m_alloc;
 	this->~GpInputDriverXInput();
-	free(this);
+	alloc->Release(this);
 }
 
 IGpPrefsHandler *GpInputDriverXInput::GetPrefsHandler() const
@@ -83,7 +85,7 @@ IGpPrefsHandler *GpInputDriverXInput::GetPrefsHandler() const
 
 GpInputDriverXInput *GpInputDriverXInput::Create(const GpInputDriverProperties &props)
 {
-	void *storage = malloc(sizeof(GpInputDriverXInput));
+	void *storage = props.m_alloc->Alloc(sizeof(GpInputDriverXInput));
 	if (!storage)
 		return nullptr;
 

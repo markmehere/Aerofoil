@@ -118,7 +118,6 @@ add_library(PortabilityLayer STATIC
 	PortabilityLayer/SimpleGraphic.cpp
 	PortabilityLayer/TextPlacer.cpp
 	PortabilityLayer/UTF8.cpp
-	PortabilityLayer/UTF16.cpp
 	PortabilityLayer/WindowDef.cpp
 	PortabilityLayer/WindowManager.cpp
 	PortabilityLayer/WorkerThread.cpp

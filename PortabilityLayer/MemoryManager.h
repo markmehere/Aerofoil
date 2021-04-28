@@ -1,9 +1,9 @@
 #pragma once
-#ifndef __PL_MEMORY_MANAGER_H__
-#define __PL_MEMORY_MANAGER_H__
 
 #include <stdint.h>
 #include <stddef.h>
+
+struct IGpAllocator;
 
 namespace PortabilityLayer
 {
@@ -50,5 +50,3 @@ namespace PortabilityLayer
 		return objectHdl;
 	}
 }
-
-#endif

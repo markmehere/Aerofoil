@@ -84,6 +84,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\AerofoilPortable\GpAllocator_C.cpp" />
     <ClCompile Include="..\Aerofoil\GpColorCursor_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileStream_Win32.cpp" />
     <ClCompile Include="..\Aerofoil\GpFileSystem_Win32.cpp" />

@@ -249,6 +249,7 @@ void DisposeDirectoryFiles(DirectoryFileListEntry *firstDFL);
 void GetMouse(Window *window, Point *point);
 Boolean StillDown();
 Boolean WaitMouseUp();
+Boolean WaitMouseUp_DisarmAsyncify();
 
 short Random();
 void GetTime(DateTimeRec *dateTime);

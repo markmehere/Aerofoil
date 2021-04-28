@@ -42,9 +42,9 @@ short MergeFloorSuite (short floor, short suite)
 
 //--------------------------------------------------------------  ExtractFloorSuite
 
-void ExtractFloorSuite (short combo, short *floor, short *suite)
+void ExtractFloorSuite (const houseType *house, SInt16 combo, SInt16 *floor, SInt16 *suite)
 {
-	if ((*thisHouse)->version < 0x0200)		// old floor/suite combo
+	if (house->version < 0x0200)		// old floor/suite combo
 	{
 		*floor = (combo / 100) - kNumUndergroundFloors;
 		*suite = combo % 100;

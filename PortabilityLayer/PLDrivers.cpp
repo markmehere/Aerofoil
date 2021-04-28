@@ -50,4 +50,10 @@ IGpVOSEventQueue *PLDrivers::GetVOSEventQueue()
 	return ms_drivers.GetDriver<GpDriverIDs::kEventQueue>();
 }
 
+IGpAllocator *PLDrivers::GetAlloc()
+{
+	return ms_drivers.GetDriver<GpDriverIDs::kAlloc>();
+}
+
+
 GpDriverCollection PLDrivers::ms_drivers;

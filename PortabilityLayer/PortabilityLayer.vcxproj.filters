@@ -132,9 +132,6 @@
     <ClInclude Include="MMHandleBlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MMBlock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DisplayDeviceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -399,9 +396,6 @@
     <ClInclude Include="AppEventHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UTF16.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PLButtonWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -430,6 +424,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FontFamilyID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FontPresets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -492,9 +489,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MemoryManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MMBlock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MMHandleBlock.cpp">
@@ -666,9 +660,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TextPlacer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UTF16.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PLButtonWidget.cpp">

@@ -10,6 +10,8 @@
 #include "PLSound.h"
 #include "DialogManager.h"
 #include "Externs.h"
+#include "IGpAudioBuffer.h"
+#include "IGpAudioDriver.h"
 #include "IGpLogDriver.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"
@@ -31,10 +33,10 @@ PLError_t LoadBufferSounds (void);
 void DumpBufferSounds (void);
 PLError_t OpenSoundChannels (void);
 void CloseSoundChannels (void);
-THandle<void> ParseAndConvertSound(const THandle<void> &handle);
+IGpAudioBuffer *ParseAndConvertSound(const THandle<void> &handle);
 
 PortabilityLayer::AudioChannel *channel0, *channel1, *channel2;
-Ptr					theSoundData[kMaxSounds];
+IGpAudioBuffer		*theSoundData[kMaxSounds];
 short				numSoundsLoaded;
 Boolean				soundLoaded[kMaxSounds], dontLoadSounds;
 Boolean				channelOpen, isSoundOn, failedSound;
@@ -192,24 +194,20 @@ PLError_t LoadTriggerSound (short soundID)
 		
 		theErr = PLErrors::kNone;
 		
-		theSound = ParseAndConvertSound(LoadHouseResource('snd ', soundID));
+		theSound = LoadHouseResource('snd ', soundID);
 		if (theSound == nil)
-		{
-			theErr = PLErrors::kFileNotFound;
-		}
+			theErr = PLErrors::kResourceError;
 		else
 		{
-			soundDataSize = GetHandleSize(theSound);
-			theSoundData[kMaxSounds - 1] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
-			if (theSoundData[kMaxSounds - 1] == nil)
-			{
-				theSound.Dispose();
-				theErr = PLErrors::kOutOfMemory;
-			}
+			IGpAudioBuffer *buffer = ParseAndConvertSound(theSound);
+			theSound.Dispose();
+
+			if (buffer == nil)
+				theErr = PLErrors::kResourceError;
 			else
 			{
-				memcpy(theSoundData[kMaxSounds - 1], (Byte*)(*theSound), soundDataSize);
-				theSound.Dispose();
+				assert(theSoundData[kMaxSounds - 1] == nil);
+				theSoundData[kMaxSounds - 1] = buffer;
 			}
 		}
 	}
@@ -222,7 +220,7 @@ PLError_t LoadTriggerSound (short soundID)
 void DumpTriggerSound (void)
 {
 	if (theSoundData[kMaxSounds - 1] != nil)
-		PortabilityLayer::MemoryManager::GetInstance()->Release(theSoundData[kMaxSounds - 1]);
+		theSoundData[kMaxSounds - 1]->Release();
 	theSoundData[kMaxSounds - 1] = nil;
 }
 
@@ -239,21 +237,21 @@ PLError_t LoadBufferSounds (void)
 	
 	for (i = 0; i < kMaxSounds - 1; i++)
 	{
-		theSound = ParseAndConvertSound(PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferSoundID));
+		theSound = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('snd ', i + kBaseBufferSoundID);
 		if (theSound == nil)
-			return (PLErrors::kOutOfMemory);
-		
-		soundDataSize = GetHandleSize(theSound);
-		
-		theSoundData[i] = PortabilityLayer::MemoryManager::GetInstance()->Alloc(soundDataSize);
-		if (theSoundData[i] == nil)
-			return (PLErrors::kOutOfMemory);
-		
-		memcpy(theSoundData[i], *theSound, soundDataSize);
+			return (PLErrors::kResourceError);
+
+		IGpAudioBuffer *buffer = ParseAndConvertSound(theSound);
 		theSound.Dispose();
+
+		if (!buffer)
+			return PLErrors::kResourceError;
+
+		assert(theSoundData[i] == nil);
+		theSoundData[i] = buffer;
 	}
-	
-	theSoundData[kMaxSounds - 1] = nil;
+
+	assert(theSoundData[kMaxSounds - 1] == nil);
 	
 	return (theErr);
 }
@@ -267,7 +265,7 @@ void DumpBufferSounds (void)
 	for (i = 0; i < kMaxSounds; i++)
 	{
 		if (theSoundData[i] != nil)
-			PortabilityLayer::MemoryManager::GetInstance()->Release(theSoundData[i]);
+			theSoundData[i]->Release();
 		theSoundData[i] = nil;
 	}
 }
@@ -406,23 +404,23 @@ void TellHerNoSounds (void)
 
 //--------------------------------------------------------------  ParseAndConvertSound
 
-THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
+IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 {
 	const uint8_t *dataStart = static_cast<const uint8_t*>(*handle);
 	const size_t size = handle.MMBlock()->m_size;
 
 	if (size < sizeof(PortabilityLayer::RIFFTag))
-		return THandle<void>();
+		return nullptr;
 
 	PortabilityLayer::RIFFTag mainRiffTag;
 	memcpy(&mainRiffTag, dataStart, sizeof(PortabilityLayer::RIFFTag));
 
 	if (mainRiffTag.m_tag != PortabilityLayer::WaveConstants::kRiffChunkID)
-		return THandle<void>();
+		return nullptr;
 
 	const uint32_t riffSize = mainRiffTag.m_chunkSize;
 	if (riffSize < 4 || riffSize - 4 > size - sizeof(PortabilityLayer::RIFFTag))
-		return THandle<void>();
+		return nullptr;
 
 	const uint8_t *riffStart = dataStart + sizeof(PortabilityLayer::RIFFTag);
 	const uint8_t *riffEnd = riffStart + riffSize;
@@ -434,7 +432,7 @@ THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
 	memcpy(&waveMarker, riffStart, 4);
 
 	if (waveMarker != PortabilityLayer::WaveConstants::kWaveChunkID)
-		return THandle<void>();
+		return nullptr;
 
 	const uint8_t *tagSearchLoc = riffStart + 4;
 
@@ -442,7 +440,7 @@ THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
 	while (tagSearchLoc != riffEnd)
 	{
 		if (riffEnd - tagSearchLoc < sizeof(PortabilityLayer::RIFFTag))
-			return THandle<void>();
+			return nullptr;
 
 		PortabilityLayer::RIFFTag riffTag;
 		memcpy(&riffTag, tagSearchLoc, sizeof(PortabilityLayer::RIFFTag));
@@ -455,20 +453,20 @@ THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
 		const uint32_t riffTagSizeUnpadded = riffTag.m_chunkSize;
 
 		if (riffTagSizeUnpadded == 0xffffffffU)
-			return THandle<void>();
+			return nullptr;
 
 		const uint32_t riffTagSizePadded = riffTagSizeUnpadded + (riffTagSizeUnpadded & 1);
 
 		tagSearchLoc += sizeof(PortabilityLayer::RIFFTag);
 
 		if (riffEnd - tagSearchLoc < riffTagSizePadded)
-			return THandle<void>();
+			return nullptr;
 
 		tagSearchLoc += riffTagSizePadded;
 	}
 
 	if (formatTagLoc == nullptr || dataTagLoc == nullptr)
-		return THandle<void>();
+		return nullptr;
 
 	PortabilityLayer::RIFFTag fmtTag;
 	memcpy(&fmtTag, formatTagLoc, sizeof(PortabilityLayer::RIFFTag));
@@ -502,7 +500,7 @@ THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
 		copyableSize = sizeof(PortabilityLayer::WaveFormatChunkV1);
 	}
 	else
-		return THandle<void>();
+		return nullptr;
 
 	memcpy(&formatChunkV3, formatContents, copyableSize);
 
@@ -510,35 +508,30 @@ THandle<void> ParseAndConvertSoundChecked(const THandle<void> &handle)
 	const PortabilityLayer::WaveFormatChunkV1 formatChunkV1 = formatChunkV2.m_v1;
 
 	if (formatChunkV1.m_bitsPerSample != 8)
-		return THandle<void>();
+		return nullptr;
 
 	if (formatChunkV1.m_formatCode != PortabilityLayer::WaveConstants::kFormatPCM ||
 		formatChunkV1.m_numChannels != 1 ||
 		formatChunkV1.m_blockAlignmentBytes != 1 ||
 		formatChunkV1.m_bitsPerSample != 8)
-		return THandle<void>();
-
-	THandle<void> convertedHandle = THandle<void>(PortabilityLayer::MemoryManager::GetInstance()->AllocHandle(4 + dataTag.m_chunkSize));
-	if (!convertedHandle)
-		return THandle<void>();
-
-	uint8_t *handleData = static_cast<uint8_t*>(*convertedHandle);
+		return nullptr;
 
 	uint32_t dataSize = dataTag.m_chunkSize;
-	memcpy(handleData, &dataSize, 4);
+	if (dataSize > 0x1000000 || dataSize < 1)
+		return nullptr;
 
-	memcpy(handleData + 4, dataContents, dataSize);
+	IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver();
+	if (!audioDriver)
+		return nullptr;
 
-	return convertedHandle;
+	return audioDriver->CreateBuffer(dataContents, dataSize);
 }
 
-THandle<void> ParseAndConvertSound(const THandle<void> &handle)
+IGpAudioBuffer *ParseAndConvertSound(const THandle<void> &handle)
 {
 	if (!handle)
-		return THandle<void>();
+		return nullptr;
 
-	THandle<void> converted = ParseAndConvertSoundChecked(handle);
-	handle.Dispose();
-
-	return converted;
+	IGpAudioBuffer *buffer = ParseAndConvertSoundChecked(handle);
+	return buffer;
 }

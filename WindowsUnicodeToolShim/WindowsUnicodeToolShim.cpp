@@ -1,7 +1,6 @@
 #include <string>
 
-#include "UTF8.h"
-#include "UTF16.h"
+#include "GpUnicode.h"
 
 #include <Windows.h>
 #include <vector>
@@ -20,13 +19,13 @@ static std::string ConvertWStringToUTF8(const wchar_t *str)
 		size_t charsDigested = 0;
 		uint32_t codePoint = 0;
 		uint8_t asUTF8[4];
-		if (!PortabilityLayer::UTF16Processor::DecodeCodePoint(reinterpret_cast<const uint16_t*>(str) + i, strLength - i, charsDigested, codePoint))
+		if (!GpUnicode::UTF16::Decode(reinterpret_cast<const uint16_t*>(str) + i, strLength - i, charsDigested, codePoint))
 			return "";
 
 		i += charsDigested;
 
 		size_t bytesEmitted = 0;
-		PortabilityLayer::UTF8Processor::EncodeCodePoint(asUTF8, bytesEmitted, codePoint);
+		GpUnicode::UTF8::Encode(asUTF8, bytesEmitted, codePoint);
 
 		result.append(reinterpret_cast<const char*>(asUTF8), bytesEmitted);
 	}
@@ -45,13 +44,13 @@ static std::wstring ConvertUTF8ToWString(const char *str)
 		size_t charsDigested = 0;
 		uint32_t codePoint = 0;
 		uint16_t asUTF16[4];
-		if (!PortabilityLayer::UTF8Processor::DecodeCodePoint(reinterpret_cast<const uint8_t*>(str) + i, strLength - i, charsDigested, codePoint))
+		if (!GpUnicode::UTF8::Decode(reinterpret_cast<const uint8_t*>(str) + i, strLength - i, charsDigested, codePoint))
 			return L"";
 
 		i += charsDigested;
 
 		size_t codePointsEmitted = 0;
-		PortabilityLayer::UTF16Processor::EncodeCodePoint(asUTF16, codePointsEmitted, codePoint);
+		GpUnicode::UTF16::Encode(asUTF16, codePointsEmitted, codePoint);
 
 		result.append(reinterpret_cast<const wchar_t*>(asUTF16), codePointsEmitted);
 	}

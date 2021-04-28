@@ -81,8 +81,7 @@ namespace
 				if (infoHeader.m_thisStructureSize > sizeForInfoHeader)
 					return false;
 
-				// Dimensions need to fit in 16-bit signed space
-				if (infoHeader.m_width >= 0x8000 || infoHeader.m_height >= 0x8000)
+				if (infoHeader.m_width >= 0x1000 || infoHeader.m_height >= 0x1000 || infoHeader.m_width < 1 || infoHeader.m_height < 1)
 					return false;
 
 				return true;
@@ -116,7 +115,7 @@ namespace PortabilityLayer
 		IResourceArchive *GetAppResourceArchive() const override;
 
 		IResourceArchive *LoadResFile(CompositeFile *file) const override;
-		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) override;
+		PLError_t CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
 		void DissociateHandle(MMHandleBlock *hdl) const override;
 		const ResourceArchiveRef *ResourceForHandle(MMHandleBlock *hdl) const override;
@@ -524,4 +523,11 @@ namespace PortabilityLayer
 		if (m_stream)
 			m_stream->Close();
 	}
+
+#if GP_ASYNCIFY_PARANOID
+	PLError_t ResourceManager::CreateBlankResFile(VirtualDirectory_t virtualDir, const PLPasStr &filename)
+	{
+		return static_cast<ResourceManagerImpl*>(this)->CreateBlankResFile(virtualDir, filename);
+	}
+#endif
 }

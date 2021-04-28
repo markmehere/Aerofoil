@@ -16,6 +16,7 @@ namespace GpDriverIDs
 		kSystemServices,
 		kFont,
 		kEventQueue,
+		kAlloc,
 
 		kCount
 	};
@@ -54,6 +55,7 @@ GP_DEFINE_MULTI_DRIVER(kInput, IGpInputDriver);
 GP_DEFINE_DRIVER(kSystemServices, IGpSystemServices);
 GP_DEFINE_DRIVER(kFont, IGpFontHandler);
 GP_DEFINE_DRIVER(kEventQueue, IGpVOSEventQueue);
+GP_DEFINE_DRIVER(kAlloc, IGpAllocator);
 
 struct GpDriverCollection
 {

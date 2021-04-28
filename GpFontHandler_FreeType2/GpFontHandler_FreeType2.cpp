@@ -3,6 +3,7 @@
 
 #include "CoreDefs.h"
 #include "GpIOStream.h"
+#include "IGpAllocator.h"
 #include "IGpFont.h"
 #include "IGpFontRenderedGlyph.h"
 #include "GpRenderedGlyphMetrics.h"
@@ -17,6 +18,8 @@
 #include <new>
 #include <assert.h>
 
+struct IGpAllocator;
+
 class GpFontRenderedGlyph_FreeType2 final : public IGpFontRenderedGlyph
 {
 public:
@@ -24,14 +27,15 @@ public:
 	const void *GetData() const override;
 	void Destroy() override;
 
-	static GpFontRenderedGlyph_FreeType2 *Create(size_t dataSize, const GpRenderedGlyphMetrics &metrics);
+	static GpFontRenderedGlyph_FreeType2 *Create(IGpAllocator *alloc, size_t dataSize, const GpRenderedGlyphMetrics &metrics);
 
 	void *GetMutableData();
 
 private:
-	GpFontRenderedGlyph_FreeType2(void *data, const GpRenderedGlyphMetrics &metrics);
+	GpFontRenderedGlyph_FreeType2(IGpAllocator *alloc, void *data, const GpRenderedGlyphMetrics &metrics);
 	~GpFontRenderedGlyph_FreeType2();
 
+	IGpAllocator *m_alloc;
 	void *m_data;
 	GpRenderedGlyphMetrics m_metrics;
 };
@@ -40,20 +44,22 @@ class GpFont_FreeType2 final : public IGpFont
 {
 public:
 	void Destroy() override;
-	IGpFontRenderedGlyph *Render(uint32_t unicodeCodePoint, unsigned int size, bool aa) override;
+	IGpFontRenderedGlyph *Render(uint32_t unicodeCodePoint, unsigned int size, unsigned int xScale, unsigned int yScale, bool aa) override;
 	bool GetLineSpacing(unsigned int size, int32_t &outSpacing) override;
+	bool SupportScaling() const override;
 
-	static GpFont_FreeType2 *Create(const FT_StreamRec_ &streamRec, GpIOStream *stream);
+	static GpFont_FreeType2 *Create(IGpAllocator *alloc, const FT_StreamRec_ &streamRec, GpIOStream *stream);
 
-	bool FTLoad(const FT_Library &library);
+	bool FTLoad(const FT_Library &library, int typeFaceIndex);
 
 private:
-	explicit GpFont_FreeType2(const FT_StreamRec_ &streamRec, GpIOStream *stream);
+	GpFont_FreeType2(IGpAllocator *alloc, const FT_StreamRec_ &streamRec, GpIOStream *stream);
 	~GpFont_FreeType2();
 
 	FT_StreamRec_ m_ftStream;
 	FT_Face m_face;
 	GpIOStream *m_stream;
+	IGpAllocator *m_alloc;
 	unsigned int m_currentSize;
 };
 
@@ -69,20 +75,21 @@ const void *GpFontRenderedGlyph_FreeType2::GetData() const
 
 void GpFontRenderedGlyph_FreeType2::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpFontRenderedGlyph_FreeType2();
-	free(this);
+	alloc->Release(this);
 }
 
-GpFontRenderedGlyph_FreeType2 *GpFontRenderedGlyph_FreeType2::Create(size_t dataSize, const GpRenderedGlyphMetrics &metrics)
+GpFontRenderedGlyph_FreeType2 *GpFontRenderedGlyph_FreeType2::Create(IGpAllocator *alloc, size_t dataSize, const GpRenderedGlyphMetrics &metrics)
 {
 	size_t alignedPrefixSize = (sizeof(GpFontRenderedGlyph_FreeType2) + GP_SYSTEM_MEMORY_ALIGNMENT - 1);
 	alignedPrefixSize -= alignedPrefixSize % GP_SYSTEM_MEMORY_ALIGNMENT;
 
-	void *storage = malloc(alignedPrefixSize + dataSize);
+	void *storage = alloc->Alloc(alignedPrefixSize + dataSize);
 	if (!storage)
 		return nullptr;
 
-	return new (storage) GpFontRenderedGlyph_FreeType2(static_cast<uint8_t*>(storage) + alignedPrefixSize, metrics);
+	return new (storage) GpFontRenderedGlyph_FreeType2(alloc, static_cast<uint8_t*>(storage) + alignedPrefixSize, metrics);
 }
 
 void *GpFontRenderedGlyph_FreeType2::GetMutableData()
@@ -91,9 +98,10 @@ void *GpFontRenderedGlyph_FreeType2::GetMutableData()
 }
 
 
-GpFontRenderedGlyph_FreeType2::GpFontRenderedGlyph_FreeType2(void *data, const GpRenderedGlyphMetrics &metrics)
+GpFontRenderedGlyph_FreeType2::GpFontRenderedGlyph_FreeType2(IGpAllocator *alloc, void *data, const GpRenderedGlyphMetrics &metrics)
 	: m_metrics(metrics)
 	, m_data(data)
+	, m_alloc(alloc)
 {
 }
 
@@ -103,11 +111,12 @@ GpFontRenderedGlyph_FreeType2::~GpFontRenderedGlyph_FreeType2()
 
 void GpFont_FreeType2::Destroy()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpFont_FreeType2();
-	free(this);
+	alloc->Release(this);
 }
 
-IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, bool aa)
+IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsigned int size, unsigned int xScale, unsigned int yScale, bool aa)
 {
 	if (m_currentSize != size)
 	{
@@ -116,6 +125,14 @@ IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsign
 
 		m_currentSize = size;
 	}
+
+	FT_Matrix transform;
+	transform.xx = xScale << 16;
+	transform.xy = 0;
+	transform.yx = 0;
+	transform.yy = yScale << 16;
+
+	FT_Set_Transform(m_face, &transform, nullptr);
 
 	FT_UInt glyphIndex = FT_Get_Char_Index(m_face, unicodeCodePoint);
 	if (!glyphIndex)
@@ -163,6 +180,8 @@ IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsign
 	metrics.m_glyphWidth = glyph->bitmap.width;
 	metrics.m_glyphHeight = glyph->bitmap.rows;
 	metrics.m_advanceX = glyph->metrics.horiAdvance / 64;
+	metrics.m_bitmapOffsetX = glyph->bitmap_left;
+	metrics.m_bitmapOffsetY = glyph->bitmap_top;
 
 	const size_t numRowsRequired = glyph->bitmap.rows;
 	size_t pitchRequired = 0;
@@ -179,7 +198,7 @@ IGpFontRenderedGlyph *GpFont_FreeType2::Render(uint32_t unicodeCodePoint, unsign
 
 	metrics.m_glyphDataPitch = pitchRequired;
 
-	GpFontRenderedGlyph_FreeType2 *renderedGlyph = GpFontRenderedGlyph_FreeType2::Create(glyphDataSize, metrics);
+	GpFontRenderedGlyph_FreeType2 *renderedGlyph = GpFontRenderedGlyph_FreeType2::Create(m_alloc, glyphDataSize, metrics);
 	if (!renderedGlyph)
 		return nullptr;
 
@@ -247,35 +266,42 @@ bool GpFont_FreeType2::GetLineSpacing(unsigned int size, int32_t &outSpacing)
 	return true;
 }
 
-
-GpFont_FreeType2 *GpFont_FreeType2::Create(const FT_StreamRec_ &streamRec, GpIOStream *stream)
+bool GpFont_FreeType2::SupportScaling() const
 {
-	void *storage = malloc(sizeof(GpFont_FreeType2));
+	return true;
+}
+
+GpFont_FreeType2 *GpFont_FreeType2::Create(IGpAllocator *alloc, const FT_StreamRec_ &streamRec, GpIOStream *stream)
+{
+	void *storage = alloc->Alloc(sizeof(GpFont_FreeType2));
 	if (!storage)
 		return nullptr;
 
-	return new (storage) GpFont_FreeType2(streamRec, stream);
+	return new (storage) GpFont_FreeType2(alloc, streamRec, stream);
 }
 
-bool GpFont_FreeType2::FTLoad(const FT_Library &library)
+bool GpFont_FreeType2::FTLoad(const FT_Library &library, int typeFaceIndex)
 {
 	FT_Open_Args openArgs;
 	memset(&openArgs, 0, sizeof(openArgs));
 	openArgs.flags = FT_OPEN_STREAM;
 	openArgs.stream = &m_ftStream;
 
-	FT_Error errorCode = FT_Open_Face(library, &openArgs, 0, &m_face);
+	FT_Error errorCode = FT_Open_Face(library, &openArgs, typeFaceIndex, &m_face);
 	if (errorCode != 0)
 		return false;
+
+	FT_Matrix transform;
 
 	return true;
 }
 
-GpFont_FreeType2::GpFont_FreeType2(const FT_StreamRec_ &streamRec, GpIOStream *stream)
+GpFont_FreeType2::GpFont_FreeType2(IGpAllocator *alloc, const FT_StreamRec_ &streamRec, GpIOStream *stream)
 	: m_face(nullptr)
 	, m_ftStream(streamRec)
 	, m_stream(stream)
 	, m_currentSize(0)
+	, m_alloc(alloc)
 {
 	assert(stream);
 }
@@ -288,13 +314,13 @@ GpFont_FreeType2::~GpFont_FreeType2()
 	m_stream->Close();
 }
 
-GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
+GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create(IGpAllocator *alloc)
 {
-	void *storage = malloc(sizeof(GpFontHandler_FreeType2));
+	void *storage = alloc->Alloc(sizeof(GpFontHandler_FreeType2));
 	if (!storage)
 		return nullptr;
 
-	GpFontHandler_FreeType2 *fh = new (storage) GpFontHandler_FreeType2();
+	GpFontHandler_FreeType2 *fh = new (storage) GpFontHandler_FreeType2(alloc);
 	if (!fh->Init())
 	{
 		fh->Shutdown();
@@ -304,7 +330,7 @@ GpFontHandler_FreeType2 *GpFontHandler_FreeType2::Create()
 	return fh;
 }
 
-IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
+IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream, int typeFaceIndex)
 {
 	FT_StreamRec_ ftStream;
 	memset(&ftStream, 0, sizeof(ftStream));
@@ -314,14 +340,14 @@ IGpFont *GpFontHandler_FreeType2::LoadFont(GpIOStream *stream)
 	ftStream.read = FTStreamIo;
 	ftStream.close = FTStreamClose;
 
-	GpFont_FreeType2 *font = GpFont_FreeType2::Create(ftStream, stream);
+	GpFont_FreeType2 *font = GpFont_FreeType2::Create(m_alloc, ftStream, stream);
 	if (!font)
 	{
 		stream->Close();
 		return nullptr;
 	}
 
-	if (!font->FTLoad(m_library))
+	if (!font->FTLoad(m_library, typeFaceIndex))
 	{
 		font->Destroy();
 		return nullptr;
@@ -337,14 +363,16 @@ bool GpFontHandler_FreeType2::KeepStreamOpen() const
 
 void GpFontHandler_FreeType2::Shutdown()
 {
+	IGpAllocator *alloc = m_alloc;
 	this->~GpFontHandler_FreeType2();
-	free(this);
+	alloc->Release(this);
 }
 
-GpFontHandler_FreeType2::GpFontHandler_FreeType2()
+GpFontHandler_FreeType2::GpFontHandler_FreeType2(IGpAllocator *alloc)
 	: m_ftIsInitialized(false)
 	, m_library(nullptr)
 	, m_currentSize(0)
+	, m_alloc(alloc)
 {
 }
 
@@ -394,18 +422,18 @@ void GpFontHandler_FreeType2::FTStreamClose(FT_Stream stream)
 
 void *GpFontHandler_FreeType2::FTAlloc(long size)
 {
-	return malloc(static_cast<size_t>(size));
+	return m_alloc->Alloc(static_cast<size_t>(size));
 }
 
 void GpFontHandler_FreeType2::FTFree(void* block)
 {
-	free(block);
+	m_alloc->Release(block);
 }
 
 void *GpFontHandler_FreeType2::FTRealloc(long curSize, long newSize, void *block)
 {
 	(void)curSize;
-	return realloc(block, static_cast<size_t>(newSize));
+	return m_alloc->Realloc(block, static_cast<size_t>(newSize));
 }
 
 bool GpFontHandler_FreeType2::Init()
@@ -431,5 +459,5 @@ __declspec(dllexport)
 #endif
 IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties)
 {
-	return GpFontHandler_FreeType2::Create();
+	return GpFontHandler_FreeType2::Create(properties.m_alloc);
 }

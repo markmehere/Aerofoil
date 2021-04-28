@@ -10,6 +10,7 @@
 #include "ResTypeID.h"
 #include "ZipFileProxy.h"
 
+#include "PLCore.h"
 #include "PLDrivers.h"
 #include "PLPasStr.h"
 #include "PLErrorCodes.h"
@@ -39,17 +40,17 @@ namespace PortabilityLayer
 		bool CompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename) override;
 		bool NonCompositeFileExists(VirtualDirectory_t dirID, const PLPasStr &filename, const char *extension) override;
 
-		bool DeleteNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext) override;
-		bool DeleteCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename) override;
+		bool DeleteNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext) GP_ASYNCIFY_PARANOID_OVERRIDE;
+		bool DeleteCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
-		PLError_t CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp) override;
-		PLError_t CreateFileAtCurrentTime(VirtualDirectory_t dirID, const PLPasStr &filename, const ResTypeID &fileCreator, const ResTypeID &fileType) override;
+		PLError_t CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp) GP_ASYNCIFY_PARANOID_OVERRIDE;
+		PLError_t CreateFileAtCurrentTime(VirtualDirectory_t dirID, const PLPasStr &filename, const ResTypeID &fileCreator, const ResTypeID &fileType) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
 		PLError_t RawOpenFileData(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 		PLError_t RawOpenFileResources(VirtualDirectory_t dirID, const PLPasStr &filename, EFilePermission filePermission, bool ignoreMeta, GpFileCreationDisposition_t creationDisposition, GpIOStream *&outStream) override;
 
-		bool PromptSaveFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) override;
-		bool PromptOpenFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) override;
+		bool PromptSaveFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) GP_ASYNCIFY_PARANOID_OVERRIDE;
+		bool PromptOpenFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
 		static FileManagerImpl *GetInstance();
 
@@ -474,12 +475,12 @@ namespace PortabilityLayer
 	void CompositeFileImpl::Close()
 	{
 		this->~CompositeFileImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	CompositeFileImpl *CompositeFileImpl::Create(VirtualDirectory_t dirID, const PLPasStr &filename, GpIOStream *stream, ZipFileProxy *zipFile, const MacFileProperties &mfp, bool resInline, bool dataInline, size_t inlineDataIndex)
 	{
-		void *storage = malloc(sizeof(CompositeFileImpl));
+		void *storage = NewPtr(sizeof(CompositeFileImpl));
 		if (!storage)
 			return nullptr;
 
@@ -506,4 +507,36 @@ namespace PortabilityLayer
 		if (m_stream)
 			m_stream->Close();
 	}
+
+#if GP_ASYNCIFY_PARANOID
+	bool FileManager::PromptSaveFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
+	{
+		return static_cast<FileManagerImpl*>(this)->PromptSaveFile(dirID, extension, path, outPathLength, pathCapacity, initialFileName, promptText, composites, callbackAPI);
+	}
+
+	bool FileManager::PromptOpenFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
+	{
+		return static_cast<FileManagerImpl*>(this)->PromptOpenFile(dirID, extension, path, outPathLength, pathCapacity, promptText, composites, callbackAPI);
+	}
+
+	PLError_t FileManager::CreateFile(VirtualDirectory_t dirID, const PLPasStr &filename, const MacFileProperties &mfp)
+	{
+		return static_cast<FileManagerImpl*>(this)->CreateFile(dirID, filename, mfp);
+	}
+
+	PLError_t FileManager::CreateFileAtCurrentTime(VirtualDirectory_t dirID, const PLPasStr &filename, const ResTypeID &fileCreator, const ResTypeID &fileType)
+	{
+		return static_cast<FileManagerImpl*>(this)->CreateFileAtCurrentTime(dirID, filename, fileCreator, fileType);
+	}
+
+	bool FileManager::DeleteNonCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename, const char *ext)
+	{
+		return static_cast<FileManagerImpl*>(this)->DeleteNonCompositeFile(dirID, filename, ext);
+	}
+
+	bool FileManager::DeleteCompositeFile(VirtualDirectory_t dirID, const PLPasStr &filename)
+	{
+		return static_cast<FileManagerImpl*>(this)->DeleteCompositeFile(dirID, filename);
+	}
+#endif
 }

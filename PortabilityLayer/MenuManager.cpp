@@ -155,7 +155,7 @@ namespace PortabilityLayer
 
 		bool FindMenuShortcut(uint16_t &menuID, uint16_t &itemID, uint8_t shortcutChar) override;
 		void MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem) GP_ASYNCIFY_PARANOID_OVERRIDE;
-		void PopupMenuSelect(const THandle<Menu> &menu, const Vec2i &popupMenuPos, const Vec2i &initialPoint, size_t initialItem, uint16_t *outItem) override;
+		void PopupMenuSelect(const THandle<Menu> &menu, const Vec2i &popupMenuPos, const Vec2i &initialPoint, size_t initialItem, uint16_t *outItem) GP_ASYNCIFY_PARANOID_OVERRIDE;
 
 		void DrawMenuBar() override;
 		void SetMenuVisible(bool isVisible) override;
@@ -288,7 +288,7 @@ namespace PortabilityLayer
 		if (m_iconGraphic)
 		{
 			m_iconGraphic->~SimpleGraphic();
-			free(m_iconGraphic);
+			DisposePtr(m_iconGraphic);
 		}
 
 		// GP TODO: Dispose of menus properly
@@ -776,7 +776,14 @@ namespace PortabilityLayer
 		bool canDismiss = false;
 		while (!canDismiss)
 		{
-			if (WaitForEvent(&evt, 1))
+			bool haveEvent = false;
+
+			{
+				PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
+				haveEvent = WaitForEvent(&evt, 1);
+			}
+
+			if (haveEvent)
 			{
 				if (evt.m_vosEvent.m_eventType == GpVOSEventTypes::kMouseInput)
 				{
@@ -827,7 +834,7 @@ namespace PortabilityLayer
 			{
 				typedef SimpleGraphicInstanceStandardPalette<16, 16> GraphicType_t;
 
-				void *storage = static_cast<GraphicType_t*>(malloc(sizeof(GraphicType_t)));
+				void *storage = static_cast<GraphicType_t*>(NewPtr(sizeof(GraphicType_t)));
 				if (storage)
 				{
 					memcpy(m_iconMask, static_cast<const uint8_t*>(*icsHandle) + 32, 32);
@@ -1588,6 +1595,11 @@ namespace PortabilityLayer
 	void MenuManager::MenuSelect(const Vec2i &initialPoint, int16_t *outMenu, uint16_t *outItem)
 	{
 		static_cast<MenuManagerImpl*>(this)->MenuSelect(initialPoint, outMenu, outItem);
+	}
+	
+	void MenuManager::PopupMenuSelect(const THandle<Menu> &menu, const Vec2i &popupMenuPos, const Vec2i &initialPoint, size_t initialItem, uint16_t *outItem)
+	{
+		static_cast<MenuManagerImpl*>(this)->PopupMenuSelect(menu, popupMenuPos, initialPoint, initialItem, outItem);
 	}
 #endif
 }

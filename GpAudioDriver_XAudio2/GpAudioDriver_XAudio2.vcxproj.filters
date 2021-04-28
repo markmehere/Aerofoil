@@ -27,6 +27,9 @@
     <ClInclude Include="GpAudioChannelXAudio2Callbacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GpAudioBufferXAudio2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GpAudioDriverFactoryXAudio2.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GpAudioChannelXAudio2Callbacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GpAudioBufferXAudio2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

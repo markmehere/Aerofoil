@@ -28,6 +28,9 @@
     <ClCompile Include="GpBWCursor_Win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\AerofoilPortable\GpAllocator_C.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\GpCommon\EGpInputDriverType.h">

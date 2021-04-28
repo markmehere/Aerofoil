@@ -2,6 +2,8 @@
 
 #include "PLCore.h"
 
+struct IGpAudioBuffer;
+
 namespace PortabilityLayer
 {
 	struct AudioChannel;
@@ -11,7 +13,7 @@ namespace PortabilityLayer
 	struct AudioChannel
 	{
 		virtual void Destroy(bool wait) = 0;
-		virtual bool AddBuffer(const void *lengthTaggedBuffer, bool blocking) = 0;
+		virtual bool AddBuffer(IGpAudioBuffer *buffer, bool blocking) = 0;
 		virtual bool AddCallback(AudioChannelCallback_t callback, bool blocking) = 0;
 		virtual void ClearAllCommands() = 0;
 		virtual void Stop() = 0;

@@ -104,7 +104,7 @@ namespace PortabilityLayer
 		return static_cast<GpUFilePos_t>(m_loc);
 	}
 
-	void MemReaderStream::Close()
+	void MemReaderStream::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 	{
 	}
 
@@ -128,7 +128,7 @@ namespace PortabilityLayer
 		return new (storage) MemBufferReaderStream(buffer, size);
 	}
 
-	void MemBufferReaderStream::Close()
+	void MemBufferReaderStream::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 	{
 		this->~MemBufferReaderStream();
 		MemoryManager::GetInstance()->Release(this);

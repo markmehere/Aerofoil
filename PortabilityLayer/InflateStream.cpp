@@ -1,5 +1,6 @@
 #include "InflateStream.h"
 #include "DeflateCodec.h"
+#include "PLCore.h"
 
 #include <stdlib.h>
 #include <new>
@@ -22,7 +23,7 @@ namespace PortabilityLayer
 		bool SeekEnd(GpUFilePos_t loc) override;
 		GpUFilePos_t Size() const override;
 		GpUFilePos_t Tell() const override;
-		void Close() override;
+		void GP_ASYNCIFY_PARANOID_NAMED(Close)() override;
 		void Flush() override;
 
 	private:
@@ -222,10 +223,10 @@ namespace PortabilityLayer
 		return m_decompressedPos;
 	}
 
-	void InflateStreamImpl::Close()
+	void InflateStreamImpl::GP_ASYNCIFY_PARANOID_NAMED(Close)()
 	{
 		this->~InflateStreamImpl();
-		free(this);
+		DisposePtr(this);
 	}
 
 	void InflateStreamImpl::Flush()
@@ -238,7 +239,7 @@ namespace PortabilityLayer
 		if (!inflateContext)
 			return nullptr;
 
-		void *storage = malloc(sizeof(InflateStreamImpl));
+		void *storage = NewPtr(sizeof(InflateStreamImpl));
 		if (!storage)
 		{
 			inflateContext->Destroy();

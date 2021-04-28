@@ -3,6 +3,7 @@
 #include "FontRenderer.h"
 #include "IGpFont.h"
 #include "IGpFontHandler.h"
+#include "GpAllocator_C.h"
 #include "GpAppInterface.h"
 #include "GpDriverIndex.h"
 #include "GpFontHandlerProperties.h"
@@ -31,7 +32,7 @@ public:
 	bool SeekEnd(GpUFilePos_t loc) override;
 	GpUFilePos_t Size() const override;
 	GpUFilePos_t Tell() const override;
-	void Close() override;
+	void GP_ASYNCIFY_PARANOID_NAMED(Close)() override;
 	void Flush() override;
 
 	const uint8_t *GetBytes() const;
@@ -167,8 +168,14 @@ bool KnownFontSpec::operator!=(const KnownFontSpec &other) const
 
 int toolMain(int argc, const char **argv)
 {
+	IGpAllocator *alloc = GpAllocator_C::GetInstance();
+
 	GpFontHandlerProperties fhProperties;
 	fhProperties.m_type = EGpFontHandlerType_FreeType2;
+	fhProperties.m_alloc = alloc;
+
+	GpDriverCollection *drivers = PLDrivers::GetDriverCollection();
+	drivers->SetDriver<GpDriverIDs::kAlloc>(alloc);
 
 	IGpFontHandler *ft2Handler = GpDriver_CreateFontHandler_FreeType2(fhProperties);
 
@@ -201,8 +208,10 @@ int toolMain(int argc, const char **argv)
 		int variation = fontFamily->GetVariationForFlags(flags);
 
 		PortabilityLayer::FontHacks hacks;
+		PortabilityLayer::VirtualDirectory_t vDir;
 		const char *path = nullptr;
-		fontFamily->GetFontSpec(variation, hacks, path);
+		int typeFaceIndex = 0;
+		fontFamily->GetFontSpec(variation, hacks, vDir, path, typeFaceIndex);
 
 		KnownFontSpec spec(path, size, aa, hacks);
 
@@ -218,7 +227,7 @@ int toolMain(int argc, const char **argv)
 		{
 			PortabilityLayer::CFileStream stream(fontFile);
 
-			IGpFont *font = ft2Handler->LoadFont(&stream);
+			IGpFont *font = ft2Handler->LoadFont(&stream, typeFaceIndex);
 			if (!ft2Handler->KeepStreamOpen())
 				stream.Close();
 

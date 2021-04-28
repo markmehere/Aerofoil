@@ -1,6 +1,7 @@
 #include "SDL.h"
 
 #include "GpMain.h"
+#include "GpAllocator_C.h"
 #include "GpAudioDriverFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpGlobalConfig.h"
@@ -59,6 +60,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_Win32::GetInstance());
 	drivers->SetDriver<GpDriverIDs::kSystemServices>(GpSystemServices_Win32::GetInstance());
 	drivers->SetDriver<GpDriverIDs::kLog>(GpLogDriver_Win32::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kAlloc>(GpAllocator_C::GetInstance());
 
 	g_gpWindowsGlobals.m_hInstance = hInstance;
 	g_gpWindowsGlobals.m_hPrevInstance = hPrevInstance;
@@ -86,6 +88,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_gpGlobalConfig.m_osGlobals = &g_gpWindowsGlobals;
 	g_gpGlobalConfig.m_logger = logger;
 	g_gpGlobalConfig.m_systemServices = GpSystemServices_Win32::GetInstance();
+	g_gpGlobalConfig.m_allocator = GpAllocator_C::GetInstance();
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_SDL2, GpDriver_CreateAudioDriver_SDL);

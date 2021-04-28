@@ -2,11 +2,11 @@
 #include "GpMutex_Win32.h"
 #include "GpThreadEvent_Win32.h"
 #include "GpWindows.h"
+#include "GpAllocator_C.h"
 
 #include "IGpClipboardContents.h"
 
-#include "UTF16.h"
-#include "UTF8.h"
+#include "GpUnicode.h"
 
 #include <assert.h>
 #include <vector>
@@ -134,6 +134,7 @@ static DWORD WINAPI StaticStartThread(LPVOID lpThreadParameter)
 
 GpSystemServices_Win32::GpSystemServices_Win32()
 	: m_isTouchscreenSimulation(false)
+	, m_alloc(GpAllocator_C::GetInstance())
 {
 }
 
@@ -181,17 +182,17 @@ void GpSystemServices_Win32::GetLocalDateTime(unsigned int &year, unsigned int &
 
 IGpMutex *GpSystemServices_Win32::CreateMutex()
 {
-	return GpMutex_Win32::Create();
+	return GpMutex_Win32::Create(m_alloc);
 }
 
 IGpMutex *GpSystemServices_Win32::CreateRecursiveMutex()
 {
-	return GpMutex_Win32::Create();
+	return GpMutex_Win32::Create(m_alloc);
 }
 
 IGpThreadEvent *GpSystemServices_Win32::CreateThreadEvent(bool autoReset, bool startSignaled)
 {
-	return GpThreadEvent_Win32::Create(autoReset, startSignaled);
+	return GpThreadEvent_Win32::Create(m_alloc, autoReset, startSignaled);
 }
 
 void *GpSystemServices_Win32::CreateThread(ThreadFunc_t threadFunc, void *context)
