@@ -93,6 +93,12 @@
     <ClInclude Include="GpBWCursor_Win32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\GpCommon\GpVector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GpCommon\GpString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ConvertedResources\Large128.ico">

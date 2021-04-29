@@ -103,6 +103,8 @@
     <ClInclude Include="..\GpCommon\GpDisplayDriverTickStatus.h" />
     <ClInclude Include="..\GpCommon\GpFileCreationDisposition.h" />
     <ClInclude Include="..\GpCommon\GpInputDriverProperties.h" />
+    <ClInclude Include="..\GpCommon\GpString.h" />
+    <ClInclude Include="..\GpCommon\GpVector.h" />
     <ClInclude Include="..\GpCommon\IGpCursor.h" />
     <ClInclude Include="..\GpCommon\IGpAudioChannelCallbacks.h" />
     <ClInclude Include="..\GpCommon\IGpDisplayDriverSurface.h" />

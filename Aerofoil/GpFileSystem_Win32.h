@@ -4,13 +4,14 @@
 
 #include "GpCoreDefs.h"
 #include "GpWindows.h"
-
-#include <string>
+#include "GpString.h"
 
 class GpFileSystem_Win32 final : public IGpFileSystem
 {
 public:
-	GpFileSystem_Win32();
+	explicit GpFileSystem_Win32(IGpAllocator *alloc);
+
+	void Destroy();
 
 	bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) override;
 	bool FileLocked(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &exists) override;
@@ -25,23 +26,25 @@ public:
 
 	const wchar_t *GetBasePath() const;
 
+	static GpFileSystem_Win32 *CreateInstance(IGpAllocator *alloc);
 	static GpFileSystem_Win32 *GetInstance();
 
 private:
+	bool Init();
+
 	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, wchar_t *outPath);
 
-	std::wstring m_prefsDir;
-	std::wstring m_scoresDir;
-	std::wstring m_packagedDir;
-	std::wstring m_housesDir;
-	std::wstring m_logsDir;
-	std::wstring m_userHousesDir;
-	std::wstring m_userSavesDir;
-	std::wstring m_resourcesDir;
-	std::wstring m_fontCacheDir;
+	GpWString m_prefsDir;
+	GpWString m_scoresDir;
+	GpWString m_packagedDir;
+	GpWString m_housesDir;
+	GpWString m_logsDir;
+	GpWString m_userHousesDir;
+	GpWString m_userSavesDir;
+	GpWString m_resourcesDir;
 	wchar_t m_executablePath[MAX_PATH];
 
 	IGpAllocator *m_alloc;
 
-	static GpFileSystem_Win32 ms_instance;
+	static GpFileSystem_Win32 *ms_instance;
 };
