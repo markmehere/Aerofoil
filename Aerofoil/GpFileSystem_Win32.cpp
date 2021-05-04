@@ -7,7 +7,7 @@
 #include "IGpAllocator.h"
 #include "IGpDirectoryCursor.h"
 
-#include <string>
+
 #include <Shlwapi.h>
 #include <ShlObj.h>
 #include <commdlg.h>
@@ -105,48 +105,69 @@ GpDirectoryCursor_Win32::~GpDirectoryCursor_Win32()
 	FindClose(m_handle);
 }
 
-GpFileSystem_Win32::GpFileSystem_Win32()
-	: m_alloc(GpAllocator_C::GetInstance())
+GpFileSystem_Win32::GpFileSystem_Win32(IGpAllocator *alloc)
+	: m_alloc(alloc)
+	, m_prefsDir(alloc)
+	, m_scoresDir(alloc)
+	, m_packagedDir(alloc)
+	, m_housesDir(alloc)
+	, m_logsDir(alloc)
+	, m_userHousesDir(alloc)
+	, m_userSavesDir(alloc)
+	, m_resourcesDir(alloc)
 {
-	// GP TODO: This shouldn't be static init since it allocates memory
 	m_executablePath[0] = 0;
+}
 
+void GpFileSystem_Win32::Destroy()
+{
+	IGpAllocator *alloc = m_alloc;
+	this->~GpFileSystem_Win32();
+	alloc->Release(this);
+}
+
+bool GpFileSystem_Win32::Init()
+{
 	PWSTR docsPath;
-	if (!FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &docsPath)))
+	if (FAILED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &docsPath)))
+		return false;
+
+	if (!m_prefsDir.Set(docsPath))
 	{
-		try
-		{
-			m_prefsDir = docsPath;
-		}
-		catch(...)
-		{
-			CoTaskMemFree(docsPath);
-			throw;
-		}
-
-		m_prefsDir.append(L"\\" GP_APPLICATION_NAME_W);
-
-		m_userHousesDir = m_prefsDir + L"\\Houses";
-		m_userSavesDir = m_prefsDir + L"\\SavedGames";
-		m_scoresDir = m_prefsDir + L"\\Scores";
-		m_logsDir = m_prefsDir + L"\\Logs";
-		m_fontCacheDir = m_prefsDir + L"\\FontCache";
-
-		CreateDirectoryW(m_prefsDir.c_str(), nullptr);
-		CreateDirectoryW(m_scoresDir.c_str(), nullptr);
-		CreateDirectoryW(m_userHousesDir.c_str(), nullptr);
-		CreateDirectoryW(m_userSavesDir.c_str(), nullptr);
-		CreateDirectoryW(m_logsDir.c_str(), nullptr);
-		CreateDirectoryW(m_fontCacheDir.c_str(), nullptr);
-
-		m_prefsDir.append(L"\\");
-		m_scoresDir.append(L"\\");
-		m_userHousesDir.append(L"\\");
-		m_userSavesDir.append(L"\\");
-		m_logsDir.append(L"\\");
-		m_fontCacheDir.append(L"\\");
-		m_resourcesDir.append(L"\\");
+		CoTaskMemFree(docsPath);
+		return false;
 	}
+
+	CoTaskMemFree(docsPath);
+
+	if (!m_prefsDir.Append(L"\\" GP_APPLICATION_NAME_W))
+		return false;
+
+	if (!m_userHousesDir.Set(m_prefsDir) || !m_userHousesDir.Append(L"\\Houses"))
+		return false;
+
+	if (!m_userSavesDir.Set(m_prefsDir) || !m_userSavesDir.Append(L"\\SavedGames"))
+		return false;
+
+	if (!m_scoresDir.Set(m_prefsDir) || !m_scoresDir.Append(L"\\Scores"))
+		return false;
+
+	if (!m_logsDir.Set(m_prefsDir) || !m_logsDir.Append(L"\\Logs"))
+		return false;
+
+	CreateDirectoryW(m_prefsDir.Buffer(), nullptr);
+	CreateDirectoryW(m_scoresDir.Buffer(), nullptr);
+	CreateDirectoryW(m_userHousesDir.Buffer(), nullptr);
+	CreateDirectoryW(m_userSavesDir.Buffer(), nullptr);
+	CreateDirectoryW(m_logsDir.Buffer(), nullptr);
+
+	if (!m_prefsDir.Append(L"\\") ||
+		!m_scoresDir.Append(L"\\") ||
+		!m_userHousesDir.Append(L"\\") ||
+		!m_userSavesDir.Append(L"\\") ||
+		!m_logsDir.Append(L"\\") ||
+		!m_resourcesDir.Append(L"\\"))
+		return false;
 
 	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
 	if (modulePathSize == MAX_PATH || modulePathSize == 0)
@@ -182,12 +203,19 @@ GpFileSystem_Win32::GpFileSystem_Win32()
 			currentPathLength--;
 	}
 
-	if (currentPathLength > 0)
-	{
-		m_packagedDir = std::wstring(m_executablePath) + L"Packaged\\";
-		m_housesDir = std::wstring(m_executablePath) + L"Packaged\\Houses\\";
-		m_resourcesDir = std::wstring(m_executablePath) + L"Resources\\";
-	}
+	if (currentPathLength == 0)
+		return false;
+
+	if (!m_packagedDir.Set(m_executablePath) || !m_packagedDir.Append(L"Packaged\\"))
+		return false;
+
+	if (!m_housesDir.Set(m_executablePath) || !m_housesDir.Append(L"Packaged\\Houses\\"))
+		return false;
+
+	if (!m_resourcesDir.Set(m_executablePath) || !m_resourcesDir.Append(L"Resources\\"))
+		return false;
+
+	return true;
 }
 
 bool GpFileSystem_Win32::FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path)
@@ -428,9 +456,27 @@ const wchar_t *GpFileSystem_Win32::GetBasePath() const
 	return m_executablePath;
 }
 
+GpFileSystem_Win32 *GpFileSystem_Win32::CreateInstance(IGpAllocator *alloc)
+{
+	void *storage = alloc->Alloc(sizeof(GpFileSystem_Win32));
+	if (!storage)
+		return nullptr;
+
+	GpFileSystem_Win32 *fs = new (storage) GpFileSystem_Win32(alloc);
+	if (!fs->Init())
+	{
+		fs->Destroy();
+		return nullptr;
+	}
+
+	ms_instance = fs;
+
+	return fs;
+}
+
 GpFileSystem_Win32 *GpFileSystem_Win32::GetInstance()
 {
-	return &ms_instance;
+	return ms_instance;
 }
 
 bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, wchar_t *outPath)
@@ -440,28 +486,28 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 	switch (virtualDirectory)
 	{
 	case PortabilityLayer::VirtualDirectories::kApplicationData:
-		baseDir = m_packagedDir.c_str();
+		baseDir = m_packagedDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kGameData:
-		baseDir = m_housesDir.c_str();
+		baseDir = m_housesDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserData:
-		baseDir = m_userHousesDir.c_str();
+		baseDir = m_userHousesDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserSaves:
-		baseDir = m_userSavesDir.c_str();
+		baseDir = m_userSavesDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kPrefs:
-		baseDir = m_prefsDir.c_str();
+		baseDir = m_prefsDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kFonts:
-		baseDir = m_resourcesDir.c_str();
+		baseDir = m_resourcesDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kHighScores:
-		baseDir = m_scoresDir.c_str();
+		baseDir = m_scoresDir.Buffer();
 		break;
 	case PortabilityLayer::VirtualDirectories::kLogs:
-		baseDir = m_logsDir.c_str();
+		baseDir = m_logsDir.Buffer();
 		break;
 	default:
 		return false;
@@ -507,4 +553,4 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 	return true;
 }
 
-GpFileSystem_Win32 GpFileSystem_Win32::ms_instance;
+GpFileSystem_Win32 *GpFileSystem_Win32::ms_instance;

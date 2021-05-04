@@ -58,33 +58,41 @@ static void AlignedFree(void *ptr)
 class GpAudioBuffer_SDL2 final : public IGpAudioBuffer
 {
 public:
+	typedef int16_t AudioSample_t;
+
 	static GpAudioBuffer_SDL2 *Create(const void *data, size_t size);
 
 	void AddRef() override;
 	void Release() override;
 
-	const void *GetData() const;
+	const AudioSample_t *GetData() const;
 	size_t GetSize() const;
 
 private:
-	GpAudioBuffer_SDL2(const void *data, size_t size);
+	GpAudioBuffer_SDL2(const AudioSample_t *data, size_t size);
 	~GpAudioBuffer_SDL2();
 
 	void Destroy();
 
-	const void *m_data;
+	const AudioSample_t *m_data;
 	size_t m_size;
 	SDL_atomic_t m_count;
 };
 
 GpAudioBuffer_SDL2 *GpAudioBuffer_SDL2::Create(const void *data, size_t size)
 {
-	void *storage = malloc(size + sizeof(GpAudioBuffer_SDL2));
+	size_t baseSize = sizeof(GpAudioBuffer_SDL2) + GP_SYSTEM_MEMORY_ALIGNMENT + 1;
+	baseSize -= baseSize % GP_SYSTEM_MEMORY_ALIGNMENT;
+	void *storage = malloc(size * sizeof(AudioSample_t) + baseSize);
 	if (!storage)
 		return nullptr;
 
-	void *dataPos = static_cast<uint8_t*>(storage) + sizeof(GpAudioBuffer_SDL2);
-	memcpy(dataPos, data, size);
+	AudioSample_t *dataPos = reinterpret_cast<AudioSample_t*>(static_cast<uint8_t*>(storage) + baseSize);
+
+	// Convert from u8 to s16
+	const uint8_t *srcData = static_cast<const uint8_t*>(data);
+	for (size_t i = 0; i < size; i++)
+		dataPos[i] = srcData[i] - 0x80;
 
 	return new (storage) GpAudioBuffer_SDL2(dataPos, size);
 }
@@ -102,7 +110,7 @@ void GpAudioBuffer_SDL2::Release()
 		this->Destroy();
 }
 
-const void *GpAudioBuffer_SDL2::GetData() const
+const int16_t *GpAudioBuffer_SDL2::GetData() const
 {
 	return m_data;
 }
@@ -113,7 +121,7 @@ size_t GpAudioBuffer_SDL2::GetSize() const
 }
 
 
-GpAudioBuffer_SDL2::GpAudioBuffer_SDL2(const void *data, size_t size)
+GpAudioBuffer_SDL2::GpAudioBuffer_SDL2(const int16_t *data, size_t size)
 	: m_data(data)
 	, m_size(size)
 {
@@ -135,6 +143,7 @@ class GpAudioChannel_SDL2 final : public IGpAudioChannel
 {
 public:
 	friend class GpAudioDriver_SDL2;
+	typedef GpAudioBuffer_SDL2::AudioSample_t AudioSample_t;
 
 	GpAudioChannel_SDL2(GpAudioDriver_SDL2_Duration_t latency, GpAudioDriver_SDL2_Duration_t bufferTime, size_t bufferSamplesMax, uint16_t sampleRate);
 	~GpAudioChannel_SDL2();
@@ -147,7 +156,7 @@ public:
 	void Stop() override;
 	void Destroy() override;
 
-	void Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2_TimePoint_t mixStartTime, GpAudioDriver_SDL2_TimePoint_t mixEndTime);
+	void Consume(int16_t *output, size_t sz, GpAudioDriver_SDL2_TimePoint_t mixStartTime, GpAudioDriver_SDL2_TimePoint_t mixEndTime);
 
 	static GpAudioChannel_SDL2 *Alloc(GpAudioDriver_SDL2 *driver, GpAudioDriver_SDL2_Duration_t latency, GpAudioDriver_SDL2_Duration_t bufferTime, size_t bufferSamplesMax, uint16_t sampleRate);
 
@@ -183,6 +192,9 @@ class GpAudioDriver_SDL2 final : public IGpAudioDriver, public IGpPrefsHandler
 public:
 	friend class GpAudioChannel_SDL2;
 
+	typedef GpAudioChannel_SDL2::AudioSample_t AudioSample_t;
+
+
 	explicit GpAudioDriver_SDL2(const GpAudioDriverProperties &properties);
 	~GpAudioDriver_SDL2();
 
@@ -206,13 +218,14 @@ private:
 
 	void MixAudio(void *stream, size_t len);
 	void RefillMixChunk(GpAudioChannel_SDL2 *const*channels, size_t numChannels, size_t maxSamplesToFill, GpAudioDriver_SDL2_TimePoint_t mixStartTime, GpAudioDriver_SDL2_TimePoint_t mixEndTime);
+	static void AddSamples(AudioSample_t *GP_RESTRICT dest, const AudioSample_t *GP_RESTRICT src, size_t nSamples);
 
 	GpAudioDriverProperties m_properties;
 	IGpMutex *m_mutex;
 	IGpMutex *m_mixState;
 
 	static const size_t kMaxChannels = 16;
-	static const size_t kMixChunkSize = 512;
+	static const size_t kMixChunkSamples = 512;
 	static const int16_t kMaxAudioVolumeScale = 64;
 
 	GpAudioChannel_SDL2 *m_channels[kMaxChannels];
@@ -225,7 +238,7 @@ private:
 
 	bool m_sdlAudioRunning;
 
-	GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) int16_t m_mixChunk[kMixChunkSize];
+	GP_ALIGNED(GP_SYSTEM_MEMORY_ALIGNMENT) int16_t m_mixChunk[kMixChunkSamples];
 	size_t m_mixChunkReadOffset;
 
 	int16_t m_audioVolumeScale;
@@ -370,7 +383,7 @@ bool GpAudioChannel_SDL2::Init(GpAudioDriver_SDL2 *driver)
 	return true;
 }
 
-void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2_TimePoint_t mixStartTime, GpAudioDriver_SDL2_TimePoint_t mixEndTime)
+void GpAudioChannel_SDL2::Consume(int16_t *output, size_t sz, GpAudioDriver_SDL2_TimePoint_t mixStartTime, GpAudioDriver_SDL2_TimePoint_t mixEndTime)
 {
 	m_mutex->Lock();
 
@@ -380,7 +393,7 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 
 	if (sz <= m_leadingSilence)
 	{
-		memset(output, 0x80, sz);
+		memset(output, 0, sz * sizeof(AudioSample_t));
 		m_leadingSilence -= sz;
 
 		m_isMixing = false;
@@ -392,7 +405,7 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 		size_t leadingSilence = m_leadingSilence;
 		if (leadingSilence > 0)
 		{
-			memset(output, 0x80, leadingSilence);
+			memset(output, 0, leadingSilence * sizeof(AudioSample_t));
 			output += leadingSilence;
 			sz -= leadingSilence;
 
@@ -403,7 +416,7 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 	while (m_numQueuedBuffers > 0)
 	{
 		GpAudioBuffer_SDL2 *buffer = m_pendingBuffers[m_nextPendingBufferConsumePos];
-		const void *bufferData = buffer->GetData();
+		const int16_t *bufferData = buffer->GetData();
 		const size_t bufferSize = buffer->GetSize();
 
 		assert(m_firstBufferSamplesConsumed < bufferSize);
@@ -411,7 +424,7 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 		const size_t available = (bufferSize - m_firstBufferSamplesConsumed);
 		if (available <= sz)
 		{
-			memcpy(output, static_cast<const uint8_t*>(bufferData) + m_firstBufferSamplesConsumed, available);
+			memcpy(output, bufferData + m_firstBufferSamplesConsumed, available * sizeof(AudioSample_t));
 			sz -= available;
 			output += available;
 
@@ -430,7 +443,7 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 		}
 		else
 		{
-			memcpy(output, static_cast<const uint8_t*>(bufferData) + m_firstBufferSamplesConsumed, sz);
+			memcpy(output, bufferData + m_firstBufferSamplesConsumed, sz * sizeof(AudioSample_t));
 			m_firstBufferSamplesConsumed += sz;
 			output += sz;
 			sz = 0;
@@ -442,7 +455,7 @@ void GpAudioChannel_SDL2::Consume(uint8_t *output, size_t sz, GpAudioDriver_SDL2
 
 	m_mutex->Unlock();
 
-	memset(output, 0x80, sz);
+	memset(output, 0, sz * sizeof(AudioSample_t));
 }
 
 GpAudioChannel_SDL2 *GpAudioChannel_SDL2::Alloc(GpAudioDriver_SDL2 *driver, GpAudioDriver_SDL2_Duration_t latency, GpAudioDriver_SDL2_Duration_t bufferTime, size_t bufferSamplesMax, uint16_t sampleRate)
@@ -473,14 +486,14 @@ GpAudioDriver_SDL2::GpAudioDriver_SDL2(const GpAudioDriverProperties &properties
 	, m_latency(GpAudioDriver_SDL2_Duration_t::zero())
 	, m_bufferTime(GpAudioDriver_SDL2_Duration_t::zero())
 	, m_sdlAudioRunning(false)
-	, m_mixChunkReadOffset(kMixChunkSize)
+	, m_mixChunkReadOffset(kMixChunkSamples)
 	, m_audioVolumeScale(kMaxAudioVolumeScale)
 
 {
 	for (size_t i = 0; i < kMaxChannels; i++)
 		m_channels[i] = nullptr;
 
-	for (size_t i = 0; i < kMixChunkSize; i++)
+	for (size_t i = 0; i < kMixChunkSamples; i++)
 		m_mixChunk[i] = 0;
 }
 
@@ -560,7 +573,7 @@ bool GpAudioDriver_SDL2::Init()
 	requestedSpec.channels = 1;
 	requestedSpec.format = AUDIO_S16;
 	requestedSpec.freq = m_properties.m_sampleRate;
-	requestedSpec.samples = kMixChunkSize;
+	requestedSpec.samples = kMixChunkSamples;
 	requestedSpec.userdata = this;
 
 	if (SDL_OpenAudio(&requestedSpec, nullptr))
@@ -628,7 +641,7 @@ void GpAudioDriver_SDL2::MixAudio(void *stream, size_t len)
 	size_t samplesSinceStart = 0;
 	for (;;)
 	{
-		size_t availableInMixChunk = kMixChunkSize - m_mixChunkReadOffset;
+		size_t availableInMixChunk = kMixChunkSamples - m_mixChunkReadOffset;
 
 		if (availableInMixChunk > samplesRemaining)
 		{
@@ -662,20 +675,21 @@ void GpAudioDriver_SDL2::MixAudio(void *stream, size_t len)
 
 void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, size_t numChannels, size_t maxSamplesToFill, GpAudioDriver_SDL2_TimePoint_t mixStartTime, GpAudioDriver_SDL2_TimePoint_t mixEndTime)
 {
-	uint8_t audioMixBufferUnaligned[kMixChunkSize + GP_SYSTEM_MEMORY_ALIGNMENT];
-	uint8_t *audioMixBuffer = audioMixBufferUnaligned;
+	uint8_t audioMixBufferUnaligned[kMixChunkSamples * sizeof(AudioSample_t) + GP_SYSTEM_MEMORY_ALIGNMENT];
+	uint8_t *audioMixBufferBytes = audioMixBufferUnaligned;
 
 	{
-		uintptr_t bufferPtr = reinterpret_cast<uintptr_t>(audioMixBuffer);
+		uintptr_t bufferPtr = reinterpret_cast<uintptr_t>(audioMixBufferBytes);
 		size_t alignPadding = GP_SYSTEM_MEMORY_ALIGNMENT - (bufferPtr % GP_SYSTEM_MEMORY_ALIGNMENT);
-		audioMixBuffer += alignPadding;
+		audioMixBufferBytes += alignPadding;
 	}
 
+	AudioSample_t *audioMixBuffer = reinterpret_cast<AudioSample_t*>(audioMixBufferBytes);
 	bool noAudio = true;
 
 	const int16_t audioVolumeScale = m_audioVolumeScale;
 
-	size_t samplesToFill = kMixChunkSize;
+	size_t samplesToFill = kMixChunkSamples;
 	if (samplesToFill > maxSamplesToFill)
 	{
 		m_mixChunkReadOffset += samplesToFill - maxSamplesToFill;
@@ -684,8 +698,7 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 	else
 		m_mixChunkReadOffset = 0;
 
-	int16_t *mixChunkStart = m_mixChunk + m_mixChunkReadOffset;
-	int16_t audioNormalizeShift = 0;
+	AudioSample_t *mixChunkStart = m_mixChunk + m_mixChunkReadOffset;
 
 	for (size_t i = 0; i < numChannels; i++)
 	{
@@ -694,25 +707,25 @@ void GpAudioDriver_SDL2::RefillMixChunk(GpAudioChannel_SDL2 *const*channels, siz
 		if (i == 0)
 		{
 			noAudio = false;
-			audioNormalizeShift = 0x80;
-			for (size_t j = 0; j < samplesToFill; j++)
-				mixChunkStart[j] = static_cast<int16_t>(audioMixBuffer[j]);
+			memcpy(mixChunkStart, audioMixBuffer, samplesToFill * sizeof(AudioSample_t));
 		}
 		else
-		{
-			audioNormalizeShift += 0x80;
-			for (size_t j = 0; j < samplesToFill; j++)
-				mixChunkStart[j] += static_cast<int16_t>(audioMixBuffer[j]);
-		}
+			AddSamples(mixChunkStart, audioMixBuffer, samplesToFill);
 	}
 
 	if (noAudio)
-		memset(mixChunkStart, 0, samplesToFill * sizeof(mixChunkStart[0]));
+		memset(mixChunkStart, 0, samplesToFill * sizeof(AudioSample_t));
 	else
 	{
 		for (size_t i = 0; i < samplesToFill; i++)
-			mixChunkStart[i] = (mixChunkStart[i] - audioNormalizeShift) * audioVolumeScale;
+			mixChunkStart[i] *= audioVolumeScale;
 	}
+}
+
+void GpAudioDriver_SDL2::AddSamples(AudioSample_t *GP_RESTRICT dest, const AudioSample_t *GP_RESTRICT src, size_t nSamples)
+{
+	for (size_t i = 0; i < nSamples; i++)
+		dest[i] += src[i];
 }
 
 

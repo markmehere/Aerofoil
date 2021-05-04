@@ -13,11 +13,13 @@
 #define GP_ALIGNED(n) __declspec(align(n))
 #else
 #define GP_ALIGNED(n) __attribute__((aligned(n)))
+#define GP_RESTRICT 
 #endif
 
 #if GP_IS_CPP11
 #define GP_DELETED = delete
 #define GP_STATIC_ASSERT(n) static_assert((n), "Static assert failed: " #n)
+#define GP_RESTRICT __restrict
 #else
 #ifndef nullptr
 #define nullptr 0
@@ -32,6 +34,7 @@
 #endif
 
 #define GP_DELETED
+#define GP_RESTRICT
 
 template<bool TCondition>
 struct __GpStaticAssertHelper

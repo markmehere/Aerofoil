@@ -404,6 +404,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int nArgs;
 	LPWSTR *cmdLineArgs = CommandLineToArgvW(cmdLine, &nArgs);
 
+	IGpAllocator *alloc = GpAllocator_C::GetInstance();
+
+	// Init file system first since logging may depend on it
+	GpFileSystem_Win32 *fs = GpFileSystem_Win32::CreateInstance(alloc);
+	if (!fs)
+		return -1;
+
 	for (int i = 1; i < nArgs; i++)
 	{
 		if (!wcscmp(cmdLineArgs[i], L"-diagnostics"))
@@ -411,7 +418,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	IGpLogDriver *logger = GpLogDriver_Win32::GetInstance();
-	IGpAllocator *alloc = GpAllocator_C::GetInstance();
 	IGpSystemServices *sysServices = GpSystemServices_Win32::GetInstance();
 
 	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
@@ -468,6 +474,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		logger->Printf(IGpLogDriver::Category_Information, "Windows environment exited with code %i, cleaning up", returnCode);
 
 	LocalFree(cmdLineArgs);
+
+	fs->Destroy();
 
 	return returnCode;
 }
