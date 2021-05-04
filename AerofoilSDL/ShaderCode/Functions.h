@@ -58,7 +58,7 @@
 "vec4 ApplyDesaturation(float desaturation, vec4 color)\n"\
 "{\n"\
 "	// This is intentionally done in gamma space\n"\
-"	if (desaturation == 0.0)\n"\
+"	if (desaturation == 0.0 || (color.r == 1.0 && color.g == 1.0 && color.b == 0.0))\n"\
 "		return color;\n"\
 "\n"\
 "	float grayLevel = dot(color.rgb, vec3(3.0, 6.0, 1.0) / 10.0);\n"\
