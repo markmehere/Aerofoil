@@ -20,7 +20,7 @@ void GpLogDriver_X::Init()
 
 void GpLogDriver_X::VPrintf(Category category, const char *fmt, va_list args)
 {
-	size_t fmtSize = 0;
+    size_t fmtSize = 0;
 	bool hasFormatting = false;
 	for (const char *fmtCheck = fmt; *fmtCheck; fmtCheck++)
 	{
@@ -64,6 +64,10 @@ void GpLogDriver_X::VPrintf(Category category, const char *fmt, va_list args)
 	}
 	else
 	{
+        //a copy is needed if using va_list multiple times (otherwise unexpected output)
+        va_list args_copy;
+        va_copy(args_copy, args);
+
 		int formattedSize = vsnprintf(nullptr, 0, fmt, args);
 		if (formattedSize <= 0)
 			return;
@@ -72,7 +76,8 @@ void GpLogDriver_X::VPrintf(Category category, const char *fmt, va_list args)
 		if (!charBuff)
 			return;
 
-		vsnprintf(charBuff, formattedSize + 1, fmt, args);
+		vsnprintf(charBuff, formattedSize + 1, fmt, args_copy);
+        va_end(args_copy);
 
 		if (m_stream)
 			m_stream->Write(charBuff, formattedSize);
