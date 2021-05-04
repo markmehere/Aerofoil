@@ -417,8 +417,6 @@
 		5CAC542E26373C60006AE5FB /* Fonts.gpf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5C54D688262D8AE600AB55E0 /* Fonts.gpf */; };
 		5CB787202639D1D800D8FDB6 /* GpAllocator_C.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB7871E2639D1D800D8FDB6 /* GpAllocator_C.cpp */; };
 		5CB787212639D1D800D8FDB6 /* GpAllocator_C.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB7871F2639D1D800D8FDB6 /* GpAllocator_C.h */; };
-		5CB787262639D86F00D8FDB6 /* GpFontHandler_FreeType2.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB787242639D86F00D8FDB6 /* GpFontHandler_FreeType2.h */; };
-		5CB787272639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB787252639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1012,8 +1010,6 @@
 		5C54D6AD262D8AE600AB55E0 /* Nemo's Market.mov.gpf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nemo's Market.mov.gpf"; sourceTree = "<group>"; };
 		5CB7871E2639D1D800D8FDB6 /* GpAllocator_C.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpAllocator_C.cpp; path = ../AerofoilPortable/GpAllocator_C.cpp; sourceTree = "<group>"; };
 		5CB7871F2639D1D800D8FDB6 /* GpAllocator_C.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GpAllocator_C.h; path = ../AerofoilPortable/GpAllocator_C.h; sourceTree = "<group>"; };
-		5CB787242639D86F00D8FDB6 /* GpFontHandler_FreeType2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GpFontHandler_FreeType2.h; path = ../GpFontHandler_FreeType2/GpFontHandler_FreeType2.h; sourceTree = "<group>"; };
-		5CB787252639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpFontHandler_FreeType2.cpp; path = ../GpFontHandler_FreeType2/GpFontHandler_FreeType2.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1079,7 +1075,6 @@
 		5C54D0B92629B6E900AB55E0 /* AerofoilShared */ = {
 			isa = PBXGroup;
 			children = (
-				5CB787232639D83A00D8FDB6 /* GpFontHandler_FreeType2 */,
 				5C54D59F262B3C6B00AB55E0 /* GpShell */,
 				5C54D4CE262B3C2D00AB55E0 /* GpApp */,
 				5C54D28F2629BC6700AB55E0 /* PortabilityLayer */,
@@ -1612,15 +1607,6 @@
 			path = Resources/Houses;
 			sourceTree = SOURCE_ROOT;
 		};
-		5CB787232639D83A00D8FDB6 /* GpFontHandler_FreeType2 */ = {
-			isa = PBXGroup;
-			children = (
-				5CB787252639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp */,
-				5CB787242639D86F00D8FDB6 /* GpFontHandler_FreeType2.h */,
-			);
-			name = GpFontHandler_FreeType2;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -1780,7 +1766,6 @@
 				5C54D54B262B3C2E00AB55E0 /* Room.h in Headers */,
 				5C54D4152629BC6C00AB55E0 /* PLMenus.h in Headers */,
 				5C54D2732629B86700AB55E0 /* crc32.h in Headers */,
-				5CB787262639D86F00D8FDB6 /* GpFontHandler_FreeType2.h in Headers */,
 				5C54D2702629B86700AB55E0 /* inflate.h in Headers */,
 				5C54D57E262B3C2E00AB55E0 /* GliderStructs.h in Headers */,
 				5C54D42E2629BC6C00AB55E0 /* GpAppInterface.h in Headers */,
@@ -2196,7 +2181,6 @@
 				5C54D3C92629BC6B00AB55E0 /* SimpleGraphic.cpp in Sources */,
 				5C54D4252629BC6C00AB55E0 /* PLIconWidget.cpp in Sources */,
 				5C54D4282629BC6C00AB55E0 /* RandomNumberGenerator.cpp in Sources */,
-				5CB787272639D86F00D8FDB6 /* GpFontHandler_FreeType2.cpp in Sources */,
 				5C54D550262B3C2E00AB55E0 /* DynamicMaps.cpp in Sources */,
 				5C54D4502629BC6D00AB55E0 /* PLButtonWidget.cpp in Sources */,
 				5C54D568262B3C2E00AB55E0 /* Scoreboard.cpp in Sources */,

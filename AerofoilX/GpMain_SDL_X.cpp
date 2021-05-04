@@ -23,8 +23,6 @@
 
 GpXGlobals g_gpXGlobals;
 
-IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties);
-
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
 IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
 IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverProperties &properties);
@@ -63,10 +61,8 @@ SDLMAIN_DECLSPEC int SDL_main(int argc, char *argv[])
     drivers->SetDriver<GpDriverIDs::kAlloc>(GpAllocator_C::GetInstance());
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;
-
 	g_gpGlobalConfig.m_audioDriverType = EGpAudioDriverType_SDL2;
-
-	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_FreeType2;
+	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_None;
 
 	EGpInputDriverType inputDrivers[] =
 	{
@@ -84,7 +80,6 @@ SDLMAIN_DECLSPEC int SDL_main(int argc, char *argv[])
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_SDL2, GpDriver_CreateAudioDriver_SDL);
 	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_SDL2_Gamepad, GpDriver_CreateInputDriver_SDL2_Gamepad);
-	GpFontHandlerFactory::RegisterFontHandlerFactory(EGpFontHandlerType_FreeType2, GpDriver_CreateFontHandler_FreeType2);
 
 	if (logger)
 		logger->Printf(IGpLogDriver::Category_Information, "SDL environment configured, starting up");
