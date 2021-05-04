@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef __PL_MACBINARY2_H__
-#define __PL_MACBINARY2_H__
-
 class GpIOStream;
 
 namespace PortabilityLayer
@@ -15,5 +12,3 @@ namespace PortabilityLayer
 		MacFileMem *ReadBin(GpIOStream *stream);
 	};
 }
-
-#endif
