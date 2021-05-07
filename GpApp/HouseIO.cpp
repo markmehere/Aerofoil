@@ -3597,5 +3597,24 @@ ExportHouseResult_t TryExportHouse(void)
 
 void ExportHouse(void)
 {
-	TryExportHouse();
+	ExportHouseResult_t result = TryExportHouse();
+
+	switch (result)
+	{
+	case ExportHouseResults::kOK:
+		break;
+	case ExportHouseResults::kMemError:
+		YellowAlert(kYellowNoMemory, 0);
+		break;
+	case ExportHouseResults::kInternalError:
+		YellowAlert(kYellowUnaccounted, 0);
+		break;
+	case ExportHouseResults::kIOError:
+	case ExportHouseResults::kStreamFailed:
+		YellowAlert(kYellowFailedWrite, 0);
+		break;
+	case ExportHouseResults::kResourceError:
+		YellowAlert(kYellowFailedResOpen, 0);
+		break;
+	}
 }
