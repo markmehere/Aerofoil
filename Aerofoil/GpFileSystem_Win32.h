@@ -42,6 +42,7 @@ private:
 	GpWString m_userHousesDir;
 	GpWString m_userSavesDir;
 	GpWString m_resourcesDir;
+	GpWString m_exportDir;
 	wchar_t m_executablePath[MAX_PATH];
 
 	IGpAllocator *m_alloc;
