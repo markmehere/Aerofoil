@@ -187,6 +187,7 @@
 #define kGameMenuID					129
 #define kOptionsMenuID				130
 #define kHouseMenuID				131
+#define kExportMenuID				132
 
 #define kSplashMode					0
 #define kEditMode					1

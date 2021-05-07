@@ -32,7 +32,7 @@ void UpdateMenusHouseClosed (void);
 void HeyYourPissingAHighScore (void);
 
 
-MenuHandle	appleMenu, gameMenu, optionsMenu, houseMenu;
+MenuHandle	appleMenu, gameMenu, optionsMenu, houseMenu, exportMenu;
 Boolean		menusUp, resumedSavedGame;
 
 
@@ -141,6 +141,11 @@ void UpdateMenusHouseOpen (void)
 			EnableMenuItem(houseMenu, iSendBack);
 		}
 	}
+
+	if (houseUnlocked)
+		EnableMenuItem(exportMenu, iExportGliderPROHouse);
+	else
+		DisableMenuItem(exportMenu, iExportGliderPROHouse);
 }
 
 //--------------------------------------------------------------  UpdateMenusHouseClosed
@@ -159,6 +164,8 @@ void UpdateMenusHouseClosed (void)
 	DisableMenuItem(houseMenu, iPaste);
 	DisableMenuItem(houseMenu, iClear);
 	DisableMenuItem(houseMenu, iDuplicate);
+
+	DisableMenuItem(exportMenu, iExportGliderPROHouse);
 }
 
 //--------------------------------------------------------------  UpdateClipboardMenus
@@ -254,12 +261,19 @@ void UpdateMenus (Boolean newMode)
 	{
 		PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
 		if (theMode == kEditMode)
+		{
 			InsertMenu(houseMenu, 0);
+			InsertMenu(exportMenu, 0);
+		}
 		else
 		{
 			THandle<Menu> houseMenu = mm->GetMenuByID(kHouseMenuID);
 			if (houseMenu)
 				mm->RemoveMenu(houseMenu);
+
+			THandle<Menu> exportMenu = mm->GetMenuByID(kExportMenuID);
+			if (exportMenu)
+				mm->RemoveMenu(exportMenu);
 		}
 	}
 	
@@ -465,6 +479,19 @@ void DoOptionsMenu (short theItem)
 //--------------------------------------------------------------  DoHouseMenu
 // Handle the user selecting an item from the House menu (only in Edit mode).
 
+void DoExportMenu(short theItem)
+{
+	switch (theItem)
+	{
+	case iExportGliderPROHouse:
+		ExportHouse();
+		break;
+	};
+}
+
+//--------------------------------------------------------------  DoHouseMenu
+// Handle the user selecting an item from the House menu (only in Edit mode).
+
 void DoHouseMenu (short theItem)
 {
 #ifndef COMPILEDEMO
@@ -646,6 +673,10 @@ void DoMenuChoice (long menuChoice)
 		
 		case kHouseMenuID:
 		DoHouseMenu(theItem);
+		break;
+
+		case kExportMenuID:
+		DoExportMenu(theItem);
 		break;
 	}
 }

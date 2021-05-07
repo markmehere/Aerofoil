@@ -404,23 +404,23 @@ void TellHerNoSounds (void)
 
 //--------------------------------------------------------------  ParseAndConvertSound
 
-IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
+bool ParseAndConvertSoundChecked(const THandle<void> &handle, void const*& outDataContents, size_t &outDataSize)
 {
 	const uint8_t *dataStart = static_cast<const uint8_t*>(*handle);
 	const size_t size = handle.MMBlock()->m_size;
 
 	if (size < sizeof(PortabilityLayer::RIFFTag))
-		return nullptr;
+		return false;
 
 	PortabilityLayer::RIFFTag mainRiffTag;
 	memcpy(&mainRiffTag, dataStart, sizeof(PortabilityLayer::RIFFTag));
 
 	if (mainRiffTag.m_tag != PortabilityLayer::WaveConstants::kRiffChunkID)
-		return nullptr;
+		return false;
 
 	const uint32_t riffSize = mainRiffTag.m_chunkSize;
 	if (riffSize < 4 || riffSize - 4 > size - sizeof(PortabilityLayer::RIFFTag))
-		return nullptr;
+		return false;
 
 	const uint8_t *riffStart = dataStart + sizeof(PortabilityLayer::RIFFTag);
 	const uint8_t *riffEnd = riffStart + riffSize;
@@ -432,7 +432,7 @@ IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 	memcpy(&waveMarker, riffStart, 4);
 
 	if (waveMarker != PortabilityLayer::WaveConstants::kWaveChunkID)
-		return nullptr;
+		return false;
 
 	const uint8_t *tagSearchLoc = riffStart + 4;
 
@@ -440,7 +440,7 @@ IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 	while (tagSearchLoc != riffEnd)
 	{
 		if (riffEnd - tagSearchLoc < sizeof(PortabilityLayer::RIFFTag))
-			return nullptr;
+			return false;
 
 		PortabilityLayer::RIFFTag riffTag;
 		memcpy(&riffTag, tagSearchLoc, sizeof(PortabilityLayer::RIFFTag));
@@ -453,20 +453,20 @@ IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 		const uint32_t riffTagSizeUnpadded = riffTag.m_chunkSize;
 
 		if (riffTagSizeUnpadded == 0xffffffffU)
-			return nullptr;
+			return false;
 
 		const uint32_t riffTagSizePadded = riffTagSizeUnpadded + (riffTagSizeUnpadded & 1);
 
 		tagSearchLoc += sizeof(PortabilityLayer::RIFFTag);
 
 		if (riffEnd - tagSearchLoc < riffTagSizePadded)
-			return nullptr;
+			return false;
 
 		tagSearchLoc += riffTagSizePadded;
 	}
 
 	if (formatTagLoc == nullptr || dataTagLoc == nullptr)
-		return nullptr;
+		return false;
 
 	PortabilityLayer::RIFFTag fmtTag;
 	memcpy(&fmtTag, formatTagLoc, sizeof(PortabilityLayer::RIFFTag));
@@ -500,7 +500,7 @@ IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 		copyableSize = sizeof(PortabilityLayer::WaveFormatChunkV1);
 	}
 	else
-		return nullptr;
+		return false;
 
 	memcpy(&formatChunkV3, formatContents, copyableSize);
 
@@ -508,23 +508,22 @@ IGpAudioBuffer *ParseAndConvertSoundChecked(const THandle<void> &handle)
 	const PortabilityLayer::WaveFormatChunkV1 formatChunkV1 = formatChunkV2.m_v1;
 
 	if (formatChunkV1.m_bitsPerSample != 8)
-		return nullptr;
+		return false;
 
 	if (formatChunkV1.m_formatCode != PortabilityLayer::WaveConstants::kFormatPCM ||
 		formatChunkV1.m_numChannels != 1 ||
 		formatChunkV1.m_blockAlignmentBytes != 1 ||
 		formatChunkV1.m_bitsPerSample != 8)
-		return nullptr;
+		return false;
 
 	uint32_t dataSize = dataTag.m_chunkSize;
 	if (dataSize > 0x1000000 || dataSize < 1)
-		return nullptr;
+		return false;
 
-	IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver();
-	if (!audioDriver)
-		return nullptr;
+	outDataContents = dataContents;
+	outDataSize = dataSize;
 
-	return audioDriver->CreateBuffer(dataContents, dataSize);
+	return true;
 }
 
 IGpAudioBuffer *ParseAndConvertSound(const THandle<void> &handle)
@@ -532,6 +531,14 @@ IGpAudioBuffer *ParseAndConvertSound(const THandle<void> &handle)
 	if (!handle)
 		return nullptr;
 
-	IGpAudioBuffer *buffer = ParseAndConvertSoundChecked(handle);
-	return buffer;
+	IGpAudioDriver *audioDriver = PLDrivers::GetAudioDriver();
+	if (!audioDriver)
+		return nullptr;
+
+	const void *dataContents = nullptr;
+	size_t dataSize = 0;
+	if (!ParseAndConvertSoundChecked(handle, dataContents, dataSize))
+		return nullptr;
+
+	return audioDriver->CreateBuffer(dataContents, dataSize);
 }

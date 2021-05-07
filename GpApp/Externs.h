@@ -75,6 +75,8 @@ namespace PortabilityLayer
 #define iObjectWindow			20
 #define iCoordinateWindow		21
 
+#define iExportGliderPROHouse	1
+
 //--------------------------------------------------------------  Structs
 /*
 typedef	short		SICN[16];

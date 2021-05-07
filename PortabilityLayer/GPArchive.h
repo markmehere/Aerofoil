@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 namespace PortabilityLayer
 {
 	class ResTypeID;
@@ -10,7 +12,7 @@ namespace PortabilityLayer
 
 		static GpArcResourceTypeTag Encode(const ResTypeID &tag);
 
-		bool Load(const char *str);
+		bool Load(const char *str, size_t strLen);
 		bool Decode(ResTypeID &outTag);
 	};
 }

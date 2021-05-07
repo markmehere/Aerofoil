@@ -128,6 +128,7 @@ namespace PortabilityLayer
 		virtual void Init() override;
 		virtual void Shutdown() override;
 
+		THandle<Menu> CreateMenu(const PLPasStr &title, uint16_t menuID, bool enabled, uint16_t width, uint16_t height, uint16_t commandID) const override;
 		THandle<Menu> DeserializeMenu(const void *resData) const override;
 		THandle<Menu> GetMenuByID(int id) const override;
 
@@ -292,6 +293,60 @@ namespace PortabilityLayer
 		}
 
 		// GP TODO: Dispose of menus properly
+	}
+
+	THandle<Menu> MenuManagerImpl::CreateMenu(const PLPasStr &title, uint16_t menuID, bool enabled, uint16_t width, uint16_t height, uint16_t commandID) const
+	{
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+
+		const uint8_t titleLength = title.Length();
+
+		size_t stringDataLength = 1 + titleLength;
+		size_t numMenuItems = 0;
+
+		MMHandleBlock *stringData = mm->AllocHandle(stringDataLength);
+		if (!stringData)
+		{
+			mm->ReleaseHandle(stringData);
+			return nullptr;
+		}
+
+		MMHandleBlock *menuData = mm->AllocHandle(sizeof(Menu) + sizeof(MenuItem) * (numMenuItems - 1));
+		if (!menuData)
+		{
+			mm->ReleaseHandle(stringData);
+			return nullptr;
+		}
+
+		Menu *menu = static_cast<Menu*>(menuData->m_contents);
+		menu->menuID = menuID;
+		menu->width = width;
+		menu->height = height;
+		menu->commandID = commandID;
+		menu->enabled = true;
+		menu->menuIndex = 0;
+		menu->cumulativeOffset = 0;
+		menu->unpaddedTitleWidth = 0;
+		menu->isIcon = false;
+		menu->haveMenuLayout = false;
+
+		uint8_t *stringDataStart = static_cast<uint8_t*>(stringData->m_contents);
+		uint8_t *stringDest = stringDataStart;
+		stringDest[0] = title.Length();
+		memcpy(stringDest + 1, title.UChars(), title.Length());
+
+		menu->numMenuItems = numMenuItems;
+		menu->stringBlobHandle = stringData;
+		menu->prevMenu = nullptr;
+		menu->nextMenu = nullptr;
+		menu->layoutHintHorizontalOffset = 0;
+		menu->layoutWidth = 0;
+		menu->layoutBaseHeight = 0;
+		menu->layoutFinalHeight = 0;
+		menu->bottomItemsTruncated = 0;
+		menu->topItemsTruncated = 0;
+
+		return THandle<Menu>(menuData);
 	}
 
 	THandle<Menu> MenuManagerImpl::DeserializeMenu(const void *resData) const

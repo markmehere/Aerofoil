@@ -25,6 +25,14 @@
 #include "PLStringCompare.h"
 #include "PLPasStr.h"
 
+#include "MacFileInfo.h"
+#include "GpIOStream.h"
+#include "GpVector.h"
+#include "MacBinary2.h"
+#include "QDPictOpcodes.h"
+#include "QDPixMap.h"
+#include "PLStandardColors.h"
+
 #define kSaveChangesAlert		1002
 #define kSaveChanges			1
 #define kDiscardChanges			2
@@ -50,6 +58,7 @@ extern	short		numberRooms, housesFound;
 extern	Boolean		noRoomAtAll, quitting, wardBitSet;
 extern	Boolean		phoneBitSet, bannerStarCountOn;
 
+bool ParseAndConvertSoundChecked(const THandle<void> &handle, void const*& outDataContents, size_t &outDataSize);
 
 //==============================================================  Functions
 
@@ -2315,4 +2324,1278 @@ THandle<void> LoadHouseResource(const PortabilityLayer::ResTypeID &resTypeID, in
 		return hdl;
 
 	return PortabilityLayer::ResourceManager::GetInstance()->GetAppResource(resTypeID, resID);
+}
+
+//--------------------------------------------------------------  ExportHouse
+
+namespace ExportHouseResults
+{
+	enum ExportHouseResult
+	{
+		kOK,
+
+		kStreamFailed,
+		kIOError,
+		kMemError,
+		kResourceError,
+		kInternalError,
+	};
+}
+
+typedef ExportHouseResults::ExportHouseResult ExportHouseResult_t;
+
+struct SimpleResource
+{
+	PortabilityLayer::ResTypeID m_resType;
+	int m_resourceID;
+	PortabilityLayer::PascalStr<255> m_name;
+	size_t m_offsetInResData;
+	uint8_t m_attributes;
+};
+
+static bool AppendRaw(GpVector<uint8_t> &bytes, const void *data, size_t size)
+{
+	for (size_t i = 0; i < size; i++)
+	{
+		if (!bytes.Append(static_cast<const uint8_t*>(data)[i]))
+			return false;
+	}
+
+	return true;
+}
+
+template<class T>
+static bool AppendRawStruct(GpVector<uint8_t> &bytes, const T &value)
+{
+	return AppendRaw(bytes, &value, sizeof(T));
+}
+
+static ExportHouseResult_t TryExportSound(GpVector<uint8_t> &resData, const THandle<void> &resHandle)
+{
+	const void *dataContents = nullptr;
+	size_t dataSize = 0;
+	if (!ParseAndConvertSoundChecked(resHandle, dataContents, dataSize))
+		return ExportHouseResults::kResourceError;
+
+	// Don't ask...
+	const uint8_t commandStreamPrefix[20] = { 0, 1, 0, 1, 0, 5, 0, 0, 0, 0xa0, 0, 1, 0x80, 0x51, 0, 0, 0, 0, 0, 0x14 };
+
+	struct BufferHeader
+	{
+		BEUInt32_t m_samplePtr;
+		BEUInt32_t m_length;
+		BEFixed32_t m_sampleRate;
+		BEUInt32_t m_loopStart;
+		BEUInt32_t m_loopEnd;
+		uint8_t m_encoding;
+		uint8_t m_baseFrequency;
+	};
+
+	BufferHeader bufferHeader;
+	bufferHeader.m_samplePtr = 0;
+	bufferHeader.m_length = static_cast<uint32_t>(dataSize);
+	bufferHeader.m_sampleRate.m_intPart = 0x56ee;
+	bufferHeader.m_sampleRate.m_fracPart = 0x8ba3;
+	bufferHeader.m_loopStart = static_cast<uint32_t>(dataSize - 2);
+	bufferHeader.m_loopEnd = static_cast<uint32_t>(dataSize - 1);
+	bufferHeader.m_encoding = 0;
+	bufferHeader.m_baseFrequency = 0x3c;
+
+	if (!resData.Resize(sizeof(bufferHeader) + sizeof(commandStreamPrefix) + dataSize))
+		return ExportHouseResults::kMemError;
+
+	memcpy(&resData[0], commandStreamPrefix, sizeof(commandStreamPrefix));
+	memcpy(&resData[sizeof(commandStreamPrefix)], &bufferHeader, sizeof(bufferHeader));
+
+	if (dataSize > 0)
+		memcpy(&resData[sizeof(commandStreamPrefix) + sizeof(bufferHeader)], dataContents, dataSize);
+
+	return ExportHouseResults::kOK;
+}
+
+static void BitSwap4(GpVector<uint8_t> &vec, size_t count)
+{
+	for (size_t i = 0; i < count; i++)
+	{
+		uint8_t v = vec[i];
+		v = (((v >> 4) & 0xf) | ((v << 4) & 0xf));
+		vec[i] = v;
+	}
+}
+
+static void BitSwap2(GpVector<uint8_t> &vec, size_t count)
+{
+	for (size_t i = 0; i < count; i++)
+	{
+		uint8_t v = vec[i];
+		v = (((v >> 2) & 0x33) | ((v << 2) & 0xcc));
+		vec[i] = v;
+	}
+}
+
+static void BitSwap1(GpVector<uint8_t> &vec, size_t count)
+{
+	for (size_t i = 0; i < count; i++)
+	{
+		uint8_t v = vec[i];
+		v = (((v >> 1) & 0x55) | ((v << 1) & 0xaa));
+		vec[i] = v;
+	}
+}
+
+namespace RLEEncoder
+{
+	static const size_t kMaxRepeat = 129;
+	static const size_t kMaxLiteral = 128;
+
+	bool EmitSymbol(GpVector<uint8_t> &compressedData, uint8_t sym)
+	{
+		return compressedData.Append(sym);
+	}
+
+	bool EmitSymbol(GpVector<uint8_t> &compressedData, uint16_t sym)
+	{
+		return compressedData.Append((sym >> 8) & 0xff) && compressedData.Append(sym & 0xff);
+	}
+
+	template<class T>
+	bool EmitLiterals(GpVector<uint8_t> &compressedData, const T *symbols, size_t length)
+	{
+		if (length == 0)
+			return true;
+
+		assert(length <= kMaxLiteral);
+		if (!compressedData.Append(static_cast<uint8_t>(length - 1)))
+			return false;
+
+		for (size_t i = 0; i < length; i++)
+		{
+			if (!EmitSymbol(compressedData, symbols[i]))
+				return false;
+		}
+
+		return true;
+	}
+
+	template<class T>
+	bool EmitRepeat(GpVector<uint8_t> &compressedData, const T &symbol, size_t length)
+	{
+		if (length < 2)
+			return EmitLiterals(compressedData, &symbol, length);
+
+		assert(length <= kMaxRepeat);
+		if (!compressedData.Append(static_cast<uint8_t>(257 - length)))
+			return false;
+
+		if (!EmitSymbol(compressedData, symbol))
+			return false;
+	
+		return true;
+	}
+
+
+	template<class T>
+	bool PackRLE(GpVector<uint8_t> &compressedData, const GpVector<T> &uncompressedData)
+	{
+		size_t numUncompressed = uncompressedData.Count();
+		const T *uncompressedSymbols = uncompressedData.Buffer();
+
+		if (!compressedData.Resize(0))
+			return false;
+
+		size_t literalStartLoc = 0;
+		size_t repeatStartLoc = 0;
+		size_t readPos = 0;
+
+		// Loop/exit invariants:
+		// repeatStartLoc - literalStartLoc <= kMaxLiteral
+		// i - repeatStartLoc < kMaxRepeat
+		for (size_t i = 0; i < numUncompressed; i++)
+		{
+			T b = uncompressedSymbols[i];
+			if (b != uncompressedSymbols[repeatStartLoc])
+			{
+				// Run terminates at i
+				const size_t repeatLength = i - repeatStartLoc;
+				const size_t literalLength = repeatStartLoc - literalStartLoc;
+
+				// Determine if we should flush the repeat or fold it into the literal span.
+				// There are several situations that can happen here:
+				// Repeat length is 1:
+				//   Literal span is at limit:
+				//     Emit literal span, start new literal span at repeatStartLoc
+				//   Literal span is below limit:
+				//     Do nothing
+				// Repeat length is 2:
+				//   Literal span is 0:
+				//     Emit repeat
+				//   Literal span is non-zero and appending repeat to literal span would be at or exceed limit:
+				//     Emit literal span and repeat
+				//   Otherwise:
+				//     Do nothing
+				// Repeat length is 3+:
+				//   Emit literal span and repeat
+				if (repeatLength == 1)
+				{
+					if (literalLength == kMaxLiteral)
+					{
+						if (!EmitLiterals(compressedData, uncompressedSymbols + literalStartLoc, literalLength))
+							return false;
+
+						literalStartLoc = repeatStartLoc;
+					}
+				}
+				else if (repeatLength == 2)
+				{
+					if (literalLength == 0 || (literalLength + repeatLength >= kMaxLiteral))
+					{
+						if (literalLength != 0)
+						{
+							if (!EmitLiterals(compressedData, uncompressedSymbols + literalStartLoc, literalLength))
+								return false;
+						}
+
+						if (!EmitRepeat(compressedData, uncompressedSymbols[repeatStartLoc], repeatLength))
+							return false;
+
+						literalStartLoc = i;
+					}
+				}
+				else if (repeatLength >= 3)
+				{
+					if (literalLength != 0)
+					{
+						if (!EmitLiterals(compressedData, uncompressedSymbols + literalStartLoc, literalLength))
+							return false;
+					}
+
+					if (!EmitRepeat(compressedData, uncompressedSymbols[repeatStartLoc], repeatLength))
+						return false;
+
+					literalStartLoc = i;
+				}
+
+				repeatStartLoc = i;
+			}
+			else
+			{
+				// i is a repeat character
+				const size_t repeatLength = i + 1 - repeatStartLoc;
+				const size_t literalLength = repeatStartLoc - literalStartLoc;
+
+				if (repeatLength == kMaxRepeat)
+				{
+					if (literalLength != 0)
+					{
+						if (!EmitLiterals(compressedData, uncompressedSymbols + literalStartLoc, literalLength))
+							return false;
+					}
+
+					if (!EmitRepeat(compressedData, uncompressedSymbols[repeatStartLoc], repeatLength))
+						return false;
+
+					literalStartLoc = i + 1;
+					repeatStartLoc = i + 1;
+				}
+			}
+		}
+
+		// Final flush
+		size_t repeatLength = numUncompressed - repeatStartLoc;
+		size_t literalLength = repeatStartLoc - literalStartLoc;
+
+		if (repeatLength == 1)
+		{
+			if (literalLength < kMaxLiteral)
+			{
+				literalLength++;
+				repeatLength = 0;
+			}
+		}
+
+		if (literalLength != 0)
+		{
+			if (!EmitLiterals(compressedData, uncompressedSymbols + literalStartLoc, literalLength))
+				return false;
+		}
+
+		if (repeatLength == 1)
+		{
+			if (!EmitLiterals(compressedData, uncompressedSymbols + repeatStartLoc, 1))
+				return false;
+		}
+		else if (repeatLength >= 2)
+		{
+			if (!EmitRepeat(compressedData, uncompressedSymbols[repeatStartLoc], repeatLength))
+				return false;
+		}
+
+		return true;
+	}
+}
+
+static ExportHouseResult_t TryExportPictFromSurface(GpVector<uint8_t> &resData, DrawSurface *surface)
+{
+	bool couldBe16Bit = true;
+	bool couldBe8Bit = true;
+	int numUniqueColors = 0;
+	PortabilityLayer::RGBAColor uniqueColors[256];
+	for (int i = 0; i < 256; i++)
+		uniqueColors[i] = PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
+
+	const Rect rect = surface->m_port.GetRect();
+
+	const size_t width = rect.Width();
+	const size_t height = rect.Height();
+
+	THandle<PixMap> pixMapHdl = surface->m_port.GetPixMap();
+	const PixMap *pixMap = *pixMapHdl;
+	const uint8_t *imageData = static_cast<const uint8_t*>(pixMap->m_data);
+	const size_t pixelDataPitch = pixMap->m_pitch;
+
+	assert(pixMap->m_pixelFormat == GpPixelFormats::kRGB32);
+	
+
+	for (size_t row = 0; row < height; row++)
+	{
+		const uint8_t *rowData = imageData + pixMap->m_pitch * row;
+
+		if (!couldBe8Bit && !couldBe16Bit)
+			break;
+
+		for (size_t col = 0; col < width; col++)
+		{
+			const uint8_t *pixelData = rowData + col * 4;
+			if (couldBe16Bit)
+			{
+				for (int ch = 0; ch < 3; ch++)
+				{
+					uint8_t channelData = pixelData[ch];
+					if ((channelData >> 2) != (channelData & 0x7))
+					{
+						couldBe16Bit = false;
+						break;
+					}
+				}
+			}
+
+			if (couldBe8Bit)
+			{
+				PortabilityLayer::RGBAColor rgbaColor = PortabilityLayer::RGBAColor::Create(pixelData[0], pixelData[1], pixelData[2], pixelData[3]);
+
+				bool matchedColor = false;
+				for (int i = 0; i < numUniqueColors; i++)
+				{
+					if (uniqueColors[i] == rgbaColor)
+					{
+						matchedColor = true;
+						break;
+					}
+				}
+
+				if (!matchedColor)
+				{
+					if (numUniqueColors == 256)
+						couldBe8Bit = false;
+					else
+						uniqueColors[numUniqueColors++] = rgbaColor;
+				}
+			}
+		}
+	}
+
+	bool isBWBitmap = false;
+
+	if (numUniqueColors <= 2)
+	{
+		isBWBitmap = true;
+		for (int c = 0; c < numUniqueColors; c++)
+		{
+			if (uniqueColors[c] != StdColors::Black() && uniqueColors[c] != StdColors::White())
+				isBWBitmap = false;
+		}
+
+		if (isBWBitmap)
+		{
+			numUniqueColors = 2;
+			uniqueColors[0] = StdColors::White();
+			uniqueColors[1] = StdColors::Black();
+		}
+	}
+
+	int bpp = 0;
+	if (isBWBitmap)
+		bpp = 1;
+	else if (couldBe8Bit)
+	{
+		if (numUniqueColors <= 2)
+			bpp = 1;
+		else if (numUniqueColors <= 4)
+			bpp = 2;
+		else if (numUniqueColors <= 16)
+			bpp = 4;
+		else
+			bpp = 8;
+	}
+	else if (couldBe16Bit)
+		bpp = 16;
+	else
+		bpp = 32;
+
+	// The typical structure of a PICT is header, ClipRegion, then a raster op.
+	// We use V1 pict for 1bpp and V2 for all others.
+	struct PictHeader
+	{
+		uint8_t m_size[2];
+
+		BERect m_rect;
+	};
+
+	BERect beRect;
+	beRect.top = beRect.left = 0;
+	beRect.right = static_cast<int16_t>(width);
+	beRect.bottom = static_cast<int16_t>(height);
+
+	PictHeader pictHeader;
+	pictHeader.m_size[0] = 0;
+	pictHeader.m_size[1] = 0;
+	pictHeader.m_rect = beRect;
+
+	if (!AppendRawStruct(resData, pictHeader))
+		return ExportHouseResults::kMemError;
+
+	int pictVersion = 1;
+	if (isBWBitmap)
+	{
+		const uint8_t versionTag[2] = { 0x11, 0x01 };
+		if (!AppendRaw(resData, versionTag, 2))
+			return ExportHouseResults::kMemError;
+	}
+	else
+	{
+		pictVersion = 2;
+
+		struct PictV2Header
+		{
+			BEUInt16_t m_versionTag;
+			BEUInt16_t m_versionOp;
+			BEUInt16_t m_headerOp;
+			BEInt16_t m_v2Version;
+			BEInt16_t m_reserved1;
+			BEFixed32_t m_top;
+			BEFixed32_t m_left;
+			BEFixed32_t m_bottom;
+			BEFixed32_t m_right;
+			BEUInt32_t m_reserved2;
+		};
+
+		GP_STATIC_ASSERT(sizeof(PictV2Header) == 30);
+
+		PictV2Header v2Header;
+		v2Header.m_versionTag = 0x0011;
+		v2Header.m_versionOp = 0x02ff;
+		v2Header.m_headerOp = 0x0c00;
+		v2Header.m_v2Version = -1;
+		v2Header.m_reserved1 = -1;
+		v2Header.m_top.m_intPart = beRect.top;
+		v2Header.m_top.m_fracPart = 0;
+		v2Header.m_left.m_intPart = beRect.left;
+		v2Header.m_left.m_fracPart = 0;
+		v2Header.m_bottom.m_intPart = beRect.bottom;
+		v2Header.m_bottom.m_fracPart = 0;
+		v2Header.m_right.m_intPart = beRect.right;
+		v2Header.m_right.m_fracPart = 0;
+
+		if (!AppendRawStruct(resData, v2Header))
+			return ExportHouseResults::kMemError;
+	}
+
+	// Emit ClipRgn opcode
+	if (pictVersion == 1)
+	{
+		const uint8_t clipRgnOpcode[1] = { PortabilityLayer::QDOpcodes::kClipRegion };
+		if (!AppendRaw(resData, clipRgnOpcode, 1))
+			return ExportHouseResults::kMemError;
+	}
+	else if (pictVersion == 2)
+	{
+		const uint8_t clipRgnOpcode[2] = { 0, PortabilityLayer::QDOpcodes::kClipRegion };
+		if (!AppendRaw(resData, clipRgnOpcode, 2))
+			return ExportHouseResults::kMemError;
+	}
+
+	struct ClipRgnData
+	{
+		BEUInt16_t m_structureSize;
+		BERect m_rect;
+	};
+
+	GP_STATIC_ASSERT(sizeof(ClipRgnData) == 10);
+
+	ClipRgnData clipRgnData;
+	clipRgnData.m_structureSize = sizeof(ClipRgnData);
+	clipRgnData.m_rect = beRect;
+
+	if (!AppendRawStruct(resData, clipRgnData))
+		return ExportHouseResults::kMemError;
+
+	// Emit image
+	const size_t bitsPerRow = width * bpp;
+	const size_t bytesPerRow = (bitsPerRow + 7) / 8;
+	const size_t expansionCapacity = bytesPerRow + (bytesPerRow / 128) + 16;	// Worst-case scenario for RLE failure to compress
+
+	uint16_t bitmapOpcode = 0;
+	int packType = 0;
+	bool isDirect = false;
+	if (bpp <= 8)
+	{
+		if (bytesPerRow < 8)
+		{
+			packType = 1;
+			bitmapOpcode = PortabilityLayer::QDOpcodes::kBitsRect;
+		}
+		else
+		{
+			packType = 0;
+			bitmapOpcode = PortabilityLayer::QDOpcodes::kPackBitsRect;
+		}
+	}
+	else
+	{
+		isDirect = true;
+		bitmapOpcode = PortabilityLayer::QDOpcodes::kDirectBitsRect;
+
+		if (bpp == 16)
+			packType = 3;
+		else if (bpp == 32)
+			packType = 4;
+		else
+			return ExportHouseResults::kInternalError;
+	}
+
+	if (pictVersion == 1)
+	{
+		const uint8_t opcode = bitmapOpcode;
+		if (!AppendRaw(resData, &opcode, 1))
+			return ExportHouseResults::kMemError;
+	}
+	else if (pictVersion == 2)
+	{
+		const BEUInt16_t opcode(bitmapOpcode);
+		if (!AppendRaw(resData, &opcode, 2))
+			return ExportHouseResults::kMemError;
+	}
+
+	// Write prelude
+	const bool isPixmap = !isBWBitmap;
+	{
+		if (isDirect)
+		{
+			struct DirectPrelude
+			{
+				BEUInt32_t m_baseAddress;
+				BEUInt16_t m_rowSize;
+			};
+
+			DirectPrelude prelude;
+			prelude.m_baseAddress = 0;
+			prelude.m_rowSize = static_cast<uint16_t>(0x8000 | bytesPerRow);
+
+			if (!AppendRawStruct(resData, prelude))
+				return ExportHouseResults::kMemError;
+		}
+		else
+		{
+			uint16_t rowSize = bytesPerRow;
+			if (!isBWBitmap)
+				rowSize |= 0x8000;
+
+			BEUInt16_t rowSizeBE(rowSize);
+
+			if (!AppendRawStruct(resData, rowSizeBE))
+				return ExportHouseResults::kMemError;
+		}
+	}
+
+	// Do actual image packing, we need to do this now so we have the pack size available
+	GpVector<uint8_t> packedImage(PLDrivers::GetAlloc());
+
+	GpVector<uint8_t> uncompressedRowData8(PLDrivers::GetAlloc());
+	GpVector<uint16_t> uncompressedRowData16(PLDrivers::GetAlloc());
+	GpVector<uint8_t> compressedRowData(PLDrivers::GetAlloc());
+
+	if (packType == 4)
+	{
+		if (!uncompressedRowData8.Resize(bytesPerRow))
+			return ExportHouseResults::kMemError;
+	}
+	else
+	{
+		if (!uncompressedRowData16.Resize(bytesPerRow / 2))
+			return ExportHouseResults::kMemError;
+	}
+
+	if (!compressedRowData.Resize(expansionCapacity))
+		return ExportHouseResults::kMemError;
+
+	for (size_t row = 0; row < height; row++)
+	{
+		if (!uncompressedRowData8.Resize(0))
+			return ExportHouseResults::kMemError;
+
+		if (!uncompressedRowData16.Resize(0))
+			return ExportHouseResults::kMemError;
+
+		const uint8_t *srcRowStart = imageData + pixelDataPitch * row;
+
+		if (packType == 4)
+		{
+			// RGB24 images
+			for (size_t ch = 0; ch < 3; ch++)
+			{
+				for (size_t col = 0; col < width; col++)
+				{
+					const uint8_t *srcPixelStart = srcRowStart + col * 4;
+					if (!uncompressedRowData8.Append(srcPixelStart[ch]))
+						return ExportHouseResults::kMemError;
+				}
+			}
+		}
+		else if (couldBe16Bit)
+		{
+			assert(packType == 3);
+			for (size_t col = 0; col < width; col++)
+			{
+				const uint8_t *srcPixelStart = srcRowStart + col * 4;
+				uint16_t packed = ((srcPixelStart[0] << 7) & 0x7c00) | ((srcPixelStart[1] << 2) & 0x3e0) | ((srcPixelStart[2] >> 3) & 0x1f);
+				if (!uncompressedRowData16.Append(packed))
+					return ExportHouseResults::kMemError;
+			}
+		}
+		else
+		{
+			assert(couldBe8Bit);
+
+			int numBitsSpooled = 0;
+			uint8_t spooledBits = 0;
+			for (size_t col = 0; col < width; col++)
+			{
+				const uint8_t *srcPixelStart = srcRowStart + col * 4;
+				PortabilityLayer::RGBAColor color = PortabilityLayer::RGBAColor::Create(srcPixelStart[0], srcPixelStart[1], srcPixelStart[2], srcPixelStart[3]);
+				int colorIndex = -1;
+				for (int ci = 0; ci < numUniqueColors; ci++)
+				{
+					if (color == uniqueColors[ci])
+					{
+						colorIndex = ci;
+						break;
+					}
+				}
+
+				assert(colorIndex >= 0);
+
+				spooledBits <<= bpp;
+				spooledBits |= colorIndex;
+				numBitsSpooled += bpp;
+
+				if (numBitsSpooled == 8)
+				{
+					if (!uncompressedRowData8.Append(spooledBits))
+						return ExportHouseResults::kMemError;
+
+					numBitsSpooled = 0;
+					spooledBits = 0;
+				}
+			}
+
+			if (numBitsSpooled != 0)
+			{
+				spooledBits <<= (8 - numBitsSpooled);
+				if (!uncompressedRowData8.Append(spooledBits))
+					return ExportHouseResults::kMemError;
+			}
+		}
+
+		if (!compressedRowData.Resize(0))
+			return ExportHouseResults::kMemError;
+
+		bool needsLengthMarker = false;
+		switch (packType)
+		{
+		case 0:
+		case 4:
+			// 8-bit RLE
+			if (!RLEEncoder::PackRLE<uint8_t>(compressedRowData, uncompressedRowData8))
+				return ExportHouseResults::kMemError;
+
+			needsLengthMarker = true;
+			break;
+		case 1:
+			// Uncompressed
+			if (!compressedRowData.Resize(bytesPerRow))
+				return ExportHouseResults::kMemError;
+
+			for (size_t i = 0; i < bytesPerRow; i++)
+				compressedRowData[i] = uncompressedRowData8[i];
+
+			needsLengthMarker = false;
+			break;
+		case 3:
+			// 16-bit RLE
+			if (!RLEEncoder::PackRLE<uint16_t>(compressedRowData, uncompressedRowData16))
+				return ExportHouseResults::kMemError;
+			needsLengthMarker = true;
+			break;
+		default:
+			assert(false);
+			return ExportHouseResults::kInternalError;
+		};
+
+		const size_t compressedSize = compressedRowData.Count();
+		if (needsLengthMarker)
+		{
+			if (bytesPerRow > 250)
+				packedImage.Append((compressedSize >> 8) & 0xff);
+			packedImage.Append(compressedSize & 0xff);
+		}
+
+		for (size_t i = 0; i < compressedSize; i++)
+			packedImage.Append(compressedRowData[i]);
+	}
+
+
+	// Write BitMap/PixMap
+	{
+		if (isBWBitmap)
+		{
+			struct BitMapData
+			{
+				BEBitMap m_bitMap;
+				BERect m_srcRect;
+				BERect m_destRect;
+				BEUInt16_t m_transferMode;
+			};
+
+			BitMapData bmData;
+			bmData.m_bitMap.m_bounds = beRect;
+			bmData.m_srcRect = beRect;
+			bmData.m_destRect = beRect;
+			bmData.m_transferMode = 0;
+
+			if (!AppendRawStruct(resData, bmData))
+				return ExportHouseResults::kMemError;
+		}
+		else
+		{
+			BEPixMap pixMap;
+			pixMap.m_bounds = beRect;
+			pixMap.m_version = 0;
+			pixMap.m_packType = packType;
+			pixMap.m_packSize = static_cast<uint32_t>(packedImage.Count());
+			pixMap.m_hRes = 0x480000;
+			pixMap.m_vRes = 0x480000;
+			pixMap.m_pixelType = (isDirect ? 16 : 0);
+			pixMap.m_pixelSize = bpp;
+			pixMap.m_componentCount = isDirect ? 3 : 1;
+
+			if (bpp == 32)
+				pixMap.m_componentSize = 8;
+			else if (bpp == 16)
+				pixMap.m_componentSize = 5;
+			else
+				pixMap.m_componentSize = bpp;
+
+			pixMap.m_planeSizeBytes = 0;
+			pixMap.m_clutHandle = 0;
+			pixMap.m_unused = 0;
+
+			if (!AppendRawStruct(resData, pixMap))
+				return ExportHouseResults::kMemError;
+
+			if (isDirect)
+			{
+			}
+			else
+			{
+				BEColorTableHeader clutHeader;
+				clutHeader.m_resourceID = 0;
+				clutHeader.m_flags = 0;
+				clutHeader.m_numItemsMinusOne = numUniqueColors - 1;
+
+				if (!AppendRawStruct(resData, clutHeader))
+					return ExportHouseResults::kMemError;
+
+				for (int i = 0; i < numUniqueColors; i++)
+				{
+					BEColorTableItem item;
+					item.m_index = i;
+					item.m_red[0] = item.m_red[1] = uniqueColors[i].r;
+					item.m_green[0] = item.m_green[1] = uniqueColors[i].g;
+					item.m_blue[0] = item.m_blue[1] = uniqueColors[i].b;
+
+					if (!AppendRawStruct(resData, item))
+						return ExportHouseResults::kMemError;
+				}
+			}
+
+			struct TransferData
+			{
+				BERect m_srcRect;
+				BERect m_destRect;
+				BEUInt16_t m_transferMode;
+			};
+
+			TransferData transferData;
+			transferData.m_srcRect = beRect;
+			transferData.m_destRect = beRect;
+			transferData.m_transferMode = 0;
+
+			if (!AppendRawStruct(resData, transferData))
+				return ExportHouseResults::kMemError;
+		}
+	}
+
+	// Write image contents
+	if (!AppendRaw(resData, &packedImage[0], packedImage.Count()))
+		return ExportHouseResults::kMemError;
+
+	// Write pad byte (??)
+	if (!isBWBitmap && (resData.Count() & 1) != 0)
+	{
+		if (!resData.Append(0))
+			return ExportHouseResults::kMemError;
+	}
+
+	// Emit EOP opcode
+	if (pictVersion == 1)
+	{
+		const uint8_t eopOpcode[1] = { PortabilityLayer::QDOpcodes::kEndOfPicture };
+		if (!AppendRaw(resData, eopOpcode, 1))
+			return ExportHouseResults::kMemError;
+	}
+	else if (pictVersion == 2)
+	{
+		const uint8_t eopOpcode[2] = { 0, PortabilityLayer::QDOpcodes::kEndOfPicture };
+		if (!AppendRaw(resData, eopOpcode, 2))
+			return ExportHouseResults::kMemError;
+	}
+
+	return ExportHouseResults::kOK;
+}
+
+static ExportHouseResult_t TryExportPICT(GpVector<uint8_t> &resData, const THandle<void> &resHandle)
+{
+	// Parse bitmap header
+	const THandle<BitmapImage> bmpHandle = resHandle.StaticCast<BitmapImage>();
+	const BitmapImage *bmp = *bmpHandle;
+
+	const Rect rect = bmp->GetRect();
+	DrawSurface *surface = nullptr;
+	if (NewGWorld(&surface, GpPixelFormats::kRGB32, &rect, nullptr) != PLErrors::kNone)
+		return ExportHouseResults::kMemError;
+
+	surface->DrawPicture(bmpHandle, rect, false);
+
+	ExportHouseResult_t result = TryExportPictFromSurface(resData, surface);
+
+	DisposeGWorld(surface);
+
+	return result;
+}
+
+static ExportHouseResult_t TryExportResource(GpVector<uint8_t> &resData, PortabilityLayer::IResourceArchive *resArchive, const PortabilityLayer::ResTypeID &resTypeID, int16_t resID)
+{
+	THandle<void> resHandle = resArchive->LoadResource(resTypeID, resID);
+	if (!resHandle)
+		return ExportHouseResults::kMemError;
+
+	if (resTypeID == PortabilityLayer::ResTypeID('PICT'))
+	{
+		ExportHouseResult_t exportResult = TryExportPICT(resData, resHandle);
+		resHandle.Dispose();
+		return exportResult;
+	}
+
+	if (resTypeID == PortabilityLayer::ResTypeID('snd '))
+	{
+		ExportHouseResult_t exportResult = TryExportSound(resData, resHandle);
+		resHandle.Dispose();
+		return exportResult;
+	}
+
+	const size_t size = resHandle.MMBlock()->m_size;
+	if (!resData.Resize(size))
+	{
+		resHandle.Dispose();
+		return ExportHouseResults::kMemError;
+	}
+
+	if (size > 0)
+		memcpy(&resData[0], *resHandle, size);
+
+	resHandle.Dispose();
+
+	return ExportHouseResults::kOK;
+}
+
+ExportHouseResult_t TryExportResources(GpIOStream *stream, PortabilityLayer::IResourceArchive *resArchive)
+{
+	if (!resArchive)
+		return ExportHouseResults::kOK;
+
+	IGpAllocator *alloc = PLDrivers::GetAlloc();
+
+	GpVector<SimpleResource> resources(alloc);
+
+	GpUFilePos_t resForkStart = stream->Tell();
+
+	PortabilityLayer::IResourceIterator *iterator = resArchive->EnumerateResources();
+	if (!iterator)
+		return ExportHouseResults::kMemError;
+
+	const GpUFilePos_t resForkHeaderPos = stream->Tell();
+
+	GpUFilePos_t resForkDataStart = 0;
+
+	PortabilityLayer::ResTypeID resTypeID;
+	int16_t resID = 0;
+	bool isFirstResource = true;
+	while (iterator->GetOne(resTypeID, resID))
+	{
+		if (resTypeID != PortabilityLayer::ResTypeID('PICT') && resTypeID != PortabilityLayer::ResTypeID('snd '))
+			continue;
+
+		if (isFirstResource)
+		{
+			// Seems to want this much scratch space...
+			uint8_t headerData[256];
+			memset(headerData, 0, sizeof(headerData));
+			if (!stream->WriteExact(headerData, sizeof(headerData)))
+				return ExportHouseResults::kIOError;
+
+			resForkDataStart = stream->Tell();
+			isFirstResource = false;
+		}
+
+		SimpleResource res;
+
+		bool isPurgeable = true;
+
+		res.m_name.Set(0, nullptr);
+		res.m_resourceID = resID;
+		res.m_resType = resTypeID;
+		res.m_attributes = 0;
+		res.m_offsetInResData = stream->Tell() - resForkDataStart;
+
+		if (isPurgeable)
+			res.m_attributes |= (1 << 5);
+
+		if (!resources.Append(static_cast<SimpleResource&&>(res)))
+		{
+			iterator->Destroy();
+			return ExportHouseResults::kMemError;
+		}
+
+		GpVector<uint8_t> resData(alloc);
+		ExportHouseResult_t exportResResult = TryExportResource(resData, resArchive, resTypeID, resID);
+		if (exportResResult != ExportHouseResults::kOK)
+			return exportResResult;
+
+		BEUInt32_t packedLen(static_cast<uint32_t>(resData.Count()));
+
+		if (!stream->WriteExact(&packedLen, sizeof(packedLen)))
+		{
+			iterator->Destroy();
+			return ExportHouseResults::kIOError;
+		}
+
+		if (resData.Count() > 0)
+		{
+			if (!stream->WriteExact(&resData[0], resData.Count()))
+			{
+				iterator->Destroy();
+				return ExportHouseResults::kIOError;
+			}
+		}
+
+		const unsigned int unpaddedExcess = ((stream->Tell() - resForkStart) & 0x3);
+		if (unpaddedExcess > 0)
+		{
+			uint8_t padding[4] = { 0, 0, 0, 0 };
+			if (!stream->WriteExact(padding, 4 - unpaddedExcess))
+				return ExportHouseResults::kIOError;
+		}
+	}
+
+	iterator->Destroy();
+
+	if (!resources.Count())
+		return ExportHouseResults::kOK;
+
+	GpVector<PortabilityLayer::ResTypeID> uniqueResTypes(alloc);
+	GpVector<unsigned int> resTypeCounts(alloc);
+
+	// Generate res map
+	for (size_t i = 0; i < resources.Count(); i++)
+	{
+		const SimpleResource &res = resources[i];
+
+		size_t uniqueResTypeIndex = uniqueResTypes.Count();
+
+		for (size_t uri = 0; uri < uniqueResTypes.Count(); uri++)
+		{
+			if (uniqueResTypes[uri] == res.m_resType)
+			{
+				uniqueResTypeIndex = uri;
+				break;
+			}
+		}
+
+		if (uniqueResTypeIndex == uniqueResTypes.Count())
+		{
+			if (!uniqueResTypes.Append(res.m_resType))
+				return ExportHouseResults::kMemError;
+
+			if (!resTypeCounts.Append(1))
+				return ExportHouseResults::kMemError;
+		}
+		else
+			resTypeCounts[uniqueResTypeIndex]++;
+	}
+
+	const GpUFilePos_t resMapPos = stream->Tell();
+	const GpUFilePos_t resDataSize = resMapPos - resForkDataStart;
+
+	// Reserved space for resource header copy (16), handle to next res map (4), file ref number (2)
+	{
+		char resHeaderCopy[22];
+		memset(resHeaderCopy, 0, sizeof(resHeaderCopy));
+
+		if (!stream->WriteExact(resHeaderCopy, sizeof(resHeaderCopy)))
+			return ExportHouseResults::kIOError;
+	}
+
+	uint16_t resForkAttributes = 0;	// We don't use any of these
+
+	const size_t typeListEntrySize = 8;
+	const size_t refListEntrySize = 12;
+
+	const size_t resourceTypeListStartLoc = 28;
+	const size_t resourceTypeListSize = 2 + uniqueResTypes.Count() * typeListEntrySize;
+	const size_t resourceRefListStartLoc = resourceTypeListStartLoc + resourceTypeListSize;
+	const size_t resourceNameListStartLoc = resourceRefListStartLoc + resources.Count() * refListEntrySize;
+
+	struct ResForkHeaderData
+	{
+		BEUInt16_t m_attributes;
+		BEUInt16_t m_resourceTypeListStartLoc;
+		BEUInt16_t m_resourceNameListStartLoc;
+		BEUInt16_t m_numResTypesMinusOne;
+	};
+
+	ResForkHeaderData headerData;
+	headerData.m_attributes = resForkAttributes;
+	headerData.m_resourceTypeListStartLoc = resourceTypeListStartLoc;
+	headerData.m_resourceNameListStartLoc = resourceNameListStartLoc;
+	headerData.m_numResTypesMinusOne = uniqueResTypes.Count() - 1;
+
+	if (!stream->WriteExact(&headerData, sizeof(headerData)))
+		return ExportHouseResults::kIOError;
+
+	GpVector<size_t> refListStartForType(alloc);
+	if (!refListStartForType.Resize(resTypeCounts.Count()))
+		return ExportHouseResults::kMemError;
+
+	if (resTypeCounts.Count() > 0)
+	{
+		refListStartForType[0] = 0;
+		for (size_t i = 1; i < refListStartForType.Count(); i++)
+			refListStartForType[i] = refListStartForType[i - 1] + resTypeCounts[i - 1];
+	}
+
+	struct ResTypeData
+	{
+		char m_resType[4];
+		BEUInt16_t m_resCountMinusOne;
+		BEUInt16_t m_refListStart;
+	};
+
+	// Write resource type list
+	for (size_t i = 0; i < uniqueResTypes.Count(); i++)
+	{
+		ResTypeData resTypeData;
+		uniqueResTypes[i].ExportAsChars(resTypeData.m_resType);
+		resTypeData.m_resCountMinusOne = resTypeCounts[i] - 1;
+		resTypeData.m_refListStart = static_cast<uint16_t>(refListStartForType[i] * refListEntrySize + resourceTypeListSize);
+
+		if (!stream->WriteExact(&resTypeData, sizeof(resTypeData)))
+			return ExportHouseResults::kIOError;
+	}
+
+	struct RefListEntry
+	{
+		BEInt16_t m_resID;
+		BEInt16_t m_nameOffset;
+		uint8_t m_attribs;
+		uint8_t m_resDataStart[3];
+		BEUInt32_t m_reserved;
+	};
+
+	// Write reference lists
+	for (size_t ti = 0; ti < uniqueResTypes.Count(); ti++)
+	{
+		PortabilityLayer::ResTypeID resType = uniqueResTypes[ti];
+
+		for (size_t i = 0; i < resources.Count(); i++)
+		{
+			const SimpleResource &res = resources[i];
+			if (res.m_resType != resType)
+				continue;
+
+			RefListEntry refListEntry;
+			refListEntry.m_resID = static_cast<int16_t>(res.m_resourceID);
+			refListEntry.m_nameOffset = -1;
+			refListEntry.m_attribs = res.m_attributes;
+
+			const size_t resDataStart = res.m_offsetInResData;
+
+			refListEntry.m_resDataStart[0] = static_cast<uint8_t>((resDataStart >> 16) & 0xff);
+			refListEntry.m_resDataStart[1] = static_cast<uint8_t>((resDataStart >> 8) & 0xff);
+			refListEntry.m_resDataStart[2] = static_cast<uint8_t>((resDataStart >> 0) & 0xff);
+			refListEntry.m_reserved = 0;
+
+			if (!stream->WriteExact(&refListEntry, sizeof(refListEntry)))
+				return ExportHouseResults::kIOError;
+		}
+	}
+
+	const GpUFilePos_t resForkEnd = stream->Tell();
+	const GpUFilePos_t resMapSize = resForkEnd - resMapPos;
+
+	struct ResForkHeader
+	{
+		BEUInt32_t m_resForkDataStart;
+		BEUInt32_t m_resMapPos;
+		BEUInt32_t m_resDataSize;
+		BEUInt32_t m_resMapSize;
+	};
+
+	ResForkHeader header;
+	header.m_resForkDataStart = static_cast<uint32_t>(resForkDataStart - resForkStart);
+	header.m_resMapPos = static_cast<uint32_t>(resMapPos - resForkStart);
+	header.m_resDataSize = static_cast<uint32_t>(resDataSize);
+	header.m_resMapSize = static_cast<uint32_t>(resMapSize);
+
+	// Write header at the start of the file
+	if (!stream->SeekStart(resForkHeaderPos))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(&header, sizeof(header)))
+		return ExportHouseResults::kIOError;
+
+	// Write header at the start of the resource map
+	if (!stream->SeekStart(resMapPos))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(&header, sizeof(header)))
+		return ExportHouseResults::kIOError;
+
+	// Return to the end of the file
+	if (!stream->SeekStart(resForkEnd))
+		return ExportHouseResults::kIOError;
+
+	return ExportHouseResults::kOK;
+}
+
+ExportHouseResult_t TryExportHouseToStream(GpIOStream *stream)
+{
+	uint8_t mb2Header[PortabilityLayer::MacBinary2::kHeaderSize];
+	memset(mb2Header, 0, sizeof(mb2Header));
+
+	// Write MacBinary header
+	if (!stream->WriteExact(mb2Header, sizeof(mb2Header)))
+		return ExportHouseResults::kIOError;
+
+	houseType *house = *thisHouse;
+	const size_t houseSize = thisHouse.MMBlock()->m_size;
+	const size_t nRooms = house->nRooms;
+	const size_t houseDataSize = houseType::kBinaryDataSize + sizeof(roomType) * nRooms;
+	ByteSwapHouse(house, houseSize, true);
+
+	if (!stream->WriteExact(house, houseType::kBinaryDataSize))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(house->rooms, sizeof(roomType) * nRooms))
+		return ExportHouseResults::kIOError;
+
+	ByteSwapHouse(house, houseSize, false);
+
+	char padding[128];
+	memset(padding, 0, sizeof(padding));
+
+	const GpUFilePos_t dataAlignExcess = stream->Tell() % 128;
+	if (dataAlignExcess != 0)
+	{
+		if (!stream->WriteExact(padding, 128 - dataAlignExcess))
+			return ExportHouseResults::kIOError;
+	}
+
+	const GpUFilePos_t resForkPos = stream->Tell();
+
+	// Serialize resources
+	if (houseResFork != nullptr)
+	{
+		ExportHouseResult_t resExportResult = TryExportResources(stream, houseResFork);
+		if (resExportResult != ExportHouseResults::kOK)
+			return resExportResult;
+	}
+
+	const GpUFilePos_t resForkSize = stream->Tell() - resForkPos;
+
+	const GpUFilePos_t resAlignExcess = resForkSize % 128;
+	if (resForkSize != 0)
+	{
+		if (!stream->WriteExact(padding, 128 - resAlignExcess))
+			return ExportHouseResults::kIOError;
+	}
+
+	PortabilityLayer::MacFileInfo fileInfo;
+	fileInfo.m_fileName.Set(thisHouseName[0], reinterpret_cast<const char*>(thisHouseName + 1));
+	fileInfo.m_commentSize = 0;
+	fileInfo.m_dataForkSize = houseDataSize;
+	fileInfo.m_resourceForkSize = resForkSize;
+	memcpy(fileInfo.m_properties.m_fileType, "gliH", 4);
+	memcpy(fileInfo.m_properties.m_fileCreator, "ozm5", 4);
+	fileInfo.m_properties.m_xPos = 0;
+	fileInfo.m_properties.m_yPos = 0;
+	fileInfo.m_properties.m_finderFlags = 0;
+	fileInfo.m_properties.m_protected = 0;
+	fileInfo.m_properties.m_createdTimeMacEpoch = fileInfo.m_properties.m_modifiedTimeMacEpoch = PLDrivers::GetSystemServices()->GetTime();
+
+	PortabilityLayer::MacBinary2::SerializeHeader(mb2Header, fileInfo);
+
+	if (!stream->SeekStart(0))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(mb2Header, PortabilityLayer::MacBinary2::kHeaderSize))
+		return ExportHouseResults::kIOError;
+
+	return ExportHouseResults::kOK;
+}
+
+ExportHouseResult_t TryExportHouse(void)
+{
+	GpIOStream *stream = nullptr;
+	if (PortabilityLayer::FileManager::GetInstance()->OpenNonCompositeFile(PortabilityLayer::VirtualDirectories::kSourceExport, thisHouseName, ".bin", PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOverwrite, stream))
+		return ExportHouseResults::kStreamFailed;
+
+	ExportHouseResult_t result = TryExportHouseToStream(stream);
+	stream->Close();
+
+	return result;
+}
+
+void ExportHouse(void)
+{
+	TryExportHouse();
 }

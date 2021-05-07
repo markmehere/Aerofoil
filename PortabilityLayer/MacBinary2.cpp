@@ -40,13 +40,9 @@ namespace
 
 namespace PortabilityLayer
 {
-	void MacBinary2::WriteBin(const MacFileMem *file, GpIOStream *stream)
+	void MacBinary2::SerializeHeader(unsigned char *mb2Header, const MacFileInfo &fileInfo)
 	{
-		const MacFileInfo &fileInfo = file->FileInfo();
-
-		uint8_t mb2Header[128];
-
-		memset(mb2Header, 0, sizeof(mb2Header));
+		memset(mb2Header, 0, kHeaderSize);
 
 		mb2Header[MB2FileOffsets::Version] = 0;
 
@@ -87,7 +83,15 @@ namespace PortabilityLayer
 		mb2Header[MB2FileOffsets::MinVersion] = 129;
 
 		BytePack::BigUInt16(mb2Header + MB2FileOffsets::Checksum, XModemCRC(mb2Header, 124, 0));
+	}
 
+	void MacBinary2::WriteBin(const MacFileMem *file, GpIOStream *stream)
+	{
+		const MacFileInfo &fileInfo = file->FileInfo();
+
+		uint8_t mb2Header[128];
+
+		SerializeHeader(mb2Header, fileInfo);
 		stream->Write(mb2Header, 128);
 
 		uint8_t *padding = mb2Header;

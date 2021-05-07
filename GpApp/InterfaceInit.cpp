@@ -32,7 +32,7 @@ extern	WindowPtr		mapWindow, toolsWindow, linkWindow;
 extern	Rect			boardSrcRect, localRoomsDest[];
 extern	IGpCursor		*handCursor, *vertCursor, *horiCursor;
 extern	IGpCursor		*diagCursor;
-extern	MenuHandle		appleMenu, gameMenu, optionsMenu, houseMenu;
+extern	MenuHandle		appleMenu, gameMenu, optionsMenu, houseMenu, exportMenu;
 extern	long			incrementModeTime;
 extern	UInt32			doubleTime;
 extern	short			fadeInSequence[], idleMode;
@@ -50,6 +50,8 @@ extern	Boolean			twoPlayerGame, paused, hasMirror, splashDrawn;
 
 void InitializeMenus (void)
 {
+	PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
+
 	appleMenu = GetMenu(kAppleMenuID);
 	if (appleMenu == nil)
 		RedAlert(kErrFailedResourceLoad);
@@ -70,12 +72,15 @@ void InitializeMenus (void)
 	if (!thisMac.isTouchscreen)
 	{
 		menusUp = true;
-		PortabilityLayer::MenuManager::GetInstance()->SetMenuVisible(true);
+		mm->SetMenuVisible(true);
 	}
 	
 	houseMenu = GetMenu(kHouseMenuID);
 	if (houseMenu == nil)
 		RedAlert(kErrFailedResourceLoad);
+
+	exportMenu = mm->CreateMenu(PSTR("Export"), kExportMenuID, true, 100, 16, 0);
+	mm->AppendMenuItem(exportMenu, 0, 0, 0, 0, true, false, PSTR("Export Glider PRO\xaa House..."));
 	
 	UpdateMenus(false);
 }

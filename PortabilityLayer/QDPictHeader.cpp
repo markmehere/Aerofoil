@@ -55,9 +55,9 @@ namespace PortabilityLayer
 			memcpy(&v2Version, v2Header + 4, 2);
 
 			// In version 2 header, v2Version == -1
-			// Followed by fixed-point bounding rectangle (16 bytes) and 4 reserved
+			// Followed by 2-byte reserved (usually -1), fixed-point bounding rectangle (16 bytes) and 4 reserved (usually 0)
 			// In ext. version 2 header, v2Version == -2
-			// Followed by 2-byte reserved, horizontal DPI (fixed point, 4 bytes), vertical DPI (fixed point, 4 bytes) optimal source rect (8 bytes), and 2 reserved
+			// Followed by 2-byte reserved (0), horizontal DPI (fixed point, 4 bytes), vertical DPI (fixed point, 4 bytes) optimal source rect (8 bytes), and 2 reserved
 		}
 		else
 			return false;

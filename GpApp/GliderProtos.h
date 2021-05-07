@@ -119,6 +119,7 @@ void GenerateRetroLinks (void);
 void DoGoToDialog (void);
 void ConvertHouseVer1To2 (void);
 void ShiftWholeHouse (SInt16);
+void ExportHouse (void);
 
 void DoHouseInfo (void);								// --- HouseInfo.c
 

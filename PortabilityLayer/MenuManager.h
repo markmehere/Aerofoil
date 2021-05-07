@@ -23,6 +23,7 @@ namespace PortabilityLayer
 		virtual void Init() = 0;
 		virtual void Shutdown() = 0;
 
+		virtual THandle<Menu> CreateMenu(const PLPasStr &title, uint16_t menuID, bool enabled, uint16_t width, uint16_t height, uint16_t commandID) const = 0;
 		virtual THandle<Menu> DeserializeMenu(const void *resData) const = 0;
 		virtual THandle<Menu> GetMenuByID(int id) const = 0;
 
