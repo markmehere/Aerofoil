@@ -9,7 +9,6 @@
 #include "RGBAColor.h"
 #include "Vec2i.h"
 
-#include <vector>
 #include <assert.h>
 
 struct QDPictDecodeState

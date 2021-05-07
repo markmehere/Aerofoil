@@ -16,7 +16,7 @@
 #include "PLErrorCodes.h"
 #include "PLSysCalls.h"
 
-#include <vector>
+#include <new>
 #include <stdlib.h>
 
 namespace PortabilityLayer
