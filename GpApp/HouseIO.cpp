@@ -69,8 +69,6 @@ void OpenHouseMovie (void)
 #ifdef COMPILEQT
 	VFileSpec	theSpec;
 	Handle		spaceSaver;
-	short		movieRefNum;
-	Boolean		dataRefWasChanged;
 	
 	if (thisMac.hasQT)
 	{
@@ -107,9 +105,7 @@ void OpenHouseMovie (void)
 
 void CloseHouseMovie (void)
 {
-#ifdef COMPILEQT
-	PLError_t		theErr;
-	
+#ifdef COMPILEQT	
 	if ((thisMac.hasQT) && (hasMovie))
 	{
 		AnimationManager::GetInstance()->RemovePlayer(&theMovie);
@@ -1123,8 +1119,8 @@ static bool LegalizeTransport(houseType *house, size_t roomNum, size_t objectNum
 			transport->tall = static_cast<int16_t>(((objRect.Width() / 4) << 8) + objRect.Height() / 4);
 		else if (obj->what == kInvisTrans)
 		{
-			transport->wide = objRect.Width();
-			transport->tall = objRect.Height();
+			transport->wide = static_cast<Byte>(objRect.Width());
+			transport->tall = static_cast<int16_t>(objRect.Height());
 		}
 	}
 
@@ -1946,8 +1942,6 @@ static bool LegalizeHouse(houseType *house, bool &anyRepairs)
 
 Boolean ReadHouse (GpIOStream *houseStream, bool untrusted)
 {
-	long		byteCount;
-	PLError_t	theErr;
 	short		whichRoom;
 
 	// There should be no padding remaining the house type
@@ -1959,7 +1953,7 @@ Boolean ReadHouse (GpIOStream *houseStream, bool untrusted)
 		return (false);
 	}
 
-	byteCount = houseStream->Size();
+	const GpUFilePos_t byteCount = houseStream->Size();
 	
 	#ifdef COMPILEDEMO
 	if (byteCount != 16526L)
@@ -2190,8 +2184,6 @@ Boolean WriteHouse (Boolean checkIt)
 
 Boolean CloseHouse (void)
 {
-	PLError_t		theErr;
-	
 	if (!houseOpen)
 		return (true);
 	
@@ -2875,7 +2867,7 @@ static ExportHouseResult_t TryExportPictFromSurface(GpVector<uint8_t> &resData, 
 
 	if (pictVersion == 1)
 	{
-		const uint8_t opcode = bitmapOpcode;
+		const uint8_t opcode = static_cast<uint8_t>(bitmapOpcode);
 		if (!AppendRaw(resData, &opcode, 1))
 			return ExportHouseResults::kMemError;
 	}
@@ -2906,7 +2898,7 @@ static ExportHouseResult_t TryExportPictFromSurface(GpVector<uint8_t> &resData, 
 		}
 		else
 		{
-			uint16_t rowSize = bytesPerRow;
+			uint16_t rowSize = static_cast<uint16_t>(bytesPerRow);
 			if (!isBWBitmap)
 				rowSize |= 0x8000;
 
@@ -3395,9 +3387,9 @@ ExportHouseResult_t TryExportResources(GpIOStream *stream, PortabilityLayer::IRe
 
 	ResForkHeaderData headerData;
 	headerData.m_attributes = resForkAttributes;
-	headerData.m_resourceTypeListStartLoc = resourceTypeListStartLoc;
-	headerData.m_resourceNameListStartLoc = resourceNameListStartLoc;
-	headerData.m_numResTypesMinusOne = uniqueResTypes.Count() - 1;
+	headerData.m_resourceTypeListStartLoc = static_cast<uint16_t>(resourceTypeListStartLoc);
+	headerData.m_resourceNameListStartLoc = static_cast<uint16_t>(resourceNameListStartLoc);
+	headerData.m_numResTypesMinusOne = static_cast<uint16_t>(uniqueResTypes.Count() - 1);
 
 	if (!stream->WriteExact(&headerData, sizeof(headerData)))
 		return ExportHouseResults::kIOError;
@@ -3562,7 +3554,7 @@ ExportHouseResult_t TryExportHouseToStream(GpIOStream *stream)
 	PortabilityLayer::MacFileInfo fileInfo;
 	fileInfo.m_fileName.Set(thisHouseName[0], reinterpret_cast<const char*>(thisHouseName + 1));
 	fileInfo.m_commentSize = 0;
-	fileInfo.m_dataForkSize = houseDataSize;
+	fileInfo.m_dataForkSize = static_cast<uint32_t>(houseDataSize);
 	fileInfo.m_resourceForkSize = resForkSize;
 	memcpy(fileInfo.m_properties.m_fileType, "gliH", 4);
 	memcpy(fileInfo.m_properties.m_fileCreator, "ozm5", 4);
