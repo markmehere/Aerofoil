@@ -30,6 +30,7 @@ public:
 	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
 	static void MarkFSStateDirty();
+	static void SyncDownloadFile(const std::string &filePath, const std::string &prettyName);
 	static void FlushFS();
 
 	static GpFileSystem_Web *GetInstance();
@@ -54,7 +55,7 @@ private:
 
 	static IGpDirectoryCursor *ScanCatalog(const GpFileSystem_Web_Resources::FileCatalog &catalog);
 
-	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool trailingSlash, std::string &resolution);
+	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool trailingSlash, std::string &resolution, bool &outIsIDB);
 
 	DelayCallback_t m_delayCallback;
 

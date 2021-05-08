@@ -31,10 +31,9 @@ IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverPrope
 EM_JS(void, InitFileSystem, (), {
 	Asyncify.handleSleep(wakeUp => {
 		FS.mkdir('/aerofoil');
-		//FS.mkdir('/aerofoil_memfs');
+		FS.mkdir('/aerofoil_memfs');
 		FS.mount(IDBFS, {}, '/aerofoil');
-		//FS.mount(MEMFS, {}, '/aerofoil_memfs');
-		//FS.mkdir('/aerofoil_memfs/Export');
+		FS.mount(MEMFS, {}, '/aerofoil_memfs');
 		FS.syncfs(true, function (err) {
 			assert(!err);
 			wakeUp();

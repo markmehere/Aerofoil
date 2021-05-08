@@ -39,6 +39,22 @@ EM_JS(void, FlushFileSystem, (), {
 	});
 });
 
+EM_JS(void, DownloadAndDeleteFile, (const char *fileNamePtr, const char *prettyNamePtr), {
+	var fileName = UTF8ToString(fileNamePtr);
+	var prettyName = UTF8ToString(prettyNamePtr);
+	console.log("Flush download of file " + fileName + " as " + prettyName);
+
+	var mimeType = "application/octet-stream";
+	if (prettyName.endsWith(".bin"))
+		mimeType = "application/macbinary";
+	else if (prettyName.endsWith(".gpf"))
+		mimeType = "application/zip";
+
+	var byteArray = FS.readFile(fileName, { encoding: "binary" });
+	var blob = new Blob([byteArray], { type: mimeType });
+	saveAs(blob, prettyName);
+});
+
 
 class GpDirectoryCursor_Web final : public IGpDirectoryCursor
 {
@@ -255,7 +271,7 @@ void GpFileStream_Web_StaticMemFile::Flush()
 class GpFileStream_Web_File final : public GpIOStream
 {
 public:
-	GpFileStream_Web_File(FILE *f, bool readOnly, bool writeOnly, bool synchronizeOnClose);
+	GpFileStream_Web_File(FILE *f, const std::string &filePath, const std::string &prettyName, bool readOnly, bool writeOnly, bool synchronizeOnClose, bool isIDB);
 	~GpFileStream_Web_File();
 
 	size_t Read(void *bytesOut, size_t size) override;
@@ -273,18 +289,24 @@ public:
 
 private:
 	FILE *m_f;
+	std::string m_filePath;
+	std::string m_prettyName;
 	bool m_seekable;
 	bool m_isReadOnly;
 	bool m_isWriteOnly;
 	bool m_synchronizeOnClose;
+	bool m_isIDB;
 };
 
 
-GpFileStream_Web_File::GpFileStream_Web_File(FILE *f, bool readOnly, bool writeOnly, bool synchronizeOnClose)
+GpFileStream_Web_File::GpFileStream_Web_File(FILE *f, const std::string &filePath, const std::string &prettyName, bool readOnly, bool writeOnly, bool synchronizeOnClose, bool isIDB)
 	: m_f(f)
 	, m_isReadOnly(readOnly)
 	, m_isWriteOnly(writeOnly)
 	, m_synchronizeOnClose(synchronizeOnClose)
+	, m_isIDB(isIDB)
+	, m_filePath(filePath)
+	, m_prettyName(prettyName)
 {
 	m_seekable = (fseek(m_f, 0, SEEK_CUR) == 0);
 }
@@ -294,7 +316,12 @@ GpFileStream_Web_File::~GpFileStream_Web_File()
 	fclose(m_f);
 
 	if (m_synchronizeOnClose)
-		GpFileSystem_Web::MarkFSStateDirty();
+	{
+		if (m_isIDB)
+			GpFileSystem_Web::MarkFSStateDirty();
+		else
+			GpFileSystem_Web::SyncDownloadFile(m_filePath, m_prettyName);
+	}
 }
 
 size_t GpFileStream_Web_File::Read(void *bytesOut, size_t size)
@@ -384,11 +411,12 @@ void GpFileStream_Web_File::Flush()
 bool GpFileSystem_Web::ms_fsStateDirty;
 
 
-bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool trailingSlash, std::string &resolution)
+bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool trailingSlash, std::string &resolution, bool &outIsIDB)
 {
 	const char *pathAppend = nullptr;
 	const std::string *rootPath = nullptr;
 	std::string unsanitized;
+	bool isIDB = false;
 
 	switch (virtualDirectory)
 	{
@@ -404,22 +432,27 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 	case PortabilityLayer::VirtualDirectories::kHighScores:
 		pathAppend = "HighScores";
 		rootPath = &m_basePath;
+		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserData:
 		pathAppend = "Houses";
 		rootPath = &m_basePath;
+		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserSaves:
 		pathAppend = "SavedGames";
 		rootPath = &m_basePath;
+		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		pathAppend = "Prefs";
 		rootPath = &m_basePath;
+		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kSourceExport:
 		pathAppend = "Export";
 		rootPath = &m_exportPath;
+		isIDB = false;
 		break;
 	default:
 		return false;
@@ -472,6 +505,7 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 		resolution = sanitized;
 	}
 
+	outIsIDB = isIDB;
 	return true;
 }
 
@@ -513,7 +547,8 @@ bool GpFileSystem_Web::FileExists(PortabilityLayer::VirtualDirectory_t virtualDi
 	}
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath))
+	bool isIDB = false;
+	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath, isIDB))
 		return false;
 
 	struct stat s;
@@ -539,7 +574,8 @@ bool GpFileSystem_Web::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDi
 	}
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath))
+	bool isIDB = false;
+	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath, isIDB))
 	{
 		if (exists)
 			exists = false;
@@ -594,11 +630,9 @@ GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_
 			return nullptr;
 	};
 
-	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kSourceExport)
-		return nullptr;
-
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, false, resolvedPath))
+	bool isIDB = false;
+	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, false, resolvedPath, isIDB))
 		return nullptr;
 
 	void *objStorage = malloc(sizeof(GpFileStream_Web_File));
@@ -625,7 +659,11 @@ GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_
 		}
 	}
 
-	return new (objStorage) GpFileStream_Web_File(f, !writeAccess, false, writeAccess);
+	std::string prettyName;
+	if (numSubPaths > 0)
+		prettyName = subPaths[numSubPaths - 1];
+
+	return new (objStorage) GpFileStream_Web_File(f, resolvedPath, prettyName, !writeAccess, false, writeAccess, isIDB);
 }
 
 bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
@@ -634,7 +672,8 @@ bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDi
 		return false;
 
 	std::string resolvedPath;
-	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath))
+	bool isIDB = false;
+	if (!ResolvePath(virtualDirectory, &path, 1, false, resolvedPath, isIDB))
 	{
 		existed = false;
 		return false;
@@ -643,7 +682,7 @@ bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDi
 	if (unlink(resolvedPath.c_str()) < 0)
 	{
 		existed = (errno != ENOENT);
-		if (existed)
+		if (existed && isIDB)
 			FlushFileSystem();
 
 		return false;
@@ -753,7 +792,8 @@ IGpDirectoryCursor *GpFileSystem_Web::ScanDirectoryNested(PortabilityLayer::Virt
 		return ScanCatalog(*catalog);
 
 	std::string resolvedPrefix;
-	if (!ResolvePath(virtualDirectory, paths, numPaths, true, resolvedPrefix))
+	bool isIDB = false;
+	if (!ResolvePath(virtualDirectory, paths, numPaths, true, resolvedPrefix, isIDB))
 		return nullptr;
 
 	std::string trimmedPrefix = resolvedPrefix.substr(m_prefsPath.size() + 1);
@@ -788,6 +828,11 @@ IGpDirectoryCursor *GpFileSystem_Web::ScanCatalog(const GpFileSystem_Web_Resourc
 void GpFileSystem_Web::MarkFSStateDirty()
 {
 	ms_fsStateDirty = true;
+}
+
+void GpFileSystem_Web::SyncDownloadFile(const std::string &filePath, const std::string &prettyName)
+{
+	DownloadAndDeleteFile(filePath.c_str(), prettyName.c_str());
 }
 
 void GpFileSystem_Web::FlushFS()
