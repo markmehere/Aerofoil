@@ -60,6 +60,7 @@ private:
 
 	std::string m_prefsPath;
 	std::string m_basePath;
+	std::string m_exportPath;
 	static bool ms_fsStateDirty;
 
 	static GpFileSystem_Web ms_instance;

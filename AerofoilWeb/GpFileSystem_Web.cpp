@@ -386,7 +386,8 @@ bool GpFileSystem_Web::ms_fsStateDirty;
 
 bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, bool trailingSlash, std::string &resolution)
 {
-	const char *prefsAppend = nullptr;
+	const char *pathAppend = nullptr;
+	const std::string *rootPath = nullptr;
 	std::string unsanitized;
 
 	switch (virtualDirectory)
@@ -401,24 +402,32 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 		unsanitized = std::string("Resources");
 		break;
 	case PortabilityLayer::VirtualDirectories::kHighScores:
-		prefsAppend = "HighScores";
+		pathAppend = "HighScores";
+		rootPath = &m_basePath;
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserData:
-		prefsAppend = "Houses";
+		pathAppend = "Houses";
+		rootPath = &m_basePath;
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserSaves:
-		prefsAppend = "SavedGames";
+		pathAppend = "SavedGames";
+		rootPath = &m_basePath;
 		break;
 	case PortabilityLayer::VirtualDirectories::kPrefs:
-		prefsAppend = "Prefs";
+		pathAppend = "Prefs";
+		rootPath = &m_basePath;
+		break;
+	case PortabilityLayer::VirtualDirectories::kSourceExport:
+		pathAppend = "Export";
+		rootPath = &m_exportPath;
 		break;
 	default:
 		return false;
 	};
 
-	if (prefsAppend)
+	if (pathAppend)
 	{
-		unsanitized = prefsAppend;
+		unsanitized = pathAppend;
 		
 		for (size_t i = 0; i < numPaths; i++)
 		{
@@ -448,7 +457,7 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 			}
 		}
 
-		resolution = m_prefsPath + "/" + sanitized;
+		resolution = (*rootPath) + "/" + sanitized;
 	}
 	else
 	{
@@ -478,6 +487,7 @@ GpFileSystem_Web::~GpFileSystem_Web()
 void GpFileSystem_Web::Init()
 {
 	m_prefsPath = "/aerofoil";
+	m_exportPath = "/aerofoil_memfs";
 
 	char *baseDir = SDL_GetBasePath();
 	m_basePath = baseDir;

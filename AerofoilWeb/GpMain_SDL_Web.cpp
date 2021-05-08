@@ -2,6 +2,7 @@
 #include "SDL_main.h"
 
 #include "GpMain.h"
+#include "GpAllocator_C.h"
 #include "GpAudioDriverFactory.h"
 #include "GpDisplayDriverFactory.h"
 #include "GpGlobalConfig.h"
@@ -30,7 +31,10 @@ IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverPrope
 EM_JS(void, InitFileSystem, (), {
 	Asyncify.handleSleep(wakeUp => {
 		FS.mkdir('/aerofoil');
+		//FS.mkdir('/aerofoil_memfs');
 		FS.mount(IDBFS, {}, '/aerofoil');
+		//FS.mount(MEMFS, {}, '/aerofoil_memfs');
+		//FS.mkdir('/aerofoil_memfs/Export');
 		FS.syncfs(true, function (err) {
 			assert(!err);
 			wakeUp();
@@ -40,6 +44,8 @@ EM_JS(void, InitFileSystem, (), {
 
 int main(int argc, char* argv[])
 {
+	IGpAllocator *alloc = GpAllocator_C::GetInstance();
+
 	InitFileSystem();
 	
 	GpLogDriver_Web::Init();
@@ -65,6 +71,7 @@ int main(int argc, char* argv[])
 	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_Web::GetInstance());
 	drivers->SetDriver<GpDriverIDs::kSystemServices>(GpSystemServices_Web::GetInstance());
 	drivers->SetDriver<GpDriverIDs::kLog>(GpLogDriver_Web::GetInstance());
+	drivers->SetDriver<GpDriverIDs::kAlloc>(alloc);
 
 	g_gpGlobalConfig.m_displayDriverType = EGpDisplayDriverType_SDL_GL2;
 
@@ -83,6 +90,7 @@ int main(int argc, char* argv[])
 	g_gpGlobalConfig.m_osGlobals = &g_gpXGlobals;
 	g_gpGlobalConfig.m_logger = logger;
 	g_gpGlobalConfig.m_systemServices = GpSystemServices_Web::GetInstance();
+	g_gpGlobalConfig.m_allocator = alloc;
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_SDL2, GpDriver_CreateAudioDriver_SDL);
