@@ -58,8 +58,8 @@ void GpLogDriver_Web::VPrintf(Category category, const char *fmt, va_list args)
 
 	vsnprintf(charBuff, formattedSize + 1, fmt, args);
 
-	fprintf(stderr, "%s%s%s\n", timestampBuffer, debugTag, charBuff);
-	fflush(stderr);
+	fprintf(stdout, "%s%s%s\n", timestampBuffer, debugTag, charBuff);
+	fflush(stdout);
 
 	free(charBuff);
 }
