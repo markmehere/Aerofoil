@@ -431,22 +431,22 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 		break;
 	case PortabilityLayer::VirtualDirectories::kHighScores:
 		pathAppend = "HighScores";
-		rootPath = &m_basePath;
+		rootPath = &m_prefsPath;
 		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserData:
 		pathAppend = "Houses";
-		rootPath = &m_basePath;
+		rootPath = &m_prefsPath;
 		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kUserSaves:
 		pathAppend = "SavedGames";
-		rootPath = &m_basePath;
+		rootPath = &m_prefsPath;
 		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kPrefs:
 		pathAppend = "Prefs";
-		rootPath = &m_basePath;
+		rootPath = &m_prefsPath;
 		isIDB = true;
 		break;
 	case PortabilityLayer::VirtualDirectories::kSourceExport:
@@ -682,11 +682,12 @@ bool GpFileSystem_Web::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDi
 	if (unlink(resolvedPath.c_str()) < 0)
 	{
 		existed = (errno != ENOENT);
-		if (existed && isIDB)
-			FlushFileSystem();
-
 		return false;
 	}
+
+	if (isIDB)
+		MarkFSStateDirty();
+
 	existed = true;
 	return true;
 }
@@ -854,7 +855,11 @@ void GpIOStream::Close()
 
 bool IGpFileSystem::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
 {
-	return static_cast<GpFileSystem_Web*>(this)->DeleteFile(virtualDirectory, path, existed);
+	bool deleted = static_cast<GpFileSystem_Web*>(this)->DeleteFile(virtualDirectory, path, existed);
+	if (deleted)
+		GpFileSystem_Web::FlushFS();
+
+	return deleted;
 }
 
 #endif
