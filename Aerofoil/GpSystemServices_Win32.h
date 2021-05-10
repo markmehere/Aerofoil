@@ -28,7 +28,7 @@ public:
 	void *CreateThread(ThreadFunc_t threadFunc, void *context) override;
 	IGpThreadEvent *CreateThreadEvent(bool autoReset, bool startSignaled) override;
 	uint64_t GetFreeMemoryCosmetic() const override;
-	void Beep() const override;
+	bool Beep() const override;
 	bool IsTouchscreen() const override;
 	bool IsUsingMouseAsTouch() const override;
 	bool IsTextInputObstructive() const override;

@@ -18,9 +18,18 @@ namespace PortabilityLayer
 			memcpy(dest + 1, src, sz);
 		}
 	}
+
+	static BeepFunction_t gs_beepFunction = nullptr;
 }
 
 void SysBeep(int duration)
 {
-	PLDrivers::GetSystemServices()->Beep();
+	if (!PLDrivers::GetSystemServices()->Beep())
+		if (PortabilityLayer::gs_beepFunction != nullptr)
+			PortabilityLayer::gs_beepFunction(duration);
+}
+
+void SetBeepFunction(BeepFunction_t beepFunction)
+{
+	PortabilityLayer::gs_beepFunction = beepFunction;
 }

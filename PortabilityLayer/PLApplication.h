@@ -25,6 +25,10 @@ void PasStringCopy(const PortabilityLayer::PascalStrLiteral<TSize> &src, unsigne
 
 void SysBeep(int duration);
 
+typedef void (*BeepFunction_t)(int duration);
+void SetBeepFunction(BeepFunction_t beepFunction);
+
+
 ///////////////////////////////////////////////////////////////////////////////
 #include "PascalStrLiteral.h"
 

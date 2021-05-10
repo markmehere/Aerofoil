@@ -39,7 +39,8 @@
 		"LICS/1004.txt" : "ApplicationResourcePatches/LICS/1004.txt",
 		"LICS/1005.txt" : "ApplicationResourcePatches/LICS/1005.txt",
 		"LICS/1006.txt" : "ApplicationResourcePatches/LICS/1006.txt",
-		"STR$23/1006.txt" : "ApplicationResourcePatches/STR/1006.txt"
+		"STR$23/1006.txt" : "ApplicationResourcePatches/STR/1006.txt",
+		"snd$20/1063.wav" : "ApplicationResourcePatches/SND/1063.wav"
 	},
 	"delete" :
 	[

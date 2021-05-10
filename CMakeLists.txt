@@ -56,7 +56,6 @@ add_library(PortabilityLayer STATIC
 	PortabilityLayer/MemoryManager.cpp
 	PortabilityLayer/MemReaderStream.cpp
 	PortabilityLayer/MenuManager.cpp
-	PortabilityLayer/MMBlock.cpp
 	PortabilityLayer/MMHandleBlock.cpp
 	PortabilityLayer/PLApplication.cpp
 	PortabilityLayer/PLButtonWidget.cpp

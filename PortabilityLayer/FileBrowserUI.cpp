@@ -21,6 +21,7 @@
 #include "WindowDef.h"
 #include "MacRomanConversion.h"
 
+#include "PLApplication.h"
 #include "PLArrayView.h"
 #include "PLControlDefinitions.h"
 #include "PLCore.h"
@@ -756,7 +757,7 @@ namespace PortabilityLayer
 				PLPasStr nameStr = editBox->GetString();
 				if (nameStr.Length() == 0 || !fs->ValidateFilePath(nameStr.Chars(), nameStr.Length()))
 				{
-					PLDrivers::GetSystemServices()->Beep();
+					SysBeep(1);
 					FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIBadNameDialogTemplateID, nullptr);
 					hit = -1;
 				}
@@ -772,7 +773,7 @@ namespace PortabilityLayer
 					{
 						DialogTextSubstitutions substitutions(nameStr);
 
-						PLDrivers::GetSystemServices()->Beep();
+						SysBeep(1);
 						int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIOverwriteDialogTemplateID, &substitutions);
 
 						if (subHit == kOverwriteNoButton)
@@ -783,7 +784,7 @@ namespace PortabilityLayer
 
 			if ((mode == Mode_Open && hit == kOpenDeleteButton) || (mode == Mode_SaveWithDelete && hit == kSaveDeleteButton))
 			{
-				PLDrivers::GetSystemServices()->Beep();
+				SysBeep(1);
 				int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIDeleteDialogTemplateID, &substitutions);
 
 				if (subHit == kOverwriteYesButton)

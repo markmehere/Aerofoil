@@ -136,8 +136,9 @@ void *GpSystemServices_Web::CreateThread(ThreadFunc_t threadFunc, void *context)
 	return nullptr;
 }
 
-void GpSystemServices_Web::Beep() const
+bool GpSystemServices_Web::Beep() const
 {
+	return false;
 }
 
 bool GpSystemServices_Web::IsTouchscreen() const
@@ -161,6 +162,11 @@ bool GpSystemServices_Web::IsFullscreenPreferred() const
 }
 
 bool GpSystemServices_Web::IsFullscreenOnStartup() const
+{
+	return false;
+}
+
+bool GpSystemServices_Web::HasNativeFileManager() const
 {
 	return false;
 }

@@ -55,8 +55,9 @@ void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *cont
 	return thread;
 }
 
-void GpSystemServices_Android::Beep() const
+bool GpSystemServices_Android::Beep() const
 {
+	return false;
 }
 
 bool GpSystemServices_Android::IsTouchscreen() const
@@ -82,6 +83,11 @@ bool GpSystemServices_Android::IsFullscreenPreferred() const
 bool GpSystemServices_Android::IsFullscreenOnStartup() const
 {
 	return true;
+}
+
+bool GpSystemServices_Android::HasNativeFileManager() const
+{
+	return false;
 }
 
 unsigned int GpSystemServices_Android::GetCPUCount() const

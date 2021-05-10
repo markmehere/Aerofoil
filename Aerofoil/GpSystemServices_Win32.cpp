@@ -232,9 +232,10 @@ uint64_t GpSystemServices_Win32::GetFreeMemoryCosmetic() const
 	return memStatus.ullAvailPhys;
 }
 
-void GpSystemServices_Win32::Beep() const
+bool GpSystemServices_Win32::Beep() const
 {
 	MessageBeep(MB_OK);
+	return true;
 }
 
 bool GpSystemServices_Win32::IsTouchscreen() const
@@ -264,7 +265,7 @@ bool GpSystemServices_Win32::IsFullscreenOnStartup() const
 
 bool GpSystemServices_Win32::HasNativeFileManager() const
 {
-	return false;
+	return true;
 }
 
 unsigned int GpSystemServices_Win32::GetCPUCount() const

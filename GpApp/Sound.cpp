@@ -23,7 +23,7 @@
 
 
 #define kBaseBufferSoundID			1000
-#define kMaxSounds					64
+#define kMaxSounds					65
 
 
 void CallBack0 (PortabilityLayer::AudioChannel *);
@@ -38,7 +38,7 @@ IGpAudioBuffer *ParseAndConvertSound(const THandle<void> &handle);
 PortabilityLayer::AudioChannel *channel0, *channel1, *channel2;
 IGpAudioBuffer		*theSoundData[kMaxSounds];
 short				numSoundsLoaded;
-Boolean				soundLoaded[kMaxSounds], dontLoadSounds;
+Boolean				dontLoadSounds;
 Boolean				channelOpen, isSoundOn, failedSound;
 
 //==============================================================  Functions
@@ -341,6 +341,14 @@ void CloseSoundChannels (void)
 	channelOpen = false;
 }
 
+//--------------------------------------------------------------  PingBeep
+
+void PingBeep (int duration)
+{
+	PlayPrioritySound(kPingSound, kPingPriority);
+}
+
+
 //--------------------------------------------------------------  InitSound
 
 void InitSound (void)
@@ -376,6 +384,8 @@ void InitSound (void)
 			failedSound = true;
 		}
 	}
+
+	SetBeepFunction (PingBeep);
 }
 
 //--------------------------------------------------------------  KillSound
