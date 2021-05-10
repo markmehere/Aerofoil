@@ -249,7 +249,7 @@ void DoAboutOpenSource(void)
 
 	static const int kAboutOpenSourceDialogTemplateID = 2005;
 
-	const Rect windowRect = Rect::Create(0, 0, 348, 512);
+	const Rect windowRect = Rect::Create(0, 0, 324, 512);
 
 	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 

@@ -4,7 +4,7 @@
 		{
 			"name" : "Okay",
 			"itemType" : "Button",
-			"pos" : [ 438, 316 ],
+			"pos" : [ 438, 292 ],
 			"size" : [ 58, 20 ],
 			"id" : 1,
 			"enabled" : true
@@ -12,7 +12,7 @@
 		{
 			"name" : "Export Source Code to ZIP Archive...",
 			"itemType" : "Button",
-			"pos" : [ 205, 316 ],
+			"pos" : [ 205, 292 ],
 			"size" : [ 226, 20 ],
 			"id" : 1,
 			"enabled" : false
@@ -174,14 +174,6 @@
 			"itemType" : "Button",
 			"pos" : [ 430, 248 ],
 			"size" : [ 66, 20 ],
-			"id" : 1,
-			"enabled" : true
-		},
-		{
-			"name" : "Ping sound original: Darrelle Jed Montojo (\"LittleRainySeasons\")",
-			"itemType" : "Label",
-			"pos" : [ 16, 277 ],
-			"size" : [ 406, 20 ],
 			"id" : 1,
 			"enabled" : true
 		}
