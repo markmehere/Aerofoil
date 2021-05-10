@@ -282,7 +282,11 @@ namespace PortabilityLayer
 		if (!FileManagerTools::ConstructFilename(extFN, initialFileName, ""))
 			return false;
 
-		return FileBrowserUI::Prompt(FileBrowserUI::Mode_Save, dirID, extension, path, outPathLength, pathCapacity, initialFileName, promptText, composites, detailsAPI);
+		FileBrowserUI::Mode mode = FileBrowserUI::Mode_SaveNoDelete;
+		if (!PLDrivers::GetSystemServices()->HasNativeFileManager())
+			mode = FileBrowserUI::Mode_SaveWithDelete;
+
+		return FileBrowserUI::Prompt(mode, dirID, extension, path, outPathLength, pathCapacity, initialFileName, promptText, composites, detailsAPI);
 	}
 
 	bool FileManagerImpl::PromptOpenFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &detailsAPI)

@@ -76,6 +76,14 @@ static bool FBUI_House_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, co
 	return PortabilityLayer::ResTypeIDCodec::Decode(cfile->GetProperties().m_fileType) == 'gliH';
 }
 
+static bool FBUI_House_IsDeleteValid(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	if (dirID != PortabilityLayer::VirtualDirectories::kUserData)
+		return false;
+
+	return !StrCmp::EqualCaseInsensitive(thisHouseName, filename);
+}
+
 static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
@@ -85,6 +93,7 @@ static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
 	api.m_loadFileDetailsCallback = FBUI_House_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_House_FreeFileDetails;
 	api.m_filterFileCallback = FBUI_House_FilterFile;
+	api.m_isDeleteValidCallback = FBUI_House_IsDeleteValid;
 
 	return api;
 }

@@ -20,8 +20,9 @@ namespace PortabilityLayer
 		void(*m_drawFileDetailsCallback)(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails);
 
 		void *(*m_loadFileDetailsCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
-		void(*m_freeFileDetailsCallback)(void *fileDetails);
-		bool(*m_filterFileCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
+		void (*m_freeFileDetailsCallback)(void *fileDetails);
+		bool (*m_filterFileCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
+		bool (*m_isDeleteValidCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
 	};
 
 	class FileBrowserUI
@@ -30,7 +31,8 @@ namespace PortabilityLayer
 
 		enum Mode
 		{
-			Mode_Save,
+			Mode_SaveNoDelete,
+			Mode_SaveWithDelete,
 			Mode_Open,
 		};
 

@@ -32,6 +32,7 @@ public:
 	virtual bool IsFullscreenPreferred() const = 0;
 	virtual bool IsFullscreenOnStartup() const = 0;
 	virtual bool IsTextInputObstructive() const = 0;
+	virtual bool HasNativeFileManager() const = 0;
 	virtual unsigned int GetCPUCount() const = 0;
 	virtual void SetTextInputEnabled(bool isEnabled) = 0;
 	virtual bool IsTextInputEnabled() const = 0;

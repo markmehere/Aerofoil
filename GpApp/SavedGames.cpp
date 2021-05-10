@@ -107,6 +107,11 @@ static bool FBUI_Save_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, con
 	return true;
 }
 
+static bool FBUI_Save_IsDeleteValid(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	return true;
+}
+
 static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI()
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
@@ -116,6 +121,7 @@ static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI
 	api.m_loadFileDetailsCallback = FBUI_Save_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_Save_FreeFileDetails;
 	api.m_filterFileCallback = FBUI_Save_FilterFile;
+	api.m_isDeleteValidCallback = FBUI_Save_IsDeleteValid;
 
 	return api;
 }
