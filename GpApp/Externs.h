@@ -76,6 +76,7 @@ namespace PortabilityLayer
 #define iCoordinateWindow		21
 
 #define iExportGliderPROHouse	1
+#define iDownloadHouse			2
 
 //--------------------------------------------------------------  Structs
 /*

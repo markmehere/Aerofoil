@@ -90,6 +90,16 @@ bool GpSystemServices_Android::HasNativeFileManager() const
 	return false;
 }
 
+GpOperatingSystem_t GpSystemServices_Android::GetOperatingSystem() const
+{
+	return GpOperatingSystems::kAndroid;
+}
+
+GpOperatingSystemFlavor_t GpSystemServices_Android::GetOperatingSystemFlavor() const
+{
+	return GpOperatingSystems::kGeneric;
+}
+
 unsigned int GpSystemServices_Android::GetCPUCount() const
 {
 	return SDL_GetCPUCount();

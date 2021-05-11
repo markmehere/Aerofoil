@@ -19,6 +19,8 @@ public:
 	bool IsFullscreenPreferred() const override;
 	bool IsFullscreenOnStartup() const override;
 	bool HasNativeFileManager() const override;
+	GpOperatingSystem_t GetOperatingSystem() const override;
+	GpOperatingSystemFlavor_t GetOperatingSystemFlavor() const override;
 	unsigned int GetCPUCount() const override;
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;

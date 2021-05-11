@@ -9,6 +9,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "IGpDisplayDriver.h"
+#include "IGpSystemServices.h"
 #include "GpApplicationName.h"
 #include "Map.h"
 #include "MenuManager.h"
@@ -79,8 +80,9 @@ void InitializeMenus (void)
 	if (houseMenu == nil)
 		RedAlert(kErrFailedResourceLoad);
 
-	exportMenu = mm->CreateMenu(PSTR("Export"), kExportMenuID, true, 100, 16, 0);
+	exportMenu = mm->CreateMenu(PSTR("Import/Export"), kExportMenuID, true, 100, 16, 0);
 	mm->AppendMenuItem(exportMenu, 0, 0, 0, 0, true, false, PSTR("Export Glider PRO\xaa House..."));
+	mm->AppendMenuItem(exportMenu, 0, 0, 0, 0, false, false, PSTR("Download House..."));
 	
 	UpdateMenus(false);
 }

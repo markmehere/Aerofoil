@@ -14,6 +14,34 @@ struct IGpMutex;
 struct IGpThreadEvent;
 struct IGpClipboardContents;
 
+namespace GpOperatingSystems
+{
+	enum GpOperatingSystem
+	{
+		kUnknown,
+
+		kWindows,
+		kAndroid,
+		kWeb,
+		kLinux,
+		kMacOS,
+		kIOS,
+	};
+}
+
+typedef GpOperatingSystems::GpOperatingSystem GpOperatingSystem_t;
+
+namespace GpOperatingSystemFlavors
+{
+	enum GpOperatingSystemFlavor
+	{
+		kGeneric,
+	};
+}
+
+typedef GpOperatingSystemFlavors::GpOperatingSystemFlavor GpOperatingSystemFlavor_t;
+
+
 struct IGpSystemServices
 {
 public:
@@ -33,6 +61,8 @@ public:
 	virtual bool IsFullscreenOnStartup() const = 0;
 	virtual bool IsTextInputObstructive() const = 0;
 	virtual bool HasNativeFileManager() const = 0;
+	virtual GpOperatingSystem_t GetOperatingSystem() const = 0;
+	virtual GpOperatingSystemFlavor_t GetOperatingSystemFlavor() const = 0;
 	virtual unsigned int GetCPUCount() const = 0;
 	virtual void SetTextInputEnabled(bool isEnabled) = 0;
 	virtual bool IsTextInputEnabled() const = 0;

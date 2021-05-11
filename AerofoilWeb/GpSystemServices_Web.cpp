@@ -171,6 +171,16 @@ bool GpSystemServices_Web::HasNativeFileManager() const
 	return false;
 }
 
+GpOperatingSystem_t GpSystemServices_Web::GetOperatingSystem() const
+{
+	return GpOperatingSystems::kWeb;
+}
+
+GpOperatingSystemFlavor_t GpSystemServices_Web::GetOperatingSystemFlavor() const
+{
+	return GpOperatingSystems::kGeneric;
+}
+
 unsigned int GpSystemServices_Web::GetCPUCount() const
 {
 	return SDL_GetCPUCount();

@@ -6,7 +6,7 @@
 //============================================================================
 
 
-//#include <Balloons.h>
+#include "PLDrivers.h"
 #include "PLNumberFormatting.h"
 #include "PLKeyEncoding.h"
 #include "PLHacks.h"
@@ -17,6 +17,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "IGpSystemServices.h"
 #include "MenuManager.h"
 #include "ObjectEdit.h"
 
@@ -143,9 +144,17 @@ void UpdateMenusHouseOpen (void)
 	}
 
 	if (houseUnlocked)
+	{
 		EnableMenuItem(exportMenu, iExportGliderPROHouse);
+		if (PLDrivers::GetSystemServices()->GetOperatingSystem() == GpOperatingSystems::kWeb)
+			EnableMenuItem(exportMenu, iDownloadHouse);
+	}
 	else
+	{
 		DisableMenuItem(exportMenu, iExportGliderPROHouse);
+		if (PLDrivers::GetSystemServices()->GetOperatingSystem() == GpOperatingSystems::kWeb)
+			DisableMenuItem(exportMenu, iDownloadHouse);
+	}
 }
 
 //--------------------------------------------------------------  UpdateMenusHouseClosed
@@ -485,6 +494,9 @@ void DoExportMenu(short theItem)
 	{
 	case iExportGliderPROHouse:
 		ExportHouse();
+		break;
+	case iDownloadHouse:
+		DownloadHouse();
 		break;
 	};
 }

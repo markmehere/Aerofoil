@@ -25,6 +25,8 @@
 #include "PLStringCompare.h"
 #include "PLPasStr.h"
 
+#include "CombinedTimestamp.h"
+#include "DeflateCodec.h"
 #include "MacFileInfo.h"
 #include "GpIOStream.h"
 #include "GpVector.h"
@@ -32,6 +34,7 @@
 #include "QDPictOpcodes.h"
 #include "QDPixMap.h"
 #include "PLStandardColors.h"
+#include "ZipFile.h"
 
 #define kSaveChangesAlert		1002
 #define kSaveChanges			1
@@ -3515,10 +3518,16 @@ ExportHouseResult_t TryExportHouseToStream(GpIOStream *stream)
 	ByteSwapHouse(house, houseSize, true);
 
 	if (!stream->WriteExact(house, houseType::kBinaryDataSize))
+	{
+		ByteSwapHouse(house, houseSize, false);
 		return ExportHouseResults::kIOError;
+	}
 
 	if (!stream->WriteExact(house->rooms, sizeof(roomType) * nRooms))
+	{
+		ByteSwapHouse(house, houseSize, false);
 		return ExportHouseResults::kIOError;
+	}
 
 	ByteSwapHouse(house, houseSize, false);
 
@@ -3590,6 +3599,221 @@ ExportHouseResult_t TryExportHouse(void)
 void ExportHouse(void)
 {
 	ExportHouseResult_t result = TryExportHouse();
+
+	switch (result)
+	{
+	case ExportHouseResults::kOK:
+		break;
+	case ExportHouseResults::kMemError:
+		YellowAlert(kYellowNoMemory, 0);
+		break;
+	case ExportHouseResults::kInternalError:
+		YellowAlert(kYellowUnaccounted, 0);
+		break;
+	case ExportHouseResults::kIOError:
+	case ExportHouseResults::kStreamFailed:
+		YellowAlert(kYellowFailedWrite, 0);
+		break;
+	case ExportHouseResults::kResourceError:
+		YellowAlert(kYellowFailedResOpen, 0);
+		break;
+	}
+}
+
+ExportHouseResult_t TryDownloadHouseToStream(GpIOStream *stream)
+{
+	PortabilityLayer::MacFileProperties mfp;
+	mfp.m_createdTimeMacEpoch = PLDrivers::GetSystemServices()->GetTime();
+	memcpy(mfp.m_fileCreator, "ozm5", 4);
+	memcpy(mfp.m_fileType, "gliH", 4);
+	mfp.m_finderFlags = 0;
+	mfp.m_modifiedTimeMacEpoch = mfp.m_createdTimeMacEpoch;
+	mfp.m_protected = 0;
+	mfp.m_xPos = 0;
+	mfp.m_yPos = 0;
+
+	PortabilityLayer::MacFilePropertiesSerialized mfps;
+	mfps.Serialize(mfp);
+
+	unsigned int year, month, day, hour, minute, second;
+	PortabilityLayer::CombinedTimestamp ts;
+	PLDrivers::GetSystemServices()->GetLocalDateTime(year, month, day, hour, minute, second);
+
+	ts.SetLocalYear(year);
+	ts.m_localDay = day;
+	ts.m_localHour = hour;
+	ts.m_localMinute = minute;
+	ts.m_localMonth = month;
+	ts.m_localSecond = second;
+
+	uint16_t dosDate, dosTime;
+	ts.GetAsMSDOSTimestamp(dosDate, dosTime);
+
+	const uint32_t metaSize = sizeof(mfps.m_data);
+	const uint32_t metaCRC = PortabilityLayer::DeflateContext::CRC32(0, mfps.m_data, metaSize);
+
+	const char *metaPackagedName = PortabilityLayer::MacFilePropertiesSerialized::GetPackagedName();
+	GpUFilePos_t metaLHPos = 0;
+	PortabilityLayer::ZipFileLocalHeader metaLH;
+	metaLH.m_signature = PortabilityLayer::ZipFileLocalHeader::kSignature;
+	metaLH.m_versionRequired = PortabilityLayer::ZipConstants::kStoredRequiredVersion;
+	metaLH.m_flags = 0;
+	metaLH.m_method = PortabilityLayer::ZipConstants::kStoredMethod;
+	metaLH.m_modificationTime = dosTime;
+	metaLH.m_modificationDate = dosDate;
+	metaLH.m_crc = metaCRC;
+	metaLH.m_compressedSize = metaSize;
+	metaLH.m_uncompressedSize = metaSize;
+	metaLH.m_fileNameLength = strlen(metaPackagedName);
+	metaLH.m_extraFieldLength = 0;
+
+	if (!stream->WriteExact(&metaLH, sizeof(metaLH)))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(metaPackagedName, strlen(metaPackagedName)))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(mfps.m_data, metaSize))
+		return ExportHouseResults::kIOError;
+
+	houseType *house = *thisHouse;
+	const size_t houseSize = thisHouse.MMBlock()->m_size;
+	const size_t nRooms = house->nRooms;
+	const size_t houseDataSize = houseType::kBinaryDataSize + sizeof(roomType) * nRooms;
+
+	ByteSwapHouse(house, houseSize, true);
+
+	uint32_t houseCRC = PortabilityLayer::DeflateContext::CRC32(0, house, houseType::kBinaryDataSize);
+	houseCRC = PortabilityLayer::DeflateContext::CRC32(houseCRC, house->rooms, sizeof(roomType) * nRooms);
+
+	const uint32_t totalhouseSize = houseType::kBinaryDataSize + sizeof(roomType) * nRooms;
+
+	GpUFilePos_t houseLHPos = 0;
+
+	const char *dataPackagedName = "!data";
+
+	PortabilityLayer::ZipFileLocalHeader houseLH;
+	houseLH.m_signature = PortabilityLayer::ZipFileLocalHeader::kSignature;
+	houseLH.m_versionRequired = PortabilityLayer::ZipConstants::kStoredRequiredVersion;
+	houseLH.m_flags = 0;
+	houseLH.m_method = PortabilityLayer::ZipConstants::kStoredMethod;
+	houseLH.m_modificationTime = dosTime;
+	houseLH.m_modificationDate = dosDate;
+	houseLH.m_crc = houseCRC;
+	houseLH.m_compressedSize = totalhouseSize;
+	houseLH.m_uncompressedSize = totalhouseSize;
+	houseLH.m_fileNameLength = strlen(dataPackagedName);
+	houseLH.m_extraFieldLength = 0;
+
+	if (!stream->WriteExact(&houseLH, sizeof(houseLH)))
+	{
+		ByteSwapHouse(house, houseSize, false);
+		return ExportHouseResults::kIOError;
+	}
+
+	if (!stream->WriteExact(dataPackagedName, strlen(dataPackagedName)))
+	{
+		ByteSwapHouse(house, houseSize, false);
+		return ExportHouseResults::kIOError;
+	}
+
+	if (!stream->WriteExact(house, houseType::kBinaryDataSize))
+	{
+		ByteSwapHouse(house, houseSize, false);
+		return ExportHouseResults::kIOError;
+	}
+
+	if (!stream->WriteExact(house->rooms, sizeof(roomType) * nRooms))
+	{
+		ByteSwapHouse(house, houseSize, false);
+		return ExportHouseResults::kIOError;
+	}
+
+	ByteSwapHouse(house, houseSize, false);
+
+	GpUFilePos_t cdirStart = stream->Tell();
+
+	PortabilityLayer::ZipCentralDirectoryFileHeader metaCDir;
+	metaCDir.m_signature = PortabilityLayer::ZipCentralDirectoryFileHeader::kSignature;
+	metaCDir.m_versionCreated = PortabilityLayer::ZipConstants::kCompressedRequiredVersion;;
+	metaCDir.m_versionRequired = PortabilityLayer::ZipConstants::kStoredRequiredVersion;
+	metaCDir.m_flags = 0;
+	metaCDir.m_method = PortabilityLayer::ZipConstants::kStoredMethod;
+	metaCDir.m_modificationTime = dosTime;
+	metaCDir.m_modificationDate = dosDate;
+	metaCDir.m_crc = metaCRC;
+	metaCDir.m_compressedSize = metaSize;
+	metaCDir.m_uncompressedSize = metaSize;
+	metaCDir.m_fileNameLength = strlen(metaPackagedName);
+	metaCDir.m_extraFieldLength = 0;
+	metaCDir.m_commentLength = 0;
+	metaCDir.m_diskNumber = 0;
+	metaCDir.m_internalAttributes = 0;
+	metaCDir.m_externalAttributes = PortabilityLayer::ZipConstants::kArchivedAttributes;
+	metaCDir.m_localHeaderOffset = static_cast<uint32_t>(metaLHPos);
+
+	if (!stream->WriteExact(&metaCDir, sizeof(metaCDir)))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(metaPackagedName, strlen(metaPackagedName)))
+		return ExportHouseResults::kIOError;
+
+	PortabilityLayer::ZipCentralDirectoryFileHeader dataCDir;
+	dataCDir.m_signature = PortabilityLayer::ZipCentralDirectoryFileHeader::kSignature;
+	dataCDir.m_versionCreated = PortabilityLayer::ZipConstants::kCompressedRequiredVersion;;
+	dataCDir.m_versionRequired = PortabilityLayer::ZipConstants::kStoredRequiredVersion;
+	dataCDir.m_flags = 0;
+	dataCDir.m_method = PortabilityLayer::ZipConstants::kStoredMethod;
+	dataCDir.m_modificationTime = dosTime;
+	dataCDir.m_modificationDate = dosDate;
+	dataCDir.m_crc = metaCRC;
+	dataCDir.m_compressedSize = houseDataSize;
+	dataCDir.m_uncompressedSize = houseDataSize;
+	dataCDir.m_fileNameLength = strlen(dataPackagedName);
+	dataCDir.m_extraFieldLength = 0;
+	dataCDir.m_commentLength = 0;
+	dataCDir.m_diskNumber = 0;
+	dataCDir.m_internalAttributes = 0;
+	dataCDir.m_externalAttributes = PortabilityLayer::ZipConstants::kArchivedAttributes;
+	dataCDir.m_localHeaderOffset = static_cast<uint32_t>(houseLHPos);
+
+	if (!stream->WriteExact(&dataCDir, sizeof(dataCDir)))
+		return ExportHouseResults::kIOError;
+
+	if (!stream->WriteExact(dataPackagedName, strlen(dataPackagedName)))
+		return ExportHouseResults::kIOError;
+
+	PortabilityLayer::ZipEndOfCentralDirectoryRecord eocd;
+	eocd.m_signature = PortabilityLayer::ZipEndOfCentralDirectoryRecord::kSignature;
+	eocd.m_thisDiskNumber = 0;
+	eocd.m_centralDirDisk = 0;
+	eocd.m_numCentralDirRecordsThisDisk = 2;
+	eocd.m_numCentralDirRecords = 2;
+	eocd.m_centralDirectorySizeBytes = static_cast<uint32_t>(stream->Tell() - cdirStart);
+	eocd.m_centralDirStartOffset = static_cast<uint32_t>(cdirStart);
+	eocd.m_commentLength = 0;
+
+	if (!stream->WriteExact(&eocd, sizeof(eocd)))
+		return ExportHouseResults::kIOError;
+
+	return ExportHouseResults::kOK;
+}
+
+ExportHouseResult_t TryDownloadHouse(void)
+{
+	GpIOStream *stream = nullptr;
+	if (PortabilityLayer::FileManager::GetInstance()->OpenNonCompositeFile(PortabilityLayer::VirtualDirectories::kSourceExport, thisHouseName, ".gpf", PortabilityLayer::EFilePermission_Write, GpFileCreationDispositions::kCreateOrOverwrite, stream))
+		return ExportHouseResults::kStreamFailed;
+
+	ExportHouseResult_t result = TryDownloadHouseToStream(stream);
+	stream->Close();
+
+	return result;
+}
+
+void DownloadHouse(void)
+{
+	ExportHouseResult_t result = TryDownloadHouse();
 
 	switch (result)
 	{
