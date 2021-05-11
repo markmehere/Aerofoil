@@ -171,6 +171,8 @@ Boolean CreateNewRoom (short h, short v)
 	char		wasState;
 	
 	CopyThisRoomToRoom();					// save off current room
+
+	memset(thisRoom, 0, sizeof(roomType));
 	
 	PasStringCopy(PSTR("Untitled Room"), thisRoom->name);
 	thisRoom->leftStart = 32;				// fill out fields of new room

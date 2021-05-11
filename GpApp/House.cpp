@@ -224,6 +224,7 @@ Boolean InitializeEmptyHouse (void)
 	}
 
 	thisHousePtr = *thisHouse;
+	memset(thisHousePtr, 0, houseSizeNoRooms);
 
 	thisHousePtr->version = kHouseVersion;
 	thisHousePtr->firstRoom = -1;
