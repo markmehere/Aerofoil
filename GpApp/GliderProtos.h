@@ -106,6 +106,7 @@ Boolean ReadScoresFromDisk (void);
 
 Boolean CreateNewHouse (void);							// --- House.c
 Boolean InitializeEmptyHouse (void);
+Boolean InitializeEmptyHouseInEditor (void);
 SInt16 RealRoomNumberCount (void);
 SInt16 GetFirstRoomNumber (void);
 void WhereDoesGliderBegin (Rect *, SInt16);

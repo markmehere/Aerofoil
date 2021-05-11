@@ -72,12 +72,12 @@ void UpdateMenusNonEditMode (void)
 		DisableMenuItem(gameMenu, iOpenSavedGame);
 		if (houseOpen)
 		{
-			EnableMenuItem(gameMenu, iLoadHouse);
+			EnableMenuItem(optionsMenu, iEditor);
 			EnableMenuItem(optionsMenu, iHighScores);
 		}
 		else
 		{
-			DisableMenuItem(gameMenu, iLoadHouse);
+			DisableMenuItem(optionsMenu, iEditor);
 			DisableMenuItem(optionsMenu, iHighScores);
 		}
 	}
@@ -86,7 +86,7 @@ void UpdateMenusNonEditMode (void)
 		EnableMenuItem(gameMenu, iNewGame);
 		EnableMenuItem(gameMenu, iTwoPlayer);
 		EnableMenuItem(gameMenu, iOpenSavedGame);
-		EnableMenuItem(gameMenu, iLoadHouse);
+		EnableMenuItem(optionsMenu, iEditor);
 		EnableMenuItem(optionsMenu, iHighScores);
 	}
 	if (demoHouseIndex == -1)
@@ -515,7 +515,7 @@ void DoHouseMenu (short theItem)
 		case iNewHouse:
 		if (CreateNewHouse())
 		{
-			whoCares = InitializeEmptyHouse();
+			whoCares = InitializeEmptyHouseInEditor();
 			whoCares = WriteHouse(false);		// Save initial house so it's not an empty file if reloaded immediately
 			OpenCloseEditWindows();
 		}

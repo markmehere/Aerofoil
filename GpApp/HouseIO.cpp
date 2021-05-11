@@ -170,6 +170,9 @@ Boolean OpenHouse (Boolean read)
 		Boolean readOK = ReadHouse(houseStream, theHousesSpecs[thisHouseIndex].m_dir != PortabilityLayer::VirtualDirectories::kGameData);
 		houseStream->Close();
 
+		if (!readOK)
+			CloseHouse();
+
 		return readOK;
 	}
 
@@ -1964,7 +1967,10 @@ Boolean ReadHouse (GpIOStream *houseStream, bool untrusted)
 	#endif
 	
 	if (thisHouse != nil)
+	{
 		thisHouse.Dispose();
+		thisHouse = nil;
+	}
 
 	if (byteCount < houseType::kBinaryDataSize)
 	{

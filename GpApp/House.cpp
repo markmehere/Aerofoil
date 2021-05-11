@@ -205,24 +205,26 @@ Boolean CreateNewHouse (void)
 // Initializes all the structures for an empty (new) house.
 
 #ifndef COMPILEDEMO
+
 Boolean InitializeEmptyHouse (void)
 {
 	houseType		*thisHousePtr;
 	Str255			tempStr;
-	
+
 	if (thisHouse != nil)
 		thisHouse.Dispose();
-	
-	thisHouse = NewHandle(sizeof(houseType) - sizeof(roomType)).StaticCast<houseType>();
-	
+
+	const size_t houseSizeNoRooms = sizeof(sizeof(houseType) - sizeof(roomType));
+	thisHouse = NewHandle(houseSizeNoRooms).StaticCast<houseType>();
+
 	if (thisHouse == nil)
 	{
 		YellowAlert(kYellowUnaccounted, 1);
 		return (false);
 	}
-	
+
 	thisHousePtr = *thisHouse;
-	
+
 	thisHousePtr->version = kHouseVersion;
 	thisHousePtr->firstRoom = -1;
 	thisHousePtr->timeStamp = 0L;
@@ -230,17 +232,17 @@ Boolean InitializeEmptyHouse (void)
 	thisHousePtr->initial.h = 32;
 	thisHousePtr->initial.v = 32;
 	ZeroHighScores();
-	
+
 	GetLocalizedString(11, tempStr);
 	PasStringCopy(tempStr, thisHousePtr->banner);
 	GetLocalizedString(12, tempStr);
 	PasStringCopy(tempStr, thisHousePtr->trailer);
 	thisHousePtr->hasGame = false;
 	thisHousePtr->nRooms = 0;
-	
+
 	wardBitSet = false;
 	phoneBitSet = false;
-	
+
 	numberRooms = 0;
 	mapLeftRoom = 60;
 	mapTopRoom = 50;
@@ -251,10 +253,17 @@ Boolean InitializeEmptyHouse (void)
 	UpdateMapWindow();
 	noRoomAtAll = true;
 	fileDirty = true;
+
+	return (true);
+}
+
+Boolean InitializeEmptyHouseInEditor (void)
+{
+	if (!InitializeEmptyHouse())
+		return (false);
+
 	UpdateMenus(false);
 	ReflectCurrentRoom(true);
-	
-	return (true);
 }
 #endif
 
