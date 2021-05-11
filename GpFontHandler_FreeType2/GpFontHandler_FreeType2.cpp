@@ -453,9 +453,8 @@ bool GpFontHandler_FreeType2::Init()
 	return true;
 }
 
-
-#ifdef _MSC_VER
 extern "C"
+#ifdef _MSC_VER
 __declspec(dllexport)
 #endif
 IGpFontHandler *GpDriver_CreateFontHandler_FreeType2(const GpFontHandlerProperties &properties)
