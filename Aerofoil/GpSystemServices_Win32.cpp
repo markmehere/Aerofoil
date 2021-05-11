@@ -232,9 +232,10 @@ uint64_t GpSystemServices_Win32::GetFreeMemoryCosmetic() const
 	return memStatus.ullAvailPhys;
 }
 
-void GpSystemServices_Win32::Beep() const
+bool GpSystemServices_Win32::Beep() const
 {
 	MessageBeep(MB_OK);
+	return true;
 }
 
 bool GpSystemServices_Win32::IsTouchscreen() const
@@ -260,6 +261,21 @@ bool GpSystemServices_Win32::IsFullscreenPreferred() const
 bool GpSystemServices_Win32::IsFullscreenOnStartup() const
 {
 	return false;
+}
+
+bool GpSystemServices_Win32::HasNativeFileManager() const
+{
+	return true;
+}
+
+GpOperatingSystem_t GpSystemServices_Win32::GetOperatingSystem() const
+{
+	return GpOperatingSystems::kWindows;
+}
+
+GpOperatingSystemFlavor_t GpSystemServices_Win32::GetOperatingSystemFlavor() const
+{
+	return GpOperatingSystemFlavors::kGeneric;
 }
 
 unsigned int GpSystemServices_Win32::GetCPUCount() const

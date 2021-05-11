@@ -27,6 +27,12 @@ namespace PortabilityLayer
 		int16_t m_resID;
 	};
 
+	struct IResourceIterator
+	{
+		virtual void Destroy() = 0;
+		virtual bool GetOne(ResTypeID &resTypeID, int16_t &outID) = 0;
+	};
+
 	struct IResourceArchive
 	{
 		virtual void Destroy() = 0;
@@ -35,6 +41,8 @@ namespace PortabilityLayer
 
 		virtual bool HasAnyResourcesOfType(const ResTypeID &resTypeID) const = 0;
 		virtual bool FindFirstResourceOfType(const ResTypeID &resTypeID, int16_t &outID) const = 0;
+
+		virtual IResourceIterator *EnumerateResources() const = 0;
 	};
 
 	class ResourceArchiveBase : public IResourceArchive
@@ -43,9 +51,13 @@ namespace PortabilityLayer
 		static const char *GetFileExtensionForResType(const ResTypeID &resTypeID, int &outValidationRule);
 	};
 
+	class ResourceArchiveZipFileIterator;
+
 	class ResourceArchiveZipFile final : public ResourceArchiveBase
 	{
 	public:
+		friend class ResourceArchiveZipFileIterator;
+
 		static ResourceArchiveZipFile *Create(ZipFileProxy *zipFileProxy, bool proxyIsShared, GpIOStream *stream);
 		void Destroy() override;
 
@@ -54,7 +66,14 @@ namespace PortabilityLayer
 		bool HasAnyResourcesOfType(const ResTypeID &resTypeID) const override;
 		bool FindFirstResourceOfType(const ResTypeID &resTypeID, int16_t &outID) const override;
 
+		IResourceIterator *EnumerateResources() const override;
+
+		static bool ParseResFromName(const char *name, size_t nameLength, ResTypeID &outResTypeID, int16_t &outID);
+
+
 	private:
+		static const size_t kMaxResourceSize = 32 * 1024 * 1024;
+
 		ResourceArchiveZipFile(ZipFileProxy *zipFileProxy, bool proxyIsShared, GpIOStream *stream, ResourceArchiveRef *resourceHandles);
 		~ResourceArchiveZipFile();
 

@@ -106,7 +106,6 @@ struct Window
 
 	bool AddWidget(PortabilityLayer::Widget *widget);
 	ArrayView<PortabilityLayer::Widget*> GetWidgets() const;
-	PortabilityLayer::Widget *GetWidgetById() const;
 	bool ReplaceWidget(PortabilityLayer::Widget *oldWidget, PortabilityLayer::Widget *newWidget);
 
 	void FocusWidget(PortabilityLayer::Widget *widget);

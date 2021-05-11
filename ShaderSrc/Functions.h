@@ -3,7 +3,7 @@ float SRGBToLinear(float v)
 	if (v <= 0.04045)
 		return v * (1.0 / 12.92);
 	else
-		return pow(((v + 0.055) * (1.0 / 1.055)), 2.4);
+		return pow(((max(v, 0.0) + 0.055) * (1.0 / 1.055)), 2.4);
 }
 
 float2 SRGBToLinear(float2 v)
@@ -47,8 +47,8 @@ float4 ApplyFlicker(int2 coordinate, int startThreshold, int endThreshold, float
 
 float4 ApplyDesaturation(float desaturation, float4 color)
 {
-	// This is intentionally done in gamma space
-	if (desaturation == 0.0)
+	// This is intentionally done in gamma space, and keeps solid yellow
+	if (desaturation == 0.0 || all(color.rgb == float3(1.0, 1.0, 0.0)))
 		return color;
 	
 	float grayLevel = dot(color.rgb, float3(3.0, 6.0, 1.0) / 10.0);

@@ -19,7 +19,7 @@
 -->
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="Aerofoil" Language="1033" Version="$(var.AerofoilReleaseVersion)" Manufacturer="The Aerofoil Project" UpgradeCode="$(var.AerofoilUpgradeCode)">
+  <Product Id="*" Name="Aerofoil" Language="1033" Version="$(var.AerofoilReleaseVersion)" Manufacturer="Gale Force Games" UpgradeCode="$(var.AerofoilUpgradeCode)">
     <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine">
     </Package>
 

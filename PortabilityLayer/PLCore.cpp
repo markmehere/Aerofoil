@@ -886,14 +886,6 @@ ArrayView<PortabilityLayer::Widget*> Window::GetWidgets() const
 	return ArrayView<PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
 }
 
-PortabilityLayer::Widget* Window::GetWidgetById() const
-{
-	//for (size_t i = 0; i < m_numWidgets; i++)
-	//	m_widgets[i]->get
-	//return ArrayView<PortabilityLayer::Widget*>(m_widgets, m_numWidgets);
-	return nullptr;
-}
-
 bool Window::ReplaceWidget(PortabilityLayer::Widget *oldWidget, PortabilityLayer::Widget *newWidget)
 {
 	for (size_t i = 0; i < m_numWidgets; i++)

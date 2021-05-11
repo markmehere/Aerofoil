@@ -6,7 +6,7 @@
 //============================================================================
 
 
-//#include <Balloons.h>
+#include "PLDrivers.h"
 #include "PLNumberFormatting.h"
 #include "PLKeyEncoding.h"
 #include "PLHacks.h"
@@ -17,6 +17,7 @@
 #include "Externs.h"
 #include "Environ.h"
 #include "House.h"
+#include "IGpSystemServices.h"
 #include "MenuManager.h"
 #include "ObjectEdit.h"
 
@@ -32,7 +33,7 @@ void UpdateMenusHouseClosed (void);
 void HeyYourPissingAHighScore (void);
 
 
-MenuHandle	appleMenu, gameMenu, optionsMenu, houseMenu;
+MenuHandle	appleMenu, gameMenu, optionsMenu, houseMenu, exportMenu;
 Boolean		menusUp, resumedSavedGame;
 
 
@@ -71,12 +72,12 @@ void UpdateMenusNonEditMode (void)
 		DisableMenuItem(gameMenu, iOpenSavedGame);
 		if (houseOpen)
 		{
-			EnableMenuItem(gameMenu, iLoadHouse);
+			EnableMenuItem(optionsMenu, iEditor);
 			EnableMenuItem(optionsMenu, iHighScores);
 		}
 		else
 		{
-			DisableMenuItem(gameMenu, iLoadHouse);
+			DisableMenuItem(optionsMenu, iEditor);
 			DisableMenuItem(optionsMenu, iHighScores);
 		}
 	}
@@ -85,7 +86,7 @@ void UpdateMenusNonEditMode (void)
 		EnableMenuItem(gameMenu, iNewGame);
 		EnableMenuItem(gameMenu, iTwoPlayer);
 		EnableMenuItem(gameMenu, iOpenSavedGame);
-		EnableMenuItem(gameMenu, iLoadHouse);
+		EnableMenuItem(optionsMenu, iEditor);
 		EnableMenuItem(optionsMenu, iHighScores);
 	}
 	if (demoHouseIndex == -1)
@@ -141,6 +142,19 @@ void UpdateMenusHouseOpen (void)
 			EnableMenuItem(houseMenu, iSendBack);
 		}
 	}
+
+	if (houseUnlocked)
+	{
+		EnableMenuItem(exportMenu, iExportGliderPROHouse);
+		if (PLDrivers::GetSystemServices()->GetOperatingSystem() == GpOperatingSystems::kWeb)
+			EnableMenuItem(exportMenu, iDownloadHouse);
+	}
+	else
+	{
+		DisableMenuItem(exportMenu, iExportGliderPROHouse);
+		if (PLDrivers::GetSystemServices()->GetOperatingSystem() == GpOperatingSystems::kWeb)
+			DisableMenuItem(exportMenu, iDownloadHouse);
+	}
 }
 
 //--------------------------------------------------------------  UpdateMenusHouseClosed
@@ -159,6 +173,8 @@ void UpdateMenusHouseClosed (void)
 	DisableMenuItem(houseMenu, iPaste);
 	DisableMenuItem(houseMenu, iClear);
 	DisableMenuItem(houseMenu, iDuplicate);
+
+	DisableMenuItem(exportMenu, iExportGliderPROHouse);
 }
 
 //--------------------------------------------------------------  UpdateClipboardMenus
@@ -254,12 +270,19 @@ void UpdateMenus (Boolean newMode)
 	{
 		PortabilityLayer::MenuManager *mm = PortabilityLayer::MenuManager::GetInstance();
 		if (theMode == kEditMode)
+		{
 			InsertMenu(houseMenu, 0);
+			InsertMenu(exportMenu, 0);
+		}
 		else
 		{
 			THandle<Menu> houseMenu = mm->GetMenuByID(kHouseMenuID);
 			if (houseMenu)
 				mm->RemoveMenu(houseMenu);
+
+			THandle<Menu> exportMenu = mm->GetMenuByID(kExportMenuID);
+			if (exportMenu)
+				mm->RemoveMenu(exportMenu);
 		}
 	}
 	
@@ -465,6 +488,22 @@ void DoOptionsMenu (short theItem)
 //--------------------------------------------------------------  DoHouseMenu
 // Handle the user selecting an item from the House menu (only in Edit mode).
 
+void DoExportMenu(short theItem)
+{
+	switch (theItem)
+	{
+	case iExportGliderPROHouse:
+		ExportHouse();
+		break;
+	case iDownloadHouse:
+		DownloadHouse();
+		break;
+	};
+}
+
+//--------------------------------------------------------------  DoHouseMenu
+// Handle the user selecting an item from the House menu (only in Edit mode).
+
 void DoHouseMenu (short theItem)
 {
 #ifndef COMPILEDEMO
@@ -476,7 +515,7 @@ void DoHouseMenu (short theItem)
 		case iNewHouse:
 		if (CreateNewHouse())
 		{
-			whoCares = InitializeEmptyHouse();
+			whoCares = InitializeEmptyHouseInEditor();
 			whoCares = WriteHouse(false);		// Save initial house so it's not an empty file if reloaded immediately
 			OpenCloseEditWindows();
 		}
@@ -646,6 +685,10 @@ void DoMenuChoice (long menuChoice)
 		
 		case kHouseMenuID:
 		DoHouseMenu(theItem);
+		break;
+
+		case kExportMenuID:
+		DoExportMenu(theItem);
 		break;
 	}
 }

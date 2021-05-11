@@ -1,11 +1,30 @@
 #include "GpFileStream_Win32.h"
+#include "IGpAllocator.h"
 
-GpFileStream_Win32::GpFileStream_Win32(HANDLE handle, bool readable, bool writeable, bool seekable)
-	: m_handle(handle)
+#include <new>
+
+GpFileStream_Win32::GpFileStream_Win32(IGpAllocator *alloc, HANDLE handle, bool readable, bool writeable, bool seekable)
+	: m_alloc(alloc)
+	, m_handle(handle)
 	, m_readable(readable)
 	, m_writeable(writeable)
 	, m_seekable(seekable)
 {
+}
+
+GpFileStream_Win32 *GpFileStream_Win32::Create(IGpAllocator *alloc, HANDLE handle, bool readable, bool writeable, bool seekable)
+{
+	void *storage = alloc->Alloc(sizeof(GpFileStream_Win32));
+	if (!storage)
+		return nullptr;
+
+	return new (storage) GpFileStream_Win32(alloc, handle, readable, writeable, seekable);
+}
+
+
+GpFileStream_Win32::~GpFileStream_Win32()
+{
+	CloseHandle(m_handle);
 }
 
 size_t GpFileStream_Win32::Read(void *bytesOut, size_t size)
@@ -122,7 +141,10 @@ GpUFilePos_t GpFileStream_Win32::Tell() const
 
 void GpFileStream_Win32::Close()
 {
-	CloseHandle(m_handle);
+	IGpAllocator *alloc = m_alloc;
+	this->~GpFileStream_Win32();
+
+	alloc->Release(this);
 }
 
 void GpFileStream_Win32::Flush()

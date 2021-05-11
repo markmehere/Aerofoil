@@ -106,6 +106,7 @@ Boolean ReadScoresFromDisk (void);
 
 Boolean CreateNewHouse (void);							// --- House.c
 Boolean InitializeEmptyHouse (void);
+Boolean InitializeEmptyHouseInEditor (void);
 SInt16 RealRoomNumberCount (void);
 SInt16 GetFirstRoomNumber (void);
 void WhereDoesGliderBegin (Rect *, SInt16);
@@ -119,12 +120,13 @@ void GenerateRetroLinks (void);
 void DoGoToDialog (void);
 void ConvertHouseVer1To2 (void);
 void ShiftWholeHouse (SInt16);
+void ExportHouse (void);
+void DownloadHouse (void);
 
 void DoHouseInfo (void);								// --- HouseInfo.c
 
 Boolean OpenHouse (Boolean load);						// --- HouseIO.c
 Boolean OpenSpecificHouse (const VFileSpec &);
-Boolean SaveHouseAs (void);
 Boolean ReadHouse (GpIOStream *houseStream, bool untrusted);
 Boolean WriteHouse (Boolean);
 Boolean CloseHouse (void);

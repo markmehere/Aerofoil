@@ -115,7 +115,8 @@
 #define kTransInSound				60			//  ее    ее
 #define kBonusSound					61			//  еееееее
 #define kHissSound					62			//
-#define kTriggerSound				63
+#define kPingSound					63			//
+#define kTriggerSound				64			// This must be the last one
 
 #define kHitWallPriority			100			//   ееееее
 #define kScoreTikPriority			101			//  ее
@@ -177,6 +178,7 @@
 #define kFollowPriority				904
 #define kTransInPriority			905
 #define kTransOutPriority			906
+#define kPingPriority				907
 #define kTriggerPriority			999
 
 #define kArrowCursor				0
@@ -187,6 +189,7 @@
 #define kGameMenuID					129
 #define kOptionsMenuID				130
 #define kHouseMenuID				131
+#define kExportMenuID				132
 
 #define kSplashMode					0
 #define kEditMode					1

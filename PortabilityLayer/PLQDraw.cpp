@@ -493,6 +493,71 @@ static void RedistributeError(int16_t *errorDiffusionNextRow, int16_t *errorDiff
 	}
 }
 
+namespace PortabilityLayer
+{
+	bool FindBitSpan(uint32_t mask, int &outLowBit, int &outHighBit)
+	{
+		bool haveAnyBits = false;
+		for (int i = 0; i < 32; i++)
+		{
+			if (mask & (1 << i))
+			{
+				if (!haveAnyBits)
+				{
+					haveAnyBits = true;
+					outLowBit = i;
+				}
+				outHighBit = i;
+			}
+		}
+
+		return haveAnyBits;
+	}
+
+	int DecodeMaskRShift1(uint32_t mask)
+	{
+		int lowBit, highBit;
+		if (!FindBitSpan(mask, lowBit, highBit))
+			return 0;
+
+		return lowBit;
+	}
+
+	int DecodeMaskRShift2(uint32_t mask)
+	{
+		int lowBit, highBit;
+		if (!FindBitSpan(mask, lowBit, highBit))
+			return 0;
+
+		int numBits = highBit - lowBit + 1;
+
+		int expandedBits = numBits;
+		while (expandedBits < 8)
+			expandedBits += numBits;
+
+		return expandedBits - 8;
+	}
+
+	int DecodeMaskMultiplier(uint32_t mask)
+	{
+		int lowBit, highBit;
+		if (!FindBitSpan(mask, lowBit, highBit))
+			return 0;
+
+		int numBits = highBit - lowBit + 1;
+
+		int expandedBits = numBits;
+		int expansionFactor = 1;
+		while (expandedBits < 8)
+		{
+			expandedBits += numBits;
+			expansionFactor = (expansionFactor << numBits) | 1;
+		}
+
+		return expansionFactor;
+	}
+}
+
 void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, bool errorDiffusion)
 {
 	if (!pictHdl)
@@ -572,9 +637,9 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 	memcpy(&fileHeader, bmpBytes, sizeof(fileHeader));
 	memcpy(&infoHeader, bmpBytes + sizeof(fileHeader), sizeof(infoHeader));
 
-	const uint16_t bpp = infoHeader.m_bitsPerPixel;
+	uint16_t bpp = infoHeader.m_bitsPerPixel;
 
-	if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 16 && bpp != 24)
+	if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 16 && bpp != 24 && bpp != 32)
 		return;
 
 	uint32_t numColors = infoHeader.m_numColors;
@@ -584,6 +649,18 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 	if (numColors == 0 && bpp <= 8)
 		numColors = (1 << bpp);
 
+	LEUInt32_t masks[4];
+	int maskRShift1[4];
+	int maskRShift2[4];
+	int maskMultiplier[4];
+	bool haveMasks = false;
+	if (infoHeader.m_thisStructureSize >= sizeof(PortabilityLayer::BitmapInfoHeader) + sizeof(uint32_t) * 4)
+	{
+		const uint8_t *masksLoc = bmpBytes + sizeof(fileHeader) + sizeof(PortabilityLayer::BitmapInfoHeader);
+		memcpy(masks, masksLoc, 16);
+		haveMasks = true;
+	}
+
 	const uint8_t *ctabLoc = bmpBytes + sizeof(fileHeader) + infoHeader.m_thisStructureSize;
 
 	const size_t ctabSize = numColors * sizeof(PortabilityLayer::BitmapColorTableEntry);
@@ -591,6 +668,57 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 
 	if (ctabSize > availCTabBytes)
 		return;
+
+	const uint32_t compressionCode = static_cast<uint32_t>(infoHeader.m_compression);
+	if (bpp == 16)
+	{
+		if (compressionCode == 0)
+		{
+			haveMasks = true;
+			masks[0] = (0x1f << 10);
+			masks[1] = (0x1f << 5);
+			masks[2] = (0x1f << 0);
+			masks[3] = (1 << 15);
+		}
+		else if (compressionCode == 3)
+		{
+			if (!haveMasks)
+				return;
+		}
+		else
+			return;
+	}
+	else if (bpp == 32)
+	{
+		if (compressionCode == 0)
+		{
+			haveMasks = true;
+			masks[0] = (0xff << 16);
+			masks[1] = (0xff << 8);
+			masks[2] = (0xff << 0);
+			masks[3] = (0xff << 24);
+		}
+		if (compressionCode == 3)
+		{
+			if (!haveMasks)
+				return;
+		}
+	}
+	else
+	{
+		if (compressionCode != 0)
+			return;
+	}
+
+	if (haveMasks)
+	{
+		for (int mi = 0; mi < 4; mi++)
+		{
+			maskRShift1[mi] = PortabilityLayer::DecodeMaskRShift1(masks[mi]);
+			maskRShift2[mi] = PortabilityLayer::DecodeMaskRShift2(masks[mi]);
+			maskMultiplier[mi] = PortabilityLayer::DecodeMaskMultiplier(masks[mi]);
+		}
+	}
 
 	if (bpp <= 8)
 	{
@@ -672,7 +800,7 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 			int16_t *errorDiffusionNextRow = nullptr;
 			int16_t *errorDiffusionCurrentRow = nullptr;
 
-			if ((bpp == 16 || bpp == 24) && errorDiffusion)
+			if ((bpp == 16 || bpp == 24 || bpp == 32) && errorDiffusion)
 			{
 				errorDiffusionBuffer = static_cast<int16_t*>(memManager->Alloc(sizeof(int16_t) * numCopyCols * 2 * 3));
 				if (!errorDiffusionBuffer)
@@ -739,12 +867,13 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 							const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
 							const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
-							const unsigned int combinedValue = srcLow | (srcHigh << 8);
-							const unsigned int b = (combinedValue & 0x1f);
-							const unsigned int g = ((combinedValue >> 5) & 0x1f);
-							const unsigned int r = ((combinedValue >> 10) & 0x1f);
+							const uint32_t combinedValue = srcLow | (srcHigh << 8);
 
-							if (r + g + b > 46)
+							uint8_t rgb[3];
+							for (unsigned int ch = 0; ch < 3; ch++)
+								rgb[ch] = (((combinedValue & masks[ch]) >> maskRShift1[ch]) * maskMultiplier[ch]) >> maskRShift2[ch];
+
+							if (rgb[0] + rgb[1] + rgb[2] > 382)
 								currentDestRow[destColIndex] = 0;
 							else
 								currentDestRow[destColIndex] = 1;
@@ -763,15 +892,12 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 								const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
 								const unsigned int combinedValue = srcLow | (srcHigh << 8);
-								const unsigned int b = (combinedValue & 0x1f);
-								const unsigned int g = ((combinedValue >> 5) & 0x1f);
-								const unsigned int r = ((combinedValue >> 10) & 0x1f);
 
-								const unsigned int xr = (r << 5) | (r >> 2);
-								const unsigned int xg = (g << 5) | (g >> 2);
-								const unsigned int xb = (b << 5) | (b >> 2);
+								uint8_t rgb[3];
+								for (unsigned int ch = 0; ch < 3; ch++)
+									rgb[ch] = (((combinedValue & masks[ch]) >> maskRShift1[ch]) * maskMultiplier[ch]) >> maskRShift2[ch];
 
-								uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(xr, xg, xb, 255));
+								uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(rgb[0], rgb[1], rgb[2], 255));
 
 								currentDestRow[destColIndex] = colorIndex;
 							}
@@ -787,15 +913,12 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 								const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
 								const unsigned int combinedValue = srcLow | (srcHigh << 8);
-								const unsigned int b = (combinedValue & 0x1f);
-								const unsigned int g = ((combinedValue >> 5) & 0x1f);
-								const unsigned int r = ((combinedValue >> 10) & 0x1f);
 
-								const unsigned int xr = (r << 5) | (r >> 2);
-								const unsigned int xg = (g << 5) | (g >> 2);
-								const unsigned int xb = (b << 5) | (b >> 2);
+								uint8_t rgb[3];
+								for (unsigned int ch = 0; ch < 3; ch++)
+									rgb[ch] = (((combinedValue & masks[ch]) >> maskRShift1[ch]) * maskMultiplier[ch]) >> maskRShift2[ch];
 
-								ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, xr, xg, xb, col, numCopyCols);
+								ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, rgb[0], rgb[1], rgb[2], col, numCopyCols);
 
 								uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
 								PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
@@ -816,15 +939,11 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 							const size_t srcColIndex = col + firstSourceCol;
 							const size_t destColIndex = col + firstDestCol;
 
-							const uint8_t srcLow = currentSourceRow[srcColIndex * 2 + 0];
-							const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
+							const uint8_t r = currentSourceRow[srcColIndex * 3 + 2];
+							const uint8_t g = currentSourceRow[srcColIndex * 3 + 1];
+							const uint8_t b = currentSourceRow[srcColIndex * 3 + 0];
 
-							const unsigned int combinedValue = srcLow | (srcHigh << 8);
-							const unsigned int b = (combinedValue & 0x1f);
-							const unsigned int g = ((combinedValue >> 5) & 0x1f);
-							const unsigned int r = ((combinedValue >> 10) & 0x1f);
-
-							if (r + g + b > 46)
+							if (r + g + b > 382)
 								currentDestRow[destColIndex] = 0;
 							else
 								currentDestRow[destColIndex] = 1;
@@ -856,6 +975,62 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 								const size_t destColIndex = col + firstDestCol;
 
 								ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, currentSourceRow[srcColIndex * 3 + 2], currentSourceRow[srcColIndex * 3 + 1], currentSourceRow[srcColIndex * 3 + 0], col, numCopyCols);
+
+								uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
+								PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
+
+								RedistributeError(errorDiffusionNextRow, errorDiffusionCurrentRow, wp.m_16[0], wp.m_16[1], wp.m_16[2], resultColor.r, resultColor.g, resultColor.b, col, numCopyCols);
+
+								currentDestRow[destColIndex] = colorIndex;
+							}
+						}
+					}
+				}
+				else if (bpp == 32)
+				{
+					if (destFormat == GpPixelFormats::kBW1)
+					{
+						for (size_t col = 0; col < numCopyCols; col++)
+						{
+							const size_t srcColIndex = col + firstSourceCol;
+							const size_t destColIndex = col + firstDestCol;
+
+							const uint8_t r = currentSourceRow[srcColIndex * 4 + 2];
+							const uint8_t g = currentSourceRow[srcColIndex * 4 + 1];
+							const uint8_t b = currentSourceRow[srcColIndex * 4 + 0];
+
+							if (r + g + b > 382)
+								currentDestRow[destColIndex] = 0;
+							else
+								currentDestRow[destColIndex] = 1;
+						}
+					}
+					else
+					{
+						if (!errorDiffusion)
+						{
+							for (size_t col = 0; col < numCopyCols; col++)
+							{
+								const size_t srcColIndex = col + firstSourceCol;
+								const size_t destColIndex = col + firstDestCol;
+
+								const uint8_t r = currentSourceRow[srcColIndex * 4 + 2];
+								const uint8_t g = currentSourceRow[srcColIndex * 4 + 1];
+								const uint8_t b = currentSourceRow[srcColIndex * 4 + 0];
+
+								uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(r, g, b, 255));
+
+								currentDestRow[destColIndex] = colorIndex;
+							}
+						}
+						else
+						{
+							for (size_t col = 0; col < numCopyCols; col++)
+							{
+								const size_t srcColIndex = col + firstSourceCol;
+								const size_t destColIndex = col + firstDestCol;
+
+								ErrorDiffusionWorkPixel wp = ApplyErrorDiffusion(errorDiffusionCurrentRow, currentSourceRow[srcColIndex * 4 + 2], currentSourceRow[srcColIndex * 4 + 1], currentSourceRow[srcColIndex * 4 + 0], col, numCopyCols);
 
 								uint8_t colorIndex = stdPalette->MapColorLUT(PortabilityLayer::RGBAColor::Create(wp.m_8[0], wp.m_8[1], wp.m_8[2], 255));
 								PortabilityLayer::RGBAColor resultColor = stdPalette->GetColors()[colorIndex];
@@ -907,7 +1082,7 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 						const size_t destColIndex = col + firstDestCol;
 
 						const unsigned int srcIndex = (currentSourceRow[srcColIndex / 8] >> (8 - ((srcColIndex & 7) + 1))) & 0x01;
-						currentDestRow32[destColIndex] = srcIndex ? blackColor32 : whiteColor32;
+						currentDestRow32[destColIndex] = unpackedColors[srcIndex];
 					}
 				}
 				else if (bpp == 4)
@@ -943,17 +1118,10 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 						const uint8_t srcHigh = currentSourceRow[srcColIndex * 2 + 1];
 
 						const unsigned int combinedValue = srcLow | (srcHigh << 8);
-						const unsigned int b = (combinedValue & 0x1f);
-						const unsigned int g = ((combinedValue >> 5) & 0x1f);
-						const unsigned int r = ((combinedValue >> 10) & 0x1f);
 
-						const unsigned int xr = (r << 5) | (r >> 2);
-						const unsigned int xg = (g << 5) | (g >> 2);
-						const unsigned int xb = (b << 5) | (b >> 2);
+						for (unsigned int ch = 0; ch < 3; ch++)
+							currentDestRowBytes[destColIndex * 4 + ch] = (((combinedValue & masks[ch]) >> maskRShift1[ch]) * maskMultiplier[ch]) >> maskRShift2[ch];
 
-						currentDestRowBytes[destColIndex * 4 + 0] = xr;
-						currentDestRowBytes[destColIndex * 4 + 1] = xg;
-						currentDestRowBytes[destColIndex * 4 + 2] = xb;
 						currentDestRowBytes[destColIndex * 4 + 3] = 255;
 					}
 				}
@@ -967,6 +1135,19 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 						currentDestRowBytes[destColIndex * 4 + 0] = currentSourceRow[srcColIndex * 3 + 2];
 						currentDestRowBytes[destColIndex * 4 + 1] = currentSourceRow[srcColIndex * 3 + 1];
 						currentDestRowBytes[destColIndex * 4 + 2] = currentSourceRow[srcColIndex * 3 + 0];
+						currentDestRowBytes[destColIndex * 4 + 3] = 255;
+					}
+				}
+				else if (bpp == 32)
+				{
+					for (size_t col = 0; col < numCopyCols; col++)
+					{
+						const size_t srcColIndex = col + firstSourceCol;
+						const size_t destColIndex = col + firstDestCol;
+
+						currentDestRowBytes[destColIndex * 4 + 0] = currentSourceRow[srcColIndex * 4 + 2];
+						currentDestRowBytes[destColIndex * 4 + 1] = currentSourceRow[srcColIndex * 4 + 1];
+						currentDestRowBytes[destColIndex * 4 + 2] = currentSourceRow[srcColIndex * 4 + 0];
 						currentDestRowBytes[destColIndex * 4 + 3] = 255;
 					}
 				}

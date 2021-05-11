@@ -37,7 +37,11 @@ public:
 	const T &operator[](size_t index) const;
 
 	bool Resize(size_t newSize);
+	bool Reserve(size_t newSize);
 	bool ResizeNoConstruct(size_t newSize);
+
+	bool Append(const T &item);
+	bool Append(T &&item);
 
 	T *Buffer();
 	const T *Buffer() const;
@@ -148,7 +152,6 @@ const T &GpVector<T, TStaticSize>::operator[](size_t index) const
 	return m_elements[index];
 }
 
-
 template<class T, size_t TStaticSize>
 bool GpVector<T, TStaticSize>::Resize(size_t newSize)
 {
@@ -159,6 +162,21 @@ bool GpVector<T, TStaticSize>::Resize(size_t newSize)
 
 	for (size_t i = oldCount; i < newSize; i++)
 		new (m_elements + i) T();
+
+	return true;
+}
+
+
+
+template<class T, size_t TStaticSize>
+bool GpVector<T, TStaticSize>::Reserve(size_t newSize)
+{
+	const size_t oldCount = m_count;
+
+	if (!ResizeNoConstruct(newSize))
+		return false;
+
+	m_count = oldCount;
 
 	return true;
 }
@@ -210,6 +228,53 @@ bool GpVector<T, TStaticSize>::ResizeNoConstruct(size_t newSize)
 
 	return true;
 }
+
+template<class T, size_t TStaticSize>
+bool GpVector<T, TStaticSize>::Append(const T &item)
+{
+	const size_t oldCount = m_count;
+
+	if (m_count == m_capacity)
+	{
+		size_t newCapacity = m_capacity * 2;
+		if (newCapacity < 8)
+			newCapacity = 8;
+
+		if (!Reserve(newCapacity))
+			return false;
+	}
+
+	if (!ResizeNoConstruct(oldCount + 1))
+		return false;
+
+	new (m_elements + oldCount) T(item);
+
+	return true;
+}
+
+template<class T, size_t TStaticSize>
+bool GpVector<T, TStaticSize>::Append(T &&item)
+{
+	const size_t oldCount = m_count;
+
+	if (m_count == m_capacity)
+	{
+		size_t newCapacity = m_capacity * 2;
+		if (newCapacity < 8)
+			newCapacity = 8;
+
+		if (!Reserve(newCapacity))
+			return false;
+	}
+
+	if (!ResizeNoConstruct(oldCount + 1))
+		return false;
+
+	new (m_elements + oldCount) T(static_cast<T&&>(item));
+
+	return true;
+}
+
 
 template<class T, size_t TStaticSize>
 const size_t GpVector<T, TStaticSize>::Count() const

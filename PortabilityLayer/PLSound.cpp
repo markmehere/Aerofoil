@@ -180,6 +180,9 @@ namespace PortabilityLayer
 
 	bool AudioChannelImpl::AddBuffer(IGpAudioBuffer *buffer, bool blocking)
 	{
+		if (!buffer)
+			return false;
+
 		buffer->AddRef();
 
 		AudioCommand cmd;

@@ -585,7 +585,7 @@ int AppStartup()
 			FlushResolutionChange();
 		}
 
-        ShowInitialLaunchDisclaimer();
+        	ShowInitialLaunchDisclaimer();
 	}
 
 	if (thisMac.isResolutionDirty)

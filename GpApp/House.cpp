@@ -51,40 +51,70 @@ extern	short		numberRooms, mapLeftRoom, mapTopRoom, numStarsRemaining;
 extern	Boolean		houseOpen, noRoomAtAll;
 extern	Boolean		twoPlayerGame, wardBitSet, phoneBitSet;
 
+struct FBUI_House_Context
+{
+	FBUI_House_Context();
 
-static void FBUI_House_DrawLabels(DrawSurface *surface, const Point &basePoint)
+	bool m_deletedAny;
+};
+
+FBUI_House_Context::FBUI_House_Context()
+	: m_deletedAny(false)
 {
 }
 
-static void FBUI_House_DrawFileDetails(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+static void FBUI_House_DrawLabels(void *context, DrawSurface *surface, const Point &basePoint)
 {
 }
 
-static void *FBUI_House_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static void FBUI_House_DrawFileDetails(void *context, DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+{
+}
+
+static void *FBUI_House_LoadFileDetails(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	return nullptr;
 }
 
-static void FBUI_House_FreeFileDetails(void *fileDetails)
+static void FBUI_House_FreeFileDetails(void *context, void *fileDetails)
 {
 }
 
-static bool FBUI_House_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static bool FBUI_House_FilterFile(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	PortabilityLayer::CompositeFile *cfile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(dirID, filename);
 
 	return PortabilityLayer::ResTypeIDCodec::Decode(cfile->GetProperties().m_fileType) == 'gliH';
 }
 
-static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
+static bool FBUI_House_IsDeleteValid(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	if (dirID != PortabilityLayer::VirtualDirectories::kUserData)
+		return false;
+
+	return !StrCmp::EqualCaseInsensitive(thisHouseName, filename);
+}
+
+static void FBUI_House_OnDeleted(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	if (dirID != PortabilityLayer::VirtualDirectories::kUserData)
+		return;
+
+	static_cast<FBUI_House_Context*>(context)->m_deletedAny = true;
+}
+
+static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI(FBUI_House_Context *context)
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
 
+	api.m_context = context;
 	api.m_drawLabelsCallback = FBUI_House_DrawLabels;
 	api.m_drawFileDetailsCallback = FBUI_House_DrawFileDetails;
 	api.m_loadFileDetailsCallback = FBUI_House_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_House_FreeFileDetails;
 	api.m_filterFileCallback = FBUI_House_FilterFile;
+	api.m_isDeleteValidCallback = FBUI_House_IsDeleteValid;
+	api.m_onDeletedCallback = FBUI_House_OnDeleted;
 
 	return api;
 }
@@ -109,8 +139,18 @@ Boolean CreateNewHouse (void)
 	char savePath[sizeof(theSpec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(theSpec.m_dir, ".gpf", savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), true, GetHouseDetailsAPI()))
+	FBUI_House_Context fbuiContext;
+
+	if (!fm->PromptSaveFile(theSpec.m_dir, ".gpf", savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), true, GetHouseDetailsAPI(&fbuiContext)))
+	{
+		if (fbuiContext.m_deletedAny)
+		{
+			BuildHouseList();
+			InitCursor();
+		}
+
 		return false;
+	}
 
 	assert(savePathLength < sizeof(theSpec.m_name) - 1);
 
@@ -165,24 +205,26 @@ Boolean CreateNewHouse (void)
 // Initializes all the structures for an empty (new) house.
 
 #ifndef COMPILEDEMO
+
 Boolean InitializeEmptyHouse (void)
 {
 	houseType		*thisHousePtr;
 	Str255			tempStr;
-	
+
 	if (thisHouse != nil)
 		thisHouse.Dispose();
-	
-	thisHouse = NewHandle(sizeof(houseType) - sizeof(roomType)).StaticCast<houseType>();
-	
+
+	const size_t houseSizeNoRooms = sizeof(sizeof(houseType) - sizeof(roomType));
+	thisHouse = NewHandle(houseSizeNoRooms).StaticCast<houseType>();
+
 	if (thisHouse == nil)
 	{
 		YellowAlert(kYellowUnaccounted, 1);
 		return (false);
 	}
-	
+
 	thisHousePtr = *thisHouse;
-	
+
 	thisHousePtr->version = kHouseVersion;
 	thisHousePtr->firstRoom = -1;
 	thisHousePtr->timeStamp = 0L;
@@ -190,17 +232,17 @@ Boolean InitializeEmptyHouse (void)
 	thisHousePtr->initial.h = 32;
 	thisHousePtr->initial.v = 32;
 	ZeroHighScores();
-	
+
 	GetLocalizedString(11, tempStr);
 	PasStringCopy(tempStr, thisHousePtr->banner);
 	GetLocalizedString(12, tempStr);
 	PasStringCopy(tempStr, thisHousePtr->trailer);
 	thisHousePtr->hasGame = false;
 	thisHousePtr->nRooms = 0;
-	
+
 	wardBitSet = false;
 	phoneBitSet = false;
-	
+
 	numberRooms = 0;
 	mapLeftRoom = 60;
 	mapTopRoom = 50;
@@ -211,10 +253,17 @@ Boolean InitializeEmptyHouse (void)
 	UpdateMapWindow();
 	noRoomAtAll = true;
 	fileDirty = true;
+
+	return (true);
+}
+
+Boolean InitializeEmptyHouseInEditor (void)
+{
+	if (!InitializeEmptyHouse())
+		return (false);
+
 	UpdateMenus(false);
 	ReflectCurrentRoom(true);
-	
-	return (true);
 }
 #endif
 

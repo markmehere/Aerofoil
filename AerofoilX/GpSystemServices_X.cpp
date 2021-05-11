@@ -70,8 +70,9 @@ void *GpSystemServices_X::CreateThread(ThreadFunc_t threadFunc, void *context)
 	return thread;
 }
 
-void GpSystemServices_X::Beep() const
+bool GpSystemServices_X::Beep() const
 {
+	return false;
 }
 
 bool GpSystemServices_X::IsTouchscreen() const
@@ -101,6 +102,21 @@ bool GpSystemServices_X::IsFullscreenPreferred() const
 bool GpSystemServices_X::IsFullscreenOnStartup() const
 {
 	return false;
+}
+
+bool GpSystemServices_X::HasNativeFileManager() const
+{
+	return true;
+}
+
+GpOperatingSystem_t GpSystemServices_X::GetOperatingSystem() const
+{
+	return GpOperatingSystems::kLinux;
+}
+
+GpOperatingSystemFlavor_t GpSystemServices_X::GetOperatingSystemFlavor() const
+{
+	return GpOperatingSystemFlavors::kGeneric;
 }
 
 unsigned int GpSystemServices_X::GetCPUCount() const

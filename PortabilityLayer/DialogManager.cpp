@@ -13,6 +13,7 @@
 #include "WindowDef.h"
 #include "WindowManager.h"
 
+#include "PLApplication.h"
 #include "PLArrayView.h"
 #include "PLBigEndian.h"
 #include "PLButtonWidget.h"
@@ -471,7 +472,7 @@ namespace PortabilityLayer
 						Rect2i windowFullRect = WindowManager::GetInstance()->GetWindowFullRect(window);
 						if (!windowFullRect.Contains(Vec2i(mouseEvent.m_x, mouseEvent.m_y)))
 						{
-							PLDrivers::GetSystemServices()->Beep();
+							SysBeep(1);
 							continue;
 						}
 					}
@@ -834,7 +835,7 @@ namespace PortabilityLayer
 		// If sound index is 0, play no sound
 
 		if (soundIndexes[0] != 0)
-			PLDrivers::GetSystemServices()->Beep();
+			SysBeep(1);
 
 		const Rect dialogRect = alertResData.m_rect.ToRect();
 

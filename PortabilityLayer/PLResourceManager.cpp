@@ -40,6 +40,61 @@ static const char *kPICTExtension = ".bmp";
 
 typedef ResourceValidationRules::ResourceValidationRule ResourceValidationRule_t;
 
+namespace PortabilityLayer
+{
+	class ResourceArchiveZipFileIterator : public IResourceIterator
+	{
+	public:
+		explicit ResourceArchiveZipFileIterator(PortabilityLayer::ZipFileProxy *proxy);
+
+		void Destroy() override;
+		bool GetOne(ResTypeID &resTypeID, int16_t &outID) override;
+
+	private:
+		~ResourceArchiveZipFileIterator();
+
+		PortabilityLayer::ZipFileProxy *m_proxy;
+		size_t m_numFiles;
+		size_t m_currentIndex;
+	};
+}
+
+
+PortabilityLayer::ResourceArchiveZipFileIterator::ResourceArchiveZipFileIterator(PortabilityLayer::ZipFileProxy *proxy)
+	: m_proxy(proxy)
+	, m_numFiles(proxy->NumFiles())
+	, m_currentIndex(0)
+{
+}
+
+void PortabilityLayer::ResourceArchiveZipFileIterator::Destroy()
+{
+	this->~ResourceArchiveZipFileIterator();
+	PortabilityLayer::MemoryManager::GetInstance()->Release(this);
+}
+
+bool PortabilityLayer::ResourceArchiveZipFileIterator::GetOne(ResTypeID &resTypeID, int16_t &outID)
+{
+	while (m_currentIndex != m_numFiles)
+	{
+		const size_t index = m_currentIndex++;
+
+		const char *name = nullptr;
+		size_t nameLength = 0;
+		m_proxy->GetFileName(index, name, nameLength);
+
+		const bool isParseable = ResourceArchiveZipFile::ParseResFromName(name, nameLength, resTypeID, outID);
+		if (isParseable)
+			return true;
+	}
+
+	return false;
+}
+
+PortabilityLayer::ResourceArchiveZipFileIterator::~ResourceArchiveZipFileIterator()
+{
+}
+
 namespace
 {
 	// Validation here is only intended to be minimal, to ensure later checks can determine the format size and do certain operations
@@ -433,6 +488,93 @@ namespace PortabilityLayer
 		return haveAny;
 	}
 
+	IResourceIterator *ResourceArchiveZipFile::EnumerateResources() const
+	{
+		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
+		void *storage = mm->Alloc(sizeof(ResourceArchiveZipFileIterator));
+		if (!storage)
+			return nullptr;
+
+		return new (storage) ResourceArchiveZipFileIterator(m_zipFileProxy);
+	}
+
+	bool ResourceArchiveZipFile::ParseResFromName(const char *name, size_t nameLength, ResTypeID &outResTypeID, int16_t &outID)
+	{
+		size_t slashPos = nameLength;
+		for (size_t i = 0; i < nameLength; i++)
+		{
+			if (name[i] == '/')
+			{
+				slashPos = i;
+				break;
+			}
+		}
+
+		if (slashPos == nameLength)
+			return false;
+
+		GpArcResourceTypeTag resTag;
+		if (!resTag.Load(name, slashPos))
+			return false;
+
+		if (!resTag.Decode(outResTypeID))
+			return false;
+
+		int validationRule = 0;
+		const char *expectedExtension = GetFileExtensionForResType(outResTypeID, validationRule);
+
+		const size_t idStart = slashPos + 1;
+		if (idStart == nameLength)
+			return false;
+
+		bool isNegative = false;
+		size_t digitsStart = idStart;
+
+		if (name[idStart] == '-')
+		{
+			isNegative = true;
+			digitsStart++;
+		}
+
+		size_t digitsEnd = nameLength;
+		int32_t resID = 0;
+		for (size_t i = digitsStart; i < nameLength; i++)
+		{
+			if (name[i] == '.')
+			{
+				digitsEnd = i;
+				break;
+			}
+			else
+			{
+				char digit = name[i];
+				if (digit < '0' || digit > '9')
+					return false;
+
+				int32_t digitNumber = static_cast<int32_t>(digit) - '0';
+				resID *= 10;
+				if (isNegative)
+					resID -= digitNumber;
+				else
+					resID += digitNumber;
+
+				if (resID < -32768 || resID > 32767)
+					return false;
+			}
+		}
+
+		outID = static_cast<int16_t>(resID);
+
+		const size_t extAvailable = nameLength - digitsEnd;
+		if (strlen(expectedExtension) != extAvailable)
+			return false;
+
+		if (memcmp(name + digitsEnd, expectedExtension, extAvailable) != 0)
+			return false;
+
+		return true;
+	}
+
 	bool ResourceArchiveZipFile::IndexResource(const ResTypeID &resTypeID, int id, size_t &outIndex, int &outValidationRule) const
 	{
 		const char *extension = GetFileExtensionForResType(resTypeID, outValidationRule);
@@ -461,6 +603,11 @@ namespace PortabilityLayer
 			handle = ref->m_handle;
 		else
 		{
+			const size_t resSize = m_zipFileProxy->GetFileSize(index);
+
+			if (resSize > kMaxResourceSize)
+				return THandle<void>();
+
 			handle = MemoryManager::GetInstance()->AllocHandle(0);
 			if (!handle)
 				return THandle<void>();
@@ -468,7 +615,7 @@ namespace PortabilityLayer
 			handle->m_rmSelfRef = ref;
 			ref->m_handle = handle;
 			ref->m_resID = static_cast<int16_t>(id);
-			ref->m_size = m_zipFileProxy->GetFileSize(index);
+			ref->m_size = resSize;
 		}
 
 		if (handle->m_contents == nullptr && load)

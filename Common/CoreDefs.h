@@ -13,7 +13,6 @@
 #define GP_ALIGNED(n) __declspec(align(n))
 #else
 #define GP_ALIGNED(n) __attribute__((aligned(n)))
-#define GP_RESTRICT 
 #endif
 
 #if GP_IS_CPP11

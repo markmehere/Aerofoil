@@ -12,6 +12,7 @@
 		"DITL/2006.json" : "ApplicationResourcePatches/DITL/2006.json",
 		"DITL/2007.json" : "ApplicationResourcePatches/DITL/2007.json",
 		"DITL/2008.json" : "ApplicationResourcePatches/DITL/2008.json",
+		"DITL/2009.json" : "ApplicationResourcePatches/DITL/2009.json",
 		"PICT/1300.bmp" : "ApplicationResourcePatches/PICT/1300.bmp",
 		"PICT/1301.bmp" : "ApplicationResourcePatches/PICT/1301.bmp",
 		"PICT/1971.bmp" : "ApplicationResourcePatches/PICT/1971.bmp",
@@ -38,7 +39,8 @@
 		"LICS/1004.txt" : "ApplicationResourcePatches/LICS/1004.txt",
 		"LICS/1005.txt" : "ApplicationResourcePatches/LICS/1005.txt",
 		"LICS/1006.txt" : "ApplicationResourcePatches/LICS/1006.txt",
-		"STR$23/1006.txt" : "ApplicationResourcePatches/STR/1006.txt"
+		"STR$23/1006.txt" : "ApplicationResourcePatches/STR/1006.txt",
+		"snd$20/1063.wav" : "ApplicationResourcePatches/SND/1063.wav"
 	},
 	"delete" :
 	[

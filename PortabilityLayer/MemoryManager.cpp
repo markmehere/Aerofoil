@@ -81,7 +81,7 @@ namespace PortabilityLayer
 		if (newSize != hdl->m_size)
 		{
 			void *newBuf = Realloc(hdl->m_contents, newSize);
-			if (!newBuf)
+			if (!newBuf && newSize != 0)
 				return false;
 
 			hdl->m_contents = newBuf;

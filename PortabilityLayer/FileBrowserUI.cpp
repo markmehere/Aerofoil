@@ -21,6 +21,7 @@
 #include "WindowDef.h"
 #include "MacRomanConversion.h"
 
+#include "PLApplication.h"
 #include "PLArrayView.h"
 #include "PLControlDefinitions.h"
 #include "PLCore.h"
@@ -40,13 +41,15 @@ static const int kCancelButton = 2;
 static const int kFileList = 3;
 static const int kFileListScrollBar = 4;
 static const int kFileNameEditBox = 5;
-static const int kDeleteButton = 5;
+static const int kOpenDeleteButton = 5;
+static const int kSaveDeleteButton = 7;
 static const int kFileBrowserUIOpenDialogTemplateID = 2001;
 static const int kFileBrowserUISaveDialogTemplateID = 2002;
 static const int kFileBrowserUIOverwriteDialogTemplateID = 2003;
 static const int kFileBrowserUIBadNameDialogTemplateID = 2004;
 static const int kFileBrowserUISaveDialogUnobstructiveTemplateID = 2007;
 static const int kFileBrowserUIDeleteDialogTemplateID = 2008;
+static const int kFileBrowserUISaveDialogWithDeleteButtonTemplateID = 2009;
 
 
 static const int kOverwriteNoButton = 1;
@@ -57,7 +60,7 @@ namespace PortabilityLayer
 	class FileBrowserUIImpl
 	{
 	public:
-		explicit FileBrowserUIImpl(const FileBrowserUI_DetailsCallbackAPI &callbackAPI);
+		FileBrowserUIImpl(VirtualDirectory_t dir, const FileBrowserUI_DetailsCallbackAPI &callbackAPI);
 		~FileBrowserUIImpl();
 
 		static void PubScrollBarCallback(void *captureContext, Widget *control, int part);
@@ -111,6 +114,8 @@ namespace PortabilityLayer
 		uint32_t m_doubleClickTime;
 		bool m_haveFirstClick;
 
+		VirtualDirectory_t m_dir;
+
 		const FileBrowserUI_DetailsCallbackAPI m_api;
 	};
 }
@@ -128,7 +133,7 @@ static int16_t FileBrowserUIImpl_PopUpAlertUIFilter(void *context, Dialog *dialo
 
 namespace PortabilityLayer
 {
-	FileBrowserUIImpl::FileBrowserUIImpl(const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
+	FileBrowserUIImpl::FileBrowserUIImpl(VirtualDirectory_t dir, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
 		: m_offset(0)
 		, m_surface(nullptr)
 		, m_window(nullptr)
@@ -142,6 +147,7 @@ namespace PortabilityLayer
 		, m_doubleClickTime(0)
 		, m_haveFirstClick(false)
 		, m_api(callbackAPI)
+		, m_dir(dir)
 	{
 	}
 
@@ -151,7 +157,7 @@ namespace PortabilityLayer
 		{
 			FileEntry *entries = *m_entries;
 			for (size_t i = 0; i < m_numEntries; i++)
-				m_api.m_freeFileDetailsCallback(entries[i].m_fileDetails);
+				m_api.m_freeFileDetailsCallback(m_api.m_context, entries[i].m_fileDetails);
 		}
 		m_entries.Dispose();
 	}
@@ -207,7 +213,7 @@ namespace PortabilityLayer
 		ResolveCachingColor blackColor = StdColors::Black();
 
 		const Point basePoint = Point::Create(16, 16 + font->GetMetrics().m_ascent);
-		m_api.m_drawLabelsCallback(m_surface, basePoint);
+		m_api.m_drawLabelsCallback(m_api.m_context, m_surface, basePoint);
 	}
 
 	void FileBrowserUIImpl::DrawFileList()
@@ -243,7 +249,7 @@ namespace PortabilityLayer
 			Point itemStringPoint = Point::Create(itemRect.left + 2, itemRect.top + glyphOffset);
 			m_surface->DrawStringConstrained(itemStringPoint, (*m_entries)[i].m_nameStr.ToShortStr(), m_rect, blackColor, font);
 
-			m_api.m_drawFileDetailsCallback(m_surface, itemStringPoint, m_rect, (*m_entries)[i].m_fileDetails);
+			m_api.m_drawFileDetailsCallback(m_api.m_context, m_surface, itemStringPoint, m_rect, (*m_entries)[i].m_fileDetails);
 
 			itemRect.top += spacing;
 			itemRect.bottom += spacing;
@@ -294,11 +300,10 @@ namespace PortabilityLayer
 		if (m_selectedIndex < 0)
 			return;
 
-
 		FileEntry *entries = *m_entries;
 
 		FileEntry &removedEntry = entries[m_selectedIndex];
-		m_api.m_freeFileDetailsCallback(removedEntry.m_fileDetails);
+		m_api.m_freeFileDetailsCallback(m_api.m_context, removedEntry.m_fileDetails);
 
 		for (size_t i = m_selectedIndex; i < m_numEntries - 1; i++)
 			entries[i] = entries[i + 1];
@@ -439,8 +444,19 @@ namespace PortabilityLayer
 
 											dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(selection >= 0);
 
+											bool isDeleteValid = (selection >= 0);
+
+											if (isDeleteValid)
+											{
+												const FileBrowserUIImpl::FileEntry &entry = (*m_entries)[selection];
+												isDeleteValid = m_api.m_isDeleteValidCallback(m_api.m_context, m_dir, entry.m_nameStr.ToShortStr());
+											}
+
 											if (gs_currentFileBrowserUIMode == FileBrowserUI::Mode_Open)
-												dialog->GetItems()[kDeleteButton - 1].GetWidget()->SetEnabled(selection >= 0);
+												dialog->GetItems()[kOpenDeleteButton - 1].GetWidget()->SetEnabled(isDeleteValid);
+											else if (gs_currentFileBrowserUIMode == FileBrowserUI::Mode_SaveWithDelete)
+												dialog->GetItems()[kSaveDeleteButton - 1].GetWidget()->SetEnabled(isDeleteValid);
+
 
 											DrawFileList();
 										}
@@ -585,16 +601,22 @@ namespace PortabilityLayer
 		int windowHeight = 272;
 		if (mode == Mode_Open)
 			dialogID = kFileBrowserUIOpenDialogTemplateID;
-		else if (mode == Mode_Save)
+		else if (mode == Mode_SaveWithDelete || mode == Mode_SaveNoDelete)
 		{
 			if (PLDrivers::GetSystemServices()->IsTextInputObstructive())
 			{
 				dialogID = kFileBrowserUISaveDialogUnobstructiveTemplateID;
 				windowHeight = 208;
 				isObstructive = true;
+				mode = Mode_SaveNoDelete;	// HACK HACK HACK
 			}
 			else
-				dialogID = kFileBrowserUISaveDialogTemplateID;
+			{
+				if (mode == Mode_SaveWithDelete)
+					dialogID = kFileBrowserUISaveDialogWithDeleteButtonTemplateID;
+				else
+					dialogID = kFileBrowserUISaveDialogTemplateID;
+			}
 		}
 		else
 		{
@@ -602,7 +624,7 @@ namespace PortabilityLayer
 			return false;
 		}
 
-		FileBrowserUIImpl uiImpl(callbackAPI);
+		FileBrowserUIImpl uiImpl(dirID, callbackAPI);
 
 		// Enumerate files
 		IGpFileSystem *fs = PLDrivers::GetFileSystem();
@@ -624,10 +646,10 @@ namespace PortabilityLayer
 			if (!memcmp(nameExt, extension, extensionLength))
 			{
 				PLPasStr fnamePStr = PLPasStr(nameLength - extensionLength, fileName);
-				if (!callbackAPI.m_filterFileCallback(dirID, fnamePStr))
+				if (!callbackAPI.m_filterFileCallback(callbackAPI.m_context, dirID, fnamePStr))
 					continue;
 
-				if (!uiImpl.AppendName(fileName, nameLength - extensionLength, callbackAPI.m_loadFileDetailsCallback(dirID, fnamePStr)))
+				if (!uiImpl.AppendName(fileName, nameLength - extensionLength, callbackAPI.m_loadFileDetailsCallback(callbackAPI.m_context, dirID, fnamePStr)))
 				{
 					dirCursor->Destroy();
 					return false;
@@ -674,7 +696,7 @@ namespace PortabilityLayer
 		const Rect scrollBarRect = dialog->GetItems()[kFileListScrollBar - 1].GetWidget()->GetRect();
 
 		EditboxWidget *editbox = nullptr;
-		if (mode == Mode_Save)
+		if (mode == Mode_SaveWithDelete || mode == Mode_SaveNoDelete)
 		{
 			editbox = static_cast<EditboxWidget*>(dialog->GetItems()[kFileNameEditBox - 1].GetWidget());
 			editbox->SetCharacterFilter(&uiImpl, FileBrowserUIImpl::PubEditBoxCharFilter);
@@ -725,7 +747,7 @@ namespace PortabilityLayer
 			if (hit == kFileListScrollBar)
 				uiImpl.SetScrollOffset(scrollBar->GetState());
 
-			if (hit == kOkayButton && mode == Mode_Save)
+			if (hit == kOkayButton && (mode == Mode_SaveWithDelete || mode == Mode_SaveNoDelete))
 			{
 				IGpFileSystem *fs = PLDrivers::GetFileSystem();
 
@@ -734,7 +756,7 @@ namespace PortabilityLayer
 				PLPasStr nameStr = editBox->GetString();
 				if (nameStr.Length() == 0 || !fs->ValidateFilePath(nameStr.Chars(), nameStr.Length()))
 				{
-					PLDrivers::GetSystemServices()->Beep();
+					SysBeep(1);
 					FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIBadNameDialogTemplateID, nullptr);
 					hit = -1;
 				}
@@ -750,7 +772,7 @@ namespace PortabilityLayer
 					{
 						DialogTextSubstitutions substitutions(nameStr);
 
-						PLDrivers::GetSystemServices()->Beep();
+						SysBeep(1);
 						int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIOverwriteDialogTemplateID, &substitutions);
 
 						if (subHit == kOverwriteNoButton)
@@ -759,23 +781,32 @@ namespace PortabilityLayer
 				}
 			}
 
-			if (mode == Mode_Open && hit == kDeleteButton)
+			if ((mode == Mode_Open && hit == kOpenDeleteButton) || (mode == Mode_SaveWithDelete && hit == kSaveDeleteButton))
 			{
-				PLDrivers::GetSystemServices()->Beep();
+				SysBeep(1);
 				int16_t subHit = FileBrowserUIImpl::PopUpAlert(Rect::Create(0, 0, 135, 327), kFileBrowserUIDeleteDialogTemplateID, &substitutions);
 
 				if (subHit == kOverwriteYesButton)
 				{
 					PLPasStr uiFileName = uiImpl.GetSelectedFileName();
 
+					bool deleted = false;
 					if (composites)
-						PortabilityLayer::FileManager::GetInstance()->DeleteCompositeFile(dirID, uiFileName);
+						deleted = PortabilityLayer::FileManager::GetInstance()->DeleteCompositeFile(dirID, uiFileName);
 					else
-						PortabilityLayer::FileManager::GetInstance()->DeleteNonCompositeFile(dirID, uiFileName, extension);
+						deleted = PortabilityLayer::FileManager::GetInstance()->DeleteNonCompositeFile(dirID, uiFileName, extension);
 
-					uiImpl.RemoveSelectedFile();
-					dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(false);
-					dialog->GetItems()[kDeleteButton - 1].GetWidget()->SetEnabled(false);
+					if (deleted)
+					{
+						callbackAPI.m_onDeletedCallback(callbackAPI.m_context, dirID, uiFileName);
+
+						uiImpl.RemoveSelectedFile();
+						dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(false);
+						if (mode == Mode_Open)
+							dialog->GetItems()[kOpenDeleteButton - 1].GetWidget()->SetEnabled(false);
+						else if (mode == Mode_SaveWithDelete)
+							dialog->GetItems()[kSaveDeleteButton - 1].GetWidget()->SetEnabled(false);
+					}
 				}
 				hit = -1;
 			}
@@ -793,7 +824,7 @@ namespace PortabilityLayer
 				uiFileName = uiImpl.GetSelectedFileName();
 				confirmed = true;
 			}
-			else if (mode == Mode_Save)
+			else if (mode == Mode_SaveWithDelete || mode == Mode_SaveNoDelete)
 			{
 				uiFileName = editbox->GetString();
 				confirmed = true;

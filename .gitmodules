@@ -1,0 +1,4 @@
+[submodule "AerofoilWeb/FileSaverDotJS"]
+	path = AerofoilWeb/FileSaverDotJS
+	url = https://github.com/eligrey/FileSaver.js.git
+	branch = master

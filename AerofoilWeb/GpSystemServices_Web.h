@@ -12,12 +12,15 @@ public:
 	~GpSystemServices_Web();
 
 	void *CreateThread(ThreadFunc_t threadFunc, void *context) override;
-	void Beep() const override;
+	bool Beep() const override;
 	bool IsTouchscreen() const override;
 	bool IsUsingMouseAsTouch() const override;
 	bool IsTextInputObstructive() const override;
 	bool IsFullscreenPreferred() const override;
 	bool IsFullscreenOnStartup() const override;
+	bool HasNativeFileManager() const override;
+	GpOperatingSystem_t GetOperatingSystem() const override;
+	GpOperatingSystemFlavor_t GetOperatingSystemFlavor() const override;
 	unsigned int GetCPUCount() const override;
 	void SetTextInputEnabled(bool isEnabled) override;
 	bool IsTextInputEnabled() const override;

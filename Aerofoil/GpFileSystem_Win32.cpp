@@ -115,6 +115,7 @@ GpFileSystem_Win32::GpFileSystem_Win32(IGpAllocator *alloc)
 	, m_userHousesDir(alloc)
 	, m_userSavesDir(alloc)
 	, m_resourcesDir(alloc)
+	, m_exportDir(alloc)
 {
 	m_executablePath[0] = 0;
 }
@@ -155,18 +156,23 @@ bool GpFileSystem_Win32::Init()
 	if (!m_logsDir.Set(m_prefsDir) || !m_logsDir.Append(L"\\Logs"))
 		return false;
 
+	if (!m_exportDir.Set(m_prefsDir) || !m_exportDir.Append(L"\\Export"))
+		return false;
+
 	CreateDirectoryW(m_prefsDir.Buffer(), nullptr);
 	CreateDirectoryW(m_scoresDir.Buffer(), nullptr);
 	CreateDirectoryW(m_userHousesDir.Buffer(), nullptr);
 	CreateDirectoryW(m_userSavesDir.Buffer(), nullptr);
 	CreateDirectoryW(m_logsDir.Buffer(), nullptr);
+	CreateDirectoryW(m_exportDir.Buffer(), nullptr);
 
 	if (!m_prefsDir.Append(L"\\") ||
 		!m_scoresDir.Append(L"\\") ||
 		!m_userHousesDir.Append(L"\\") ||
 		!m_userSavesDir.Append(L"\\") ||
 		!m_logsDir.Append(L"\\") ||
-		!m_resourcesDir.Append(L"\\"))
+		!m_resourcesDir.Append(L"\\") ||
+		!m_exportDir.Append(L"\\"))
 		return false;
 
 	DWORD modulePathSize = GetModuleFileNameW(nullptr, m_executablePath, MAX_PATH);
@@ -284,7 +290,7 @@ GpIOStream *GpFileSystem_Win32::OpenFileNested(PortabilityLayer::VirtualDirector
 	if (h == INVALID_HANDLE_VALUE)
 		return false;
 
-	return new GpFileStream_Win32(h, true, writeAccess, true);
+	return GpFileStream_Win32::Create(m_alloc, h, true, writeAccess, true);
 }
 
 bool GpFileSystem_Win32::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
@@ -508,6 +514,9 @@ bool GpFileSystem_Win32::ResolvePath(PortabilityLayer::VirtualDirectory_t virtua
 		break;
 	case PortabilityLayer::VirtualDirectories::kLogs:
 		baseDir = m_logsDir.Buffer();
+		break;
+	case PortabilityLayer::VirtualDirectories::kSourceExport:
+		baseDir = m_exportDir.Buffer();
 		break;
 	default:
 		return false;

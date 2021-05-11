@@ -309,7 +309,7 @@ void DoAboutFramework (void)
 	static const int kAboutFrameworkDialogTemplateID = 2000;
 	static const int kAboutOpenSourceButton = 2;
 
-	const Rect windowRect = Rect::Create(0, 0, 272, 450);
+	const Rect windowRect = Rect::Create(0, 0, 320, 450);
 
 	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
@@ -319,6 +319,7 @@ void DoAboutFramework (void)
 
 	int16_t verticalPoint = 16 + font->GetMetrics().m_ascent;
 	int16_t horizontalOffset = 16;
+	int16_t creditsHorizontalOffset = 80;
 	const int16_t spacing = 12;
 
 	PortabilityLayer::DialogManager *dialogManager = PortabilityLayer::DialogManager::GetInstance();
@@ -333,23 +334,28 @@ void DoAboutFramework (void)
 	Window *window = dialog->GetWindow();
 
 	DrawSurface *surface = window->GetDrawSurface();
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 0), PSTR(GP_APPLICATION_NAME " " GP_APPLICATION_VERSION_STRING "   \xa9" GP_APPLICATION_COPYRIGHT_STRING), blackColor, font);
-	
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 2), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO."), blackColor, font);
 
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 4), PSTR("This software is not maintained by, supported by, endorsed by, or"), blackColor, font);
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 5), PSTR("otherwise associated with the authors or publishers of Glider PRO."), blackColor, font);
-
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 7), PSTR("Please do not contact any of them regarding issues that you have"), blackColor, font);
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 8), PSTR("with " GP_APPLICATION_NAME "."), blackColor, font);
-
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 10), PSTR("If you would like to contribute to this project, visit:"), blackColor, font);
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 11), PSTR(GP_APPLICATION_WEBSITE_STRING), blackColor, font);
-
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 13), PSTR("To report a problem or request support, submit an issue via"), blackColor, font);
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 14), PSTR("the website above."), blackColor, font);
-
-	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * 16), PSTR("For more information, please see the accompanying documentation."), blackColor, font);
+	int lineNum = 0;
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR(GP_APPLICATION_NAME " " GP_APPLICATION_VERSION_STRING "   \xa9" GP_APPLICATION_COPYRIGHT_STRING), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum)), PSTR("Credits:"), blackColor, font);
+	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Eric Lasota - Programming, admin"), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO."), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("This software is not maintained by, supported by, endorsed by, or"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("otherwise associated with the authors or publishers of Glider PRO."), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Please do not contact any of them regarding issues that you have"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("with " GP_APPLICATION_NAME "."), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("If you would like to contribute to this project, visit:"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR(GP_APPLICATION_WEBSITE_STRING), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("To report a problem or request support, submit an issue via"), blackColor, font);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("the website above."), blackColor, font);
+	(lineNum++);
+	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("For more information, please see the accompanying documentation."), blackColor, font);
 
 	surface->DrawString(Point::Create(horizontalOffset, windowRect.bottom - 16), PSTR("Build: " __DATE__ " " __TIME__ " " ABOUT_DIALOG_CONFIGURATION_TAG), blackColor, fontLight);
 

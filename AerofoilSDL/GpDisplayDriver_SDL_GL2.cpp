@@ -2711,7 +2711,7 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 		m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	m_useUpscaleFilter = ((m_pixelScaleX < 2.0f && m_pixelScaleX > 1.0f) || (m_pixelScaleY < 2.0f && m_pixelScaleY > 1.0f));
+	m_useUpscaleFilter = (m_pixelScaleX == 1.5f || m_pixelScaleX == 2.5f || m_pixelScaleY == 1.5f || m_pixelScaleY == 2.5f);
 
 	if (m_useUpscaleFilter)
 	{

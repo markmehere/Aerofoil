@@ -91,9 +91,8 @@ namespace PortabilityLayer
 		return output;
 	}
 
-	bool GpArcResourceTypeTag::Load(const char *str)
+	bool GpArcResourceTypeTag::Load(const char *str, size_t l)
 	{
-		size_t l = strlen(str);
 		if (l < sizeof(m_id))
 		{
 			memcpy(m_id, str, l);
