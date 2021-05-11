@@ -513,9 +513,9 @@ namespace PortabilityLayer
 	}
 
 #if GP_ASYNCIFY_PARANOID
-	bool FileManager::PromptSaveFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, bool &outDeletedAny, const PLPasStr &initialFileName, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
+	bool FileManager::PromptSaveFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &initialFileName, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)
 	{
-		return static_cast<FileManagerImpl*>(this)->PromptSaveFile(dirID, extension, path, outPathLength, pathCapacity, outDeletedAny, initialFileName, promptText, composites, callbackAPI);
+		return static_cast<FileManagerImpl*>(this)->PromptSaveFile(dirID, extension, path, outPathLength, pathCapacity, initialFileName, promptText, composites, callbackAPI);
 	}
 
 	bool FileManager::PromptOpenFile(VirtualDirectory_t dirID, const char *extension, char *path, size_t &outPathLength, size_t pathCapacity, const PLPasStr &promptText, bool composites, const FileBrowserUI_DetailsCallbackAPI &callbackAPI)

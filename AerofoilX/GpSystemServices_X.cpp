@@ -106,7 +106,7 @@ GpOperatingSystem_t GpSystemServices_X::GetOperatingSystem() const
 
 GpOperatingSystemFlavor_t GpSystemServices_X::GetOperatingSystemFlavor() const
 {
-	return GpOperatingSystems::kGeneric;
+	return GpOperatingSystemFlavors::kGeneric;
 }
 
 unsigned int GpSystemServices_X::GetCPUCount() const

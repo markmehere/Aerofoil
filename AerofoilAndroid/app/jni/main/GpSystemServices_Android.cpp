@@ -97,7 +97,7 @@ GpOperatingSystem_t GpSystemServices_Android::GetOperatingSystem() const
 
 GpOperatingSystemFlavor_t GpSystemServices_Android::GetOperatingSystemFlavor() const
 {
-	return GpOperatingSystems::kGeneric;
+	return GpOperatingSystemFlavors::kGeneric;
 }
 
 unsigned int GpSystemServices_Android::GetCPUCount() const
