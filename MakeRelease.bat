@@ -21,6 +21,7 @@ copy /Y x64\Release\MakeTimestamp.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\FTagData.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\gpr2gpa.exe ReleasePkg\Aerofoil\Tools
 copy /Y x64\Release\unpacktool.exe ReleasePkg\Aerofoil\Tools
+copy /Y x64\Release\MergeGPF.exe ReleasePkg\Aerofoil\Tools
 
 mkdir ReleasePkg\PDBs
 
