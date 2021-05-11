@@ -214,7 +214,7 @@ Boolean InitializeEmptyHouse (void)
 	if (thisHouse != nil)
 		thisHouse.Dispose();
 
-	const size_t houseSizeNoRooms = sizeof(sizeof(houseType) - sizeof(roomType));
+	const size_t houseSizeNoRooms = sizeof(houseType) - sizeof(roomType);
 	thisHouse = NewHandle(houseSizeNoRooms).StaticCast<houseType>();
 
 	if (thisHouse == nil)
