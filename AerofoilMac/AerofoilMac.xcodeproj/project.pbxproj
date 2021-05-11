@@ -589,7 +589,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5C54D0962629B42100AB55E0 /* AerofoilMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AerofoilMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C54D0962629B42100AB55E0 /* Aerofoil.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aerofoil.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C54D09F2629B42400AB55E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5C54D0A22629B42400AB55E0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		5C54D0A42629B42400AB55E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1046,7 +1046,7 @@
 		5C54D0972629B42100AB55E0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5C54D0962629B42100AB55E0 /* AerofoilMac.app */,
+				5C54D0962629B42100AB55E0 /* Aerofoil.app */,
 				5C54D0B32629B5C600AB55E0 /* libAerofoilShared.a */,
 			);
 			name = Products;
@@ -1801,9 +1801,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		5C54D0952629B42100AB55E0 /* AerofoilMac */ = {
+		5C54D0952629B42100AB55E0 /* Aerofoil */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5C54D0AA2629B42400AB55E0 /* Build configuration list for PBXNativeTarget "AerofoilMac" */;
+			buildConfigurationList = 5C54D0AA2629B42400AB55E0 /* Build configuration list for PBXNativeTarget "Aerofoil" */;
 			buildPhases = (
 				5C54D0922629B42100AB55E0 /* Sources */,
 				5C54D0932629B42100AB55E0 /* Frameworks */,
@@ -1817,9 +1817,9 @@
 			dependencies = (
 				5C54D684262D898F00AB55E0 /* PBXTargetDependency */,
 			);
-			name = AerofoilMac;
+			name = Aerofoil;
 			productName = AerofoilMac;
-			productReference = 5C54D0962629B42100AB55E0 /* AerofoilMac.app */;
+			productReference = 5C54D0962629B42100AB55E0 /* Aerofoil.app */;
 			productType = "com.apple.product-type.application";
 		};
 		5C54D0B22629B5C600AB55E0 /* AerofoilShared */ = {
@@ -1874,7 +1874,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				5C54D0952629B42100AB55E0 /* AerofoilMac */,
+				5C54D0952629B42100AB55E0 /* Aerofoil */,
 				5C54D0B22629B5C600AB55E0 /* AerofoilShared */,
 			);
 		};
@@ -2330,6 +2330,8 @@
 				CODE_SIGN_ENTITLEMENTS = AerofoilMac/AerofoilMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 3V3B8U8926;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					__MACOS__,
@@ -2345,6 +2347,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 1.1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.madthijs.AerofoilMac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2360,6 +2363,8 @@
 				CODE_SIGN_ENTITLEMENTS = AerofoilMac/AerofoilMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 3V3B8U8926;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					__MACOS__,
@@ -2376,6 +2381,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 1.1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.madthijs.AerofoilMac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2438,7 +2444,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5C54D0AA2629B42400AB55E0 /* Build configuration list for PBXNativeTarget "AerofoilMac" */ = {
+		5C54D0AA2629B42400AB55E0 /* Build configuration list for PBXNativeTarget "Aerofoil" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5C54D0AB2629B42400AB55E0 /* Debug */,

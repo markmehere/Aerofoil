@@ -264,6 +264,8 @@ Boolean InitializeEmptyHouseInEditor (void)
 
 	UpdateMenus(false);
 	ReflectCurrentRoom(true);
+    
+    return (true);
 }
 #endif
 

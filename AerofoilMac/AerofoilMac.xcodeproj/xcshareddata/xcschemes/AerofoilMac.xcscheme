@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5C54D0952629B42100AB55E0"
-               BuildableName = "AerofoilMac.app"
-               BlueprintName = "AerofoilMac"
+               BuildableName = "Aerofoil.app"
+               BlueprintName = "Aerofoil"
                ReferencedContainer = "container:AerofoilMac.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5C54D0952629B42100AB55E0"
-            BuildableName = "AerofoilMac.app"
-            BlueprintName = "AerofoilMac"
+            BuildableName = "Aerofoil.app"
+            BlueprintName = "Aerofoil"
             ReferencedContainer = "container:AerofoilMac.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5C54D0952629B42100AB55E0"
-            BuildableName = "AerofoilMac.app"
-            BlueprintName = "AerofoilMac"
+            BuildableName = "Aerofoil.app"
+            BlueprintName = "Aerofoil"
             ReferencedContainer = "container:AerofoilMac.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
