@@ -51,32 +51,43 @@ extern	short		numberRooms, mapLeftRoom, mapTopRoom, numStarsRemaining;
 extern	Boolean		houseOpen, noRoomAtAll;
 extern	Boolean		twoPlayerGame, wardBitSet, phoneBitSet;
 
+struct FBUI_House_Context
+{
+	FBUI_House_Context();
 
-static void FBUI_House_DrawLabels(DrawSurface *surface, const Point &basePoint)
+	bool m_deletedAny;
+};
+
+FBUI_House_Context::FBUI_House_Context()
+	: m_deletedAny(false)
 {
 }
 
-static void FBUI_House_DrawFileDetails(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+static void FBUI_House_DrawLabels(void *context, DrawSurface *surface, const Point &basePoint)
 {
 }
 
-static void *FBUI_House_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static void FBUI_House_DrawFileDetails(void *context, DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+{
+}
+
+static void *FBUI_House_LoadFileDetails(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	return nullptr;
 }
 
-static void FBUI_House_FreeFileDetails(void *fileDetails)
+static void FBUI_House_FreeFileDetails(void *context, void *fileDetails)
 {
 }
 
-static bool FBUI_House_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static bool FBUI_House_FilterFile(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	PortabilityLayer::CompositeFile *cfile = PortabilityLayer::FileManager::GetInstance()->OpenCompositeFile(dirID, filename);
 
 	return PortabilityLayer::ResTypeIDCodec::Decode(cfile->GetProperties().m_fileType) == 'gliH';
 }
 
-static bool FBUI_House_IsDeleteValid(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static bool FBUI_House_IsDeleteValid(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	if (dirID != PortabilityLayer::VirtualDirectories::kUserData)
 		return false;
@@ -84,16 +95,26 @@ static bool FBUI_House_IsDeleteValid(PortabilityLayer::VirtualDirectory_t dirID,
 	return !StrCmp::EqualCaseInsensitive(thisHouseName, filename);
 }
 
-static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI()
+static void FBUI_House_OnDeleted(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+	if (dirID != PortabilityLayer::VirtualDirectories::kUserData)
+		return;
+
+	static_cast<FBUI_House_Context*>(context)->m_deletedAny = true;
+}
+
+static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetHouseDetailsAPI(FBUI_House_Context *context)
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
 
+	api.m_context = context;
 	api.m_drawLabelsCallback = FBUI_House_DrawLabels;
 	api.m_drawFileDetailsCallback = FBUI_House_DrawFileDetails;
 	api.m_loadFileDetailsCallback = FBUI_House_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_House_FreeFileDetails;
 	api.m_filterFileCallback = FBUI_House_FilterFile;
 	api.m_isDeleteValidCallback = FBUI_House_IsDeleteValid;
+	api.m_onDeletedCallback = FBUI_House_OnDeleted;
 
 	return api;
 }
@@ -118,8 +139,18 @@ Boolean CreateNewHouse (void)
 	char savePath[sizeof(theSpec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(theSpec.m_dir, ".gpf", savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), true, GetHouseDetailsAPI()))
+	FBUI_House_Context fbuiContext;
+
+	if (!fm->PromptSaveFile(theSpec.m_dir, ".gpf", savePath, savePathLength, sizeof(theSpec.m_name), PSTR("My House"), PSTR("Create House"), true, GetHouseDetailsAPI(&fbuiContext)))
+	{
+		if (fbuiContext.m_deletedAny)
+		{
+			BuildHouseList();
+			InitCursor();
+		}
+
 		return false;
+	}
 
 	assert(savePathLength < sizeof(theSpec.m_name) - 1);
 

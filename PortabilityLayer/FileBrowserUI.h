@@ -16,13 +16,16 @@ namespace PortabilityLayer
 
 	struct FileBrowserUI_DetailsCallbackAPI
 	{
-		void(*m_drawLabelsCallback)(DrawSurface *surface, const Point &basePoint);
-		void(*m_drawFileDetailsCallback)(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails);
+		void *m_context;
 
-		void *(*m_loadFileDetailsCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
-		void (*m_freeFileDetailsCallback)(void *fileDetails);
-		bool (*m_filterFileCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
-		bool (*m_isDeleteValidCallback)(VirtualDirectory_t dirID, const PLPasStr &filename);
+		void (*m_drawLabelsCallback)(void *context, DrawSurface *surface, const Point &basePoint);
+		void (*m_drawFileDetailsCallback)(void *context, DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails);
+
+		void *(*m_loadFileDetailsCallback)(void *context, VirtualDirectory_t dirID, const PLPasStr &filename);
+		void (*m_freeFileDetailsCallback)(void *context, void *fileDetails);
+		bool (*m_filterFileCallback)(void *context, VirtualDirectory_t dirID, const PLPasStr &filename);
+		bool (*m_isDeleteValidCallback)(void *context, VirtualDirectory_t dirID, const PLPasStr &filename);
+		void (*m_onDeletedCallback)(void *context, VirtualDirectory_t dirID, const PLPasStr &filename);
 	};
 
 	class FileBrowserUI

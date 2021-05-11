@@ -157,7 +157,7 @@ namespace PortabilityLayer
 		{
 			FileEntry *entries = *m_entries;
 			for (size_t i = 0; i < m_numEntries; i++)
-				m_api.m_freeFileDetailsCallback(entries[i].m_fileDetails);
+				m_api.m_freeFileDetailsCallback(m_api.m_context, entries[i].m_fileDetails);
 		}
 		m_entries.Dispose();
 	}
@@ -213,7 +213,7 @@ namespace PortabilityLayer
 		ResolveCachingColor blackColor = StdColors::Black();
 
 		const Point basePoint = Point::Create(16, 16 + font->GetMetrics().m_ascent);
-		m_api.m_drawLabelsCallback(m_surface, basePoint);
+		m_api.m_drawLabelsCallback(m_api.m_context, m_surface, basePoint);
 	}
 
 	void FileBrowserUIImpl::DrawFileList()
@@ -249,7 +249,7 @@ namespace PortabilityLayer
 			Point itemStringPoint = Point::Create(itemRect.left + 2, itemRect.top + glyphOffset);
 			m_surface->DrawStringConstrained(itemStringPoint, (*m_entries)[i].m_nameStr.ToShortStr(), m_rect, blackColor, font);
 
-			m_api.m_drawFileDetailsCallback(m_surface, itemStringPoint, m_rect, (*m_entries)[i].m_fileDetails);
+			m_api.m_drawFileDetailsCallback(m_api.m_context, m_surface, itemStringPoint, m_rect, (*m_entries)[i].m_fileDetails);
 
 			itemRect.top += spacing;
 			itemRect.bottom += spacing;
@@ -300,11 +300,10 @@ namespace PortabilityLayer
 		if (m_selectedIndex < 0)
 			return;
 
-
 		FileEntry *entries = *m_entries;
 
 		FileEntry &removedEntry = entries[m_selectedIndex];
-		m_api.m_freeFileDetailsCallback(removedEntry.m_fileDetails);
+		m_api.m_freeFileDetailsCallback(m_api.m_context, removedEntry.m_fileDetails);
 
 		for (size_t i = m_selectedIndex; i < m_numEntries - 1; i++)
 			entries[i] = entries[i + 1];
@@ -450,7 +449,7 @@ namespace PortabilityLayer
 											if (isDeleteValid)
 											{
 												const FileBrowserUIImpl::FileEntry &entry = (*m_entries)[selection];
-												isDeleteValid = m_api.m_isDeleteValidCallback(m_dir, entry.m_nameStr.ToShortStr());
+												isDeleteValid = m_api.m_isDeleteValidCallback(m_api.m_context, m_dir, entry.m_nameStr.ToShortStr());
 											}
 
 											if (gs_currentFileBrowserUIMode == FileBrowserUI::Mode_Open)
@@ -647,10 +646,10 @@ namespace PortabilityLayer
 			if (!memcmp(nameExt, extension, extensionLength))
 			{
 				PLPasStr fnamePStr = PLPasStr(nameLength - extensionLength, fileName);
-				if (!callbackAPI.m_filterFileCallback(dirID, fnamePStr))
+				if (!callbackAPI.m_filterFileCallback(callbackAPI.m_context, dirID, fnamePStr))
 					continue;
 
-				if (!uiImpl.AppendName(fileName, nameLength - extensionLength, callbackAPI.m_loadFileDetailsCallback(dirID, fnamePStr)))
+				if (!uiImpl.AppendName(fileName, nameLength - extensionLength, callbackAPI.m_loadFileDetailsCallback(callbackAPI.m_context, dirID, fnamePStr)))
 				{
 					dirCursor->Destroy();
 					return false;
@@ -797,12 +796,17 @@ namespace PortabilityLayer
 					else
 						deleted = PortabilityLayer::FileManager::GetInstance()->DeleteNonCompositeFile(dirID, uiFileName, extension);
 
-					uiImpl.RemoveSelectedFile();
-					dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(false);
-					if (mode == Mode_Open)
-						dialog->GetItems()[kOpenDeleteButton - 1].GetWidget()->SetEnabled(false);
-					else if (mode == Mode_SaveWithDelete)
-						dialog->GetItems()[kSaveDeleteButton - 1].GetWidget()->SetEnabled(false);
+					if (deleted)
+					{
+						callbackAPI.m_onDeletedCallback(callbackAPI.m_context, dirID, uiFileName);
+
+						uiImpl.RemoveSelectedFile();
+						dialog->GetItems()[kOkayButton - 1].GetWidget()->SetEnabled(false);
+						if (mode == Mode_Open)
+							dialog->GetItems()[kOpenDeleteButton - 1].GetWidget()->SetEnabled(false);
+						else if (mode == Mode_SaveWithDelete)
+							dialog->GetItems()[kSaveDeleteButton - 1].GetWidget()->SetEnabled(false);
+					}
 				}
 				hit = -1;
 			}

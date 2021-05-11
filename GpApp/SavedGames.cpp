@@ -41,7 +41,11 @@ static const int kStarsOffset = 180;
 static const int kGlidersOffset = 260;
 static const int kScoreOffset = 320;
 
-static void FBUI_Save_DrawLabels(DrawSurface *surface, const Point &basePoint)
+struct FBUI_Save_Context
+{
+};
+
+static void FBUI_Save_DrawLabels(void *context, DrawSurface *surface, const Point &basePoint)
 {
 	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
 	PortabilityLayer::RenderedFont *rfont = GetFont(PortabilityLayer::FontPresets::kSystem12Bold);
@@ -51,7 +55,7 @@ static void FBUI_Save_DrawLabels(DrawSurface *surface, const Point &basePoint)
 	surface->DrawString(basePoint + Point::Create(kScoreOffset, 0), PSTR("Score"), blackColor, rfont);
 }
 
-static void FBUI_Save_DrawFileDetails(DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
+static void FBUI_Save_DrawFileDetails(void *context, DrawSurface *surface, const Point &basePoint, const Rect &constraintRect, void *fileDetails)
 {
 	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
 	PortabilityLayer::RenderedFont *rfont = GetFont(PortabilityLayer::FontPresets::kSystem12Bold);
@@ -70,7 +74,7 @@ static void FBUI_Save_DrawFileDetails(DrawSurface *surface, const Point &basePoi
 	surface->DrawString(basePoint + Point::Create(kScoreOffset, 0), numStr, blackColor, rfont);
 }
 
-static void *FBUI_Save_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static void *FBUI_Save_LoadFileDetails(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	GpIOStream *stream = nullptr;
 	if (PortabilityLayer::FileManager::GetInstance()->OpenNonCompositeFile(dirID, filename, ".sav", PortabilityLayer::EFilePermission_Read, GpFileCreationDispositions::kOpenExisting, stream) != PLErrors::kNone)
@@ -97,31 +101,37 @@ static void *FBUI_Save_LoadFileDetails(PortabilityLayer::VirtualDirectory_t dirI
 	return gameData;
 }
 
-static void FBUI_Save_FreeFileDetails(void *fileDetails)
+static void FBUI_Save_FreeFileDetails(void *context, void *fileDetails)
 {
 	PortabilityLayer::MemoryManager::GetInstance()->Release(fileDetails);
 }
 
-static bool FBUI_Save_FilterFile(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static bool FBUI_Save_FilterFile(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	return true;
 }
 
-static bool FBUI_Save_IsDeleteValid(PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+static bool FBUI_Save_IsDeleteValid(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
 {
 	return true;
 }
 
-static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI()
+static void FBUI_Save_OnDeleted(void *context, PortabilityLayer::VirtualDirectory_t dirID, const PLPasStr &filename)
+{
+}
+
+static PortabilityLayer::FileBrowserUI_DetailsCallbackAPI GetSavedGameDetailsAPI(FBUI_Save_Context *context)
 {
 	PortabilityLayer::FileBrowserUI_DetailsCallbackAPI api;
 
+	api.m_context = context;
 	api.m_drawLabelsCallback = FBUI_Save_DrawLabels;
 	api.m_drawFileDetailsCallback = FBUI_Save_DrawFileDetails;
 	api.m_loadFileDetailsCallback = FBUI_Save_LoadFileDetails;
 	api.m_freeFileDetailsCallback = FBUI_Save_FreeFileDetails;
 	api.m_filterFileCallback = FBUI_Save_FilterFile;
 	api.m_isDeleteValidCallback = FBUI_Save_IsDeleteValid;
+	api.m_onDeletedCallback = FBUI_Save_OnDeleted;
 
 	return api;
 }
@@ -175,7 +185,8 @@ Boolean SaveGame2 (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptSaveFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game"), false, GetSavedGameDetailsAPI()))
+	FBUI_Save_Context context;
+	if (!fm->PromptSaveFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PLPasStr(gameNameStr), PSTR("Save Game"), false, GetSavedGameDetailsAPI(&context)))
 	{
 		mm->Release(savedGame);
 		return false;
@@ -272,7 +283,8 @@ Boolean OpenSavedGame (void)
 	char savePath[sizeof(spec.m_name) + 1];
 	size_t savePathLength = 0;
 
-	if (!fm->PromptOpenFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), false, GetSavedGameDetailsAPI()))
+	FBUI_Save_Context context;
+	if (!fm->PromptOpenFile(spec.m_dir, ".sav", savePath, savePathLength, sizeof(spec.m_name), PSTR("Open Saved Game"), false, GetSavedGameDetailsAPI(&context)))
 		return false;
 
 	assert(savePathLength < sizeof(spec.m_name) - 1);
