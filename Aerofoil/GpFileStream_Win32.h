@@ -7,7 +7,7 @@
 class GpFileStream_Win32 final : public GpIOStream
 {
 public:
-	explicit GpFileStream_Win32(HANDLE handle, bool readable, bool writeable, bool seekable);
+	~GpFileStream_Win32();
 
 	size_t Read(void *bytesOut, size_t size) override;
 	size_t Write(const void *bytes, size_t size) override;
@@ -26,7 +26,12 @@ public:
 	void Close();
 #endif
 
+	static GpFileStream_Win32 *Create(IGpAllocator *alloc, HANDLE handle, bool readable, bool writeable, bool seekable);
+
 private:
+	GpFileStream_Win32(IGpAllocator *alloc, HANDLE handle, bool readable, bool writeable, bool seekable);
+
+	IGpAllocator *m_alloc;
 	HANDLE m_handle;
 	bool m_readable;
 	bool m_writeable;

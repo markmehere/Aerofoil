@@ -290,7 +290,7 @@ GpIOStream *GpFileSystem_Win32::OpenFileNested(PortabilityLayer::VirtualDirector
 	if (h == INVALID_HANDLE_VALUE)
 		return false;
 
-	return new GpFileStream_Win32(h, true, writeAccess, true);
+	return GpFileStream_Win32::Create(m_alloc, h, true, writeAccess, true);
 }
 
 bool GpFileSystem_Win32::DeleteFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool &existed)
