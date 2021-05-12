@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef __PL_SCOPEDPTR_H__
-#define __PL_SCOPEDPTR_H__
-
 #include "CoreDefs.h"
 
 namespace PortabilityLayer
@@ -49,7 +46,7 @@ namespace PortabilityLayer
 	inline ScopedPtr<T>::~ScopedPtr()
 	{
 		if (m_ref)
-			delete m_ref;
+			m_ref->Destroy();
 	}
 
 	template<class T>
@@ -88,10 +85,8 @@ namespace PortabilityLayer
 	inline void ScopedPtr<T>::Set(T *ref)
 	{
 		if (m_ref && m_ref != ref)
-			delete m_ref;
+			m_ref->Destroy();
 
 		m_ref = ref;
 	}
 }
-
-#endif

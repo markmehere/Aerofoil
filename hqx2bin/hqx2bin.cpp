@@ -27,6 +27,7 @@ SOFTWARE.
 #include "BinHex4.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
+#include "GpAllocator_C.h"
 
 using namespace PortabilityLayer;
 
@@ -54,7 +55,7 @@ int main(int argc, const char **argv)
 
 	CFileStream fs(f, true, false, true);
 
-	ScopedPtr<MacFileMem> memFile = BinHex4::LoadHQX(&fs);
+	ScopedPtr<MacFileMem> memFile = BinHex4::LoadHQX(&fs, GpAllocator_C::GetInstance());
 
 	fs.Close();
 

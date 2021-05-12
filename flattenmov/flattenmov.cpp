@@ -4,6 +4,8 @@
 #include "MemReaderStream.h"
 #include "ResourceCompiledTypeList.h"
 #include "ResourceFile.h"
+#include "ScopedPtr.h"
+#include "GpAllocator_C.h"
 
 #include <stdio.h>
 
@@ -48,15 +50,15 @@ int main(int argc, const char **argv)
 	mfi.m_resourceForkSize = resSize;
 	mfi.m_commentSize = 0;
 
-	PortabilityLayer::MacFileMem memFile(dataFork, resFork, nullptr, mfi);
+	PortabilityLayer::ScopedPtr<PortabilityLayer::MacFileMem> memFile = PortabilityLayer::MacFileMem::Create(GpAllocator_C::GetInstance(), dataFork, resFork, nullptr, mfi);
 
 	delete[] dataFork;
 	delete[] resFork;
 
-	const uint8_t *dataBytes = memFile.DataFork();
+	const uint8_t *dataBytes = memFile->DataFork();
 	if (dataBytes[0] == 0 && dataBytes[1] == 0 && dataBytes[2] == 0 && dataBytes[3] == 0)
 	{
-		uint32_t mdatSize = memFile.FileInfo().m_dataForkSize;
+		uint32_t mdatSize = memFile->FileInfo().m_dataForkSize;
 		uint8_t mdatSizeEncoded[4];
 		mdatSizeEncoded[0] = ((mdatSize >> 24) & 0xff);
 		mdatSizeEncoded[1] = ((mdatSize >> 16) & 0xff);
@@ -65,7 +67,7 @@ int main(int argc, const char **argv)
 
 		PortabilityLayer::ResourceFile *rf = PortabilityLayer::ResourceFile::Create();
 
-		PortabilityLayer::MemReaderStream resStream(memFile.ResourceFork(), memFile.FileInfo().m_resourceForkSize);
+		PortabilityLayer::MemReaderStream resStream(memFile->ResourceFork(), memFile->FileInfo().m_resourceForkSize);
 		rf->Load(&resStream);
 
 		const PortabilityLayer::ResourceCompiledTypeList *typeList = rf->GetResourceTypeList(PortabilityLayer::ResTypeID('moov'));
@@ -102,7 +104,7 @@ int main(int argc, const char **argv)
 			return -1;
 		}
 
-		fwrite(dataBytes, 1, memFile.FileInfo().m_dataForkSize, outF);
+		fwrite(dataBytes, 1, memFile->FileInfo().m_dataForkSize, outF);
 		fclose(outF);
 	}
 

@@ -25,6 +25,7 @@ SOFTWARE.
 #include "CFileStream.h"
 #include "CombinedTimestamp.h"
 #include "DeflateCodec.h"
+#include "GpAllocator_C.h"
 #include "ScopedPtr.h"
 #include "BinHex4.h"
 #include "MacBinary2.h"
@@ -75,7 +76,7 @@ int toolMain(int argc, const char **argv)
 
 	CFileStream fs(f, true, false, true);
 
-	ScopedPtr<MacFileMem> memFile = BinHex4::LoadHQX(&fs);
+	ScopedPtr<MacFileMem> memFile = BinHex4::LoadHQX(&fs, GpAllocator_C::GetInstance());
 
 	fs.Close();
 

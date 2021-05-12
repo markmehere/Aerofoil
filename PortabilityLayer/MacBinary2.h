@@ -1,6 +1,7 @@
 #pragma once
 
 class GpIOStream;
+struct IGpAllocator;
 
 namespace PortabilityLayer
 {
@@ -14,6 +15,6 @@ namespace PortabilityLayer
 		void SerializeHeader(unsigned char *headerBytes, const MacFileInfo &macFileInfo);
 
 		void WriteBin(const MacFileMem *file, GpIOStream *stream);
-		MacFileMem *ReadBin(GpIOStream *stream);
+		MacFileMem *ReadBin(GpIOStream *stream, IGpAllocator *alloc);
 	};
 }

@@ -1,9 +1,7 @@
 #pragma once
 
-#ifndef __PL_BINHEX4_H__
-#define __PL_BINHEX4_H__
-
 class GpIOStream;
+struct IGpAllocator;
 
 namespace PortabilityLayer
 {
@@ -11,8 +9,6 @@ namespace PortabilityLayer
 
 	namespace BinHex4
 	{
-		MacFileMem *LoadHQX(GpIOStream *stream);
+		MacFileMem *LoadHQX(GpIOStream *stream, IGpAllocator *alloc);
 	};
 }
-
-#endif

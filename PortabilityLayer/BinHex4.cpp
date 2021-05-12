@@ -1,8 +1,8 @@
 #include "BinHex4.h"
 #include "GpIOStream.h"
+#include "GpVector.h"
 
 #include <string.h>
-#include <vector>
 #include <assert.h>
 
 // See: https://files.stairways.com/other/binhex-40-specs-info.txt
@@ -59,7 +59,7 @@ namespace
 
 namespace PortabilityLayer
 {
-	MacFileMem *BinHex4::LoadHQX(GpIOStream *stream)
+	MacFileMem *BinHex4::LoadHQX(GpIOStream *stream, IGpAllocator *alloc)
 	{
 		const uint8_t errCodeChar = 64;
 
@@ -108,7 +108,7 @@ namespace PortabilityLayer
 				return nullptr;
 		}
 
-		std::vector<uint8_t> bytesAfter6To8;
+		GpVector<uint8_t> bytesAfter6To8(alloc);
 
 		if (stream->IsSeekable())
 		{
@@ -120,7 +120,10 @@ namespace PortabilityLayer
 					return nullptr;
 
 				if (endPos > filePos && (endPos - filePos) < SIZE_MAX / 6)
-					bytesAfter6To8.reserve(static_cast<size_t>(endPos - filePos) * 6 / 8);
+				{
+					if (!bytesAfter6To8.Reserve(static_cast<size_t>(endPos - filePos) * 6 / 8))
+						return nullptr;
+				}
 			}
 		}
 
@@ -170,19 +173,22 @@ namespace PortabilityLayer
 				break;
 			case 6:
 				decodedByte |= value6Bit;
-				bytesAfter6To8.push_back(decodedByte);
+				if (!bytesAfter6To8.Append(decodedByte))
+					return nullptr;
 				decodedByte = 0;
 				decodedByteBitPos = 8;
 				break;
 			case 4:
 				decodedByte |= (value6Bit >> 2);
-				bytesAfter6To8.push_back(decodedByte);
+				if (!bytesAfter6To8.Append(decodedByte))
+					return nullptr;
 				decodedByte = (value6Bit << 6) & 0xff;
 				decodedByteBitPos = 6;
 				break;
 			case 2:
 				decodedByte |= (value6Bit >> 4);
-				bytesAfter6To8.push_back(decodedByte);
+				if (!bytesAfter6To8.Append(decodedByte))
+					return nullptr;
 				decodedByte = (value6Bit << 4) & 0xff;
 				decodedByteBitPos = 4;
 				break;
@@ -191,7 +197,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		const size_t bytesBeforeRLEDec = bytesAfter6To8.size();
+		const size_t bytesBeforeRLEDec = bytesAfter6To8.Count();
 		size_t decodedDataSize = 0;
 		for (size_t i = 0; i < bytesBeforeRLEDec; i++)
 		{
@@ -212,8 +218,9 @@ namespace PortabilityLayer
 				decodedDataSize++;
 		}
 
-		std::vector<uint8_t> decodedBytes;
-		decodedBytes.reserve(decodedDataSize);
+		GpVector<uint8_t> decodedBytes(alloc);
+		if (!decodedBytes.Reserve(decodedDataSize))
+			return nullptr;
 
 		for (size_t i = 0; i < bytesBeforeRLEDec; i++)
 		{
@@ -224,28 +231,37 @@ namespace PortabilityLayer
 				const uint8_t runLength = bytesAfter6To8[++i];
 
 				if (runLength == 0)
-					decodedBytes.push_back(0x90);
+				{
+					if (!decodedBytes.Append(0x90))
+						return nullptr;
+				}
 				else
 				{
-					if (decodedBytes.size() == 0)
+					if (decodedBytes.Count() == 0)
 						return nullptr;
 
-					const uint8_t lastByte = *(decodedBytes.end() - 1);
+					const uint8_t lastByte = decodedBytes[decodedBytes.Count() - 1];
 					for (size_t r = 1; r < runLength; r++)
-						decodedBytes.push_back(lastByte);
+					{
+						if (!decodedBytes.Append(lastByte))
+							return nullptr;
+					}
 				}
 			}
 			else
-				decodedBytes.push_back(b);
+			{
+				if (!decodedBytes.Append(b))
+					return nullptr;
+			}
 		}
 
 		assert(decodedBytes.size() == decodedDataSize);
 
-		if (decodedBytes.size() == 0)
+		if (decodedBytes.Count() == 0)
 			return nullptr;
 
 		const uint8_t nameLength = decodedBytes[0];
-		if (decodedBytes.size() < 22 + nameLength || nameLength > 63)
+		if (decodedBytes.Count() < 22 + nameLength || nameLength > 63)
 			return nullptr;
 
 		// Header format:
@@ -272,7 +288,7 @@ namespace PortabilityLayer
 		mfi.m_dataForkSize = ByteUnpack::BigUInt32(&decodedBytes[headerStartLoc + 10]);
 		mfi.m_resourceForkSize = ByteUnpack::BigUInt32(&decodedBytes[headerStartLoc + 14]);
 
-		const size_t availableDataSize = decodedBytes.size() - 26 - nameLength;	// +4 bytes for CRCs
+		const size_t availableDataSize = decodedBytes.Count() - 26 - nameLength;	// +4 bytes for CRCs
 
 		if (mfi.m_dataForkSize > availableDataSize || availableDataSize - mfi.m_dataForkSize < mfi.m_resourceForkSize)
 			return nullptr;
@@ -297,6 +313,6 @@ namespace PortabilityLayer
 		if (expectedResCRC != BinHexCRC(&decodedBytes[resourceForkStart], mfi.m_resourceForkSize))
 			return nullptr;
 
-		return new MacFileMem(&decodedBytes[dataForkStart], &decodedBytes[resourceForkStart], nullptr, mfi);
+		return MacFileMem::Create(alloc, &decodedBytes[dataForkStart], &decodedBytes[resourceForkStart], nullptr, mfi);
 	}
 }

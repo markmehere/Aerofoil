@@ -27,6 +27,7 @@ SOFTWARE.
 #include "ScopedPtr.h"
 #include "MacBinary2.h"
 #include "MacFileMem.h"
+#include "GpAllocator_C.h"
 
 #include <string>
 
@@ -77,7 +78,7 @@ int main(int argc, const char **argv)
 
 	CFileStream fs(f, true, false, true);
 
-	ScopedPtr<MacFileMem> memFile = MacBinary2::ReadBin(&fs);
+	ScopedPtr<MacFileMem> memFile = MacBinary2::ReadBin(&fs, GpAllocator_C::GetInstance());
 
 	fs.Close();
 
