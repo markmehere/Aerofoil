@@ -255,7 +255,7 @@ namespace PortabilityLayer
 			}
 		}
 
-		assert(decodedBytes.size() == decodedDataSize);
+		assert(decodedBytes.Count() == decodedDataSize);
 
 		if (decodedBytes.Count() == 0)
 			return nullptr;
