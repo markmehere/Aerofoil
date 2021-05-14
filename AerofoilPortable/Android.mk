@@ -14,6 +14,7 @@ LOCAL_CFLAGS := -DGP_DEBUG_CONFIG=0
 
 # Add your application source files here...
 LOCAL_SRC_FILES := \
+	GpAllocator_C.cpp	\
 	GpThreadEvent_Cpp11.cpp	\
 	GpSystemServices_POSIX.cpp
 
