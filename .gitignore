@@ -60,3 +60,4 @@ AerofoilMac/DerivedData/
 SDL2-2.0.12/Xcode/SDL/SDL.xcodeproj/xcuserdata/*
 AerofoilMac/Resources/*.gpf
 AerofoilMac/Resources/Houses/*.gpf
+AerofoilMac/*.xcodeproj/project.xcworkspace/xcuserdata

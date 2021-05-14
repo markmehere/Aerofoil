@@ -3,9 +3,7 @@
 #define __PL_BINARY_SEARCH_H__
 
 #include <stdint.h>
-#ifdef __MACOS__
 #include <stddef.h>
-#endif
 
 namespace PortabilityLayer
 {

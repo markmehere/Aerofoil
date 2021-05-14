@@ -91,11 +91,7 @@ bool GpSystemServices_X::IsTextInputObstructive() const
 }
 
 bool GpSystemServices_X::IsFullscreenPreferred() const
-{
-	#ifdef __MACOS__
-	return false;
-	#endif
-	
+{	
 	return true;
 }
 
