@@ -2,25 +2,58 @@
 
 namespace PortabilityLayer
 {
-	MacFileMem::MacFileMem(const uint8_t *dataFork, const uint8_t *resourceFork, const char* comment, const MacFileInfo &fileInfo)
-		: m_info(fileInfo)
+	MacFileMem::MacFileMem(IGpAllocator *alloc, const MacFileInfo &fileInfo)
+		: m_alloc(alloc)
+		, m_info(fileInfo)
+		, m_data(alloc)
 	{
-		uint8_t *buffer = new uint8_t[fileInfo.m_dataForkSize + fileInfo.m_resourceForkSize + fileInfo.m_commentSize + 1];
-		m_data.Set(buffer);
+	}
 
-		memcpy(buffer, dataFork, fileInfo.m_dataForkSize);
-		buffer += fileInfo.m_dataForkSize;
+	bool MacFileMem::Init(const uint8_t *dataFork, const uint8_t *resourceFork, const char* comment)
+	{
+		const size_t combinedSize = m_info.m_dataForkSize + m_info.m_resourceForkSize + m_info.m_commentSize + 1;
+		if (!m_data.Resize(combinedSize))
+			return false;
 
-		memcpy(buffer, resourceFork, fileInfo.m_resourceForkSize);
-		buffer += fileInfo.m_resourceForkSize;
+		uint8_t *buffer = m_data.Buffer();
+		memcpy(buffer, dataFork, m_info.m_dataForkSize);
+		buffer += m_info.m_dataForkSize;
 
-		memcpy(buffer, comment, fileInfo.m_commentSize);
-		buffer += fileInfo.m_commentSize;
+		memcpy(buffer, resourceFork, m_info.m_resourceForkSize);
+		buffer += m_info.m_resourceForkSize;
+
+		memcpy(buffer, comment, m_info.m_commentSize);
+		buffer += m_info.m_commentSize;
 
 		*buffer = 0;
+
+		return true;
 	}
 
 	MacFileMem::~MacFileMem()
 	{
+	}
+
+	MacFileMem *MacFileMem::Create(IGpAllocator *alloc, const uint8_t *dataFork, const uint8_t *resourceFork, const char* comment, const MacFileInfo &fileInfo)
+	{
+		void *storage = alloc->Alloc(sizeof(MacFileMem));
+		if (!storage)
+			return nullptr;
+
+		MacFileMem *result = new (storage) MacFileMem(alloc, fileInfo);
+		if (!result->Init(dataFork, resourceFork, comment))
+		{
+			result->Destroy();
+			return nullptr;
+		}
+
+		return result;
+	}
+
+	void MacFileMem::Destroy()
+	{
+		IGpAllocator *alloc = m_alloc;
+		this->~MacFileMem();
+		alloc->Release(this);
 	}
 }

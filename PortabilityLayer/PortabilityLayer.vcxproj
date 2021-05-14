@@ -209,7 +209,6 @@
     <ClInclude Include="VirtualDirectory.h" />
     <ClInclude Include="RCPtr.h" />
     <ClInclude Include="RefCounted.h" />
-    <ClInclude Include="ScopedArray.h" />
     <ClInclude Include="ScopedPtr.h" />
     <ClInclude Include="SmallestInt.h" />
     <ClInclude Include="UnsafePascalStr.h" />

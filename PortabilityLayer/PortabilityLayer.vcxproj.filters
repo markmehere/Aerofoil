@@ -42,9 +42,6 @@
     <ClInclude Include="ScopedPtr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ScopedArray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PascalStr.h">
       <Filter>Header Files</Filter>
     </ClInclude>

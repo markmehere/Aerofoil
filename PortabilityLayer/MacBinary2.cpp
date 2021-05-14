@@ -106,7 +106,7 @@ namespace PortabilityLayer
 		stream->Write(padding, resourceForkPadding);
 	}
 
-	MacFileMem *MacBinary2::ReadBin(GpIOStream *stream)
+	MacFileMem *MacBinary2::ReadBin(GpIOStream *stream, IGpAllocator *alloc)
 	{
 		MacFileInfo fileInfo;
 
@@ -153,37 +153,35 @@ namespace PortabilityLayer
 		if (fileInfo.m_resourceForkSize > SIZE_MAX)
 			return nullptr;
 
-		uint8_t *dataBuffer = nullptr;
-		uint8_t *rsrcBuffer = nullptr;
+		GpVector<uint8_t> dataBuffer(alloc);
+		GpVector<uint8_t> rsrcBuffer(alloc);
 
 		if (fileInfo.m_dataForkSize != 0)
-			dataBuffer = new uint8_t[fileInfo.m_dataForkSize];
+			dataBuffer.Resize(fileInfo.m_dataForkSize);
 
 		if (fileInfo.m_resourceForkSize != 0)
-			rsrcBuffer = new uint8_t[fileInfo.m_resourceForkSize];
+			rsrcBuffer.Resize(fileInfo.m_resourceForkSize);
 
-		ScopedArray<uint8_t> dataContents(dataBuffer);
-		ScopedArray<uint8_t> rsrcContents(rsrcBuffer);
 
 		uint8_t *padding = mb2Header;
 
 		const size_t dataForkPadding = 127 - ((fileInfo.m_dataForkSize + 127) % 128);
 		const size_t resourceForkPadding = 127 - ((fileInfo.m_resourceForkSize + 127) % 128);
 
-		if (stream->Read(dataBuffer, fileInfo.m_dataForkSize) != fileInfo.m_dataForkSize)
+		if (stream->Read(dataBuffer.Buffer(), fileInfo.m_dataForkSize) != fileInfo.m_dataForkSize)
 			return nullptr;
 
 		if (stream->Read(padding, dataForkPadding) != dataForkPadding)
 			return nullptr;
 
-		if (stream->Read(rsrcBuffer, fileInfo.m_resourceForkSize) != fileInfo.m_resourceForkSize)
+		if (stream->Read(rsrcBuffer.Buffer(), fileInfo.m_resourceForkSize) != fileInfo.m_resourceForkSize)
 			return nullptr;
 
 		if (stream->Read(padding, resourceForkPadding) != resourceForkPadding)
 			return nullptr;
 
 		// Ignore comment for now
-		return new MacFileMem(dataBuffer, rsrcBuffer, nullptr, fileInfo);
+		return MacFileMem::Create(alloc, dataBuffer.Buffer(), rsrcBuffer.Buffer(), nullptr, fileInfo);
 	}
 }
 

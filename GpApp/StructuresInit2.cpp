@@ -182,6 +182,8 @@ void CreatePointers (void)
 	thisRoom = (roomPtr)NewPtr(sizeof(roomType));
 	if (thisRoom == nil)
 		RedAlert(kErrNoMemory);
+
+	memset(thisRoom, 0, sizeof(roomType));
 	
 	hotSpots = nil;
 	hotSpots = (hotPtr)NewPtr(sizeof(hotObject) * kMaxHotSpots);

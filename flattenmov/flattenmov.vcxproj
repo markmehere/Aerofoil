@@ -41,6 +41,7 @@
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
     <Import Project="..\Debug.props" />
+    <Import Project="..\AerofoilPortable.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -48,6 +49,7 @@
     <Import Project="..\Common.props" />
     <Import Project="..\GpCommon.props" />
     <Import Project="..\Release.props" />
+    <Import Project="..\AerofoilPortable.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -74,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\AerofoilPortable\GpAllocator_C.cpp" />
     <ClCompile Include="flattenmov.cpp" />
   </ItemGroup>
   <ItemGroup>

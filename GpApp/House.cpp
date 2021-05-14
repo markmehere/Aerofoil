@@ -214,7 +214,7 @@ Boolean InitializeEmptyHouse (void)
 	if (thisHouse != nil)
 		thisHouse.Dispose();
 
-	const size_t houseSizeNoRooms = sizeof(sizeof(houseType) - sizeof(roomType));
+	const size_t houseSizeNoRooms = sizeof(houseType) - sizeof(roomType);
 	thisHouse = NewHandle(houseSizeNoRooms).StaticCast<houseType>();
 
 	if (thisHouse == nil)
@@ -224,6 +224,7 @@ Boolean InitializeEmptyHouse (void)
 	}
 
 	thisHousePtr = *thisHouse;
+	memset(thisHousePtr, 0, houseSizeNoRooms);
 
 	thisHousePtr->version = kHouseVersion;
 	thisHousePtr->firstRoom = -1;
@@ -264,8 +265,8 @@ Boolean InitializeEmptyHouseInEditor (void)
 
 	UpdateMenus(false);
 	ReflectCurrentRoom(true);
-    
-    return (true);
+
+	return (true);
 }
 #endif
 
