@@ -10136,6 +10136,7 @@
 			buildSettings = {
 				CLANG_LINK_OBJC_RUNTIME = NO;
 				OTHER_LDFLAGS = "-liconv";
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
@@ -10216,6 +10217,7 @@
 			buildSettings = {
 				CLANG_LINK_OBJC_RUNTIME = NO;
 				OTHER_LDFLAGS = "-liconv";
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -10358,6 +10360,7 @@
 				INFOPLIST_FILE = hidapi/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libsdl.hidapi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -10372,6 +10375,7 @@
 				INFOPLIST_FILE = hidapi/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libsdl.hidapi;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};

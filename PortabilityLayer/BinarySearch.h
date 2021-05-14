@@ -3,6 +3,7 @@
 #define __PL_BINARY_SEARCH_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 namespace PortabilityLayer
 {

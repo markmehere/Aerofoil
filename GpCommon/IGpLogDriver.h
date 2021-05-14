@@ -18,7 +18,6 @@ struct IGpLogDriver
 	void Printf(Category category, const char *fmt, ...);
 };
 
-
 inline void IGpLogDriver::Printf(Category category, const char *fmt, ...)
 {
 	va_list args;
