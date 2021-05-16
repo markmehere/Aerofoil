@@ -16,6 +16,7 @@ endif()
 message("Building ${EXECNAME} for: ${PLATFORM}")
 
 add_definitions(-DGP_DEBUG_CONFIG=0)
+add_definitions(-DNDEBUG=1)
 
 
 add_library(stb STATIC
