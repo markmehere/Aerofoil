@@ -222,13 +222,13 @@ PLError_t CreateOffScreenGWorld (DrawSurface **theGWorld, Rect *bounds)
 {
 	GpPixelFormat_t pixelFormat = PortabilityLayer::DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
-	return NewGWorld(theGWorld, pixelFormat, bounds, nil);
+	return NewGWorld(theGWorld, pixelFormat, *bounds);
 }
 
 
 PLError_t CreateOffScreenGWorldCustomDepth(DrawSurface **theGWorld, Rect *bounds, GpPixelFormat_t pixelFormat)
 {
-	return NewGWorld(theGWorld, pixelFormat, bounds, nil);
+	return NewGWorld(theGWorld, pixelFormat, *bounds);
 }
 
 //--------------------------------------------------------------  KillOffScreenPixMap
@@ -357,12 +357,12 @@ bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::IResourceArchive *re
 	Handle hdl = resFile->LoadResource('icl8', resID);
 	if (hdl)
 	{
-		THandle<PortabilityLayer::PixMapImpl> img = PortabilityLayer::IconLoader::GetInstance()->LoadSimpleColorIcon(hdl);
-
+		THandle<BitmapImage> img = hdl.StaticCast<BitmapImage>();
 		if (img)
 		{
-			CopyBits(*img, *surface->m_port.GetPixMap(), &(*img)->m_rect, &theRect, srcCopy);
-			img.Dispose();
+			const Rect rect = (*img)->GetRect();
+			if (rect.Width() == 32 && rect.Height() == 32)
+				surface->DrawPicture(img, theRect);
 		}
 
 		hdl.Dispose();
@@ -372,12 +372,22 @@ bool LargeIconPlot (DrawSurface *surface, PortabilityLayer::IResourceArchive *re
 	hdl = resFile->LoadResource('ICN#', resID);
 	if (hdl)
 	{
-		THandle<PortabilityLayer::PixMapImpl> img = PortabilityLayer::IconLoader::GetInstance()->LoadBWIcon(hdl);
-
+		THandle<BitmapImage> img = hdl.StaticCast<BitmapImage>();
 		if (img)
 		{
-			CopyBits(*img, *surface->m_port.GetPixMap(), &(*img)->m_rect, &theRect, srcCopy);
-			img.Dispose();
+			const Rect baseRect = (*img)->GetRect();
+			if (baseRect.Width() == 32 && baseRect.Height() == 64)
+			{
+				const Rect reducedRect = Rect::Create(0, 0, 32, 32);
+				DrawSurface *tempSurface = nullptr;
+				PLError_t err = NewGWorld(&tempSurface, surface->m_port.GetPixelFormat(), reducedRect);
+				if (err == PLErrors::kNone)
+				{
+					tempSurface->DrawPicture(img, baseRect);
+					CopyBits(*tempSurface->m_port.GetPixMap(), *surface->m_port.GetPixMap(), &reducedRect, &theRect, srcCopy);
+					DisposeGWorld(tempSurface);
+				}
+			}
 		}
 
 		hdl.Dispose();

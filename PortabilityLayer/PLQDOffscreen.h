@@ -17,7 +17,7 @@ typedef CTabPtr *CTabHandle;
 typedef PixMap *PixMapPtr;
 typedef PixMapPtr *PixMapHandle;
 
-PLError_t NewGWorld(DrawSurface **gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable);
+PLError_t NewGWorld(DrawSurface **gworld, GpPixelFormat_t pixelFormat, const Rect &bounds);
 void DisposeGWorld(DrawSurface *gworld);
 
 PixMapHandle GetGWorldPixMap(DrawSurface *gworld);

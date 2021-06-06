@@ -311,7 +311,7 @@ namespace PortabilityLayer
 			extension = ".wav";
 			outValidationRule = ResourceValidationRules::kWAV;
 		}
-		else if (resTypeID == ResTypeID('Date') || resTypeID == ResTypeID('PICT'))
+		else if (resTypeID == ResTypeID('Date') || resTypeID == ResTypeID('PICT') || resTypeID == ResTypeID('ICN#') || resTypeID == ResTypeID('icl8') || resTypeID == ResTypeID('icl4') || resTypeID == ResTypeID('ics#') || resTypeID == ResTypeID('ics8') || resTypeID == ResTypeID('ics4'))
 		{
 			extension = kPICTExtension;
 			outValidationRule = ResourceValidationRules::kBMP;

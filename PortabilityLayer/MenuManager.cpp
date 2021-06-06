@@ -892,13 +892,41 @@ namespace PortabilityLayer
 				void *storage = static_cast<GraphicType_t*>(NewPtr(sizeof(GraphicType_t)));
 				if (storage)
 				{
-					memcpy(m_iconMask, static_cast<const uint8_t*>(*icsHandle) + 32, 32);
-					memcpy(m_iconColors, static_cast<const uint8_t*>(*ics8Handle), 16 * 16);
+					DrawSurface *iconMaskTemp = nullptr;
+					DrawSurface *iconColorTemp = nullptr;
 
-					GraphicType_t *graphic = new (storage) GraphicType_t(m_iconColors);
+					if (NewGWorld(&iconMaskTemp, GpPixelFormats::kBW1, Rect::Create(0, 0, 16, 16)) == PLErrors::kNone)
+					{
+						if (NewGWorld(&iconColorTemp, GpPixelFormats::k8BitStandard, Rect::Create(0, 0, 16, 16)) == PLErrors::kNone)
+						{
+							iconMaskTemp->DrawPicture(icsHandle.StaticCast<BitmapImage>(), Rect::Create(-16, 0, 16, 16));
+							iconColorTemp->DrawPicture(ics8Handle.StaticCast<BitmapImage>(), Rect::Create(0, 0, 16, 16));
 
-					m_iconGraphic = graphic;
+							const PixMap *maskPixMap = (*iconMaskTemp->m_port.GetPixMap());
+							const PixMap *colorPixMap = (*iconColorTemp->m_port.GetPixMap());
 
+							memset(m_iconMask, 0, 16 * 16 / 8);
+
+							for (size_t row = 0; row < 16; row++)
+							{
+								const uint8_t *maskSourceRow = static_cast<const uint8_t*>(maskPixMap->m_data) + maskPixMap->m_pitch * row;
+
+								for (size_t col = 0; col < 16; col++)
+								{
+									if (maskSourceRow[col] != 0)
+										m_iconMask[row * 2 + col / 8] |= (1 << (7 - (col & 7)));
+								}
+								memcpy(m_iconColors + row * 16, static_cast<const uint8_t*>(colorPixMap->m_data) + colorPixMap->m_pitch * row, 16);
+							}
+
+							GraphicType_t *graphic = new (storage) GraphicType_t(m_iconColors);
+
+							m_iconGraphic = graphic;
+							DisposeGWorld(iconColorTemp);
+						}
+
+						DisposeGWorld(iconMaskTemp);
+					}
 				}
 			}
 
@@ -923,7 +951,7 @@ namespace PortabilityLayer
 
 		if (m_menuBarGraf == nullptr)
 		{
-			if (qdManager->NewGWorld(&m_menuBarGraf, pixelFormat, menuRect, nullptr) != 0)
+			if (qdManager->NewGWorld(&m_menuBarGraf, pixelFormat, menuRect) != 0)
 				return;
 		}
 
@@ -1529,7 +1557,7 @@ namespace PortabilityLayer
 		{
 			GpPixelFormat_t pixelFormat = DisplayDeviceManager::GetInstance()->GetPixelFormat();
 
-			if (qdManager->NewGWorld(&m_menuGraf, pixelFormat, menuRect, nullptr) != 0)
+			if (qdManager->NewGWorld(&m_menuGraf, pixelFormat, menuRect) != 0)
 				return;
 		}
 

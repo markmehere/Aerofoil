@@ -1,24 +1,55 @@
-As with Glider PRO's Room Editor, custom backgrounds, sounds, and TV videos
-are supported.
+CREATING CUSTOM RESOURCES FOR YOUR HOUSES
+------------------------------------------------------------------------------
+When editing a house, you can create custom resources for it by creating a ZIP
+archive with the name of the house .gpf and .gpd files and giving it a .gpa
+extension.  This is referred to as a "resource archive."
 
-Since Glider PRO used formats that were very Mac-specific, Aerofoil has
-replaced most of them with more current formats.
+Within a resource archive, you can place resources in a subfolder named after
+the resource type, and resource files within the subfolder with a specified
+ID.
 
-To add resources to a house, create a ZIP file with the extension ".gpa" with
-the same name as the .gpd and .gpf files that already exist for the house.
+Supported resource types and their corresponding folder names:
+"icl4":   32x32 4-bit-per-pixel icon graphics in BMP format.
+"icl8":   32x32 8-bit-per-pixel icon graphics in BMP format.
+"ICN$23": 32x64 black and white icon graphics and masks.  The top half of the
+          image is the image, and bottom half is the mask.  The mask should
+		  be white for transparent pixels and black for opaque pixels.
+"ics4":   16x16 4-bit-per-pixel icon graphics in BMP format.
+"ics8":   16x16 8-bit-per-pixel icon graphics in BMP format.
+"ics$23": 16x32 black and white icon graphics and masks.  The top half of the
+          image is the image, and bottom half is the mask.  The mask should
+		  be white for transparent pixels and black for opaque pixels.
+"PICT":   BMP format images.
+"snd$20": Sounds in 8-bit mono unsigned 22254Hz WAV format.
 
-You can add resources by adding them to a folder named as the resource type,
-with the appropriate extension.
 
-For example, for a "PICT" resource of ID "3000", create a file named "3000.bmp"
-and put it in the "PICT" directory in the .gpa archive.
+For example, to create a custom image with the resource ID 1200, create a BMP
+format image named "1200.bmp" and place it in the "PICT" directory inside of
+the resource archive.
 
-PICT resources, used for custom decorations and backgrounds, must be BMP files.
+IDs can range from -32768 to 32767.
 
-Sounds should go in a directory named "snd$20"
-Sounds must be WAV format, monaural, 8-bit unsigned PCM, 22255 Hz.
-Sounds recorded at a different sample rate will play back at the wrong speed.
-Sounds that are not monaural or 8-bit unsigned PCM will fail to load.
+To create a custom icon, create an "icl8" or "ICN$23" resource with the ID
+-16455.
 
-Resource IDs must be between -32768 and 32767.  Other resource IDs will fail
-to load.
+
+PACKAGING YOUR HOUSE FOR DISTRIBUTION
+-------------------------------------------------------------------------------
+To package a house for single-file distribution, use the "MergeGPF" tool to
+combine the metadata, house data, and resources into a single GPF file.  Doing
+this will make your house read-only, so make a copy first!
+
+If you accidentally make your house read-only by doing this, then you can
+return it to an editable state via the following steps:
+- Open the GPF file using a ZIP archive tool.
+- Extract the "!data" file from the GPF and change it to the name of the house
+  with a ".gpd" extension.
+- If the house has any custom resources, then duplicate the GPF file and rename
+  it to the house name with a ".gpa" extension, then open it with a ZIP archive
+  tool and remove the "!!meta" and "!data" files from the ".gpa" archive.
+- Remove the "!data" file and any custom resources from the GPF file.
+
+Alternately, you can export a house to play with the original Glider PRO by
+using the "Export Glider PRO House..." option in the Import/Export menu.  Doing
+this will output a MacBinary file to the "Export" subdirectory of the "Aerofoil"
+directory in your Documents directory.

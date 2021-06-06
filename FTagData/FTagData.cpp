@@ -57,22 +57,52 @@ int toolMain(int argc, const char **argv)
 	for (int i = 7; i < argc; i++)
 	{
 		const char *arg = argv[i];
-		if (!strcmp(arg, "locked"))
-			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_LOCKED;
+		if (!strcmp(arg, "alias"))
+			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_ALIAS;
 		else if (!strcmp(arg, "invisible"))
 			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_INVISIBLE;
 		else if (!strcmp(arg, "bundle"))
 			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_BUNDLE;
-		else if (!strcmp(arg, "system"))
-			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_SYSTEM;
-		else if (!strcmp(arg, "copyprotected"))
-			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_COPY_PROTECTED;
-		else if (!strcmp(arg, "busy"))
-			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_BUSY;
-		else if (!strcmp(arg, "changed"))
-			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_CHANGED;
+		else if (!strcmp(arg, "namelocked"))
+			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_NAME_LOCKED;
+		else if (!strcmp(arg, "stationary"))
+			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_STATIONARY;
+		else if (!strcmp(arg, "customicon"))
+			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_CUSTOM_ICON;
 		else if (!strcmp(arg, "inited"))
 			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_INITED;
+		else if (!strcmp(arg, "noinits"))
+			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_NO_INITS;
+		else if (!strcmp(arg, "shared"))
+			mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_SHARED;
+		else if (!strcmp(arg, "locked"))
+			mfp.m_protected = 1;
+		else if (!strcmp(arg, "color"))
+		{
+			int color = 0;
+			if (i < argc - 1)
+			{
+				i++;
+				color = atoi(argv[i + 1]);
+			}
+			else
+			{
+				fprintf(stderr, "Color should be followed by a number ranging from 0 to 7");
+				return -1;
+			}
+
+			if (color & 4)
+				mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_COLOR_BIT2;
+			if (color & 2)
+				mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_COLOR_BIT1;
+			if (color & 1)
+				mfp.m_finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_COLOR_BIT0;
+		}
+		else
+		{
+			fprintf(stderr, "Unknown flag: %s", arg);
+			return -1;
+		}
 	}
 
 	PortabilityLayer::MacFilePropertiesSerialized mps;

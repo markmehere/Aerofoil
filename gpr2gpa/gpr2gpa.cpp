@@ -8,6 +8,7 @@
 #include "QDPictDecoder.h"
 #include "QDPictEmitContext.h"
 #include "QDPictEmitScanlineParameters.h"
+#include "QDStandardPalette.h"
 #include "MacFileInfo.h"
 #include "ResourceFile.h"
 #include "ResourceCompiledTypeList.h"
@@ -307,6 +308,193 @@ void ExportZipFile(const char *path, std::vector<PlannedEntry> &entries, const P
 	fclose(outF);
 }
 
+
+
+bool ExportBMP(size_t width, size_t height, size_t pitchInElements, const PortabilityLayer::RGBAColor *pixelData, std::vector<uint8_t> &outData)
+{
+	outData.resize(0);
+
+	bool couldBe15Bit = true;
+	bool couldBeIndexed = true;
+
+	PortabilityLayer::BitmapColorTableEntry colorTable[256];
+	unsigned int numColors = 0;
+
+	for (size_t row = 0; row < height; row++)
+	{
+		const PortabilityLayer::RGBAColor *rowData = &pixelData[pitchInElements * row];
+
+		for (size_t col = 0; col < width; col++)
+		{
+			const PortabilityLayer::RGBAColor &pixel = rowData[col];
+
+			if (couldBe15Bit)
+			{
+				if (FiveToEight(pixel.r >> 3) != pixel.r || FiveToEight(pixel.g >> 3) != pixel.g || FiveToEight(pixel.b >> 3) != pixel.b)
+				{
+					couldBe15Bit = false;
+					if (!couldBeIndexed)
+						break;
+				}
+			}
+
+			if (couldBeIndexed)
+			{
+				bool matched = false;
+				for (unsigned int ci = 0; ci < numColors; ci++)
+				{
+					const PortabilityLayer::BitmapColorTableEntry &ctabEntry = colorTable[ci];
+
+					if (ctabEntry.m_r == pixel.r && ctabEntry.m_g == pixel.g && ctabEntry.m_b == pixel.b)
+					{
+						matched = true;
+						break;
+					}
+				}
+
+				if (matched == false)
+				{
+					if (numColors == 256)
+					{
+						couldBeIndexed = false;
+						if (!couldBe15Bit)
+							break;
+					}
+					else
+					{
+						PortabilityLayer::BitmapColorTableEntry &ctabEntry = colorTable[numColors++];
+						ctabEntry.m_r = pixel.r;
+						ctabEntry.m_g = pixel.g;
+						ctabEntry.m_b = pixel.b;
+						ctabEntry.m_reserved = 0;
+					}
+				}
+			}
+		}
+
+		if (!couldBeIndexed && !couldBe15Bit)
+			break;
+	}
+
+	unsigned int bpp = 24;
+	if (couldBeIndexed)
+	{
+		if (numColors <= 2)
+			bpp = 1;
+		else if (numColors <= 16)
+			bpp = 4;
+		else
+			bpp = 8;
+	}
+	else if (couldBe15Bit)
+		bpp = 16;
+
+	const size_t minimalBitsPerRow = bpp * width;
+	const size_t rowPitchBytes = ((minimalBitsPerRow + 31) / 32) * 4;	// DWORD alignment
+
+	const size_t colorTableSize = (bpp < 16) ? numColors * 4 : 0;
+	const size_t fileHeaderSize = sizeof(PortabilityLayer::BitmapFileHeader);
+	const size_t infoHeaderSize = sizeof(PortabilityLayer::BitmapInfoHeader);
+	const size_t ctabSize = (bpp < 16) ? (numColors * 4) : 0;
+	const size_t imageDataSize = rowPitchBytes * height;
+	const size_t postCTabPaddingSize = 2;
+	const size_t imageFileSize = fileHeaderSize + infoHeaderSize + ctabSize + postCTabPaddingSize + imageDataSize;
+
+	outData.reserve(imageFileSize);
+
+	PortabilityLayer::BitmapFileHeader fileHeader;
+	fileHeader.m_id[0] = 'B';
+	fileHeader.m_id[1] = 'M';
+	fileHeader.m_fileSize = static_cast<uint32_t>(imageFileSize);
+	fileHeader.m_imageDataStart = static_cast<uint32_t>(fileHeaderSize + infoHeaderSize + ctabSize + postCTabPaddingSize);
+	fileHeader.m_reserved1 = 0;
+	fileHeader.m_reserved2 = 0;
+
+	VectorAppend(outData, reinterpret_cast<const uint8_t*>(&fileHeader), sizeof(fileHeader));
+
+	PortabilityLayer::BitmapInfoHeader infoHeader;
+	infoHeader.m_thisStructureSize = sizeof(infoHeader);
+	infoHeader.m_width = static_cast<uint32_t>(width);
+	infoHeader.m_height = static_cast<uint32_t>(height);
+	infoHeader.m_planes = 1;
+	infoHeader.m_bitsPerPixel = bpp;
+	infoHeader.m_compression = PortabilityLayer::BitmapConstants::kCompressionRGB;
+	infoHeader.m_imageSize = static_cast<uint32_t>(imageDataSize);
+	infoHeader.m_xPixelsPerMeter = 2835;
+	infoHeader.m_yPixelsPerMeter = 2835;
+	infoHeader.m_numColors = (bpp < 16) ? numColors : 0;
+	infoHeader.m_importantColorCount = 0;
+
+	VectorAppend(outData, reinterpret_cast<const uint8_t*>(&infoHeader), sizeof(infoHeader));
+
+	if (bpp < 16)
+		VectorAppend(outData, reinterpret_cast<const uint8_t*>(colorTable), sizeof(PortabilityLayer::BitmapColorTableEntry) * numColors);
+
+	for (size_t i = 0; i < postCTabPaddingSize; i++)
+		outData.push_back(0);
+
+	std::vector<uint8_t> rowPackData;
+	rowPackData.resize(rowPitchBytes);
+
+	for (size_t row = 0; row < height; row++)
+	{
+		for (size_t i = 0; i < rowPitchBytes; i++)
+			rowPackData[i] = 0;
+
+		const PortabilityLayer::RGBAColor *rowData = &pixelData[pitchInElements * (height - 1 - row)];
+
+		for (size_t col = 0; col < width; col++)
+		{
+			const PortabilityLayer::RGBAColor &pixel = rowData[col];
+
+			if (bpp == 24)
+			{
+				rowPackData[col * 3 + 0] = pixel.b;
+				rowPackData[col * 3 + 1] = pixel.g;
+				rowPackData[col * 3 + 2] = pixel.r;
+			}
+			else if (bpp == 16)
+			{
+				int packedValue = 0;
+				packedValue |= (pixel.b >> 3);
+				packedValue |= ((pixel.g >> 3) << 5);
+				packedValue |= ((pixel.r >> 3) << 10);
+
+				rowPackData[col * 2 + 0] = static_cast<uint8_t>(packedValue & 0xff);
+				rowPackData[col * 2 + 1] = static_cast<uint8_t>((packedValue >> 8) & 0xff);
+			}
+			else
+			{
+				unsigned int colorIndex = 0;
+				for (unsigned int ci = 0; ci < numColors; ci++)
+				{
+					const PortabilityLayer::BitmapColorTableEntry &ctabEntry = colorTable[ci];
+
+					if (ctabEntry.m_r == pixel.r && ctabEntry.m_g == pixel.g && ctabEntry.m_b == pixel.b)
+					{
+						colorIndex = ci;
+						break;
+					}
+				}
+
+				if (bpp == 8)
+					rowPackData[col] = colorIndex;
+				else if (bpp == 4)
+					rowPackData[col / 2] |= (colorIndex << (8 - (((col & 1) + 1) * 4)));
+				else if (bpp == 1)
+				{
+					if (colorIndex)
+						rowPackData[col / 8] |= (0x80 >> (col & 7));
+				}
+			}
+		}
+
+		VectorAppend(outData, &rowPackData[0], rowPackData.size());
+	}
+
+	return true;
+}
+
 class BMPDumperContext : public PortabilityLayer::QDPictEmitContext
 {
 public:
@@ -491,191 +679,7 @@ bool BMPDumperContext::AllocTempBuffers(uint8_t *&buffer1, size_t buffer1Size, u
 
 bool BMPDumperContext::Export(std::vector<uint8_t> &outData) const
 {
-	outData.resize(0);
-
-	bool couldBe15Bit = true;
-	bool couldBeIndexed = true;
-
-	PortabilityLayer::BitmapColorTableEntry colorTable[256];
-	unsigned int numColors = 0;
-
-	const size_t height = m_frame.Height();
-	const size_t width = m_frame.Width();
-	const size_t pitch = m_pitchInElements;
-
-	for (size_t row = 0; row < height; row++)
-	{
-		const PortabilityLayer::RGBAColor *rowData = &m_pixelData[m_pitchInElements * row];
-
-		for (size_t col = 0; col < width; col++)
-		{
-			const PortabilityLayer::RGBAColor &pixel = rowData[col];
-
-			if (couldBe15Bit)
-			{
-				if (FiveToEight(pixel.r >> 3) != pixel.r || FiveToEight(pixel.g >> 3) != pixel.g || FiveToEight(pixel.b >> 3) != pixel.b)
-				{
-					couldBe15Bit = false;
-					if (!couldBeIndexed)
-						break;
-				}
-			}
-
-			if (couldBeIndexed)
-			{
-				bool matched = false;
-				for (unsigned int ci = 0; ci < numColors; ci++)
-				{
-					const PortabilityLayer::BitmapColorTableEntry &ctabEntry = colorTable[ci];
-
-					if (ctabEntry.m_r == pixel.r && ctabEntry.m_g == pixel.g && ctabEntry.m_b == pixel.b)
-					{
-						matched = true;
-						break;
-					}
-				}
-
-				if (matched == false)
-				{
-					if (numColors == 256)
-					{
-						couldBeIndexed = false;
-						if (!couldBe15Bit)
-							break;
-					}
-					else
-					{
-						PortabilityLayer::BitmapColorTableEntry &ctabEntry = colorTable[numColors++];
-						ctabEntry.m_r = pixel.r;
-						ctabEntry.m_g = pixel.g;
-						ctabEntry.m_b = pixel.b;
-						ctabEntry.m_reserved = 0;
-					}
-				}
-			}
-		}
-
-		if (!couldBeIndexed && !couldBe15Bit)
-			break;
-	}
-
-	unsigned int bpp = 24;
-	if (couldBeIndexed)
-	{
-		if (numColors <= 2)
-			bpp = 1;
-		else if (numColors <= 16)
-			bpp = 4;
-		else
-			bpp = 8;
-	}
-	else if (couldBe15Bit)
-		bpp = 16;
-
-	const size_t minimalBitsPerRow = bpp * width;
-	const size_t rowPitchBytes = ((minimalBitsPerRow + 31) / 32) * 4;	// DWORD alignment
-
-	const size_t colorTableSize = (bpp < 16) ? numColors * 4 : 0;
-	const size_t fileHeaderSize = sizeof(PortabilityLayer::BitmapFileHeader);
-	const size_t infoHeaderSize = sizeof(PortabilityLayer::BitmapInfoHeader);
-	const size_t ctabSize = (bpp < 16) ? (numColors * 4) : 0;
-	const size_t imageDataSize = rowPitchBytes * height;
-	const size_t postCTabPaddingSize = 2;
-	const size_t imageFileSize = fileHeaderSize + infoHeaderSize + ctabSize + postCTabPaddingSize + imageDataSize;
-
-	outData.reserve(imageFileSize);
-
-	PortabilityLayer::BitmapFileHeader fileHeader;
-	fileHeader.m_id[0] = 'B';
-	fileHeader.m_id[1] = 'M';
-	fileHeader.m_fileSize = static_cast<uint32_t>(imageFileSize);
-	fileHeader.m_imageDataStart = static_cast<uint32_t>(fileHeaderSize + infoHeaderSize + ctabSize + postCTabPaddingSize);
-	fileHeader.m_reserved1 = 0;
-	fileHeader.m_reserved2 = 0;
-
-	VectorAppend(outData, reinterpret_cast<const uint8_t*>(&fileHeader), sizeof(fileHeader));
-
-	PortabilityLayer::BitmapInfoHeader infoHeader;
-	infoHeader.m_thisStructureSize = sizeof(infoHeader);
-	infoHeader.m_width = static_cast<uint32_t>(width);
-	infoHeader.m_height = static_cast<uint32_t>(height);
-	infoHeader.m_planes = 1;
-	infoHeader.m_bitsPerPixel = bpp;
-	infoHeader.m_compression = PortabilityLayer::BitmapConstants::kCompressionRGB;
-	infoHeader.m_imageSize = static_cast<uint32_t>(imageDataSize);
-	infoHeader.m_xPixelsPerMeter = 2835;
-	infoHeader.m_yPixelsPerMeter = 2835;
-	infoHeader.m_numColors = (bpp < 16) ? numColors : 0;
-	infoHeader.m_importantColorCount = 0;
-
-	VectorAppend(outData, reinterpret_cast<const uint8_t*>(&infoHeader), sizeof(infoHeader));
-
-	if (bpp < 16)
-		VectorAppend(outData, reinterpret_cast<const uint8_t*>(colorTable), sizeof(PortabilityLayer::BitmapColorTableEntry) * numColors);
-
-	for (size_t i = 0; i < postCTabPaddingSize; i++)
-		outData.push_back(0);
-
-	std::vector<uint8_t> rowPackData;
-	rowPackData.resize(rowPitchBytes);
-
-	for (size_t row = 0; row < height; row++)
-	{
-		for (size_t i = 0; i < rowPitchBytes; i++)
-			rowPackData[i] = 0;
-
-		const PortabilityLayer::RGBAColor *rowData = &m_pixelData[m_pitchInElements * (height - 1 - row)];
-
-		for (size_t col = 0; col < width; col++)
-		{
-			const PortabilityLayer::RGBAColor &pixel = rowData[col];
-
-			if (bpp == 24)
-			{
-				rowPackData[col * 3 + 0] = pixel.b;
-				rowPackData[col * 3 + 1] = pixel.g;
-				rowPackData[col * 3 + 2] = pixel.r;
-			}
-			else if (bpp == 16)
-			{
-				int packedValue = 0;
-				packedValue |= (pixel.b >> 3);
-				packedValue |= ((pixel.g >> 3) << 5);
-				packedValue |= ((pixel.r >> 3) << 10);
-
-				rowPackData[col * 2 + 0] = static_cast<uint8_t>(packedValue & 0xff);
-				rowPackData[col * 2 + 1] = static_cast<uint8_t>((packedValue >> 8) & 0xff);
-			}
-			else
-			{
-				unsigned int colorIndex = 0;
-				for (unsigned int ci = 0; ci < numColors; ci++)
-				{
-					const PortabilityLayer::BitmapColorTableEntry &ctabEntry = colorTable[ci];
-
-					if (ctabEntry.m_r == pixel.r && ctabEntry.m_g == pixel.g && ctabEntry.m_b == pixel.b)
-					{
-						colorIndex = ci;
-						break;
-					}
-				}
-
-				if (bpp == 8)
-					rowPackData[col] = colorIndex;
-				else if (bpp == 4)
-					rowPackData[col / 2] |= (colorIndex << (8 - (((col & 1) + 1) * 4)));
-				else if (bpp == 1)
-				{
-					if (colorIndex)
-						rowPackData[col / 8] |= (0x80 >> (col & 7));
-				}
-			}
-		}
-
-		VectorAppend(outData, &rowPackData[0], rowPackData.size());
-	}
-
-	return true;
+	return ExportBMP(m_frame.Width(), m_frame.Height(), m_pitchInElements, &m_pixelData[0], outData);
 }
 
 bool ImportPICT(std::vector<uint8_t> &outBMP, const void *inData, size_t inSize)
@@ -1266,6 +1270,51 @@ bool ImportDialogItemTemplate(std::vector<uint8_t> &outTXT, const void *inData, 
 	return true;
 }
 
+bool ImportIcon(std::vector<uint8_t> &outBMP, const void *inData, size_t inSize, uint8_t width, uint8_t height, uint8_t bpp)
+{
+	size_t expectedSize = width * height * bpp / 8;
+	if (inSize != expectedSize)
+		return false;
+
+	PortabilityLayer::RGBAColor bwColors[] = { PortabilityLayer::RGBAColor::Create(255, 255, 255, 255), PortabilityLayer::RGBAColor::Create(0, 0, 0, 255) };
+	const PortabilityLayer::RGBAColor *palette = nullptr;
+
+	if (bpp == 1)
+		palette = bwColors;
+	else if (bpp == 4)
+		palette = PortabilityLayer::Icon4BitPalette::GetInstance()->GetColors();
+	else if (bpp == 8)
+		palette = PortabilityLayer::StandardPalette::GetInstance()->GetColors();
+	else
+		return false;
+
+
+	size_t numPixels = width * height;
+
+	std::vector<PortabilityLayer::RGBAColor> pixelData;
+	pixelData.resize(numPixels);
+
+	int bitOffset = 8;
+	size_t byteOffset = 0;
+	int mask = (1 << bpp) - 1;
+	for (size_t i = 0; i < numPixels; i++)
+	{
+		if (bitOffset == 0)
+		{
+			byteOffset++;
+			bitOffset = 8;
+		}
+
+		bitOffset -= bpp;
+
+		int value = static_cast<const uint8_t*>(inData)[byteOffset];
+		value = (value >> bitOffset) & mask;
+		pixelData[i] = palette[value];
+	}
+
+	return ExportBMP(width, height, width, &pixelData[0], outBMP);
+}
+
 void ReadFileToVector(FILE *f, std::vector<uint8_t> &vec)
 {
 	fseek(f, 0, SEEK_END);
@@ -1452,6 +1501,24 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 	const PortabilityLayer::ResTypeID indexStringTypeID = PortabilityLayer::ResTypeID('STR#');
 	const PortabilityLayer::ResTypeID ditlTypeID = PortabilityLayer::ResTypeID('DITL');
 
+	struct IconTypeSpec
+	{
+		uint8_t m_width;
+		uint8_t m_height;
+		uint8_t m_bpp;
+		PortabilityLayer::ResTypeID m_resTypeID;
+	};
+
+	const IconTypeSpec iconTypeSpecs[] =
+	{
+		{ 32, 64, 1, PortabilityLayer::ResTypeID('ICN#') },
+		{ 32, 32, 4, PortabilityLayer::ResTypeID('icl4') },
+		{ 32, 32, 8, PortabilityLayer::ResTypeID('icl8') },
+		{ 16, 32, 1, PortabilityLayer::ResTypeID('ics#') },
+		{ 16, 16, 4, PortabilityLayer::ResTypeID('ics4') },
+		{ 16, 16, 8, PortabilityLayer::ResTypeID('ics8') },
+	};
+
 	for (size_t tlIndex = 0; tlIndex < typeListCount; tlIndex++)
 	{
 		const PortabilityLayer::ResourceCompiledTypeList &typeList = typeLists[tlIndex];
@@ -1527,17 +1594,40 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 			}
 			else
 			{
-				PlannedEntry entry;
+				bool isIcon = false;
 
-				char resName[256];
-				sprintf_s(resName, "%s/%i.bin", resTag.m_id, static_cast<int>(res.m_resID));
+				for (int i = 0; i < sizeof(iconTypeSpecs) / sizeof(iconTypeSpecs[0]); i++)
+				{
+					const IconTypeSpec &iconSpec = iconTypeSpecs[i];
+					if (typeList.m_resType == iconSpec.m_resTypeID)
+					{
+						isIcon = true;
 
-				entry.m_name = resName;
-				entry.m_uncompressedContents.resize(res.GetSize());
+						PlannedEntry entry;
+						char resName[256];
+						sprintf_s(resName, "%s/%i.bmp", resTag.m_id, static_cast<int>(res.m_resID));
 
-				memcpy(&entry.m_uncompressedContents[0], resData, resSize);
+						entry.m_name = resName;
 
-				contents.push_back(entry);
+						if (ImportIcon(entry.m_uncompressedContents, resData, resSize, iconSpec.m_width, iconSpec.m_height, iconSpec.m_bpp))
+							contents.push_back(entry);
+					}
+				}
+
+				if (!isIcon)
+				{
+					PlannedEntry entry;
+
+					char resName[256];
+					sprintf_s(resName, "%s/%i.bin", resTag.m_id, static_cast<int>(res.m_resID));
+
+					entry.m_name = resName;
+					entry.m_uncompressedContents.resize(res.GetSize());
+
+					memcpy(&entry.m_uncompressedContents[0], resData, resSize);
+
+					contents.push_back(entry);
+				}
 			}
 		}
 	}

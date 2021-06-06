@@ -33,6 +33,7 @@
 #include "MacBinary2.h"
 #include "QDPictOpcodes.h"
 #include "QDPixMap.h"
+#include "QDStandardPalette.h"
 #include "PLStandardColors.h"
 #include "ZipFile.h"
 
@@ -3192,7 +3193,7 @@ static ExportHouseResult_t TryExportPICT(GpVector<uint8_t> &resData, const THand
 
 	const Rect rect = bmp->GetRect();
 	DrawSurface *surface = nullptr;
-	if (NewGWorld(&surface, GpPixelFormats::kRGB32, &rect, nullptr) != PLErrors::kNone)
+	if (NewGWorld(&surface, GpPixelFormats::kRGB32, rect) != PLErrors::kNone)
 		return ExportHouseResults::kMemError;
 
 	surface->DrawPicture(bmpHandle, rect, false);
@@ -3202,6 +3203,89 @@ static ExportHouseResult_t TryExportPICT(GpVector<uint8_t> &resData, const THand
 	DisposeGWorld(surface);
 
 	return result;
+}
+
+
+static ExportHouseResult_t TryExportIcon(GpVector<uint8_t> &resData, const THandle<void> &resHandle, uint8_t width, uint8_t height, uint8_t bpp)
+{
+	DrawSurface *surface = nullptr;
+	const Rect rect = Rect::Create(0, 0, height, width);
+
+	const BitmapImage *bmp = *resHandle.StaticCast<BitmapImage>();
+
+	if (bmp->GetRect() != rect)
+		return ExportHouseResults::kResourceError;
+
+	if (NewGWorld(&surface, GpPixelFormats::kRGB32, rect) != PLErrors::kNone)
+		return ExportHouseResults::kMemError;
+
+	surface->DrawPicture(resHandle.StaticCast<BitmapImage>(), rect, false);
+
+	if (!resData.Resize(width * height * bpp / 8))
+	{
+		DisposeGWorld(surface);
+		return ExportHouseResults::kMemError;
+	}
+
+	memset(resData.Buffer(), 0, width * height * bpp / 8);
+
+	const PixMap *pixMap = *surface->m_port.GetPixMap();
+	for (size_t row = 0; row < height; row++)
+	{
+		const PortabilityLayer::RGBAColor *srcColors = reinterpret_cast<const const PortabilityLayer::RGBAColor*>(static_cast<const uint8_t*>(pixMap->m_data) + pixMap->m_pitch * row);
+
+		for (size_t col = 0; col < width; col++)
+		{
+			const PortabilityLayer::RGBAColor &color = srcColors[col];
+			const size_t pixelIndex = col + row * width;
+
+			switch (bpp)
+			{
+			case 8:
+				{
+					const uint8_t colorIndex = PortabilityLayer::StandardPalette::GetInstance()->MapColorAnalytic(color);
+					resData[pixelIndex] = colorIndex;
+				}
+				break;
+			case 4:
+				{
+					uint8_t colorIndex = 0;
+					uint32_t bestError = 255 * 255 * 3 + 1;
+					const PortabilityLayer::RGBAColor *palette = PortabilityLayer::Icon4BitPalette::GetInstance()->GetColors();
+					const uint8_t candidateColor[3] = { color.r, color.g, color.b };
+
+					for (uint8_t i = 0; i < 16; i++)
+					{
+						uint32_t error = 0;
+						const int16_t deltas[3] = { palette[i].r - color.r, palette[i].g - color.g, palette[i].b - color.b };
+						for (int ch = 0; ch < 3; ch++)
+							error += static_cast<uint32_t>(deltas[ch] * deltas[ch]);
+
+						if (error < bestError)
+						{
+							bestError = error;
+							colorIndex = i;
+						}
+					}
+
+					resData[pixelIndex / 2] |= colorIndex << (4 - (pixelIndex & 1) * 4);
+				}
+				break;
+			case 1:
+				{
+					if (color.r + color.g + color.b < 382)
+						resData[pixelIndex / 8] |= 1 << (7 - (pixelIndex & 7));
+				}
+				break;
+			default:
+				return ExportHouseResults::kInternalError;
+			}
+		}
+	}
+
+	DisposeGWorld(surface);
+
+	return ExportHouseResults::kOK;
 }
 
 static ExportHouseResult_t TryExportResource(GpVector<uint8_t> &resData, PortabilityLayer::IResourceArchive *resArchive, const PortabilityLayer::ResTypeID &resTypeID, int16_t resID)
@@ -3224,6 +3308,35 @@ static ExportHouseResult_t TryExportResource(GpVector<uint8_t> &resData, Portabi
 		return exportResult;
 	}
 
+	struct IconTypeSpec
+	{
+		uint8_t m_width;
+		uint8_t m_height;
+		uint8_t m_bpp;
+		PortabilityLayer::ResTypeID m_resTypeID;
+	};
+
+	const IconTypeSpec iconTypeSpecs[] =
+	{
+		{ 32, 64, 1, PortabilityLayer::ResTypeID('ICN#') },
+		{ 32, 32, 4, PortabilityLayer::ResTypeID('icl4') },
+		{ 32, 32, 8, PortabilityLayer::ResTypeID('icl8') },
+		{ 16, 32, 1, PortabilityLayer::ResTypeID('ics#') },
+		{ 16, 16, 4, PortabilityLayer::ResTypeID('ics4') },
+		{ 16, 16, 8, PortabilityLayer::ResTypeID('ics8') },
+	};
+
+	for (int i = 0; i < sizeof(iconTypeSpecs) / sizeof(iconTypeSpecs[0]); i++)
+	{
+		const IconTypeSpec &spec = iconTypeSpecs[i];
+		if (resTypeID == spec.m_resTypeID)
+		{
+			ExportHouseResult_t exportResult = TryExportIcon(resData, resHandle, spec.m_width, spec.m_height, spec.m_bpp);
+			resHandle.Dispose();
+			return exportResult;
+		}
+	}
+
 	const size_t size = resHandle.MMBlock()->m_size;
 	if (!resData.Resize(size))
 	{
@@ -3239,8 +3352,10 @@ static ExportHouseResult_t TryExportResource(GpVector<uint8_t> &resData, Portabi
 	return ExportHouseResults::kOK;
 }
 
-ExportHouseResult_t TryExportResources(GpIOStream *stream, PortabilityLayer::IResourceArchive *resArchive)
+ExportHouseResult_t TryExportResources(GpIOStream *stream, PortabilityLayer::IResourceArchive *resArchive, bool &hasCustomIcon)
 {
+	hasCustomIcon = false;
+
 	if (!resArchive)
 		return ExportHouseResults::kOK;
 
@@ -3258,12 +3373,36 @@ ExportHouseResult_t TryExportResources(GpIOStream *stream, PortabilityLayer::IRe
 
 	GpUFilePos_t resForkDataStart = 0;
 
+	PortabilityLayer::ResTypeID exportableResTypes[] =
+	{
+		'PICT',
+		'snd ',
+		'ICN#',
+		'icl4',
+		'icl8',
+		'ics#',
+		'ics4',
+		'ics8'
+	};
+
+	const size_t numExportableResTypes = sizeof(exportableResTypes) / sizeof(exportableResTypes[0]);
+
 	PortabilityLayer::ResTypeID resTypeID;
 	int16_t resID = 0;
 	bool isFirstResource = true;
 	while (iterator->GetOne(resTypeID, resID))
 	{
-		if (resTypeID != PortabilityLayer::ResTypeID('PICT') && resTypeID != PortabilityLayer::ResTypeID('snd '))
+		bool isExportable = false;
+		for (size_t i = 0; i < numExportableResTypes; i++)
+		{
+			if (resTypeID == exportableResTypes[i])
+			{
+				isExportable = true;
+				break;
+			}
+		}
+
+		if (!isExportable)
 			continue;
 
 		if (isFirstResource)
@@ -3326,6 +3465,9 @@ ExportHouseResult_t TryExportResources(GpIOStream *stream, PortabilityLayer::IRe
 			if (!stream->WriteExact(padding, 4 - unpaddedExcess))
 				return ExportHouseResults::kIOError;
 		}
+
+		if (resTypeID == PortabilityLayer::ResTypeID('ICN#') && resID == -16455)
+			hasCustomIcon = true;
 	}
 
 	iterator->Destroy();
@@ -3549,10 +3691,12 @@ ExportHouseResult_t TryExportHouseToStream(GpIOStream *stream)
 
 	const GpUFilePos_t resForkPos = stream->Tell();
 
+	bool hasCustomIcon = false;
+
 	// Serialize resources
 	if (houseResFork != nullptr)
 	{
-		ExportHouseResult_t resExportResult = TryExportResources(stream, houseResFork);
+		ExportHouseResult_t resExportResult = TryExportResources(stream, houseResFork, hasCustomIcon);
 		if (resExportResult != ExportHouseResults::kOK)
 			return resExportResult;
 	}
@@ -3566,6 +3710,11 @@ ExportHouseResult_t TryExportHouseToStream(GpIOStream *stream)
 			return ExportHouseResults::kIOError;
 	}
 
+	uint16_t finderFlags = 0;
+
+	if (hasCustomIcon)
+		finderFlags |= PortabilityLayer::FINDER_FILE_FLAG_CUSTOM_ICON;
+
 	PortabilityLayer::MacFileInfo fileInfo;
 	fileInfo.m_fileName.Set(thisHouseName[0], reinterpret_cast<const char*>(thisHouseName + 1));
 	fileInfo.m_commentSize = 0;
@@ -3575,7 +3724,7 @@ ExportHouseResult_t TryExportHouseToStream(GpIOStream *stream)
 	memcpy(fileInfo.m_properties.m_fileCreator, "ozm5", 4);
 	fileInfo.m_properties.m_xPos = 0;
 	fileInfo.m_properties.m_yPos = 0;
-	fileInfo.m_properties.m_finderFlags = 0;
+	fileInfo.m_properties.m_finderFlags = finderFlags;
 	fileInfo.m_properties.m_protected = 0;
 	fileInfo.m_properties.m_createdTimeMacEpoch = fileInfo.m_properties.m_modifiedTimeMacEpoch = PLDrivers::GetSystemServices()->GetTime();
 

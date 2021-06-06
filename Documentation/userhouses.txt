@@ -1,3 +1,14 @@
+ADDING A THIRD-PARTY HOUSE TO AEROFOIL
+-------------------------------------------------------------------------------
+To add a third-party house to Aerofoil, copy the house .gpf file, and .gpd/.gpa
+files, if necessary, to the "Houses" directory inside of the "Aerofoil"
+directory in your "Documents" directory, then restart Aerofoil.
+
+
+
+
+IMPORTING EXISTING COMMUNITY CONTENT TO AEROFOIL
+-------------------------------------------------------------------------------
 If you want to import an existing third-party Glider PRO house to Aerofoil,
 a few steps are required.
 
@@ -27,6 +38,8 @@ house with custom PICT resources that isn't supported, please submit a sample
 to Aerofoil's issue tracker.
 
 
+IMPORTING TV QUICKTIME MOVIES
+-------------------------------------------------------------------------------
 Converting QuickTime movies for displaying on in-game TVs is a bit more complex.
 First, you need to convert the movie to a sequence of BMP images, which you
 can do with third-party tools such as FFMPEG.  Second, you need to create a
@@ -70,8 +83,8 @@ Glider PRO didn't really do any validation of houses.  Currently, Aerofoil
 doesn't do any additional validation either, and it's possible that invalid
 house data may lead to crashes or even remote code execution.
 
-I will be doing a hardening pass on the loader for the 1.1 release.  Until
-then, please only load houses from trusted sources.
+Aerofoil 1.1 has a significantly stricter validator, which will reject data
+that seems excessively large or invalid.
 
 Also, Glider PRO houses were able to take advantage of a resource overlaying
 feature of the Macintosh operating system, where a resource being present in
@@ -79,6 +92,4 @@ the house file with the same ID as an application resource would cause the
 resource to override the application resource.
 
 Aerofoil's resource loader is much more restrictive: Currently, only
-backgrounds, audio triggers, and icons may load from the house data.  This
-restriction will be loosened in the 1.1 release to allow resources to be
-overrided if I can confirm that it's safe to override them.
+backgrounds, audio triggers, and icons may load from the house data.

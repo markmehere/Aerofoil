@@ -15,7 +15,7 @@ namespace PortabilityLayer
 		QDManagerImpl();
 
 		void Init() override;
-		PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable) override;
+		PLError_t NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds) override;
 		void DisposeGWorld(DrawSurface *gw) override;
 
 		static QDManagerImpl *GetInstance();
@@ -32,7 +32,7 @@ namespace PortabilityLayer
 	{
 	}
 
-	PLError_t QDManagerImpl::NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds, ColorTable **colorTable)
+	PLError_t QDManagerImpl::NewGWorld(DrawSurface **gw, GpPixelFormat_t pixelFormat, const Rect &bounds)
 	{
 		void *grafStorage = MemoryManager::GetInstance()->Alloc(sizeof(DrawSurface));
 		if (!grafStorage)

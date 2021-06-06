@@ -584,7 +584,7 @@ void DrawSurface::DrawPicture(THandle<BitmapImage> pictHdl, const Rect &bounds, 
 		PL_NotYetImplemented_TODO("Palette");
 
 		DrawSurface *scaleSurface = nullptr;
-		if (PortabilityLayer::QDManager::GetInstance()->NewGWorld(&scaleSurface, this->m_port.GetPixelFormat(), picRect, nullptr) != PLErrors::kNone)
+		if (PortabilityLayer::QDManager::GetInstance()->NewGWorld(&scaleSurface, this->m_port.GetPixelFormat(), picRect) != PLErrors::kNone)
 			return;
 
 		scaleSurface->DrawPicture(pictHdl, picRect);

@@ -18,9 +18,9 @@
 #include <string.h>
 #include <assert.h>
 
-PLError_t NewGWorld(DrawSurface **gworld, GpPixelFormat_t pixelFormat, const Rect *bounds, CTabHandle colorTable)
+PLError_t NewGWorld(DrawSurface **gworld, GpPixelFormat_t pixelFormat, const Rect &bounds)
 {
-	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, pixelFormat, *bounds, colorTable);
+	return PortabilityLayer::QDManager::GetInstance()->NewGWorld(gworld, pixelFormat, bounds);
 }
 
 void DisposeGWorld(DrawSurface *gworld)

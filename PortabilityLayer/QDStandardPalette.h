@@ -56,4 +56,19 @@ namespace PortabilityLayer
 
 		uint8_t m_lut[16 * 16 * 16];
 	};
+
+	class Icon4BitPalette
+	{
+	public:
+		static const unsigned int kSize = 16;
+
+		Icon4BitPalette();
+
+		static Icon4BitPalette *GetInstance();
+		const RGBAColor *GetColors() const;
+
+	private:
+		static Icon4BitPalette ms_instance;
+		RGBAColor m_colors[kSize];
+	};
 }

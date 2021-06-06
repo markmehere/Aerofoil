@@ -233,7 +233,7 @@ void AnimationManager::RefreshPlayer(AnimationPlayer *player)
 		else
 		{
 			DrawSurface *renderSurface = nullptr;
-			if (PortabilityLayer::QDManager::GetInstance()->NewGWorld(&renderSurface, surface->m_port.GetPixelFormat(), player->m_renderRect, nullptr) != PLErrors::kNone)
+			if (PortabilityLayer::QDManager::GetInstance()->NewGWorld(&renderSurface, surface->m_port.GetPixelFormat(), player->m_renderRect) != PLErrors::kNone)
 				return;
 
 			renderSurface->DrawPicture(img, player->m_renderRect);

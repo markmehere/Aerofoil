@@ -299,4 +299,36 @@ namespace PortabilityLayer
 	}
 
 	StandardPalette StandardPalette::ms_instance;
+
+	Icon4BitPalette::Icon4BitPalette()
+	{
+		m_colors[0] = RGBAColor::Create(255, 255, 255, 255);
+		m_colors[1] = RGBAColor::Create(251, 243, 5, 255);
+		m_colors[2] = RGBAColor::Create(255, 100, 3, 255);
+		m_colors[3] = RGBAColor::Create(221, 9, 7, 255);
+		m_colors[4] = RGBAColor::Create(242, 8, 132, 255);
+		m_colors[5] = RGBAColor::Create(71, 0, 165, 255);
+		m_colors[6] = RGBAColor::Create(0, 0, 211, 255);
+		m_colors[7] = RGBAColor::Create(2, 171, 234, 255);
+		m_colors[8] = RGBAColor::Create(31, 183, 20, 255);
+		m_colors[9] = RGBAColor::Create(0, 100, 18, 255);
+		m_colors[10] = RGBAColor::Create(86, 44, 5, 255);
+		m_colors[11] = RGBAColor::Create(144, 113, 58, 255);
+		m_colors[12] = RGBAColor::Create(191, 191, 191, 255);
+		m_colors[13] = RGBAColor::Create(128, 128, 128, 255);
+		m_colors[14] = RGBAColor::Create(64, 64, 64, 255);
+		m_colors[15] = RGBAColor::Create(0, 0, 0, 255);
+	}
+
+	Icon4BitPalette *Icon4BitPalette::GetInstance()
+	{
+		return &ms_instance;
+	}
+
+	const RGBAColor *Icon4BitPalette::GetColors() const
+	{
+		return m_colors;
+	}
+
+	Icon4BitPalette Icon4BitPalette::ms_instance;
 }
