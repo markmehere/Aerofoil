@@ -4,7 +4,7 @@ mkdir Packaged
 mkdir Packaged\Houses
 
 x64\Release\MiniRez.exe "GliderProData\Glider PRO.r" Packaged\ApplicationResources.gpr
-x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpa" "ApplicationResourcePatches\manifest.json"
+x64\Release\gpr2gpa.exe "Packaged\ApplicationResources.gpr" "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpa" -patch "ApplicationResourcePatches\manifest.json"
 x64\Release\FTagData.exe "DefaultTimestamp.timestamp" "Packaged\ApplicationResources.gpf" data ozm5 0 0 locked
 x64\Release\MergeGPF.exe "Packaged\ApplicationResources.gpf"
 
@@ -54,14 +54,14 @@ x64\Release\gpr2gpa.exe "Packaged\Houses\CD Demo House.gpr" "DefaultTimestamp.ti
 x64\Release\gpr2gpa.exe "Packaged\Houses\Davis Station.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Davis Station.gpa"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Demo House.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Demo House.gpa"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Fun House.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Fun House.gpa"
-x64\Release\gpr2gpa.exe "Packaged\Houses\Grand Prix.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Grand Prix.gpa" "HousePatches\GrandPrix.json"
-x64\Release\gpr2gpa.exe "Packaged\Houses\ImagineHouse PRO II.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\ImagineHouse PRO II.gpa" "HousePatches\ImagineHousePROII.json"
-x64\Release\gpr2gpa.exe "Packaged\Houses\In The Mirror.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\In The Mirror.gpa" "HousePatches\InTheMirror.json"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Grand Prix.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Grand Prix.gpa" -patch "HousePatches\GrandPrix.json"
+x64\Release\gpr2gpa.exe "Packaged\Houses\ImagineHouse PRO II.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\ImagineHouse PRO II.gpa" -patch "HousePatches\ImagineHousePROII.json"
+x64\Release\gpr2gpa.exe "Packaged\Houses\In The Mirror.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\In The Mirror.gpa" -patch "HousePatches\InTheMirror.json"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Land of Illusion.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Land of Illusion.gpa"
-x64\Release\gpr2gpa.exe "Packaged\Houses\Leviathan.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Leviathan.gpa" "HousePatches\Leviathan.json"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Leviathan.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Leviathan.gpa" -patch "HousePatches\Leviathan.json"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Metropolis.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Metropolis.gpa"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Nemo's Market.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Nemo's Market.gpa"
-x64\Release\gpr2gpa.exe "Packaged\Houses\Rainbow's End.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Rainbow's End.gpa" "HousePatches\RainbowsEnd.json"
+x64\Release\gpr2gpa.exe "Packaged\Houses\Rainbow's End.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Rainbow's End.gpa" -patch "HousePatches\RainbowsEnd.json"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Slumberland.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Slumberland.gpa"
 x64\Release\gpr2gpa.exe "Packaged\Houses\SpacePods.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\SpacePods.gpa"
 x64\Release\gpr2gpa.exe "Packaged\Houses\Teddy World.gpr" "DefaultTimestamp.timestamp" "Packaged\Houses\Teddy World.gpa"

@@ -95,7 +95,12 @@ StuffItParser g_stuffItParser;
 StuffIt5Parser g_stuffIt5Parser;
 CompactProParser g_compactProParser;
 
-std::string LegalizeWindowsFileName(const std::string &path)
+static bool IsSeparator(char c)
+{
+	return c == '/' || c == '\\';
+}
+
+std::string LegalizeWindowsFileName(const std::string &path, bool paranoid)
 {
 	const size_t length = path.length();
 
@@ -114,6 +119,9 @@ std::string LegalizeWindowsFileName(const std::string &path)
 			if (i == length - 1)
 				isLegalChar = false;
 		}
+
+		if (paranoid && isLegalChar)
+			isLegalChar = c == '_' || c == ' ' || c == '.' || c == ',' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
 
 		if (isLegalChar)
 			legalizedPath.append(&c, 1);
@@ -209,7 +217,7 @@ void MakeIntermediateDirectories(const std::string &path)
 	}
 }
 
-int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts);
+int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, bool pathParanoid, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts);
 
 int ExtractSingleFork(const ArchiveCompressedChunkDesc &chunkDesc, const std::string &path, IFileReader &reader)
 {
@@ -361,7 +369,7 @@ int ExtractFile(const ArchiveItem &item, const std::string &path, IFileReader &r
 	return 0;
 }
 
-int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
+int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, bool pathParanoid, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	std::string path(reinterpret_cast<const char*>(item.m_fileNameUTF8.data()), item.m_fileNameUTF8.size());
 
@@ -371,7 +379,7 @@ int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, 
 	fputs_utf8(path.c_str(), stdout);
 	printf("\n");
 
-	path = LegalizeWindowsFileName(path);
+	path = LegalizeWindowsFileName(path, pathParanoid);
 
 	path = dirPath + path;
 
@@ -381,7 +389,7 @@ int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, 
 
 		path.append("\\");
 
-		int returnCode = RecursiveExtractFiles(depth + 1, item.m_children, path, reader, ts);
+		int returnCode = RecursiveExtractFiles(depth + 1, item.m_children, path, pathParanoid, reader, ts);
 		if (returnCode)
 			return returnCode;
 
@@ -391,14 +399,14 @@ int ExtractItem(int depth, const ArchiveItem &item, const std::string &dirPath, 
 		return ExtractFile(item, path, reader, ts);
 }
 
-int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
+int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::string &path, bool pathParanoid, IFileReader &reader, const PortabilityLayer::CombinedTimestamp &ts)
 {
 	const std::vector<ArchiveItem> &items = itemList->m_items;
 
 	const size_t numChildren = items.size();
 	for (size_t i = 0; i < numChildren; i++)
 	{
-		int returnCode = ExtractItem(depth, items[i], path, reader, ts);
+		int returnCode = ExtractItem(depth, items[i], path, pathParanoid, reader, ts);
 		if (returnCode)
 			return returnCode;
 	}
@@ -406,22 +414,25 @@ int RecursiveExtractFiles(int depth, ArchiveItemList *itemList, const std::strin
 	return 0;
 }
 
-int toolMain(int argc, const char **argv)
+int PrintUsage()
 {
-	if (argc != 4)
-	{
-		fprintf(stderr, "Usage: unpacktool <archive file> <timestamp.ts> <destination>");
-		return -1;
-	}
+	fprintf(stderr, "Usage: unpacktool <archive file> <timestamp.ts> <destination> [options]");
+	fprintf(stderr, "Usage: unpacktool -bulk <timestamp.ts> <archive files>");
+	return -1;
+}
 
-	FILE *inputArchive = fopen_utf8(argv[1], "rb");
+int decompMain(int argc, const char **argv)
+{
+	for (int i = 0; i < argc; i++)
+		printf("%s\n", argv[i]);
 
-	if (!inputArchive)
-	{
-		fprintf(stderr, "Could not open input archive");
-		return -1;
-	}
+	if (argc < 4)
+		return PrintUsage();
 
+	bool isBulkMode = !strcmp(argv[1], "-bulk");
+
+	if (!isBulkMode && argc < 4)
+		return PrintUsage();
 
 	FILE *tsFile = fopen_utf8(argv[2], "rb");
 
@@ -440,45 +451,111 @@ int toolMain(int argc, const char **argv)
 
 	fclose(tsFile);
 
-	CFileReader reader(inputArchive);
+	int arcArg = 1;
+	int numArgArcs = 1;
 
-	IArchiveParser *parsers[] =
+	if (isBulkMode)
 	{
-		&g_compactProParser,
-		&g_stuffItParser,
-		&g_stuffIt5Parser
-	};
+		arcArg = 3;
+		numArgArcs = argc - 3;
+	}
 
-	ArchiveItemList *archiveItemList = nullptr;
-
-	printf("Reading archive...\n");
-
-	for (IArchiveParser *parser : parsers)
+	bool pathParanoid = false;
+	if (!isBulkMode)
 	{
-		if (parser->Check(reader))
+		for (int optArgIndex = 4; optArgIndex < argc; )
 		{
-			archiveItemList = parser->Parse(reader);
-			break;
+			const char *optArg = argv[optArgIndex++];
+
+			if (!strcmp(optArg, "-paranoid"))
+				pathParanoid = true;
+			else
+			{
+				fprintf(stderr, "Unknown option %s\n", optArg);
+				return -1;
+			}
 		}
 	}
 
-	if (!archiveItemList)
+	for (int arcArgIndex = 0; arcArgIndex < numArgArcs; arcArgIndex++)
 	{
-		fprintf(stderr, "Failed to open archive");
-		return -1;
+		const char *arcPath = argv[arcArg + arcArgIndex];
+
+		FILE *inputArchive = fopen_utf8(arcPath, "rb");
+
+		std::string destPath;
+		if (isBulkMode)
+		{
+			destPath = arcPath;
+			size_t lastSepIndex = 0;
+			for (size_t i = 1; i < destPath.size(); i++)
+			{
+				if (destPath[i] == '/' || destPath[i] == '\\')
+					lastSepIndex = i;
+			}
+
+			destPath = destPath.substr(0, lastSepIndex);
+		}
+		else
+			destPath = argv[3];
+
+		if (!inputArchive)
+		{
+			fprintf(stderr, "Could not open input archive");
+			return -1;
+		}
+
+		CFileReader reader(inputArchive);
+
+		IArchiveParser *parsers[] =
+		{
+			&g_compactProParser,
+			&g_stuffItParser,
+			&g_stuffIt5Parser
+		};
+
+		ArchiveItemList *archiveItemList = nullptr;
+
+		printf("Reading archive '%s'...\n", arcPath);
+
+		for (IArchiveParser *parser : parsers)
+		{
+			if (parser->Check(reader))
+			{
+				archiveItemList = parser->Parse(reader);
+				break;
+			}
+		}
+
+		if (!archiveItemList)
+		{
+			fprintf(stderr, "Failed to open archive");
+			return -1;
+		}
+
+		printf("Decompressing files...\n");
+
+		std::string currentPath = destPath;
+		TerminateDirectoryPath(currentPath);
+
+		MakeIntermediateDirectories(currentPath);
+
+		int returnCode = RecursiveExtractFiles(0, archiveItemList, currentPath, pathParanoid, reader, ts);
+		if (returnCode != 0)
+		{
+			fprintf(stderr, "Error decompressing archive");
+			return returnCode;
+		}
+
+		delete archiveItemList;
 	}
 
-	printf("Decompressing files...\n");
-
-	std::string currentPath = argv[3];
-	TerminateDirectoryPath(currentPath);
-
-	MakeIntermediateDirectories(currentPath);
-
-	int returnCode = RecursiveExtractFiles(0, archiveItemList, currentPath, reader, ts);
-
-	delete archiveItemList;
-
-	return returnCode;
+	return 0;
 }
 
+
+int toolMain(int argc, const char **argv)
+{
+	int returnCode = decompMain(argc, argv);
+	return returnCode;
+}

@@ -2386,7 +2386,7 @@ static ExportHouseResult_t TryExportSound(GpVector<uint8_t> &resData, const THan
 	{
 		BEUInt32_t m_samplePtr;
 		BEUInt32_t m_length;
-		BEFixed32_t m_sampleRate;
+		BEUFixed32_t m_sampleRate;
 		BEUInt32_t m_loopStart;
 		BEUInt32_t m_loopEnd;
 		uint8_t m_encoding;
@@ -2784,10 +2784,10 @@ static ExportHouseResult_t TryExportPictFromSurface(GpVector<uint8_t> &resData, 
 			BEUInt16_t m_headerOp;
 			BEInt16_t m_v2Version;
 			BEInt16_t m_reserved1;
-			BEFixed32_t m_top;
-			BEFixed32_t m_left;
-			BEFixed32_t m_bottom;
-			BEFixed32_t m_right;
+			BESFixed32_t m_top;
+			BESFixed32_t m_left;
+			BESFixed32_t m_bottom;
+			BESFixed32_t m_right;
 			BEUInt32_t m_reserved2;
 		};
 

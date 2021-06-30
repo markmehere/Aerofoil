@@ -229,6 +229,7 @@ int toolMain(int argc, const char **argv)
 	std::vector<size_t> fileNameSizes;
 
 	FILE *resF = fopen_utf8(resName.c_str(), "rb");
+	if (resF)
 	{
 		PortabilityLayer::ZipEndOfCentralDirectoryRecord eocd;
 

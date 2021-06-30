@@ -29,9 +29,11 @@
 #include "macedec.h"
 
 #include <stdio.h>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <algorithm>
-#include <Windows.h>
+#include "GpWindows.h"
 
 enum AudioCompressionCodecID
 {
@@ -498,6 +500,8 @@ bool ExportBMP(size_t width, size_t height, size_t pitchInElements, const Portab
 class BMPDumperContext : public PortabilityLayer::QDPictEmitContext
 {
 public:
+	explicit BMPDumperContext(const char *dumpqtDir, int resID);
+
 	bool SpecifyFrame(const Rect &rect) override;
 	Rect ConstrainRegion(const Rect &rect) const override;
 	void Start(PortabilityLayer::QDPictBlitSourceType sourceType, const PortabilityLayer::QDPictEmitScanlineParameters &params) override;
@@ -520,8 +524,18 @@ private:
 	PortabilityLayer::QDPictEmitScanlineParameters m_blitParams;
 	PortabilityLayer::QDPictBlitSourceType m_blitSourceType;
 
+	const char *m_dumpqtDir;
+	int m_resID;
+
 	std::vector<uint8_t> m_tempBuffers;
 };
+
+
+BMPDumperContext::BMPDumperContext(const char *dumpqtDir, int resID)
+	: m_dumpqtDir(dumpqtDir)
+	, m_resID(resID)
+{
+}
 
 bool BMPDumperContext::SpecifyFrame(const Rect &rect)
 {
@@ -648,10 +662,704 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 	}
 }
 
+
+struct ImageDescriptionData
+{
+	char m_codecType[4];
+	uint8_t m_reserved[8];
+	BEUInt16_t m_cdataVersion;
+	BEUInt16_t m_cdataRevision;
+	char m_vendor[4];
+	BEUInt32_t m_temporalQuality;
+	BEUInt32_t m_spatialQuality;
+	BEUInt16_t m_width;
+	BEUInt16_t m_height;
+	BEUFixed32_t m_hRes;
+	BEUFixed32_t m_vRes;
+	BEUInt32_t m_dataSize;
+	BEUInt16_t m_frameCount;
+	uint8_t m_nameLength;
+	uint8_t m_name[31];
+	BEUInt16_t m_depth;
+	BEUInt16_t m_clutID;
+};
+
+struct ImageDescription
+{
+	BEUInt32_t m_idSize;
+	ImageDescriptionData m_data;
+};
+
+class MovDumpScope
+{
+public:
+	MovDumpScope(GpIOStream &stream, const char *atom);
+	~MovDumpScope();
+
+private:
+	GpIOStream &m_stream;
+	GpUFilePos_t m_startPos;
+};
+
+MovDumpScope::MovDumpScope(GpIOStream &stream, const char *atom)
+	: m_stream(stream)
+	, m_startPos(stream.Tell())
+{
+	struct AtomData
+	{
+		BEUInt32_t m_size;
+		char m_type[4];
+	};
+
+	AtomData atomData;
+	memcpy(atomData.m_type, atom, 4);
+	atomData.m_size = 0;
+
+	stream.Write(&atomData, 8);
+}
+
+MovDumpScope::~MovDumpScope()
+{
+	GpUFilePos_t returnPos = m_stream.Tell();
+	m_stream.SeekStart(m_startPos);
+	BEUInt32_t size = BEUInt32_t(static_cast<uint32_t>(returnPos - m_startPos));
+
+	m_stream.Write(&size, 4);
+	m_stream.SeekStart(returnPos);
+}
+
+
+static bool DumpMOV(GpIOStream &stream, const ImageDescription &imageDesc, const std::vector<uint8_t> &imageData)
+{
+	if (imageData.size() == 0)
+		return true;
+
+	struct HDLRData
+	{
+		uint8_t m_version;
+		uint8_t m_flags[3];
+		BEUInt32_t m_componentType;
+		BEUInt32_t m_componentSubtype;
+		BEUInt32_t m_componentManufacturer;
+		BEUInt32_t m_componentFlags;
+		BEUInt32_t m_componentFlagsMask;
+		// Var: Name
+	};
+
+	const uint32_t duration = 40;
+
+	{
+		MovDumpScope ftypScope(stream, "ftyp");
+
+		struct FTYPData
+		{
+			char m_majorBrand[4];
+			BEUInt32_t m_minorVersion;
+			char m_compatibleBrands[4];
+		};
+
+		FTYPData data;
+		memcpy(data.m_majorBrand, "qt  ", 4);
+		data.m_minorVersion = 0x200;
+		memcpy(data.m_compatibleBrands, "qt  ", 4);
+
+		stream.Write(&data, sizeof(data));
+	}
+
+	{
+		MovDumpScope wideScope(stream, "wide");
+	}
+
+	GpUFilePos_t imageDataStart = 0;
+	{
+		MovDumpScope mdatScope(stream, "mdat");
+
+		imageDataStart = stream.Tell();
+		stream.Write(&imageData[0], imageData.size());
+	}
+
+	{
+		MovDumpScope moovScope(stream, "moov");
+
+		{
+			MovDumpScope mvhdScope(stream, "mvhd");
+
+			struct MVHDData
+			{
+				uint8_t m_version;
+				uint8_t m_flags[3];
+				BEUInt32_t m_creationTime;
+				BEUInt32_t m_modificationTime;
+				BEUInt32_t m_timeScale;
+				BEUInt32_t m_duration;
+				BEUFixed32_t m_preferredRate;
+				BEUFixed16_t m_preferredVolume;
+				uint8_t m_reserved[10];
+				BESFixed32_t m_matrix[9];
+				BEUInt32_t m_previewTime;
+				BEUInt32_t m_previewDuration;
+				BEUInt32_t m_posterTime;
+				BEUInt32_t m_selectionTime;
+				BEUInt32_t m_selectionDuration;
+				BEUInt32_t m_currentTime;
+				BEUInt32_t m_nextTrackID;
+			};
+
+			MVHDData mvhdData;
+			memset(&mvhdData, 0, sizeof(mvhdData));
+			mvhdData.m_timeScale = 1000;
+			mvhdData.m_duration = duration;
+			mvhdData.m_preferredRate.m_intPart = 1;
+			mvhdData.m_preferredVolume.m_intPart = 1;
+			mvhdData.m_matrix[0].m_intPart = 1;
+			mvhdData.m_matrix[5].m_intPart = 5;
+			mvhdData.m_matrix[8].m_intPart = 0x4000;
+			mvhdData.m_nextTrackID = 2;
+
+			stream.Write(&mvhdData, sizeof(mvhdData));
+		}
+
+		{
+			MovDumpScope trakScope(stream, "trak");
+
+			{
+				MovDumpScope tkhdScope(stream, "tkhd");
+
+				struct TKHDData
+				{
+					uint8_t m_version;
+					uint8_t m_flags[3];
+					BEUInt32_t m_creationTime;
+					BEUInt32_t m_modificationTime;
+					BEUInt32_t m_trackID;
+					uint8_t m_reserved[4];
+					BEUInt32_t m_duration;
+					uint8_t m_reserved2[8];
+					BEUInt16_t m_layer;
+					BEUInt16_t m_alternateGroup;
+					BEUInt16_t m_volume;
+					uint8_t m_reserved3[2];
+					BEUFixed32_t m_matrix[9];
+					BEUFixed32_t m_trackWidth;
+					BEUFixed32_t m_trackHeight;
+				};
+
+				TKHDData tkhdData;
+				memset(&tkhdData, 0, sizeof(tkhdData));
+
+				tkhdData.m_flags[2] = 0x3;	// Used in movie + enabled
+				tkhdData.m_trackID = 1;
+				tkhdData.m_duration = duration;
+				tkhdData.m_matrix[0].m_intPart = 1;
+				tkhdData.m_matrix[5].m_intPart = 5;
+				tkhdData.m_matrix[8].m_intPart = 0x4000;
+				tkhdData.m_trackWidth.m_intPart = imageDesc.m_data.m_width;
+				tkhdData.m_trackHeight.m_intPart = imageDesc.m_data.m_height;
+
+				stream.Write(&tkhdData, sizeof(tkhdData));
+			}
+
+			{
+				MovDumpScope edtsScope(stream, "edts");
+
+				{
+					MovDumpScope elstScope(stream, "elst");
+
+					struct ELSTEntry
+					{
+						BEUInt32_t m_duration;
+						BEUInt32_t m_mediaTime;
+						BEUFixed32_t m_mediaRate;
+					};
+
+					struct ELSTData
+					{
+						uint8_t m_version;
+						uint8_t m_flags[3];
+						BEUInt32_t m_numEntries;
+
+						ELSTEntry m_entry;
+					};
+
+					ELSTData elstData;
+					memset(&elstData, 0, sizeof(elstData));
+
+					elstData.m_numEntries = 1;
+					elstData.m_entry.m_duration = duration;
+					elstData.m_entry.m_mediaRate.m_intPart = 1;
+
+					stream.Write(&elstData, sizeof(elstData));
+				}
+			}
+
+			{
+				MovDumpScope mdiaScope(stream, "mdia");
+
+				{
+					MovDumpScope mdhdScope(stream, "mdhd");
+
+					struct MDHDData
+					{
+						uint8_t m_version;
+						uint8_t m_flags[3];
+						BEUInt32_t m_creationTime;
+						BEUInt32_t m_modificationTime;
+						BEUFixed32_t m_timeScale;
+						BEUInt32_t m_duration;
+						BEUInt16_t m_language;
+						BEUInt16_t m_quality;
+					};
+
+					MDHDData mdhdData;
+					memset(&mdhdData, 0, sizeof(mdhdData));
+
+					mdhdData.m_timeScale.m_fracPart = 12800;
+					mdhdData.m_duration = 0x200;
+					mdhdData.m_language = 0x7fff;
+
+					stream.Write(&mdhdData, sizeof(mdhdData));
+				}
+
+				{
+					MovDumpScope hdlrScope(stream, "hdlr");
+
+					HDLRData hdlrData;
+					memset(&hdlrData, 0, sizeof(hdlrData));
+
+					hdlrData.m_componentType = 0x6d686c72;		// mhlr
+					hdlrData.m_componentSubtype = 0x76696465;	// vide
+
+					stream.Write(&hdlrData, sizeof(hdlrData));
+
+					const char *handlerName = "VideoHandler";
+					uint8_t handlerNameLen = strlen(handlerName);
+
+					stream.Write(&handlerNameLen, 1);
+					stream.Write(handlerName, handlerNameLen);
+				}
+
+				{
+					MovDumpScope minfScope(stream, "minf");
+
+					{
+						MovDumpScope vmhdScope(stream, "vmhd");
+
+						struct VMHDData
+						{
+							uint8_t m_version;
+							uint8_t m_flags[3];
+							BEUInt16_t m_graphicsMode;
+							BEUInt16_t m_opColor[3];
+						};
+
+						VMHDData vmhdData;
+						memset(&vmhdData, 0, sizeof(vmhdData));
+
+						vmhdData.m_flags[2] = 1;	// Compatibility flag
+
+						stream.Write(&vmhdData, sizeof(vmhdData));
+					}
+
+					{
+						MovDumpScope hdlrScope(stream, "hdlr");
+
+						HDLRData hdlrData;
+						memset(&hdlrData, 0, sizeof(hdlrData));
+
+						hdlrData.m_componentType = 0x64686c72;		// dhlr
+						hdlrData.m_componentSubtype = 0x75726c20;	// url 
+
+						stream.Write(&hdlrData, sizeof(hdlrData));
+
+						const char *handlerName = "VideoHandler";
+						uint8_t handlerNameLen = strlen(handlerName);
+
+						stream.Write(&handlerNameLen, 1);
+						stream.Write(handlerName, handlerNameLen);
+					}
+
+					{
+						MovDumpScope dinfScope(stream, "dinf");
+
+						{
+							MovDumpScope drefScope(stream, "dref");
+
+							struct DREFData
+							{
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								BEUInt32_t m_numEntries;
+								// DREFEntry
+							};
+
+							struct DREFEntry
+							{
+								BEUInt32_t m_size;
+								BEUInt32_t m_type;
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								// Data
+							};
+
+							DREFData drefData;
+							memset(&drefData, 0, sizeof(drefData));
+
+							drefData.m_numEntries = 1;
+
+							stream.Write(&drefData, sizeof(drefData));
+
+							DREFEntry drefEntry;
+							memset(&drefEntry, 0, sizeof(drefEntry));
+
+							drefEntry.m_size = sizeof(DREFEntry);
+							drefEntry.m_type = 0x75726c20;	// url
+							drefEntry.m_flags[2] = 1;	// Self-contained
+
+							stream.Write(&drefEntry, sizeof(drefEntry));
+						}
+					}
+
+					{
+						MovDumpScope stblScope(stream, "stbl");
+
+						{
+							MovDumpScope stsdScope(stream, "stsd");
+
+							struct STSDData
+							{
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								BEUInt32_t m_numEntries;
+							};
+
+							STSDData stsdData;
+							memset(&stsdData, 0, sizeof(stsdData));
+							stsdData.m_numEntries = 1;
+
+							stream.Write(&stsdData, sizeof(stsdData));
+
+							struct STSDEntry
+							{
+								BEUInt32_t m_size;
+								uint8_t m_dataFormat[4];
+								uint8_t m_reserved[6];
+								BEUInt16_t m_dataRefIndex;
+							};
+
+							struct FieldAtom
+							{
+								BEUInt32_t m_atomSize;
+								char m_atomID[4];
+								uint8_t m_fieldCount;
+								uint8_t m_fieldOrdering;
+							};
+
+							struct VideoMediaSampleDescription
+							{
+								BEUInt16_t m_version;
+								BEUInt16_t m_revisionLevel;
+								BEUInt32_t m_vendor;
+								BEUInt32_t m_temporalQuality;
+								BEUInt32_t m_spatialQuality;
+								BEUInt16_t m_width;
+								BEUInt16_t m_height;
+								BEUFixed32_t m_hRes;
+								BEUFixed32_t m_vRes;
+								BEUInt32_t m_dataSize;
+								BEUInt16_t m_frameCountPerSample;
+								uint8_t m_compressorNameLength;
+								uint8_t m_compressorName[31];
+								BEUInt16_t m_depth;
+								BEInt16_t m_ctabID;
+
+								FieldAtom m_fieldAtom;
+							};
+
+							STSDEntry stsdEntry;
+							memset(&stsdEntry, 0, sizeof(stsdEntry));
+
+							stsdEntry.m_size = sizeof(STSDEntry) + sizeof(VideoMediaSampleDescription);
+							memcpy(stsdEntry.m_dataFormat, imageDesc.m_data.m_codecType, 4);
+							stsdEntry.m_dataRefIndex = 1;
+
+							stream.Write(&stsdEntry, sizeof(stsdEntry));
+
+							const size_t kVideoMediaSampleDescSize = sizeof(VideoMediaSampleDescription);
+							GP_STATIC_ASSERT(kVideoMediaSampleDescSize == 80);
+
+							VideoMediaSampleDescription vmsdDesc;
+							memset(&vmsdDesc, 0, sizeof(vmsdDesc));
+
+							memcpy(&vmsdDesc.m_vendor, "GR2A", 4);
+							vmsdDesc.m_temporalQuality = 0x200;
+							vmsdDesc.m_spatialQuality = 0x200;
+							vmsdDesc.m_width = imageDesc.m_data.m_width;
+							vmsdDesc.m_height = imageDesc.m_data.m_height;
+							vmsdDesc.m_hRes.m_intPart = 72;
+							vmsdDesc.m_vRes.m_intPart = 72;
+							vmsdDesc.m_frameCountPerSample = 1;
+							vmsdDesc.m_depth = imageDesc.m_data.m_depth;
+							vmsdDesc.m_ctabID = -1;
+
+							memcpy(vmsdDesc.m_fieldAtom.m_atomID, "fild", 4);
+							vmsdDesc.m_fieldAtom.m_atomSize = sizeof(vmsdDesc.m_fieldAtom);
+							vmsdDesc.m_fieldAtom.m_fieldCount = 1;
+
+							stream.Write(&vmsdDesc, sizeof(vmsdDesc));
+						}
+
+						{
+							MovDumpScope sttsScope(stream, "stts");
+
+							struct STTSData
+							{
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								BEUInt32_t m_numEntries;
+							};
+
+							STTSData sttsData;
+							memset(&sttsData, 0, sizeof(sttsData));
+							sttsData.m_numEntries = 1;
+
+							stream.Write(&sttsData, sizeof(sttsData));
+
+							struct STTSEntry
+							{
+								BEUInt32_t m_sampleCount;
+								BEUInt32_t m_sampleDuration;
+							};
+
+							STTSEntry sttsEntry;
+							memset(&sttsEntry, 0, sizeof(sttsEntry));
+							sttsEntry.m_sampleCount = 1;
+							sttsEntry.m_sampleDuration = 0x200;
+
+							stream.Write(&sttsEntry, sizeof(sttsEntry));
+						}
+
+						{
+							MovDumpScope sttsScope(stream, "stsc");
+
+							struct STSCData
+							{
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								BEUInt32_t m_numEntries;
+							};
+
+							STSCData stscData;
+							memset(&stscData, 0, sizeof(stscData));
+							stscData.m_numEntries = 1;
+
+							stream.Write(&stscData, sizeof(stscData));
+
+							struct STSCEntry
+							{
+								BEUInt32_t m_firstChunk;
+								BEUInt32_t m_samplesPerChunk;
+								BEUInt32_t m_sampleDescriptionID;
+							};
+
+							STSCEntry stscEntry;
+							memset(&stscEntry, 0, sizeof(stscEntry));
+							stscEntry.m_firstChunk = 1;
+							stscEntry.m_samplesPerChunk = 1;
+							stscEntry.m_sampleDescriptionID = 1;
+
+							stream.Write(&stscEntry, sizeof(stscEntry));
+						}
+
+						{
+							MovDumpScope sttsScope(stream, "stsz");
+
+							struct STSZData
+							{
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								BEUInt32_t m_sampleSize;
+								BEUInt32_t m_numEntries;
+							};
+
+							STSZData stszData;
+							memset(&stszData, 0, sizeof(stszData));
+							stszData.m_sampleSize = static_cast<uint32_t>(imageData.size());
+							stszData.m_numEntries = 1;
+
+							stream.Write(&stszData, sizeof(stszData));
+						}
+
+						{
+							MovDumpScope sttsScope(stream, "stco");
+
+							struct STCOData
+							{
+								uint8_t m_version;
+								uint8_t m_flags[3];
+								BEUInt32_t m_numEntries;
+
+								BEUInt32_t m_firstChunkOffset;
+							};
+
+							STCOData stcoData;
+							memset(&stcoData, 0, sizeof(stcoData));
+							stcoData.m_firstChunkOffset = static_cast<uint32_t>(imageDataStart);
+							stcoData.m_numEntries = 1;
+
+							stream.Write(&stcoData, sizeof(stcoData));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+static bool ReadImageDesc(GpIOStream *stream, ImageDescription &imageDesc, std::vector<uint8_t> *optAuxData)
+{
+	GpUFilePos_t imageDescStart = stream->Tell();
+	if (!stream->ReadExact(&imageDesc.m_idSize, sizeof(imageDesc.m_idSize)))
+		return false;
+
+	if (imageDesc.m_idSize < sizeof(ImageDescription))
+		return false;
+
+	if (!stream->ReadExact(&imageDesc.m_data, sizeof(imageDesc.m_data)))
+		return false;
+
+	if (optAuxData == nullptr)
+	{
+		if (!stream->SeekStart(imageDescStart))
+			return false;
+
+		if (!stream->SeekCurrent(imageDesc.m_idSize))
+			return false;
+	}
+	else
+	{
+		const size_t auxSize = imageDesc.m_idSize - sizeof(ImageDescription);
+		optAuxData->resize(auxSize);
+		if (auxSize > 0)
+		{
+			if (!stream->ReadExact(&(*optAuxData)[0], auxSize))
+				return false;
+		}
+	}
+
+	return true;
+}
+
 bool BMPDumperContext::EmitQTContent(GpIOStream *stream, uint32_t dataSize, bool isCompressed)
 {
+	GpUFilePos_t startPos = stream->Tell();
+
+	if (isCompressed && !m_dumpqtDir)
+		return false;
+
 	// Only one known house ("Magic" seems to use uncompressed, which is partly documented here:
 	// https://github.com/gco/xee/blob/master/XeePhotoshopPICTLoader.m
+
+	struct UncompressedDataHeader
+	{
+		BEUInt16_t m_version;
+		BESFixed32_t m_matrix[9];
+		BEUInt32_t m_matteSizeBytes;
+		BERect m_matteRect;
+	};
+
+	struct CompressedDataHeader
+	{
+		BEUInt16_t m_transferMode;
+		BERect m_srcRect;
+		BEUInt32_t m_preferredAccuracy;
+		BEUInt32_t m_maskSizeBytes;
+	};
+
+	UncompressedDataHeader dHeader;
+	if (!stream->ReadExact(&dHeader, sizeof(dHeader)))
+		return false;
+
+	CompressedDataHeader cHeader;
+	ImageDescription matteDesc;
+	ImageDescription imageDesc;
+	std::vector<uint8_t> imageDescAux;
+
+	bool haveMDesc = false;
+
+	if (isCompressed)
+	{
+		if (!stream->ReadExact(&cHeader, sizeof(cHeader)))
+			return false;
+	}
+
+	if (dHeader.m_matteSizeBytes != 0)
+	{
+		haveMDesc = true;
+		if (!ReadImageDesc(stream, matteDesc, nullptr))
+			return false;
+	}
+
+	if (isCompressed)
+	{
+		if (cHeader.m_maskSizeBytes > 0)
+		{
+			if (!stream->SeekCurrent(cHeader.m_maskSizeBytes))
+				return false;
+		}
+
+		if (!ReadImageDesc(stream, imageDesc, &imageDescAux))
+			return false;
+
+		const size_t imageDataSize = imageDesc.m_data.m_dataSize;
+
+		GpUFilePos_t imageDataPrefixSize = stream->Tell() - startPos;
+		if (imageDataPrefixSize > dataSize)
+			return false;
+
+		const size_t dataAvailable = dataSize - imageDataPrefixSize;
+
+		if (dataAvailable < imageDataSize)
+			return false;
+
+		std::vector<uint8_t> imageData;
+		imageData.resize(imageDataSize);
+
+		if (!stream->ReadExact(&imageData[0], imageDataSize))
+			return false;
+
+		std::stringstream dumpPathStream;
+		dumpPathStream << m_dumpqtDir << "/" << m_resID << ".mov";
+
+		FILE *tempFile = fopen_utf8(dumpPathStream.str().c_str(), "wb");
+		if (!tempFile)
+			return false;
+
+		PortabilityLayer::CFileStream tempFileStream(tempFile);
+		bool dumpedOK = DumpMOV(tempFileStream, imageDesc, imageData);
+		tempFileStream.Close();
+
+		if (!dumpedOK)
+			return false;
+
+		if (!stream->SeekStart(startPos))
+			return false;
+
+		if (!stream->SeekCurrent(dataSize))
+			return false;
+
+		return false;
+	}
+	else
+	{
+		BEUInt16_t subOpcode;
+		if (!stream->ReadExact(&subOpcode, sizeof(subOpcode)))
+			return false;
+
+		int n = 0;
+	}
+
 
 	// Known compressed cases and codecs:
 	// "Egypt" res 10011: JPEG
@@ -682,10 +1390,10 @@ bool BMPDumperContext::Export(std::vector<uint8_t> &outData) const
 	return ExportBMP(m_frame.Width(), m_frame.Height(), m_pitchInElements, &m_pixelData[0], outData);
 }
 
-bool ImportPICT(std::vector<uint8_t> &outBMP, const void *inData, size_t inSize)
+bool ImportPICT(std::vector<uint8_t> &outBMP, const void *inData, size_t inSize, const char *dumpqtDir, int resID)
 {
 	PortabilityLayer::MemReaderStream stream(inData, inSize);
-	BMPDumperContext context;
+	BMPDumperContext context(dumpqtDir, resID);
 
 	PortabilityLayer::QDPictDecoder decoder;
 	if (decoder.DecodePict(&stream, &context))
@@ -788,7 +1496,7 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	{
 		BEUInt32_t m_samplePtr;
 		BEUInt32_t m_length;
-		BEFixed32_t m_sampleRate;
+		BEUFixed32_t m_sampleRate;
 		BEUInt32_t m_loopStart;
 		BEUInt32_t m_loopEnd;
 		uint8_t m_encoding;
@@ -799,7 +1507,7 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	{
 		BEUInt32_t m_samplePtr;
 		BEUInt32_t m_channelCount;
-		BEFixed32_t m_sampleRate;
+		BEUFixed32_t m_sampleRate;
 		BEUInt32_t m_loopStart;
 		BEUInt32_t m_loopEnd;
 		uint8_t m_encoding;
@@ -819,7 +1527,7 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	{
 		BEUInt32_t m_samplePtr;
 		BEUInt32_t m_channelCount;
-		BEFixed32_t m_sampleRate;
+		BEUFixed32_t m_sampleRate;
 		BEUInt32_t m_loopStart;
 		BEUInt32_t m_loopEnd;
 		uint8_t m_encoding;
@@ -969,7 +1677,7 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 		{
 			fprintf(stderr, "WARNING: Downsampling sound resource %i to 8 bit\n", resID);
 
-			const size_t numSamples = extHeader.m_numSamples * extHeader.m_channelCount;
+			const size_t numSamples = extHeader.m_numSamples;
 			resampledSound.resize(numSamples);
 
 			for (size_t i = 0; i < numSamples; i++)
@@ -998,6 +1706,100 @@ bool ImportSound(std::vector<uint8_t> &outWAV, const void *inData, size_t inSize
 	uint32_t sampleRate = header.m_sampleRate.m_intPart;
 	if (static_cast<int>(header.m_sampleRate.m_fracPart) >= 0x8000)
 		sampleRate++;
+
+	if (sampleRate == 0)
+		return false;
+
+	std::vector<uint8_t> rateChangedSound;
+	const uint32_t minSampleRate = 22000;
+	const uint32_t maxSampleRate = 23000;
+	if (sampleRate > maxSampleRate || sampleRate < minSampleRate)
+	{
+		uint32_t sampleRateRatioNumerator = 1;
+		uint32_t sampleRateRatioDenominator = 1;
+
+		uint32_t targetSampleRate = 0;
+		if (sampleRate < minSampleRate)
+		{
+			targetSampleRate = sampleRate;
+			while (targetSampleRate * 2 <= maxSampleRate)
+			{
+				targetSampleRate *= 2;
+				sampleRateRatioNumerator *= 2;
+			}
+		}
+		else
+		{
+			targetSampleRate = sampleRate;
+			while (minSampleRate * 2 <= targetSampleRate)
+			{
+				targetSampleRate /= 2;
+				sampleRateRatioDenominator *= 2;
+			}
+		}
+
+		if (targetSampleRate > maxSampleRate || targetSampleRate < minSampleRate)
+		{
+			targetSampleRate = 0x56ef;
+			sampleRateRatioNumerator = targetSampleRate;
+			sampleRateRatioDenominator = sampleRate;
+		}
+
+
+		targetSampleRate = sampleRate * sampleRateRatioNumerator / sampleRateRatioDenominator;
+
+		fprintf(stderr, "WARNING: Resampling sound resource %i from %i to %i Hz\n", resID, static_cast<int>(sampleRate), static_cast<int>(targetSampleRate));
+
+		uint32_t postInterpolateSampleRateRatioNumerator = sampleRateRatioNumerator;
+		uint32_t postInterpolateSampleRateRatioDenominator = sampleRateRatioDenominator;
+
+		std::vector<uint8_t> interpolatableSound(sndBufferData, sndBufferData + inputDataLength);
+		while (postInterpolateSampleRateRatioNumerator * 2 <= postInterpolateSampleRateRatioDenominator)
+		{
+			size_t halfSize = interpolatableSound.size() / 2;
+			for (size_t i = 0; i < halfSize; i++)
+				interpolatableSound[i] = (interpolatableSound[i * 2] + interpolatableSound[i * 2 + 1] + 1) / 2;
+			interpolatableSound.resize(halfSize);
+			postInterpolateSampleRateRatioNumerator *= 2;
+
+			if (postInterpolateSampleRateRatioNumerator % 2 == 0 && postInterpolateSampleRateRatioDenominator % 2 == 0)
+			{
+				postInterpolateSampleRateRatioNumerator /= 2;
+				postInterpolateSampleRateRatioDenominator /= 2;
+			}
+		}
+
+		if (postInterpolateSampleRateRatioNumerator != postInterpolateSampleRateRatioDenominator)
+		{
+			size_t originalSize = interpolatableSound.size();
+			size_t targetSize = originalSize * postInterpolateSampleRateRatioNumerator / postInterpolateSampleRateRatioDenominator;
+			rateChangedSound.resize(targetSize);
+
+			for (size_t i = 0; i < targetSize; i++)
+			{
+				size_t sampleIndexTimes256 = i * postInterpolateSampleRateRatioDenominator * 256 / postInterpolateSampleRateRatioNumerator;
+				size_t startSampleIndex = sampleIndexTimes256 / 256;
+				size_t endSampleIndex = startSampleIndex + 1;
+				if (startSampleIndex >= originalSize)
+					startSampleIndex = originalSize - 1;
+				if (endSampleIndex >= originalSize)
+					endSampleIndex = originalSize - 1;
+
+				size_t interpolation = sampleIndexTimes256 % 256;
+				uint8_t startSample = interpolatableSound[startSampleIndex];
+				uint8_t endSample = interpolatableSound[endSampleIndex];
+
+				rateChangedSound[i] = ((startSample * (256 - interpolation) + endSample * interpolation + 128) / 256);
+			}
+			sampleRate = (sampleRate * sampleRateRatioNumerator * 2 + sampleRateRatioDenominator) / (sampleRateRatioDenominator * 2);
+		}
+		else
+			rateChangedSound = interpolatableSound;
+
+		sndBufferData = &rateChangedSound[0];
+		inputDataLength = rateChangedSound.size();
+		outputDataLength = inputDataLength;
+	}
 
 	PortabilityLayer::WaveFormatChunkV1 formatChunk;
 
@@ -1328,6 +2130,71 @@ void ReadFileToVector(FILE *f, std::vector<uint8_t> &vec)
 	}
 }
 
+bool ParsePatchNames(const std::vector<uint8_t> &patchFileContents, std::vector<std::string> &names)
+{
+	rapidjson::Document document;
+	document.Parse(reinterpret_cast<const char*>(&patchFileContents[0]), patchFileContents.size());
+	if (document.HasParseError())
+	{
+		fprintf(stderr, "Error occurred parsing patch data");
+		fprintf(stderr, "Error code %i  Location %i", static_cast<int>(document.GetParseError()), static_cast<int>(document.GetErrorOffset()));
+		return false;
+	}
+
+	if (!document.IsObject())
+	{
+		fprintf(stderr, "Patch document is not an object");
+		return false;
+	}
+
+	if (document.HasMember("add"))
+	{
+		const rapidjson::Value &addValue = document["add"];
+		if (!addValue.IsObject())
+		{
+			fprintf(stderr, "Patch add list is not an object");
+			return false;
+		}
+
+		for (rapidjson::Value::ConstMemberIterator it = addValue.MemberBegin(), itEnd = addValue.MemberEnd(); it != itEnd; ++it)
+		{
+			const rapidjson::Value &itemName = it->name;
+			if (!itemName.IsString())
+			{
+				fprintf(stderr, "Patch add list item key is not a string");
+				return false;
+			}
+
+			const char *itemNameStr = itemName.GetString();
+			names.push_back(std::string(itemNameStr));
+		}
+	}
+
+	if (document.HasMember("delete"))
+	{
+		const rapidjson::Value &deleteValue = document["delete"];
+		if (!deleteValue.IsArray())
+		{
+			fprintf(stderr, "Patch add list is not an object");
+			return false;
+		}
+
+		for (const rapidjson::Value *it = deleteValue.Begin(), *itEnd = deleteValue.End(); it != itEnd; ++it)
+		{
+			const rapidjson::Value &item = *it;
+			if (!item.IsString())
+			{
+				fprintf(stderr, "Patch delete list item key is not a string");
+				return false;
+			}
+
+			names.push_back(std::string(item.GetString()));
+		}
+	}
+
+	return true;
+}
+
 bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<PlannedEntry> &archive)
 {
 	rapidjson::Document document;
@@ -1461,7 +2328,16 @@ bool ApplyPatch(const std::vector<uint8_t> &patchFileContents, std::vector<Plann
 	return true;
 }
 
-int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimestamp &ts, FILE *patchF, const char *outPath)
+bool ContainsName(const std::vector<std::string> &names, const char *name)
+{
+	for (const std::string &vname : names)
+		if (vname == name)
+			return true;
+
+	return false;
+}
+
+int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimestamp &ts, FILE *patchF, const char *dumpqtDir, const char *outPath)
 {
 	FILE *inF = fopen_utf8(resPath, "rb");
 	if (!inF)
@@ -1519,6 +2395,14 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 		{ 16, 16, 8, PortabilityLayer::ResTypeID('ics8') },
 	};
 
+	std::vector<std::string> reservedNames;
+
+	if (havePatchFile)
+	{
+		if (!ParsePatchNames(patchFileContents, reservedNames))
+			return -1;
+	}
+
 	for (size_t tlIndex = 0; tlIndex < typeListCount; tlIndex++)
 	{
 		const PortabilityLayer::ResourceCompiledTypeList &typeList = typeLists[tlIndex];
@@ -1546,23 +2430,29 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 			if (typeList.m_resType == pictTypeID || typeList.m_resType == dateTypeID)
 			{
-				PlannedEntry entry;
 				char resName[256];
 				sprintf_s(resName, "%s/%i.bmp", resTag.m_id, static_cast<int>(res.m_resID));
 
+				if (ContainsName(reservedNames, resName))
+					continue;
+
+				PlannedEntry entry;
 				entry.m_name = resName;
 
-				if (ImportPICT(entry.m_uncompressedContents, resData, resSize))
+				if (ImportPICT(entry.m_uncompressedContents, resData, resSize, dumpqtDir, res.m_resID))
 					contents.push_back(entry);
 				else
 					fprintf(stderr, "Failed to import PICT res %i\n", static_cast<int>(res.m_resID));
 			}
 			else if (typeList.m_resType == sndTypeID)
 			{
-				PlannedEntry entry;
 				char resName[256];
 				sprintf_s(resName, "%s/%i.wav", resTag.m_id, static_cast<int>(res.m_resID));
 
+				if (ContainsName(reservedNames, resName))
+					continue;
+
+				PlannedEntry entry;
 				entry.m_name = resName;
 
 				if (ImportSound(entry.m_uncompressedContents, resData, resSize, res.m_resID))
@@ -1572,10 +2462,13 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 			}
 			else if (typeList.m_resType == indexStringTypeID)
 			{
-				PlannedEntry entry;
 				char resName[256];
 				sprintf_s(resName, "%s/%i.txt", resTag.m_id, static_cast<int>(res.m_resID));
 
+				if (ContainsName(reservedNames, resName))
+					continue;
+
+				PlannedEntry entry;
 				entry.m_name = resName;
 
 				if (ImportIndexedString(entry.m_uncompressedContents, resData, resSize))
@@ -1583,10 +2476,13 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 			}
 			else if (typeList.m_resType == ditlTypeID)
 			{
-				PlannedEntry entry;
 				char resName[256];
 				sprintf_s(resName, "%s/%i.json", resTag.m_id, static_cast<int>(res.m_resID));
 
+				if (ContainsName(reservedNames, resName))
+					continue;
+
+				PlannedEntry entry;
 				entry.m_name = resName;
 
 				if (ImportDialogItemTemplate(entry.m_uncompressedContents, resData, resSize))
@@ -1601,25 +2497,34 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 					const IconTypeSpec &iconSpec = iconTypeSpecs[i];
 					if (typeList.m_resType == iconSpec.m_resTypeID)
 					{
-						isIcon = true;
-
-						PlannedEntry entry;
 						char resName[256];
 						sprintf_s(resName, "%s/%i.bmp", resTag.m_id, static_cast<int>(res.m_resID));
 
-						entry.m_name = resName;
+						if (!ContainsName(reservedNames, resName))
+						{
+							isIcon = true;
 
-						if (ImportIcon(entry.m_uncompressedContents, resData, resSize, iconSpec.m_width, iconSpec.m_height, iconSpec.m_bpp))
-							contents.push_back(entry);
+							PlannedEntry entry;
+
+							entry.m_name = resName;
+
+							if (ImportIcon(entry.m_uncompressedContents, resData, resSize, iconSpec.m_width, iconSpec.m_height, iconSpec.m_bpp))
+								contents.push_back(entry);
+
+							break;
+						}
 					}
 				}
 
 				if (!isIcon)
 				{
-					PlannedEntry entry;
-
 					char resName[256];
 					sprintf_s(resName, "%s/%i.bin", resTag.m_id, static_cast<int>(res.m_resID));
+
+					if (ContainsName(reservedNames, resName))
+						continue;
+
+					PlannedEntry entry;
 
 					entry.m_name = resName;
 					entry.m_uncompressedContents.resize(res.GetSize());
@@ -1688,7 +2593,7 @@ int ConvertDirectory(const std::string &basePath, const PortabilityLayer::Combin
 			fputs_utf8(houseArchivePath.c_str(), stdout);
 			fprintf(stdout, "\n");
 
-			int returnCode = ConvertSingleFile(resPath.c_str(), ts, nullptr, houseArchivePath.c_str());
+			int returnCode = ConvertSingleFile(resPath.c_str(), ts, nullptr, nullptr, houseArchivePath.c_str());
 			if (returnCode)
 			{
 				fprintf(stderr, "An error occurred while converting\n");
@@ -1704,10 +2609,15 @@ int ConvertDirectory(const std::string &basePath, const PortabilityLayer::Combin
 
 int PrintUsage()
 {
-	fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [patch.json]\n");
+	fprintf(stderr, "Usage: gpr2gpa <input.gpr> <input.ts> <output.gpa> [options]\n");
 	fprintf(stderr, "       gpr2gpa <input dir>\\* <input.ts>\n");
 	fprintf(stderr, "       gpr2gpa <input dir>/* <input.ts>\n");
 	fprintf(stderr, "       gpr2gpa * <input.ts>\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "       -patch patch.json\n");
+	fprintf(stderr, "       -dumpqt <temp dir>\n");
+
 	return -1;
 }
 
@@ -1744,19 +2654,43 @@ int toolMain(int argc, const char **argv)
 			return ConvertDirectory(base.substr(0, base.length() - 2), ts);
 	}
 
-	if (argc != 4 && argc != 5)
-		return PrintUsage();
-
+	const char *dumpqtPath = nullptr;
 	FILE *patchF = nullptr;
-	if (argc == 5)
+	if (argc > 4)
 	{
-		patchF = fopen_utf8(argv[4], "rb");
-		if (!patchF)
+		for (int optArgIndex = 4; optArgIndex < argc; )
 		{
-			fprintf(stderr, "Error reading patch file");
-			return -1;
+			const char *optArg = argv[optArgIndex++];
+			if (!strcmp(optArg, "-patch"))
+			{
+				if (optArgIndex == argc)
+					return PrintUsage();
+
+				if (patchF != nullptr)
+				{
+					fprintf(stderr, "Already specified patch file");
+					return -1;
+				}
+
+				const char *patchPath = argv[optArgIndex++];
+				patchF = fopen_utf8(patchPath, "rb");
+				if (!patchF)
+				{
+					fprintf(stderr, "Error reading patch file");
+					return -1;
+				}
+			}
+			else if (!strcmp(optArg, "-dumpqt"))
+			{
+				if (optArgIndex == argc)
+					return PrintUsage();
+
+				dumpqtPath = argv[optArgIndex++];
+			}
+			else
+				return PrintUsage();
 		}
 	}
 
-	return ConvertSingleFile(argv[1], ts, patchF, argv[3]);
+	return ConvertSingleFile(argv[1], ts, patchF, dumpqtPath, argv[3]);
 }

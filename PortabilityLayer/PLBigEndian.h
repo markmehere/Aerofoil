@@ -244,8 +244,26 @@ typedef BEInteger<int32_t> BEInt32_t;
 typedef BEInteger<uint16_t> BEUInt16_t;
 typedef BEInteger<uint32_t> BEUInt32_t;
 
-struct BEFixed32_t
+struct BESFixed32_t
 {
 	BEInt16_t m_intPart;
 	BEUInt16_t m_fracPart;
+};
+
+struct BEUFixed32_t
+{
+	BEUInt16_t m_intPart;
+	BEUInt16_t m_fracPart;
+};
+
+struct BESFixed16_t
+{
+	int8_t m_intPart;
+	uint8_t m_fracPart;
+};
+
+struct BEUFixed16_t
+{
+	uint8_t m_intPart;
+	uint8_t m_fracPart;
 };

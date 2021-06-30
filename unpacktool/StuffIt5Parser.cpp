@@ -6,6 +6,7 @@
 #include "PLBigEndian.h"
 
 #include <vector>
+#include <unordered_map>
 
 #include "CSInputBuffer.h"
 
@@ -101,9 +102,15 @@ struct StuffIt5Block
 	std::vector<uint8_t> m_filename;
 
 	std::vector<StuffIt5Block> m_children;
+	int m_numChildren;
 
-	bool Read(IFileReader &reader)
+	int64_t m_endPos;
+
+	bool Read(IFileReader &reader, bool &outIsDirectoryAppendage)
 	{
+		outIsDirectoryAppendage = false;
+
+		int64_t headerPos = reader.GetPosition();
 		if (!reader.ReadExact(&m_header, sizeof(m_header)))
 			return false;
 
@@ -145,13 +152,12 @@ struct StuffIt5Block
 			if (commentLength > m_header.m_headerSize - sizeWithOnlyNameAndPasswordInfo - 4)
 				return false;
 
-
 			m_commentSize = commentLength;
 			m_commentPos = reader.GetPosition();
 
 			if (commentLength)
 			{
-				if (reader.SeekCurrent(commentLength))
+				if (!reader.SeekCurrent(commentLength))
 					return false;
 			}
 
@@ -165,6 +171,13 @@ struct StuffIt5Block
 
 		if (!reader.SeekCurrent(m_header.m_headerSize - sizeWithCommentData))
 			return false;
+
+		if (m_header.m_dataForkDesc.m_uncompressedSize == static_cast<uint32_t>(0xffffffff))
+		{
+			outIsDirectoryAppendage = true;
+			m_endPos = reader.GetPosition();
+			return true;
+		}
 
 		if (!reader.ReadExact(&m_annex1, sizeof(m_annex1)))
 			return false;
@@ -199,21 +212,13 @@ struct StuffIt5Block
 		{
 			int numFiles = (m_header.m_dataForkDesc.m_algorithm_dirNumFilesHigh << 8) | (m_header.m_dataForkDesc.m_passwordDataLength_dirNumFilesLow);
 
-			m_children.resize(numFiles);
-			for (int i = 0; i < numFiles; i++)
-			{
-				if (i != 0)
-				{
-					if (!reader.SeekStart(m_children[i - 1].m_header.m_nextEntryOffset))
-						return false;
-				}
-
-				if (!m_children[i].Read(reader))
-					return false;
-			}
+			m_numChildren = numFiles;
+			m_endPos = reader.GetPosition();
 		}
 		else
 		{
+			m_numChildren = 0;
+
 			if (m_hasResourceFork)
 			{
 				m_resForkPos = reader.GetPosition();
@@ -221,6 +226,8 @@ struct StuffIt5Block
 			}
 			else
 				m_dataForkPos = reader.GetPosition();
+
+			m_endPos = m_dataForkPos + m_header.m_dataForkDesc.m_compressedSize;
 		}
 
 		return true;
@@ -304,6 +311,34 @@ bool StuffIt5Parser::Check(IFileReader &reader)
 	return (*match) == '\0';
 }
 
+static bool RecursiveBuildTree(std::vector<StuffIt5Block> &dirBlocks, uint32_t dirPos, const std::vector<StuffIt5Block> &flatBlocks, const std::unordered_map<uint32_t, size_t> &filePosToDirectoryBlock, const std::unordered_map<size_t, uint32_t> &directoryBlockToFilePos, const std::unordered_map<uint32_t, std::vector<size_t>> &entryChildren, int depth)
+{
+	if (depth == 16)
+		return false;
+
+	std::unordered_map<uint32_t, std::vector<size_t>>::const_iterator children = entryChildren.find(dirPos);
+	if (children == entryChildren.end())
+		return true;
+
+	for (size_t childIndex : children->second)
+	{
+		StuffIt5Block block = flatBlocks[childIndex];
+		if (block.m_isDirectory)
+		{
+			std::unordered_map<size_t, uint32_t>::const_iterator directoryFilePosIt = directoryBlockToFilePos.find(childIndex);
+			if (directoryFilePosIt == directoryBlockToFilePos.end())
+				return false;
+
+			if (!RecursiveBuildTree(block.m_children, directoryFilePosIt->second, flatBlocks, filePosToDirectoryBlock, directoryBlockToFilePos, entryChildren, depth + 1))
+				return false;
+		}
+
+		dirBlocks.push_back(static_cast<StuffIt5Block&&>(block));
+	}
+
+	return true;
+}
+
 ArchiveItemList *StuffIt5Parser::Parse(IFileReader &reader)
 {
 	reader.SeekStart(0);
@@ -317,17 +352,52 @@ ArchiveItemList *StuffIt5Parser::Parse(IFileReader &reader)
 	if (!reader.SeekStart(header.m_rootDirFirstEntryOffset))
 		return nullptr;
 
-	std::vector<StuffIt5Block> rootDirBlocks;
-	rootDirBlocks.resize(numRootDirEntries);
+	size_t totalBlocks = numRootDirEntries;
+	std::vector<StuffIt5Block> flatBlocks;
 
-	for (int i = 0; i < numRootDirEntries; i++)
+	std::unordered_map<size_t, uint32_t> directoryBlockToFilePos;
+	std::unordered_map<uint32_t, size_t> filePosToDirectoryBlock;
+
+	// Unfortunately StuffIt 5 archive next/prev entry chains seem to be meaningless.
+	// The only real way to determine directory structure is after the fact.
+	for (int i = 0; i < totalBlocks; i++)
 	{
-		if (i != 0)
-			reader.SeekStart(rootDirBlocks[i - 1].m_header.m_nextEntryOffset);
+		int64_t fpos = reader.GetPosition();
 
-		if (!rootDirBlocks[i].Read(reader))
+		bool isAppendage = false;
+		StuffIt5Block flatBlock;
+		if (!flatBlock.Read(reader, isAppendage))
 			return nullptr;
+
+		if (isAppendage)
+		{
+			totalBlocks++;
+			continue;
+		}
+
+		if (flatBlock.m_isDirectory)
+		{
+			totalBlocks += flatBlock.m_numChildren;
+			directoryBlockToFilePos[flatBlocks.size()] = static_cast<uint32_t>(fpos);
+			filePosToDirectoryBlock[static_cast<uint32_t>(fpos)] = flatBlocks.size();
+		}
+
+		if (i != totalBlocks - 1)
+		{
+			if (!reader.SeekStart(flatBlock.m_endPos))
+				return nullptr;
+		}
+
+		flatBlocks.push_back(flatBlock);
 	}
+
+	std::unordered_map<uint32_t, std::vector<size_t>> entryChildren;
+
+	for (size_t i = 0; i < flatBlocks.size(); i++)
+		entryChildren[flatBlocks[i].m_header.m_dirEntryOffset].push_back(i);
+
+	std::vector<StuffIt5Block> rootDirBlocks;
+	RecursiveBuildTree(rootDirBlocks, 0, flatBlocks, filePosToDirectoryBlock, directoryBlockToFilePos, entryChildren, 0);
 
 	return ConvertToItemList(rootDirBlocks);
 }

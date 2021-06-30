@@ -71,6 +71,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bin2h", "bin2h\bin2h.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HouseTool", "HouseTool\HouseTool.vcxproj", "{B31BFF9D-2D14-4B1A-A625-8348CC3D8D67}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASADTool", "ASADTool\ASADTool.vcxproj", "{DF692F94-3A11-40E1-8846-9815B4DBBDB0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -195,6 +197,10 @@ Global
 		{B31BFF9D-2D14-4B1A-A625-8348CC3D8D67}.Debug|x64.Build.0 = Debug|x64
 		{B31BFF9D-2D14-4B1A-A625-8348CC3D8D67}.Release|x64.ActiveCfg = Release|x64
 		{B31BFF9D-2D14-4B1A-A625-8348CC3D8D67}.Release|x64.Build.0 = Release|x64
+		{DF692F94-3A11-40E1-8846-9815B4DBBDB0}.Debug|x64.ActiveCfg = Debug|x64
+		{DF692F94-3A11-40E1-8846-9815B4DBBDB0}.Debug|x64.Build.0 = Debug|x64
+		{DF692F94-3A11-40E1-8846-9815B4DBBDB0}.Release|x64.ActiveCfg = Release|x64
+		{DF692F94-3A11-40E1-8846-9815B4DBBDB0}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
