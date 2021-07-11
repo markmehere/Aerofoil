@@ -28,7 +28,7 @@ void HandleOSEvent (EventRecord *);
 void HandleHighLevelEvent (EventRecord *);
 void HandleIdleTask (void);
 void IncrementMode (void);
-
+void DoEndGame (void);
 
 
 long			lastUp, incrementModeTime;
@@ -398,6 +398,17 @@ void HandleIdleTask (void)
 			HandleSplashResolutionChange();
 		}
 	}
+	
+#ifndef COMPILEDEMO
+	if (quitting) {
+		if (theMode == kEditMode) {
+			if (!QuerySaveChanges()) {
+				quitting = false;
+			}
+		}
+	}
+#endif
+	
 
 	TickMainMenuUI();
 }
