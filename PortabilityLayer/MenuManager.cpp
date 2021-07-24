@@ -1405,14 +1405,22 @@ namespace PortabilityLayer
 
 	size_t MenuManagerImpl::FormatHintText(uint8_t *buffer, uint8_t key)
 	{
+#ifdef __MACOS__
+		buffer[0] = 'C';
+		buffer[1] = 'm';
+		buffer[2] = 'd';
+		buffer[3] = '+';
+		buffer[4] = key;
+		return 5;
+#else
 		buffer[0] = 'C';
 		buffer[1] = 't';
 		buffer[2] = 'r';
 		buffer[3] = 'l';
 		buffer[4] = '+';
 		buffer[5] = key;
-
 		return 6;
+#endif
 	}
 
 	MenuManagerImpl *MenuManagerImpl::GetInstance()

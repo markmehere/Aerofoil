@@ -1637,11 +1637,19 @@ static bool IdentifyVKey(const SDL_KeyboardEvent *keyEvt, GpKeyIDSubset_t &outSu
 				return false;
 		}
 		break;
+#ifdef __MACOS__
+	case SDLK_LGUI:
+#else
 	case SDLK_LCTRL:
+#endif
 		outSubset = GpKeyIDSubsets::kSpecial;
 		outKey.m_specialKey = GpKeySpecials::kLeftCtrl;
 		break;
+#ifdef __MACOS__
+	case SDLK_RGUI:
+#else
 	case SDLK_RCTRL:
+#endif
 		outSubset = GpKeyIDSubsets::kSpecial;
 		outKey.m_specialKey = GpKeySpecials::kRightCtrl;
 		break;
