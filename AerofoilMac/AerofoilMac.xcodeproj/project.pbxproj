@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		4A04C5AC269AD58E009F5CA3 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A04C59D269AD58E009F5CA3 /* MainMenu.xib */; };
+		4A04C5AF269AD600009F5CA3 /* AerofoilAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A04C5AE269AD600009F5CA3 /* AerofoilAppDelegate.mm */; };
+		4A04C5B6269AE945009F5CA3 /* AerofoilApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A04C5B5269AE945009F5CA3 /* AerofoilApplication.m */; };
+		4A04C5B7269AE96B009F5CA3 /* MacInit.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A04C5B0269AE243009F5CA3 /* MacInit.mm */; };
 		5C54D0A02629B42400AB55E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C54D09F2629B42400AB55E0 /* Assets.xcassets */; };
 		5C54D0BE2629B72000AB55E0 /* stb_image_write.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D0BC2629B72000AB55E0 /* stb_image_write.h */; };
 		5C54D0BF2629B72000AB55E0 /* stb_image_write.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D0BD2629B72000AB55E0 /* stb_image_write.c */; };
@@ -590,6 +593,12 @@
 
 /* Begin PBXFileReference section */
 		4A04C59E269AD58E009F5CA3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4A04C5AD269AD600009F5CA3 /* AerofoilAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AerofoilAppDelegate.h; sourceTree = "<group>"; };
+		4A04C5AE269AD600009F5CA3 /* AerofoilAppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AerofoilAppDelegate.mm; sourceTree = "<group>"; usesTabs = 1; };
+		4A04C5B0269AE243009F5CA3 /* MacInit.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MacInit.mm; sourceTree = "<group>"; };
+		4A04C5B2269AE368009F5CA3 /* MacInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MacInit.h; sourceTree = "<group>"; };
+		4A04C5B4269AE945009F5CA3 /* AerofoilApplication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AerofoilApplication.h; sourceTree = "<group>"; };
+		4A04C5B5269AE945009F5CA3 /* AerofoilApplication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AerofoilApplication.m; sourceTree = "<group>"; };
 		5C54D0962629B42100AB55E0 /* Aerofoil.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aerofoil.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C54D09F2629B42400AB55E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5C54D0A42629B42400AB55E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1065,10 +1074,16 @@
 				5C54D656262D84A800AB55E0 /* GpLogDriver_X.cpp */,
 				5C54D659262D84A900AB55E0 /* GpLogDriver_X.h */,
 				5C54D654262D84A800AB55E0 /* GpMain_SDL_X.cpp */,
+				4A04C5B0269AE243009F5CA3 /* MacInit.mm */,
+				4A04C5B2269AE368009F5CA3 /* MacInit.h */,
 				5C54D655262D84A800AB55E0 /* GpSystemServices_X.cpp */,
 				5C54D658262D84A900AB55E0 /* GpSystemServices_X.h */,
 				5C54D0A42629B42400AB55E0 /* Info.plist */,
 				4A04C59D269AD58E009F5CA3 /* MainMenu.xib */,
+				4A04C5B4269AE945009F5CA3 /* AerofoilApplication.h */,
+				4A04C5B5269AE945009F5CA3 /* AerofoilApplication.m */,
+				4A04C5AD269AD600009F5CA3 /* AerofoilAppDelegate.h */,
+				4A04C5AE269AD600009F5CA3 /* AerofoilAppDelegate.mm */,
 			);
 			path = AerofoilMac;
 			sourceTree = "<group>";
@@ -1997,8 +2012,10 @@
 				5C54D67A262D889D00AB55E0 /* DrawQuad32P.cpp in Sources */,
 				5C54D67B262D889D00AB55E0 /* CopyQuadP.cpp in Sources */,
 				5C54D669262D886900AB55E0 /* GpThreadEvent_Cpp11.cpp in Sources */,
+				4A04C5B6269AE945009F5CA3 /* AerofoilApplication.m in Sources */,
 				5C54D65B262D84A900AB55E0 /* GpMain_SDL_X.cpp in Sources */,
 				5C54D67C262D889E00AB55E0 /* DrawQuadPaletteP.cpp in Sources */,
+				4A04C5B7269AE96B009F5CA3 /* MacInit.mm in Sources */,
 				5C54D679262D889D00AB55E0 /* GpDisplayDriver_SDL_GL2.cpp in Sources */,
 				5C54D67F262D889E00AB55E0 /* GpAudioDriver_SDL2.cpp in Sources */,
 				5C54D668262D886900AB55E0 /* GpSystemServices_POSIX.cpp in Sources */,
@@ -2006,6 +2023,7 @@
 				5C54D65C262D84A900AB55E0 /* GpSystemServices_X.cpp in Sources */,
 				5C54D67D262D889E00AB55E0 /* ScaleQuadP.cpp in Sources */,
 				5C54D678262D889D00AB55E0 /* GpInputDriver_SDL_Gamepad.cpp in Sources */,
+				4A04C5AF269AD600009F5CA3 /* AerofoilAppDelegate.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
