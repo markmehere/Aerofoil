@@ -17,13 +17,19 @@ void DoSettingsMain(void);
 @implementation AerofoilAppDelegate
 
 - (IBAction)showAboutAerofoil:(id)sender {
-	DoAboutFramework();
+	[self performAsynchronously:DoAboutFramework];
 }
 - (IBAction)showAboutGliderPRO:(id)sender {
-	DoAbout();
+	[self performAsynchronously:DoAbout];
 }
 - (IBAction)showPreferences:(id)sender {
-	DoSettingsMain();
+	[self performAsynchronously:DoSettingsMain];
+}
+
+- (void)performAsynchronously:(void(*)())function {
+	dispatch_async(dispatch_get_main_queue(), ^{
+		function();
+	});
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
