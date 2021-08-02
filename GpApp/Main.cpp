@@ -537,9 +537,6 @@ int AppStartup()
 	ToolBoxInit();
 	CheckOurEnvirons();
 
-	if (thisMac.isTouchscreen)
-		PortabilityLayer::MenuManager::GetInstance()->SetMenuTouchScreenStyle(true);
-
 	if (!thisMac.hasColor)
 		RedAlert(kErrNeedColorQD);
 	if (!thisMac.hasSystem7)

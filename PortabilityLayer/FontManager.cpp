@@ -91,6 +91,9 @@ namespace PortabilityLayer
 		for (int i = 0; i < FontFamilyIDs::kCount; i++)
 			m_fontFamilies[static_cast<FontFamilyID_t>(i)] = FontFamily::Create(static_cast<FontFamilyID_t>(i));
 
+		if (m_fontFamilies[FontFamilyIDs::kSystemSymbols])
+			m_fontFamilies[FontFamilyIDs::kSystemSymbols]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/Inter/Inter-SemiBold.ttf", 0, FontHacks_SystemSymbols);
+
 		if (m_fontFamilies[FontFamilyIDs::kSystem])
 			m_fontFamilies[FontFamilyIDs::kSystem]->AddFont(FontFamilyFlag_None, VirtualDirectories::kFonts, "Fonts/OpenSans/OpenSans-ExtraBold.ttf", 0, FontHacks_None);
 
@@ -409,6 +412,8 @@ namespace PortabilityLayer
 
 	FontManagerImpl::FontPreset FontManagerImpl::ms_fontPresets[FontPresets::kCount] =
 	{
+		{ FontFamilyIDs::kSystemSymbols, 12, FontFamilyFlag_None, true },
+
 		{ FontFamilyIDs::kSystem, 12, FontFamilyFlag_None, true },
 		{ FontFamilyIDs::kSystem, 12, FontFamilyFlag_Bold, true },
 

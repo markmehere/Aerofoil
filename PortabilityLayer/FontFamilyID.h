@@ -6,6 +6,7 @@ namespace PortabilityLayer
 	{
 		enum FontFamilyID
 		{
+			kSystemSymbols,
 			kSystem,
 			kApplication,
 			kMonospace,

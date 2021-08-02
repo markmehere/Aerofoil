@@ -4,7 +4,7 @@
 		{
 			"name" : "Okay",
 			"itemType" : "Button",
-			"pos" : [ 438, 292 ],
+			"pos" : [ 438, 316 ],
 			"size" : [ 58, 20 ],
 			"id" : 1,
 			"enabled" : true
@@ -12,7 +12,7 @@
 		{
 			"name" : "Export Source Code to ZIP Archive...",
 			"itemType" : "Button",
-			"pos" : [ 205, 292 ],
+			"pos" : [ 205, 316 ],
 			"size" : [ 226, 20 ],
 			"id" : 1,
 			"enabled" : false
@@ -98,7 +98,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "LIBICONV ©1999-2001, 2016 Free Software Foundation, Inc.",
+			"name" : "Inter font ©2016-2019 Rasmus Andersson + Inter Project Authors",
 			"itemType" : "Label",
 			"pos" : [ 16, 149 ],
 			"size" : [ 406, 20 ],
@@ -114,7 +114,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "RapidJSON ©2015 THL A29 Limited, a Tencent company, and Milo Yip",
+			"name" : "LIBICONV ©1999-2001, 2016 Free Software Foundation, Inc.",
 			"itemType" : "Label",
 			"pos" : [ 16, 172 ],
 			"size" : [ 406, 28 ],
@@ -130,7 +130,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "zlib ©1995-2017 Jean-loup Gailly and Mark Adler",
+			"name" : "RapidJSON ©2015 THL A29 Limited, a Tencent company, and Milo Yip",
 			"itemType" : "Label",
 			"pos" : [ 16, 205 ],
 			"size" : [ 406, 20 ],
@@ -146,7 +146,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "FreeType ©2020 The FreeType Project",
+			"name" : "zlib ©1995-2017 Jean-loup Gailly and Mark Adler",
 			"itemType" : "Label",
 			"pos" : [ 16, 229 ],
 			"size" : [ 406, 20 ],
@@ -162,7 +162,7 @@
 			"enabled" : true
 		},
 		{
-			"name" : "Simple DirectMedia Layer ©1997-2020 Sam Lantinga",
+			"name" : "FreeType ©2020 The FreeType Project",
 			"itemType" : "Label",
 			"pos" : [ 16, 253 ],
 			"size" : [ 406, 20 ],
@@ -173,6 +173,22 @@
 			"name" : "License...",
 			"itemType" : "Button",
 			"pos" : [ 430, 248 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "Simple DirectMedia Layer ©1997-2020 Sam Lantinga",
+			"itemType" : "Label",
+			"pos" : [ 16, 277 ],
+			"size" : [ 406, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 272 ],
 			"size" : [ 66, 20 ],
 			"id" : 1,
 			"enabled" : true

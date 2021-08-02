@@ -93,6 +93,7 @@
     <ClInclude Include="ByteUnpack.h" />
     <ClInclude Include="CFileStream.h" />
     <ClInclude Include="CombinedTimestamp.h" />
+    <ClInclude Include="CompositeRenderedFont.h" />
     <ClInclude Include="DataTypes.h" />
     <ClInclude Include="DeflateCodec.h" />
     <ClInclude Include="DialogManager.h" />
@@ -226,6 +227,7 @@
     <ClCompile Include="BitmapImage.cpp" />
     <ClCompile Include="ByteSwap.cpp" />
     <ClCompile Include="CFileStream.cpp" />
+    <ClCompile Include="CompositeRenderedFont.cpp" />
     <ClCompile Include="DeflateCodec.cpp" />
     <ClCompile Include="DialogManager.cpp" />
     <ClCompile Include="DisplayDeviceManager.cpp" />

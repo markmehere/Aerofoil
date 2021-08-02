@@ -105,6 +105,7 @@ namespace PortabilityLayer
 
 	private:
 		static void SynthesizeBoldAA(IGpFontRenderedGlyph *&glyph, unsigned int xScale, unsigned int yScale, bool aa, uint8_t character, int size, FontHacks fontHacks);
+		static uint16_t ResolveSystemSymbol(uint8_t character);
 
 		static FontRendererImpl ms_instance;
 	};
@@ -396,6 +397,10 @@ namespace PortabilityLayer
 		for (unsigned int i = 0; i < numCharacters; i++)
 		{
 			uint16_t unicodeCodePoint = MacRoman::ToUnicode(i);
+
+			if (fontHacks == FontHacks_SystemSymbols)
+				unicodeCodePoint = ResolveSystemSymbol(i);
+
 			if (unicodeCodePoint == 0xffff)
 				continue;
 
@@ -666,6 +671,35 @@ namespace PortabilityLayer
 
 		glyph->Destroy();
 		glyph = newGlyph;
+	}
+
+	uint16_t FontRendererImpl::ResolveSystemSymbol(uint8_t character)
+	{
+		// This emulates Chicago system symbol mappings
+		switch (character)
+		{
+		case 0x02: return 0x21e5;
+		case 0x03: return 0x21e4;
+		case 0x05: return 0x21e7;
+		case 0x06: return 0x2303;
+		case 0x07: return 0x2325;
+		case 0x0a: return 0x2326;
+		case 0x0b: return 0x21a9;
+		case 0x0c: return 0x21aa;
+		case 0x10: return 0x2193;
+		case 0x11: return 0x2318;
+		case 0x12: return 0x27a3;
+		case 0x13: return 0x25c6;
+		case 0x14: return 0x2764;	// Supposed to be Apple logo but, uh yeah
+		case 0x17: return 0x232b;
+		case 0x18: return 0x2190;
+		case 0x19: return 0x2191;
+		case 0x1a: return 0x2192;
+		case 0x1b: return 0x238b;
+		case 0x1c: return 0x2327;
+		default:
+			return 0xffff;
+		}
 	}
 
 	FontRendererImpl *FontRendererImpl::GetInstance()
