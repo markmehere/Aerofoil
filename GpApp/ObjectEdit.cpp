@@ -2664,7 +2664,7 @@ void HiliteAllObjects (void)
 	{
 		Delay(1, nullptr);
 	}
-	while ((theseKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) &&
+	while ((theseKeys->IsSet(PL_KEY_SHORTCUT)) &&
 			(theseKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))));
 	
 	for (i = 0; i < kMaxRoomObs; i++)

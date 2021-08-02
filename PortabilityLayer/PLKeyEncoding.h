@@ -26,6 +26,7 @@ namespace KeyEventEitherSpecialCategories
 		kControl,
 		kAlt,
 		kShift,
+		kCommand,
 	};
 }
 
@@ -43,6 +44,7 @@ namespace KeyEventEitherSpecialCategories
 #define PL_KEY_NUMPAD_SPECIAL_ENCODE(k)		((KeyEventType_NumPadSpecial) | ((k) << PL_INPUT_TYPE_CODE_BITS))
 #define PL_KEY_FKEY(k)						((KeyEventType_FKey) | ((k) << PL_INPUT_TYPE_CODE_BITS))
 #define PL_KEY_EITHER_SPECIAL(k)			((KeyEventType_EitherSpecial) | ((KeyEventEitherSpecialCategories::k) << PL_INPUT_TYPE_CODE_BITS))
+#define PL_KEY_SHORTCUT						(GetShortcutKeySpecial())
 #define PL_KEY_GAMEPAD_BUTTON(k, pl)		((KeyEventType_GamepadButton) | (pl << PL_INPUT_TYPE_CODE_BITS) | ((GpGamepadButtons::k) << (PL_INPUT_TYPE_CODE_BITS + PL_INPUT_PLAYER_INDEX_BITS)))
 #define PL_KEY_GAMEPAD_BUTTON_ENCODE(k, pl)	((KeyEventType_GamepadButton) | (pl << PL_INPUT_TYPE_CODE_BITS) | ((k) << (PL_INPUT_TYPE_CODE_BITS + PL_INPUT_PLAYER_INDEX_BITS)))
 
@@ -50,6 +52,7 @@ namespace KeyEventEitherSpecialCategories
 #define PL_KEY_GET_VALUE(k)					((k) >> PL_INPUT_TYPE_CODE_BITS)
 
 intptr_t PackVOSKeyCode(const GpKeyboardInputEvent &evt);
+intptr_t GetShortcutKeySpecial();
 
 struct KeyDownStates
 {

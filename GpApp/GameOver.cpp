@@ -228,7 +228,7 @@ void DoGameOverStarAnimation (void)
 		{
 			const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
-			if ((theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift))))
+			if ((theKeys->IsSet(PL_KEY_SHORTCUT)) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift))))
 				noInteruption = false;
 
 			if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
@@ -475,7 +475,7 @@ void DoDiedGameOver (void)
 		{
 			const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
-			if ((theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift))))
+			if ((theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))) || (theKeys->IsSet(PL_KEY_SHORTCUT)) || (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift))))
 			{
 				pagesStuck = 8;
 				userAborted = true;

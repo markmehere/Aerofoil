@@ -101,6 +101,8 @@ namespace GpKeySpecials
 		kRightCtrl,
 		kLeftAlt,
 		kRightAlt,
+		kLeftCommand,
+		kRightCommand,
 		kNumLock,
 		kLeftArrow,
 		kUpArrow,

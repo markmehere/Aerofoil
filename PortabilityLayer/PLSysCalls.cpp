@@ -1,5 +1,6 @@
 #include "PLCore.h"
 #include "AppEventHandler.h"
+#include "PLDrivers.h"
 #include "PLEventQueue.h"
 #include "PLKeyEncoding.h"
 #include "PLMovies.h"
@@ -9,6 +10,7 @@
 #include "GpVOSEvent.h"
 #include "IGpDisplayDriver.h"
 #include "IGpVOSEventQueue.h"
+#include "IGpSystemServices.h"
 #include "InputManager.h"
 #include "HostSuspendCallArgument.h"
 #include "HostSuspendHook.h"
@@ -129,6 +131,15 @@ intptr_t PackVOSKeyCode(const GpKeyboardInputEvent &vosEvent)
 	}
 
 	return 0;
+}
+
+
+intptr_t GetShortcutKeySpecial()
+{
+	if (PLDrivers::GetSystemServices()->GetOperatingSystem() == GpOperatingSystems::kMacOS)
+		return PL_KEY_EITHER_SPECIAL(kCommand);
+	else
+		return PL_KEY_EITHER_SPECIAL(kControl);
 }
 
 static void TranslateVOSEvent(const GpVOSEvent *vosEvent, uint32_t timestamp, PortabilityLayer::EventQueue *queue)

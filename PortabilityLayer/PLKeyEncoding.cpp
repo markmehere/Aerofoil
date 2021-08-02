@@ -12,6 +12,8 @@ static bool BitTestEitherSpecial(const KeyDownStates &keyMap, int eitherSpecial)
 		return keyMap.m_special.Get(GpKeySpecials::kLeftShift) || keyMap.m_special.Get(GpKeySpecials::kRightShift);
 	case KeyEventEitherSpecialCategories::kControl:
 		return keyMap.m_special.Get(GpKeySpecials::kLeftCtrl) || keyMap.m_special.Get(GpKeySpecials::kRightCtrl);
+	case KeyEventEitherSpecialCategories::kCommand:
+		return keyMap.m_special.Get(GpKeySpecials::kLeftCommand) || keyMap.m_special.Get(GpKeySpecials::kRightCommand);
 	default:
 		assert(false);
 		return false;

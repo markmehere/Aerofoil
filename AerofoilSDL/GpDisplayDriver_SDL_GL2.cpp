@@ -1637,6 +1637,14 @@ static bool IdentifyVKey(const SDL_KeyboardEvent *keyEvt, GpKeyIDSubset_t &outSu
 				return false;
 		}
 		break;
+	case SDLK_LGUI:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kLeftCommand;
+		break;
+	case SDLK_RGUI:
+		outSubset = GpKeyIDSubsets::kSpecial;
+		outKey.m_specialKey = GpKeySpecials::kRightCommand;
+		break;
 	case SDLK_LCTRL:
 		outSubset = GpKeyIDSubsets::kSpecial;
 		outKey.m_specialKey = GpKeySpecials::kLeftCtrl;
