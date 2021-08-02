@@ -554,6 +554,8 @@ static const char *gs_specialKeyNames[GpKeySpecials::kCount] =
 	"rt ctrl",
 	"lf alt",
 	"rt alt",
+	"lf cmd",
+	"rt cmd",
 	"num lock",
 	"lf arrow",
 	"up arrow",

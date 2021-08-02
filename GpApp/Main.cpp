@@ -44,7 +44,7 @@
 
 #include <atomic>
 
-#define kPrefsVersion			0x0039
+#define kPrefsVersion			0x003a
 
 
 void ReadInPrefs (void);
