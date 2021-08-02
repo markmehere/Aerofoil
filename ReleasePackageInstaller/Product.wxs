@@ -38,7 +38,6 @@
             <Directory Id="AEROFOILHOUSESDIR" Name="Houses" />
           </Directory>
           <Directory Id="AEROFOILDOCUMENTATIONDIR" Name="Documentation" />
-          <Directory Id="AEROFOILTOOLSDIR" Name="Tools" />
         </Directory>
       </Directory>
 
@@ -79,36 +78,6 @@
       </Component>
       <Component Id="Fonts" Guid="*">
         <File Id="Fonts.gpf" Source="$(var.PackagedDataDir)\Fonts.gpf" KeyPath="yes" Checksum="yes"/>
-      </Component>
-    </DirectoryRef>
-
-    <DirectoryRef Id="AEROFOILTOOLSDIR">
-      <Component Id="bin2gp.exe" Guid="*">
-        <File Id="bin2gp.exe" Source="$(var.bin2gp.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="flattenmov.exe" Guid="*">
-        <File Id="flattenmov.exe" Source="$(var.flattenmov.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="FTagData.exe" Guid="*">
-        <File Id="FTagData.exe" Source="$(var.FTagData.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="gpr2gpa.exe" Guid="*">
-        <File Id="gpr2gpa.exe" Source="$(var.gpr2gpa.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="hqx2bin.exe" Guid="*">
-        <File Id="hqx2bin.exe" Source="$(var.hqx2bin.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="hqx2gp.exe" Guid="*">
-        <File Id="hqx2gp.exe" Source="$(var.hqx2gp.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="MakeTimestamp.exe" Guid="*">
-        <File Id="MakeTimestamp.exe" Source="$(var.MakeTimestamp.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="unpacktool.exe" Guid="*">
-        <File Id="unpacktool.exe" Source="$(var.unpacktool.TargetPath)" KeyPath="yes" Checksum="yes"/>
-      </Component>
-      <Component Id="MergeGPF.exe" Guid="*">
-        <File Id="MergeGPF.exe" Source="$(var.MergeGPF.TargetPath)" KeyPath="yes" Checksum="yes"/>
       </Component>
     </DirectoryRef>
 
@@ -169,18 +138,6 @@
 
       <Feature Id="HousePack1Feature" Title="Additional Houses" Level="1" Description="!(loc.HousePack1FeatureDescription)">
         <ComponentGroupRef Id="HousePack1ComponentGroup" />
-      </Feature>
-
-      <Feature Id="ImportToolsFeature" Title="Data Import Utilities" Level="4" Description="!(loc.ImportToolsFeatureDescription)">
-        <ComponentRef Id="bin2gp.exe" />
-        <ComponentRef Id="flattenmov.exe" />
-        <ComponentRef Id="FTagData.exe" />
-        <ComponentRef Id="gpr2gpa.exe" />
-        <ComponentRef Id="hqx2bin.exe" />
-        <ComponentRef Id="hqx2gp.exe" />
-        <ComponentRef Id="MakeTimestamp.exe" />
-        <ComponentRef Id="unpacktool.exe" />
-        <ComponentRef Id="MergeGPF.exe" />
       </Feature>
     </Feature>
 
