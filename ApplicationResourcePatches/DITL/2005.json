@@ -116,23 +116,7 @@
 		{
 			"name" : "LIBICONV ©1999-2001, 2016 Free Software Foundation, Inc.",
 			"itemType" : "Label",
-			"pos" : [ 16, 172 ],
-			"size" : [ 406, 28 ],
-			"id" : 1,
-			"enabled" : true
-		},
-		{
-			"name" : "License...",
-			"itemType" : "Button",
-			"pos" : [ 430, 172 ],
-			"size" : [ 66, 20 ],
-			"id" : 1,
-			"enabled" : true
-		},
-		{
-			"name" : "RapidJSON ©2015 THL A29 Limited, a Tencent company, and Milo Yip",
-			"itemType" : "Label",
-			"pos" : [ 16, 205 ],
+			"pos" : [ 16, 173 ],
 			"size" : [ 406, 20 ],
 			"id" : 1,
 			"enabled" : true
@@ -140,7 +124,23 @@
 		{
 			"name" : "License...",
 			"itemType" : "Button",
-			"pos" : [ 430, 200 ],
+			"pos" : [ 430, 168 ],
+			"size" : [ 66, 20 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "RapidJSON ©2015 THL A29 Limited, a Tencent company, and Milo Yip",
+			"itemType" : "Label",
+			"pos" : [ 16, 194 ],
+			"size" : [ 406, 28 ],
+			"id" : 1,
+			"enabled" : true
+		},
+		{
+			"name" : "License...",
+			"itemType" : "Button",
+			"pos" : [ 430, 196 ],
 			"size" : [ 66, 20 ],
 			"id" : 1,
 			"enabled" : true
