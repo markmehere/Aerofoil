@@ -1,9 +1,11 @@
 #include "MenuManager.h"
+#include "CompositeRenderedFont.h"
 #include "DisplayDeviceManager.h"
 #include "FontFamily.h"
 #include "FontManager.h"
 #include "IGpFont.h"
 #include "IGpDisplayDriver.h"
+#include "IGpSystemServices.h"
 #include "MemoryManager.h"
 #include "ResourceManager.h"
 #include "SimpleGraphic.h"
@@ -119,6 +121,8 @@ struct Menu
 
 namespace PortabilityLayer
 {
+	class CompositeRenderedFont;
+
 	class MenuManagerImpl final : public MenuManager
 	{
 	public:
@@ -162,9 +166,6 @@ namespace PortabilityLayer
 		void SetMenuVisible(bool isVisible) override;
 
 		void RenderFrame(IGpDisplayDriver *displayDriver) override;
-
-		void SetMenuTouchScreenStyle(bool isTouchScreen) override;
-		bool IsMenuTouchScreenStyle() const override;
 
 		static MenuManagerImpl *GetInstance();
 
@@ -213,9 +214,7 @@ namespace PortabilityLayer
 		static const unsigned int kIconResID = 128;
 		static const unsigned int kMenuBarIconYOffset = 2;
 		static const unsigned int kMenuBarTextYOffset = 14;
-		static const unsigned int kTouchScreenMenuBarTextYOffset = 40;
 		static const unsigned int kMenuBarHeight = 20;
-		static const unsigned int kTouchscreenMenuBarHeight = 54;
 		static const unsigned int kMenuBarItemPadding = 6;
 		static const unsigned int kMenuBarInitialPadding = 16;
 
@@ -233,10 +232,9 @@ namespace PortabilityLayer
 		static const unsigned int kMenuItemLeftPadding = 16 + 2 + 2;	// 2 for left border, 16 for icon, 2 for spacing
 
 		static const int kMenuFontFlags = PortabilityLayer::FontFamilyFlag_Bold;
-		static const int kTouchScreenMenuFontFlags = PortabilityLayer::FontFamilyFlag_None;
 
+		static const FontPreset_t kMenuFontSymbolsPreset = FontPresets::kSystemSymbols12;
 		static const FontPreset_t kMenuFontPreset = FontPresets::kSystem12Bold;
-		static const FontPreset_t kTouchScreenMenuFontPreset = FontPresets::kApplication40;
 
 		DrawSurface *m_menuBarGraf;
 
@@ -245,7 +243,6 @@ namespace PortabilityLayer
 		bool m_haveMenuBarLayout;
 		bool m_haveIcon;
 		bool m_menuBarVisible;
-		bool m_isTouchScreen;
 
 		uint8_t m_iconColors[16 * 16];
 		uint8_t m_iconMask[32];
@@ -257,6 +254,7 @@ namespace PortabilityLayer
 		static const int kHintTextCapacity = 6;
 
 		static size_t FormatHintText(uint8_t *buffer, uint8_t key);
+		static CompositeRenderedFont GetMenuTextCompositeFont();
 
 		static MenuManagerImpl ms_instance;
 	};
@@ -267,7 +265,6 @@ namespace PortabilityLayer
 		, m_haveIcon(false)
 		, m_iconGraphic(nullptr)
 		, m_menuBarVisible(false)
-		, m_isTouchScreen(false)
 	{
 	}
 
@@ -945,7 +942,7 @@ namespace PortabilityLayer
 
 		PortabilityLayer::QDManager *qdManager = PortabilityLayer::QDManager::GetInstance();
 
-		const int16_t menuHeight = m_isTouchScreen ? kTouchscreenMenuBarHeight : kMenuBarHeight;
+		const int16_t menuHeight = kMenuBarHeight;
 
 		const Rect menuRect = Rect::Create(0, 0, menuHeight, width);
 
@@ -1048,18 +1045,9 @@ namespace PortabilityLayer
 
 		// Text items
 		ResolveCachingColor barNormalTextColor = gs_barNormalTextColor;
-		PortabilityLayer::RenderedFont *sysFont = nullptr;
-		unsigned int textYOffset = 0;
-		if (m_isTouchScreen)
-		{
-			sysFont = GetFont(kTouchScreenMenuFontPreset);
-			textYOffset = kTouchScreenMenuBarTextYOffset;
-		}
-		else
-		{
-			sysFont = GetFont(kMenuFontPreset);
-			textYOffset = kMenuBarTextYOffset;
-		}
+		PortabilityLayer::CompositeRenderedFont sysFont = GetMenuTextCompositeFont();
+
+		const unsigned int textYOffset = kMenuBarTextYOffset;
 
 		{
 			Menu **menuHdl = m_firstMenu;
@@ -1081,7 +1069,7 @@ namespace PortabilityLayer
 						if (menuHdl != selectedMenuHdl)
 						{
 							const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), textYOffset);
-							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barNormalTextColor, sysFont);
+							graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barNormalTextColor, &sysFont);
 						}
 					}
 				}
@@ -1101,7 +1089,7 @@ namespace PortabilityLayer
 				size_t xCoordinate = menu->cumulativeOffset + (menu->menuIndex * 2) * kMenuBarItemPadding + kMenuBarInitialPadding;
 
 				const Point itemPos = Point::Create(static_cast<int16_t>(xCoordinate), textYOffset);
-				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barHighlightTextColor, sysFont);
+				graf->DrawString(itemPos, PLPasStr(static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents)), barHighlightTextColor, &sysFont);
 			}
 		}
 
@@ -1130,15 +1118,8 @@ namespace PortabilityLayer
 				const PixMap *pixMap = *m_menuBarGraf->m_port.GetPixMap();
 				const size_t width = pixMap->m_rect.right - pixMap->m_rect.left;
 				const size_t height = pixMap->m_rect.bottom - pixMap->m_rect.top;
-				int32_t y = 0;
 
-				if (m_isTouchScreen)
-				{
-					unsigned int displayHeight = WindowManager::GetInstance()->GetDisplayResolution().m_y;
-					y = static_cast<int32_t>(displayHeight) - kTouchscreenMenuBarHeight;
-				}
-
-				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, y, width, height, nullptr);
+				displayDriver->DrawSurface(m_menuBarGraf->m_ddSurface, 0, 0, width, height, nullptr);
 			}
 		}
 
@@ -1167,16 +1148,6 @@ namespace PortabilityLayer
 		}
 	}
 
-	void MenuManagerImpl::SetMenuTouchScreenStyle(bool isTouchScreenStyle)
-	{
-		m_isTouchScreen = isTouchScreenStyle;
-	}
-
-	bool MenuManagerImpl::IsMenuTouchScreenStyle() const
-	{
-		return m_isTouchScreen;
-	}
-
 	void MenuManagerImpl::RefreshMenuBarLayout()
 	{
 		if (m_haveMenuBarLayout)
@@ -1184,19 +1155,7 @@ namespace PortabilityLayer
 
 		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-		PortabilityLayer::RenderedFont *rfont = nullptr;
-		PortabilityLayer::FontFamily *fontFamily = nullptr;
-
-		unsigned int fontSize = 0;
-		unsigned int fontFlags = 0;
-
-		if (m_isTouchScreen)
-			rfont = GetFont(kTouchScreenMenuFontPreset);
-		else
-			rfont = GetFont(kMenuFontPreset);
-
-		if (!rfont)
-			return;
+		PortabilityLayer::CompositeRenderedFont sysFont = GetMenuTextCompositeFont();
 
 		unsigned int index = 0;
 		size_t measuredWidth = 0;
@@ -1217,7 +1176,7 @@ namespace PortabilityLayer
 				menu->isIcon = true;
 			}
 			else
-				menu->unpaddedTitleWidth = rfont->MeasureString(pascalStr.UChars(), pascalStr.Length());
+				menu->unpaddedTitleWidth = sysFont.MeasureString(pascalStr.UChars(), pascalStr.Length());
 
 			measuredWidth += menu->unpaddedTitleWidth;
 
@@ -1234,9 +1193,7 @@ namespace PortabilityLayer
 
 		PortabilityLayer::FontManager *fontManager = PortabilityLayer::FontManager::GetInstance();
 
-		PortabilityLayer::RenderedFont *rfont = GetFont(kMenuFontPreset);
-		if (!rfont)
-			return;
+		PortabilityLayer::CompositeRenderedFont rfont = GetMenuTextCompositeFont();
 
 		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
 
@@ -1258,7 +1215,7 @@ namespace PortabilityLayer
 			const uint8_t *itemName = strBlob + item.nameOffsetInStringBlob;
 			const PLPasStr itemNamePStr = PLPasStr(itemName);
 
-			const size_t nameWidth = rfont->MeasureString(itemNamePStr.UChars(), itemNamePStr.Length());
+			const size_t nameWidth = rfont.MeasureString(itemNamePStr.UChars(), itemNamePStr.Length());
 
 			const size_t paddedWidth = nameWidth + kMenuItemLeftPadding + kMenuItemRightPadding;
 
@@ -1270,7 +1227,7 @@ namespace PortabilityLayer
 			{
 				uint8_t hintText[kHintTextCapacity];
 				const size_t hintLength = FormatHintText(hintText, item.key);
-				hintWidth = std::max<size_t>(rfont->MeasureString(hintText, hintLength) + kMenuItemRightPadding, hintWidth);
+				hintWidth = std::max<size_t>(rfont.MeasureString(hintText, hintLength) + kMenuItemRightPadding, hintWidth);
 			}
 		}
 
@@ -1386,13 +1343,7 @@ namespace PortabilityLayer
 
 	bool MenuManagerImpl::IsYInMenuBarRange(int32_t y) const
 	{
-		if (m_isTouchScreen)
-		{
-			unsigned int displayHeight = WindowManager::GetInstance()->GetDisplayResolution().m_y;
-			return y >= (static_cast<int32_t>(displayHeight - kTouchscreenMenuBarHeight)) && y < static_cast<int32_t>(displayHeight);
-		}
-		else
-			return y >= 0 && y < static_cast<int32_t>(kMenuBarHeight);
+		return y >= 0 && y < static_cast<int32_t>(kMenuBarHeight);
 	}
 
 	bool MenuManagerImpl::ItemIsSeparator(const Menu &menu, const MenuItem &item)
@@ -1405,22 +1356,31 @@ namespace PortabilityLayer
 
 	size_t MenuManagerImpl::FormatHintText(uint8_t *buffer, uint8_t key)
 	{
-#ifdef __MACOS__
-		buffer[0] = 'C';
-		buffer[1] = 'm';
-		buffer[2] = 'd';
-		buffer[3] = '+';
-		buffer[4] = key;
-		return 5;
-#else
-		buffer[0] = 'C';
-		buffer[1] = 't';
-		buffer[2] = 'r';
-		buffer[3] = 'l';
-		buffer[4] = '+';
-		buffer[5] = key;
-		return 6;
-#endif
+		if (PLDrivers::GetSystemServices()->GetOperatingSystem() == GpOperatingSystems::kMacOS)
+		{
+			buffer[0] = 0x11;	// Command symbol
+			buffer[1] = key;
+			return 2;
+		}
+		else
+		{
+			buffer[0] = 'C';
+			buffer[1] = 't';
+			buffer[2] = 'r';
+			buffer[3] = 'l';
+			buffer[4] = '+';
+			buffer[5] = key;
+			return 6;
+		}
+	}
+
+
+	CompositeRenderedFont MenuManagerImpl::GetMenuTextCompositeFont()
+	{
+		PortabilityLayer::RenderedFont *sysFont = GetFont(kMenuFontPreset);
+		PortabilityLayer::RenderedFont *symbolsFont = GetFont(kMenuFontSymbolsPreset);
+
+		return CompositeRenderedFont(symbolsFont, sysFont);
 	}
 
 	MenuManagerImpl *MenuManagerImpl::GetInstance()
@@ -1588,7 +1548,7 @@ namespace PortabilityLayer
 			surface->FillRect(Rect::Create(static_cast<int16_t>(menu->layoutFinalHeight - 1), 1, static_cast<int16_t>(menu->layoutFinalHeight), static_cast<int16_t>(menu->layoutWidth - 1)), darkGrayColor);
 		}
 
-		PortabilityLayer::RenderedFont *sysFont = GetFont(kMenuFontPreset);
+		PortabilityLayer::CompositeRenderedFont compositeFont = GetMenuTextCompositeFont();
 
 		const uint8_t *strBlob = static_cast<const uint8_t*>(menu->stringBlobHandle->m_contents);
 
@@ -1619,7 +1579,7 @@ namespace PortabilityLayer
 				else
 					itemTextAndCheckColor = gs_barDisabledTextColor;
 
-				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), itemTextAndCheckColor, sysFont);
+				surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), itemTextAndCheckColor, &compositeFont);
 
 				if (item.key)
 				{
@@ -1627,7 +1587,7 @@ namespace PortabilityLayer
 
 					uint8_t hintText[kHintTextCapacity];
 					const size_t hintLength = FormatHintText(hintText, item.key);
-					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), itemTextAndCheckColor, sysFont);
+					surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), itemTextAndCheckColor, &compositeFont);
 				}
 
 				if (item.checked)
@@ -1659,7 +1619,7 @@ namespace PortabilityLayer
 
 			itemPos.v = item.layoutYOffset + kMenuItemTextYOffset;
 
-			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), barHighlightTextColor, sysFont);
+			surface->DrawString(itemPos, PLPasStr(strBlob + item.nameOffsetInStringBlob), barHighlightTextColor, &compositeFont);
 
 			if (item.key)
 			{
@@ -1667,7 +1627,7 @@ namespace PortabilityLayer
 
 				uint8_t hintText[kHintTextCapacity];
 				const size_t hintLength = FormatHintText(hintText, item.key);
-				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), barHighlightTextColor, sysFont);
+				surface->DrawString(hintPos, PLPasStr(hintLength, reinterpret_cast<const char*>(hintText)), barHighlightTextColor, &compositeFont);
 
 				if (item.checked)
 					surface->FillRect(Rect::Create(item.layoutYOffset + kMenuItemCheckTopOffset, kMenuItemCheckLeftOffset, item.layoutYOffset + kMenuItemCheckBottomOffset, kMenuItemCheckRightOffset), barHighlightTextColor);

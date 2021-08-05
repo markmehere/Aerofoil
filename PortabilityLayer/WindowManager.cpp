@@ -1481,7 +1481,7 @@ namespace PortabilityLayer
 			logger->Printf(IGpLogDriver::Category_Information, "WindowManagerImpl: Resizing from %ix%i to %ix%i", static_cast<int>(prevWidth), static_cast<int>(prevHeight), static_cast<int>(newWidth), static_cast<int>(newHeight));
 
 		const uint32_t menuBarHeight = PortabilityLayer::MenuManager::GetInstance()->GetMenuBarHeight();
-		const bool menuIsTouchScreen = PortabilityLayer::MenuManager::GetInstance()->IsMenuTouchScreenStyle();
+		const bool menuIsTouchScreen = false; //PortabilityLayer::MenuManager::GetInstance()->IsMenuTouchScreenStyle();
 
 		for (PortabilityLayer::WindowImpl *window = m_windowStackTop; window != nullptr; window = window->GetWindowBelow())
 		{

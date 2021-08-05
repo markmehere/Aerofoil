@@ -145,7 +145,7 @@ void HandleKeyEvent (const KeyDownStates &keyStates, const GpKeyboardInputEvent 
 {
 	const intptr_t theChar = PackVOSKeyCode(theEvent);
 	const bool shiftDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kShift));
-	const bool commandDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kControl));
+	const bool commandDown = keyStates.IsSet(PL_KEY_SHORTCUT);
 	const bool optionDown = keyStates.IsSet(PL_KEY_EITHER_SPECIAL(kAlt));
 	
 	if ((commandDown) && (!optionDown))
@@ -424,7 +424,7 @@ void HandleEvent (void)
 	bool				itHappened = true;
 
 	const KeyDownStates *eventKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
-	if ((eventKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl))) &&
+	if ((eventKeys->IsSet(PL_KEY_SHORTCUT)) &&
 			(eventKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt))))
 	{
 		HiliteAllObjects();

@@ -6,6 +6,8 @@ namespace PortabilityLayer
 	{
 		enum FontPreset
 		{
+			kSystemSymbols12,
+
 			kSystem12,
 			kSystem12Bold,
 

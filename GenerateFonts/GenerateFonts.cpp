@@ -286,6 +286,8 @@ int toolMain(int argc, const char **argv)
 	fprintf(manifestF, "\t]\n");
 	fprintf(manifestF, "}\n");
 
+	fclose(manifestF);
+
 	PortabilityLayer::RenderedFontCatalogHeader catHeader;
 
 	FILE *catF = fopen_utf8("Packaged/FontCacheCatalog.bin", "wb");

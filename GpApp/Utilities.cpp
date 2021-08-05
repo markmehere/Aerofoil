@@ -470,7 +470,7 @@ Boolean WaitForInputEvent (short seconds)
 	{
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
-		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)) || theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt)) || theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift)))
+		if (theKeys->IsSet(PL_KEY_SHORTCUT) || theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kAlt)) || theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kShift)))
 			waiting = false;
 
 		if (PortabilityLayer::EventQueue::GetInstance()->Dequeue(&theEvent))
@@ -501,7 +501,7 @@ void WaitCommandQReleased (void)
 	{
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
-		if (!theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)) || !theKeys->IsSet(PL_KEY_ASCII('Q')))
+		if (!theKeys->IsSet(PL_KEY_SHORTCUT) || !theKeys->IsSet(PL_KEY_ASCII('Q')))
 			waiting = false;
 
 		PL_ASYNCIFY_PARANOID_DISARM_FOR_SCOPE();
@@ -554,6 +554,8 @@ static const char *gs_specialKeyNames[GpKeySpecials::kCount] =
 	"rt ctrl",
 	"lf alt",
 	"rt alt",
+	"lf cmd",
+	"rt cmd",
 	"num lock",
 	"lf arrow",
 	"up arrow",

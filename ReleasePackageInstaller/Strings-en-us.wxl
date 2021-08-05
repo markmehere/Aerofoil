@@ -2,5 +2,4 @@
 <WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
 	<String Id="AerofoilApplicationFeatureDescription">Installs the base game and the main houses (Slumberland and Demo House)</String>
   <String Id="HousePack1FeatureDescription">Installs additional houses from the Glider PRO CD-ROM and the CD demo house from the open source release.</String>
-  <String Id="ImportToolsFeatureDescription">Installs tools for importing houses created by the original Macintosh version of Glider PRO.</String>
 </WixLocalization>

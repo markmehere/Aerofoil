@@ -233,11 +233,12 @@ void DoAboutOpenSource(void)
 	static const int kOpenSansLicenseButton = 8;
 	static const int kRobotoMonoLicenseButton = 10;
 	static const int kGochiHandLicenseButton = 12;
-	static const int kLibIConvLicenseButton = 14;
-	static const int kRapidJSONLicenseButton = 16;
-	static const int kZLibLicenseButton = 18;
-	static const int kFreeTypeLicenseButton = 20;
-	static const int kSDLLicenseButton = 22;
+	static const int kInterLicenseButton = 14;
+	static const int kLibIConvLicenseButton = 16;
+	static const int kRapidJSONLicenseButton = 18;
+	static const int kZLibLicenseButton = 20;
+	static const int kFreeTypeLicenseButton = 22;
+	static const int kSDLLicenseButton = 24;
 
 	static const int kLicenseResourceApache = 1000;
 	static const int kLicenseResourceGPLv2 = 1001;
@@ -249,7 +250,7 @@ void DoAboutOpenSource(void)
 
 	static const int kAboutOpenSourceDialogTemplateID = 2005;
 
-	const Rect windowRect = Rect::Create(0, 0, 324, 512);
+	const Rect windowRect = Rect::Create(0, 0, 348, 512);
 
 	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
@@ -281,6 +282,7 @@ void DoAboutOpenSource(void)
 			DoLicenseReader(kLicenseResourceApache);
 			break;
 		case kGochiHandLicenseButton:
+		case kInterLicenseButton:
 			DoLicenseReader(kLicenseResourceOFL);
 			break;
 		case kLibIConvLicenseButton:

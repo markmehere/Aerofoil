@@ -370,7 +370,7 @@ void DoPause (void)
 		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
 				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
 			paused = false;
-		else if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
+		else if (theKeys->IsSet(PL_KEY_SHORTCUT))
 			DoCommandKey();
 
 		Delay(1, nullptr);
@@ -480,7 +480,7 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 
 #else
 
-		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
+		if (theKeys->IsSet(PL_KEY_SHORTCUT))
 			DoCommandKey();
 
 		// Cheesy - Use touchscreen menu as quit
@@ -568,7 +568,7 @@ void GetInput (gliderPtr thisGlider)
 	{
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
-		if (theKeys->IsSet(PL_KEY_EITHER_SPECIAL(kControl)))
+		if (theKeys->IsSet(PL_KEY_SHORTCUT))
 			DoCommandKey();
 	}
 

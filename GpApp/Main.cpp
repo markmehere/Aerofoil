@@ -44,7 +44,7 @@
 
 #include <atomic>
 
-#define kPrefsVersion			0x0039
+#define kPrefsVersion			0x003a
 
 
 void ReadInPrefs (void);
@@ -536,9 +536,6 @@ int AppStartup()
 
 	ToolBoxInit();
 	CheckOurEnvirons();
-
-	if (thisMac.isTouchscreen)
-		PortabilityLayer::MenuManager::GetInstance()->SetMenuTouchScreenStyle(true);
 
 	if (!thisMac.hasColor)
 		RedAlert(kErrNeedColorQD);
