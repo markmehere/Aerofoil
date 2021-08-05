@@ -1,6 +1,3 @@
-#ifndef MacInit_h
-#define MacInit_h
+#pragma once
 
 int MacInit(void);
-
-#endif /* MacInit_h */
