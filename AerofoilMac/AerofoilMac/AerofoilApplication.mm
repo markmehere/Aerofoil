@@ -1,13 +1,13 @@
 #import "AerofoilApplication.h"
 #include "SDL.h"
 
-extern int SDL_SendQuit(void);
-
 @implementation AerofoilApplication
 
 - (void)terminate:(id)sender {
-	// TODO: Use Aerofoil method instead of private SDL method
-	SDL_SendQuit();
+	SDL_Event event;
+	event.quit.type = SDL_QUIT;
+	event.quit.timestamp = SDL_GetTicks();
+	SDL_PushEvent(&event);
 }
 
 @end
