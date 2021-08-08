@@ -466,6 +466,21 @@ void HandleEvent (void)
 				break;
 			}
 		}
+		else if (theEvent.m_vosEvent.m_eventType == GpVOSEventType_t::kMenuItemSelected)
+		{
+			switch (theEvent.m_vosEvent.m_event.m_menuItemSelectionEvent)
+			{
+			case GpMenuItemSelectionEvents::kAboutGliderPRO:
+				DoAbout();
+				break;
+			case GpMenuItemSelectionEvents::kAboutAerofoil:
+				DoAboutFramework();
+				break;
+			case GpMenuItemSelectionEvents::kPreferences:
+				DoSettingsMain();
+				break;
+			}
+		}
 	}
 	else
 		HandleIdleTask();

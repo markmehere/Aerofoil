@@ -169,6 +169,10 @@ static void TranslateVOSEvent(const GpVOSEvent *vosEvent, uint32_t timestamp, Po
 			appHandler->OnQuit();
 
 		break;
+	case GpVOSEventTypes::kMenuItemSelected:
+		if (TimeTaggedVOSEvent *evt = queue->Enqueue())
+			*evt = TimeTaggedVOSEvent::Create(*vosEvent, timestamp);
+		break;
 	}
 }
 

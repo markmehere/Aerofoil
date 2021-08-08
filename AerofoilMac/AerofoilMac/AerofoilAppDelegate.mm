@@ -1,10 +1,9 @@
 #import "AerofoilAppDelegate.h"
-#import "About.h"
+#import "AerofoilApplication.h"
 #include "WindowManager.h"
 #include "GliderDefines.h" // kPlayMode
 
 extern short theMode;
-void DoSettingsMain(void);
 
 @interface AerofoilAppDelegate ()
 
@@ -17,19 +16,13 @@ void DoSettingsMain(void);
 @implementation AerofoilAppDelegate
 
 - (IBAction)showAboutAerofoil:(id)sender {
-	[self performAsynchronously:DoAboutFramework];
+	[NSApp sendMenuItemEvent:GpMenuItemSelectionEvents::kAboutAerofoil];
 }
 - (IBAction)showAboutGliderPRO:(id)sender {
-	[self performAsynchronously:DoAbout];
+	[NSApp sendMenuItemEvent:GpMenuItemSelectionEvents::kAboutGliderPRO];
 }
 - (IBAction)showPreferences:(id)sender {
-	[self performAsynchronously:DoSettingsMain];
-}
-
-- (void)performAsynchronously:(void(*)())function {
-	dispatch_async(dispatch_get_main_queue(), ^{
-		function();
-	});
+	[NSApp sendMenuItemEvent:GpMenuItemSelectionEvents::kPreferences];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
