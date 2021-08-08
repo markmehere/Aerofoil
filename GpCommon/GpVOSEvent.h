@@ -97,8 +97,8 @@ namespace GpKeySpecials
 		kEnter,
 		kLeftShift,
 		kRightShift,
-		kLeftCtrl,  // Maps to Command modifier on macOS.
-		kRightCtrl, //
+		kLeftCtrl,
+		kRightCtrl,
 		kLeftAlt,
 		kRightAlt,
 		kLeftCommand,
