@@ -11,6 +11,8 @@
 		4A04C5AF269AD600009F5CA3 /* AerofoilAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A04C5AE269AD600009F5CA3 /* AerofoilAppDelegate.mm */; };
 		4A04C5B6269AE945009F5CA3 /* AerofoilApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A04C5B5269AE945009F5CA3 /* AerofoilApplication.m */; };
 		4A04C5B7269AE96B009F5CA3 /* MacInit.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A04C5B0269AE243009F5CA3 /* MacInit.mm */; };
+		4A2818FE26BBDD35005A36C0 /* CompositeRenderedFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A2818EF26BBDD35005A36C0 /* CompositeRenderedFont.cpp */; };
+		4A2818FF26BBDD35005A36C0 /* CompositeRenderedFont.h in Headers */ = {isa = PBXBuildFile; fileRef = 4A2818FD26BBDD35005A36C0 /* CompositeRenderedFont.h */; };
 		5C54D0A02629B42400AB55E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C54D09F2629B42400AB55E0 /* Assets.xcassets */; };
 		5C54D0BE2629B72000AB55E0 /* stb_image_write.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C54D0BC2629B72000AB55E0 /* stb_image_write.h */; };
 		5C54D0BF2629B72000AB55E0 /* stb_image_write.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C54D0BD2629B72000AB55E0 /* stb_image_write.c */; };
@@ -598,7 +600,10 @@
 		4A04C5B0269AE243009F5CA3 /* MacInit.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MacInit.mm; sourceTree = "<group>"; };
 		4A04C5B2269AE368009F5CA3 /* MacInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MacInit.h; sourceTree = "<group>"; };
 		4A04C5B4269AE945009F5CA3 /* AerofoilApplication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AerofoilApplication.h; sourceTree = "<group>"; };
-		4A04C5B5269AE945009F5CA3 /* AerofoilApplication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AerofoilApplication.m; sourceTree = "<group>"; };
+		4A04C5B5269AE945009F5CA3 /* AerofoilApplication.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AerofoilApplication.mm; sourceTree = "<group>"; };
+		4A2818EF26BBDD35005A36C0 /* CompositeRenderedFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CompositeRenderedFont.cpp; sourceTree = "<group>"; };
+		4A2818FD26BBDD35005A36C0 /* CompositeRenderedFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CompositeRenderedFont.h; sourceTree = "<group>"; };
+		4AA1EB4D26BF9399001D8CC6 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		5C54D0962629B42100AB55E0 /* Aerofoil.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aerofoil.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C54D09F2629B42400AB55E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5C54D0A42629B42400AB55E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1166,6 +1171,8 @@
 				5C54D2B12629BC6800AB55E0 /* CFileStream.cpp */,
 				5C54D2AE2629BC6800AB55E0 /* CFileStream.h */,
 				5C54D2B52629BC6800AB55E0 /* CombinedTimestamp.h */,
+				4A2818EF26BBDD35005A36C0 /* CompositeRenderedFont.cpp */,
+				4A2818FD26BBDD35005A36C0 /* CompositeRenderedFont.h */,
 				5C54D2FC2629BC6800AB55E0 /* DataTypes.h */,
 				5C54D2D62629BC6800AB55E0 /* DeflateCodec.cpp */,
 				5C54D2EB2629BC6800AB55E0 /* DeflateCodec.h */,
@@ -1630,6 +1637,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A2818FF26BBDD35005A36C0 /* CompositeRenderedFont.h in Headers */,
 				5C54D44B2629BC6D00AB55E0 /* FontFamilyID.h in Headers */,
 				5CB787212639D1D800D8FDB6 /* GpAllocator_C.h in Headers */,
 				5C54D38C2629BC6A00AB55E0 /* EllipsePlotter.h in Headers */,
@@ -2202,6 +2210,7 @@
 				5C54D4282629BC6C00AB55E0 /* RandomNumberGenerator.cpp in Sources */,
 				5C54D550262B3C2E00AB55E0 /* DynamicMaps.cpp in Sources */,
 				5C54D4502629BC6D00AB55E0 /* PLButtonWidget.cpp in Sources */,
+				4A2818FE26BBDD35005A36C0 /* CompositeRenderedFont.cpp in Sources */,
 				5C54D568262B3C2E00AB55E0 /* Scoreboard.cpp in Sources */,
 				5C54D596262B3C2F00AB55E0 /* Link.cpp in Sources */,
 			);
