@@ -46,7 +46,7 @@ void HandleRoomVisitation (void);
 void SetObjectsToDefaults (void);
 void InitTelephone (void);
 void HandleTelephone (void);
-
+void DoEndGame (void);
 
 phoneType	thePhone, theChimes;
 Rect		glidSrcRect, justRoomsRect;
@@ -717,7 +717,11 @@ void PlayGame (void)
 				HandleDynamicScoreboard();
 			}
 		}
-
+		
+		if (quitting) {
+			DoEndGame();
+		}
+		
 		if (gameOver)
 		{
 			countDown--;

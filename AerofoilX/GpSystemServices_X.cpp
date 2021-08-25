@@ -107,7 +107,11 @@ bool GpSystemServices_X::HasNativeFileManager() const
 
 GpOperatingSystem_t GpSystemServices_X::GetOperatingSystem() const
 {
+#ifdef __MACOS__
+	return GpOperatingSystems::kMacOS;
+#else
 	return GpOperatingSystems::kLinux;
+#endif
 }
 
 GpOperatingSystemFlavor_t GpSystemServices_X::GetOperatingSystemFlavor() const

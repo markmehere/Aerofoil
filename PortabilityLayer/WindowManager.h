@@ -38,6 +38,7 @@ namespace PortabilityLayer
 		virtual void SetWindowTitle(Window *window, const PLPasStr &title) = 0;
 		virtual Rect2i GetWindowFullRect(Window *window) const = 0;
 		virtual bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const = 0;
+		virtual bool IsExclusiveWindowVisible() = 0;
 		virtual void SwapExclusiveWindow(Window *& windowRef) = 0;
 
 		GP_ASYNCIFY_PARANOID_VIRTUAL void FlickerWindowIn(Window *window, int32_t velocity) GP_ASYNCIFY_PARANOID_PURE;

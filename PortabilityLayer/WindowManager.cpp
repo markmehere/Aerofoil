@@ -186,6 +186,7 @@ namespace PortabilityLayer
 		void SetWindowTitle(Window *window, const PLPasStr &title) override;
 		Rect2i GetWindowFullRect(Window *window) const override;
 		bool GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const override;
+		bool IsExclusiveWindowVisible() override;
 		void SwapExclusiveWindow(Window *& windowRef) override;
 
 		void FlickerWindowIn(Window *window, int32_t velocity) GP_ASYNCIFY_PARANOID_OVERRIDE;
@@ -1320,6 +1321,10 @@ namespace PortabilityLayer
 	bool WindowManagerImpl::GetWindowChromeInteractionZone(Window *window, const Vec2i &point, RegionID_t &outRegion) const
 	{
 		return static_cast<WindowImpl*>(window)->GetChromeInteractionZone(point, outRegion);
+	}
+
+	bool WindowManagerImpl::IsExclusiveWindowVisible() {
+		return m_exclusiveWindow != nullptr;
 	}
 
 	void WindowManagerImpl::SwapExclusiveWindow(Window *& windowRef)

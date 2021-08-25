@@ -42,6 +42,7 @@ void DoPause (void);
 void DoTouchScreenMenu (void);
 void DoBatteryEngaged (gliderPtr);
 void DoHeliumEngaged (gliderPtr);
+void DoEndGame (void);
 void QuerySaveGame (Boolean &save, Boolean &cancel);
 
 
@@ -72,27 +73,10 @@ void LogDemoKey (char keyIs)
 void DoCommandKey (void)
 {
 	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
-
+	
 	if (theKeys->IsSet(PL_KEY_ASCII('Q')))
 	{
-		Boolean wantCancel = false;
-		playing = false;
-		paused = false;
-		if ((!twoPlayerGame) && (!demoGoing))
-		{
-			Boolean wantSave = false;
-			QuerySaveGame(wantSave, wantCancel);
-
-			if (wantSave)
-			{
-				// New save game.
-				if (!SaveGame2())
-					wantCancel = true;
-			}
-		}
-
-		if (wantCancel)
-			playing = true;
+		DoEndGame();
 	}
 	else if ((theKeys->IsSet(PL_KEY_ASCII('S'))) && (!twoPlayerGame))
 	{
@@ -337,24 +321,7 @@ void DoTouchScreenMenu(void)
 	switch (highlightedItem)
 	{
 	case TouchScreenMenuItems::kQuit:
-		{
-			Boolean wantCancel = false;
-			playing = false;
-			paused = false;
-			if ((!twoPlayerGame) && (!demoGoing))
-			{
-				Boolean wantSave = false;
-				QuerySaveGame(wantSave, wantCancel);
-				if (wantSave)
-				{
-					if (!SaveGame2())		// New save game.
-						wantCancel = true;
-				}
-			}
-
-			if (wantCancel)
-				playing = true;
-		}
+		DoEndGame();
 		break;
 	case TouchScreenMenuItems::kSave:
 		assert(!twoPlayerGame);
@@ -810,6 +777,28 @@ void GetInput (gliderPtr thisGlider)
 		{
 			DoPause();
 		}
+	}
+}
+
+void DoEndGame() {
+	Boolean wantCancel = false;
+	playing = false;
+	paused = false;
+	quitting = false;
+	if ((!twoPlayerGame) && (!demoGoing))
+	{
+		Boolean wantSave = false;
+		QuerySaveGame(wantSave, wantCancel);
+		if (wantSave)
+		{
+			if (!SaveGame2())        // New save game.
+				wantCancel = true;
+		}
+	}
+	
+	if (wantCancel)
+	{
+		playing = true;
 	}
 }
 

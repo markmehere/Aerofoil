@@ -270,6 +270,17 @@ struct GpVideoResolutionChangedEvent
 	uint32_t m_newHeight;
 };
 
+namespace GpMenuItemSelectionEvents
+{
+	enum GpMenuItemSelectionEvent {
+		kAboutGliderPRO,
+		kAboutAerofoil,
+		kPreferences
+	};
+}
+
+typedef GpMenuItemSelectionEvents::GpMenuItemSelectionEvent GpMenuItemSelectionEvent_t;
+
 namespace GpVOSEventTypes
 {
 	enum GpVOSEventType
@@ -279,6 +290,7 @@ namespace GpVOSEventTypes
 		kTouchInput,
 		kGamepadInput,
 		kVideoResolutionChanged,
+		kMenuItemSelected,
 		kQuit
 	};
 }
@@ -294,6 +306,7 @@ struct GpVOSEvent
 		GpTouchInputEvent m_touchInputEvent;
 		GpGamepadInputEvent m_gamepadInputEvent;
 		GpVideoResolutionChangedEvent m_resolutionChangedEvent;
+		GpMenuItemSelectionEvent_t m_menuItemSelectionEvent;
 	};
 
 	EventUnion m_event;
