@@ -227,6 +227,8 @@ int toolMain(int argc, const char **argv)
 	std::vector<PortabilityLayer::ZipCentralDirectoryFileHeader> resCentralDir;
 	std::vector<uint8_t> fileNameBytes;
 	std::vector<size_t> fileNameSizes;
+	std::vector<uint8_t> commentBytes;
+	std::vector<size_t> commentSizes;
 
 	FILE *resF = fopen_utf8(resName.c_str(), "rb");
 	if (resF)
@@ -266,7 +268,20 @@ int toolMain(int argc, const char **argv)
 				}
 			}
 
-			if (!resStream.SeekCurrent(cdirFile.m_extraFieldLength + cdirFile.m_commentLength))
+			size_t commentLength = cdirFile.m_commentLength;
+			commentSizes.push_back(commentLength);
+
+			if (commentLength > 0)
+			{
+				commentBytes.resize(commentBytes.size() + commentLength);
+				if (!resStream.Read(&commentBytes[commentBytes.size() - commentLength], commentLength))
+				{
+					fprintf(stderr, "Error reading cdir entry");
+					return -1;
+				}
+			}
+
+			if (!resStream.SeekCurrent(cdirFile.m_extraFieldLength))
 			{
 				fprintf(stderr, "Error reading cdir entry");
 				return -1;
@@ -275,7 +290,7 @@ int toolMain(int argc, const char **argv)
 			resCentralDir.push_back(cdirFile);
 
 			numFiles++;
-			cdirSize += sizeof(PortabilityLayer::ZipCentralDirectoryFileHeader) + fileNameLength;
+			cdirSize += sizeof(PortabilityLayer::ZipCentralDirectoryFileHeader) + fileNameLength + commentLength;
 		}
 
 		for (size_t i = 0; i < resCentralDir.size(); i++)
@@ -296,7 +311,6 @@ int toolMain(int argc, const char **argv)
 
 			cdirHeader.m_localHeaderOffset = mergedStream.Tell();
 			cdirHeader.m_extraFieldLength = 0;
-			cdirHeader.m_commentLength = 0;
 
 			if (!mergedStream.WriteExact(&resLH, sizeof(resLH)))
 			{
@@ -357,19 +371,22 @@ int toolMain(int argc, const char **argv)
 		}
 	}
 
+	size_t commentBytesOffset = 0;
 	size_t fnameBytesOffset = 0;
 	for (size_t i = 0; i < resCentralDir.size(); i++)
 	{
 		size_t fnameSize = fileNameSizes[i];
+		size_t commentSize = commentSizes[i];
 		const PortabilityLayer::ZipCentralDirectoryFileHeader &cdir = resCentralDir[i];
 
-		if (!mergedStream.WriteExact(&cdir, sizeof(cdir)) || (fnameSize > 0 && !mergedStream.WriteExact(&fileNameBytes[fnameBytesOffset], fnameSize)))
+		if (!mergedStream.WriteExact(&cdir, sizeof(cdir)) || (fnameSize > 0 && !mergedStream.WriteExact(&fileNameBytes[fnameBytesOffset], fnameSize)) || (commentSize > 0 && !mergedStream.WriteExact(&commentBytes[commentBytesOffset], commentSize)))
 		{
 			fprintf(stderr, "Error writing directory");
 			return -1;
 		}
 
 		fnameBytesOffset += fnameSize;
+		commentBytesOffset += commentSize;
 	}
 
 	PortabilityLayer::ZipEndOfCentralDirectoryRecord eocd;

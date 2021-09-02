@@ -52,6 +52,7 @@ struct PlannedEntry
 	std::vector<uint8_t> m_compressedContents;
 
 	std::string m_name;
+	std::string m_comment;
 	bool m_isDirectory;
 
 	PlannedEntry()
@@ -252,7 +253,7 @@ void ExportZipFile(const char *path, std::vector<PlannedEntry> &entries, const P
 		cdirHeader.m_uncompressedSize = static_cast<uint32_t>(entry.m_uncompressedContents.size());
 		cdirHeader.m_fileNameLength = static_cast<uint32_t>(entry.m_name.size());
 		cdirHeader.m_extraFieldLength = 0;
-		cdirHeader.m_commentLength = 0;
+		cdirHeader.m_commentLength = static_cast<uint32_t>(entry.m_comment.size());
 		cdirHeader.m_diskNumber = 0;
 		cdirHeader.m_internalAttributes = 0;
 		cdirHeader.m_externalAttributes = entry.m_isDirectory ? PortabilityLayer::ZipConstants::kDirectoryAttributes : PortabilityLayer::ZipConstants::kArchivedAttributes;
@@ -290,6 +291,7 @@ void ExportZipFile(const char *path, std::vector<PlannedEntry> &entries, const P
 	{
 		fwrite(&cdirRecords[i], 1, sizeof(PortabilityLayer::ZipCentralDirectoryFileHeader), outF);
 		fwrite(entries[i].m_name.c_str(), 1, entries[i].m_name.size(), outF);
+		fwrite(entries[i].m_comment.c_str(), 1, entries[i].m_comment.size(), outF);
 	}
 
 	long cdirEndPos = ftell(outF);
@@ -2363,7 +2365,6 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 	PortabilityLayer::ResourceFile *resFile = PortabilityLayer::ResourceFile::Create();
 	resFile->Load(&cfs);
-	cfs.Close();
 
 	PortabilityLayer::ResourceCompiledTypeList *typeLists = nullptr;
 	size_t typeListCount = 0;
@@ -2428,6 +2429,14 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 			const void *resData = res.m_resData;
 			const size_t resSize = res.GetSize();
 
+			std::string resComment;
+
+			if (res.m_resNameOffset >= 0)
+			{
+				const uint8_t *pstrStart = resFile->GetResNames() + res.m_resNameOffset;
+				resComment = std::string(reinterpret_cast<const char*>(pstrStart + 1), pstrStart[0]);
+			}
+
 			if (typeList.m_resType == pictTypeID || typeList.m_resType == dateTypeID)
 			{
 				char resName[256];
@@ -2438,6 +2447,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				PlannedEntry entry;
 				entry.m_name = resName;
+				entry.m_comment = resComment;
 
 				if (ImportPICT(entry.m_uncompressedContents, resData, resSize, dumpqtDir, res.m_resID))
 					contents.push_back(entry);
@@ -2454,6 +2464,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				PlannedEntry entry;
 				entry.m_name = resName;
+				entry.m_comment = resComment;
 
 				if (ImportSound(entry.m_uncompressedContents, resData, resSize, res.m_resID))
 					contents.push_back(entry);
@@ -2470,6 +2481,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				PlannedEntry entry;
 				entry.m_name = resName;
+				entry.m_comment = resComment;
 
 				if (ImportIndexedString(entry.m_uncompressedContents, resData, resSize))
 					contents.push_back(entry);
@@ -2484,6 +2496,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 
 				PlannedEntry entry;
 				entry.m_name = resName;
+				entry.m_comment = resComment;
 
 				if (ImportDialogItemTemplate(entry.m_uncompressedContents, resData, resSize))
 					contents.push_back(entry);
@@ -2505,8 +2518,8 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 							isIcon = true;
 
 							PlannedEntry entry;
-
 							entry.m_name = resName;
+							entry.m_comment = resComment;
 
 							if (ImportIcon(entry.m_uncompressedContents, resData, resSize, iconSpec.m_width, iconSpec.m_height, iconSpec.m_bpp))
 								contents.push_back(entry);
@@ -2527,6 +2540,7 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 					PlannedEntry entry;
 
 					entry.m_name = resName;
+					entry.m_comment = resComment;
 					entry.m_uncompressedContents.resize(res.GetSize());
 
 					memcpy(&entry.m_uncompressedContents[0], resData, resSize);
@@ -2536,6 +2550,8 @@ int ConvertSingleFile(const char *resPath, const PortabilityLayer::CombinedTimes
 			}
 		}
 	}
+
+	cfs.Close();
 
 	if (havePatchFile)
 	{

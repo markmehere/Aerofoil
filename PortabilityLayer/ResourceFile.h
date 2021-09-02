@@ -21,6 +21,9 @@ namespace PortabilityLayer
 
 		void GetAllResourceTypeLists(ResourceCompiledTypeList *&outTypeLists, size_t &outCount) const;
 
+		const uint8_t *GetResNames() const;
+		const size_t GetResNamesSize() const;
+
 		const ResourceCompiledTypeList *GetResourceTypeList(const ResTypeID &resType);
 		THandle<void> LoadResource(const ResTypeID &resType, int id);
 
@@ -42,6 +45,8 @@ namespace PortabilityLayer
 
 		ResourceCompiledTypeList *m_compiledTypeListBlob;
 		size_t m_numResourceTypes;
+
+		uint32_t m_nameListOffset;
 
 		static bool CompiledRefSortPredicate(const ResourceCompiledRef &a, const ResourceCompiledRef &b);
 		static bool CompiledTypeListSortPredicate(const ResourceCompiledTypeList &a, const ResourceCompiledTypeList &b);

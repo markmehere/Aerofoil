@@ -20,6 +20,7 @@ namespace PortabilityLayer
 		, m_numResources(0)
 		, m_compiledTypeListBlob(nullptr)
 		, m_numResourceTypes(0)
+		, m_nameListOffset(0)
 	{
 	}
 
@@ -341,6 +342,16 @@ namespace PortabilityLayer
 	{
 		outTypeLists = m_compiledTypeListBlob;
 		outCount = m_numResourceTypes;
+	}
+
+	const uint8_t *ResourceFile::GetResNames() const
+	{
+		return m_resNameBlob;
+	}
+
+	const size_t ResourceFile::GetResNamesSize() const
+	{
+		return m_resNameBlobSize;
 	}
 
 	const ResourceCompiledTypeList *ResourceFile::GetResourceTypeList(const ResTypeID &resType)
