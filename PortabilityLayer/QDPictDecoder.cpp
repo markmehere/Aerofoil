@@ -559,6 +559,7 @@ namespace PortabilityLayer
 		}
 
 		const int componentSize = pixMapBE.m_componentSize;
+		const int componentCount = pixMapBE.m_componentCount;
 
 		// We only support rect moves that are the same size
 		if (srcRect.right - srcRect.left != destRect.right - destRect.left)
@@ -685,7 +686,7 @@ namespace PortabilityLayer
 
 					if (!started)
 					{
-						context->Start(QDPictBlitSourceType_RGB15, params);
+						context->Start(QDPictBlitSourceType_RGB15Native, params);
 						started = true;
 					}
 
@@ -758,8 +759,14 @@ namespace PortabilityLayer
 					case 8:
 						context->Start(QDPictBlitSourceType_Indexed8Bit, params);
 						break;
+					case 5:
+						if (componentCount == 3)
+							context->Start(QDPictBlitSourceType_RGB15BE, params);
+						else
+							return 52;
+						break;
 					default:
-						return 52;	// ???
+						return 53;	// ???
 					}
 
 					started = true;
@@ -768,14 +775,14 @@ namespace PortabilityLayer
 				context->BlitScanlineAndAdvance(decompressedScanlineBuffer);
 			}
 			else
-				return 53;
+				return 54;
 		}
 
 		// Either undocumented behavior or non-compliant PICT resources, not sure
 		if (isPixMap && (stream->Tell() & 1) != 0)
 		{
 			if (!stream->SeekCurrent(1))
-				return 54;
+				return 55;
 		}
 
 		return 0;

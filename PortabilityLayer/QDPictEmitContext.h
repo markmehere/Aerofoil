@@ -18,7 +18,8 @@ namespace PortabilityLayer
 		QDPictBlitSourceType_Indexed2Bit,
 		QDPictBlitSourceType_Indexed4Bit,
 		QDPictBlitSourceType_Indexed8Bit,
-		QDPictBlitSourceType_RGB15,
+		QDPictBlitSourceType_RGB15Native,
+		QDPictBlitSourceType_RGB15BE,
 		QDPictBlitSourceType_RGB24_Interleaved,
 		QDPictBlitSourceType_RGB24_Multiplane,
 	};

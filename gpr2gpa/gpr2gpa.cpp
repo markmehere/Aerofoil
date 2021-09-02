@@ -624,11 +624,25 @@ void BMPDumperContext::BlitScanlineAndAdvance(const void *scanlineData)
 			outRowStart[i] = m_blitParams.m_colors[colorIndex];
 		}
 		break;
-	case PortabilityLayer::QDPictBlitSourceType_RGB15:
+	case PortabilityLayer::QDPictBlitSourceType_RGB15Native:
 		for (size_t i = 0; i < rowSize; i++)
 		{
 			const size_t originCol = i + firstSrcCol;
 			const uint16_t item = *reinterpret_cast<const uint16_t*>(scanlineBytes + originCol * 2);
+			PortabilityLayer::RGBAColor &outputItem = outRowStart[i];
+
+			outputItem.b = FiveToEight(item & 0x1f);
+			outputItem.g = FiveToEight((item >> 5) & 0x1f);
+			outputItem.r = FiveToEight((item >> 10) & 0x1f);
+			outputItem.a = 255;
+		}
+		break;
+	case PortabilityLayer::QDPictBlitSourceType_RGB15BE:
+		for (size_t i = 0; i < rowSize; i++)
+		{
+			const size_t originCol = i + firstSrcCol;
+			const uint8_t *itemBytes = (scanlineBytes + originCol * 2);
+			const uint16_t item = static_cast<uint16_t>((itemBytes[0] << 8) | itemBytes[1]);
 			PortabilityLayer::RGBAColor &outputItem = outRowStart[i];
 
 			outputItem.b = FiveToEight(item & 0x1f);
