@@ -9,6 +9,6 @@ To play:
 Windows, macOS:
 Download from the Releases page, or from https://galeforcegames.itch.io/aerofoil
 
-Android: Download from Google Play Store: https://play.google.com/store/apps/details?id=org.thecodedeposit.aerofoil from itch.io: https://play.google.com/store/apps/details?id=org.thecodedeposit.aerofoil, or from the Releases page
+Android: Download from Google Play Store: https://play.google.com/store/apps/details?id=org.thecodedeposit.aerofoil from itch.io: https://galeforcegames.itch.io/aerofoil, or from the Releases page
 
 Browser (HTML5): Visit https://galeforcegames.itch.io/aerofoil
