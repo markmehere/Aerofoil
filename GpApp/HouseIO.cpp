@@ -3257,7 +3257,11 @@ static ExportHouseResult_t TryExportIcon(GpVector<uint8_t> &resData, const THand
 					for (uint8_t i = 0; i < 16; i++)
 					{
 						uint32_t error = 0;
-						const int16_t deltas[3] = { palette[i].r - color.r, palette[i].g - color.g, palette[i].b - color.b };
+						const int16_t deltas[3] = {
+							static_cast<int16_t>(palette[i].r - color.r),
+							static_cast<int16_t>(palette[i].g - color.g),
+							static_cast<int16_t>(palette[i].b - color.b)
+						};
 						for (int ch = 0; ch < 3; ch++)
 							error += static_cast<uint32_t>(deltas[ch] * deltas[ch]);
 

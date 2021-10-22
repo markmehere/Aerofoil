@@ -20,6 +20,7 @@
 #include "IGpVOSEventQueue.h"
 
 #include <string>
+#include "MacInit.h"
 
 GpXGlobals g_gpXGlobals;
 
@@ -40,7 +41,11 @@ SDLMAIN_DECLSPEC int SDL_main(int argc, char *argv[])
 			enableLogging = true;
 	}
 
+#ifndef __MACOS__
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
+#else
+	if (MacInit())
+#endif
 		return -1;
 
 	GpFileSystem_X::GetInstance()->Init();

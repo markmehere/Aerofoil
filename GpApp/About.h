@@ -6,5 +6,5 @@
 
 
 void DoAbout (void);
-
+void DoAboutFramework (void);
 

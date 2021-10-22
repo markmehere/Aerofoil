@@ -50,6 +50,8 @@ SDL2-2.0.12/sdl2.pc
 SDL2-2.0.12/sdl2-config
 install_manifest.txt
 
+## macOS
+.DS_Store
 
 ## Xcode projects
 AerofoilMac/xcuserdata/

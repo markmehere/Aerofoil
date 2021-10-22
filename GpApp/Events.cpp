@@ -28,7 +28,7 @@ void HandleOSEvent (EventRecord *);
 void HandleHighLevelEvent (EventRecord *);
 void HandleIdleTask (void);
 void IncrementMode (void);
-
+void DoEndGame (void);
 
 
 long			lastUp, incrementModeTime;
@@ -398,6 +398,17 @@ void HandleIdleTask (void)
 			HandleSplashResolutionChange();
 		}
 	}
+	
+#ifndef COMPILEDEMO
+	if (quitting) {
+		if (theMode == kEditMode) {
+			if (!QuerySaveChanges()) {
+				quitting = false;
+			}
+		}
+	}
+#endif
+	
 
 	TickMainMenuUI();
 }
@@ -452,6 +463,21 @@ void HandleEvent (void)
 				HandleKeyEvent(*eventKeys, theEvent.m_vosEvent.m_event.m_keyboardInputEvent);
 				break;
 			default:
+				break;
+			}
+		}
+		else if (theEvent.m_vosEvent.m_eventType == GpVOSEventType_t::kMenuItemSelected)
+		{
+			switch (theEvent.m_vosEvent.m_event.m_menuItemSelectionEvent)
+			{
+			case GpMenuItemSelectionEvents::kAboutGliderPRO:
+				DoAbout();
+				break;
+			case GpMenuItemSelectionEvents::kAboutAerofoil:
+				DoAboutFramework();
+				break;
+			case GpMenuItemSelectionEvents::kPreferences:
+				DoSettingsMain();
 				break;
 			}
 		}
