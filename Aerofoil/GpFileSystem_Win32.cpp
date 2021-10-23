@@ -260,7 +260,7 @@ GpIOStream *GpFileSystem_Win32::OpenFileNested(PortabilityLayer::VirtualDirector
 	wchar_t winPath[MAX_PATH + 1];
 
 	if (!ResolvePath(virtualDirectory, paths, numPaths, winPath))
-		return false;
+		return nullptr;
 
 	const DWORD desiredAccess = writeAccess ? (GENERIC_WRITE | GENERIC_READ) : GENERIC_READ;
 	DWORD winCreationDisposition = 0;
@@ -283,12 +283,12 @@ GpIOStream *GpFileSystem_Win32::OpenFileNested(PortabilityLayer::VirtualDirector
 		winCreationDisposition = TRUNCATE_EXISTING;
 		break;
 	default:
-		return false;
+		return nullptr;
 	}
 
 	HANDLE h = CreateFileW(winPath, desiredAccess, FILE_SHARE_READ, nullptr, winCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (h == INVALID_HANDLE_VALUE)
-		return false;
+		return nullptr;
 
 	return GpFileStream_Win32::Create(m_alloc, h, true, writeAccess, true);
 }

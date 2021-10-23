@@ -161,7 +161,7 @@ ArchiveItemList *StuffItParser::Parse(IFileReader &reader)
 
 			const uint8_t fileNameLength = header[SITFH_FNAMESIZE];
 			if (fileNameLength > SITFH_FNAME_CRC - SITFH_FNAME)
-				return false;
+				return nullptr;
 
 			std::vector<uint8_t> utf8FileName;
 			StringCommon::ConvertMacRomanFileName(utf8FileName, header + SITFH_FNAME, fileNameLength);

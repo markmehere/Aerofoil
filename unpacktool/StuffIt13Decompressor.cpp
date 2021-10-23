@@ -403,7 +403,7 @@ XADPrefixCode *StuffIt13Decompressor::allocAndParseCodeOfSize(int numcodes, XADP
 			{
 				unsigned int bits;
 				if (!CSInputNextBitStringLE(input, 3, bits))
-					return false;
+					return nullptr;
 
 				val = bits + 2;
 				while (val--)
@@ -414,7 +414,7 @@ XADPrefixCode *StuffIt13Decompressor::allocAndParseCodeOfSize(int numcodes, XADP
 			{
 				unsigned int bits;
 				if (!CSInputNextBitStringLE(input, 6, bits))
-					return false;
+					return nullptr;
 
 				val = bits + 10;
 				while (val--)

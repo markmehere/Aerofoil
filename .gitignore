@@ -21,6 +21,8 @@
 *.aps
 *.res
 *.a
+*.recipe
+*.FileListAbsolute.txt
 .vs/*
 Packaged/*
 DebugData/*

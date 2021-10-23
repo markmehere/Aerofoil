@@ -3232,7 +3232,7 @@ static ExportHouseResult_t TryExportIcon(GpVector<uint8_t> &resData, const THand
 	const PixMap *pixMap = *surface->m_port.GetPixMap();
 	for (size_t row = 0; row < height; row++)
 	{
-		const PortabilityLayer::RGBAColor *srcColors = reinterpret_cast<const const PortabilityLayer::RGBAColor*>(static_cast<const uint8_t*>(pixMap->m_data) + pixMap->m_pitch * row);
+		const PortabilityLayer::RGBAColor *srcColors = reinterpret_cast<const PortabilityLayer::RGBAColor*>(static_cast<const uint8_t*>(pixMap->m_data) + pixMap->m_pitch * row);
 
 		for (size_t col = 0; col < width; col++)
 		{
