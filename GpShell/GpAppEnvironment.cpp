@@ -88,10 +88,3 @@ void GpAppEnvironment::InitializeApplicationState()
 	drivers->SetDriver<GpDriverIDs::kFont>(m_fontHandler);
 	drivers->SetDriver<GpDriverIDs::kEventQueue>(m_vosEventQueue);
 }
-
-void GpAppEnvironment::SynchronizeState()
-{
-	const size_t numInputDrivers = m_numInputDrivers;
-	for (size_t i = 0; i < numInputDrivers; i++)
-		m_inputDrivers[i]->ProcessInput();
-}

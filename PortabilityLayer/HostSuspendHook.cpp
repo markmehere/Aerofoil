@@ -5,6 +5,7 @@
 
 #include "PLDrivers.h"
 #include "IGpDisplayDriver.h"
+#include "IGpInputDriver.h"
 
 
 namespace PortabilityLayer
@@ -13,5 +14,9 @@ namespace PortabilityLayer
 	{
 		PLDrivers::GetDisplayDriver()->ServeTicks(ticks);
 		DisplayDeviceManager::GetInstance()->IncrementTickCount(ticks);
+
+		const size_t numInputDrivers = PLDrivers::GetNumInputDrivers();
+		for (size_t i = 0; i < numInputDrivers; i++)
+			PLDrivers::GetInputDriver(i)->ProcessInput();
 	}
 }

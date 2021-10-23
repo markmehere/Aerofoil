@@ -4,6 +4,7 @@
 #include "BitmapImage.cpp"
 #include "ByteSwap.cpp"
 #include "CFileStream.cpp"
+#include "CompositeRenderedFont.cpp"
 #include "DeflateCodec.cpp"
 #include "DialogManager.cpp"
 #include "DisplayDeviceManager.cpp"

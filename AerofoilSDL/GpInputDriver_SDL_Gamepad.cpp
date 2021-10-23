@@ -177,8 +177,6 @@ void GpInputDriverSDLGamepad::HandleDeviceRemoved(SDL_JoystickID joystickID)
 		{
 			m_playerButtonDown[playerNum][button] = false;
 
-
-
 			GpVOSEvent evt;
 			evt.m_eventType = GpVOSEventTypes::kKeyboardInput;
 			evt.m_event.m_keyboardInputEvent.m_eventType = GpKeyboardInputEventTypes::kUp;

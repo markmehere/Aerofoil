@@ -26,6 +26,7 @@ GpAndroidGlobals g_gpAndroidGlobals;
 
 IGpDisplayDriver *GpDriver_CreateDisplayDriver_SDL_GL2(const GpDisplayDriverProperties &properties);
 IGpAudioDriver *GpDriver_CreateAudioDriver_SDL(const GpAudioDriverProperties &properties);
+IGpInputDriver *GpDriver_CreateInputDriver_SDL2_Gamepad(const GpInputDriverProperties &properties);
 
 class GpLogDriver_Android final : public IGpLogDriver
 {
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
 
 	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
 
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
 		return -1;
 
 	SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
@@ -94,8 +95,13 @@ int main(int argc, char* argv[])
 
 	g_gpGlobalConfig.m_fontHandlerType = EGpFontHandlerType_None;
 
-	g_gpGlobalConfig.m_inputDriverTypes = nullptr;
-	g_gpGlobalConfig.m_numInputDrivers = 0;
+	EGpInputDriverType inputDrivers[] =
+	{
+		EGpInputDriverType_SDL2_Gamepad
+	};
+
+	g_gpGlobalConfig.m_inputDriverTypes = inputDrivers;
+	g_gpGlobalConfig.m_numInputDrivers = sizeof(inputDrivers) / sizeof(inputDrivers[0]);
 
 	g_gpGlobalConfig.m_osGlobals = &g_gpAndroidGlobals;
 	g_gpGlobalConfig.m_logger = GpLogDriver_Android::GetInstance();
@@ -104,6 +110,7 @@ int main(int argc, char* argv[])
 
 	GpDisplayDriverFactory::RegisterDisplayDriverFactory(EGpDisplayDriverType_SDL_GL2, GpDriver_CreateDisplayDriver_SDL_GL2);
 	GpAudioDriverFactory::RegisterAudioDriverFactory(EGpAudioDriverType_SDL2, GpDriver_CreateAudioDriver_SDL);
+	GpInputDriverFactory::RegisterInputDriverFactory(EGpInputDriverType_SDL2_Gamepad, GpDriver_CreateInputDriver_SDL2_Gamepad);
 
 	int returnCode = GpMain::Run();
 
@@ -117,9 +124,4 @@ int main(int argc, char* argv[])
 	exit(returnCode);
 
 	return returnCode;
-}
-
-IGpInputDriverSDLGamepad *IGpInputDriverSDLGamepad::GetInstance()
-{
-	return nullptr;
 }

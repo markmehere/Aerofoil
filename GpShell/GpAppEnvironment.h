@@ -41,7 +41,6 @@ public:
 private:
 	static void StaticAppThreadFunc(void *context);
 	void InitializeApplicationState();
-	void SynchronizeState();
 
 	IGpDisplayDriver *m_displayDriver;
 	IGpAudioDriver *m_audioDriver;

@@ -20,6 +20,7 @@ LOCAL_CFLAGS := -DGP_DEBUG_CONFIG=0
 LOCAL_SRC_FILES := \
 	GpAudioDriver_SDL2.cpp	\
 	GpDisplayDriver_SDL_GL2.cpp	\
+	GpInputDriver_SDL_Gamepad.cpp	\
 	ShaderCode/CopyQuadP.cpp	\
 	ShaderCode/DrawQuadPaletteP.cpp	\
 	ShaderCode/DrawQuad32P.cpp	\
