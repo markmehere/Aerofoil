@@ -4,7 +4,7 @@
 		{
 			"name" : "Okay",
 			"itemType" : "Button",
-			"pos" : [ 376, 288 ],
+			"pos" : [ 376, 300 ],
 			"size" : [ 58, 20 ],
 			"id" : 1,
 			"enabled" : true
@@ -12,7 +12,7 @@
 		{
 			"name" : "Third Party/Licensing Info...",
 			"itemType" : "Button",
-			"pos" : [ 176, 288 ],
+			"pos" : [ 176, 300 ],
 			"size" : [ 190, 20 ],
 			"id" : 1,
 			"enabled" : true

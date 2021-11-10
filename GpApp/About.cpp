@@ -311,7 +311,7 @@ void DoAboutFramework (void)
 	static const int kAboutFrameworkDialogTemplateID = 2000;
 	static const int kAboutOpenSourceButton = 2;
 
-	const Rect windowRect = Rect::Create(0, 0, 320, 450);
+	const Rect windowRect = Rect::Create(0, 0, 332, 450);
 
 	PortabilityLayer::WindowDef wdef = PortabilityLayer::WindowDef::Create(windowRect, PortabilityLayer::WindowStyleFlags::kAlert, true, 0, 0, PSTR(""));
 
@@ -342,7 +342,8 @@ void DoAboutFramework (void)
 	(lineNum++);
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum)), PSTR("Credits:"), blackColor, font);
 	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Eric Lasota - Programming, admin"), blackColor, font);
-	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Thijs Verboon - macOS version"), blackColor, font);
+	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Thijs Verboon - macOS programming"), blackColor, font);
+	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Phil Marell - macOS programming"), blackColor, font);
 	(lineNum++);
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO."), blackColor, font);
 	(lineNum++);
