@@ -19,6 +19,10 @@
     <OutputPath>$(SolutionDir)ReleasePkg\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <Cultures>en-us</Cultures>
+    <DefineConstants>DocumentationDataDir=$(SolutionDir)\Documentation;
+HousesDataDir=$(SolutionDir)\Packaged\Houses;
+PackagedDataDir=$(SolutionDir)\Packaged;
+VSInstallDir=$(VsInstallRoot)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Product.wxs" />
@@ -179,6 +183,7 @@
 DocumentationDataDir=$(SolutionDir)\Documentation;
 HousesDataDir=$(SolutionDir)\Packaged\Houses;
 PackagedDataDir=$(SolutionDir)\Packaged;
+VSInstallDir=$(VsInstallRoot)
 	</DefineConstants>
   </PropertyGroup>
   <Target Name="BeforeBuild">
