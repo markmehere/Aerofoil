@@ -4,7 +4,7 @@ mkdir ReleasePkg
 
 mkdir ReleasePkg\Aerofoil
 mkdir ReleasePkg\Aerofoil\Packaged
-mkdir ReleasePkg\Aerofoil\Tools
+mkdir ReleasePkg\AerofoilTools
 
 copy /Y x64\Release\Aerofoil.exe ReleasePkg\Aerofoil
 copy /Y x64\Release\GpAudioDriver_XAudio2.dll ReleasePkg\Aerofoil
@@ -13,15 +13,15 @@ copy /Y x64\Release\GpDisplayDriver_D3D11.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\GpInputDriver_XInput.dll ReleasePkg\Aerofoil
 copy /Y x64\Release\GpApp.dll ReleasePkg\Aerofoil
 
-copy /Y x64\Release\flattenmov.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\bin2gp.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\hqx2bin.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\hqx2gp.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\MakeTimestamp.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\FTagData.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\gpr2gpa.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\unpacktool.exe ReleasePkg\Aerofoil\Tools
-copy /Y x64\Release\MergeGPF.exe ReleasePkg\Aerofoil\Tools
+copy /Y x64\Release\flattenmov.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\bin2gp.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\hqx2bin.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\hqx2gp.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\MakeTimestamp.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\FTagData.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\gpr2gpa.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\unpacktool.exe ReleasePkg\AerofoilTools
+copy /Y x64\Release\MergeGPF.exe ReleasePkg\AerofoilTools
 
 mkdir ReleasePkg\PDBs
 
