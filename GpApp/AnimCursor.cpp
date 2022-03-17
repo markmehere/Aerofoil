@@ -336,7 +336,7 @@ void DisposCursors (void)
 
 void IncrementCursor (void)
 {
-	if (animCursorH == 0)
+	if (animCursorH == nullptr)
 		InitAnimatedCursor(nil);
 	if (animCursorH)
 	{
@@ -356,7 +356,7 @@ void IncrementCursor (void)
 
 void DecrementCursor (void)
 {
-	if (animCursorH == 0)
+	if (animCursorH == nullptr)
 		InitAnimatedCursor(nil);
 	if (animCursorH)
 	{
