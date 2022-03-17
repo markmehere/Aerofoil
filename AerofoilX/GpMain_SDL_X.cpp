@@ -20,7 +20,9 @@
 #include "IGpVOSEventQueue.h"
 
 #include <string>
+#ifdef __MACOS__
 #include "MacInit.h"
+#endif
 
 GpXGlobals g_gpXGlobals;
 

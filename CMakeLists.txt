@@ -45,6 +45,7 @@ add_library(PortabilityLayer STATIC
 	PortabilityLayer/BitmapImage.cpp
 	PortabilityLayer/ByteSwap.cpp
 	PortabilityLayer/CFileStream.cpp
+	PortabilityLayer/CompositeRenderedFont.cpp
 	PortabilityLayer/DeflateCodec.cpp
 	PortabilityLayer/DialogManager.cpp
 	PortabilityLayer/DisplayDeviceManager.cpp
@@ -240,7 +241,8 @@ target_include_directories(GpApp PRIVATE
 target_link_libraries(GpApp PortabilityLayer)
 
 if(CMAKE_HOST_UNIX)
-	add_executable(${EXECNAME}
+	set(EXEC_SOURCES )
+	list(APPEND EXEC_SOURCES
 		AerofoilPortable/GpSystemServices_POSIX.cpp
 		AerofoilPortable/GpThreadEvent_Cpp11.cpp
 		AerofoilPortable/GpAllocator_C.cpp
@@ -257,8 +259,16 @@ if(CMAKE_HOST_UNIX)
 		AerofoilX/GpSystemServices_X.cpp
 		AerofoilX/GpFileSystem_X.cpp
 		)
-		
-	target_include_directories(${EXECNAME} PRIVATE
+
+	set(EXEC_LIBS )
+	list(APPEND EXEC_LIBS
+		${SDL2_LIBRARIES}
+		GpApp
+		GpShell
+		)
+
+	set(EXEC_INC_DIRS )
+	list(APPEND EXEC_INC_DIRS
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Common>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpCommon>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpShell>
@@ -267,8 +277,22 @@ if(CMAKE_HOST_UNIX)
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/PortabilityLayer>
 		${SDL2_INCLUDE_DIRS}
 		)
+	if(PLATFORM STREQUAL "MAC")
+		list(APPEND EXEC_SOURCES
+			AerofoilMac/AerofoilMac/AerofoilApplication.mm
+			AerofoilMac/AerofoilMac/MacInit.mm
+			)
+		list(APPEND EXEC_INC_DIRS
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AerofoilMac/AerofoilMac>
+			)
+		list(APPEND EXEC_LIBS
+			"-framework Cocoa"
+			)
+	endif(PLATFORM STREQUAL "MAC")
 
-	target_link_libraries(${EXECNAME} ${SDL2_LIBRARIES} GpApp GpShell)
+	add_executable(${EXECNAME} ${EXEC_SOURCES})
+	target_include_directories(${EXECNAME} PRIVATE ${EXEC_INC_DIRS})
+	target_link_libraries(${EXECNAME} ${EXEC_LIBS})
 endif()
 
 
