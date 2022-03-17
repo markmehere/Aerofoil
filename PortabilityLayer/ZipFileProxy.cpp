@@ -324,6 +324,11 @@ namespace PortabilityLayer
 				return nullptr;
 			}
 		}
+		else
+		{
+			if (numFiles != 0)
+				return nullptr;
+		}
 
 		bool failed = false;
 
