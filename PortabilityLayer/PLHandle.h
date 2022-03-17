@@ -24,6 +24,7 @@ class THandle final : public THandleBase
 {
 public:
 	THandle();
+	THandle(std::nullptr_t);
 	THandle(T **hdl);
 	explicit THandle(PortabilityLayer::MMHandleBlock *hdl);
 	THandle(const THandle<T> &other);
@@ -70,6 +71,12 @@ inline PortabilityLayer::MMHandleBlock *THandleBase::MMBlock() const
 
 template<class T>
 inline THandle<T>::THandle()
+	: THandleBase(nullptr)
+{
+}
+
+template<class T>
+inline THandle<T>::THandle(std::nullptr_t)
 	: THandleBase(nullptr)
 {
 }
