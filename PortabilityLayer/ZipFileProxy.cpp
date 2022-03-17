@@ -10,6 +10,7 @@
 #include "DeflateCodec.h"
 
 #include <algorithm>
+#include <stdlib.h>
 
 namespace
 {

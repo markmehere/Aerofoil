@@ -4,6 +4,7 @@
 #include "GpApplicationName.h"
 #include "GpIOStream.h"
 
+#include <stdlib.h>
 #include <time.h>
 #include <cstring>
 

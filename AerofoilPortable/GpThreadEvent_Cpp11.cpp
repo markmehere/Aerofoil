@@ -1,5 +1,7 @@
 #include "GpThreadEvent_Cpp11.h"
 
+#include <stdlib.h>
+
 GpThreadEvent_Cpp11::GpThreadEvent_Cpp11(bool autoReset, bool startSignaled)
 	: m_flag(startSignaled)
 	, m_autoReset(autoReset)
