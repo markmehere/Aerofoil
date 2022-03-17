@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace PortabilityLayer
 {
 	struct MMHandleBlock;
@@ -46,6 +48,9 @@ public:
 
 	bool operator==(T** other) const;
 	bool operator!=(T** other) const;
+
+	bool operator==(std::nullptr_t) const;
+	bool operator!=(std::nullptr_t) const;
 
 	static THandle<T> NullPtr();
 };
@@ -114,17 +119,33 @@ inline bool THandle<T>::operator!=(const THandle<T> &other) const
 template<class T>
 inline bool THandle<T>::operator==(T** other) const
 {
+	if (other == nullptr)
+		return m_hdl == nullptr;
 	return static_cast<void*>(&m_hdl->m_contents) == static_cast<void*>(other);
 }
 
 template<class T>
 inline bool THandle<T>::operator!=(T** other) const
 {
+	if (other == nullptr)
+		return m_hdl != nullptr;
 	return static_cast<void*>(&m_hdl->m_contents) != static_cast<void*>(other);
 }
 
 template<class T>
-THandle<T> THandle<T>::NullPtr()
+inline bool THandle<T>::operator==(std::nullptr_t) const
+{
+	return m_hdl == nullptr;
+}
+
+template<class T>
+inline bool THandle<T>::operator!=(std::nullptr_t) const
+{
+	return m_hdl != nullptr;
+}
+
+template<class T>
+inline THandle<T> THandle<T>::NullPtr()
 {
 	return THandle<T>(static_cast<PortabilityLayer::MMHandleBlock *>(nullptr));
 }
