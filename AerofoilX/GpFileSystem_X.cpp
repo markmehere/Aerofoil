@@ -305,6 +305,8 @@ GpIOStream *GpFileSystem_X::OpenFileNested(PortabilityLayer::VirtualDirectory_t 
 	FILE *f = fopen(resolvedPath.c_str(), mode);
 	if (!f)
 	{
+		fprintf(stderr, "GpFileSystem_X: Cannot open \"%s\"\n",
+				resolvedPath.c_str());
 		free(objStorage);
 		return nullptr;
 	}
