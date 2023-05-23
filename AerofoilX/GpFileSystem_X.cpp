@@ -27,7 +27,7 @@
 
 #include "UTF8.h"
 
-#if defined(__CYGWIN__) || defined(__MACOS__)
+#if defined(__CYGWIN__) || defined(__MACOS__) || defined(__linux)
 typedef off_t off64_t;
 #define fstat64 fstat
 #define fseek64 fseek
