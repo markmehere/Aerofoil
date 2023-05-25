@@ -3,13 +3,8 @@
 #include "IGpClipboardContents.h"
 #include "IGpThreadEvent.h"
 
-#ifdef __MACOS__
 #include <SDL.h>
 #include <pthread.h>
-#else
-#include "SDL2/SDL.h"
-#endif
-
 #include <time.h>
 #include <unistd.h>
 #include <string>
