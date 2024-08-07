@@ -5,6 +5,28 @@ SET(EXECNAME "AerofoilX" CACHE STRING "Defines the exec name")
 
 message(${CMAKE_BINARY_DIR})
 
+# Use Release build type by default
+if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	set(CMAKE_BUILD_TYPE Release)
+	message("Build type unspecified, using Release")
+endif()
+
+# Enable LTO by default if supported
+if("${CMAKE_INTERPROCEDURAL_OPTIMIZATION}" STREQUAL "")
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT IPO_SUPPORTED)
+	if(IPO_SUPPORTED)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION On)
+		message("Compiler supports LTO, enabling automatically")
+	endif()
+endif()
+
+# FIXME: Clang treats this as an error by default; fixing the source rather
+# than downgrading the error to a warning would be a better solution.
+add_compile_options(
+	$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang>:-Wno-error=c++11-narrowing>
+	)
+
 find_package(SDL2 REQUIRED)
 
 if(PLATFORM STREQUAL "MAC")
@@ -127,18 +149,18 @@ add_library(PortabilityLayer STATIC
 	)
 
 target_include_directories(PortabilityLayer PRIVATE
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Common>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpCommon>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/PortabilityLayer>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zlib>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rapidjson/include>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/MacRomanConversion>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/stb>
+	Common
+	GpCommon
+	PortabilityLayer
+	zlib
+	rapidjson/include
+	MacRomanConversion
+	stb
 	)
 
 target_compile_options(PortabilityLayer PRIVATE -Wno-multichar)
 
-target_link_libraries(PortabilityLayer zlib MacRomanConversion stb)
+target_link_libraries(PortabilityLayer PRIVATE zlib MacRomanConversion stb)
 
 
 add_library(GpShell STATIC
@@ -153,9 +175,9 @@ add_library(GpShell STATIC
 	)
 
 target_include_directories(GpShell PRIVATE
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Common>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpCommon>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/PortabilityLayer>
+	Common
+	GpCommon
+	PortabilityLayer
 	)
 
 add_library(GpApp STATIC
@@ -233,16 +255,15 @@ add_library(GpApp STATIC
 target_compile_options(GpApp PRIVATE -Wno-multichar)
 
 target_include_directories(GpApp PRIVATE
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Common>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpCommon>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/PortabilityLayer>
+	Common
+	GpCommon
+	PortabilityLayer
 	)
 
-target_link_libraries(GpApp PortabilityLayer)
+target_link_libraries(GpApp PRIVATE PortabilityLayer)
 
 if(CMAKE_HOST_UNIX)
-	set(EXEC_SOURCES )
-	list(APPEND EXEC_SOURCES
+	set(EXEC_SOURCES
 		AerofoilPortable/GpSystemServices_POSIX.cpp
 		AerofoilPortable/GpThreadEvent_Cpp11.cpp
 		AerofoilPortable/GpAllocator_C.cpp
@@ -260,21 +281,20 @@ if(CMAKE_HOST_UNIX)
 		AerofoilX/GpFileSystem_X.cpp
 		)
 
-	set(EXEC_LIBS )
-	list(APPEND EXEC_LIBS
+	set(EXEC_LIBS
 		${SDL2_LIBRARIES}
 		GpApp
 		GpShell
+		PortabilityLayer
 		)
 
-	set(EXEC_INC_DIRS )
-	list(APPEND EXEC_INC_DIRS
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Common>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpCommon>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GpShell>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AerofoilSDL>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AerofoilPortable>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/PortabilityLayer>
+	set(EXEC_INC_DIRS
+		Common
+		GpCommon
+		GpShell
+		AerofoilSDL
+		AerofoilPortable
+		PortabilityLayer
 		${SDL2_INCLUDE_DIRS}
 		)
 	if(PLATFORM STREQUAL "MAC")
@@ -283,7 +303,7 @@ if(CMAKE_HOST_UNIX)
 			AerofoilMac/AerofoilMac/MacInit.mm
 			)
 		list(APPEND EXEC_INC_DIRS
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AerofoilMac/AerofoilMac>
+			AerofoilMac/AerofoilMac
 			)
 		list(APPEND EXEC_LIBS
 			"-framework Cocoa"
@@ -296,4 +316,418 @@ if(CMAKE_HOST_UNIX)
 endif()
 
 
-install (TARGETS ${EXECNAME})
+add_executable(flattenmov EXCLUDE_FROM_ALL flattenmov/flattenmov.cpp AerofoilPortable/GpAllocator_C.cpp)
+target_include_directories(flattenmov PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	)
+target_link_libraries(flattenmov PortabilityLayer)
+
+add_executable(bin2gp EXCLUDE_FROM_ALL bin2gp/bin2gp.cpp AerofoilPortable/GpAllocator_C.cpp)
+target_include_directories(bin2gp PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	)
+target_link_libraries(bin2gp PortabilityLayer)
+
+add_executable(hqx2bin EXCLUDE_FROM_ALL hqx2bin/hqx2bin.cpp AerofoilPortable/GpAllocator_C.cpp)
+target_include_directories(hqx2bin PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	)
+target_link_libraries(hqx2bin PortabilityLayer)
+
+add_executable(hqx2gp EXCLUDE_FROM_ALL
+	hqx2gp/hqx2gp.cpp
+	AerofoilPortable/GpAllocator_C.cpp
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(hqx2gp PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(hqx2gp PortabilityLayer)
+
+add_executable(gpr2gpa EXCLUDE_FROM_ALL
+	gpr2gpa/gpr2gpa.cpp
+	gpr2gpa/macedec.cpp
+	AerofoilPortable/GpAllocator_C.cpp
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(gpr2gpa PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	MacRomanConversion
+	WindowsUnicodeToolShim
+	rapidjson/include
+	zlib
+	)
+target_link_libraries(gpr2gpa PortabilityLayer MacRomanConversion zlib)
+
+add_executable(MakeTimestamp EXCLUDE_FROM_ALL MakeTimestamp/MakeTimestamp.cpp)
+target_include_directories(MakeTimestamp PRIVATE PortabilityLayer)
+target_link_libraries(MakeTimestamp PortabilityLayer)
+
+add_executable(FTagData EXCLUDE_FROM_ALL
+	FTagData/FTagData.cpp
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(FTagData PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(FTagData PortabilityLayer)
+
+add_executable(MergeGPF EXCLUDE_FROM_ALL
+	MergeGPF/MergeGPF.cpp
+	AerofoilPortable/GpAllocator_C.cpp
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(MergeGPF PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(MergeGPF PortabilityLayer)
+
+add_executable(MiniRez EXCLUDE_FROM_ALL MiniRez/MiniRez.cpp WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp)
+target_include_directories(MiniRez PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(MiniRez PortabilityLayer)
+
+add_executable(HouseTool EXCLUDE_FROM_ALL
+	HouseTool/HouseTool.cpp
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(HouseTool PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	MacRomanConversion
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(HouseTool PortabilityLayer MacRomanConversion)
+
+add_executable(unpacktool EXCLUDE_FROM_ALL
+	unpacktool/ArchiveDescription.cpp
+	unpacktool/BWT.cpp
+	unpacktool/CompactProLZHDecompressor.cpp
+	unpacktool/CompactProLZHRLEDecompressor.cpp
+	unpacktool/CompactProParser.cpp
+	unpacktool/CompactProRLEDecompressor.cpp
+	unpacktool/CRC.cpp
+	unpacktool/CSInputBuffer.cpp
+	unpacktool/DecompressorProxyReader.cpp
+	unpacktool/LZSSDecompressor.cpp
+	unpacktool/LZW.cpp
+	unpacktool/LZWDecompressor.cpp
+	unpacktool/NullDecompressor.cpp
+	unpacktool/PrefixCode.cpp
+	unpacktool/RLE90Decompressor.cpp
+	unpacktool/StringCommon.cpp
+	unpacktool/StuffIt13Decompressor.cpp
+	unpacktool/StuffIt5Parser.cpp
+	unpacktool/StuffItArsenicDecompressor.cpp
+	unpacktool/StuffItCommon.cpp
+	unpacktool/StuffItHuffmanDecompressor.cpp
+	unpacktool/StuffItParser.cpp
+	unpacktool/unpacktool.cpp
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(unpacktool PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	MacRomanConversion
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(unpacktool PortabilityLayer MacRomanConversion)
+
+
+find_package(Freetype)
+if(FREETYPE_FOUND)
+	add_library(GpFontHandler_FreeType2 STATIC
+		GpFontHandler_FreeType2/GpFontHandler_FreeType2.cpp
+		)
+
+	target_include_directories(GpFontHandler_FreeType2 PRIVATE
+		Common
+		GpCommon
+		"${FREETYPE_INCLUDE_DIR_ft2build}"
+		)
+
+	target_link_libraries(GpFontHandler_FreeType2 PRIVATE Freetype::Freetype)
+
+
+	add_executable(GenerateFonts EXCLUDE_FROM_ALL
+		GenerateFonts/GenerateFonts.cpp
+		AerofoilPortable/GpAllocator_C.cpp
+		WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+		)
+	target_include_directories(GenerateFonts PRIVATE
+		Common
+		GpCommon
+		PortabilityLayer
+		AerofoilPortable
+		WindowsUnicodeToolShim
+		)
+	target_link_libraries(GenerateFonts PortabilityLayer GpFontHandler_FreeType2)
+endif()
+
+add_executable(ConvertColorCursors EXCLUDE_FROM_ALL
+	ConvertColorCursors/ConvertColorCursors.cpp
+	AerofoilPortable/GpAllocator_C.cpp
+	stb/stb_image_write.c
+	WindowsUnicodeToolShim/UnixUnicodeToolShim.cpp
+	)
+target_include_directories(ConvertColorCursors PRIVATE
+	Common
+	GpCommon
+	PortabilityLayer
+	AerofoilPortable
+	stb
+	WindowsUnicodeToolShim
+	)
+target_link_libraries(ConvertColorCursors PortabilityLayer)
+
+
+add_custom_target(BuildDirs
+	BYPRODUCTS Packaged tmp
+	COMMAND "${CMAKE_COMMAND}" -E make_directory Packaged/Houses tmp
+	VERBATIM
+	)
+
+set(DATA_FILES)
+
+function(add_data_file NAME)
+	list(APPEND DATA_FILES "Packaged/${NAME}")
+	set(DATA_FILES "${DATA_FILES}" PARENT_SCOPE)
+
+	cmake_parse_arguments(PARSE_ARGV 1 ARG "" "" "")
+	set(TMPDIR "${CMAKE_CURRENT_BINARY_DIR}/tmp/${NAME}")
+	list(TRANSFORM ARG_UNPARSED_ARGUMENTS
+		REPLACE {TMPDIR} "${TMPDIR}"
+		)
+
+	add_custom_command(
+		OUTPUT "Packaged/${NAME}"
+		DEPENDS BuildDirs
+		COMMAND "${CMAKE_COMMAND}" -E make_directory "${TMPDIR}"
+		${ARG_UNPARSED_ARGUMENTS}
+		COMMAND "${CMAKE_COMMAND}" -E rename
+			"${TMPDIR}/${NAME}"
+			"${CMAKE_CURRENT_BINARY_DIR}/Packaged/${NAME}"
+		COMMAND "${CMAKE_COMMAND}" -E rm -r -- "${TMPDIR}"
+		VERBATIM
+		)
+endfunction()
+
+add_data_file(ApplicationResources.gpf
+	DEPENDS
+		MiniRez gpr2gpa FTagData MergeGPF "GliderProData/Glider PRO.r"
+		ApplicationResourcePatches/manifest.json DefaultTimestamp.timestamp
+	COMMAND MiniRez
+		"GliderProData/Glider PRO.r"
+		"{TMPDIR}/ApplicationResources.gpr"
+	COMMAND gpr2gpa
+		"{TMPDIR}/ApplicationResources.gpr"
+		DefaultTimestamp.timestamp
+		"{TMPDIR}/ApplicationResources.gpa"
+		-patch ApplicationResourcePatches/manifest.json
+	COMMAND FTagData
+		DefaultTimestamp.timestamp
+		"{TMPDIR}/ApplicationResources.gpf"
+		data ozm5 0 0 locked
+	COMMAND MergeGPF
+		"{TMPDIR}/ApplicationResources.gpf"
+	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	)
+
+file(GLOB_RECURSE FONT_DEPS RELATIVE "${CMAKE_SOURCE_DIR}" CONFIGURE_DEPENDS Resources/Fonts/*)
+add_data_file(Fonts.gpf
+	DEPENDS GenerateFonts MiniRez gpr2gpa FTagData MergeGPF ${FONT_DEPS}
+	COMMAND GenerateFonts "${CMAKE_SOURCE_DIR}/Resources" {TMPDIR}
+	COMMAND MiniRez "${CMAKE_SOURCE_DIR}/Empty.r" {TMPDIR}/Fonts.gpr
+	COMMAND gpr2gpa
+		{TMPDIR}/Fonts.gpr
+		"${CMAKE_SOURCE_DIR}/DefaultTimestamp.timestamp"
+		{TMPDIR}/Fonts.gpa
+		-patch {TMPDIR}/FontCacheManifest.json
+	COMMAND FTagData
+		DefaultTimestamp.timestamp
+		{TMPDIR}/Fonts.gpf
+		data ozm5 0 0 locked
+	COMMAND MergeGPF {TMPDIR}/Fonts.gpf
+	)
+
+# These files are committed to the repo and aren't currently useful on non-Windows systems anyway.
+#file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Aerofoil/ConvertedResources)
+#
+#set(CONVERTED_ICONS
+#	Aerofoil/ConvertedResources/Large128.ico
+#	Aerofoil/ConvertedResources/Large129.ico
+#	Aerofoil/ConvertedResources/Large130.ico
+#	Aerofoil/ConvertedResources/Large131.ico
+#	Aerofoil/ConvertedResources/Large132.ico
+#	Aerofoil/ConvertedResources/Large133.ico
+#	Aerofoil/ConvertedResources/Small128.ico
+#	Aerofoil/ConvertedResources/Small129.ico
+#	Aerofoil/ConvertedResources/Small130.ico
+#	Aerofoil/ConvertedResources/Small133.ico
+#	)
+#
+#add_custom_command(
+#	OUTPUT ${CONVERTED_ICONS}
+#	DEPENDS ConvertColorCursors Packaged/ApplicationResources.gpr
+#	COMMAND ConvertColorCursors
+#	)
+#add_custom_target(Icons DEPENDS ${CONVERTED_ICONS})
+
+set(HOUSE_FILES)
+
+function(add_house NAME)
+	cmake_parse_arguments(PARSE_ARGV 0 ARG
+		""
+		PATCH
+		""
+		)
+
+	if(ARG_PATCH)
+		set(PATCH_ARGS -patch "${CMAKE_SOURCE_DIR}/HousePatches/${ARG_PATCH}")
+	endif()
+
+	set(BASE_PATH "Packaged/Houses/${NAME}")
+	list(APPEND HOUSE_FILES "${BASE_PATH}.gpf")
+
+	set(BYPRODUCTS "${BASE_PATH}.gpr" "${BASE_PATH}.gpa" "${BASE_PATH}.gpd")
+	set(BINHEX_SRC "${CMAKE_SOURCE_DIR}/GliderProData/Houses/${NAME}.binhex")
+	set(TS "${CMAKE_SOURCE_DIR}/DefaultTimestamp.timestamp")
+
+	add_custom_command(
+		OUTPUT
+			"${BASE_PATH}.gpf"
+		BYPRODUCTS
+			${BYPRODUCTS}
+		DEPENDS hqx2gp gpr2gpa MergeGPF BuildDirs "${BINHEX_SRC}" "${TS}"
+		COMMAND hqx2gp
+			"${BINHEX_SRC}"
+			"${TS}"
+			"${BASE_PATH}"
+		COMMAND gpr2gpa
+			"${BASE_PATH}.gpr"
+			"${TS}"
+			"${BASE_PATH}.gpa"
+			${PATCH_ARGS}
+		${HOUSE_EXTRA_COMMANDS}
+		COMMAND MergeGPF
+			"${BASE_PATH}.gpf"
+		COMMAND "${CMAKE_COMMAND}" -E rm
+			${BYPRODUCTS}
+		VERBATIM
+		)
+
+	set(MOV_GPA_SRC "${CMAKE_SOURCE_DIR}/GliderProData/ConvertedMovies/${NAME}.mov.gpa")
+	if(EXISTS "${MOV_GPA_SRC}")
+		list(APPEND HOUSE_FILES "${BASE_PATH}.mov.gpf")
+
+		add_custom_command(
+			OUTPUT
+				"${BASE_PATH}.mov.gpf"
+			BYPRODUCTS
+				"${BASE_PATH}.mov.gpa"
+			DEPENDS FTagData MergeGPF BuildDirs "${MOV_GPA_SRC}" "${TS}"
+			COMMAND FTagData
+				"${TS}"
+				"${BASE_PATH}.mov.gpf"
+				MooV ozm5 0 0 locked
+			COMMAND "${CMAKE_COMMAND}" -E copy
+				-t "Packaged/Houses"
+				"${MOV_GPA_SRC}"
+			COMMAND MergeGPF
+				"${BASE_PATH}.mov.gpf"
+			COMMAND "${CMAKE_COMMAND}" -E rm
+				"${BASE_PATH}.mov.gpa"
+			VERBATIM
+			)
+	endif()
+	set(HOUSE_FILES "${HOUSE_FILES}" PARENT_SCOPE)
+endfunction()
+
+add_house("Art Museum")
+add_house("California or Bust!")
+
+set(HOUSE_EXTRA_COMMANDS
+	DEPENDS HouseTool
+	COMMAND HouseTool
+		patch "Packaged/Houses/Castle o' the Air.gpd" .firstRoom 77
+	)
+add_house("Castle o' the Air")
+unset(HOUSE_EXTRA_COMMANDS)
+
+add_house("CD Demo House")
+add_house("Davis Station")
+add_house("Demo House")
+add_house("Fun House")
+add_house("Grand Prix" PATCH "GrandPrix.json")
+add_house("ImagineHouse PRO II" PATCH "ImagineHousePROII.json")
+add_house("In The Mirror" PATCH "InTheMirror.json")
+add_house("Land of Illusion")
+add_house("Leviathan" PATCH "Leviathan.json")
+add_house("Metropolis")
+add_house("Nemo's Market")
+add_house("Rainbow's End" PATCH "RainbowsEnd.json")
+add_house("Slumberland")
+add_house("SpacePods")
+add_house("Teddy World")
+add_house("The Asylum Pro")
+add_house("Titanic")
+
+add_custom_target(Executable DEPENDS "${EXECNAME}")
+
+add_custom_target(Resources ALL
+	DEPENDS
+		${DATA_FILES}
+		${HOUSE_FILES}
+	)
+
+set(TOOL_EXES
+	flattenmov
+	bin2gp
+	hqx2bin
+	hqx2gp
+	MakeTimestamp
+	FTagData
+	gpr2gpa
+	unpacktool
+	MergeGPF
+	)
+add_custom_target(Tools ALL DEPENDS ${TOOL_EXES})
+
+
+list(TRANSFORM DATA_FILES PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+list(TRANSFORM HOUSE_FILES PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+
+install(TARGETS "${EXECNAME}" COMPONENT Executable)
+install(FILES ${DATA_FILES} DESTINATION lib/aerofoil/Packaged COMPONENT Resources)
+install(FILES ${HOUSE_FILES} DESTINATION lib/aerofoil/Packaged/Houses COMPONENT Resources)
+install(TARGETS ${TOOL_EXES} DESTINATION lib/aerofoil/tools COMPONENT Tools)
