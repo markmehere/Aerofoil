@@ -33,14 +33,12 @@ InstallerPackages/*
 *.wixobj
 *.CopyComplete
 *.lnk
-*.cmake
 ReleasePackageInstaller/obj/*
 ReleasePackageInstaller/bin/*
 ReleasePackageInstaller/AerofoilPackageDefs.wxi
 ReleasePackageInstaller/AerofoilPackageVersion.wxi
 packages/*
 !SDL2-2.30.5/lib/x64/*
-!SDL2-2.30.5/cmake/*.cmake
 CMakeCache.txt
 CMakeFiles/*
 Makefile
