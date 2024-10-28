@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+  <id>io.github.elasota.aerofoil</id>
+  <name>Aerofoil</name>
+  <developer id="io.github.elasota.aerofoil">
+    <name>John Calhoun, Eric Lasota, Aerofoil Contributors</name>
+    <url>https://github.com/elasota/Aerofoil/graphs/contributors</url>
+  </developer>
+  <branding>
+    <color type="primary" scheme_preference="light">#ffcc99</color>
+    <color type="primary" scheme_preference="dark">#6b3838</color>
+  </branding>
+  <summary>A modern cross-platform port of Glider PRO, the classic Macintosh paper airplane game</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0</project_license>
+  <url type="homepage">https://github.com/elasota/Aerofoil/</url>
+  <description>
+    <p>Aerofoil is a port of John Calhoun's Glider PRO, the classic paper airplane game
+      for Apple Macintosh computers released in 1994.</p>
+    <p>The port features a 90's-style GUI, gamepad support, high-quality upscaling and
+      color correction, a full port of the level editor, a set of import tools for unpacking
+      and converting the vast majority of existing community content, and a new touchscreen interface
+      for mobile devices.</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://cdn.jsdelivr.net/gh/elasota/elasota.github.io@refs/heads/master/aerofoil/titlescreen.png</image>
+      <caption>The classic title screen with the custom menu GUI</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://cdn.jsdelivr.net/gh/elasota/elasota.github.io@refs/heads/master/aerofoil/demomode.png</image>
+      <caption>Demo mode</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://cdn.jsdelivr.net/gh/elasota/elasota.github.io@refs/heads/master/aerofoil/winscreen.png</image>
+      <caption>You won!</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://cdn.jsdelivr.net/gh/elasota/elasota.github.io@refs/heads/master/aerofoil/nemosmarket.png</image>
+      <caption>One of the included houses</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://cdn.jsdelivr.net/gh/elasota/elasota.github.io@refs/heads/master/aerofoil/editor.png</image>
+      <caption>Level editor included!</caption>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Game</category>
+  </categories>
+  <releases type="external" url="https://raw.githubusercontent.com/elasota/Aerofoil/refs/heads/master/Resources/Linux/io.github.elasota.aerofoil.releases.xml" />
+  <content_rating type="oars-1.1"></content_rating>
+</component>
