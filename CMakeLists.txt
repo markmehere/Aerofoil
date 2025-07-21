@@ -734,3 +734,15 @@ install(TARGETS "${EXECNAME}" COMPONENT Executable)
 install(FILES ${DATA_FILES} DESTINATION lib/aerofoil/Packaged COMPONENT Resources)
 install(FILES ${HOUSE_FILES} DESTINATION lib/aerofoil/Packaged/Houses COMPONENT Resources)
 install(TARGETS ${TOOL_EXES} DESTINATION lib/aerofoil/tools COMPONENT Tools)
+
+if (UNIX AND NOT APPLE)
+	install(FILES Resources/Linux/io.github.elasota.aerofoil.metainfo.xml
+		DESTINATION share/appdata
+		PERMISSIONS WORLD_READ GROUP_READ GROUP_EXECUTE OWNER_READ OWNER_WRITE)
+	install(FILES Resources/Linux/io.github.elasota.aerofoil.desktop
+		DESTINATION share/applications
+		PERMISSIONS WORLD_EXECUTE WORLD_READ GROUP_READ GROUP_EXECUTE OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+	install(FILES Resources/Linux/io.github.elasota.aerofoil.svg
+		DESTINATION share/icons/hicolor/scalable/apps
+		PERMISSIONS WORLD_READ GROUP_READ GROUP_EXECUTE OWNER_READ OWNER_WRITE)
+endif()
