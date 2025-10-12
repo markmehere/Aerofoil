@@ -496,33 +496,19 @@
 			remoteGlobalIDString = BECDF6BE0761BA81005FE872;
 			remoteInfo = "Standard DMG";
 		};
-		5C54D5FA262D759600AB55E0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = A75FDB8C23E4C74400529352;
-			remoteInfo = hidapi;
-		};
-		5C54D5FC262D759600AB55E0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = A75FDB4923E399AC00529352;
-			remoteInfo = "hidapi-iOS";
-		};
-		5C54D5FE262D759600AB55E0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = A75FDB6E23E3A2C900529352;
-			remoteInfo = "hidapi-tvOS";
-		};
 		5C54D683262D898F00AB55E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 5C54D08E2629B42100AB55E0 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5C54D0B22629B5C600AB55E0;
 			remoteInfo = AerofoilShared;
+		};
+		A8FC7CAD2E9A867A00537E7B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E2D187CF28A5673500D2B4F1;
+			remoteInfo = "xcFramework-iOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -601,9 +587,9 @@
 		4A04C5B0269AE243009F5CA3 /* MacInit.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MacInit.mm; sourceTree = "<group>"; };
 		4A04C5B2269AE368009F5CA3 /* MacInit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MacInit.h; sourceTree = "<group>"; };
 		4A04C5B4269AE945009F5CA3 /* AerofoilApplication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AerofoilApplication.h; sourceTree = "<group>"; };
-		4A2818EF26BBDD35005A36C0 /* CompositeRenderedFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CompositeRenderedFont.cpp; path = CompositeRenderedFont.cpp; sourceTree = "<group>"; };
-		4A2818FD26BBDD35005A36C0 /* CompositeRenderedFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CompositeRenderedFont.h; path = CompositeRenderedFont.h; sourceTree = "<group>"; };
 		4A04C5B5269AE945009F5CA3 /* AerofoilApplication.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AerofoilApplication.mm; sourceTree = "<group>"; };
+		4A2818EF26BBDD35005A36C0 /* CompositeRenderedFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CompositeRenderedFont.cpp; sourceTree = "<group>"; };
+		4A2818FD26BBDD35005A36C0 /* CompositeRenderedFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CompositeRenderedFont.h; sourceTree = "<group>"; };
 		4AA1EB4D26BF9399001D8CC6 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		5C54D0962629B42100AB55E0 /* Aerofoil.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aerofoil.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C54D09F2629B42400AB55E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -962,7 +948,7 @@
 		5C54D5B1262B3C6B00AB55E0 /* GpAudioDriverFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GpAudioDriverFactory.h; sourceTree = "<group>"; };
 		5C54D5B2262B3C6B00AB55E0 /* GpAudioDriverFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GpAudioDriverFactory.cpp; sourceTree = "<group>"; };
 		5C54D5B3262B3C6B00AB55E0 /* GpMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GpMain.h; sourceTree = "<group>"; };
-		5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL.xcodeproj; path = "../SDL2-2.0.12/Xcode/SDL/SDL.xcodeproj"; sourceTree = "<group>"; };
+		5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL.xcodeproj; path = "../SDL2-2.30.5/Xcode/SDL/SDL.xcodeproj"; sourceTree = "<group>"; };
 		5C54D654262D84A800AB55E0 /* GpMain_SDL_X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpMain_SDL_X.cpp; path = ../../AerofoilX/GpMain_SDL_X.cpp; sourceTree = "<group>"; };
 		5C54D655262D84A800AB55E0 /* GpSystemServices_X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpSystemServices_X.cpp; path = ../../AerofoilX/GpSystemServices_X.cpp; sourceTree = "<group>"; };
 		5C54D656262D84A800AB55E0 /* GpLogDriver_X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpLogDriver_X.cpp; path = ../../AerofoilX/GpLogDriver_X.cpp; sourceTree = "<group>"; };
@@ -1527,6 +1513,7 @@
 				5C54D5E7262D759600AB55E0 /* SDL2.framework */,
 				5C54D5E9262D759600AB55E0 /* SDL2.framework */,
 				5C54D5EB262D759600AB55E0 /* SDL2.framework */,
+				A8FC7CAE2E9A867A00537E7B /* SDL2.framework */,
 				5C54D5ED262D759600AB55E0 /* libSDL2.a */,
 				5C54D5EF262D759600AB55E0 /* libSDL2.a */,
 				5C54D5F1262D759600AB55E0 /* libSDL2.a */,
@@ -1534,9 +1521,6 @@
 				5C54D5F5262D759600AB55E0 /* libSDL2.dylib */,
 				5C54D5F7262D759600AB55E0 /* libSDL2.dylib */,
 				5C54D5F9262D759600AB55E0 /* SDL2 */,
-				5C54D5FB262D759600AB55E0 /* hidapi.framework */,
-				5C54D5FD262D759600AB55E0 /* hidapi.framework */,
-				5C54D5FF262D759600AB55E0 /* hidapi.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1978,25 +1962,11 @@
 			remoteRef = 5C54D5F8262D759600AB55E0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		5C54D5FB262D759600AB55E0 /* hidapi.framework */ = {
+		A8FC7CAE2E9A867A00537E7B /* SDL2.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
-			path = hidapi.framework;
-			remoteRef = 5C54D5FA262D759600AB55E0 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		5C54D5FD262D759600AB55E0 /* hidapi.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = hidapi.framework;
-			remoteRef = 5C54D5FC262D759600AB55E0 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		5C54D5FF262D759600AB55E0 /* hidapi.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = hidapi.framework;
-			remoteRef = 5C54D5FE262D759600AB55E0 /* PBXContainerItemProxy */;
+			path = SDL2.framework;
+			remoteRef = A8FC7CAD2E9A867A00537E7B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -2361,7 +2331,7 @@
 				CODE_SIGN_ENTITLEMENTS = AerofoilMac/AerofoilMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 3V3B8U8926;
+				DEVELOPMENT_TEAM = CW8KH2U6P2;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2369,7 +2339,7 @@
 					"'GP_DEBUG_CONFIG=1'",
 				);
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../SDL2-2.0.12/include\"",
+					"\"$(SRCROOT)/../SDL2-2.30.5/include\"",
 					"\"$(SRCROOT)/../GpCommon\"",
 					"\"$(SRCROOT)/../Common\"",
 				);
@@ -2393,7 +2363,7 @@
 				CODE_SIGN_ENTITLEMENTS = AerofoilMac/AerofoilMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 3V3B8U8926;
+				DEVELOPMENT_TEAM = CW8KH2U6P2;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2401,7 +2371,7 @@
 					"'GP_DEBUG_CONFIG=0'",
 				);
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../SDL2-2.0.12/include\"",
+					"\"$(SRCROOT)/../SDL2-2.30.5/include\"",
 					"\"$(SRCROOT)/../GpCommon\"",
 					"\"$(SRCROOT)/../Common\"",
 				);

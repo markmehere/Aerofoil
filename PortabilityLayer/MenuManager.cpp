@@ -1378,7 +1378,7 @@ namespace PortabilityLayer
 	CompositeRenderedFont MenuManagerImpl::GetMenuTextCompositeFont()
 	{
 		PortabilityLayer::RenderedFont *sysFont = GetFont(kMenuFontPreset);
-		PortabilityLayer::RenderedFont *symbolsFont = GetFont(kMenuFontSymbolsPreset);
+		PortabilityLayer::RenderedFont *symbolsFont = GetFont(kMenuFontPreset);
 
 		return CompositeRenderedFont(symbolsFont, sysFont);
 	}

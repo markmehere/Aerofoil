@@ -30,7 +30,7 @@ add_definitions(-D__STDC_FORMAT_MACROS)
 set_property(DIRECTORY PROPERTY COMPILE_OPTIONS ${EXTRA_CXX_FLAGS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()
 
 add_executable(archivertest archiver/archiver.cpp archiver/archivertest.cpp)
@@ -40,7 +40,7 @@ foreach (example ${EXAMPLES})
 endforeach()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_link_libraries(parsebyparts pthread)
+    target_link_libraries(parsebyparts)
 endif()
 
 add_custom_target(examples ALL DEPENDS ${EXAMPLES})
