@@ -38,18 +38,18 @@ ReleasePackageInstaller/bin/*
 ReleasePackageInstaller/AerofoilPackageDefs.wxi
 ReleasePackageInstaller/AerofoilPackageVersion.wxi
 packages/*
-!SDL2-2.30.5/lib/x64/*
+!SDL2-2.32.6/lib/x64/*
 CMakeCache.txt
 CMakeFiles/*
 Makefile
-SDL2-2.30.5/CMakeFiles/*
-SDL2-2.30.5/build
-SDL2-2.30.5/config.status
-SDL2-2.30.5/libtool
-SDL2-2.30.5/Makefile.rules
-SDL2-2.30.5/sdl2.pc
-SDL2-2.30.5/sdl2-config
-SDL2-2.30.5/test/*
+SDL2-2.32.6/CMakeFiles/*
+SDL2-2.32.6/build
+SDL2-2.32.6/config.status
+SDL2-2.32.6/libtool
+SDL2-2.32.6/Makefile.rules
+SDL2-2.32.6/sdl2.pc
+SDL2-2.32.6/sdl2-config
+SDL2-2.32.6/test/*
 install_manifest.txt
 
 ## macOS
@@ -61,7 +61,7 @@ AerofoilMac/*.xcodeproj/xcuserdata/
 AerofoilMac/build/
 AerofoilMac/DerivedData/
 *.xcuserstate
-SDL2-2.30.5/Xcode/SDL/SDL.xcodeproj/xcuserdata/*
+SDL2-2.32.6/Xcode/SDL/SDL.xcodeproj/xcuserdata/*
 AerofoilMac/Resources/*.gpf
 AerofoilMac/Resources/Houses/*.gpf
 AerofoilMac/*.xcodeproj/project.xcworkspace/xcuserdata
