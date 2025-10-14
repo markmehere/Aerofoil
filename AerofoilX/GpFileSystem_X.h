@@ -14,7 +14,7 @@ class GpFileSystem_X final : public IGpFileSystem
 public:
 	GpFileSystem_X();
 	~GpFileSystem_X();
-	
+
 	void Init();
 
 	bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) override;
@@ -29,6 +29,7 @@ public:
 	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
 	static GpFileSystem_X *GetInstance();
+	bool OpenGithub() const override;
 
 private:
 	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution);

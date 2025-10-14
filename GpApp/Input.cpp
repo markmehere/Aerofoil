@@ -26,6 +26,7 @@
 #include "Vec2i.h"
 #include "WindowDef.h"
 #include "WindowManager.h"
+#include "GpVOSEvent.h"
 
 
 #define kNormalThrust		5
@@ -56,6 +57,7 @@ extern	short		otherPlayerEscaped;
 extern	Boolean		quitting, playing, onePlayerLeft, twoPlayerGame, demoGoing, pendingTouchScreenMenu;
 extern	touchScreenControlState	touchScreen;
 extern	macEnviron	thisMac;
+extern	Boolean		isMusicOn;
 
 
 //==============================================================  Functions
@@ -73,8 +75,8 @@ void LogDemoKey (char keyIs)
 void DoCommandKey (void)
 {
 	const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
-	
-	if (theKeys->IsSet(PL_KEY_ASCII('Q')))
+
+    if (theKeys->IsSet(PL_KEY_ASCII('Q')))
 	{
 		DoEndGame();
 	}
@@ -176,12 +178,15 @@ void DoTouchScreenMenu(void)
 {
 	static const int kTouchScreenMenuResource = 1300;
 	static const int kTouchScreenHighlightResource = 1301;
+	Boolean wasMusicOn = isMusicOn;
 
 	THandle<BitmapImage> highlightH = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kTouchScreenHighlightResource).StaticCast<BitmapImage>();
 	BitmapImage *highlightImage = *highlightH;
 
 	if (!highlightH)
 		return;
+
+	if (wasMusicOn) ToggleMusicWhilePlaying(true);
 
 	DrawSurface *highlightSurface = nullptr;
 	Rect highlightRect = highlightImage->GetRect();
@@ -315,6 +320,8 @@ void DoTouchScreenMenu(void)
 	imageH.Dispose();
 	DisposeGWorld(highlightSurface);
 
+    if (wasMusicOn) ToggleMusicWhilePlaying(true);
+
 	if (highlightedItem < 0)
 		return;
 
@@ -344,6 +351,8 @@ void DoPause (void)
 
 	DrawSurface *surface = mainWindow->GetDrawSurface();
 
+	Boolean wasMusicOn = isMusicOn;
+
 	QSetRect(&bounds, 0, 0, 214, 54);
 	CenterRectInRect(&bounds, &houseRect);
 	if (isEscPauseKey)
@@ -360,21 +369,24 @@ void DoPause (void)
 		Delay(1, nullptr);
 	}
 	while ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
-			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))));
-
+			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))) ||
+			(!isEscPauseKey && theKeys->IsSet(PL_KEY_GAMEPAD_BUTTON(GpGamepadButton::kMisc1, 0))));
+	if (wasMusicOn) ToggleMusicWhilePlaying(true);
 	paused = true;
 	while (paused)
 	{
 		theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
 
 		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
-				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))) ||
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_GAMEPAD_BUTTON(GpGamepadButton::kMisc1, 0))))
 			paused = false;
 		else if (theKeys->IsSet(PL_KEY_SHORTCUT))
 			DoCommandKey();
 
 		Delay(1, nullptr);
 	}
+	if (wasMusicOn) ToggleMusicWhilePlaying(true);
 
 	CopyBits((BitMap *)*GetGWorldPixMap(workSrcMap),
 			GetPortBitMapForCopyBits(mainWindow->GetDrawSurface()),
@@ -386,7 +398,8 @@ void DoPause (void)
 		Delay(1, nullptr);
 	}
 	while ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
-			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))));
+			(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))) ||
+			(!isEscPauseKey && theKeys->IsSet(PL_KEY_GAMEPAD_BUTTON(GpGamepadButton::kMisc1, 0))));
 }
 
 //--------------------------------------------------------------  DoBatteryEngaged
@@ -553,7 +566,8 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 	 		thisGlider->fireHeld = false;
 
 		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
-				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))) ||
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_GAMEPAD_BUTTON(GpGamepadButton::kMisc1, 0))))
 		{
 			DoPause();
 		}
@@ -564,6 +578,13 @@ void DoHeliumEngaged (gliderPtr thisGlider)
 
 void GetInput (gliderPtr thisGlider)
 {
+    const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
+    const Boolean menu = theKeys->IsSet(PL_KEY_GAMEPAD_BUTTON(GpGamepadButton::kMisc2, 0)) || theKeys->IsSet(PL_KEY_ASCII('M'));
+
+	if (menu) {
+		pendingTouchScreenMenu = true;
+	}
+
 	if (thisGlider->which == kPlayer1)
 	{
 		const KeyDownStates *theKeys = PortabilityLayer::InputManager::GetInstance()->GetKeys();
@@ -773,7 +794,8 @@ void GetInput (gliderPtr thisGlider)
 		}
 
 		if ((isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kEscape))) ||
-				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))))
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_SPECIAL(kTab))) ||
+				(!isEscPauseKey && theKeys->IsSet(PL_KEY_GAMEPAD_BUTTON(GpGamepadButton::kMisc1, 0))))
 		{
 			DoPause();
 		}
@@ -795,7 +817,7 @@ void DoEndGame() {
 				wantCancel = true;
 		}
 	}
-	
+
 	if (wantCancel)
 	{
 		playing = true;

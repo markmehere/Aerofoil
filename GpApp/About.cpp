@@ -101,18 +101,18 @@ void DoAbout (void)
 	#define			kAboutDialogID			150		// res ID of About dialog
 	#define			kTextItemVers			2		// item number of version text
 	#define			kPictItemMain			4		// item number of main PICT
-	
+
 	Dialog			*aboutDialog;
 	Str255			longVersion;
 	StringPtr		messagePtr;
 	VersRecHndl		version;
 	ControlHandle	itemHandle;
 	short			hit;
-	
+
 	aboutDialog = PortabilityLayer::DialogManager::GetInstance()->LoadDialog(kAboutDialogID, PL_GetPutInFrontWindowPtr(), nullptr);
 //	if (aboutDialog == nil)
 //		RedAlert(kErrDialogDidntLoad);
-	
+
 	version = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('vers', 1).StaticCast<VersionRecord>();
 	if (version != nil)
 	{
@@ -133,7 +133,7 @@ void DoAbout (void)
 	mainPICTBounds = aboutDialog->GetItems()[kPictItemMain - 1].GetWidget()->GetRect();
 
 	UpdateMainPict(aboutDialog);
-	
+
 	do										// Loop until user wants to exit
 	{
 		hit = aboutDialog->ExecuteModal(nullptr, PL_FILTER_FUNC(AboutFilter));
@@ -342,8 +342,8 @@ void DoAboutFramework (void)
 	(lineNum++);
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum)), PSTR("Credits:"), blackColor, font);
 	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Eric Lasota - Programming, admin"), blackColor, font);
-	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Thijs Verboon - macOS programming"), blackColor, font);
-	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Phil Marell - macOS programming"), blackColor, font);
+	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Thijs Verboon and Phil Marell - macOS programming"), blackColor, font);
+	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Mark Pazolli - Android programming"), blackColor, font);
 	surface->DrawString(Point::Create(creditsHorizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR("Iain King-Speir - Linux programming"), blackColor, font);
 	(lineNum++);
 	surface->DrawString(Point::Create(horizontalOffset, verticalPoint + spacing * (lineNum++)), PSTR(GP_APPLICATION_NAME " is an unoffical third-party port of Glider PRO."), blackColor, font);
@@ -387,7 +387,7 @@ static void HiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTHiLit		151		// res ID of unhilit button PICT
 	THandle<BitmapImage>	thePict;
-	
+
 	if (!okayButtIsHiLit)
 	{
 		thePict = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kOkayButtPICTHiLit).StaticCast<BitmapImage>();
@@ -395,7 +395,7 @@ static void HiLiteOkayButton (DrawSurface *surface)
 		{
 			surface->DrawPicture(thePict, okayButtonBounds);
 			thePict.Dispose();
-			
+
 			okayButtIsHiLit = true;
 		}
 	}
@@ -409,7 +409,7 @@ static void UnHiLiteOkayButton (DrawSurface *surface)
 {
 	#define		kOkayButtPICTNotHiLit	150		// res ID of hilit button PICT
 	THandle<BitmapImage>	thePict;
-	
+
 	if (okayButtIsHiLit)
 	{
 		thePict = PortabilityLayer::ResourceManager::GetInstance()->GetAppResource('PICT', kOkayButtPICTNotHiLit).StaticCast<BitmapImage>();
@@ -417,7 +417,7 @@ static void UnHiLiteOkayButton (DrawSurface *surface)
 		{
 			surface->DrawPicture(thePict, okayButtonBounds);
 			thePict.Dispose();
-			
+
 			okayButtIsHiLit = false;
 		}
 	}
@@ -432,7 +432,7 @@ static void UpdateMainPict (Dialog *theDial)
 	uint64_t	freeMemory;
 
 	freeMemory = PLDrivers::GetSystemServices()->GetFreeMemoryCosmetic();
-	
+
 	PasStringCopy(PSTR("Memory:   "), theStr);		// display free memory
 
 	long totalSize = static_cast<long>(freeMemory / 1024);
@@ -440,7 +440,7 @@ static void UpdateMainPict (Dialog *theDial)
 	PasStringConcat(theStr, theStr2);
 	PasStringConcat(theStr, PSTR("K"));
 	DrawDialogUserText2(theDial, 7, theStr);
-	
+
 	PasStringCopy(PSTR("Screen:   "), theStr);		// display screen size/depth
 	NumToString((long)(thisMac.fullScreen.right - thisMac.fullScreen.left), theStr2);
 	PasStringConcat(theStr, theStr2);

@@ -127,7 +127,7 @@ bool GpDirectoryCursor_Web::GetNext(const char *&outFileName)
 								else
 									failedNibble = true;
 							}
-							
+
 							if (!failedNibble)
 							{
 								c = static_cast<char>((decNibbles[0] << 4) + decNibbles[1]);
@@ -139,7 +139,7 @@ bool GpDirectoryCursor_Web::GetNext(const char *&outFileName)
 
 				m_decodedFileName += c;
 			}
-			
+
 			outFileName = m_decodedFileName.c_str();
 			return true;
 		}
@@ -192,7 +192,7 @@ size_t GpFileStream_Web_StaticMemFile::Read(void *bytesOut, size_t size)
 {
 	size_t available = m_size - m_offset;
 	size = std::min(size, available);
-	
+
 	memcpy(bytesOut, m_bytes + m_offset, size);
 	m_offset += size;
 	return size;
@@ -231,7 +231,7 @@ bool GpFileStream_Web_StaticMemFile::SeekCurrent(GpFilePos_t loc)
 {
 	GpFilePos_t minOffset = -static_cast<GpFilePos_t>(m_offset);
 	GpFilePos_t maxOffset = static_cast<GpFilePos_t>(m_size - m_offset);
-	
+
 	if (loc < minOffset || loc > maxOffset)
 		return false;
 
@@ -461,16 +461,16 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 	if (pathAppend)
 	{
 		unsanitized = pathAppend;
-		
+
 		for (size_t i = 0; i < numPaths; i++)
 		{
 			unsanitized += "/";
 			unsanitized += paths[i];
 		}
-		
+
 		if (trailingSlash)
 			unsanitized += "/";
-		
+
 		std::string sanitized;
 		for (size_t i = 0; i < unsanitized.size(); i++)
 		{
@@ -495,7 +495,7 @@ bool GpFileSystem_Web::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualD
 	else
 	{
 		std::string sanitized = m_basePath + unsanitized;
-		
+
 		for (size_t i = 0; i < numPaths; i++)
 		{
 			sanitized += "/";
@@ -585,6 +585,11 @@ bool GpFileSystem_Web::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDi
 	int permissions = access(resolvedPath.c_str(), W_OK | F_OK);
 	exists = ((permissions & F_OK) != 0);
 	return ((permissions & W_OK) != 0);
+}
+
+bool GpFileSystem_Android::OpenGithub() const
+{
+	return false;
 }
 
 GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition)

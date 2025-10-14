@@ -21,13 +21,6 @@
 #include <jni.h>
 #include "UTF8.h"
 
-JNIEXPORT void JNICALL nativePostSourceExportRequest(JNIEnv *env, jclass cls, jboolean cancelled, jint fd, jobject pfd);
-
-static JNINativeMethod GpFileSystemAPI_tab[] =
-{
-	{ "nativePostSourceExportRequest", "(ZILjava/lang/Object;)V", reinterpret_cast<void*>(nativePostSourceExportRequest) },
-};
-
 class GpFileStream_PFD final : public GpIOStream
 {
 public:
@@ -118,7 +111,6 @@ GpFileStream_PFD::GpFileStream_PFD(GpFileSystem_Android *fs, int fd, jobject pfd
 
 GpFileStream_PFD::~GpFileStream_PFD()
 {
-	m_fs->ClosePFD(m_pfd);
 }
 
 size_t GpFileStream_PFD::Read(void *bytesOut, size_t size)
@@ -360,37 +352,13 @@ void GpFileStream_Android_File::Flush()
 	fflush(m_f);
 }
 
-bool GpFileSystem_Android::OpenSourceExportFD(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *const *paths, size_t numPaths, int &fd, jobject &pfd)
+bool GpFileSystem_Android::OpenGithub() const
 {
-	if (!m_sourceExportMutex)
-		m_sourceExportMutex = PLDrivers::GetSystemServices()->CreateMutex();
-
-	m_sourceExportWaiting = true;
-	m_sourceExportCancelled = false;
-
 	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
 
-	jstring fname = jni->NewStringUTF(paths[0]);
+	jni->CallVoidMethod(m_activity, this->m_openGithubMID);
 
-	jni->CallVoidMethod(m_activity, this->m_selectSourceExportPathMID, fname);
-	jni->DeleteLocalRef(fname);
-
-	for (;;)
-	{
-		m_sourceExportMutex->Lock();
-		const bool isWaiting = m_sourceExportWaiting;
-		m_sourceExportMutex->Unlock();
-
-		if (!isWaiting)
-			break;
-
-		m_delayCallback(5);
-	}
-
-	fd = m_sourceExportFD;
-	pfd = m_sourceExportPFD;
-
-	return !m_sourceExportCancelled;
+	return true;
 }
 
 bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset)
@@ -448,11 +416,6 @@ bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virt
 GpFileSystem_Android::GpFileSystem_Android()
 	: m_activity(nullptr)
 	, m_delayCallback(nullptr)
-	, m_sourceExportMutex(nullptr)
-	, m_sourceExportFD(0)
-	, m_sourceExportWaiting(false)
-	, m_sourceExportCancelled(false)
-	, m_sourceExportPFD(nullptr)
 {
 }
 
@@ -464,16 +427,11 @@ void GpFileSystem_Android::InitJNI()
 {
 	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
 
-	jclass fileSystemAPIClass = jni->FindClass("org/thecodedeposit/aerofoil/GpFileSystemAPI");
-	int registerStatus = jni->RegisterNatives(fileSystemAPIClass, GpFileSystemAPI_tab, sizeof(GpFileSystemAPI_tab) / sizeof(GpFileSystemAPI_tab[0]));
-	jni->DeleteLocalRef(fileSystemAPIClass);
-
 	jobject activityLR = static_cast<jobject>(SDL_AndroidGetActivity());
 	jclass activityClassLR = static_cast<jclass>(jni->GetObjectClass(activityLR));
 
 	m_scanAssetDirectoryMID = jni->GetMethodID(activityClassLR, "scanAssetDirectory", "(Ljava/lang/String;)[Ljava/lang/String;");
-	m_selectSourceExportPathMID = jni->GetMethodID(activityClassLR, "selectSourceExportPath", "(Ljava/lang/String;)V");
-	m_closeSourceExportPFDMID = jni->GetMethodID(activityClassLR, "closeSourceExportPFD", "(Ljava/lang/Object;)V");
+	m_openGithubMID = jni->GetMethodID(activityClassLR, "openGithub", "()V");
 
 	m_activity = jni->NewGlobalRef(activityLR);
 
@@ -579,24 +537,6 @@ GpIOStream *GpFileSystem_Android::OpenFileNested(PortabilityLayer::VirtualDirect
 		default:
 			return nullptr;
 	};
-
-	if (virtualDirectory == PortabilityLayer::VirtualDirectories::kSourceExport)
-	{
-		void *objStorage = malloc(sizeof(GpFileStream_PFD));
-		if (!objStorage)
-			return nullptr;
-
-		int fd = 0;
-		jobject pfd = nullptr;
-		const bool resolved = OpenSourceExportFD(virtualDirectory, subPaths, numSubPaths, fd, pfd);
-		if (!resolved)
-		{
-			free(objStorage);
-			return nullptr;
-		}
-
-		return new (objStorage) GpFileStream_PFD(this, fd, pfd, false, true);
-	}
 
 	std::string resolvedPath;
 	bool isAsset;
@@ -734,26 +674,6 @@ void GpFileSystem_Android::SetDelayCallback(DelayCallback_t delayCallback)
 	m_delayCallback = delayCallback;
 }
 
-void GpFileSystem_Android::PostSourceExportRequest(bool cancelled, int fd, jobject pfd)
-{
-	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
-	jobject globalRef = jni->NewGlobalRef(pfd);
-
-	m_sourceExportMutex->Lock();
-	m_sourceExportWaiting = false;
-	m_sourceExportCancelled = cancelled;
-	m_sourceExportFD = fd;
-	m_sourceExportPFD = globalRef;
-	m_sourceExportMutex->Unlock();
-}
-
-void GpFileSystem_Android::ClosePFD(jobject pfd)
-{
-	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
-	jni->CallVoidMethod(m_activity, m_closeSourceExportPFDMID, pfd);
-	jni->DeleteGlobalRef(pfd);
-}
-
 GpFileSystem_Android *GpFileSystem_Android::GetInstance()
 {
 	return &ms_instance;
@@ -882,11 +802,6 @@ IGpDirectoryCursor *GpFileSystem_Android::ScanStorageDirectory(PortabilityLayer:
 		return nullptr;
 
 	return new GpDirectoryCursor_POSIX(d);
-}
-
-JNIEXPORT void JNICALL nativePostSourceExportRequest(JNIEnv *env, jclass cls, jboolean cancelled, jint fd, jobject pfd)
-{
-	GpFileSystem_Android::GetInstance()->PostSourceExportRequest(cancelled != JNI_FALSE, fd, pfd);
 }
 
 GpFileSystem_Android GpFileSystem_Android::ms_instance;

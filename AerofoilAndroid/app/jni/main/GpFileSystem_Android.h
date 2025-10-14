@@ -29,8 +29,7 @@ public:
 
 	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
-	void PostSourceExportRequest(bool cancelled, int fd, jobject pfd);
-	void ClosePFD(jobject pfd);
+	bool OpenGithub() const override;
 
 	static GpFileSystem_Android *GetInstance();
 
@@ -38,21 +37,13 @@ private:
 	IGpDirectoryCursor *ScanAssetDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 	IGpDirectoryCursor *ScanStorageDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 
-	bool OpenSourceExportFD(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, int &fd, jobject &pfd);
 	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset);
 
 	DelayCallback_t m_delayCallback;
 
 	jobject m_activity;
 	jmethodID m_scanAssetDirectoryMID;
-	jmethodID m_selectSourceExportPathMID;
-	jmethodID m_closeSourceExportPFDMID;
-
-	IGpMutex *m_sourceExportMutex;
-	int m_sourceExportFD;
-	bool m_sourceExportWaiting;
-	bool m_sourceExportCancelled;
-	jobject m_sourceExportPFD;
+	jmethodID m_openGithubMID;
 
 	static GpFileSystem_Android ms_instance;
 };

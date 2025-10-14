@@ -117,8 +117,8 @@ static void DrawMainMenuControl(DrawSurface *surface, MainMenuUIState::ControlID
 {
 	Rect surfaceRect = surface->m_port.GetRect();
 
-	PortabilityLayer::ResolveCachingColor blackColor(StdColors::Black());
-	PortabilityLayer::ResolveCachingColor whiteColor(StdColors::White());
+	PortabilityLayer::ResolveCachingColor blackColor(PortabilityLayer::RGBAColor::Create(112, 61, 20, 255));
+	PortabilityLayer::ResolveCachingColor whiteColor(PortabilityLayer::RGBAColor::Create(255, 206, 76, 255));
 	PortabilityLayer::ResolveCachingColor borderColor1(PortabilityLayer::RGBAColor::Create(255, 51, 51, 255));
 	PortabilityLayer::ResolveCachingColor borderColor2(PortabilityLayer::RGBAColor::Create(255, 153, 51, 255));
 

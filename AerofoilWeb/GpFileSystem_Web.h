@@ -15,7 +15,7 @@ class GpFileSystem_Web final : public IGpFileSystem
 public:
 	GpFileSystem_Web();
 	~GpFileSystem_Web();
-	
+
 	void Init();
 
 	bool FileExists(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path) override;
@@ -34,6 +34,7 @@ public:
 	static void FlushFS();
 
 	static GpFileSystem_Web *GetInstance();
+	bool OpenGithub() const override;
 
 private:
 	struct ScanDirectoryNestedContext
@@ -50,7 +51,7 @@ private:
 	IGpDirectoryCursor *ScanDirectoryNestedInternal(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
 
 	IGpDirectoryCursor *ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths);
-	
+
 	static const GpFileSystem_Web_Resources::FileCatalog *GetCatalogForVirtualDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory);
 
 	static IGpDirectoryCursor *ScanCatalog(const GpFileSystem_Web_Resources::FileCatalog &catalog);

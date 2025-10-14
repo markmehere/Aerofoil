@@ -112,12 +112,22 @@ void StopTheMusic (void)
 
 //--------------------------------------------------------------  ToggleMusicWhilePlaying
 
-void ToggleMusicWhilePlaying (void)
+void ToggleMusicWhilePlaying (Boolean force)
 {
 	PLError_t		theErr;
 
 	if (dontLoadMusic)
 		return;
+
+    if (force)
+    {
+        if (!isMusicOn)
+            theErr = StartMusic();
+        else
+            StopTheMusic();
+
+        return;
+    }
 
 	if (isPlayMusicGame)
 	{

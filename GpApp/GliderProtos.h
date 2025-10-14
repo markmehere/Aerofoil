@@ -238,7 +238,7 @@ void TagGliderIdle (gliderPtr);
 
 PLError_t StartMusic (void);								// --- Music.c
 void StopTheMusic (void);
-void ToggleMusicWhilePlaying (void);
+void ToggleMusicWhilePlaying (Boolean);
 void SetMusicalMode (SInt16);
 void InitMusic (void);
 void KillMusic (void);

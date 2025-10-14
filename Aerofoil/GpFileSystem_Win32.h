@@ -28,6 +28,7 @@ public:
 
 	static GpFileSystem_Win32 *CreateInstance(IGpAllocator *alloc);
 	static GpFileSystem_Win32 *GetInstance();
+	bool OpenGithub() const override;
 
 private:
 	bool Init();

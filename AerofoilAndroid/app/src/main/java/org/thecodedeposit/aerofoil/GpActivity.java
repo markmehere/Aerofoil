@@ -43,58 +43,16 @@ public class GpActivity extends SDLActivity
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+    public void openGithub()
     {
-        if (requestCode == SOURCE_EXPORT_REQUEST_ID)
-        {
-            if (resultCode == RESULT_OK)
-            {
-                Uri uri = intent.getData();
-                Context context = getContext();
-                ContentResolver contentResolver = context.getContentResolver();
-                try
-                {
-                    ParcelFileDescriptor fd = contentResolver.openFileDescriptor(uri, "w");
-                    GpFileSystemAPI.nativePostSourceExportRequest(false, fd.getFd(), fd);
-                }
-                catch (IOException e)
-                {
-                    GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
-                    return;
-                }
+        Uri githubUrl = Uri.parse("https://github.com/markmehere/Aerofoil");
+        Intent intent = new Intent(Intent.ACTION_VIEW, githubUrl);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                startActivity(intent);
             }
-            else
-                GpFileSystemAPI.nativePostSourceExportRequest(true, 0, null);
-        }
-        else
-        {
-            super.onActivityResult(requestCode, resultCode, intent);
-        }
-    }
-
-    public void selectSourceExportPath(String fname)
-    {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
-                .setType("application/zip")
-                .addCategory(Intent.CATEGORY_OPENABLE)
-                .putExtra(Intent.EXTRA_TITLE, fname);
-        startActivityForResult(intent, SOURCE_EXPORT_REQUEST_ID);
-    }
-
-    public void closeSourceExportPFD(Object obj)
-    {
-        try
-        {
-            ((ParcelFileDescriptor) obj).close();
-        }
-        catch (IOException e)
-        {
-        }
+        });
     }
 }

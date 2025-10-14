@@ -202,7 +202,7 @@ bool GpFileSystem_X::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDir
 		resolution += "/";
 		resolution += paths[i];
 	}
-	
+
 	return true;
 }
 
@@ -262,6 +262,11 @@ bool GpFileSystem_X::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDire
 	return ((permissions & W_OK) != 0);
 }
 
+bool GpFileSystem_Android::OpenGithub() const
+{
+	return false;
+}
+
 GpIOStream *GpFileSystem_X::OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
 	const char *mode = nullptr;
@@ -294,7 +299,7 @@ GpIOStream *GpFileSystem_X::OpenFileNested(PortabilityLayer::VirtualDirectory_t 
 		return nullptr;
 
 	std::string resolvedPath;
-	
+
 	if (!ResolvePath(virtualDirectory, subPaths, numSubPaths, resolvedPath))
 		return nullptr;
 
