@@ -30,6 +30,7 @@ public:
 
 	static GpFileSystem_X *GetInstance();
 	bool OpenGithub() const override;
+	bool ShowInstructions() const override;
 
 private:
 	bool ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution);

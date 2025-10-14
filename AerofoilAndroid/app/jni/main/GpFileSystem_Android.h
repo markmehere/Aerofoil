@@ -30,6 +30,7 @@ public:
 	void SetDelayCallback(DelayCallback_t delayCallback) override;
 
 	bool OpenGithub() const override;
+	bool ShowInstructions() const override;
 
 	static GpFileSystem_Android *GetInstance();
 
@@ -44,6 +45,7 @@ private:
 	jobject m_activity;
 	jmethodID m_scanAssetDirectoryMID;
 	jmethodID m_openGithubMID;
+	jmethodID m_showInstructionsMID;
 
 	static GpFileSystem_Android ms_instance;
 };

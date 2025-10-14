@@ -19,6 +19,7 @@
 #include "PLQDraw.h"
 #include "PLStandardColors.h"
 #include "PLSysCalls.h"
+#include "IGpFileSystem.h"
 
 struct MainMenuControlState
 {
@@ -40,6 +41,7 @@ struct MainMenuUIState
 
 		Control_LoadHouse,
 		Control_Demo,
+		Control_Controls,
 		Control_Page1To2,
 
 		Control_AboutApplication,
@@ -101,6 +103,8 @@ static PLPasStr GetTextForControl(MainMenuUIState::ControlID controlID)
 		return PSTR("Load House");
 	case MainMenuUIState::Control_Demo:
 		return PSTR("Demo");
+	case MainMenuUIState::Control_Controls:
+		return PSTR("Controls");
 	case MainMenuUIState::Control_HighScores:
 		return PSTR("High Scores");
 	case MainMenuUIState::Control_AboutApplication:
@@ -242,6 +246,7 @@ void StartMainMenuUI()
 
 	mainMenu.m_controls[MainMenuUIState::Control_LoadHouse].m_page = 1;
 	mainMenu.m_controls[MainMenuUIState::Control_Demo].m_page = 1;
+	mainMenu.m_controls[MainMenuUIState::Control_Controls].m_page = 1;
 	mainMenu.m_controls[MainMenuUIState::Control_Page1To2].m_page = 1;
 
 	mainMenu.m_controls[MainMenuUIState::Control_AboutApplication].m_page = 2;
@@ -396,6 +401,10 @@ static void HandleMainMenuUISelection(MainMenuUIState::ControlID controlID)
 
 	case MainMenuUIState::Control_Demo:
 		DoDemoGame();	// This handles main menu UI by itself
+		break;
+
+	case MainMenuUIState::Control_Controls:
+		PLDrivers::GetFileSystem()->ShowInstructions();
 		break;
 
 	case MainMenuUIState::Control_AboutApplication:

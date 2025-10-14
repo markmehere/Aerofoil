@@ -592,6 +592,11 @@ bool GpFileSystem_Android::OpenGithub() const
 	return false;
 }
 
+bool GpFileSystem_Android::ShowInstructions() const
+{
+	return false;
+}
+
 GpIOStream *GpFileSystem_Web::OpenFileNested(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* subPaths, size_t numSubPaths, bool writeAccess, GpFileCreationDisposition_t createDisposition)
 {
 	if (numSubPaths == 1)

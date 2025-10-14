@@ -35,6 +35,7 @@ public:
 
 	static GpFileSystem_Web *GetInstance();
 	bool OpenGithub() const override;
+	bool ShowInstructions() const override;
 
 private:
 	struct ScanDirectoryNestedContext

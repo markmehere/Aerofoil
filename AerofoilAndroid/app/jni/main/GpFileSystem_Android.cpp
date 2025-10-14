@@ -361,6 +361,15 @@ bool GpFileSystem_Android::OpenGithub() const
 	return true;
 }
 
+bool GpFileSystem_Android::ShowInstructions() const
+{
+	JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+
+	env->CallVoidMethod(m_activity, m_showInstructionsMID);
+
+	return true;
+}
+
 bool GpFileSystem_Android::ResolvePath(PortabilityLayer::VirtualDirectory_t virtualDirectory, char const* const* paths, size_t numPaths, std::string &resolution, bool &isAsset)
 {
 	const char *prefsAppend = nullptr;
@@ -432,7 +441,7 @@ void GpFileSystem_Android::InitJNI()
 
 	m_scanAssetDirectoryMID = jni->GetMethodID(activityClassLR, "scanAssetDirectory", "(Ljava/lang/String;)[Ljava/lang/String;");
 	m_openGithubMID = jni->GetMethodID(activityClassLR, "openGithub", "()V");
-
+	m_showInstructionsMID = jni->GetMethodID(activityClassLR, "showInstructions", "()V");
 	m_activity = jni->NewGlobalRef(activityLR);
 
 	jni->DeleteLocalRef(activityLR);

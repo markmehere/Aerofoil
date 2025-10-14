@@ -2,20 +2,10 @@ package org.thecodedeposit.aerofoil;
 
 import org.libsdl.app.SDLActivity;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.ParcelFileDescriptor;
-import android.provider.MediaStore;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
 
 public class GpActivity extends SDLActivity
 {
@@ -54,5 +44,11 @@ public class GpActivity extends SDLActivity
                 startActivity(intent);
             }
         });
+    }
+
+    public void showInstructions()
+    {
+        Intent intent = new Intent(this, InstructionActivity.class);
+        startActivity(intent);
     }
 }

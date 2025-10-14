@@ -30,6 +30,7 @@ public:
 	GpIOStream *OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition);
 	IGpDirectoryCursor *ScanDirectory(PortabilityLayer::VirtualDirectory_t virtualDirectory);
 	virtual bool OpenGithub() const = 0;
+	virtual bool ShowInstructions() const = 0;
 };
 
 inline GpIOStream *IGpFileSystem::OpenFile(PortabilityLayer::VirtualDirectory_t virtualDirectory, const char *path, bool writeAccess, GpFileCreationDisposition_t createDisposition)
