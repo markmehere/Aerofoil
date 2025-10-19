@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 public class GpActivity extends SDLActivity
@@ -62,8 +63,9 @@ public class GpActivity extends SDLActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                View view = getWindow().getDecorView().getRootView();
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.toggleSoftInput(0, InputMethodManager.HIDE_FORCED);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
         });
     }
