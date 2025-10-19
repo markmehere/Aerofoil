@@ -13,6 +13,7 @@
 #include "Rect2i.h"
 #include "TextPlacer.h"
 #include "GpUnicode.h"
+#include "IGpLogDriver.h"
 
 #include "PLDrivers.h"
 #include "PLKeyEncoding.h"
@@ -22,6 +23,9 @@
 #include "PLCore.h"
 
 #include <algorithm>
+
+#define kHighNameDialogID		1020
+#define kHighBannerDialogID		1021
 
 namespace PortabilityLayer
 {
@@ -46,12 +50,17 @@ namespace PortabilityLayer
 		, m_scrollOffset(0, 0)
 		, m_characterFilter(nullptr)
 		, m_characterFilterContext(nullptr)
+		, m_noEnableEvents(state.m_dialogID == kHighNameDialogID || state.m_dialogID == kHighBannerDialogID)
 	{
+		IGpLogDriver *logger = PLDrivers::GetLogDriver();
+		if (m_noEnableEvents && logger) {
+			logger->Printf(IGpLogDriver::Category_Information, "Editbox typing disabled");
+		}
 	}
 
 	EditboxWidget::~EditboxWidget()
 	{
-		if (m_hasFocus)
+		if (m_hasFocus && !m_noEnableEvents)
 			PLDrivers::GetSystemServices()->SetTextInputEnabled(false);
 
 		PortabilityLayer::MemoryManager *mm = PortabilityLayer::MemoryManager::GetInstance();
@@ -173,7 +182,7 @@ namespace PortabilityLayer
 
 	void EditboxWidget::LoseFocus()
 	{
-		if (m_hasFocus)
+		if (m_hasFocus && !m_noEnableEvents)
 			PLDrivers::GetSystemServices()->SetTextInputEnabled(false);
 
 		m_hasFocus = false;
@@ -684,7 +693,7 @@ namespace PortabilityLayer
 			Redraw();
 		}
 	}
-	
+
 	void EditboxWidget::HandleCopy()
 	{
 		if (m_selStartChar == m_selEndChar)

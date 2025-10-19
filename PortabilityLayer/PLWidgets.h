@@ -79,6 +79,7 @@ namespace PortabilityLayer
 		int32_t m_max;
 		int16_t m_state;
 		int16_t m_resID;
+		int16_t m_dialogID;
 		bool m_enabled;
 
 		WidgetUpdateCallback_t m_defaultCallback;

@@ -131,6 +131,7 @@ namespace PortabilityLayer
 		bool m_isMultiLine;
 		bool m_isDraggingSelection;
 		bool m_isDraggingWords;
+		bool m_noEnableEvents;
 		size_t m_dragSelectionStartChar;
 		size_t m_dragSelectionEndChar;
 		uint32_t m_doubleClickTime;

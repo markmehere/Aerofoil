@@ -572,7 +572,9 @@ void GetHighScoreName (short place)
 	if (doZooms)
 		wm->FlickerWindowOut(theDial->GetWindow(), 64);
 
-	sysServices->SetTextInputEnabled(false);
+	if (place != 1) {
+        sysServices->SetTextInputEnabled(false);
+    }
 	wm->SwapExclusiveWindow(exclStack);	// Pop exclusive window
 
 	theDial->Destroy();

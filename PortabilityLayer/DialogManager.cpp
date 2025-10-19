@@ -77,14 +77,16 @@ namespace PortabilityLayer
 	class DialogTemplate final
 	{
 	public:
-		DialogTemplate(DialogTemplateItem *itemStorage, size_t numItems);
+		DialogTemplate(DialogTemplateItem *itemStorage, int16_t dialogId, size_t numItems);
 		bool DeserializeItems(const rapidjson::Value &itemsArray);
 		void Destroy();
 
 		ArrayView<const DialogTemplateItem> GetItems() const;
+		int16_t GetDialogId() const { return m_dialogId; }
 
 	private:
 		DialogTemplateItem *m_items;
+		int16_t m_dialogId;
 		size_t m_numItems;
 	};
 
@@ -199,8 +201,9 @@ namespace PortabilityLayer
 		return m_widget;
 	}
 
-	DialogTemplate::DialogTemplate(DialogTemplateItem *itemStorage, size_t numItems)
+	DialogTemplate::DialogTemplate(DialogTemplateItem *itemStorage, int16_t dialogId, size_t numItems)
 		: m_items(itemStorage)
+		, m_dialogId(dialogId)
 		, m_numItems(numItems)
 	{
 	}
@@ -534,6 +537,7 @@ namespace PortabilityLayer
 
 			WidgetBasicState basicState;
 			basicState.m_enabled = templateItem.m_enabled;
+			basicState.m_dialogID = tmpl->GetDialogId();
 			basicState.m_resID = templateItem.m_id;
 			basicState.m_text = PascalStr<255>(PLPasStr(substitutedStr));
 			basicState.m_rect = templateItem.m_rect;
@@ -893,7 +897,7 @@ namespace PortabilityLayer
 
 		uint8_t *itemsLoc = static_cast<uint8_t*>(storage) + dtlAlignedSize;
 
-		DialogTemplate *dtemplate = new (storage) DialogTemplate(reinterpret_cast<DialogTemplateItem*>(itemsLoc), numItems);
+		DialogTemplate *dtemplate = new (storage) DialogTemplate(reinterpret_cast<DialogTemplateItem*>(itemsLoc), resID, numItems);
 		if (!dtemplate->DeserializeItems(itemsArray))
 		{
 			dtemplate->Destroy();
