@@ -31,6 +31,21 @@ GpSystemServices_Android::GpSystemServices_Android()
 {
 }
 
+void GpSystemServices_Android::InitJNI()
+{
+	JNIEnv *jni = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
+
+	jobject activityLR = static_cast<jobject>(SDL_AndroidGetActivity());
+	jclass activityClassLR = static_cast<jclass>(jni->GetObjectClass(activityLR));
+
+	m_showTextInputMID = jni->GetMethodID(activityClassLR, "showTextInput", "()V");
+	m_hideTextInputMID = jni->GetMethodID(activityClassLR, "hideTextInput", "()V");
+	m_activity = jni->NewGlobalRef(activityLR);
+
+	jni->DeleteLocalRef(activityLR);
+	jni->DeleteLocalRef(activityClassLR);
+}
+
 void *GpSystemServices_Android::CreateThread(ThreadFunc_t threadFunc, void *context)
 {
 	IGpThreadEvent *evt = CreateThreadEvent(true, false);
@@ -107,6 +122,14 @@ unsigned int GpSystemServices_Android::GetCPUCount() const
 
 void GpSystemServices_Android::SetTextInputEnabled(bool isEnabled)
 {
+	if (!m_textInputEnabled && isEnabled) {
+		JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+		env->CallVoidMethod(m_activity, m_showTextInputMID);
+	}
+	else if (m_textInputEnabled && !isEnabled) {
+		JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+		env->CallVoidMethod(m_activity, m_hideTextInputMID);
+	}
 	m_textInputEnabled = isEnabled;
 }
 

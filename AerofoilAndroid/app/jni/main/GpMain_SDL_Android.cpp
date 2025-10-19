@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
 	SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
 
 	GpFileSystem_Android::GetInstance()->InitJNI();
+	GpSystemServices_Android::GetInstance()->InitJNI();
 
 	GpDriverCollection *drivers = GpAppInterface_Get()->PL_GetDriverCollection();
 	drivers->SetDriver<GpDriverIDs::kFileSystem>(GpFileSystem_Android::GetInstance());

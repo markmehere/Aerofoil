@@ -70,7 +70,7 @@ void DoHighScores (void)
 {
 	Rect		tempRect;
 	PortabilityLayer::ResolveCachingColor blackColor = StdColors::Black();
-	
+
 	SpinCursor(3);
 	workSrcMap->FillRect(workSrcRect, blackColor);
 	QSetRect(&tempRect, 0, 0, 640, 480);
@@ -102,7 +102,7 @@ void DoHighScores (void)
 		DelayTicks(60);
 		WaitForInputEvent(30);
 	}
-	
+
 	RedrawSplashScreen();
 }
 
@@ -127,30 +127,30 @@ void DrawHighScores (DrawSurface *surface)
 	PortabilityLayer::ResolveCachingColor cyanColor = PortabilityLayer::RGBAColor::Create(0, 255, 255, 255);
 	PortabilityLayer::ResolveCachingColor whiteColor = PortabilityLayer::RGBAColor::Create(255, 255, 255, 255);
 	PortabilityLayer::ResolveCachingColor blueColor = PortabilityLayer::RGBAColor::Create(0, 0, 255, 255);
-	
+
 	scoreLeft = ((thisMac.constrainedScreen.right - thisMac.constrainedScreen.left) - kScoreWide) / 2;
 	dropIt = 129 + splashOriginV;
-	
+
 	QSetRect(&tempRect, 0, 0, 332, 30);
 	theErr = CreateOffScreenGWorld(&tempMap, &tempRect);
 	LoadGraphic(tempMap, kHighScoresPictID);
-	
+
 	theErr = CreateOffScreenGWorldCustomDepth(&tempMask, &tempRect, GpPixelFormats::kBW1);
 	LoadGraphic(tempMask, kHighScoresMaskID);
-	
+
 	tempRect2 = tempRect;
 	QOffsetRect(&tempRect2, scoreLeft + (kScoreWide - 332) / 2, dropIt - 60);
-	
-	CopyMask((BitMap *)*GetGWorldPixMap(tempMap), 
-			(BitMap *)*GetGWorldPixMap(tempMask), 
-			(BitMap *)*GetGWorldPixMap(workSrcMap), 
+
+	CopyMask((BitMap *)*GetGWorldPixMap(tempMap),
+			(BitMap *)*GetGWorldPixMap(tempMask),
+			(BitMap *)*GetGWorldPixMap(workSrcMap),
 			&tempRect, &tempRect, &tempRect2);
-	
+
 	DisposeGWorld(tempMap);
 	DisposeGWorld(tempMask);
 
 	PortabilityLayer::RenderedFont *appFont14 = GetFont(PortabilityLayer::FontPresets::kApplication14SyntheticBold);
-	
+
 	PasStringCopy(PSTR("\xa5 "), tempStr);
 	PasStringConcat(tempStr, thisHouseName);
 	PasStringConcat(tempStr, PSTR(" \xa5"));
@@ -172,15 +172,15 @@ void DrawHighScores (DrawSurface *surface)
 
 	const Point topScoreTextPoint = Point::Create(scoreLeft + (kScoreWide - bannerWidth) / 2, dropIt - kKimsLifted - 1);
 	surface->DrawString(topScoreTextPoint, tempStr, yellowColor, appFont12);
-	
+
 	QSetRect(&tempRect, 0, 0, bannerWidth + 8, kScoreSpacing);
-	QOffsetRect(&tempRect, scoreLeft - 3 + (kScoreWide - bannerWidth) / 2, 
+	QOffsetRect(&tempRect, scoreLeft - 3 + (kScoreWide - bannerWidth) / 2,
 			dropIt + 5 - kScoreSpacing - kKimsLifted);
 
 	surface->FrameRect(tempRect, blackColor);
 	QOffsetRect(&tempRect, -1, -1);
 	surface->FrameRect(tempRect, yellowColor);
-	
+
 	for (i = 0; i < kMaxScores; i++)
 	{
 		if (thisHousePtr->highScores.scores[i] > 0L)
@@ -284,9 +284,9 @@ void SortHighScores (void)
 	houseType	*thisHousePtr;
 	long		greatest;
 	short		i, h, which;
-	
+
 	thisHousePtr = *thisHouse;
-	
+
 	for (h = 0; h < kMaxScores; h++)
 	{
 		greatest = -1L;
@@ -319,9 +319,9 @@ void ZeroHighScores (void)
 {
 	houseType	*thisHousePtr;
 	short		i;
-	
+
 	thisHousePtr = *thisHouse;
-	
+
 	PasStringCopy(thisHouseName, thisHousePtr->highScores.banner);
 	for (i = 0; i < kMaxScores; i++)
 	{
@@ -340,9 +340,9 @@ void ZeroAllButHighestScore (void)
 	houseType	*thisHousePtr;
 	short		i;
 	char		wasState;
-	
+
 	thisHousePtr = *thisHouse;
-	
+
 	for (i = 1; i < kMaxScores; i++)
 	{
 		PasStringCopy(PSTR("--------------"), thisHousePtr->highScores.names[i]);
@@ -353,26 +353,26 @@ void ZeroAllButHighestScore (void)
 }
 
 //--------------------------------------------------------------  TestHighScore
-// This function is called after a game ends in order to test theÉ
-// current high score against the high score list.  It returns trueÉ
+// This function is called after a game ends in order to test theï¿½
+// current high score against the high score list.  It returns trueï¿½
 // if the player is on the high score list now.
 
 Boolean TestHighScore (void)
 {
 	houseType	*thisHousePtr;
 	short		placing, i;
-	
+
 	if (resumedSavedGame)
 		return (false);
 
 	if (IsHighScoreDisabled())
 		return false;
-	
+
 	thisHousePtr = *thisHouse;
-	
+
 	lastHighScore = -1;
 	placing = -1;
-	
+
 	for (i = 0; i < kMaxScores; i++)
 	{
 		if (theScore > thisHousePtr->highScores.scores[i])
@@ -385,7 +385,7 @@ Boolean TestHighScore (void)
 
 	if (IsHighScoreForceTop())
 		placing = 0;
-	
+
 	if (placing != -1)
 	{
 		int64_t scoreTimestamp = PLDrivers::GetSystemServices()->GetTime();
@@ -409,7 +409,7 @@ Boolean TestHighScore (void)
 
 		WriteScores();
 	}
-	
+
 	if (placing != -1)
 	{
 		DoHighScores();
@@ -425,9 +425,9 @@ Boolean TestHighScore (void)
 void UpdateNameDialog (Dialog *theDialog)
 {
 	short		nChars;
-	
+
 	DrawDefaultButton(theDialog);
-	
+
 	nChars = GetDialogStringLen(theDialog, kHighNameItem);
 	SetDialogNumToStr(theDialog, kNameNCharsItem, (long)nChars);
 }
@@ -530,7 +530,8 @@ void GetHighScoreName (short place)
 	Boolean			leaving;
 
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
-	
+	IGpSystemServices *sysServices = PLDrivers::GetSystemServices();
+
 	InitCursor();
 	NumToString(theScore, scoreStr);
 	NumToString((long)place, placeStr);
@@ -542,6 +543,7 @@ void GetHighScoreName (short place)
 	FlushEvents();
 	SetDialogString(theDial, kHighNameItem, highName);
 	SelectDialogItemText(theDial, kHighNameItem, 0, 1024);
+	sysServices->SetTextInputEnabled(true);
 	leaving = false;
 
 	UpdateNameDialog(theDial);
@@ -558,7 +560,7 @@ void GetHighScoreName (short place)
 	while (!leaving)
 	{
 		item = theDial->ExecuteModal(nullptr, PL_FILTER_FUNC(NameFilter));
-		
+
 		if (item == kOkayButton)
 		{
 			GetDialogString(theDial, kHighNameItem, tempStr);
@@ -570,8 +572,9 @@ void GetHighScoreName (short place)
 	if (doZooms)
 		wm->FlickerWindowOut(theDial->GetWindow(), 64);
 
+	sysServices->SetTextInputEnabled(false);
 	wm->SwapExclusiveWindow(exclStack);	// Pop exclusive window
-	
+
 	theDial->Destroy();
 }
 
@@ -581,9 +584,9 @@ void GetHighScoreName (short place)
 void UpdateBannerDialog (Dialog *theDialog)
 {
 	short		nChars;
-	
+
 	DrawDefaultButton(theDialog);
-	
+
 	nChars = GetDialogStringLen(theDialog, kHighBannerItem);
 	SetDialogNumToStr(theDialog, kBannerScoreNCharsItem, (long)nChars);
 }
@@ -594,7 +597,7 @@ void UpdateBannerDialog (Dialog *theDialog)
 int16_t BannerFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 {
 	short		nChars;
-	
+
 	if (keyStroke)
 	{
 		nChars = GetDialogStringLen(dial, kHighBannerItem);
@@ -638,8 +641,8 @@ int16_t BannerFilter(void *context, Dialog *dial, const TimeTaggedVOSEvent *evt)
 }
 
 //--------------------------------------------------------------  GetHighScoreBanner
-// A player who gets the #1 slot gets to enter a short message (thatÉ
-// appears across the top of the high scores list).  This dialogÉ
+// A player who gets the #1 slot gets to enter a short message (thatï¿½
+// appears across the top of the high scores list).  This dialogï¿½
 // gets that message.
 
 void GetHighScoreBanner (void)
@@ -650,11 +653,13 @@ void GetHighScoreBanner (void)
 	Boolean			leaving;
 
 	PortabilityLayer::WindowManager *wm = PortabilityLayer::WindowManager::GetInstance();
-	
+	IGpSystemServices *sysServices = PLDrivers::GetSystemServices();
+
 	PlayPrioritySound(kEnergizeSound, kEnergizePriority);
 	BringUpDialog(&theDial, kHighBannerDialogID, nullptr);
 	SetDialogString(theDial, kHighBannerItem, highBanner);
 	SelectDialogItemText(theDial, kHighBannerItem, 0, 1024);
+	sysServices->SetTextInputEnabled(true);
 	leaving = false;
 
 	UpdateBannerDialog(theDial);
@@ -671,7 +676,7 @@ void GetHighScoreBanner (void)
 	while (!leaving)
 	{
 		item = theDial->ExecuteModal(nullptr, PL_FILTER_FUNC(BannerFilter));
-		
+
 		if (item == kOkayButton)
 		{
 			GetDialogString(theDial, kHighBannerItem, tempStr);
@@ -684,7 +689,8 @@ void GetHighScoreBanner (void)
 		wm->FlickerWindowOut(theDial->GetWindow(), 64);
 
 	wm->SwapExclusiveWindow(exclStack);	// Pop exclusive window
-	
+
+	sysServices->SetTextInputEnabled(false);
 	theDial->Destroy();
 }
 
@@ -703,7 +709,7 @@ Boolean OpenHighScoresFile (const VFileSpec &spec, GpIOStream *&outStream, Boole
 
 	if (!CheckFileError(theErr, PSTR("High Score")))
 		return (false);
-	
+
 	return (true);
 }
 
@@ -718,14 +724,14 @@ Boolean WriteScoresToDisk (void)
 	short		volRefNum;
 	char		wasState;
 	GpIOStream	*scoresStream = nil;
-	
+
 	scoreSpec = MakeVFileSpec(PortabilityLayer::VirtualDirectories::kHighScores, thisHouseName);
 	if (!OpenHighScoresFile(scoreSpec, scoresStream, true))
 	{
 		SysBeep(1);
 		return (false);
 	}
-	
+
 	byteCount = sizeof(scoresType);
 	theScores = &((*thisHouse)->highScores);
 
@@ -771,14 +777,14 @@ Boolean ReadScoresFromDisk (void)
 
 	if (!scoresStream)
 		return (false);
-	
+
 	byteCount = scoresStream->Size();
 	if (byteCount != sizeof(scoresType))
 	{
 		scoresStream->Close();
 		return (false);
 	}
-	
+
 	theScores = &((*thisHouse)->highScores);
 
 	if (scoresStream->Read(theScores, byteCount) != byteCount)
@@ -787,7 +793,7 @@ Boolean ReadScoresFromDisk (void)
 		scoresStream->Close();
 		return (false);
 	}
-	
+
 	scoresStream->Close();
 
 	return (true);

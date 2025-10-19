@@ -109,6 +109,10 @@ GpInputDriverSDLGamepad::~GpInputDriverSDLGamepad()
 
 bool GpInputDriverSDLGamepad::FindJoystickPlayer(uint8_t &playerNum, SDL_JoystickID joystickID)
 {
+#ifdef NO_MULTIPLE_JOYSTICKS
+	playerNum = static_cast<uint8_t>(0);
+	return true;
+#else
 	for (int i = 0; i < kMaxPlayers; i++)
 	{
 		if (m_playerJoystickIDs[i] == joystickID)
@@ -119,10 +123,16 @@ bool GpInputDriverSDLGamepad::FindJoystickPlayer(uint8_t &playerNum, SDL_Joystic
 	}
 
 	return false;
+#endif
 }
 
 void GpInputDriverSDLGamepad::HandleDeviceAdded(SDL_JoystickID joystickID)
 {
+#ifdef NO_MULTIPLE_JOYSTICKS
+	if (m_playerControllers[0]) SDL_GameControllerClose(m_playerControllers[0]);
+	m_playerJoystickIDs[0] = joystickID;
+	m_playerControllers[0] = SDL_GameControllerOpen(joystickID);
+#else
 	for (int i = 0; i < kMaxPlayers; i++)
 	{
 		if (m_playerJoystickIDs[i] == -1)
@@ -136,10 +146,14 @@ void GpInputDriverSDLGamepad::HandleDeviceAdded(SDL_JoystickID joystickID)
 			return;
 		}
 	}
+#endif
 }
 
 void GpInputDriverSDLGamepad::HandleDeviceRemoved(SDL_JoystickID joystickID)
 {
+#ifdef NO_MULTIPLE_JOYSTICKS
+	return;
+#endif
 	int playerNum = 0;
 	bool foundPlayer = false;
 	for (int i = 0; i < kMaxPlayers; i++)

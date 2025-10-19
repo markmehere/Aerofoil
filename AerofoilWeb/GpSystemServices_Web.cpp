@@ -15,7 +15,7 @@ public:
 
 	void Lock() override;
 	void Unlock() override;
-	
+
 	static IGpMutex *GetInstance();
 
 private:
@@ -143,12 +143,12 @@ bool GpSystemServices_Web::Beep() const
 
 bool GpSystemServices_Web::IsTouchscreen() const
 {
-	return false;
+	return true;
 }
 
 bool GpSystemServices_Web::IsUsingMouseAsTouch() const
 {
-	return false;
+	return true;
 }
 
 bool GpSystemServices_Web::IsTextInputObstructive() const

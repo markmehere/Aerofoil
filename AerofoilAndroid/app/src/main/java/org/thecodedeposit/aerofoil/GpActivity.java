@@ -2,10 +2,12 @@ package org.thecodedeposit.aerofoil;
 
 import org.libsdl.app.SDLActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.inputmethod.InputMethodManager;
 
 public class GpActivity extends SDLActivity
 {
@@ -42,6 +44,26 @@ public class GpActivity extends SDLActivity
             @Override
             public void run() {
                 startActivity(intent);
+            }
+        });
+    }
+
+    public void showTextInput() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            }
+        });
+    }
+
+    public void hideTextInput() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.toggleSoftInput(0, InputMethodManager.HIDE_FORCED);
             }
         });
     }

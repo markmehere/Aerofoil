@@ -2,6 +2,7 @@
 
 #include "GpSystemServices_POSIX.h"
 #include "GpCoreDefs.h"
+#include <jni.h>
 
 class GpSystemServices_Android final : public GpSystemServices_POSIX
 {
@@ -28,9 +29,13 @@ public:
 	void FlushTextInputEnabled();
 
 	static GpSystemServices_Android *GetInstance();
+	void InitJNI();
 
 private:
 	static GpSystemServices_Android ms_instance;
 
+	jobject m_activity;
+	jmethodID m_showTextInputMID;
+	jmethodID m_hideTextInputMID;
 	bool m_textInputEnabled;
 };

@@ -6,6 +6,11 @@ PortabilityLayer::RGBAColor StdColors::Black()
 	return PortabilityLayer::RGBAColor::Create(0, 0, 0, 255);
 }
 
+PortabilityLayer::RGBAColor StdColors::Yellow()
+{
+	return PortabilityLayer::RGBAColor::Create(255, 204, 51, 255);
+}
+
 PortabilityLayer::RGBAColor StdColors::White()
 {
 	return PortabilityLayer::RGBAColor::Create(255, 255, 255, 255);

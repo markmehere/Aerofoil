@@ -11,8 +11,8 @@ android {
         applicationId = "org.thecodedeposit.aerofoil"
         minSdk = 31
         targetSdk = 36
-        versionCode = 31
-        versionName = "1.2.1"
+        versionCode = 33
+        versionName = "1.2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         setProperty("archivesBaseName", "aerofoil")

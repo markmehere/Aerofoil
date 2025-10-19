@@ -32,4 +32,5 @@ target_compile_definitions(
     AerofoilSDL
     PUBLIC
     GP_DEBUG_CONFIG=0
+    NO_MULTIPLE_JOYSTICKS=1
 )

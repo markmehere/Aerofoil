@@ -259,12 +259,12 @@ bool GpFileSystem_Win32::FileLocked(PortabilityLayer::VirtualDirectory_t virtual
 	return (attribs & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
-bool GpFileSystem_Android::OpenGithub() const
+bool GpFileSystem_Win32::OpenGithub() const
 {
 	return false;
 }
 
-bool GpFileSystem_Android::ShowInstructions() const
+bool GpFileSystem_Win32::ShowInstructions() const
 {
 	return false;
 }

@@ -1,4 +1,4 @@
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
 	// This doesn't work on AMD Windows drivers
 	#define GP_GL_SHADER_CODE_MEDIUM_PRECISION_PREFIX "precision mediump float;\n"
 	#define GP_GL_SHADER_CODE_HIGH_PRECISION_PREFIX "precision highp float;\n"

@@ -587,12 +587,12 @@ bool GpFileSystem_Web::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDi
 	return ((permissions & W_OK) != 0);
 }
 
-bool GpFileSystem_Android::OpenGithub() const
+bool GpFileSystem_Web::OpenGithub() const
 {
 	return false;
 }
 
-bool GpFileSystem_Android::ShowInstructions() const
+bool GpFileSystem_Web::ShowInstructions() const
 {
 	return false;
 }

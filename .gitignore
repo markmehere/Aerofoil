@@ -54,6 +54,11 @@ install_manifest.txt
 
 ## macOS
 .DS_Store
+SDLBuild
+
+# web
+AerofoilWeb/utils/bin2h
+FileSaver.js
 
 ## Xcode projects
 AerofoilMac/xcuserdata/

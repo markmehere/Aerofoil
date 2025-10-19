@@ -262,12 +262,12 @@ bool GpFileSystem_X::FileLocked(PortabilityLayer::VirtualDirectory_t virtualDire
 	return ((permissions & W_OK) != 0);
 }
 
-bool GpFileSystem_Android::OpenGithub() const
+bool GpFileSystem_X::OpenGithub() const
 {
 	return false;
 }
 
-bool GpFileSystem_Android::ShowInstructions() const
+bool GpFileSystem_X::ShowInstructions() const
 {
 	return false;
 }

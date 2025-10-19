@@ -20,6 +20,7 @@
 #include "SDL_mouse.h"
 #include "SDL_opengl.h"
 #include "SDL_video.h"
+#include "SDL_render.h"
 
 #include <stdlib.h>
 #include <new>
@@ -32,6 +33,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #endif
 
 #pragma push_macro("LoadCursor")
@@ -1127,12 +1129,21 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	: m_window(nullptr)
 	, m_frameTimeAccumulated(std::chrono::high_resolution_clock::duration::zero())
 	, m_frameTimeSliceSize(std::chrono::high_resolution_clock::duration::zero())
+#ifndef __EMSCRIPTEN__
+	, m_windowWidthPhysical(800)
+	, m_windowHeightPhysical(480)
+	, m_windowWidthVirtual(800)
+	, m_windowHeightVirtual(480)
+	, m_initialWidthVirtual(800)
+	, m_initialHeightVirtual(480)
+#else
 	, m_windowWidthPhysical(640)
 	, m_windowHeightPhysical(480)
 	, m_windowWidthVirtual(640)
 	, m_windowHeightVirtual(480)
 	, m_initialWidthVirtual(640)
 	, m_initialHeightVirtual(480)
+#endif
 	, m_pixelScaleX(1.0f)
 	, m_pixelScaleY(1.0f)
 	, m_useUpscaleFilter(false)
@@ -1148,8 +1159,13 @@ GpDisplayDriver_SDL_GL2::GpDisplayDriver_SDL_GL2(const GpDisplayDriverProperties
 	, m_isResolutionResetDesired(false)
 	, m_windowModeRevertX(200)
 	, m_windowModeRevertY(200)
+#ifndef __EMSCRIPTEN__
+	, m_windowModeRevertWidth(800)
+	, m_windowModeRevertHeight(480)
+#else
 	, m_windowModeRevertWidth(640)
 	, m_windowModeRevertHeight(480)
+#endif
 	, m_lastFullScreenToggleTimeStamp(0)
 	, m_bgIsDark(false)
 	, m_useICCProfile(false)
@@ -1291,6 +1307,9 @@ bool GpDisplayDriver_SDL_GL2::Init()
 
 	IGpLogDriver *logger = m_properties.m_logger;
 
+#ifdef __EMSCRIPTEN__
+	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+#else
 	uint32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	if (m_properties.m_systemServices->IsFullscreenOnStartup())
 	{
@@ -1299,7 +1318,7 @@ bool GpDisplayDriver_SDL_GL2::Init()
 	}
 	else
 		windowFlags |= SDL_WINDOW_RESIZABLE;
-
+#endif
 	m_window = SDL_CreateWindow(GP_APPLICATION_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_windowWidthPhysical, m_windowHeightPhysical, windowFlags);
 	if (!m_window)
 	{
@@ -1309,6 +1328,7 @@ bool GpDisplayDriver_SDL_GL2::Init()
 		return false;
 	}
 
+#ifndef __EMSCRIPTEN__
 	if (m_isFullScreen)
 	{
 		m_windowModeRevertWidth = m_windowWidthPhysical;
@@ -1347,6 +1367,7 @@ bool GpDisplayDriver_SDL_GL2::Init()
 				logger->Printf(IGpLogDriver::Category_Error, "AdjustedRequestedResolution failed!");
 		}
 	}
+#endif
 
 	const bool obstructiveTextInput = m_properties.m_systemServices->IsTextInputObstructive();
 
@@ -1409,26 +1430,21 @@ void GpDisplayDriver_SDL_GL2::ServeTicks(int ticks)
 		}
 		else
 		{
-			if (m_isFullScreen != m_isFullScreenDesired)
-			{
-				if (m_isFullScreenDesired)
-					BecomeFullScreen();
-				else
-					BecomeWindowed();
+#ifdef __EMSCRIPTEN__
+			double canvasWidth, canvasHeight;
+			emscripten_get_element_css_size("canvas", &canvasWidth, &canvasHeight);
+			double pixelRatio = emscripten_get_device_pixel_ratio();
 
-				if (logger)
-					logger->Printf(IGpLogDriver::Category_Information, "Triggering GL context reset due to fullscreen state change");
-
-				m_contextLost = true;
-				continue;
-			}
-
+			unsigned int desiredWidth = static_cast<unsigned int>(canvasWidth * pixelRatio);
+			unsigned int desiredHeight = static_cast<unsigned int>(canvasHeight * pixelRatio);
+#else
 			int clientWidth = 0;
 			int clientHeight = 0;
 			SDL_GetWindowSize(m_window, &clientWidth, &clientHeight);
 
 			unsigned int desiredWidth = clientWidth;
 			unsigned int desiredHeight = clientHeight;
+#endif
 			if (desiredWidth != m_windowWidthPhysical || desiredHeight != m_windowHeightPhysical || m_isResolutionResetDesired)
 			{
 				if (logger)
@@ -1498,21 +1514,6 @@ void GpDisplayDriver_SDL_GL2::ServeTicks(int ticks)
 				m_contextLost = false;
 				continue;
 			}
-
-			bool wantTextInput = m_properties.m_systemServices->IsTextInputEnabled();
-			if (wantTextInput != m_textInputEnabled)
-			{
-				m_textInputEnabled = wantTextInput;
-				if (m_textInputEnabled)
-					SDL_StartTextInput();
-				else
-					SDL_StopTextInput();
-			}
-
-			// Handle dismissal of on-screen keyboard
-			const bool isTextInputActuallyActive = SDL_IsTextInputActive();
-			m_textInputEnabled = isTextInputActuallyActive;
-			m_properties.m_systemServices->SetTextInputEnabled(isTextInputActuallyActive);
 
 			if (SyncRender())
 			{
@@ -2500,7 +2501,7 @@ bool GpDisplayDriver_SDL_GL2::InitResources(uint32_t physicalWidth, uint32_t phy
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> scaleQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_scaleQuadP_GL2);
 	GpComPtr<GpGLShader<GL_FRAGMENT_SHADER>> copyQuadPixelShader = CreateShader<GL_FRAGMENT_SHADER>(GpBinarizedShaders::g_copyQuadP_GL2);
 
-		
+
 	if (!m_res.m_drawQuadPaletteFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteFlickerPixelShader) ||
 		!m_res.m_drawQuadPaletteNoFlickerProgram.Link(this, drawQuadVertexShader, drawQuadPaletteNoFlickerPixelShader)
 		|| !m_res.m_drawQuad32FlickerProgram.Link(this, drawQuadVertexShader, drawQuad32FlickerPixelShader)
@@ -2795,6 +2796,11 @@ bool GpDisplayDriver_SDL_GL2::InitBackBuffer(uint32_t width, uint32_t height)
 
 void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 {
+	int eff_windowWidthPhysical = m_windowWidthPhysical;
+	int eff_windowHeightPhysical = m_windowHeightPhysical;
+#ifdef __EMSCRIPTEN__
+	SDL_GL_GetDrawableSize(m_window, &eff_windowWidthPhysical, &eff_windowHeightPhysical);
+#endif
 	if (m_useUpscaleFilter)
 	{
 		m_gl.BindFramebuffer(GL_FRAMEBUFFER, m_res.m_upscaleTextureRTV->GetID());
@@ -2856,13 +2862,13 @@ void GpDisplayDriver_SDL_GL2::ScaleVirtualScreen()
 
 	m_gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	m_gl.Viewport(0, 0, m_windowWidthPhysical, m_windowHeightPhysical);
+	m_gl.Viewport(0, 0, eff_windowWidthPhysical, eff_windowHeightPhysical);
 
 	const BlitQuadProgram &program = m_res.m_copyQuadProgram;
 
 	{
-		const float twoDivWidth = 2.0f / static_cast<float>(m_windowWidthPhysical);
-		const float twoDivHeight = 2.0f / static_cast<float>(m_windowHeightPhysical);
+		const float twoDivWidth = 2.0f / static_cast<float>(eff_windowWidthPhysical);
+		const float twoDivHeight = 2.0f / static_cast<float>(eff_windowHeightPhysical);
 
 		// Use the scaled virtual width instead of the physical width to correctly handle cases where the window boundary is in the middle of a pixel
 		float fWidth = static_cast<float>(m_windowWidthVirtual) * m_pixelScaleX;

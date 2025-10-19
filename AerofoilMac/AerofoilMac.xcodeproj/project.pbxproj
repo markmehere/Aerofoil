@@ -948,7 +948,7 @@
 		5C54D5B1262B3C6B00AB55E0 /* GpAudioDriverFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GpAudioDriverFactory.h; sourceTree = "<group>"; };
 		5C54D5B2262B3C6B00AB55E0 /* GpAudioDriverFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GpAudioDriverFactory.cpp; sourceTree = "<group>"; };
 		5C54D5B3262B3C6B00AB55E0 /* GpMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GpMain.h; sourceTree = "<group>"; };
-		5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL.xcodeproj; path = "../SDL2-2.30.5/Xcode/SDL/SDL.xcodeproj"; sourceTree = "<group>"; };
+		5C54D5D6262D759500AB55E0 /* SDL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL.xcodeproj; path = "../SDL2-2.32.6/Xcode/SDL/SDL.xcodeproj"; sourceTree = "<group>"; };
 		5C54D654262D84A800AB55E0 /* GpMain_SDL_X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpMain_SDL_X.cpp; path = ../../AerofoilX/GpMain_SDL_X.cpp; sourceTree = "<group>"; };
 		5C54D655262D84A800AB55E0 /* GpSystemServices_X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpSystemServices_X.cpp; path = ../../AerofoilX/GpSystemServices_X.cpp; sourceTree = "<group>"; };
 		5C54D656262D84A800AB55E0 /* GpLogDriver_X.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GpLogDriver_X.cpp; path = ../../AerofoilX/GpLogDriver_X.cpp; sourceTree = "<group>"; };
@@ -2339,7 +2339,7 @@
 					"'GP_DEBUG_CONFIG=1'",
 				);
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../SDL2-2.30.5/include\"",
+					"\"$(SRCROOT)/../SDL2-2.32.6/include\"",
 					"\"$(SRCROOT)/../GpCommon\"",
 					"\"$(SRCROOT)/../Common\"",
 				);
@@ -2371,7 +2371,7 @@
 					"'GP_DEBUG_CONFIG=0'",
 				);
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../SDL2-2.30.5/include\"",
+					"\"$(SRCROOT)/../SDL2-2.32.6/include\"",
 					"\"$(SRCROOT)/../GpCommon\"",
 					"\"$(SRCROOT)/../Common\"",
 				);
