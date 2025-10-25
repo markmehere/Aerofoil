@@ -20,14 +20,13 @@ public class GpActivity extends SDLActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
-        assetManager = getAssets();
     }
 
     public String[] scanAssetDirectory(String directory)
     {
         try
         {
+            assetManager = getAssets();
             return this.assetManager.list(directory);
         }
         catch (java.io.IOException ex)
