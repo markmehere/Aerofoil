@@ -147,7 +147,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         mClipboardHandler = null;
         mCursors = new Hashtable<Integer, PointerIcon>();
         mLastCursorID = 0;
-        mSDLThread = null;
         mIsResumedCalled = false;
         mHasFocus = true;
         mNextNativeState = NativeState.INIT;
