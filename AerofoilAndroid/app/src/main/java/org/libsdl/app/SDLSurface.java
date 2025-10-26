@@ -38,7 +38,7 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     protected float mWidth, mHeight;
 
     // Is SurfaceView ready for rendering
-    public boolean mIsSurfaceReady;
+    public volatile boolean mIsSurfaceReady;
 
     // Startup
     public SDLSurface(Context context) {

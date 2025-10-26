@@ -44,15 +44,13 @@ import android.widget.Toast;
 
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
     SDL Activity
 */
 public class SDLActivity extends Activity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "SDL";
-    private static final int SDL_MAJOR_VERSION = 2;
-    private static final int SDL_MINOR_VERSION = 32;
-    private static final int SDL_MICRO_VERSION = 6;
 
     public static boolean mIsResumedCalled, mHasFocus;
 
@@ -77,8 +75,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     protected static final int SDL_ORIENTATION_PORTRAIT = 3;
     protected static final int SDL_ORIENTATION_PORTRAIT_FLIPPED = 4;
 
-    protected static int mCurrentOrientation;
-    protected static Locale mCurrentLocale;
+    public static volatile int mCurrentOrientation;
+    public static volatile Locale mCurrentLocale;
 
     // Handle the state of the native layer
     public enum NativeState {
@@ -88,20 +86,22 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     public static NativeState mNextNativeState;
     public static NativeState mCurrentNativeState;
 
-    /** If shared libraries (e.g. SDL or the native application) could not be loaded. */
-    public static boolean mBrokenLibraries = true;
-
     // Main components
-    protected static SDLActivity mSingleton;
-    protected static SDLSurface mSurface;
+    public static volatile SDLActivity mSingleton;
+    public static volatile SDLSurface mSurface;
     public static DummyEdit mTextEdit;
     public static boolean mScreenKeyboardShown;
-    public static ViewGroup mLayout;
-    public static SDLClipboardHandler mClipboardHandler;
+    public static volatile ViewGroup mLayout;
+    public static volatile SDLClipboardHandler mClipboardHandler;
     protected static Hashtable<Integer, PointerIcon> mCursors;
     protected static int mLastCursorID;
     protected static SDLGenericMotionListener_API12 mMotionListener;
-    protected static HIDDeviceManager mHIDDeviceManager;
+    public static volatile HIDDeviceManager mHIDDeviceManager;
+
+    // Thread components
+    protected static Thread mLoadLibrariesThread;
+    protected static AtomicBoolean mFullyLoaded = new AtomicBoolean(false);
+    protected static Object mLoadLibrariesLock = new Object();
 
     // This is what SDL runs in. It invokes SDL_main(), eventually
     protected static Thread mSDLThread;
@@ -121,52 +121,11 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     }
 
     /**
-     * This method returns the name of the shared object with the application entry point
-     * It can be overridden by derived classes.
-     */
-    protected String getMainSharedObject() {
-        String library;
-        String[] libraries = SDLActivity.mSingleton.getLibraries();
-        if (libraries.length > 0) {
-            library = "lib" + libraries[libraries.length - 1] + ".so";
-        } else {
-            library = "libmain.so";
-        }
-        return getContext().getApplicationInfo().nativeLibraryDir + "/" + library;
-    }
-
-    /**
      * This method returns the name of the application entry point
      * It can be overridden by derived classes.
      */
     protected String getMainFunction() {
         return "SDL_main";
-    }
-
-    /**
-     * This method is called by SDL before loading the native shared libraries.
-     * It can be overridden to provide names of shared libraries to be loaded.
-     * The default implementation returns the defaults. It never returns null.
-     * An array returned by a new implementation must at least contain "SDL2".
-     * Also keep in mind that the order the libraries are loaded may matter.
-     * @return names of shared libraries to be loaded (e.g. "SDL2", "main").
-     */
-    protected String[] getLibraries() {
-        return new String[] {
-            "SDL2",
-            // "SDL2_image",
-            // "SDL2_mixer",
-            // "SDL2_net",
-            // "SDL2_ttf",
-            "main"
-        };
-    }
-
-    // Load the .so
-    public void loadLibraries() {
-       for (String lib : getLibraries()) {
-          SDL.loadLibrary(lib, this);
-       }
     }
 
     /**
@@ -188,15 +147,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         mClipboardHandler = null;
         mCursors = new Hashtable<Integer, PointerIcon>();
         mLastCursorID = 0;
-        mSDLThread = null;
         mIsResumedCalled = false;
         mHasFocus = true;
         mNextNativeState = NativeState.INIT;
         mCurrentNativeState = NativeState.INIT;
-    }
-    
-    protected SDLSurface createSDLSurface(Context context) {
-        return new SDLSurface(context);
     }
 
     // Setup
@@ -205,7 +159,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "Device: " + Build.DEVICE);
         Log.v(TAG, "Model: " + Build.MODEL);
         Log.v(TAG, "onCreate()");
+        
         super.onCreate(savedInstanceState);
+        mSingleton = this;
 
         try {
             Thread.currentThread().setName("SDLActivity");
@@ -213,110 +169,15 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             Log.v(TAG, "modify thread properties failed " + e.toString());
         }
 
-        // Load shared libraries
-        String errorMsgBrokenLib = "";
-        try {
-            loadLibraries();
-            mBrokenLibraries = false; /* success */
-        } catch(UnsatisfiedLinkError e) {
-            System.err.println(e.getMessage());
-            mBrokenLibraries = true;
-            errorMsgBrokenLib = e.getMessage();
-        } catch(Exception e) {
-            System.err.println(e.getMessage());
-            mBrokenLibraries = true;
-            errorMsgBrokenLib = e.getMessage();
-        }
-
-        if (!mBrokenLibraries) {
-            String expected_version = String.valueOf(SDL_MAJOR_VERSION) + "." +
-                                      String.valueOf(SDL_MINOR_VERSION) + "." +
-                                      String.valueOf(SDL_MICRO_VERSION);
-            String version = nativeGetVersion();
-            if (!version.equals(expected_version)) {
-                mBrokenLibraries = true;
-                errorMsgBrokenLib = "SDL C/Java version mismatch (expected " + expected_version + ", got " + version + ")";
-            }
-        }
-
-        if (mBrokenLibraries) {
-            mSingleton = this;
-            AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(this);
-            dlgAlert.setMessage("An error occurred while trying to start the application. Please try again and/or reinstall."
-                  + System.getProperty("line.separator")
-                  + System.getProperty("line.separator")
-                  + "Error: " + errorMsgBrokenLib);
-            dlgAlert.setTitle("SDL Error");
-            dlgAlert.setPositiveButton("Exit",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog,int id) {
-                        // if this button is clicked, close current activity
-                        SDLActivity.mSingleton.finish();
-                    }
-                });
-           dlgAlert.setCancelable(false);
-           dlgAlert.create().show();
-
-           return;
-        }
-
-        // Set up JNI
-        SDL.setupJNI();
-
-        // Initialize state
-        SDL.initialize();
-
-        // So we can call stuff from static callbacks
-        mSingleton = this;
-        SDL.setContext(this);
-
-        mClipboardHandler = new SDLClipboardHandler();
-
-        mHIDDeviceManager = HIDDeviceManager.acquire(this);
-
-        // Set up the surface
-        mSurface = createSDLSurface(this);
-
-        mLayout = new RelativeLayout(this);
-        mLayout.addView(mSurface);
-
-        // Get our current screen orientation and pass it down.
-        mCurrentOrientation = SDLActivity.getCurrentOrientation();
-        // Only record current orientation
-        SDLActivity.onNativeOrientationChanged(mCurrentOrientation);
-
-        try {
-            if (Build.VERSION.SDK_INT < 24 /* Android 7.0 (N) */) {
-                mCurrentLocale = getContext().getResources().getConfiguration().locale;
-            } else {
-                mCurrentLocale = getContext().getResources().getConfiguration().getLocales().get(0);
-            }
-        } catch(Exception ignored) {
-        }
-
-        setContentView(mLayout);
-
-        setWindowStyle(false);
-
-        getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(this);
-
-        // Get filename from "Open with" of another application
-        Intent intent = getIntent();
-        if (intent != null && intent.getData() != null) {
-            String filename = intent.getData().getPath();
-            if (filename != null) {
-                Log.v(TAG, "Got filename: " + filename);
-                SDLActivity.onNativeDropFile(filename);
-            }
-        }
+        mLoadLibrariesThread = new LoadLibrariesThread();
+        mLoadLibrariesThread.start();
     }
 
     protected void pauseNativeThread() {
         mNextNativeState = NativeState.PAUSED;
         mIsResumedCalled = false;
 
-        if (SDLActivity.mBrokenLibraries) {
+        if (LoadLibrariesThread.mBrokenLibraries) {
             return;
         }
 
@@ -326,10 +187,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     protected void resumeNativeThread() {
         mNextNativeState = NativeState.RESUMED;
         mIsResumedCalled = true;
-
-        if (SDLActivity.mBrokenLibraries) {
-           return;
-        }
 
         SDLActivity.handleNativeState();
     }
@@ -404,7 +261,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         super.onWindowFocusChanged(hasFocus);
         Log.v(TAG, "onWindowFocusChanged(): " + hasFocus);
 
-        if (SDLActivity.mBrokenLibraries) {
+        if (LoadLibrariesThread.mBrokenLibraries) {
             return;
         }
 
@@ -426,7 +283,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onLowMemory()");
         super.onLowMemory();
 
-        if (SDLActivity.mBrokenLibraries) {
+        if (LoadLibrariesThread.mBrokenLibraries) {
            return;
         }
 
@@ -438,7 +295,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onConfigurationChanged()");
         super.onConfigurationChanged(newConfig);
 
-        if (SDLActivity.mBrokenLibraries) {
+        if (LoadLibrariesThread.mBrokenLibraries) {
            return;
         }
 
@@ -459,7 +316,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         SDLAudioManager.release(this);
 
-        if (SDLActivity.mBrokenLibraries) {
+        if (LoadLibrariesThread.mBrokenLibraries) {
            super.onDestroy();
            return;
         }
@@ -526,7 +383,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
 
-        if (SDLActivity.mBrokenLibraries) {
+        if (LoadLibrariesThread.mBrokenLibraries) {
            return false;
         }
 
@@ -572,23 +429,22 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         // Try a transition to resumed state
         if (mNextNativeState == NativeState.RESUMED) {
-            if (mSurface.mIsSurfaceReady && mHasFocus && mIsResumedCalled) {
+            if ((mSDLThread == null || mHasFocus) && mIsResumedCalled) {
                 if (mSDLThread == null) {
                     // This is the entry point to the C app.
                     // Start up the C app thread and enable sensor input for the first time
                     // FIXME: Why aren't we enabling sensor input at start?
 
                     mSDLThread = new Thread(new SDLMain(), "SDLThread");
-                    mSurface.enableSensor(Sensor.TYPE_ACCELEROMETER, true);
                     mSDLThread.start();
+                    mCurrentNativeState = mNextNativeState;
 
                     // No nativeResume(), don't signal Android_ResumeSem
-                } else {
+                } else if (mSurface.mIsSurfaceReady) {
                     nativeResume();
+                    mSurface.handleResume();
+                    mCurrentNativeState = mNextNativeState;
                 }
-                mSurface.handleResume();
-
-                mCurrentNativeState = mNextNativeState;
             }
         }
     }
