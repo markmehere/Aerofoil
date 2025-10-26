@@ -19,7 +19,7 @@ public class LoadLibrariesThread extends Thread {
 
     private static String TAG = "LoadLibraries";
 
-    private static final String[] librariesToLoad = new String[] {
+    public static final String[] librariesToLoad = new String[] {
         "SDL2",
         // "SDL2_image",
         // "SDL2_mixer",
@@ -48,7 +48,7 @@ public class LoadLibrariesThread extends Thread {
         }
     }
 
-    private SDLSurface createSDLSurface(Context context) {
+    public static SDLSurface createSDLSurface(Context context) {
         return new SDLSurface(context);
     }
 
