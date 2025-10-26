@@ -9,7 +9,7 @@ public class SDLMain implements Runnable {
     @Override
     public void run() {
         // Runs SDL_main()
-        String library = SDLActivity.mSingleton.getMainSharedObject();
+        String library = LoadLibrariesThread.getMainSharedObject(SDLActivity.mSingleton);
         String function = SDLActivity.mSingleton.getMainFunction();
         String[] arguments = SDLActivity.mSingleton.getArguments();
 
